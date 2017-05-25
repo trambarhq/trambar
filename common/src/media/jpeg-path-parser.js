@@ -1,12 +1,11 @@
 /**
  * Parse embeded path in a JPEG image
  *
- * @param  {Buffer} buffer
+ * @param  {Uint8Array} bytes
  *
  * @return {Object|null}
  */
-exports.parse = function(buffer) {
-    var bytes = new Uint8Array(buffer);
+exports.parse = function(bytes) {
     var p = findPhotoshopSegment(bytes);
     if(p !== -1) {
         return parse8BIMData(bytes, p);
