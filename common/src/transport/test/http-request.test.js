@@ -1,9 +1,9 @@
-var Chai = require('chai'), expect = Chai.expect, assert = Chai.assert;
+var Chai = require('chai'), expect = Chai.expect;
 
 var HttpRequest = require('transport/http-request');
 
 describe('HttpRequest', () => {
-    describe('#fetch', () => {
+    describe('#fetch()', () => {
         it('should retrieve a JSON object using GET', () => {
             var url = 'http://httpbin.org/get';
             var payload = {

@@ -2,11 +2,11 @@
   "name": "trambar-backend",
   "version": "1.0.0",
   "description": "Trambar Backend Services",
-  "main": "index.js",
-  "author": "Chung Leong <cleong@cal.berkeley.edu>",
+  "author": "Chung Leong <chernyshevsky@hotmail.com>",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha -- src/**/test/*.js"
   },
   "dependencies": {
     "bluebird": "^3.5.0",

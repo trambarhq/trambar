@@ -14,7 +14,7 @@ module.exports = function(config) {
         ],
 
         preprocessors: {
-          'tests.bundle.js': [ 'webpack', 'sourcemap' ]
+            'tests.bundle.js': [ 'webpack', 'sourcemap' ]
         },
 
         plugins: [
@@ -25,7 +25,7 @@ module.exports = function(config) {
             'karma-webpack',
         ],
 
-        reporters: [ 'dots' ],
+        reporters: [ 'progress' ],
 
         webpack: {
             devtool: 'inline-source-map',
@@ -36,9 +36,13 @@ module.exports = function(config) {
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
                         query: {
-                            presets: ['es2015', 'react']
+                            presets: [ 'es2015', 'react' ]
                         }
                     },
+                    {
+                        test: /\.jpg/,
+                        loader: 'bin-loader',
+                    }
                 ]
             },
             resolve: {

@@ -2,7 +2,13 @@
   "name": "trambar-common",
   "version": "1.0.0",
   "description": "Trambar Common Code",
+  "author": "Chung Leong <chernyshevsky@hotmail.com>",
+  "license": "MIT",
   "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/karma/bin/karma start --single-run",
+    "test:start": "./node_modules/karma/bin/karma start"
+  },
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.24.1",
@@ -10,6 +16,7 @@
     "babel-preset-env": "^1.4.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
+    "bin-loader": "^0.1.0",
     "bluebird": "^3.5.0",
     "chai": "^3.5.0",
     "enzyme": "^2.8.2",
@@ -26,10 +33,5 @@
     "react-addons-test-utils": "~15.4.0",
     "react-dom": "~15.4.0",
     "webpack": "^2.5.1"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Chung Leong <cleong@cal.berkeley.edu>",
-  "license": "MIT"
+  }
 }
