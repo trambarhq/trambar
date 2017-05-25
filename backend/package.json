@@ -1,0 +1,26 @@
+{
+  "name": "trambar-backend",
+  "version": "1.0.0",
+  "description": "Trambar Backend Services",
+  "main": "index.js",
+  "author": "Chung Leong <cleong@cal.berkeley.edu>",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "express": "^4.15.2",
+    "jsDAV": "^0.3.4",
+    "jsdav-promise": "0.0.2",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
+    "pg": "^6.2.2",
+    "pg-pool": "^1.7.1",
+    "sharp": "0.17.3"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.4.1"
+  }
+}

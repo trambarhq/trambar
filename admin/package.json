@@ -1,0 +1,20 @@
+{
+  "name": "trambar-admin",
+  "version": "1.0.0",
+  "description": "Trambar Administration Site",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "bluebird": "^3.5.0",
+    "lodash": "^4.17.4",
+    "react": "^15.5.4",
+    "react-dom": "^15.5.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chung Leong <cleong@cal.berkeley.edu>",
+  "license": "MIT"
+}
