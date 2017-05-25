@@ -13,7 +13,7 @@ describe('LocaleManager', () => {
             defaultLanguageCode: 'pl-pl',
             onChange: (evt) => {
                 if (resolve) {
-                    resolve(manager);
+                    resolve(evt.target);
                     resolve = null; // don't call this again
                 }
                 changeCount++;
@@ -31,14 +31,13 @@ describe('LocaleManager', () => {
             },
         };
         var wrapper = Enzyme.mount(<LocaleManager {...props} />);
-        var manager = wrapper.instance();
 
         setTimeout(() => {
             reject(new Error('onChange not called within 1000ms'));
         }, 1000);
     });
 
-    it('should call onChange at some point', () => {
+    it('should call onChange() at some point', () => {
         return managerReady;
     })
     it('should default to Polish as English is not supported', () => {
@@ -127,7 +126,6 @@ describe('LocaleManager', () => {
             };
             return managerReady.then((manager) => {
                 return manager.change('ru-ua').then(() => {
-                    debugger;
                     expect(manager.pick(phrase)).to.contain('Kobieta');
                 });
             });

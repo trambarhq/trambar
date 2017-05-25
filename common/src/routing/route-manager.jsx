@@ -27,6 +27,10 @@ module.exports = React.createClass({
                 return true;
             }
         });
+        if (baseUrl === undefined) {
+            console.error(`Page is not hosted at one of the expected base URLs (${this.props.baseUrls})`)
+        }
+        return baseUrl;
     },
 
     getUrl: function() {
@@ -45,6 +49,18 @@ module.exports = React.createClass({
         return this.state.query;
     },
 
+    goTo: function(location, replacing) {
+        var baseUrl = this.state.baseUrl;
+        if (baseUrl !== undefined) {
+            var url = location.pathname;
+            if (url.substr(0, baseUrl.length) === baseUrl && url.charAt(baseUrl.length) === '/') {
+                url = url.substr(baseUrl.length);
+                return this.change(url, replacing);
+            }
+        }
+        return Promise.reject(new Error('Cannot route to location not at the base URL'));
+    },
+
     goBack: function() {
 
     },
@@ -59,12 +75,12 @@ module.exports = React.createClass({
         }
         var route = null;
         _.each(this.props.pages, (page) => {
-            var info = page.parseURL(url);
-            if (info) {
+            var params = page.parseUrl(url);
+            if (params) {
                 route = {
                     url: url,
                     component: page,
-                    parameters: info.parameters,
+                    parameters: params,
                     query: query,
                 };
                 return false;
@@ -75,14 +91,21 @@ module.exports = React.createClass({
 
     change: function(url, replacing) {
         if (this.state.url === url) {
-            return Promise.resolve(true);
+            return Promise.resolve();
         }
         var route = this.find(url);
         if (route) {
             this.setState(route, () => {
+                // set the browser location
+                var fullUrl = this.state.baseUrl + url;
+                if (replacing) {
+                    history.replaceState({}, '', fullUrl);
+                } else {
+                    history.pushState({}, '', fullUrl);
+                }
                 this.triggerChangeEvent();
             });
-            return Promise.resolve(true);
+            return Promise.resolve();
         } else {
             return this.triggerMissingEvent();
         }
@@ -111,11 +134,14 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        return null;
+        return <div/>;
     },
 
     componentDidMount: function() {
-
+        debugger;
+        this.goTo(window.location, true).catch((err) => {
+            console.error(err);
+        });
     },
 });
 
