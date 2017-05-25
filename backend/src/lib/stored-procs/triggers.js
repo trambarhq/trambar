@@ -40,13 +40,23 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
         sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, diff);
     }
 
-    if (NEW && OLD) {
-        if (NEW.dirty) {
-            if (NEW.atime && !NEW.ltime) {
-                if (OLD.atime != NEW.atime) {
-                    var id = NEW.id;
-                    sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id);
-                }
+    // if the roll is dirty, we might need to do something to expedite its update
+    if (NEW && NEW.dirty) {
+        // if lock time isn't null, then the row will soon be updated
+        if (!NEW.ltime) {
+            var requestCleaning = false;
+            if (!OLD || !OLD.dirty) {
+                // the row has just become dirty
+                requestCleaning = true;
+            } else if (OLD.atime != NEW.atime) {
+                // the row has just been accessed--ask for cleaning again
+                // recipient(s) will understand the urgency by looking at the
+                // atime
+                requestCleaning = true;
+            }
+            if (requestCleaning) {
+                var id = NEW.id;
+                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id);
             }
         }
     }

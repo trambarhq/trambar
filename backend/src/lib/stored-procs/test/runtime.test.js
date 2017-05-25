@@ -82,7 +82,7 @@ describe('Runtime', () => {
             expect(Runtime.findChanges(a, b, ['a', 'c'])).to.be.null;
         })
     })
-    describe('#sendChangeNotification', () => {
+    describe('#sendChangeNotification()', () => {
         it('should send notification message containg diff', () => {
             var stmts = initPLV8();
             var diff = { a: [ 'dingo', 'bingo' ] };
@@ -98,7 +98,7 @@ describe('Runtime', () => {
             expect(stmts[1]).to.contain('NOTIFY').to.contain('1234');
         })
     })
-    describe('#sendCleanNotification', () => {
+    describe('#sendCleanNotification()', () => {
         it('should send clean notification message', () => {
             var stmts = initPLV8();
             Runtime.sendCleanNotification('UPDATE', 'schema', 'table', 5);
