@@ -36,6 +36,9 @@ require('application.scss');
 
 module.exports = React.createClass({
     displayName: 'Application',
+    propTypes: {
+
+    },
     components: ComponentRefs({
         remoteDataSource: RemoteDataSource,
         routeManager: RouteManager,
@@ -93,6 +96,7 @@ module.exports = React.createClass({
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             onChange: this.handleDatabaseChange,
+            onAuthRequest: this.handleDatabaseAuthRequest,
         };
         var routeManagerProps = {
             ref: setters.routeManager,
@@ -100,7 +104,7 @@ module.exports = React.createClass({
             pages: pageClasses,
             database: this.state.database,
             onChange: this.handleRouteChange,
-            onMissing: this.handleRouteMissing,
+            onRedirection: this.handleRedirectionRequest,
         };
         var localeManagerProps = {
             ref: setters.localeManager,
@@ -115,9 +119,7 @@ module.exports = React.createClass({
         };
         return (
             <div>
-                <RemoteDataSource {...remoteDataSourceProps} >
-                    {this.renderLocalCache()}
-                </RemoteDataSource>
+                <RemoteDataSource {...remoteDataSourceProps} />
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
@@ -125,23 +127,6 @@ module.exports = React.createClass({
         );
     },
 
-    renderLocalCache: function() {
-        if (process.env.PLATFORM === 'cordova') {
-            var SQLiteCache = require('data/sqlite-cache');
-            if (SQLiteCache.isAvailable()) {
-                var sqliteProps = {
-                };
-                return <SQLiteCache {...sqliteProps} />;
-            }
-        } else if (process.env.PLATFORM === 'browser') {
-            var IndexedDBCache = require('data/indexed-db-cache');
-            if (IndexedDBCache.isAvailable()) {
-                var indexedDBProps = {
-                };
-                return <IndexedDBCache {...indexedDBProps} />;
-            }
-        }
-    },
 
     componentDidMount: function() {
     },
@@ -208,10 +193,10 @@ module.exports = React.createClass({
         });
     },
 
-    handleRouteMissing: function(evt) {
+    handleRedirectionRequest: function(evt) {
         return Promise.try(() => {
             if (evt.url === '/') {
-                // go either to StartPage or NewsPage
+                // go to either StartPage or NewsPage
                 var db = this.state.database.use({ by: this, schema: 'local' });
                 return db.find({ table: 'project_link' }).then((links) => {
                     var recent = _.last(_.sortBy(links, 'atime'));

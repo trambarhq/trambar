@@ -1,5 +1,8 @@
 module.exports = Theme;
 
 function Theme(themeManager) {
-    this.themeManager = themeManager;
+
+    Object.defineProperty(this, 'themeManager', {
+        value: themeManager
+    });
 }

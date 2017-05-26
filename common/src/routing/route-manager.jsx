@@ -7,7 +7,7 @@ module.exports = React.createClass({
         pages: PropTypes.array.isRequired,
         baseUrls: PropTypes.arrayOf(PropTypes.string).isRequired,
         onChange: PropTypes.func,
-        onMissing: PropTypes.func,
+        onRedirectionRequest: PropTypes.func,
     },
 
     getInitialState: function() {
@@ -115,7 +115,7 @@ module.exports = React.createClass({
             return Promise.resolve();
         } else {
             if (!noRedirecting) {
-                return this.triggerMissingEvent().then((newUrl) => {
+                return this.triggerRedirectionRequest().then((newUrl) => {
                     return this.change(newUrl, replacing, true);
                 });
             } else {
@@ -133,10 +133,10 @@ module.exports = React.createClass({
         }
     },
 
-    triggerMissingEvent: function(url) {
-        if (this.props.onMissing) {
-            return this.props.onMissing({
-                type: 'missing_route',
+    triggerRedirectionRequest: function(url) {
+        if (this.props.onRedirectionRequest) {
+            return this.props.onRedirectionRequest({
+                type: 'route_request',
                 target: this,
                 url: url,
             });

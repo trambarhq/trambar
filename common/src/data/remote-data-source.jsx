@@ -2,6 +2,10 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var IndexedDBCache = (process.env.PLATFORM === 'browser') ? require('data/indexed-db-cache') : null;
+var SQLiteCache = (process.env.PLATFORM === 'cordova') ? require('data/sqlite-cache') : null;
+var LocalCache = IndexedDBCache || SQLiteCache;
+
 var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
@@ -11,7 +15,7 @@ module.exports = React.createClass({
         onAuthRequest: PropTypes.func,
     },
     components: ComponentRefs({
-        cache: Object
+        cache: LocalCache
     }),
 
     /**
@@ -338,16 +342,21 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        return <div>{this.renderLocalCache()}</div>;
+        return (
+            <div>
+                {this.renderLocalCache()}
+            </div>
+        );
     },
 
     renderLocalCache: function() {
-        if (_.isEmpty(this.props.children)) {
-            return null;
-        }
-        var child = React.Children.only(this.props.children);
         var setters = this.components.setters;
-        return React.cloneElement(child, { ref: setters.cache })
+        if (LocalCache.isAvailable()) {
+            var cacheProps = {
+                ref: setters.cache
+            };
+            return <LocalCache {...cacheProps} />;
+        }
     },
 
     componentDidMount: function() {

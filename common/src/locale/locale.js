@@ -2,10 +2,15 @@ module.exports = Locale;
 
 function Locale(localeManager) {
     this.languageCode = localeManager.getLanguageCode();
-    this.localManager = localeManager;
 
+    // bind functions to object so we can place them in short-named variables
+    // for convenience
     this.translate = this.translate.bind(this);
     this.pick = this.pick.bind(this);
+
+    Object.defineProperty(this, 'localManager', {
+        value: localManager
+    });
 }
 
 Locale.prototype.translate = function(phrase) {

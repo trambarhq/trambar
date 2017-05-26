@@ -30,7 +30,7 @@ describe('RouteManager', () => {
     history.replaceState({}, '', '/test/');
 
     var changeCount = 0;
-    var missingCount = 0;
+    var redirectionCount = 0;
     var managerReady = new Promise((resolve, reject) => {
         var props = {
             pages,
@@ -43,8 +43,8 @@ describe('RouteManager', () => {
                 }
                 changeCount++;
             },
-            onMissing: (evt) => {
-                missingCount++;
+            onRedirectionRequest: (evt) => {
+                redirectionCount++;
                 return Promise.resolve(pages[0].url);
             },
         };
@@ -63,9 +63,9 @@ describe('RouteManager', () => {
             expect(manager.state).to.have.property('baseUrl', '/test');
         });
     })
-    it('should have call onMissing()', () => {
+    it('should have call onRedirectionRequest() since no page maps to /', () => {
         return managerReady.then((manager) => {
-            expect(missingCount).to.be.above(0);
+            expect(redirectionCount).to.be.above(0);
         });
     })
     it('should have redirected to the home page', () => {

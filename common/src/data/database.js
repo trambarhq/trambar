@@ -4,8 +4,11 @@ var Promise = require('bluebird');
 module.exports = Database;
 
 function Database(remoteDataSource, context) {
-    this.remoteDataSource = remoteDataSource;
     this.context = context;
+    
+    Object.defineProperty(this, 'remoteDataSource', {
+        value: remoteDataSource
+    });
 }
 
 Database.prototype.find = function(query) {

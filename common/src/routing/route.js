@@ -4,13 +4,17 @@ var Promise = require('bluebird');
 module.exports = Route;
 
 function Route(routeManager) {
-    this.routeManager = routeManager;
     this.callbacks = [];
     this.url = routeManager.getUrl();
     this.component = routeManager.getComponent();
     this.parameters = routeManager.getParameters();
     this.query = routeManager.getQuery();
+
+    Object.defineProperty(this, 'routeManager', {
+        value: routeManager
+    });
 }
+
 
 Route.match = function(route, url) {
     var names = [];
@@ -23,7 +27,7 @@ Route.match = function(route, url) {
     if (m) {
         var params = {};
         _.each(names, (name, index) => {
-            params[name] = m[index + 1];
+            params[name.substr(1)] = m[index + 1];
         });
         return params;
     }
@@ -34,14 +38,14 @@ Route.match = function(route, url) {
  *
  * @param  {String} url
  *
- * @return {Promise<Boolean>}
+ * @return {Promise}
  */
 Route.prototype.change = function(url, replacing) {
-    return this.ask(url, interactive).then((ok) => {
+    return this.ask(url, true).then((ok) => {
         if (ok) {
             return this.routeManager.change(url, replacing);
         } else {
-            return false;
+            throw new Error('');
         }
     });
 };
@@ -51,7 +55,7 @@ Route.prototype.change = function(url, replacing) {
  *
  * @param  {Boolean} interactive
  *
- * @return {Promise<Boolean>}
+ * @return {Promise<Boolean>|Boolean}
  */
 Route.prototype.ask = function(url, interactive) {
     if (interactive) {
