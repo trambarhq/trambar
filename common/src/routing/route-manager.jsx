@@ -23,6 +23,9 @@ module.exports = React.createClass({
     getBaseUrl: function() {
         var path = location.pathname;
         var baseUrl = _.find(this.props.baseUrls, (url) => {
+            if (/\/$/.test(url)) {
+                throw new Error('Base URL should not end a slash');
+            }
             if (path.substr(0, url.length) === url) {
                 return true;
             }
@@ -75,6 +78,10 @@ module.exports = React.createClass({
         }
         var route = null;
         _.each(this.props.pages, (page) => {
+            if (typeof(page.parseUrl) !== 'function') {
+                var pageName = _.get(page, 'displayName', 'Page')
+                throw new Error(`${pageName} does not implement the static function parseUrl()`);
+            }
             var params = page.parseUrl(url);
             if (params) {
                 route = {
@@ -89,7 +96,7 @@ module.exports = React.createClass({
         return route;
     },
 
-    change: function(url, replacing) {
+    change: function(url, replacing, noRedirecting) {
         if (this.state.url === url) {
             return Promise.resolve();
         }
@@ -107,7 +114,13 @@ module.exports = React.createClass({
             });
             return Promise.resolve();
         } else {
-            return this.triggerMissingEvent();
+            if (!noRedirecting) {
+                return this.triggerMissingEvent().then((newUrl) => {
+                    return this.change(newUrl, replacing, true);
+                });
+            } else {
+                throw new Error('Unable to find page');
+            }
         }
     },
 
@@ -120,13 +133,12 @@ module.exports = React.createClass({
         }
     },
 
-    triggerMissingEvent: function(url, replacing) {
+    triggerMissingEvent: function(url) {
         if (this.props.onMissing) {
             return this.props.onMissing({
                 type: 'missing_route',
                 target: this,
                 url: url,
-                replacing: replacing || false
             });
         } else {
             return Promise.reject(new Error('Unable to route URL to a page: ' + url))
@@ -138,7 +150,6 @@ module.exports = React.createClass({
     },
 
     componentDidMount: function() {
-        debugger;
         this.goTo(window.location, true).catch((err) => {
             console.error(err);
         });

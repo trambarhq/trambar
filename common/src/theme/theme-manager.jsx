@@ -1,10 +1,12 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Database = require('data/database');
+
 module.exports = React.createClass({
     displayName: 'ThemeManager',
     propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
+        database: PropTypes.instanceOf(Database),
         onChange: PropTypes.func,
     },
 
@@ -53,7 +55,7 @@ module.exports = React.createClass({
             db.start().then(() => {
                 return db.findOne({
                     table: 'settings',
-                    name: 'theme'
+                    key: 'theme'
                 });
             }).then((settings) => {
                 if (settings && settings.theme) {

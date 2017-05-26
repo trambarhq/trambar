@@ -1,5 +1,7 @@
 var _ = require('lodash');
 var Path = require('path');
+var Webpack = require('webpack');
+var DefinePlugin = Webpack.DefinePlugin;
 
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -10,6 +12,15 @@ var folders = _.mapValues({
     assets: 'assets',
     includes: [ 'src', '../common/src', 'node_modules' ]
 }, resolve);
+
+var env = {
+    PLATFORM: 'browser',
+    DEPLOYMENT: 'development',
+};
+var constants = {};
+_.each(env, (value, name) => {
+    constants[`process.env.${name}`] = JSON.stringify(String(value));
+});
 
 module.exports = {
     context: folders.src,
@@ -56,11 +67,13 @@ module.exports = {
         ]
     },
     plugins: [
+        new DefinePlugin(constants),
         new HtmlWebpackPlugin({
             template: `${folders.assets}/index.html`,
             filename: `${folders.www}/index.html`,
         })
     ],
+    devtool: 'inline-source-map',
 };
 
 function resolve(path) {

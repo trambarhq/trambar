@@ -3,8 +3,8 @@ var Promise = require('bluebird');
 var Express = require('express');
 var Moment = require('moment');
 
-var HttpError = require('http-error');
 var Database = require('database');
+var HttpError = require('errors/http-error');
 
 var Account = require('accessors/account');
 var Authentication = require('accessors/authentication');

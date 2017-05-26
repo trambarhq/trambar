@@ -6,7 +6,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('start-page.css');
+require('start-page.scss');
 
 module.exports = Relaks.createClass({
     displayName: 'StartPage',
@@ -19,7 +19,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/start/')
+            return Route.match('/start/', url);
         },
 
         getUrl: function(params) {

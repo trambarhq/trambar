@@ -45,8 +45,7 @@ describe('RouteManager', () => {
             },
             onMissing: (evt) => {
                 missingCount++;
-                evt.target.change(pages[0].url, evt.replacing);
-                return Promise.resolve(true);
+                return Promise.resolve(pages[0].url);
             },
         };
         var wrapper = Enzyme.mount(<RouteManager {...props} />);

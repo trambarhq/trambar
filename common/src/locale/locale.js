@@ -1,6 +1,8 @@
+module.exports = Locale;
 
 function Locale(localeManager) {
-    this.languageCode = localManager.getLanguageCode();
+    this.languageCode = localeManager.getLanguageCode();
+    this.localManager = localeManager;
 
     this.translate = this.translate.bind(this);
     this.pick = this.pick.bind(this);

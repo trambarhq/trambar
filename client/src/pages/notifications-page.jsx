@@ -18,7 +18,7 @@ module.exports = React.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/notifications/');
+            var params = Route.match('/:server/:schema/notifications/', url);
             if (params) {
                 params.navigation = {
                     top: {},
@@ -26,6 +26,7 @@ module.exports = React.createClass({
                         section: 'notifications'
                     }
                 }
+                return params;
             }
         },
 

@@ -1,6 +1,9 @@
+var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var ComponentRefs = require('utils/component-refs');
+var HttpError = require('errors/http-error');
 
 // non-visual components
 var RemoteDataSource = require('data/remote-data-source');
@@ -18,19 +21,21 @@ var UsersPage = require('pages/users-page');
 var NotificationsPage = require('pages/notifications-page');
 var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
+var ErrorPage = require('pages/error-page');
 
 var pageClasses = [
     NewsPage,
     UsersPage,
     NotificationsPage,
     BookmarksPage,
-    SettingsPage
+    SettingsPage,
+    ErrorPage,
 ];
 
 require('application.scss');
 
 module.exports = React.createClass({
-    module: 'Application',
+    displayName: 'Application',
     components: ComponentRefs({
         remoteDataSource: RemoteDataSource,
         routeManager: RouteManager,
@@ -48,10 +53,10 @@ module.exports = React.createClass({
     },
 
     isReady: function() {
-        return !!this.props.database
-            && !!this.props.locale
-            && !!this.props.route
-            && !!this.props.theme;
+        return !!this.state.database
+            && !!this.state.locale
+            && !!this.state.route
+            && !!this.state.theme;
     },
 
     render: function() {
@@ -86,11 +91,12 @@ module.exports = React.createClass({
     renderConfiguration: function() {
         var setters = this.components.setters;
         var remoteDataSourceProps = {
-            ref: refs.remoteDataSource,
+            ref: setters.remoteDataSource,
             onChange: this.handleDatabaseChange,
         };
         var routeManagerProps = {
             ref: setters.routeManager,
+            baseUrls: [ '', '/trambar' ],
             pages: pageClasses,
             database: this.state.database,
             onChange: this.handleRouteChange,
@@ -100,6 +106,7 @@ module.exports = React.createClass({
             ref: setters.localeManager,
             database: this.state.database,
             onChange: this.handleLocaleChange,
+            onModuleRequest: this.handleLanguageModuleRequest,
         };
         var themeManagerProps = {
             ref: setters.themeManager,
@@ -178,7 +185,7 @@ module.exports = React.createClass({
     },
 
     handleLanguageModuleRequest: function(evt) {
-        var languageCode = _.substr(evt.languageCode, 0, 2);
+        var languageCode = evt.languageCode.substr(0, 2);
         return new Promise((resolve, reject) => {
             // list the modules here so Webpack can codesplit them
             //
@@ -202,26 +209,29 @@ module.exports = React.createClass({
     },
 
     handleRouteMissing: function(evt) {
-        if (evt.url === '/') {
-            // go either to StartPage or NewsPage
-            var db = this.state.database.use({ by: this, schema: 'local' });
-            return db.find({ table: 'project_link' }).then((links) => {
-                var recent = _.last(_.sortBy(links, 'atime'));
-                var url;
-                if (!recent) {
-                    url = StartPage.getUrl({});
-                } else {
-                    url = NewsPage.getUrl({
-                        server: recent.server,
-                        schema: recent.schema,
-                    });
-                }
-                return evt.target.change(url, evt.replacing);
-            });
-        } else {
-            var url = MissingPage.getUrl({});
-            return evt.target.change(url, evt.replacing);
-        }
+        return Promise.try(() => {
+            if (evt.url === '/') {
+                // go either to StartPage or NewsPage
+                var db = this.state.database.use({ by: this, schema: 'local' });
+                return db.find({ table: 'project_link' }).then((links) => {
+                    var recent = _.last(_.sortBy(links, 'atime'));
+                    if (recent) {
+                        return NewsPage.getUrl({
+                            server: recent.server,
+                            schema: recent.schema,
+                        });
+                    } else {
+                        return StartPage.getUrl({});
+                    }
+                    return url;
+                });
+            } else {
+                throw new HttpError(404);
+            }
+        }).catch((err) => {
+            var errorCode = err.statusCode || 500;
+            return ErrorPage.getUrl({ errorCode });
+        });
     },
 
     handleThemeChange: function(evt) {

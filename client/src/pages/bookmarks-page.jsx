@@ -18,7 +18,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/bookmarks/:roleIds');
+            var params = Route.match('/:server/:schema/bookmarks/:roleIds', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(parts[3], '+'), parseInt));
                 params.navigation = {
@@ -31,6 +31,7 @@ module.exports = Relaks.createClass({
                         section: 'bookmarks'
                     }
                 }
+                return params;
             }
         },
 
@@ -55,7 +56,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             loading: true,
         };
-        meanwhile.show(<BookmarksPage {...props} />);
+        meanwhile.show(<BookmarksPageSync {...props} />);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
@@ -78,7 +79,7 @@ module.exports = Relaks.createClass({
         }).then((stories) => {
             // save last piece of data and render the page with everything
             props.stories = stories
-            meanwhile.show(<BookmarksPage {...props} />);
+            meanwhile.show(<BookmarksPageSync {...props} />);
         }).then(() => {
             // load users who created the bookmarks
             var criteria = {};
@@ -86,12 +87,12 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
-            return <BookmarksPage {...props} />;
+            return <BookmarksPageSync {...props} />;
         });
     }
 });
 
-module.exports = React.createClass({
+var BookmarksPageSync = module.exports.Sync = React.createClass({
     displayName: 'BookmarksPage',
     propTypes: {
         loading: PropTypes.bool,
@@ -106,5 +107,6 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        return null;
     },
 });

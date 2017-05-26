@@ -1,17 +1,22 @@
+var React = require('react');
+
 var Relax = module.exports = {};
 
 Relax.createClass = function(specs) {
     var mergedSpecs = {};
     for (var name in specs) {
-        var f = specs[name];
-        switch (name) {
-            case 'getInitialState':
-                f = function() {
-
-                }
-                break;
-        }
+        mergedSpecs[name] = specs[name];
     }
+    if (!mergedSpecs.render) {
+        mergedSpecs.render = render;
+    }
+    if (!mergedSpecs.renderError) {
+        mergedSpecs.renderError = renderError;
+    }
+    if (!mergedSpecs.shouldComponentUpdate) {
+        mergedSpecs.shouldComponentUpdate = shouldComponentUpdate;
+    }
+    return React.createClass(mergedSpecs);
 };
 
 function render() {
@@ -202,6 +207,16 @@ function renderError(err) {
     return <pre className="error">{text}</pre>;
 }
 
+function shouldComponentUpdate(nextProps, nextState) {
+    if (!compare(nextProps, this.props)) {
+        return true;
+    }
+    if (!compare(nextState, this.state)) {
+        return true;
+    }
+    return false;
+}
+
 /**
  * Return true if the given object is a promise
  *
@@ -214,4 +229,21 @@ function isPromise(object) {
         return true;
     }
     return false;
+}
+
+function compare(prevSet, nextSet) {
+    if (prevSet === nextSet) {
+        return true;
+    }
+    if (!prevSet || !nextSet) {
+        return false;
+    }
+    for (var key in nextSet) {
+        var prev = prevSet[key];
+        var next = nextSet[key];
+        if (next !== prev) {
+            return false;
+        }
+    }
+    return true;
 }

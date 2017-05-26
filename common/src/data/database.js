@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
+module.exports = Database;
+
 function Database(remoteDataSource, context) {
     this.remoteDataSource = remoteDataSource;
     this.context = context;
@@ -65,7 +67,7 @@ Database.prototype.use = function(...varSets) {
  */
 Database.prototype.start = function(location) {
     location = merge(this.context, location);
-    return this.remoteDataSource.start();
+    return this.remoteDataSource.start(location);
 };
 
 function merge(context, query) {

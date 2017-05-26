@@ -18,7 +18,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/users/:roleIds/');
+            var params = Route.match('/:server/:schema/users/:roleIds/', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
@@ -86,7 +86,7 @@ module.exports = Relaks.createClass({
     }
 });
 
-module.exports = React.createClass({
+var UsersPageSync = module.exports.Sync = React.createClass({
     displayName: 'UsersPageSync',
     propTypes: {
         loading: PropTypes.bool,

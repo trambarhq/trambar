@@ -1,5 +1,8 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+
+var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
@@ -7,6 +10,9 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
         onAuthRequest: PropTypes.func,
     },
+    components: ComponentRefs({
+        cache: Object
+    }),
 
     /**
      * Return initial state of component
@@ -160,7 +166,7 @@ module.exports = React.createClass({
         });
         // save the search
         this.replaceRecentSearch(null, search);
-        return result;
+        return search;
     },
 
     checkSearchFreshness: function(search) {
@@ -291,7 +297,7 @@ module.exports = React.createClass({
     },
 
     searchLocalCache: function(search) {
-        var cache = this.props.children;
+        var cache = this.components.cache;
         if (!cache) {
             return false;
         }
@@ -306,7 +312,7 @@ module.exports = React.createClass({
     },
 
     updateCachedObjects: function(location, objects) {
-        var cache = this.props.children;
+        var cache = this.components.cache;
         if (!cache) {
             return false;
         }
@@ -319,7 +325,7 @@ module.exports = React.createClass({
     },
 
     removeCachedObjects: function(location, objects) {
-        var cache = this.props.children;
+        var cache = this.components.cache;
         if (!cache) {
             return false;
         }
@@ -332,8 +338,21 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        return null;
+        return <div>{this.renderLocalCache()}</div>;
     },
+
+    renderLocalCache: function() {
+        if (_.isEmpty(this.props.children)) {
+            return null;
+        }
+        var child = React.Children.only(this.props.children);
+        var setters = this.components.setters;
+        return React.cloneElement(child, { ref: setters.cache })
+    },
+
+    componentDidMount: function() {
+        this.triggerChangeEvent();
+    }
 });
 
 var authTokens = {};

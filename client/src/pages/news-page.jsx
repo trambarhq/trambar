@@ -18,8 +18,8 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema:/news/:roleIds/:date/')
-                      || Route.match('/:server/:schema:/news/:roleIds/');
+            var params = Route.match('/:server/:schema/news/:roleIds/:date/', url)
+                      || Route.match('/:server/:schema/news/:roleIds/', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(parts[3], '+'), parseInt));
                 params.navigation = {
@@ -35,7 +35,7 @@ module.exports = Relaks.createClass({
                 return params;
             }
         },
-        
+
         getUrl: function(params) {
             var server = params.server || '~';
             var schema = params.schema;
@@ -63,7 +63,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             loading: true,
         };
-        meanwhile.show(<NewsPage {...props} />);
+        meanwhile.show(<NewsPageSync {...props} />);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
@@ -71,7 +71,7 @@ module.exports = Relaks.createClass({
             return db.findOne({ table: 'user', criteria });
         }).then((currentUser) => {
             props.currentUser = currentUser;
-            meanwhile.show(<NewsPage {...props} />);
+            meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
             var date = route.parameters.date;
             var roleIds = route.parameters.roleIds;
@@ -107,12 +107,12 @@ module.exports = Relaks.createClass({
             // save last piece of data and render the page with everything
             props.stories = stories
             props.loading = false;
-            return <NewsPage {...props} />;
+            return <NewsPageSync {...props} />;
         });
     }
 });
 
-module.exports = React.createClass({
+var NewsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NewsPage',
     propTypes: {
         loading: PropTypes.bool,
@@ -126,5 +126,6 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        return null;
     },
 });

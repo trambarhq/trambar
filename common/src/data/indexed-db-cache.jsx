@@ -38,7 +38,7 @@ module.exports = React.createClass({
                 var objectStore = transaction.objectStore(storeName);
                 var results = [];
                 var criteria = query.criteria;
-                if (criteria.id !== undefined && _.keys(criteria).length === 1) {
+                if (criteria && criteria.id !== undefined && _.keys(criteria).length === 1) {
                     // look up by id
                     var ids = criteria.id;
                     if (ids instanceof Array) {
@@ -268,9 +268,6 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        return <div>Hello</div>;
-    },
-
-    componentDidMount: function() {
+        return <div />;
     },
 });

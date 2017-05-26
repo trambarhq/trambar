@@ -18,7 +18,7 @@ module.exports = React.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/settings/');
+            var params = Route.match('/settings/', url);
             if (params) {
                 params.navigation = {
                     top: {},
@@ -29,7 +29,7 @@ module.exports = React.createClass({
                 return params;
             }
         },
-        
+
         getUrl: function(params) {
             return '/settings/';
         },
