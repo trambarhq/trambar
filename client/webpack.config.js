@@ -74,6 +74,10 @@ module.exports = {
         })
     ],
     devtool: 'inline-source-map',
+    devServer: {
+        inline: true,
+        historyApiFallback: true
+    }
 };
 
 function resolve(path) {
