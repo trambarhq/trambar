@@ -9,11 +9,8 @@ if (process.env.PLATFORM === 'cordova') {
     window.addEventListener('load', initialize);
 }
 
-console.log(process.env.PLATFORM);
-
 function initialize(evt) {
-    console.log('initializing');
-    var appContainer = document.getElementById('app');
+    var appContainer = document.getElementById('app-container');
     if (!appContainer) {
         throw new Error('Unable to find app element in DOM');
     }

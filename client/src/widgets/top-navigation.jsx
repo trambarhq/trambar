@@ -5,7 +5,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('top-navigation.scss');
+require('./top-navigation.scss');
 
 module.exports = React.createClass({
     displayName: 'TopNavigation',
@@ -24,6 +24,7 @@ module.exports = React.createClass({
     render: function() {
         return (
             <header className="top-navigation">
+                Top Nav
                 {this.renderSpacerBar()}
                 {this.renderButtonBar()}
                 {this.renderCollapsibleControl()}

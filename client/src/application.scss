@@ -1,0 +1,24 @@
+* {
+    box-sizing: border-box;
+}
+
+.application {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 100%;
+    width: 100%;
+}
+
+.page-view-port {
+    flex: 1 1 auto;
+    background-color: green;
+    position: relative;
+
+    background-color: yellow;
+    overflow: auto;
+}

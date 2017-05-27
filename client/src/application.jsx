@@ -16,6 +16,7 @@ var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
 
 // pages
+var StartPage = require('pages/start-page');
 var NewsPage = require('pages/news-page');
 var UsersPage = require('pages/users-page');
 var NotificationsPage = require('pages/notifications-page');
@@ -23,7 +24,11 @@ var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
 var ErrorPage = require('pages/error-page');
 
+var TopNavigation = require('widgets/top-navigation');
+var BottomNavigation = require('widgets/bottom-navigation');
+
 var pageClasses = [
+    StartPage,
     NewsPage,
     UsersPage,
     NotificationsPage,
@@ -83,9 +88,11 @@ module.exports = React.createClass({
             theme: this.state.theme,
         };
         return (
-            <div>
+            <div className="application">
                 <TopNavigation {...props} />
-                <CurrentPage {...props} />
+                <section className="page-view-port">
+                    <CurrentPage {...props} />
+                </section>
                 <BottomNavigation {...props} />
             </div>
         );
@@ -104,7 +111,7 @@ module.exports = React.createClass({
             pages: pageClasses,
             database: this.state.database,
             onChange: this.handleRouteChange,
-            onRedirection: this.handleRedirectionRequest,
+            onRedirectionRequest: this.handleRedirectionRequest,
         };
         var localeManagerProps = {
             ref: setters.localeManager,
@@ -125,10 +132,6 @@ module.exports = React.createClass({
                 <ThemeManager {...themeManagerProps} />
             </div>
         );
-    },
-
-
-    componentDidMount: function() {
     },
 
     componentDidUpdate: function() {
@@ -215,6 +218,7 @@ module.exports = React.createClass({
             }
         }).catch((err) => {
             var errorCode = err.statusCode || 500;
+            console.error(err);
             return ErrorPage.getUrl({ errorCode });
         });
     },
@@ -226,5 +230,12 @@ module.exports = React.createClass({
     },
 
     hideSplashScreen: function() {
+        var screen = document.getElementById('splash-screen');
+        if (screen) {
+            screen.style.opacity = 0;
+            setTimeout(() => {
+                screen.style.display = 'none';
+            }, 3000);
+        }
     }
 });

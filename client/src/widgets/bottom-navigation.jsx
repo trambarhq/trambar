@@ -5,7 +5,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('bottom-navigation.scss');
+require('./bottom-navigation.scss');
 
 module.exports = React.createClass({
     displayName: 'BottomNavigation',
@@ -24,7 +24,7 @@ module.exports = React.createClass({
     render: function() {
         return (
             <footer className="bottom-navigation">
-                Footer
+                Bottom Nav
             </footer>
         );
     },
