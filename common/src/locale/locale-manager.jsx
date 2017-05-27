@@ -143,8 +143,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Get the
-     * @return {[type]}
+     * Get the browser's language setting and use it
      */
     componentDidMount: function() {
         var initialLanguageCode = getBrowserLanguage() || this.props.defaultLanguageCode;

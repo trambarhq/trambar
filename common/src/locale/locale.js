@@ -8,8 +8,8 @@ function Locale(localeManager) {
     this.translate = this.translate.bind(this);
     this.pick = this.pick.bind(this);
 
-    Object.defineProperty(this, 'localManager', {
-        value: localManager
+    Object.defineProperty(this, 'localeManager', {
+        value: localeManager
     });
 }
 

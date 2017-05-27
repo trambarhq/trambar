@@ -1,10 +1,13 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Database = require('data/database');
+
 module.exports = React.createClass({
     displayName: 'RouteManager',
     propTypes: {
         pages: PropTypes.array.isRequired,
+        database: PropTypes.instanceOf(Database),
         baseUrls: PropTypes.arrayOf(PropTypes.string).isRequired,
         onChange: PropTypes.func,
         onRedirectionRequest: PropTypes.func,
@@ -115,7 +118,7 @@ module.exports = React.createClass({
             return Promise.resolve();
         } else {
             if (!noRedirecting) {
-                return this.triggerRedirectionRequest().then((newUrl) => {
+                return this.triggerRedirectionRequest(url).then((newUrl) => {
                     return this.change(newUrl, replacing, true);
                 });
             } else {
@@ -149,7 +152,13 @@ module.exports = React.createClass({
         return <div/>;
     },
 
-    componentDidMount: function() {
+    /**
+     * Get the language settings from local data storage
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
         this.goTo(window.location, true).catch((err) => {
             console.error(err);
         });

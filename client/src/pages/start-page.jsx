@@ -1,3 +1,4 @@
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 
@@ -6,7 +7,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('start-page.scss');
+require('./start-page.scss');
 
 module.exports = Relaks.createClass({
     displayName: 'StartPage',
@@ -27,6 +28,12 @@ module.exports = Relaks.createClass({
         },
     },
 
+    getInitialState: function() {
+        return {
+            number: 0
+        };
+    },
+
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ by: this });
         var props = {
@@ -35,10 +42,21 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-    }
+        meanwhile.show(
+            <div>Loading...</div>
+        );
+        var items = _.map(_.range(1, 100), (number, i) => {
+            return <li key={i}>Item #{number}</li>;
+        })
+        return Promise.resolve(
+            <div>
+                <ul>{items}</ul>
+            </div>
+        ).delay(25);
+    },
 });
 
-var StartPageSync = module.exports = React.createClass({
+var StartPageSync = module.exports.Sync = React.createClass({
     displayName: 'StartPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
