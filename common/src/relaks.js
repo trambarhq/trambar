@@ -1,8 +1,8 @@
 var React = require('react');
 
-var Relax = module.exports = {};
+var Relaks = module.exports = {};
 
-Relax.createClass = function(specs) {
+Relaks.createClass = function(specs) {
     var mergedSpecs = {};
     for (var name in specs) {
         mergedSpecs[name] = specs[name];
@@ -20,7 +20,7 @@ Relax.createClass = function(specs) {
 };
 
 function render() {
-    // initial Relax context if it hasn't been done yet
+    // initial Relaks context if it hasn't been done yet
     var relaks = this.relaks;
     if (!relaks) {
         relaks = this.relaks = {
@@ -122,7 +122,7 @@ function render() {
             }
         }
     };
-    var meanwhile = { check, show, onCancel: null };
+    var meanwhile = relaks.meanwhile = { check, show, onCancel: null };
 
     // call user-defined renderAsync() in a try-catch block to catch potential errors
     try {
@@ -135,12 +135,12 @@ function render() {
         // a synchronouse error occurred, return a rendering of the error immediately
         var element = this.renderError(err);
         relaks.promisedElement = element;
+        relaks.meanwhile = null;
         return element;
     }
 
     if (isPromise(promise)) {
         // set up handlers for the promise returned
-        relaks.meanwhile = meanwhile;
         relaks.promise = promise;
         var resolve = (element) => {
             if (meanwhile === relaks.meanwhile) {
@@ -168,6 +168,7 @@ function render() {
     } else {
         // allow renderAsync() to act synchronously
         var element = promise;
+        relaks.meanwhile = null;
         relaks.promisedElement = element;
     }
 
@@ -181,17 +182,16 @@ function render() {
             if (!relaks.promisedElement) {
                 // show the progress immediately as the alternative is nothing
                 clearTimeout(relaks.progressElementTimeout);
-                relaks.progressElementExpected = true;
+                relaks.progressElementExpected = false;
                 relaks.progressElementTimeout = 0;
                 return relaks.progressElement;
             }
         } else {
             return relaks.progressElement;
         }
-    } else {
-        // just show what was there before (or null)
-        return relaks.promisedElement;
     }
+    // just show what was there before (or null)
+    return relaks.promisedElement;
 }
 
 function renderError(err) {
@@ -247,3 +247,9 @@ function compare(prevSet, nextSet) {
     }
     return true;
 }
+
+function AsyncRenderingInterrupted() {
+    this.message = 'Async rendering interrupted';
+}
+
+AsyncRenderingInterrupted.prototype = Object.create(Error.prototype)
