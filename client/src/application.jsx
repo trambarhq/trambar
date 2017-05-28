@@ -236,7 +236,7 @@ module.exports = React.createClass({
             screen.style.opacity = 0;
             setTimeout(() => {
                 screen.style.display = 'none';
-            }, 3000);
+            }, 1000);
         }
     }
 });
