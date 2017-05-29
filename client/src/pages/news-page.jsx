@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var StoryList = require('widgets/story-list');
+
 module.exports = Relaks.createClass({
     displayName: 'NewsPage',
     propTypes: {
@@ -55,7 +58,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server, by: this });
         var props = {
             stories: null,
-            currentUserId: null,
+            currentUser: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -65,18 +68,10 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<NewsPageSync {...props} />);
         return db.start().then((userId) => {
-            // load current user
-            var criteria = {};
-            crtieria.id = userId;
-            return db.findOne({ table: 'user', criteria });
-        }).then((currentUser) => {
-            props.currentUser = currentUser;
-            meanwhile.show(<NewsPageSync {...props} />);
-        }).then(() => {
             var date = route.parameters.date;
             var roleIds = route.parameters.roleIds;
             var searchString = route.query.q;
-            if (date || _.isEmpty(roleIds) || searchString) {
+            if (date || searchString) {
                 // load story matching filters
                 var criteria = {};
                 if (date) {
@@ -96,7 +91,12 @@ module.exports = Relaks.createClass({
                 // load story in listing
                 var criteria = {};
                 criteria.type = 'news';
-                criteria.user_id = _.get(props.currentUser, 'id', 0);
+                criteria.user_id = userId;
+                if (!_.isEmpty(roleIds)) {
+                    criteria.filters = {
+                        role_id: roleIds
+                    };
+                }
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
                     var criteria = {};
                     criteria.id = listing.story_ids;
@@ -117,7 +117,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         loading: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
-        currentUserId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -127,7 +126,25 @@ var NewsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>News page</div>
+            <div>
+                <h2>News page</h2>
+                {this.renderList()}
+            </div>
         );
+    },
+
+    renderList: function() {
+        if (!this.props.stories) {
+            return;
+        }
+        var listProps = {
+            stories: this.props.stories,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <StoryList {...listProps} />
     },
 });
