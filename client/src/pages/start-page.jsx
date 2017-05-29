@@ -7,6 +7,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var OnDemand = require('widgets/on-demand');
+
 require('./start-page.scss');
 
 module.exports = Relaks.createClass({
@@ -45,14 +47,30 @@ module.exports = Relaks.createClass({
         meanwhile.show(
             <div>Loading...</div>
         );
-        var items = _.map(_.range(1, 100), (number, i) => {
-            return <li key={i}>Item #{number}</li>;
-        })
+        var items = _.map(_.range(1, 1000), this.renderItem);
         return Promise.resolve(
             <div>
-                <ul>{items}</ul>
+                {items}
             </div>
         ).delay(25);
+    },
+
+    renderItem: function(number, i) {
+        return (
+            <OnDemand key={i} type="test" initial={i < 10}>
+                <div style={{ display: 'inline-block', width: '40%', padding: 5, border: '1px solid white' }}>
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    This is a test and this is only a test.
+                    ({number})
+                </div>
+            </OnDemand>
+        );
     },
 });
 

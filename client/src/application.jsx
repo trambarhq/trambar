@@ -24,6 +24,7 @@ var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
 var ErrorPage = require('pages/error-page');
 
+// widgets
 var TopNavigation = require('widgets/top-navigation');
 var BottomNavigation = require('widgets/bottom-navigation');
 
