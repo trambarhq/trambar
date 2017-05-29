@@ -55,16 +55,16 @@ function handleDatabaseChanges(events) {
             if (nameDiff) {
                 var nameBefore = nameDiff[0];
                 var nameAfter = nameDiff[1];
-                if (event.op == 'INSERT') {
-                    if (nameAfter) {
+                if (!nameBefore && nameAfter) {
+                    if (event.op == 'INSERT' || event.op === 'UPDATE') {
                         return createSchema(db, nameAfter);
                     }
-                } else if (event.op === 'DELETE') {
-                    if (nameBefore) {
+                } else if (nameBefore && !nameAfter) {
+                    if (event.op == 'DELETE') {
                         return deleteSchema(db, nameBefore);
                     }
-                } else if (event.op === 'UPDATE'){
-                    if (nameBefore && nameAfter) {
+                } else if (nameBefore && nameAfter) {
+                    if (event.op === 'UPDATE') {
                         return renameSchema(db, nameBefore, nameAfter);
                     }
                 }

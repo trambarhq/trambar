@@ -71,7 +71,9 @@ Database.open(true).then((db) => {
         },
 
         getChildrenAsync: function() {
-            return Project.find(db, 'global', { deleted: false }, 'name').map((project) => {
+            return Project.find(db, 'global', { deleted: false }, 'name').filter((project) => {
+                return !!project.name;
+            }).map((project) => {
                 return SchemaFolder.new(project.name);
             }).then((projectFolders) => {
                 var globalFolder = SchemaFolder.new('global');
@@ -107,27 +109,54 @@ Database.open(true).then((db) => {
             this.accessor = _.find(accessors, { table });
         },
 
-        getChildAsync: function(name) {
-            var id = parseInt(name);
-            return this.accessor.findOne(db, this.schema, { id: id, deleted: false }, 'id').then((row) => {
+        createFileAsync: function(name, data, type) {
+            var text = data.toString();
+            var object = (text) ? JSON.parse(text) : {};
+            _.set(object, 'details.fn', name);
+            return this.accessor.findOne(db, this.schema, { fn: name, deleted: false }, `id`).then((row) => {
                 if (row) {
-                    return RowFile.new(this.schema, this.table, row.id);
+                    throw new JsDAVPromise.Conflict;
+                }
+                return this.accessor.saveOne(db, this.schema, object).then((row) => {
+                    return true;
+                });
+            });
+        },
+
+        getChildAsync: function(name) {
+            return this.accessor.findOne(db, this.schema, { fn: name, deleted: false }, `id, details->>'fn' AS fn`).then((row) => {
+                if (row) {
+                    return row;
+                }
+                var id = parseInt(name);
+                if (id !== id) {
+                    // NaN
+                    return null;
+                }
+                return this.accessor.findOne(db, this.schema, { id: id, fn: null, deleted: false }, `id, details->>'fn' AS fn`);
+            }).then((row) => {
+                if (row) {
+                    var filename = row.fn || row.id + '.json';
+                    return RowFile.new(this.schema, this.table, row.id, filename);
+                } else {
+                    return null;
                 }
             });
         },
 
         getChildrenAsync: function() {
-            return this.accessor.find(db, this.schema, { deleted: false }, 'id').map((row) => {
-                return RowFile.new(this.schema, this.table, row.id);
+            return this.accessor.find(db, this.schema, { deleted: false }, `id, details->>'fn' AS fn`).map((row) => {
+                var filename = row.fn || row.id + '.json';
+                return RowFile.new(this.schema, this.table, row.id, filename);
             });
         },
     });
 
     var RowFile = File.extend(
     {
-        initialize: function(schema, table, id) {
-            this.name = id + '.json';
-            this.path = `/${schema}/${table}/${id}.json`;
+        initialize: function(schema, table, id, filename) {
+            this.name = filename;
+            this.path = `/${schema}/${table}/${filename}`;
             this.id = id;
             this.schema = schema;
             this.table = table;
@@ -137,6 +166,8 @@ Database.open(true).then((db) => {
 
         getAsync: function() {
             return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, '*').then((row) => {
+                row = _.omit(row, 'ctime', 'mtime', 'gn', 'deleted');
+                row.details = _.omit(row.details, 'fn');
                 var text = JSON.stringify(row, undefined, 2);
                 return new Buffer(text);
             });
@@ -149,6 +180,9 @@ Database.open(true).then((db) => {
                 if (row.id !== this.id) {
                     throw new Error('Cannot change id');
                 }
+                if (this.name !== this.id + '.json') {
+                    _.set(row, 'details.fn', this.name);
+                }
                 return this.accessor.saveOne(db, this.schema, row).then((row) => {
                     return !!row;
                 });
@@ -156,6 +190,9 @@ Database.open(true).then((db) => {
         },
 
         deleteAsync: function() {
+            return this.accessor.removeOne(db, this.schema, { id: this.id }).then((row) => {
+                return true;
+            });
         },
 
         getSizeAsync: function() {
@@ -173,9 +210,20 @@ Database.open(true).then((db) => {
                 return row.mtime;
             });
         },
+
+        setNameAsync: function(name) {
+            return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'details').then((row) => {
+                if (row) {
+                    _.set(row, 'details.fn', name);
+                    return this.accessor.saveOne(db, this.schema, row).then((row) => {
+                        return true;
+                    });
+                }
+            });
+        },
     });
 
-    JsDAV.debugMode = true;
+    JsDAV.debugMode = false;
     JsDAV.createServer({
         node: RootFolder.new(''),
         locksBackend: JsDAVLocksBackendFS.new('/var/tmp')

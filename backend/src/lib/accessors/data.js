@@ -164,10 +164,13 @@ module.exports = {
             }
         });
 
-        if (critera.filename) {
-            var bound = '$' + index++;
-            params.push(value);
-            conds.push(`details->>'filename' = ${bound}`);
+        if (criteria.fn !== undefined) {
+            if (criteria.fn === null) {
+                conds.push(`details->>'fn' IS NULL`);
+            } else {
+                params.push(criteria.fn);
+                conds.push(`details->>'fn' = ${'$' + params.length}`);
+            }
         }
         if (criteria.limit) {
             riteria.limit = criteria.limit;
@@ -214,7 +217,7 @@ module.exports = {
         var parameters = [];
         var index = 1;
         var id = 0;
-        _.each(columns, (name, i) => {
+        _.each(columns, (name) => {
             var value = object[name];
             if (name !== 'id') {
                 var bound = '$' + index++;
@@ -240,21 +243,35 @@ module.exports = {
         var table = this.getTableName(schema);
         var valueSets = [];
         var parameters = [];
+        var columns = _.keys(this.columns);
+        var columnsPresent = [];
         var index = 1;
+        // see which columns are being set
+        _.each(objects, (object) => {
+            _.each(columns, (name) => {
+                if (object.hasOwnProperty(name) && name !== 'id') {
+                    if (columnsPresent.indexOf(name) === -1) {
+                        columnsPresent.push(name);
+                    }
+                }
+            });
+        });
         _.each(objects, (object) => {
             var values = [];
-            _.forIn(columnsNoId, (name) => {
-                if (object.hasOwnProperty(name) && name !== 'id') {
+            _.each(columnsPresent, (name) => {
+                if (object.hasOwnProperty(name)) {
                     var value = object[name];
                     var bound = '$' + index++;
                     parameters.push(value);
                     values.push(bound);
+                } else {
+                    values.push('null');
                 }
             });
             valueSets.push(`(${values.join(',')})`);
         });
         var sql = `
-            INSERT INTO ${table}
+            INSERT INTO ${table} (${columnsPresent.join(', ')})
             VALUES ${valueSets.join(',')}
             RETURNING *
         `;
