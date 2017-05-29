@@ -1,5 +1,36 @@
 .top-navigation {
     flex: 0 1 auto;
     background-color: #262626;
-    color: #ccc;
+    color: #aaa;
+    border-bottom: 1px solid #171717;
+    padding-left: 4px;
+    padding-right: 4px;
+
+    .button {
+        font-size: 1.4em;
+        width: 1.8em;
+        text-align: center;
+        padding: 6px 6px 6px 6px;
+        cursor: pointer;
+
+        &:hover {
+            color: #ccc;
+        }
+
+        &.active {
+            color: #fff;
+        }
+
+        &.disabled {
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        &.calendar, &.filter {
+            float: left;
+        }
+        &.search {
+            float: right;
+        }
+    }
 }

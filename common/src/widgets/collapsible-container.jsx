@@ -1,6 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
-require('collapsible-container.scss');
+require('./collapsible-container.scss');
 
 module.exports = React.createClass({
     displayName: 'CollapsibleContainer',
