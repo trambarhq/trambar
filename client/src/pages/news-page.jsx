@@ -99,7 +99,6 @@ module.exports = Relaks.createClass({
                     };
                 }
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
-                    console.log('Listing: ', listing)
                     if (!listing) {
                         return [];
                     }

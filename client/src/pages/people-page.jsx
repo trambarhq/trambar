@@ -63,7 +63,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
-            crtieria.id = userId;
+            criteria.id = userId;
             return db.findOne({ table: 'user', criteria });
         }).then((currentUser) => {
             props.currentUser = currentUser;

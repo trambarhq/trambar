@@ -138,8 +138,10 @@ module.exports = React.createClass({
 
     componentDidUpdate: function() {
         if (!this.splashScreenHidden && this.isReady()) {
-            this.hideSplashScreen();
             this.splashScreenHidden = true;
+            setTimeout(() => {
+                this.hideSplashScreen();
+            }, 100);
         }
     },
 
@@ -168,7 +170,7 @@ module.exports = React.createClass({
                             password: 'qwerty'
                         };
                         this.state.authRequest.resolve(credentials);
-                    }, 500);
+                    }, 10);
                 });
             }
         });
@@ -241,8 +243,10 @@ module.exports = React.createClass({
         if (screen) {
             screen.style.opacity = 0;
             setTimeout(() => {
-                screen.parentNode.removeChild(screen);
-                if (style) {
+                if (screen.parentNode) {
+                    screen.parentNode.removeChild(screen);
+                }
+                if (style && style.parentNode) {
                     style.parentNode.removeChild(style);
                 }
             }, 1000);

@@ -231,6 +231,7 @@ module.exports = React.createClass({
         }
         var count = search.results.length;
         if (count < minimum) {
+            console.log('checkSearchValidity: false');
             return false;
         }
         // we have the minimum number of objects requested
@@ -259,6 +260,7 @@ module.exports = React.createClass({
                 }
             });
         }
+        console.log('checkSearchValidity: true');
         return true;
     },
 

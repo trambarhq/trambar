@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 // widgets
 var OnDemand = require('widgets/on-demand');
 var StoryView = require('widgets/story-view');
@@ -44,14 +47,14 @@ module.exports = Relaks.createClass({
             // load current user
             var criteria = {};
             criteria.id = userId;
-            return db.findOne({ table: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((currentUser) => {
             props.currentUser = currentUser;
         }).then(() => {
             // load authors of stories
             var criteria = {};
             criteria.id = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
-            return db.find({ table: 'user', criteria });
+            return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.users = users;
             meanwhile.show(<StoryListSync {...props} />);
@@ -70,7 +73,7 @@ module.exports = Relaks.createClass({
                 // don't ask for the ones we have already
                 return !_.find(props.users, { id: userId });
             });
-            return db.find({ table: 'user', criteria });
+            return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.users = _.concat(props.users, users),
             props.loading = false;
@@ -81,6 +84,7 @@ module.exports = Relaks.createClass({
 
 var StoryListSync = module.exports.Sync = React.createClass({
     displayName: 'StoryList.Sync',
+    mixins: [ UpdateCheck ],
     propTypes: {
         stories: PropTypes.arrayOf(PropTypes.object).isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
