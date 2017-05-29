@@ -233,10 +233,14 @@ module.exports = React.createClass({
 
     hideSplashScreen: function() {
         var screen = document.getElementById('splash-screen');
+        var style = document.getElementById('splash-screen-style');
         if (screen) {
             screen.style.opacity = 0;
             setTimeout(() => {
-                screen.style.display = 'none';
+                screen.parentNode.removeChild(screen);
+                if (style) {
+                    style.parentNode.removeChild(style);
+                }
             }, 1000);
         }
     }

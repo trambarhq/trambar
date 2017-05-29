@@ -3,6 +3,10 @@
     font-family: sans-serif;
 }
 
+body {
+    overflow: hidden;
+}
+
 .application {
     position: absolute;
     display: flex;
