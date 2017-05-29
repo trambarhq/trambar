@@ -32,7 +32,9 @@ module.exports = React.createClass({
             } else {
                 // stop rendering the component after it has fully transitioned out
                 setTimeout(() => {
-                    this.setState({ hidden: true });
+                    if (!this.props.open) {
+                        this.setState({ hidden: true });
+                    }
                 }, 1000);
             }
         }

@@ -1,7 +1,6 @@
 .bottom-navigation {
     flex: 0 1 auto;
     background-color: #262626;
-    color: #ccc;
     border-top: 1px solid #323232;
     padding-left: 4px;
     padding-right: 4px;
@@ -17,6 +16,7 @@
         text-align: center;
         padding: 6px 6px 6px 6px;
         cursor: pointer;
+        color: #888;
 
         .fa {
             font-size: 1.4em;
@@ -25,11 +25,11 @@
         .label {
             font-size: 0.8em;
             vertical-align: 0.2em;
-            color: #999;
+            color: #666;
         }
 
         &:link, &:visited {
-            color: #ccc;
+            color: #888;
             text-decoration: none;
         }
 
@@ -41,16 +41,8 @@
             color: #fff;
         }
 
-        &.disabled {
-            color: #555;
-            cursor: not-allowed;
-        }
-
-        &.calendar, &.filter {
-            float: left;
-        }
-        &.search {
-            float: right;
+        &.active .label {
+            color: #fff;
         }
     }
 }

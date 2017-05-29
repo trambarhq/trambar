@@ -38,33 +38,39 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var location = _.pick(this.props.route.parameters, 'server', 'schema');
+        var section = _.get(this.props.route.parameters, 'navigation.bottom.section');
         var newsButtonProps = {
             label: t('news'),
             icon: 'newspaper-o',
+            active: (section === 'news'),
             href: NewsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var notificationsButtonProps = {
             label: t('notications'),
-            icon: 'comments-o',
+            icon: 'comments',
+            active: (section === 'notifications'),
             href: NotificationsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var bookmarksButtonProps = {
             label: t('bookmarks'),
             icon: 'bookmark',
+            active: (section === 'bookmarks'),
             href: BookmarksPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var usersButtonProps = {
             label: t('people'),
             icon: 'users',
+            active: (section === 'users'),
             href: UsersPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var settingsButtonProps = {
             label: t('settings'),
             icon: 'gears',
+            active: (section === 'settings'),
             href: SettingsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
@@ -88,17 +94,15 @@ module.exports = React.createClass({
 
 function Button(props) {
     var classes = [ 'button' ];
+    var clickHandler = props.onClick;
     if (props.className) {
         classes.push(props.className);
     }
     if (props.active) {
         classes.push('active');
     }
-    if (props.disabled) {
-        classes.push('disabled');
-    }
     return (
-        <a className={classes.join(' ')} href={props.href} onClick={props.onClick}>
+        <a className={classes.join(' ')} href={props.href} onClick={clickHandler}>
             <i className={`fa fa-${props.icon}`} />
             {' '}
             <span className="label">{props.label}</span>

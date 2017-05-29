@@ -29,12 +29,7 @@ module.exports = React.createClass({
 
     toggleControl: function(name) {
         if (this.state.expanded && name === this.state.selectedControl) {
-            this.setState({ expanded: false }, () => {
-                // stop rendering the control half a second later
-                setTimeout(() => {
-                    this.setState({ selectedControl: '' });
-                }, 500);
-            });
+            this.setState({ expanded: false });
         } else {
             this.setState({ selectedControl: name, expanded: true });
         }
@@ -74,18 +69,21 @@ module.exports = React.createClass({
         var selected = (this.state.expanded) ? this.state.selectedControl : '';
         var calendarProps = {
             icon: 'calendar',
+            className: 'calendar',
             disabled: !params.dateSelection,
             active: selected === 'calendar',
             onClick: this.handleCalendarClick,
         };
         var filterProps = {
             icon: 'filter',
+            className: 'filter',
             disabled: !params.roleSelection,
             active: selected === 'filter',
             onClick: this.handleFilterClick,
         };
         var searchProps = {
             icon: 'search',
+            className: 'search',
             disabled: !params.textSearch,
             active: selected === 'search',
             onClick: this.handleSearchClick,
@@ -137,15 +135,20 @@ module.exports = React.createClass({
 });
 
 function Button(props) {
-    var classes = [ 'button', props.icon ];
+    var classes = [ 'button' ];
+    var clickHandler = props.onClick;
+    if (props.className) {
+        classes.push(props.className);
+    }
     if (props.active) {
         classes.push('active');
     }
     if (props.disabled) {
         classes.push('disabled');
+        clickHandler = null;
     }
     return (
-        <div className={classes.join(' ')} onClick={props.onClick}>
+        <div className={classes.join(' ')} onClick={clickHandler}>
             <i className={`fa fa-${props.icon}`} />
         </div>
     );

@@ -22,20 +22,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/start/', url);
-            if (params) {
-                params.navigation = {
-                    top: {
-                        dateSelection: true,
-                        roleSelection: true,
-                        textSearch: true,
-                    },
-                    bottom: {
-                        section: 'news'
-                    }
-                };
-                return params;
-            }
+            return Route.match('/start/', url);
         },
 
         getUrl: function(params) {
