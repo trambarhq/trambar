@@ -13,12 +13,19 @@ var ComponentRefs = require('utils/component-refs');
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     propTypes: {
+        refreshInterval: PropTypes.number,
         onChange: PropTypes.func,
         onAuthRequest: PropTypes.func,
     },
     components: ComponentRefs({
         cache: LocalCache
     }),
+
+    getDefaultProps: function() {
+        return {
+            refreshInterval: 15 * 60,
+        };
+    },
 
     /**
      * Return initial state of component
@@ -123,9 +130,11 @@ module.exports = React.createClass({
     },
 
     findRecentSearch: function(query) {
+        // remove "by"
+        var baseQuery = getSearchQuery(query);
         var index = _.findIndex(this.state.recentSearchResults, (search) => {
             var searchQuery = getSearchQuery(search);
-            return _.isEqual(query, searchQuery);
+            return _.isEqual(baseQuery, searchQuery);
         });
         if (index !== -1) {
             // move the matching search to the top
@@ -197,7 +206,8 @@ module.exports = React.createClass({
         }
         var elapsed = getTimeElapsed(search.finish, new Date);
         var interval = this.props.refreshInterval * 1000;
-        if (elapsed < interval) {
+        if (!(elapsed > interval)) {
+            console.log('checkSearchFreshness: true');
             return true;
         }
         // need to check the server
@@ -206,6 +216,7 @@ module.exports = React.createClass({
                 this.triggerChangeEvent();
             }
         });
+        console.log('checkSearchFreshness: false');
         return false;
     },
 
@@ -235,6 +246,7 @@ module.exports = React.createClass({
             if (elapsed > interval) {
                 searchRemotely = true;
             } else {
+                search.finish = minRetrievalTime;
                 searchRemotely = false;
             }
         } else {
@@ -316,7 +328,6 @@ module.exports = React.createClass({
             responseType: 'json',
         };
         return HttpRequest.fetch('POST', url, credentials, options).then((result) => {
-            console.log(result);
             return result;
         });
     },
@@ -333,9 +344,8 @@ module.exports = React.createClass({
             contentType: 'json',
             responseType: 'json',
         };
-        console.log('Discovery: ', url, payload);
+        console.log(`Discovery: ${table}`);
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
-            console.log(result);
             return result;
         });
     },
@@ -352,9 +362,8 @@ module.exports = React.createClass({
             contentType: 'json',
             responseType: 'json',
         };
-        console.log('Retrieval: ', url, payload);
+        console.log(`Retrieval: ${table}`);
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
-            console.log(result);
             return result;
         });
     },
@@ -429,7 +438,7 @@ function getUpdateList(ids, gns, objects) {
     var updated = [];
     _.each(ids, (id, i) => {
         var gn = gns[i];
-        var index = _.sortedIndexBy(objects, 'id', { id: id });
+        var index = _.sortedIndexBy(objects, { id: id }, 'id');
         var object = objects[index];
         if (!object || object.id !== id || object.gn !== gn) {
             updated.push(id);
@@ -454,7 +463,7 @@ function removeObjects(objects, ids) {
     }
     objects = _.slice(objects);
     _.each(ids, (id) => {
-        var index = _.sortedIndexBy(objects, 'id', { id: id });
+        var index = _.sortedIndexBy(objects, { id: id }, 'id');
         var object = objects[index];
         if (object && object.id === id) {
             objects.splice(index, 1);
@@ -466,7 +475,7 @@ function removeObjects(objects, ids) {
 function pickObjects(objects, ids) {
     var list = [];
     _.each(ids, (id) => {
-        var index = _.sortedIndexBy(objects, 'id', { id: id });
+        var index = _.sortedIndexBy(objects, { id: id }, 'id');
         var object = objects[index];
         if (object && object.id === id) {
             list.push(object);
@@ -478,10 +487,9 @@ function pickObjects(objects, ids) {
 function insertObjects(objects, newObjects) {
     objects = _.slice(objects);
     _.each(newObjects, (newObject) => {
-        var id = newObject.id;
-        var index = _.sortedIndexBy(objects, 'id', { id: id });
+        var index = _.sortedIndexBy(objects, newObject, 'id');
         var object = objects[index];
-        if (object && object.id === id) {
+        if (object && object.id === newObject.id) {
             objects[index] = newObject;
         } else {
             objects.splice(index, 0, newObject);
@@ -504,7 +512,7 @@ function getTimeElapsed(start, end) {
     }
     var s = (typeof(start) === 'string') ? new Date(start) : start;
     var e = (typeof(end) === 'string') ? new Date(end) : end;
-    return e - s;
+    return (e - s);
 }
 
 function getSearchLocation(search) {
@@ -556,9 +564,8 @@ function getProtocol(server) {
 }
 
 function getExpectedObjectCount(criteria) {
-    var keys = _.keys(criteria);
-    if (keys.length === 1 && keys[0] === 'id') {
-        var ids = keys[0];
+    if (criteria.hasOwnProperty('id')) {
+        var ids = criteria.id;
         if (ids instanceof Array) {
             return ids.length;
         } else if (typeof(ids) === 'number') {

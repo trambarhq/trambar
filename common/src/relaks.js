@@ -9,18 +9,37 @@ Relaks.createClass = function(specs) {
     }
     if (!mergedSpecs.render) {
         mergedSpecs.render = render;
-    }
-    if (!mergedSpecs.renderError) {
-        mergedSpecs.renderError = renderError;
-    }
-    if (!mergedSpecs.shouldComponentUpdate) {
-        mergedSpecs.shouldComponentUpdate = shouldComponentUpdate;
+
+        if (specs.componentDidMount) {
+            var componentDidMountCustom = specs.componentDidMount;
+            mergedSpecs.componentDidMount = function() {
+                componentDidMount.call(this);
+                componentDidMountCustom.call(this);
+            };
+        } else {
+            mergedSpecs.componentDidMount = componentDidMount;
+        }
+        if (specs.componentWillUnmount) {
+            var componentWillUnmountCustom = specs.componentWillUnmount;
+            mergedSpecs.componentWillUnmount = function() {
+                componentWillUnmount.call(this);
+                componentWillUnmountCustom.call(this);
+            };
+        } else {
+            mergedSpecs.componentWillUnmount = componentWillUnmount;
+        }
+
+        if (!mergedSpecs.renderError) {
+            mergedSpecs.renderError = renderError;
+        }
+        if (!mergedSpecs.shouldComponentUpdate) {
+            mergedSpecs.shouldComponentUpdate = shouldComponentUpdate;
+        }
     }
     return React.createClass(mergedSpecs);
 };
 
 function render() {
-    // initial Relaks context if it hasn't been done yet
     var relaks = this.relaks;
     if (!relaks) {
         relaks = this.relaks = {
@@ -215,6 +234,25 @@ function shouldComponentUpdate(nextProps, nextState) {
         return true;
     }
     return false;
+}
+
+function componentDidMount() {
+}
+
+function componentWillUnmount() {
+    var relaks = this.relaks;
+    if (relaks) {
+        relaks.progressElement = null;
+        relaks.progressElementExpected = false;
+        if (relaks.progressElementTimeout) {
+            clearTimeout(relaks.progressElementTimeout);
+        }
+        relaks.progressElementTimeout = 0;
+        relaks.promisedElement = null;
+        relaks.promisedElementExpected = false;
+        relaks.meanwhile = null;
+        relaks.promise = null;
+    }
 }
 
 /**

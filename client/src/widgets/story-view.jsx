@@ -27,8 +27,8 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <section>
-                <pre>{JSON.stringify(this.props.story)}</pre>
+            <section style={{ border: '1px solid black', margin: 10 }}>
+                <pre>{JSON.stringify(this.props.story, undefined, 2)}</pre>
             </section>
         );
     },

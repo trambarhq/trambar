@@ -62,7 +62,9 @@ module.exports = React.createClass({
             this.actualHeight = this.containerNode.offsetHeight;
         }
         if (this.nearViewPort === undefined) {
-            this.adjustVisibility();
+            var type = this.props.type;
+            var list = componentLists[type];
+            this.adjustVisibility(list.viewPortRect);
         }
     },
 
@@ -76,7 +78,8 @@ module.exports = React.createClass({
             this.forceUpdate();
         }
         if (this.nearViewPort === undefined) {
-            this.adjustVisibility();
+            var list = componentLists[type];
+            this.adjustVisibility(list.viewPortRect);
         }
     },
 

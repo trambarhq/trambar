@@ -1,5 +1,7 @@
-var React = require('react'), PropTypes = React.PropTypes;
 var _ = require('lodash');
+var React = require('react'), PropTypes = React.PropTypes;
+
+var LocalSearch = require('data/local-search');
 
 module.exports = React.createClass({
     displayName: 'IndexedDBCache',
@@ -89,7 +91,7 @@ module.exports = React.createClass({
                         if(cursor) {
                             var record = cursor.value;
                             var object = record.data;
-                            if (LocalSearch.match(object, criteria)) {
+                            if (LocalSearch.match(table, object, criteria)) {
                                 var index = _.sortedIndexBy(results, object, 'id');
                                 results.splice(index, 0, object);
                             }

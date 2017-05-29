@@ -102,7 +102,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         );
     },
 
-    renderStory: function(story) {
+    renderStory: function(story, index) {
         var reactions;
         var users;
         if (this.props.reactions) {
@@ -125,7 +125,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             key: story.id,
         };
         return (
-            <OnDemand key={story.id}>
+            <OnDemand key={index} initial={index < 10}>
                 <StoryView {...storyProps} />
             </OnDemand>
         );
