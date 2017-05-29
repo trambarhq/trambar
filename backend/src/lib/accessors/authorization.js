@@ -65,7 +65,7 @@ module.exports = {
      */
     watch: function(db, schema) {
         return Promise.resolve(false);
-    },    
+    },
 
     findOne: function(db, schema, criteria, columns) {
         var table = `"global"."${this.table}"`;
@@ -82,5 +82,41 @@ module.exports = {
         } else {
             return Promise.resolve(null);
         }
+    },
+
+    saveOne: function(db, schema, object) {
+        if (object.id) {
+            return this.updateOne(db, schema, object);
+        } else {
+            return this.insertOne(db, schema, object);
+        }
+    },
+
+    insertOne: function(db, schema, object) {
+        var table = `"global"."${this.table}"`;
+        console.log(object.token);
+        var sql = `
+            INSERT INTO ${table} (user_id, token, expiration_date)
+            VALUES ($1, $2, $3)
+            RETURNING *
+        `;
+        var params = [ object.user_id, object.token, object.expiration_date ];
+        return db.query(sql, params).get(0).then((row) => {
+            return row || null;
+        });
+    },
+
+    updateOne: function(db, schema, object) {
+        var table = `"global"."${this.table}"`;
+        var sql = `
+            UPDATE ${table}
+            SET token = $1, expiration_date = $2
+            WHERE id = $3
+            RETURNING *
+        `;
+        var params = [ object.token, object.expiration_date, object.id ];
+        return db.query(sql, params).get(0).then((row) => {
+            return row || null;
+        });
     },
 };

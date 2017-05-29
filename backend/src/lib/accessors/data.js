@@ -218,13 +218,15 @@ module.exports = {
         var index = 1;
         var id = 0;
         _.each(columns, (name) => {
-            var value = object[name];
-            if (name !== 'id') {
-                var bound = '$' + index++;
-                parameters.push(value);
-                assignments.push(`${name} = ${bound}`);
-            } else {
-                id = value;
+            if (object.hasOwnProperty(name)) {
+                var value = object[name];
+                if (name !== 'id') {
+                    var bound = '$' + index++;
+                    parameters.push(value);
+                    assignments.push(`${name} = ${bound}`);
+                } else {
+                    id = value;
+                }
             }
         });
         parameters.push(id);

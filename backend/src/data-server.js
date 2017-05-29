@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
+var BodyParser = require('body-parser');
 var Moment = require('moment');
+var Crypto = Promise.promisifyAll(require('crypto'));
 
 var Database = require('database');
 var HttpError = require('errors/http-error');
@@ -28,6 +30,7 @@ var Story = require('accessors/story');
 var app = Express();
 var server = app.listen(80);
 
+app.use(BodyParser.json());
 app.set('json spaces', 2);
 
 app.route('/api/authorization/')
@@ -227,11 +230,37 @@ function handleStorage(req, res) {
 }
 
 function authenticateUser(db, params) {
-
+    var criteria = {};
+    if (params.password && params.username) {
+        criteria.type = 'password';
+        criteria.username = params.username;
+        criteria.password = params.password;
+    };
+    return Authentication.findOne(db, 'global', criteria, 'user_id').then((auth) => {
+        if (!auth) {
+            throw new HttpError(401);
+        }
+        return User.findOne(db, 'global', { id: auth.user_id, deleted: false }, '*').then((user) => {
+            if (!user) {
+                throw new HttpError(403);
+            }
+            return user;
+        });
+    });
 }
 
 function authorizeUser(db, user) {
-
+    return Authorization.findOne(db, 'global', { expired: true }, '*').then((auth) => {
+        return Crypto.randomBytesAsync(24).then((buffer) => {
+            if (!auth) {
+                auth = {};
+            }
+            auth.user_id = user.id;
+            auth.token = buffer.toString('hex');
+            auth.expiration_date = Moment().startOf('day').add(30, 'days').toISOString();
+            return Authorization.saveOne(db, 'global', auth);
+        });
+    });
 }
 
 function checkAuthorization(db, token) {

@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var BCrypt = Promise.promisifyAll(require('bcrypt'));
 
 module.exports = {
     schema: 'global',
@@ -72,18 +73,31 @@ module.exports = {
         var table = `"global"."${this.table}"`;
         if (criteria.type === 'password') {
             var sql = `
-                SELECT ${columns}
+                SELECT ${columns}, details->>'password_hash' AS hash
                 FROM ${table}
                 WHERE type = 'password'
-                AND details->'username' = $1
-                AND details->'password_hash' = $2
+                AND details->>'username' = $1
             `;
-            var parameters = [ criteria.username, hash ];
+            var parameters = [ criteria.username ];
             return db.query(sql, parameters).get(0).then((row) => {
-                return row || null;
+                // process a bogus hash when record is missing to maintain
+                // the same time requirement
+                var hash = _.get(row, 'hash') || bogusHash;
+                return BCrypt.compareAsync(criteria.password, hash).then((match) => {
+                    if (!match || row === undefined) {
+                        return null;
+                    }
+                    return _.omit(row, 'hash');
+                });
             });
         } else {
             return Promise.resolve(null);
         }
     },
 };
+
+var bcryptRounds = 10;
+var bogusHash = '';
+BCrypt.hash('not a password', bcryptRounds, (err, hash) => {
+    bogusHash = hash;
+});

@@ -2,6 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var HttpRequest = require('transport/http-request');
+
 var IndexedDBCache = (process.env.PLATFORM === 'browser') ? require('data/indexed-db-cache') : null;
 var SQLiteCache = (process.env.PLATFORM === 'cordova') ? require('data/sqlite-cache') : null;
 var LocalCache = IndexedDBCache || SQLiteCache;
@@ -37,6 +39,8 @@ module.exports = React.createClass({
      * @return {Promise<Number>}
      */
     start: function(location) {
+        // Promise.resolve() ensures that the callback won't get called
+        // within render()
         return Promise.resolve().then(() => {
             if (location.schema === 'local') {
                 return 0;
@@ -54,7 +58,7 @@ module.exports = React.createClass({
                 if (credentials.user_id && credentials.token) {
                     return credentials.user_id;
                 } else {
-                    return this.authorizeUser(credentials).then((authorization) => {
+                    return this.authorizeUser(location, credentials).then((authorization) => {
                         authCache[server] = authorization;
                     });
                 }
@@ -288,16 +292,26 @@ module.exports = React.createClass({
         });
     },
 
-    authorizeUser: function(credentials) {
-
+    authorizeUser: function(location, credentials) {
+        var host = getHostName(location);
+        var protocol = /^localhost/.test(host) ? 'http' : 'https';
+        var url = `${protocol}://${host}/api/authorization/`;
+        var options = {
+            contentType: 'json',
+            responseType: 'json',
+        };
+        return HttpRequest.fetch('POST', url, credentials, options).then((result) => {
+            console.log(result);
+            return result;
+        });
     },
 
     discoverRemoteObjects: function(query) {
-
+        var host = getHostName(location);
     },
 
     retrieveRemoteObjects: function(location, ids) {
-
+        var host = getHostName(location);
     },
 
     searchLocalCache: function(search) {
@@ -454,4 +468,12 @@ function getSearchLocation(search) {
 
 function getSearchQuery(search) {
     return _.pick(search, 'server', 'schema', 'table', 'criteria');
+}
+
+function getHostName(location) {
+    if (!location.server || location.server === '~') {
+        return window.location.hostname;
+    } else {
+        return location.server;
+    }
 }

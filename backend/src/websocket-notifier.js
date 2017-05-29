@@ -13,6 +13,6 @@ sockJs.on('connection', function(conn) {
     });
 });
 
-var server = http.createServer();
+var server = Http.createServer();
 sockJs.installHandlers(server, { prefix:'/socket' });
-server.listen(9999, '0.0.0.0');
+server.listen(80, '0.0.0.0');
