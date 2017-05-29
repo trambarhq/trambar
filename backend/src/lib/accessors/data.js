@@ -173,7 +173,7 @@ module.exports = {
             }
         }
         if (criteria.limit) {
-            riteria.limit = criteria.limit;
+            criteria.limit = criteria.limit;
         }
         if (criteria.order) {
             query.order = criteria.order;

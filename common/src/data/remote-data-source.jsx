@@ -45,7 +45,7 @@ module.exports = React.createClass({
             if (location.schema === 'local') {
                 return 0;
             }
-            var server = location.server;
+            var server = getServerName(location);
             if (!server) {
                 throw new Error('No server specified');
             }
@@ -60,6 +60,7 @@ module.exports = React.createClass({
                 } else {
                     return this.authorizeUser(location, credentials).then((authorization) => {
                         authCache[server] = authorization;
+                        return authorization.user_id;
                     });
                 }
             });
@@ -130,6 +131,14 @@ module.exports = React.createClass({
             // move the matching search to the top
             var searchResultsAfter = _.slice(this.state.recentSearchResults);
             var search = searchResultsAfter[index];
+            // add the component to the "by" array so we can figure out
+            // who requested the data
+            var byComponent = _.get(query, 'by.constructor.displayName',)
+            if (byComponent) {
+                if (!_.includes(search.by, byComponent)) {
+                    search.by.push(byComponent);
+                }
+            }
             searchResultsAfter.splice(index, 1);
             searchResultsAfter.unshift(search);
             this.setState({ recentSearchResults: searchResultsAfter });
@@ -159,7 +168,12 @@ module.exports = React.createClass({
             finish: null,
             results: null,
             promise: null,
+            by: [],
         });
+        var byComponent = _.get(query, 'by.constructor.displayName',)
+        if (byComponent) {
+            search.by.push(byComponent);
+        }
         search.promise = this.searchLocalCache(search).then(() => {
             if (this.checkSearchValidity(search)) {
                 // there are enough records to warrent the immediate display
@@ -167,7 +181,7 @@ module.exports = React.createClass({
                 return search.results;
             } else {
                 // not enough cached data--wait for what we'll get from the server
-                return this.serchRemoteDatabase(search).then(() => {
+                return this.searchRemoteDatabase(search).then(() => {
                     return search.results;
                 });
             }
@@ -237,7 +251,7 @@ module.exports = React.createClass({
     },
 
     searchRemoteDatabase: function(search) {
-        var location = getSearchLocation(location);
+        var location = getSearchLocation(search);
         var query = getSearchQuery(search);
         search.start = getCurrentTime();
         return this.discoverRemoteObjects(query).then((discovery) => {
@@ -259,7 +273,7 @@ module.exports = React.createClass({
                 // retrieve the updated (or new) objects from server
                 return this.retrieveRemoteObjects(location, idsUpdated).then((retrieval) => {
                     // then add them to the list and remove missing ones
-                    var newObjects = retrieval.objects;
+                    var newObjects = retrieval;
                     var newResults = insertObjects(search.results, newObjects);
                     newResults = removeObjects(newResults, idsRemoved);
                     return newResults;
@@ -288,14 +302,15 @@ module.exports = React.createClass({
                 object.rtime = rtime;
             });
             this.updateCachedObjects(location, search.results);
-            return changed;
+            return !!newResults;
         });
     },
 
     authorizeUser: function(location, credentials) {
-        var host = getHostName(location);
-        var protocol = /^localhost/.test(host) ? 'http' : 'https';
-        var url = `${protocol}://${host}/api/authorization/`;
+        var server = getServerName(location);
+        var protocol = getProtocol(server);
+        var url = `${protocol}://${server}/api/authorization/`;
+        var payload = credentials;
         var options = {
             contentType: 'json',
             responseType: 'json',
@@ -307,11 +322,41 @@ module.exports = React.createClass({
     },
 
     discoverRemoteObjects: function(query) {
-        var host = getHostName(location);
+        var server = getServerName(query);
+        var protocol = getProtocol(server);
+        var schema = query.schema;
+        var table = query.table;
+        var url = `${protocol}://${server}/api/discovery/${schema}/${table}/`;
+        var payload = _.omit(query, 'server', 'schema', 'table');
+        payload.token = getAuthToken(server);
+        var options = {
+            contentType: 'json',
+            responseType: 'json',
+        };
+        console.log('Discovery: ', url, payload);
+        return HttpRequest.fetch('POST', url, payload, options).then((result) => {
+            console.log(result);
+            return result;
+        });
     },
 
     retrieveRemoteObjects: function(location, ids) {
-        var host = getHostName(location);
+        var server = getServerName(location);
+        var protocol = getProtocol(server);
+        var schema = location.schema;
+        var table = location.table;
+        var url = `${protocol}://${server}/api/retrieval/${schema}/${table}/`;
+        var payload = { ids: ids };
+        payload.token = getAuthToken(server);
+        var options = {
+            contentType: 'json',
+            responseType: 'json',
+        };
+        console.log('Retrieval: ', url, payload);
+        return HttpRequest.fetch('POST', url, payload, options).then((result) => {
+            console.log(result);
+            return result;
+        });
     },
 
     searchLocalCache: function(search) {
@@ -381,7 +426,7 @@ module.exports = React.createClass({
 var authCache = {};
 
 function getUpdateList(ids, gns, objects) {
-    var update = [];
+    var updated = [];
     _.each(ids, (id, i) => {
         var gn = gns[i];
         var index = _.sortedIndexBy(objects, 'id', { id: id });
@@ -470,10 +515,54 @@ function getSearchQuery(search) {
     return _.pick(search, 'server', 'schema', 'table', 'criteria');
 }
 
-function getHostName(location) {
-    if (!location.server || location.server === '~') {
+/**
+ * Return auth token for server, saved earlier
+ *
+ * @param  {String} server
+ *
+ * @return {String|undefined}
+ */
+function getAuthToken(server) {
+    var authCacheEntry = authCache[server];
+    if (authCacheEntry) {
+        return authCacheEntry.token;
+    }
+}
+
+/**
+ * Get the domain name or ip address from a location object
+ *
+ * @param  {Object} location
+ *
+ * @return {String}
+ */
+function getServerName(location) {
+    if (location.server === '~') {
         return window.location.hostname;
     } else {
         return location.server;
+    }
+}
+
+/**
+ * Return 'http' if server is localhost, 'https' otherwise
+ *
+ * @param  {String} server
+ *
+ * @return {String}
+ */
+function getProtocol(server) {
+    return /^localhost\b/.test(server) ? 'http' : 'https'    ;
+}
+
+function getExpectedObjectCount(criteria) {
+    var keys = _.keys(criteria);
+    if (keys.length === 1 && keys[0] === 'id') {
+        var ids = keys[0];
+        if (ids instanceof Array) {
+            return ids.length;
+        } else if (typeof(ids) === 'number') {
+            return ids > 0 ? 1 : 0;
+        }
     }
 }

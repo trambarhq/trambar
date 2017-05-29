@@ -23,7 +23,10 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ by: this });
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
         var props = {
             reactions: null,
             users: null,
@@ -41,7 +44,7 @@ module.exports = Relaks.createClass({
             // load current user
             var criteria = {};
             criteria.id = userId;
-            return db.findOne({ tabel: 'user', criteria });
+            return db.findOne({ table: 'user', criteria });
         }).then((currentUser) => {
             props.currentUser = currentUser;
         }).then(() => {
@@ -92,7 +95,11 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        return _.map(this.props.stories, this.renderStory);
+        return (
+            <div className="story-list">
+                {_.map(this.props.stories, this.renderStory)}
+            </div>
+        );
     },
 
     renderStory: function(story) {

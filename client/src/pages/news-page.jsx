@@ -55,7 +55,8 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
         var props = {
             stories: null,
             currentUser: null,
@@ -91,13 +92,17 @@ module.exports = Relaks.createClass({
                 // load story in listing
                 var criteria = {};
                 criteria.type = 'news';
-                criteria.user_id = userId;
+                criteria.target_user_id = userId;
                 if (!_.isEmpty(roleIds)) {
                     criteria.filters = {
                         role_id: roleIds
                     };
                 }
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
+                    console.log('Listing: ', listing)
+                    if (!listing) {
+                        return [];
+                    }
                     var criteria = {};
                     criteria.id = listing.story_ids;
                     return db.find({ table: 'story', criteria });

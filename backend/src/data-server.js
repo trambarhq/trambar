@@ -140,6 +140,9 @@ function handleRetrieval(req, res) {
                     });
                 }
             }
+            if (!(ids instanceof Array)) {
+                throw new HttpError(400);
+            }
             if (ids.length > 5000) {
                 throw new HttpError(400);
             }
