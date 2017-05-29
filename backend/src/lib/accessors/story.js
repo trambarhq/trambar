@@ -16,7 +16,9 @@ module.exports = _.create(Data, {
         type: String,       // post, commit, merge, deployment, issue, task-start, task-end, survey
         object_id: Number,
         user_ids: Array(Number),
+        role_ids: Array(Number),
         published: Boolean,
+        ptime: String,
         public: Boolean,
     },
     criteria: {
@@ -25,6 +27,7 @@ module.exports = _.create(Data, {
         type: String,
         object_id: Number,
         user_ids: Array(Number),
+        role_ids: Array(Number),
         published: Boolean,
         public: Boolean,
     },
@@ -50,7 +53,9 @@ module.exports = _.create(Data, {
                 type varchar(32),
                 object_id int,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
+                role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 published boolean NOT NULL DEFAULT false,
+                ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );

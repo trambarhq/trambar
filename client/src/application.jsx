@@ -18,7 +18,7 @@ var Theme = require('theme/theme');
 // pages
 var StartPage = require('pages/start-page');
 var NewsPage = require('pages/news-page');
-var UsersPage = require('pages/users-page');
+var PeoplePage = require('pages/people-page');
 var NotificationsPage = require('pages/notifications-page');
 var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
@@ -31,7 +31,7 @@ var BottomNavigation = require('widgets/bottom-navigation');
 var pageClasses = [
     StartPage,
     NewsPage,
-    UsersPage,
+    PeoplePage,
     NotificationsPage,
     BookmarksPage,
     SettingsPage,
@@ -144,9 +144,8 @@ module.exports = React.createClass({
     },
 
     handleDatabaseChange: function(evt) {
-        this.setState({
-            database: new Database(evt.target),
-        });
+        var database = new Database(evt.target);
+        this.setState({ database });
     },
 
     handleDatabaseAuthRequest: function(evt) {
@@ -169,9 +168,9 @@ module.exports = React.createClass({
     },
 
     handleLocaleChange: function(evt) {
-        this.setState({
-            locale: new Locale(evt.target),
-        });
+        var locale = new Locale(evt.target);
+        this.setState({ locale });
+        document.title = locale.translate('app-name');
     },
 
     handleLanguageModuleRequest: function(evt) {
@@ -193,9 +192,8 @@ module.exports = React.createClass({
     },
 
     handleRouteChange: function(evt) {
-        this.setState({
-            route: new Route(evt.target),
-        });
+        var route = new Route(evt.target);
+        this.setState({ route });
     },
 
     handleRedirectionRequest: function(evt) {
@@ -226,9 +224,8 @@ module.exports = React.createClass({
     },
 
     handleThemeChange: function(evt) {
-        this.setState({
-            theme: new Theme(evt.target),
-        });
+        var theme = new Theme(evt.target);
+        this.setState({ theme });
     },
 
     hideSplashScreen: function() {

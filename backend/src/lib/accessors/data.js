@@ -146,24 +146,29 @@ module.exports = {
                 if (type === Array || type instanceof Array) {
                     if (value instanceof Array) {
                         // overlaps
-                        conds.push(`${name} && ${bound}`)
+                        conds.push(`${name} && ${bound}`);
                     } else {
                         // contains
-                        conds.push(`${name} @> ${bound}`)
+                        conds.push(`${name} @> ${bound}`);
                     }
                 } else {
                     if (value instanceof Array) {
                         // equals any
-                        conds.push(`${name} = ANY(${bound})`)
+                        conds.push(`${name} = ANY(${bound})`);
                     } else {
                         // equals
-                        conds.push(`${name} = ${bound}`)
+                        conds.push(`${name} = ${bound}`);
                     }
 
                 }
             }
         });
 
+        if (critera.filename) {
+            var bound = '$' + index++;
+            params.push(value);
+            conds.push(`details->>'filename' = ${bound}`);
+        }
         if (criteria.limit) {
             riteria.limit = criteria.limit;
         }

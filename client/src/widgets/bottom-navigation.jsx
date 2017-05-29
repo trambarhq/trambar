@@ -6,7 +6,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 var NewsPage = require('pages/news-page');
-var UsersPage = require('pages/users-page');
+var PeoplePage = require('pages/people-page');
 var NotificationsPage = require('pages/notifications-page');
 var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
@@ -40,35 +40,35 @@ module.exports = React.createClass({
         var location = _.pick(this.props.route.parameters, 'server', 'schema');
         var section = _.get(this.props.route.parameters, 'navigation.bottom.section');
         var newsButtonProps = {
-            label: t('news'),
+            label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
             href: NewsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var notificationsButtonProps = {
-            label: t('notications'),
+            label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
             href: NotificationsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var bookmarksButtonProps = {
-            label: t('bookmarks'),
+            label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
             href: BookmarksPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
-        var usersButtonProps = {
-            label: t('people'),
+        var peopleButtonProps = {
+            label: t('bottom-nav-people'),
             icon: 'users',
-            active: (section === 'users'),
-            href: UsersPage.getUrl(location),
+            active: (section === 'people'),
+            href: PeoplePage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var settingsButtonProps = {
-            label: t('settings'),
+            label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
             href: SettingsPage.getUrl(location),
@@ -79,7 +79,7 @@ module.exports = React.createClass({
                 <Button {...newsButtonProps} />
                 <Button {...notificationsButtonProps} />
                 <Button {...bookmarksButtonProps} />
-                <Button {...usersButtonProps} />
+                <Button {...peopleButtonProps} />
                 <Button {...settingsButtonProps} />
             </div>
         );

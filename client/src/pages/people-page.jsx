@@ -7,8 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+require('./people-page.scss')
+
 module.exports = Relaks.createClass({
-    displayName: 'UsersPage',
+    displayName: 'PeoplePage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -18,7 +20,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/users/:roleIds/', url);
+            var params = Route.match('/:server/:schema/people/:roleIds/', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
@@ -28,7 +30,7 @@ module.exports = Relaks.createClass({
                         textSearch: true,
                     },
                     bottom: {
-                        section: 'users'
+                        section: 'people'
                     }
                 };
                 return params;
@@ -39,7 +41,7 @@ module.exports = Relaks.createClass({
             var server = params.server || '~';
             var schema = params.schema;
             var roles = _.join(params.roleIds, '+') || 'all';
-            return `/${server}/${schema}/users/${roles}/`;
+            return `/${server}/${schema}/people/${roles}/`;
         },
     },
 
@@ -57,7 +59,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             loading: true,
         };
-        meanwhile.show(<UsersPageSync {...props} />);
+        meanwhile.show(<PeoplePageSync {...props} />);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
@@ -81,13 +83,13 @@ module.exports = Relaks.createClass({
             // save last piece of data and render the page with everything
             props.stories = users
             props.loading = false;
-            return <UsersPageSync {...props} />;
+            return <PeoplePageSync {...props} />;
         });
     }
 });
 
-var UsersPageSync = module.exports.Sync = React.createClass({
-    displayName: 'UsersPageSync',
+var PeoplePageSync = module.exports.Sync = React.createClass({
+    displayName: 'PeoplePageSync',
     propTypes: {
         loading: PropTypes.bool,
         users: PropTypes.arrayOf(PropTypes.object),
@@ -101,7 +103,7 @@ var UsersPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>User page</div>
+            <div>People page</div>
         );
     },
 });
