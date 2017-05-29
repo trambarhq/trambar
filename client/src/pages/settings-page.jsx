@@ -18,7 +18,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/settings/', url);
+            var params = Route.match('/:server/:schema/settings/', url);
             if (params) {
                 params.navigation = {
                     top: {},
@@ -31,7 +31,9 @@ module.exports = Relaks.createClass({
         },
 
         getUrl: function(params) {
-            return '/settings/';
+            var server = params.server || '~';
+            var schema = params.schema;
+            return `/${server}/${schema}/settings/`;
         },
     },
 
