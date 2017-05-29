@@ -37,7 +37,7 @@ module.exports = React.createClass({
      * @return {Promise<Number>}
      */
     start: function(location) {
-        return Promise.try(() => {
+        return Promise.resolve().then(() => {
             if (location.schema === 'local') {
                 return 0;
             }
@@ -364,7 +364,7 @@ module.exports = React.createClass({
     }
 });
 
-var authTokens = {};
+var authCache = {};
 
 function getUpdateList(ids, gns, objects) {
     var update = [];

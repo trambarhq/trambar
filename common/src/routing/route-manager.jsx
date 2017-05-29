@@ -153,15 +153,17 @@ module.exports = React.createClass({
     },
 
     /**
-     * Get the language settings from local data storage
+     * Set the initial route once database is available
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        this.goTo(window.location, true).catch((err) => {
-            console.error(err);
-        });
+        if (!prevProps.database && this.props.database) {
+            this.goTo(window.location, true).catch((err) => {
+                console.error(err);
+            });
+        }
     },
 });
 

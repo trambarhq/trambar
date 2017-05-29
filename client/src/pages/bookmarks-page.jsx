@@ -20,7 +20,7 @@ module.exports = Relaks.createClass({
         parseUrl: function(url) {
             var params = Route.match('/:server/:schema/bookmarks/:roleIds', url);
             if (params) {
-                params.roleIds = _.filter(_.map(_.split(parts[3], '+'), parseInt));
+                params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
                     top: {
                         dateSelection: false,
@@ -38,14 +38,14 @@ module.exports = Relaks.createClass({
         getUrl: function(params) {
             var server = params.server || '~';
             var schema = params.schema;
-            return `/${server}/${schema}/notifications/`;
+            return `/${server}/${schema}/bookmarks/`;
         },
     },
 
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ by: this, server: server });
+        var db = this.props.database.use({ server, by: this });
         var props = {
             bookmarks: null,
             currentUserId: null,
@@ -93,7 +93,7 @@ module.exports = Relaks.createClass({
 });
 
 var BookmarksPageSync = module.exports.Sync = React.createClass({
-    displayName: 'BookmarksPage',
+    displayName: 'BookmarksPage.Sync',
     propTypes: {
         loading: PropTypes.bool,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
@@ -107,6 +107,8 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        return null;
+        return (
+            <div>Bookmarks page</div>
+        );
     },
 });

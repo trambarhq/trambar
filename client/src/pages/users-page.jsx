@@ -46,7 +46,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ by: this, server: server });
+        var db = this.props.database.use({ server, by: this });
         var props = {
             stories: null,
             currentUserId: null,
@@ -100,5 +100,8 @@ var UsersPageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        return (
+            <div>User page</div>
+        );
     },
 });

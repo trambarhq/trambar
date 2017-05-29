@@ -17,7 +17,7 @@ Locale.prototype.translate = function(phrase) {
     if (phrase instanceof Object) {
         return this.pick(phrase);
     }
-    return this.localManager.translate.apply(this.localManager, arguments);
+    return this.localeManager.translate.apply(this.localManager, arguments);
 };
 
 Locale.prototype.pick = function(phraseVersions) {

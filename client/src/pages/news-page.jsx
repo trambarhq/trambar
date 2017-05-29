@@ -21,7 +21,7 @@ module.exports = Relaks.createClass({
             var params = Route.match('/:server/:schema/news/:roleIds/:date/', url)
                       || Route.match('/:server/:schema/news/:roleIds/', url);
             if (params) {
-                params.roleIds = _.filter(_.map(_.split(parts[3], '+'), parseInt));
+                params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
                     top: {
                         dateSelection: true,
@@ -52,7 +52,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ by: this, server: server });
+        var db = this.props.database.use({ server, by: this });
         var props = {
             stories: null,
             currentUserId: null,
@@ -113,7 +113,7 @@ module.exports = Relaks.createClass({
 });
 
 var NewsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'NewsPage',
+    displayName: 'NewsPage.Sync',
     propTypes: {
         loading: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
@@ -126,6 +126,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        return null;
+        return (
+            <div>News page</div>
+        );
     },
 });

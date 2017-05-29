@@ -76,22 +76,25 @@ module.exports = React.createClass({
             icon: 'calendar',
             disabled: !params.dateSelection,
             active: selected === 'calendar',
+            onClick: this.handleCalendarClick,
         };
         var filterProps = {
             icon: 'filter',
             disabled: !params.roleSelection,
             active: selected === 'filter',
+            onClick: this.handleFilterClick,
         };
         var searchProps = {
             icon: 'search',
             disabled: !params.textSearch,
             active: selected === 'search',
+            onClick: this.handleSearchClick,
         };
         return (
             <div>
-                <Button {...calendarProps} onClick={this.handleCalendarClick} />
-                <Button {...filterProps} onClick={this.handleFilterClick}  />
-                <Button {...searchProps} onClick={this.handleSearchClick}  />
+                <Button {...calendarProps} />
+                <Button {...filterProps} />
+                <Button {...searchProps} />
             </div>
         );
     },
@@ -142,8 +145,8 @@ function Button(props) {
         classes.push('disabled');
     }
     return (
-        <div className={classes.join(' ')}>
-            <i className={`fa fa-${props.icon}`} onClick={props.onClick} />
+        <div className={classes.join(' ')} onClick={props.onClick}>
+            <i className={`fa fa-${props.icon}`} />
         </div>
     );
 }

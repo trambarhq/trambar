@@ -2,4 +2,55 @@
     flex: 0 1 auto;
     background-color: #262626;
     color: #ccc;
+    border-top: 1px solid #323232;
+    padding-left: 4px;
+    padding-right: 4px;
+
+    .button-container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .button {
+        display: block;
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 6px 6px 6px 6px;
+        cursor: pointer;
+
+        .fa {
+            font-size: 1.4em;
+        }
+
+        .label {
+            font-size: 0.8em;
+            vertical-align: 0.2em;
+            color: #999;
+        }
+
+        &:link, &:visited {
+            color: #ccc;
+            text-decoration: none;
+        }
+
+        &:hover {
+            color: #ccc;
+        }
+
+        &.active {
+            color: #fff;
+        }
+
+        &.disabled {
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        &.calendar, &.filter {
+            float: left;
+        }
+        &.search {
+            float: right;
+        }
+    }
 }

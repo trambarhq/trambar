@@ -41,6 +41,9 @@ Route.match = function(route, url) {
  * @return {Promise}
  */
 Route.prototype.change = function(url, replacing) {
+    if (typeof(url) !== 'string') {
+        throw new Error('Invalid argument')
+    }
     return this.ask(url, true).then((ok) => {
         if (ok) {
             return this.routeManager.change(url, replacing);
