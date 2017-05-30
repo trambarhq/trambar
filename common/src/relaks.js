@@ -115,9 +115,12 @@ function render() {
         relaks.progressElement = element;
         var update = () => {
             if (!synchronous) {
-                relaks.progressElementExpected = true;
-                relaks.progressElementTimeout = 0;
-                this.forceUpdate();
+                // function might run even after clearTimeout() was called on the timeout
+                if (relaks.progressElementTimeout) {
+                    relaks.progressElementExpected = true;
+                    relaks.progressElementTimeout = 0;
+                    this.forceUpdate();
+                }
             } else {
                 // no need to force update since we're still inside
                 // render() and it can simply return the progress element

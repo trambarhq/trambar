@@ -8,6 +8,10 @@ var IndexedDBCache = (process.env.PLATFORM === 'browser') ? require('data/indexe
 var SQLiteCache = (process.env.PLATFORM === 'cordova') ? require('data/sqlite-cache') : null;
 var LocalCache = IndexedDBCache || SQLiteCache;
 
+var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
+var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;
+var Notifier = WebsocketNotifier || PushNotifier;
+
 var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
@@ -18,7 +22,8 @@ module.exports = React.createClass({
         onAuthRequest: PropTypes.func,
     },
     components: ComponentRefs({
-        cache: LocalCache
+        cache: LocalCache,
+        notifier: Notifier,
     }),
 
     getDefaultProps: function() {
@@ -63,13 +68,20 @@ module.exports = React.createClass({
             return this.triggerAuthRequest(server).then((credentials) => {
                 // use the cached authorization token
                 if (credentials.user_id && credentials.token) {
-                    return credentials.user_id;
+                    return credentials;
                 } else {
                     return this.authorizeUser(location, credentials).then((authorization) => {
                         authCache[server] = authorization;
-                        return authorization.user_id;
+                        return authorization;
                     });
                 }
+            }).then((authorization) => {
+                var notifier = this.components.notifier;
+                if (notifier) {
+                    var protocol = getProtocol(server);
+                    notifier.connect(protocol, server, authorization.token);
+                }
+                return authorization.user_id;
             });
         });
     },
@@ -415,6 +427,7 @@ module.exports = React.createClass({
         return (
             <div>
                 {this.renderLocalCache()}
+                {this.renderNotifier()}
             </div>
         );
     },
@@ -429,9 +442,27 @@ module.exports = React.createClass({
         }
     },
 
+    renderNotifier: function() {
+        var setters = this.components.setters;
+        if (Notifier.isAvailable()) {
+            var notifierProps = {
+                ref: setters.notifier,
+                locale: this.props.locale,
+                onNotify: this.handleChangeNotification,
+            };
+            return <Notifier {...notifierProps} />;
+        }
+    },
+
     componentDidMount: function() {
         this.triggerChangeEvent();
-    }
+    },
+
+    handleChangeNotification: function(evt) {
+        var changes = evt.changes;
+        console.log(changes);
+        this.triggerChangeEvent();
+    },
 });
 
 var authCache = {};

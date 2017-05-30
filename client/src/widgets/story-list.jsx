@@ -26,6 +26,7 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
+        console.log('renderAsync');
         var route = this.props.route;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
