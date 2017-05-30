@@ -8,6 +8,7 @@ var Crypto = Promise.promisifyAll(require('crypto'));
 var Database = require('database');
 var HttpError = require('errors/http-error');
 
+// global accessors
 var Account = require('accessors/account');
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
@@ -16,6 +17,7 @@ var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
 var User = require('accessors/user');
 
+// project-specific accessors
 var Bookmark = require('accessors/bookmark');
 var Commit = require('accessors/commit');
 var Folder = require('accessors/folder');
@@ -47,16 +49,42 @@ app.route('/api/retrieval/:schema/:table/:id?')
 app.route('/api/storage/:schema/:table/:id?')
     .post(handleStorage);
 
+/**
+ * Send response to browser as JSON object
+ *
+ * @param  {Response} res
+ * @param  {Object} result
+ */
 function sendResponse(res, result) {
     res.json(result);
 }
 
+/**
+ * Send error to browser as JSON object
+ *
+ * @param  {Response} res
+ * @param  {Object} err
+ */
 function sendError(res, err) {
-    var statusCode = err.statusCode || 500;
-    console.error(err);
-    res.status(statusCode).json({ message: err.message });
+    var statusCode = err.statusCode;
+    var message = err.message;
+    if (!statusCode) {
+        // not an expected error
+        console.error(err);
+        statusCode = 500;
+        if (process.env.NODE_ENV === 'production') {
+            message = 'Internal server error';
+        }
+    }
+    res.status(statusCode).json({ message });
 }
 
+/**
+ * Handle authentication and authorization of users
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
 function handleAuthorization(req, res) {
     var params = req.body || req.query;
     var schema = req.params.schema;
@@ -79,6 +107,12 @@ function handleAuthorization(req, res) {
     });
 }
 
+/**
+ * Handle search for objects, returning just the ids and gns (generation numbers)
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
 function handleDiscovery(req, res) {
     var params = req.body || req.query;
     var schema = req.params.schema;
@@ -121,6 +155,12 @@ function handleDiscovery(req, res) {
     });
 }
 
+/**
+ * Handle the actual retrieval of objects, by ids
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
 function handleRetrieval(req, res) {
     var params = req.body || req.query;
     var schema = req.params.schema;
@@ -164,6 +204,12 @@ function handleRetrieval(req, res) {
     });
 }
 
+/**
+ * Handle storage request
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
 function handleStorage(req, res) {
     var body = req.body;
     var schema = req.params.schema;
@@ -232,6 +278,15 @@ function handleStorage(req, res) {
     });
 }
 
+/**
+ * Find user record, based on login/password or possibily some other mean
+ * of identity verification
+ *
+ * @param  {Database} db
+ * @param  {Object} params
+ *
+ * @return {User}
+ */
 function authenticateUser(db, params) {
     var criteria = {};
     if (params.password && params.username) {
@@ -252,6 +307,14 @@ function authenticateUser(db, params) {
     });
 }
 
+/**
+ * Create authorization token
+ *
+ * @param  {Database} db
+ * @param  {User} user
+ *
+ * @return {Authorization}
+ */
 function authorizeUser(db, user) {
     return Authorization.findOne(db, 'global', { expired: true }, '*').then((auth) => {
         return Crypto.randomBytesAsync(24).then((buffer) => {
@@ -266,6 +329,14 @@ function authorizeUser(db, user) {
     });
 }
 
+/**
+ * Check authorization token, throwing if it's invalid or expired
+ *
+ * @param  {Database} db
+ * @param  {String} token
+ *
+ * @return {Authorization}
+ */
 function checkAuthorization(db, token) {
     return Authorization.findOne(db, 'global', { token }, '*').then((auth) => {
         if (!auth) {
@@ -279,6 +350,14 @@ function checkAuthorization(db, token) {
     });
 }
 
+/**
+ * Load information related to user that can be used to determine access level
+ *
+ * @param  {Database} db
+ * @param  {Number} userId
+ *
+ * @return {Object}
+ */
 function fetchCredentials(db, userId) {
     var credentials = {};
     return User.findOne(db, 'global', { user_id: userId, deleted: false }, '*').then((user) => {
@@ -311,6 +390,14 @@ var projectAccessors = [
     Story,
 ];
 
+/**
+ * Return appropriate accessor for schema and table
+ *
+ * @param  {String} schema
+ * @param  {String} table
+ *
+ * @return {Accessor}
+ */
 function getAccessor(schema, table) {
     var accessors = (schema === 'global') ? globalAccessors : projectAccessors;
     var accessor = _.find(accessors, { table });
