@@ -190,6 +190,7 @@ module.exports = React.createClass({
             results: null,
             promise: null,
             by: [],
+            dirty: false,
         });
         var byComponent = _.get(query, 'by.constructor.displayName',)
         if (byComponent) {
@@ -216,11 +217,15 @@ module.exports = React.createClass({
         if (search.schema === 'local') {
             return true;
         }
-        var elapsed = getTimeElapsed(search.finish, new Date);
-        var interval = this.props.refreshInterval * 1000;
-        if (!(elapsed > interval)) {
-            console.log('checkSearchFreshness: true');
-            return true;
+        if (!search.dirty) {
+            // the result hasn't been invalidated via notification
+            // still, we want to check with the server once in a while
+            var elapsed = getTimeElapsed(search.finish, new Date);
+            var interval = this.props.refreshInterval * 1000;
+            if (!(elapsed > interval)) {
+                console.log('checkSearchFreshness: true');
+                return true;
+            }
         }
         // need to check the server
         this.searchRemoteDatabase(search).then((changed) => {
@@ -318,6 +323,7 @@ module.exports = React.createClass({
             }
             search.finish = getCurrentTime();
             search.duration = getTimeElapsed(search.start, search.finish);
+            search.dirty = false;
 
             // update this.state.recentSearchResults
             this.replaceRecentSearch(search, _.clone(search));
@@ -459,9 +465,46 @@ module.exports = React.createClass({
     },
 
     handleChangeNotification: function(evt) {
-        var changes = evt.changes;
-        console.log(changes);
-        this.triggerChangeEvent();
+        var changed = false;
+        _.forIn(evt.changes, (idList, name) => {
+            var parts = _.split(name, '.');
+            var schema = parts[0];
+            var table = parts[1];
+            _.each(this.state.recentSearchResults, (search) => {
+                if (search.schema === schema && search.table === table) {
+                    if (search.results) {
+                        var dirty = false;
+                        var expectedCount = getExpectedObjectCount(search.criteria);
+                        if (expectedCount === search.results.length) {
+                            // see if the ids show up in the results
+                            _.each(idList, (id) => {
+                                var index = _.sortedIndexBy(search.results, { id }, 'id');
+                                var object = search.results[index];
+                                if (object && object.id === id) {
+                                    dirty = true;
+                                    return false;
+                                }
+                            });
+                        } else {
+                            // we can't tell if new objects won't sudden show up
+                            // in the search results
+                            dirty = true;
+                        }
+                    }
+                    if (dirty) {
+                        search.dirty = true;
+                        changed = true;
+                    }
+                }
+            });
+        });
+        if (changed) {
+            // tell data consuming components to rerun their queries
+            // initially, they'd all get the data they had before
+            // another change event will occur if new objects are
+            // actually retrieved from the remote server
+            this.triggerChangeEvent();
+        }
     },
 });
 
@@ -471,7 +514,7 @@ function getUpdateList(ids, gns, objects) {
     var updated = [];
     _.each(ids, (id, i) => {
         var gn = gns[i];
-        var index = _.sortedIndexBy(objects, { id: id }, 'id');
+        var index = _.sortedIndexBy(objects, { id }, 'id');
         var object = objects[index];
         if (!object || object.id !== id || object.gn !== gn) {
             updated.push(id);
@@ -496,7 +539,7 @@ function removeObjects(objects, ids) {
     }
     objects = _.slice(objects);
     _.each(ids, (id) => {
-        var index = _.sortedIndexBy(objects, { id: id }, 'id');
+        var index = _.sortedIndexBy(objects, { id }, 'id');
         var object = objects[index];
         if (object && object.id === id) {
             objects.splice(index, 1);
@@ -508,7 +551,7 @@ function removeObjects(objects, ids) {
 function pickObjects(objects, ids) {
     var list = [];
     _.each(ids, (id) => {
-        var index = _.sortedIndexBy(objects, { id: id }, 'id');
+        var index = _.sortedIndexBy(objects, { id }, 'id');
         var object = objects[index];
         if (object && object.id === id) {
             list.push(object);

@@ -22,12 +22,13 @@ exports.notifyDataChange.args = '';
 exports.notifyDataChange.ret = 'trigger';
 
 exports.indicateLiveDataChange = function(OLD, NEW) {
-    var omit = [ 'dirty', 'ltime', 'atime' ];
+    var omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
     var diff = findChanges(OLD, NEW, omit);
     if (diff) {
         NEW.gn += 1;
         NEW.mtime = new Date;
     }
+    return NEW;
 }
 exports.indicateLiveDataChange.args = '';
 exports.indicateLiveDataChange.ret = 'trigger';

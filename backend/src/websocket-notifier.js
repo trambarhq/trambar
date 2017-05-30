@@ -27,7 +27,7 @@ var tables = [
     'story',
 ];
 Database.open(true).then((db) => {
-    return db.listen(tables, 'change', handleDatabaseChanges, 500).then(() => {
+    return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
         var sockJS = SockJS.createServer({
             sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js'
         });
