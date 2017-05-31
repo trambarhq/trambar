@@ -128,6 +128,48 @@ Database.prototype.listen = function(tables, event, callback, delay) {
     });
 };
 
+/**
+ * Check if a schema exists
+ *
+ * @param  {String} schema
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.schemaExists = function(schema) {
+    var sql = `SELECT 1 FROM pg_namespace WHERE nspname = $1`;
+    return this.query(sql, [ schema ]).get(0).then((row) => {
+        return !!row;
+    });
+}
+
+/**
+ * Check if a user role exists
+ *
+ * @param  {String} username
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.roleExists = function(username) {
+    var sql = `SELECT 1 FROM pg_roles WHERE rolname = $1`;
+    return this.query(sql, [ username ]).get(0).then((row) => {
+        return !!row;
+    });
+}
+
+/**
+ * Check if a schema exists
+ *
+ * @param  {String} schema
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.functionExists = function(schema) {
+    var sql = `SELECT 1 FROM pg_proc WHERE proname = $1;`;
+    return this.query(sql, [ schema ]).get(0).then((row) => {
+        return !!row;
+    });
+}
+
 function processNotification(cxt, msg) {
     try {
         if (cxt.channels.indexOf(msg.channel) !== -1) {

@@ -1,0 +1,27 @@
+version: "2"
+services:
+  postgres:
+    image: trambar-postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=trambar
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=qwerty
+  node:
+    image: trambar-node-dev
+    volumes:
+      - ../../trambar/backend/src:/opt/trambar/backend/src
+      - ../../trambar/common/src:/opt/trambar/common/src
+    environment:
+      - NODE_PATH=/opt/trambar/backend/src:/opt/trambar/backend/src/lib:/opt/trambar/common/src
+      - NODE_ENV=development
+      - DEPLOYMENT=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=trambar
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=qwerty
+      - DOCKER_MOCHA=1
+    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/**/test/*.js ]
+    depends_on:
+      - postgres

@@ -41,6 +41,10 @@ Database.open(true).then((db) => {
         return db.listen([ 'project' ], 'change', handleDatabaseChanges, 0);
     }).then(() => {
         setInterval(() => { cleanMessageQueue(db) }, 5 * 60 * 1000);
+    }).then(() => {
+        if (exports.onReady) {
+            exports.onReady();
+        }
     });
 }).catch((err) => {
     console.error(err);
@@ -70,6 +74,8 @@ function handleDatabaseChanges(events) {
                 }
             }
         }
+    }).catch((err) => {
+        console.log(err.message);
     });
 }
 
@@ -82,7 +88,7 @@ function handleDatabaseChanges(events) {
  */
 function initializeDatabase(db) {
     return addDatabaseRoles(db).then(() => {
-        return schemaExists(db, 'global').then((exists) => {
+        return db.schemaExists('global').then((exists) => {
             if (exists) {
                 return false;
             }
@@ -98,7 +104,7 @@ function initializeDatabase(db) {
 function addDatabaseRoles(db) {
     var roles = ['internal_role', 'webfacing_role'];
     return Promise.mapSeries(roles, (role) => {
-        return roleExists(db, role).then((exists) => {
+        return db.roleExists(role).then((exists) => {
             if (exists) {
                 return false;
             }
@@ -289,36 +295,6 @@ function setSchemaVersion(db, schema, version) {
     var sql = `UPDATE ${table} SET version = $1, deployment = $2`;
     return db.execute(sql, [ version, deployment ]).then((result) => {
         return result.rowCount > 0;
-    });
-}
-
-/**
- * Check if a schema exists
- *
- * @param  {Database} db
- * @param  {String} schema
- *
- * @return {Promise<Boolean>}
- */
-function schemaExists(db, schema) {
-    var sql = `SELECT 1 FROM pg_namespace WHERE nspname = $1`;
-    return db.query(sql, [ schema ]).get(0).then((row) => {
-        return !!row;
-    });
-}
-
-/**
- * Check if a user role exists
- *
- * @param  {Database} db
- * @param  {String} username
- *
- * @return {Promise<Boolean>}
- */
-function roleExists(db, username) {
-    var sql = `SELECT 1 FROM pg_roles WHERE rolname = $1`;
-    return db.query(sql, [ username ]).get(0).then((row) => {
-        return !!row;
     });
 }
 

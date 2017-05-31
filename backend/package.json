@@ -7,7 +7,9 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha -- src/**/test/*.js",
-    "test:start": "./node_modules/mocha/bin/mocha --watch -- src/**/test/*.js"
+    "test:start": "./node_modules/mocha/bin/mocha --watch -- src/**/test/*.js",
+    "test:docker": "docker-compose -p test -f test.yml up",
+    "test:docker:clean": "docker-compose -p test -f test.yml down"
   },
   "dependencies": {
     "bcrypt": "^1.0.2",
@@ -18,6 +20,7 @@
     "jsdav-promise": "0.0.2",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
+    "moment-timezone": "^0.5.13",
     "pg": "^6.2.2",
     "pg-pool": "^1.7.1",
     "phantom": "^4.0.3",

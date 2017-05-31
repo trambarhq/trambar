@@ -19,6 +19,10 @@ Database.open(true).then((db) => {
             return _.union(list, analyser.sourceTables);
         }, []);
         return db.listen(tables, 'change', handleDatabaseChanges);
+    }).then(() => {
+        if (exports.onReady) {
+            exports.onReady();
+        }
     });
 });
 
