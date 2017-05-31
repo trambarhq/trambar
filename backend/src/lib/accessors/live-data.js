@@ -93,20 +93,26 @@ module.exports = _.create(Data, {
      * Lock a row for updates
      *
      * @param  {Database} db
+     * @param  {String} schema
      * @param  {Number} id
      * @param  {String} interval
+     * @param  {String} columns
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise<Object>}
      */
-    lock: function(db, id, interval) {
+    lock: function(db, schema, id, interval, columns) {
         var parameters = [ interval, id ];
         var sql = `
             UPDATE ${table}
-            SET ltime = NOW() + INTERVAL $1
+            SET ltime = NOW() + CAST($1 AS INTERVAL)
             WHERE id = $2 AND (ltime IS NULL OR ltime < NOW())
+            RETURNING ${columns}
         `;
-        return db.execute(sql).then((result) => {
-            return result.rowCount > 0;
+        return db.query(sql).get(0).then((row) => {
+            if (!row) {
+                throw new Error('Unable to establish lock on row');
+            }
+            return row;
         });
     },
 
@@ -114,12 +120,14 @@ module.exports = _.create(Data, {
      * Update a row then unlock it
      *
      * @param  {Database} db
+     * @param  {String} schema
      * @param  {Number} id
      * @param  {Object} props
+     * @param  {String} columns
      *
-     * @return {Promise<Boolean}
+     * @return {Promise<Object>}
      */
-    unlock: function(db, id, props) {
+    unlock: function(db, schema, id, props, columns) {
         var assignments = [];
         var parameters = [];
         var index = 1;
@@ -135,9 +143,13 @@ module.exports = _.create(Data, {
             UPDATE ${table}
             SET ${assignments.join(',')}, ltime = NULL
             WHERE id = $2 AND ltime >= NOW()
+            RETURNING ${columns}
         `;
-        return db.execute(sql).then((result) => {
-            return result.rowCount > 0;
+        return db.query(sql).get(0).then((row) => {
+            if (!row) {
+                throw new Error('Unable to update row')
+            }
+            return row;
         });
     },
 });

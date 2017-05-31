@@ -54,7 +54,10 @@ module.exports = {
                 // increment the count for story type
                 counts[row.type] = (counts[row.type] || 0) + 1;
             });
-            return activities;
+            return {
+                details: activities,
+                sample_count: rows.length,
+            };
         });
     }
 }

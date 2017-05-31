@@ -80,8 +80,8 @@ exports.sendChangeNotification = function(op, schema, table, id, diff) {
     }
 };
 
-exports.sendCleanNotification = function(op, schema, table, id) {
-    var info = { op, schema, table, id };
+exports.sendCleanNotification = function(op, schema, table, id, atime) {
+    var info = { op, schema, table, id, atime };
     var channel = table + '_clean';
     var msg = JSON.stringify(info);
     var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;

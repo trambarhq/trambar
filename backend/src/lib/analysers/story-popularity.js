@@ -41,7 +41,10 @@ module.exports = {
             _.each(rows, (row) => {
                 counts[row.type] = (counts[row.type] || 0) + 1;
             });
-            return counts;
+            return {
+                details: counts,
+                sample_count: rows.length,
+            };
         });
     }
 }

@@ -57,7 +57,7 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
             }
             if (requestCleaning) {
                 var id = NEW.id;
-                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id);
+                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, NEW.atime);
             }
         }
     }

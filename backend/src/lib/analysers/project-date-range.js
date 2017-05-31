@@ -36,11 +36,17 @@ module.exports = {
         };
         Story.apply(criteria, query);
         var sql = `
-            SELECT MIN(ptime) AS start, MAX(ptime) AS end FROM ${table}
+            SELECT MIN(ptime) AS start, MAX(ptime) AS end, COUNT(ptime) FROM ${table}
             WHERE ${query.conditions.join(' AND ')}
         `;
         return db.query(sql, query.parameters).get(0).then((row) => {
-            return row || {};
+            return {
+                details: {
+                    start_time: _.get(row, 'start', ''),
+                    end_time: _.get(row, 'end', ''),
+                },
+                sample_count: _.get(row, 'count', 0),
+            };
         });
     }
 }

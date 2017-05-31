@@ -101,8 +101,9 @@ function invalidateStatistics(db, schema, events) {
                 return Statistics.find(db, schema, statsCriteria, 'id, sample_count');
             }).then((rows) => {
                 // invalidate those stats with fewer data points first
-                var ids = _.map(_.sortBy(rows, 'sample_count'), 'id');
-                var chunks = _.chunk(ids, 50);
+                var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ])
+                var ids = _.map(orderedRows, 'id');
+                var chunks = _.chunk(ids, 10);
                 return Promise.map(chunks, (ids) => {
                     return Statistics.invalidate(db, schema, ids);
                 });
