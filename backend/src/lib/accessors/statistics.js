@@ -52,4 +52,14 @@ module.exports = _.create(LiveData, {
         `;
         return db.execute(sql);
     },
+
+    apply: function(criteria, query) {
+        LiveData.apply.call(this, _.omit(criteria, 'filters'), query);
+        if (criteria.filters) {
+            var params = query.parameters;
+            var conds = query.conditions;
+            params.push(criteria.filters);
+            conds.push(`"matchAny"(filters, $${params.length})`);
+        }
+    },
 });

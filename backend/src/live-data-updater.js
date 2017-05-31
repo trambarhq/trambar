@@ -2,20 +2,21 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
 
-var tables = [ 'listing', 'statistics' ];
-
 Database.open(true).then((db) => {
     return Promise.resolve().then(() => {
-        return db.listen(tables, 'change', handleDatabaseChanges);
-    }).then(() => {
-        return db.listen(tables, 'clean', handleDatabaseDirtyReads);
+        var tables = [
+            'listing',
+            'statistics'
+        ];
+        return db.listen(tables, 'clean', handleDatabaseCleanRequests);
     });
 });
 
-function handleDatabaseChange(events) {
-
-}
-
-function handleDatabaseDirtyReads(events) {
-
+function handleDatabaseCleanRequests(events) {
+    // process the events for each schema separately
+    var db = this;
+    var eventGroups = _.groupBy(events, 'schema');
+    var schemas = _.keys(eventGroups);
+    return Promise.each(schemas, (schema) => {
+    });
 }

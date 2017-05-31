@@ -105,4 +105,130 @@ describe('Runtime', () => {
             expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
         })
     })
+    describe('#matchObject()', () => {
+        it('should return true when comparing a single-id filters', () => {
+            var object = {
+                story_id: 1
+            };
+            var filters = {
+                story_id: 1
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return true when comparing a multi-id filters', () => {
+            var object = {
+                story_ids: 1
+            };
+            var filters = {
+                story_ids: [ 1, 2, 3 ]
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return true when a multi-id filters overlaps ids in an object', () => {
+            var object = {
+                story_ids: [ 2 ]
+            };
+            var filters = {
+                story_ids: [ 1, 2, 3 ]
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return false when id is not on the list', () => {
+            var object = {
+                story_ids: 4
+            };
+            var filters = {
+                story_ids: [ 1, 2, 3 ]
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
+        it('should return true when a multi-id filters does not overlap ids in an object', () => {
+            var object = {
+                story_ids: [ 4, 5, 6 ]
+            };
+            var filters = {
+                story_ids: [ 1, 2, 3 ]
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
+        it('should return false when all criteria are met', () => {
+            var object = {
+                story_id: 1,
+                type: 'good',
+                user_ids: 4
+            };
+            var filters = {
+                story_id: 1,
+                type: 'good',
+                user_ids: [1, 2, 3, 4]
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return false when some of the criteria are not met', () => {
+            var object = {
+                story_id: 1,
+                type: 'good'
+            };
+            var filters = {
+                story_id: 1,
+                type: 'bad'
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
+        it('should return true when a timestamp falls within a time-range filter', () => {
+            var object = {
+                story_id: 1,
+                time_range: '2017-05-31T00:00:00.000Z'
+            };
+            var filters = {
+                story_id: 1,
+                time_range: '[2016-05-31T00:00:00.000Z,2018-05-31T00:00:00.000Z]'
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return true when a timestamp falls within an open-ended time-range', () => {
+            var object = {
+                story_id: 1,
+                time_range: '2017-05-31T00:00:00.000Z'
+            };
+            var filters = {
+                story_id: 1,
+                time_range: '[2017-05-31T00:00:00.000Z,]'
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return false when a timestamp falls outside a time-range', () => {
+            var object = {
+                story_id: 1,
+                time_range: '2017-09-01T00:00:00.000Z'
+            };
+            var filters = {
+                story_id: 1,
+                time_range: '[2017-05-31T00:00:00.000Z,2017-08-31T00:00:00.000Z]'
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
+        it('should return true when a time-range includes the timestamp filter', () => {
+            var object = {
+                story_id: 1,
+                time_range: '[2017-04-22T00:00:00.000Z,2017-06-22T00:00:00.000Z]'
+            };
+            var filters = {
+                story_id: 1,
+                time_range: '2017-05-31T00:00:00.000Z'
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return false when a time-range does not include the timestamp', () => {
+            var object = {
+                story_id: 1,
+                time_range: '[2017-06-12T00:00:00.000Z,2017-06-22T00:00:00.000Z]'
+            };
+            var filters = {
+                story_id: 1,
+                time_range: '2017-05-31T00:00:00.000Z'
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
+    })
 })

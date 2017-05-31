@@ -87,3 +87,56 @@ exports.sendCleanNotification = function(op, schema, table, id) {
     var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
     plv8.execute(sql);
 };
+
+exports.matchObject = function(filters, object) {
+    for (var name in filters) {
+        switch (name) {
+            case 'time_range':
+                if (!matchTimeRanges(filters[name], object[name])) {
+                    return false;
+                }
+                break;
+            default:
+                if (!matchScalars(filters[name], object[name])) {
+                    return false;
+                }
+        }
+    }
+    return true;
+};
+
+function matchTimeRanges(a, b) {
+    // check if start-time or end-time of B is inside A
+    var ar = parseRange(a), as = ar[0], ae = ar[1];
+    var br = parseRange(b), bs = br[0], be = br[1];
+    if ((ae && bs > ae) || (as && be < as)) {
+        return false;
+    }
+    return true;
+}
+
+function parseRange(r) {
+    if (r.charAt(0) === '[' && r.charAt(r.length - 1) === ']' && r.indexOf(',') !== -1) {
+        return r.substr(1, r.length - 1).split(',')
+    } else {
+        // it's actually a timestamp
+        return [r, r];
+    }
+}
+
+function matchScalars(a, b) {
+    if (typeof(a) !== 'object' && typeof(b) !== 'object') {
+        return a === b;
+    } else if (a instanceof Array && typeof(b) !== 'object') {
+        return a.indexOf(b) !== -1;
+    } else if (typeof(a) !== 'object' && b instanceof(Array)) {
+        return b.indexOf(a) !== -1;
+    } else if (a instanceof Array && b instanceof Array) {
+        for (var i = 0; i < a.length; i++) {
+            if (b.indexOf(a[i]) !== -1) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
