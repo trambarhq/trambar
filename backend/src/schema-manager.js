@@ -40,9 +40,11 @@ Database.open(true).then((db) => {
     }).then(() => {
         return db.listen([ 'project' ], 'change', handleDatabaseChanges, 0);
     }).then(() => {
-        setInterval(() => { cleanMessageQueue(db) }, 5 * 60 * 1000);
-    }).then(() => {
+        var interval = setInterval(() => {
+            cleanMessageQueue(db);
+        }, 5 * 60 * 1000);
         exports.exit = function() {
+            clearInterval(interval);
             db.close();
         };
         if (exports.onReady) {

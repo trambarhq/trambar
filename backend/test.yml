@@ -10,6 +10,8 @@ services:
       - POSTGRES_PASSWORD=qwerty
   node:
     image: trambar-node-dev
+    ports:
+      - 80:80
     volumes:
       - ../../trambar/backend/src:/opt/trambar/backend/src
       - ../../trambar/common/src:/opt/trambar/common/src

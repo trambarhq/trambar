@@ -1,10 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Fs = Promise.promisifyAll(require('fs'));
+var FS = Promise.promisifyAll(require('fs'));
 var Express = require('express');
 var BodyParser = require('body-parser');
 var Multer  = require('multer');
-
 var Sharp = require('sharp');
 var Piexif = require("piexifjs");
 var Phantom = require('phantom');
@@ -23,16 +22,16 @@ exports.exit = function() {
 
 // create the cache folders
 var cacheFolder = '/var/cache/media';
-if (!Fs.existsSync(cacheFolder)) {
-    Fs.mkdirSync(cacheFolder);
+if (!FS.existsSync(cacheFolder)) {
+    FS.mkdirSync(cacheFolder);
 }
 var imageCacheFolder = `${cacheFolder}/images`;
-if (!Fs.existsSync(imageCacheFolder)) {
-    Fs.mkdirSync(imageCacheFolder);
+if (!FS.existsSync(imageCacheFolder)) {
+    FS.mkdirSync(imageCacheFolder);
 }
 var videoCacheFolder = `${cacheFolder}/videos`;
-if (!Fs.existsSync(videoCacheFolder)) {
-    Fs.mkdirSync(videoCacheFolder);
+if (!FS.existsSync(videoCacheFolder)) {
+    FS.mkdirSync(videoCacheFolder);
 }
 
 var upload = Multer({ dest: '/var/tmp' });
@@ -40,11 +39,7 @@ var upload = Multer({ dest: '/var/tmp' });
 app.use(BodyParser.json());
 app.set('json spaces', 2);
 
-app.get('/media/images/:hash/:filename', handleResizedImageRequest);
-
-app.get('/media/images/:hash', handleOriginalImageRequest);
-
-app.get('/media/videos/:hash', handleOriginalVideoRequest);
+app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
 
 app.post('/media/html/screenshot', handleWebsiteScreenshot);
 
@@ -52,16 +47,28 @@ app.post('/media/images/upload', upload.array('images', 16), handleImageUpload);
 
 app.post('/media/videos/upload', upload.array('videos', 4), handleVideoUpload);
 
-function handleOriginalImageRequest(req, res) {
+app.use('/media/images', Express.static(imageCacheFolder));
 
-}
+app.use('/media/videos', Express.static(videoCacheFolder));
 
-function handleOriginalVideoRequest(req, res) {
-
-}
-
-function handleResizedImageRequest(req, res) {
-
+function handleImageFiltersRequest(req, res) {
+    var hash = req.params.hash;
+    var filename = req.params.filename;
+    var m = /([^.]*?)(\.(jpg|jpeg|png|webp))?$/i.exec(filename);
+    if (!m) {
+        res.status(400).json({ message: 'Invalid filename' });
+    }
+    var filters = m[1], format = m[3];
+    if (!format || format === 'jpg') {
+        format = 'jpeg';
+    }
+    var path = `${imageCacheFolder}/${hash}`;
+    var image = applyFilters(Sharp(path), filters, format);
+    image.toBuffer().then((buffer) => {
+        res.type(format).send(buffer);
+    }).catch((err) => {
+        res.status(400).json({ message: err.message });
+    });
 }
 
 function handleWebsiteScreenshot(req, res) {
@@ -70,7 +77,7 @@ function handleWebsiteScreenshot(req, res) {
     var date = (new Date).toISOString().substr(0, 10);
     var hash = md5(`${url} ${date}`);
     var path = `${imageCacheFolder}/${hash}`;
-    return Fs.statAsync(path).then((stats) => {
+    return FS.statAsync(path).then((stats) => {
         // just get title from the JPEG file if it already exists
         return getJPEGDescription(path);
     }).catch((err) => {
@@ -80,7 +87,7 @@ function handleWebsiteScreenshot(req, res) {
         // save to temp path first, as PhantomJS needs the extension
         var tempPath = `${path}.jpeg`;
         return createWebsiteScreenshot(url, tempPath).then((title) => {
-            return Fs.renameAsync(tempPath, path).return(title);
+            return FS.renameAsync(tempPath, path).return(title);
         });
     }).then((title) => {
         var url = `/media/images/${hash}`;
@@ -91,7 +98,26 @@ function handleWebsiteScreenshot(req, res) {
 }
 
 function handleImageUpload(req, res) {
-    res.json({ files: _.size(req.files) });
+    Promise.mapSeries(req.files, (file) => {
+        return FS.readFileAsync(file.path).then((buffer) => {
+            var hash = md5(buffer);
+            var destPath = `${imageCacheFolder}/${hash}`;
+            return FS.statAsync(destPath).catch((err) => {
+                return FS.writeFileAsync(destPath, buffer);
+            }).then(() => {
+                return hash;
+            });
+        });
+    }).then((hashes) => {
+        var files = _.map(hashes, (hash) => {
+            return {
+                url: `/media/images/${hash}`
+            };
+        });
+        res.json({ files });
+    }).catch((err) => {
+        res.status(500).json({ message: err.message });
+    });
 }
 
 function handleVideoUpload(req, res) {
@@ -154,7 +180,7 @@ function createWebsiteScreenshot(url, destPath) {
  * @param {String} destPath
  */
 function addJPEGDescription(description, destPath) {
-    return Fs.readFileAsync(destPath).then((buffer) => {
+    return FS.readFileAsync(destPath).then((buffer) => {
         var data = buffer.toString('binary');
         var zeroth = {};
         zeroth[Piexif.ImageIFD.ImageDescription] = description;
@@ -163,7 +189,7 @@ function addJPEGDescription(description, destPath) {
         var newData = Piexif.insert(exifbytes, data);
         return new Buffer(newData, 'binary');
     }).then((buffer) => {
-        return Fs.writeFileAsync(destPath, buffer);
+        return FS.writeFileAsync(destPath, buffer);
     });
 }
 
@@ -175,11 +201,107 @@ function addJPEGDescription(description, destPath) {
  * @return {Promise<String>}
  */
 function getJPEGDescription(path) {
-    return Fs.readFileAsync(path).then((buffer) => {
+    return FS.readFileAsync(path).then((buffer) => {
         var data = buffer.toString('binary');
         var exifObj = Piexif.load(data);
         return _.get(exifObj, [ '0th', Piexif.ImageIFD.ImageDescription ], '');
     });
+}
+
+var operators = {
+    background: function(r, g, b, a) {
+        this.background(r / 100, g / 100, b / 100, a / 100);
+    },
+    blur: function(sigma) {
+        this.blur(sigma / 10 || 0.3)
+    },
+    crop: function(left, top, width, height) {
+        this.extract({ left, top, width, height });
+    },
+    extract: function(channel) {
+        this.extractChannel(channel);
+    },
+    flatten: function() {
+        this.flatten();
+    },
+    flip: function() {
+        this.flip();
+    },
+    flop: function() {
+        this.flop();
+    },
+    height: function(height) {
+        this.resize(null, height);
+    },
+    gamma: function(gamma) {
+        this.gamma(gamma / 10 || 2.2);
+    },
+    grayscale: function() {
+        this.grayscale();
+    },
+    normalize: function() {
+        this.normalize();
+    },
+    negate: function() {
+        this.negate();
+    },
+    quality: function(quality) {
+        this.settings.quality = quality;
+    },
+    rotate: function(degree) {
+        this.rotate(degree);
+    },
+    resize: function(width, height) {
+        this.resize(width, height);
+    },
+    sharpen: function() {
+        this.sharpen();
+    },
+    trim: function() {
+        this.trim();
+    },
+    width: function(width) {
+        this.resize(width, null);
+    },
+};
+
+function applyFilters(image, filters, format) {
+    image.settings = {
+        quality: 90,
+    };
+    filters = _.split(filters, /[ +]/);
+    _.each(filters, (filter) => {
+        var cmd = '', args = [];
+        var regExp = /(\D+)(\d*)/g, m;
+        while(m = regExp.exec(filter)) {
+            if (!cmd) {
+                cmd = m[1];
+            }
+            var arg = parseInt(m[2]);
+            if (arg === arg) {
+                args.push(arg);
+            }
+        }
+        var operator = null;
+        _.each(operators, (operator, name) => {
+            if (name.substr(0, cmd.length) === cmd) {
+                operator.apply(image, args);
+                return false;
+            }
+        });
+    });
+    var quality = image.settings.quality || 90;
+    switch (_.toLower(format)) {
+        case 'webp':
+            image.webp({ quality })
+        case 'png':
+            image.png();
+            break;
+        case 'jpeg':
+            image.jpeg({ quality });
+            break;
+    }
+    return image;
 }
 
 /**

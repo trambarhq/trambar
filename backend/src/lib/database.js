@@ -69,6 +69,7 @@ Database.open = function(exclusive) {
 
 Database.prototype.close = function() {
     if (this.client !== pool) {
+        this.client.removeAllListeners();
         this.client.release();
     }
     this.client = null;
@@ -82,7 +83,7 @@ Database.prototype.query = function(sql, parameters) {
 
 Database.prototype.execute = function(sql, parameters) {
     if (!this.client) {
-        return Promise.reject('Connection was closed');
+        return Promise.reject('Connection was closed: ' + sql.substr(0, 20) + '...');
     }
     // convert promise to Bluebird variety
     return Promise.resolve(this.client.query(sql, parameters));
