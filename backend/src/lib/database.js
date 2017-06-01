@@ -1,7 +1,10 @@
+var _ = require('lodash');
 var Promise = require('bluebird');
 var FS = require('fs');
 var PgPool = require('pg-pool')
 var PgTypes = require('pg').types;
+
+var Async = require('utils/async-do-while');
 
 module.exports = Database;
 
@@ -16,11 +19,11 @@ var TIMESTAMP_OID = 1114
  * @return {String}
  */
 function parseDate(val) {
-   if (val) {
-      var date = new Date(val);
-      return date.toISOString();
-   }
-   return val;
+    if (val) {
+        var date = new Date(val);
+        return date.toISOString();
+    }
+    return val;
 }
 PgTypes.setTypeParser(TIMESTAMPTZ_OID, parseDate);
 PgTypes.setTypeParser(TIMESTAMP_OID, parseDate);
@@ -40,32 +43,78 @@ function Database(client) {
 
 Database.open = function(exclusive) {
     if (exclusive) {
-        // make five attempts at connecting
-        var attempts = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        return Promise.reduce(attempts, (db, attempt) => {
-            if (db) {
-                return db;
-            }
-            // convert promise to Bluebird variety
+        var db;
+        var attempt;
+        Async.begin(() => {
+            attempt = 1;
+        })
+        Async.while(() => {
             return Promise.resolve(pool.connect()).then((client) => {
-                return new Database(client);
+                // done--break out of loop
+                db = new Database(client);
+                return false;
             }).catch((err) => {
-                if (attempt === attempts.length) {
-                    // output error on last failed attempt
-                    console.error(err);
-                    return null;
+                // try again if the number of attempts hasn't exceed the limit
+                if (attempt++ < 10) {
+                    return true;
                 } else {
-                    // wait a second on error
-                    return Promise.delay(1000, null);
+                    throw err;
                 }
-            });
-        }, null);
+            })
+        })
+        Async.do(() => {
+            // wait a second
+            return Promise.delay(1000);
+        })
+        Async.finally(() => {
+            return db;
+        })
+        return Async.result();
     } else {
         // run database queries through the pool
         var db = new Database(pool);
         return Promise.resolve(db);
     }
 };
+
+/**
+ * Wait for schemas to come into existence
+ *
+ * @param  {Array<String>} schemas
+ * @param  {Number} wait
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.need = function(schemas, wait) {
+    return Database.open(true).then((db) => {
+        var foundEvery;
+        var startTime;
+        Async.begin(() => {
+            foundEvery = false;
+            startTime = new Date;
+        })
+        Async.while(() => {
+            var now = new Date;
+            if ((now - startTime) > wait) {
+                return false;
+            }
+            return Promise.map(schemas, (schema) => {
+                return db.schemaExists(schema);
+            }).then((exists) => {
+                foundEvery = _.every(exists);
+                return !foundEvery;
+            });
+        })
+        Async.do(() => {
+            return Promise.delay(500);
+        })
+        Async.finally(() => {
+            db.close();
+            return foundEvery;
+        })
+        return Async.result();
+    });
+}
 
 Database.prototype.close = function() {
     if (this.client !== pool) {
