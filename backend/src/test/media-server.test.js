@@ -6,23 +6,15 @@ var Path = require('path');
 var Sharp = require('sharp');
 var Request = require('request');
 
-if (process.env.DOCKER_MOCHA) {
-    var MediaServer = require('media-server');
-    var mediaServerReady = new Promise((resolve, reject) => {
-        MediaServer.onReady = () => {
-            resolve();
-        };
-    });
-}
-
 describe('MediaServer', function() {
+    var MediaServer;
     before(function() {
-        if (!MediaServer) {
+        if (process.env.DOCKER_MOCHA) {
+            MediaServer = require('media-server');
+            return MediaServer.initialized;
+        } else {
             this.skip()
         }
-    })
-    it('should call the onReady handler at some point', function() {
-        return mediaServerReady;
     })
     it('should accept an image upload', function() {
         var url = `http://localhost/media/images/upload/`;
@@ -94,7 +86,7 @@ describe('MediaServer', function() {
     })
     after(function() {
         if (MediaServer) {
-            MediaServer.exit();
+            return MediaServer.exit();
         }
     })
 })

@@ -2,25 +2,19 @@ var _ = require('lodash');
 var Promise = require('bluebird').config({ warnings: false });
 var Chai = require('chai'), expect = Chai.expect;
 
-if (process.env.DOCKER_MOCHA) {
-    var Database = require('database');
-    var SchemaManager = require('schema-manager');
-    var schemaManagerReady = new Promise((resolve, reject) => {
-        SchemaManager.onReady = () => {
-            resolve();
-        };
-    });
-}
+var Database = require('database');
 
 describe('SchemaManager', function() {
+    var SchemaManager;
     before(function() {
-        if (!SchemaManager) {
+        if (process.env.DOCKER_MOCHA) {
+            this.timeout(20000);
+            SchemaManager = require('schema-manager');
+            return SchemaManager.initialized;
+        } else {
             this.skip();
         }
     })
-    it('should call the onReady handler at some point', function() {
-        return schemaManagerReady;
-    }).timeout(10000);
     it('should have created the schema "global"', function() {
         return Database.open().then((db) => {
             return db.schemaExists('global').then((exists) => {
@@ -68,7 +62,7 @@ describe('SchemaManager', function() {
     it('should create a new project schema where a row is added to the project table', function() {
         return Database.open().then((db) => {
             var project = {
-                name: 'hello'
+                name: 'test'
             };
             return db.schemaExists(project.name).then((exists) => {
                 if (exists) {
@@ -77,17 +71,17 @@ describe('SchemaManager', function() {
                 }
             }).then(() => {
                 var Project = require('accessors/project');
-                return Project.saveOne(db, 'global', project).delay(500);
+                return Project.saveOne(db, 'global', project).delay(5000);
             }).then(() => {
                 return db.schemaExists(project.name).then((exists) => {
                     expect(exists).to.be.true;
                 });
             });
-        });
-    })
+        })
+    }).timeout(10000)
     after(function() {
         if (SchemaManager) {
-            SchemaManager.exit();
+            return SchemaManager.exit();
         }
     })
 })

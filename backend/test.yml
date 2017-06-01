@@ -8,15 +8,15 @@ services:
       - POSTGRES_DB=trambar
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=qwerty
-  node:
+    logging:
+      driver: none
+  lib:
     image: trambar-node-dev
-    ports:
-      - 80:80
     volumes:
       - ../../trambar/backend/src:/opt/trambar/backend/src
       - ../../trambar/common/src:/opt/trambar/common/src
     environment:
-      - NODE_PATH=/opt/trambar/backend/src:/opt/trambar/backend/src/lib:/opt/trambar/common/src
+      - NODE_PATH=/opt/trambar/backend/node_modules:/opt/trambar/backend/src:/opt/trambar/backend/src/lib:/opt/trambar/common/src
       - NODE_ENV=development
       - DEPLOYMENT=development
       - POSTGRES_HOST=postgres
@@ -24,6 +24,20 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=qwerty
       - DOCKER_MOCHA=1
-    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/**/test/*.js ]
+    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/lib/**/test/*.js ]
+  schema_manager:
+    extends: lib
+    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/test/schema-manager.test.js ]
     depends_on:
+      - lib
       - postgres
+  data_server:
+    extends: lib
+    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/test/data-server.test.js ]
+    depends_on:
+      - schema_manager
+  media_server:
+    extends: lib
+    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/test/media-server.test.js ]
+    depends_on:
+      - schema_manager

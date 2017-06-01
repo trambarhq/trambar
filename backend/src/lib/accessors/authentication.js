@@ -94,6 +94,29 @@ module.exports = {
             return Promise.resolve(null);
         }
     },
+
+    insertOne: function(db, schema, object) {
+        var table = `"global"."${this.table}"`;
+        if (object.type === 'password') {
+            return BCrypt.hashAsync(object.password, 10).then((hash) => {
+                var details = {
+                    username: object.username,
+                    password_hash: hash,
+                };
+                var params = [ object.type, object.user_id, details ];
+                var sql = `
+                    INSERT INTO ${table} (type, user_id, details)
+                    VALUES ($1, $2, $3)
+                    RETURNING *
+                `;
+                return db.query(sql, params).get(0).then((row) => {
+                    return row || null;
+                })
+            });
+        } else {
+            return Promise.resolve(null);
+        }
+    }
 };
 
 var bcryptRounds = 10;

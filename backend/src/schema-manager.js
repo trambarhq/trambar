@@ -22,7 +22,7 @@ var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 
-Database.open(true).then((db) => {
+exports.initialized = Database.open(true).then((db) => {
     return db.updateJavaScriptRuntime().then(() => {
         // reconnect, since the runtime might be different
         db.close();
@@ -46,17 +46,17 @@ Database.open(true).then((db) => {
         exports.exit = function() {
             clearInterval(interval);
             db.close();
+            return Promise.resolve();
         };
-        if (exports.onReady) {
-            exports.onReady();
-        }
     });
 }).catch((err) => {
     console.error(err);
     process.exit(-1);
 });
 
-exports.exit = function() {};
+exports.exit = function() {
+    return Promise.resolve();
+};
 
 function handleDatabaseChanges(events) {
     var db = this;
@@ -82,7 +82,7 @@ function handleDatabaseChanges(events) {
             }
         }
     }).catch((err) => {
-        console.log('ERROR: ' + err.message);
+        console.error(err);
     });
 }
 

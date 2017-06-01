@@ -94,7 +94,6 @@ module.exports = {
 
     insertOne: function(db, schema, object) {
         var table = `"global"."${this.table}"`;
-        console.log(object.token);
         var sql = `
             INSERT INTO ${table} (user_id, token, expiration_date)
             VALUES ($1, $2, $3)

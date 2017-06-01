@@ -10,14 +10,25 @@ var Phantom = require('phantom');
 var Crypto = require('crypto')
 
 var app = Express();
-var server = app.listen(80, () => {
-    if (exports.onReady) {
-        exports.onReady();
-    }
+var server;
+
+exports.initialized = new Promise((resolve, reject) => {
+    server = app.listen(80, () => {
+        resolve();
+    });
 });
 
 exports.exit = function() {
-    server.close();
+    return new Promise((resolve, reject) => {
+        if (server) {
+            server.close();
+            server.on('close', () => {
+                resolve();
+            });
+        } else {
+            resolve();
+        }
+    });
 };
 
 // create the cache folders

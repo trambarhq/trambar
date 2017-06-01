@@ -12,7 +12,7 @@ var analysers = [
     StoryPopularity,
 ];
 
-Database.open(true).then((db) => {
+exports.initialized = Database.open(true).then((db) => {
     return Promise.resolve().then(() => {
         // get list of tables that analyers make use of
         var tables = _.reduce(analysers, (list, analyser) => {
@@ -20,11 +20,16 @@ Database.open(true).then((db) => {
         }, []);
         return db.listen(tables, 'change', handleDatabaseChanges);
     }).then(() => {
-        if (exports.onReady) {
-            exports.onReady();
-        }
+        exports.exit = function() {
+            db.close();
+            return Promise.resolve();
+        };
     });
 });
+
+exports.exit = function() {
+    return Promise.resolve();
+};
 
 function handleDatabaseChanges(events) {
     // process the events for each schema separately

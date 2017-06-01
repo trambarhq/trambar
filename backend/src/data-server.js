@@ -30,7 +30,26 @@ var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 
 var app = Express();
-var server = app.listen(80);
+var server;
+
+exports.initialized = new Promise((resolve, reject) => {
+    server = app.listen(80, () => {
+        resolve();
+    });
+});
+
+exports.exit = function() {
+    return new Promise((resolve, reject) => {
+        if (server) {
+            server.close();
+            server.on('close', () => {
+                resolve();
+            });
+        } else {
+            resolve();
+        }
+    });
+};
 
 app.use(BodyParser.json());
 app.set('json spaces', 2);
@@ -197,7 +216,6 @@ function handleRetrieval(req, res) {
             return db.close();
         });
     }).then((result) => {
-        console.log(result)
         sendResponse(res, result);
     }).catch((err) => {
         sendError(res, err);

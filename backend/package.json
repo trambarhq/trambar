@@ -8,8 +8,9 @@
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha -- src/**/test/*.js",
     "test:start": "./node_modules/mocha/bin/mocha --watch -- src/**/test/*.js",
-    "test:docker": "docker-compose -p test -f test.yml up",
-    "test:docker:clean": "docker-compose -p test -f test.yml down"
+    "test:docker:start": "docker-compose -p test -f test.yml up -d",
+    "test:docker:logs": "docker-compose -p test -f test.yml logs -f",
+    "test:docker:stop": "docker-compose -p test -f test.yml down"
   },
   "dependencies": {
     "bcrypt": "^1.0.2",
