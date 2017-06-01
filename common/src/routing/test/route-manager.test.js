@@ -24,7 +24,7 @@ var pages = [
     new MockPage('/forum/1/messages/2/', { forumId: 1, messageId: 2 }),
 ];
 
-describe('RouteManager', () => {
+describe('RouteManager', function() {
     // set the browser location to the base URL
     var startUrl = location.href;
     history.replaceState({}, '', '/test/');
@@ -55,28 +55,28 @@ describe('RouteManager', () => {
         }, 1000);
     });
 
-    it('should call onChange() at some point', () => {
+    it('should call onChange() at some point', function() {
         return managerReady;
     })
-    it('should have detected correctly the base URL', () => {
+    it('should have detected correctly the base URL', function() {
         return managerReady.then((manager) => {
             expect(manager.state).to.have.property('baseUrl', '/test');
         });
     })
-    it('should have call onRedirectionRequest() since no page maps to /', () => {
+    it('should have call onRedirectionRequest() since no page maps to /', function() {
         return managerReady.then((manager) => {
             expect(redirectionCount).to.be.above(0);
         });
     })
-    it('should have redirected to the home page', () => {
+    it('should have redirected to the home page', function() {
         return managerReady.then((manager) => {
             expect(manager.getUrl()).to.equal('/home/');
             expect(location.pathname).to.equal('/test/home/');
         });
     })
 
-    describe('#change()', () => {
-        it('should not fire onChange() where called with the current URL', () => {
+    describe('#change()', function() {
+        it('should not fire onChange() where called with the current URL', function() {
             return managerReady.then((manager) => {
                 var prevChangeCount = changeCount;
                 return manager.change(manager.getUrl()).then(() => {
@@ -84,7 +84,7 @@ describe('RouteManager', () => {
                 });
             });
         })
-        it('should to able to change to different pages', () => {
+        it('should to able to change to different pages', function() {
             return managerReady.then((manager) => {
                 return Promise.each([1, 2, 3], (index) => {
                     var page = pages[index];

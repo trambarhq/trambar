@@ -3,13 +3,23 @@ var Promise = require('bluebird');
 var Fs = Promise.promisifyAll(require('fs'));
 var Express = require('express');
 var BodyParser = require('body-parser');
+var Multer  = require('multer');
+
 var Sharp = require('sharp');
 var Piexif = require("piexifjs");
 var Phantom = require('phantom');
 var Crypto = require('crypto')
 
 var app = Express();
-var server = app.listen(8081);
+var server = app.listen(80, () => {
+    if (exports.onReady) {
+        exports.onReady();
+    }
+});
+
+exports.exit = function() {
+    server.close();
+};
 
 // create the cache folders
 var cacheFolder = '/var/cache/media';
@@ -25,6 +35,8 @@ if (!Fs.existsSync(videoCacheFolder)) {
     Fs.mkdirSync(videoCacheFolder);
 }
 
+var upload = Multer({ dest: '/var/tmp' });
+
 app.use(BodyParser.json());
 app.set('json spaces', 2);
 
@@ -32,13 +44,19 @@ app.get('/media/images/:hash/:filename', handleResizedImageRequest);
 
 app.get('/media/images/:hash', handleOriginalImageRequest);
 
+app.get('/media/videos/:hash', handleOriginalVideoRequest);
+
 app.post('/media/html/screenshot', handleWebsiteScreenshot);
 
-app.post('/media/images/upload', handleImageUpload);
+app.post('/media/images/upload', upload.array('images', 16), handleImageUpload);
 
-app.post('/media/video/upload', handleVideoUpload);
+app.post('/media/videos/upload', upload.array('videos', 4), handleVideoUpload);
 
 function handleOriginalImageRequest(req, res) {
+
+}
+
+function handleOriginalVideoRequest(req, res) {
 
 }
 
@@ -73,7 +91,7 @@ function handleWebsiteScreenshot(req, res) {
 }
 
 function handleImageUpload(req, res) {
-
+    res.json({ files: _.size(req.files) });
 }
 
 function handleVideoUpload(req, res) {

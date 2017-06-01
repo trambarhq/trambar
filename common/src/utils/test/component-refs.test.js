@@ -6,8 +6,8 @@ var Enzyme = require('enzyme');
 
 var ComponentRefs = require('utils/component-refs');
 
-describe('ComponentRefs', () => {
-    it('should capture references of sub-components', () => {
+describe('ComponentRefs', function() {
+    it('should capture references of sub-components', function() {
         var components = ComponentRefs({
             dog: HTMLElement,
             cat: HTMLElement,

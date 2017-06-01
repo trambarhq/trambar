@@ -22,74 +22,74 @@ function initPLV8() {
     return stmts;
 }
 
-describe('Runtime', () => {
-    describe('#isEqual()', () => {
-        it('should return true when two scalars are the same', () => {
+describe('Runtime', function() {
+    describe('#isEqual()', function() {
+        it('should return true when two scalars are the same', function() {
             var a = 99;
             var b = 99;
             expect(Runtime.isEqual(a, b)).to.equal(true);
         })
-        it('should return false when two scalars are different', () => {
+        it('should return false when two scalars are different', function() {
             var a = 99;
             var b = 100;
             expect(Runtime.isEqual(a, b)).to.equal(false);
         })
-        it('should return true when two arrays are the same', () => {
+        it('should return true when two arrays are the same', function() {
             var a = [ 1, 2, 3 ];
             var b = [ 1, 2, 3 ];
             expect(Runtime.isEqual(a, b)).to.equal(true);
         })
-        it('should return true when two arrays obtain objects that are the same', () => {
+        it('should return true when two arrays obtain objects that are the same', function() {
             var a = [ { a:1 }, { b: { c: 2 } } ];
             var b = [ { a:1 }, { b: { c: 2 } } ];
             expect(Runtime.isEqual(a, b)).to.equal(true);
         })
-        it('should return false when two arrays are different', () => {
+        it('should return false when two arrays are different', function() {
             var a = [1, 2, 3];
             var b = [1, 2, 4];
             expect(Runtime.isEqual(a, b)).to.equal(false);
         })
-        it('should return false when two arrays obtain objects that are different', () => {
+        it('should return false when two arrays obtain objects that are different', function() {
             var a = [ { a:1 }, { b: { c:2 } }];
             var b = [ { a:1 }, { b: { c:4 } }];
             expect(Runtime.isEqual(a, b)).to.equal(false);
         })
-        it('should return false when one object has an extra property', () => {
+        it('should return false when one object has an extra property', function() {
             var a = { a: { b: { c: 1 } } };
             var b = { a: { b: { c: 1, d: 2 } } };
             expect(Runtime.isEqual(a, b)).to.equal(false);
         })
     })
-    describe('#findChanges()', () => {
-        it('should return true null when two objects are the same', () => {
+    describe('#findChanges()', function() {
+        it('should return true null when two objects are the same', function() {
             var a = { a: 'dingo' };
             var b = { a: 'dingo' };
             expect(Runtime.findChanges(a, b)).to.be.null;
         })
-        it('should return the difference between two objects', () => {
+        it('should return the difference between two objects', function() {
             var a = { a: 'dingo', b: 'cat' };
             var b = { a: 'bingo', b: 'cat' };
             expect(Runtime.findChanges(a, b)).to.deep.equal({ a: [ 'dingo', 'bingo' ] });
         })
-        it('should return the differences of multiple fields', () => {
+        it('should return the differences of multiple fields', function() {
             var a = { a: 'dingo', b: 'cat', c: 'turkey' };
             var b = { a: 'bingo', b: 'cat', c: 'Turkey' };
             expect(Runtime.findChanges(a, b)).to.have.keys('a', 'c');
         })
-        it('should ignore differences in omitted fields', () => {
+        it('should ignore differences in omitted fields', function() {
             var a = { a: 'dingo', b: 'cat', c: 'turkey' };
             var b = { a: 'bingo', b: 'cat', c: 'Turkey' };
             expect(Runtime.findChanges(a, b, ['a', 'c'])).to.be.null;
         })
     })
-    describe('#sendChangeNotification()', () => {
-        it('should send notification message containg diff', () => {
+    describe('#sendChangeNotification()', function() {
+        it('should send notification message containg diff', function() {
             var stmts = initPLV8();
             var diff = { a: [ 'dingo', 'bingo' ] };
             Runtime.sendChangeNotification('INSERT', 'schema', 'table', 5, diff);
             expect(stmts[0]).to.contain('NOTIFY');
         })
-        it('should insert notification into message_queue when diff is large', () => {
+        it('should insert notification into message_queue when diff is large', function() {
             var stmts = initPLV8();
             var bigArray = Array(1000);
             var diff = { a: [ bigArray, bigArray.slice(1) ] };
@@ -98,15 +98,15 @@ describe('Runtime', () => {
             expect(stmts[1]).to.contain('NOTIFY').to.contain('1234');
         })
     })
-    describe('#sendCleanNotification()', () => {
-        it('should send clean notification message', () => {
+    describe('#sendCleanNotification()', function() {
+        it('should send clean notification message', function() {
             var stmts = initPLV8();
             Runtime.sendCleanNotification('UPDATE', 'schema', 'table', 5);
             expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
         })
     })
-    describe('#matchObject()', () => {
-        it('should return true when comparing a single-id filters', () => {
+    describe('#matchObject()', function() {
+        it('should return true when comparing a single-id filters', function() {
             var object = {
                 story_id: 1
             };
@@ -115,7 +115,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return true when comparing a multi-id filters', () => {
+        it('should return true when comparing a multi-id filters', function() {
             var object = {
                 story_ids: 1
             };
@@ -124,7 +124,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return true when a multi-id filters overlaps ids in an object', () => {
+        it('should return true when a multi-id filters overlaps ids in an object', function() {
             var object = {
                 story_ids: [ 2 ]
             };
@@ -133,7 +133,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return false when id is not on the list', () => {
+        it('should return false when id is not on the list', function() {
             var object = {
                 story_ids: 4
             };
@@ -142,7 +142,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(false);
         })
-        it('should return true when a multi-id filters does not overlap ids in an object', () => {
+        it('should return true when a multi-id filters does not overlap ids in an object', function() {
             var object = {
                 story_ids: [ 4, 5, 6 ]
             };
@@ -151,7 +151,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(false);
         })
-        it('should return false when all criteria are met', () => {
+        it('should return false when all criteria are met', function() {
             var object = {
                 story_id: 1,
                 type: 'good',
@@ -164,7 +164,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return false when some of the criteria are not met', () => {
+        it('should return false when some of the criteria are not met', function() {
             var object = {
                 story_id: 1,
                 type: 'good'
@@ -175,7 +175,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(false);
         })
-        it('should return true when a timestamp falls within a time-range filter', () => {
+        it('should return true when a timestamp falls within a time-range filter', function() {
             var object = {
                 story_id: 1,
                 time_range: '2017-05-31T00:00:00.000Z'
@@ -186,7 +186,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return true when a timestamp falls within an open-ended time-range', () => {
+        it('should return true when a timestamp falls within an open-ended time-range', function() {
             var object = {
                 story_id: 1,
                 time_range: '2017-05-31T00:00:00.000Z'
@@ -197,7 +197,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return false when a timestamp falls outside a time-range', () => {
+        it('should return false when a timestamp falls outside a time-range', function() {
             var object = {
                 story_id: 1,
                 time_range: '2017-09-01T00:00:00.000Z'
@@ -208,7 +208,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(false);
         })
-        it('should return true when a time-range includes the timestamp filter', () => {
+        it('should return true when a time-range includes the timestamp filter', function() {
             var object = {
                 story_id: 1,
                 time_range: '[2017-04-22T00:00:00.000Z,2017-06-22T00:00:00.000Z]'
@@ -219,7 +219,7 @@ describe('Runtime', () => {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(true);
         })
-        it('should return false when a time-range does not include the timestamp', () => {
+        it('should return false when a time-range does not include the timestamp', function() {
             var object = {
                 story_id: 1,
                 time_range: '[2017-06-12T00:00:00.000Z,2017-06-22T00:00:00.000Z]'

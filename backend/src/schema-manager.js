@@ -42,6 +42,9 @@ Database.open(true).then((db) => {
     }).then(() => {
         setInterval(() => { cleanMessageQueue(db) }, 5 * 60 * 1000);
     }).then(() => {
+        exports.exit = function() {
+            db.close();
+        };
         if (exports.onReady) {
             exports.onReady();
         }
@@ -50,6 +53,8 @@ Database.open(true).then((db) => {
     console.error(err);
     process.exit(-1);
 });
+
+exports.exit = function() {};
 
 function handleDatabaseChanges(events) {
     var db = this;
@@ -75,7 +80,7 @@ function handleDatabaseChanges(events) {
             }
         }
     }).catch((err) => {
-        console.log(err.message);
+        console.log('ERROR: ' + err.message);
     });
 }
 

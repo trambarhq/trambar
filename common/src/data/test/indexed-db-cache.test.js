@@ -5,12 +5,12 @@ var Enzyme = require('enzyme');
 
 var IndexedDBCache = require('data/indexed-db-cache.jsx');
 
-describe('IndexedDBCache', () => {
+describe('IndexedDBCache', function() {
     var wrapper = Enzyme.mount(<IndexedDBCache />);
     var cache = wrapper.instance();
 
-    describe('#save', () => {
-        it('should save an object to IndexedDB', () => {
+    describe('#save', function() {
+        it('should save an object to IndexedDB', function() {
             var location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -25,7 +25,7 @@ describe('IndexedDBCache', () => {
             };
             return cache.save(location, [ object ]);
         })
-        it('should save multiple objects', () => {
+        it('should save multiple objects', function() {
             var location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -48,8 +48,8 @@ describe('IndexedDBCache', () => {
             return cache.save(location, [ object1, object2 ]);
         })
     })
-    describe('#find', () => {
-        it('should be able to find object saved earlier', () => {
+    describe('#find', function() {
+        it('should be able to find object saved earlier', function() {
             var query = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -62,7 +62,7 @@ describe('IndexedDBCache', () => {
                 expect(objects[0]).to.have.deep.property('details.name', 'John Doe');
             });
         })
-        it('should be able to find object by multiple ids', () => {
+        it('should be able to find object by multiple ids', function() {
             var query = {
                 server: 'somewhere.net',
                 schema: 'global',

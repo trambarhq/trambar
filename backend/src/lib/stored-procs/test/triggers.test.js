@@ -16,12 +16,12 @@ function initPLV8() {
     return stmts;
 }
 
-describe('Triggers', () => {
+describe('Triggers', function() {
     for (var name in Runtime) {
         global[name] = Runtime[name];
     }
-    describe('#indicateDataChange()', () => {
-        it('should increment gn and update mtime when new row is different', () => {
+    describe('#indicateDataChange()', function() {
+        it('should increment gn and update mtime when new row is different', function() {
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime: mtime, details: { a: 'bingo' } };
@@ -29,7 +29,7 @@ describe('Triggers', () => {
             expect(NEW.gn).to.equal(OLD.gn + 1);
             expect(NEW.mtime).to.not.equal(OLD.mtime);
         })
-        it('should keep gn and mtime the same when new row contains no change', () => {
+        it('should keep gn and mtime the same when new row contains no change', function() {
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
@@ -38,8 +38,8 @@ describe('Triggers', () => {
             expect(NEW.mtime).to.equal(OLD.mtime);
         })
     })
-    describe('#indicateLiveDataChange()', () => {
-        it('should increment gn and update mtime when new row is different', () => {
+    describe('#indicateLiveDataChange()', function() {
+        it('should increment gn and update mtime when new row is different', function() {
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'bingo' } };
@@ -47,7 +47,7 @@ describe('Triggers', () => {
             expect(NEW.gn).to.equal(OLD.gn + 1);
             expect(NEW.mtime).to.not.equal(OLD.mtime);
         })
-        it('should return ignore changes to ltime, atime, and dirty', () => {
+        it('should return ignore changes to ltime, atime, and dirty', function() {
             var mtime = new Date('2017');
             var ltime = new Date('2017-06');
             var atime = new Date('2017-06-04');
@@ -58,8 +58,8 @@ describe('Triggers', () => {
             expect(NEW.mtime).to.equal(OLD.mtime);
         })
     })
-    describe('#notifyDataChange()', () => {
-        it('should send change notification on update', () => {
+    describe('#notifyDataChange()', function() {
+        it('should send change notification on update', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
@@ -67,14 +67,14 @@ describe('Triggers', () => {
             Triggers.notifyDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
             expect(stmts[0]).to.contain('NOTIFY').to.contain('{"a":"dingo"},{"a":"bingo"}');
         })
-        it('should send change notification on insert', () => {
+        it('should send change notification on insert', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var NEW = { id: 1, gn: 1, mtime: mtime, details: { a: 'bingo' } };
             Triggers.notifyDataChange(null, NEW, 'INSERT', 'schema', 'table');
             expect(stmts[0]).to.contain('NOTIFY').to.contain('null,{"a":"bingo"}');
         })
-        it('should send change notification on delete', () => {
+        it('should send change notification on delete', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
@@ -82,8 +82,8 @@ describe('Triggers', () => {
             expect(stmts[0]).to.contain('NOTIFY').to.contain('{"a":"dingo"},null');
         })
     })
-    describe('#notifyLiveDataChange()', () => {
-        it('should send change notification on update', () => {
+    describe('#notifyLiveDataChange()', function() {
+        it('should send change notification on update', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'dingo' } };
@@ -91,7 +91,7 @@ describe('Triggers', () => {
             Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
             expect(stmts[0]).to.contain('NOTIFY').to.contain('{"a":"dingo"},{"a":"bingo"}');
         })
-        it('should send clean notification when dirty becomes true', () => {
+        it('should send clean notification when dirty becomes true', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'dingo' } };
@@ -100,7 +100,7 @@ describe('Triggers', () => {
             expect(stmts).to.be.lengthOf(1);
             expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
         })
-        it('should send clean notification on atime change', () => {
+        it('should send clean notification on atime change', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var atime = new Date('2017-06-04');
@@ -109,7 +109,7 @@ describe('Triggers', () => {
             Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
             expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
         })
-        it('should not send clean notification when ltime is set', () => {
+        it('should not send clean notification when ltime is set', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var ltime = new Date('2017-06');
@@ -119,7 +119,7 @@ describe('Triggers', () => {
             Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
             expect(stmts).to.be.empty;
         })
-        it('should send change notification after row is updated', () => {
+        it('should send change notification after row is updated', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var ltime = new Date('2017-06');
@@ -130,7 +130,7 @@ describe('Triggers', () => {
             Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
             expect(stmts[0]).to.contain('NOTIFY').to.contain('change');
         })
-        it('should do nothing when an update results in no change', () => {
+        it('should do nothing when an update results in no change', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var ltime = new Date('2017-06');

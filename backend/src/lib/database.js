@@ -81,6 +81,9 @@ Database.prototype.query = function(sql, parameters) {
 };
 
 Database.prototype.execute = function(sql, parameters) {
+    if (!this.client) {
+        return Promise.reject('Connection was closed');
+    }
     // convert promise to Bluebird variety
     return Promise.resolve(this.client.query(sql, parameters));
 };
