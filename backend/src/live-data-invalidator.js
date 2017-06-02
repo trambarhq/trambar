@@ -4,6 +4,7 @@ var Database = require('database');
 
 // accessors
 var Statistics = require('accessors/statistics');
+var Listing = require('accessors/listing');
 
 // analysers
 var DailyActivities = require('analysers/daily-activities');
@@ -15,27 +16,35 @@ var analysers = [
     ProjectDateRange,
     StoryPopularity,
 ];
+var database;
 
-exports.initialized = Database.open(true).then((db) => {
-    return Promise.resolve().then(() => {
-        // get list of tables that analyers make use of
-        var tables = _.reduce(analysers, (list, analyser) => {
-            return _.union(list, analyser.sourceTables);
-        }, []);
-        return db.listen(tables, 'change', handleDatabaseChanges);
-    }).then(() => {
-        exports.exit = function() {
-            db.close();
-            return Promise.resolve();
-        };
+function start() {
+    return Database.open(true).then((db) => {
+        database = db;
+        return db.need('global').then(() => {
+            // get list of tables that the analyers make use of
+            var tables = _.reduce(analysers, (list, analyser) => {
+                return _.union(list, analyser.sourceTables);
+            }, []);
+            return db.listen(tables, 'change', handleDatabaseChanges);
+        });
     });
-});
+}
 
-exports.exit = function() {
+function stop() {
+    if (database) {
+        database.close();
+    }
     return Promise.resolve();
 };
 
 function handleDatabaseChanges(events) {
+    // filter out events from other tests
+    if (process.env.DOCKER_MOCHA) {
+        events = _.filter(events, (event) => {
+            return (event.schema === 'test:LiveDataInvalidator');
+        });
+    }
     // process the events for each schema separately
     var db = this;
     var eventGroups = _.groupBy(events, 'schema');
@@ -124,4 +133,11 @@ function invalidateStatistics(db, schema, events) {
             });
         });
     });
+}
+
+exports.start = start;
+exports.stop = stop;
+
+if (process.argv[1] === __filename) {
+    start();
 }

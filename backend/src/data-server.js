@@ -29,16 +29,33 @@ var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 
-var app = Express();
 var server;
 
-exports.initialized = new Promise((resolve, reject) => {
-    server = app.listen(80, () => {
-        resolve();
+function start() {
+    return Database.open(true).then((db) => {
+        return db.need('global').then(() => {
+            var app = Express();
+            app.use(BodyParser.json());
+            app.set('json spaces', 2);
+            app.route('/api/authorization/').post(handleAuthorization);
+            app.route('/api/discovery/:schema/:table/').post(handleDiscovery).get(handleDiscovery);
+            app.route('/api/retrieval/:schema/:table/:id?').post(handleRetrieval).get(handleRetrieval);
+            app.route('/api/storage/:schema/:table/:id?').post(handleStorage);
+            return new Promise((resolve, reject) => {
+                server = app.listen(80, () => {
+                    resolve();
+                });
+                server.once('error', (evt) => {
+                    reject(new Error(evt.message));
+                });
+            });
+        }).finally(() => {
+            return db.close();
+        });
     });
-});
+}
 
-exports.exit = function() {
+function stop() {
     return new Promise((resolve, reject) => {
         if (server) {
             server.close();
@@ -50,23 +67,6 @@ exports.exit = function() {
         }
     });
 };
-
-app.use(BodyParser.json());
-app.set('json spaces', 2);
-
-app.route('/api/authorization/')
-    .post(handleAuthorization);
-
-app.route('/api/discovery/:schema/:table/')
-    .get(handleDiscovery)
-    .post(handleDiscovery);
-
-app.route('/api/retrieval/:schema/:table/:id?')
-    .get(handleRetrieval)
-    .post(handleRetrieval);
-
-app.route('/api/storage/:schema/:table/:id?')
-    .post(handleStorage);
 
 /**
  * Send response to browser as JSON object
@@ -423,4 +423,11 @@ function getAccessor(schema, table) {
         throw new HttpError(404);
     }
     return accessor;
+}
+
+exports.start = start;
+exports.stop = stop;
+
+if (process.argv[1] === __filename) {
+    start();
 }

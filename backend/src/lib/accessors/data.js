@@ -26,8 +26,11 @@ module.exports = {
      * @return {String}
      */
     getTableName: function(schema) {
-        if (!/^\w+$/.test(schema)) {
-            throw new Error('Invalid name: ' + schema);
+        // allow non-alphanumeric schema name during testing
+        if (!process.env.DOCKER_MOCHA) {
+            if (!/^\w+$/.test(schema)) {
+                throw new Error('Invalid name: ' + schema);
+            }
         }
         if (this.schema === 'global' && schema !== 'global') {
             throw new Error('Referencing global table in project-specific schema: ' + this.table);

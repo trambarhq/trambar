@@ -3,12 +3,19 @@ var Promise = require('bluebird');
 var Chai = require('chai'), expect = Chai.expect;
 
 var Database = require('database');
+var SchemaManager = require('schema-manager');
+
+// service being tested
+var LiveDataInvalidator = require('live-data-invalidator');
+
+// accessors
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
 
+var schema = 'test:LiveDataInvalidator';
+
 describe('LiveDataInvalidator', function() {
-    var LiveDataInvalidator;
     var testStatsRecords = {
         rangeOverall: {
             type: 'project-date-range',
@@ -50,34 +57,36 @@ describe('LiveDataInvalidator', function() {
         },
     };
     before(function() {
-        if (process.env.DOCKER_MOCHA) {
-            // wait for the creation of the global and test schema
-            this.timeout(30000);
-            return Database.need([ 'global', 'test' ], 30000).then(() => {
-                LiveDataInvalidator = require('live-data-invalidator');
-                return LiveDataInvalidator.initialized;
-            }).then(() => {
-                // create test records
-                return Database.open().then((db) => {
+        if (!process.env.DOCKER_MOCHA) {
+            return this.skip();
+        }
+        this.timeout(30000);
+        return LiveDataInvalidator.start().then(() => {
+            return Database.open().then((db) => {
+                // create test schema if it's not there
+                return db.schemaExists(schema).then((exists) => {
+                    if (!exists) {
+                        return SchemaManager.createSchema(db, schema);
+                    }
+                }).then(() => {
+                    // create test records
                     var testRecordKeys = _.keys(testStatsRecords);
                     var testRecords = _.values(testStatsRecords);
                     return Promise.each(testRecords, (record, index) => {
-                        return Statistics.findOne(db, 'test', record, '*').then((stats) => {
+                        // rely on auto-generation
+                        return Statistics.findOne(db, schema, record, '*').then((stats) => {
                             var key = testRecordKeys[index];
                             testStatsRecords[key] = stats;
                         });
                     }).then(() => {
-                        return cleanRecords(db, 'test', testStatsRecords);
+                        // set dirty to false
+                        return cleanRecords(db, schema, testStatsRecords);
                     });
-                }).catch((err) => {
-                    console.error(err);
                 });
             });
-        } else {
-            this.skip()
-        }
+        });
     })
-    it('should mark stats as dirty when a published story is inserted', () => {
+    it('should mark stats as dirty when a published story is inserted', function() {
         return Database.open().then((db) => {
             var story = {
                 type: 'story',
@@ -86,21 +95,20 @@ describe('LiveDataInvalidator', function() {
                 published: true,
                 ptime: now(),
             };
-            return Story.insertOne(db, 'test', story).delay(500).then((story) => {
+            return Story.insertOne(db, schema, story).delay(500).then((story) => {
                 var ids = [
                     testStatsRecords.rangeOverall.id,
                     testStatsRecords.activitiesOverall.id,
                 ];
-                return Statistics.find(db, 'test', { id: ids }, '*').each((stats) => {
+                return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', true);
                 });
             }).finally(() => {
-                return cleanRecords(db, 'test', testStatsRecords);
+                return cleanRecords(db, schema, testStatsRecords);
             });
         });
-        return Story.insertOne()
     }).timeout(5000)
-    it('should ignore a story when it is not published', () => {
+    it('should ignore a story when it is not published', function() {
         return Database.open().then((db) => {
             var story = {
                 type: 'story',
@@ -108,21 +116,21 @@ describe('LiveDataInvalidator', function() {
                 role_ids: [ 2 ],
                 published: false,
             };
-            return Story.insertOne(db, 'test', story).delay(500).then((story) => {
+            return Story.insertOne(db, schema, story).delay(500).then((story) => {
                 var ids = [
                     testStatsRecords.rangeOverall.id,
                     testStatsRecords.activitiesOverall.id,
                 ];
-                return Statistics.find(db, 'test', { id: ids }, '*').each((stats) => {
+                return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', false);
                 });
             }).finally(() => {
-                return cleanRecords(db, 'test', testStatsRecords);
+                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
     }).timeout(5000)
-    it('should trigger "clean" events when a published story is inserted', () => {
+    it('should trigger "clean" events when a published story is inserted', function() {
         // need exclusive connection for event handling
         return Database.open(true).then((db) => {
             var story = {
@@ -139,19 +147,19 @@ describe('LiveDataInvalidator', function() {
                 });
             };
             return db.listen([ 'statistics' ], 'clean', onClean, 100).then(() => {
-                return Story.insertOne(db, 'test', story).delay(500).then((story) => {
+                return Story.insertOne(db, schema, story).delay(500).then((story) => {
                     expect(cleaningIds).to.include(testStatsRecords.rangeOverall.id);
                     expect(cleaningIds).to.include(testStatsRecords.activitiesOverall.id);
                 });
             }).finally(() => {
-                return cleanRecords(db, 'test', testStatsRecords).then(() => {
+                return cleanRecords(db, schema, testStatsRecords).then(() => {
                     db.close();
                 });
             });
         });
         return Story.insertOne()
     }).timeout(5000)
-    it('should invalidate user and role specific stats', () => {
+    it('should invalidate user and role specific stats', function() {
         return Database.open().then((db) => {
             var story = {
                 type: 'story',
@@ -160,7 +168,7 @@ describe('LiveDataInvalidator', function() {
                 published: true,
                 ptime: now(),
             };
-            return Story.insertOne(db, 'test', story).delay(500).then((story) => {
+            return Story.insertOne(db, schema, story).delay(500).then((story) => {
                 var ids = [
                     testStatsRecords.rangeOverall.id,
                     testStatsRecords.rangeRoles.id,
@@ -169,16 +177,16 @@ describe('LiveDataInvalidator', function() {
                     testStatsRecords.activitiesRoles.id,
                     testStatsRecords.activitiesUser.id,
                 ];
-                return Statistics.find(db, 'test', { id: ids }, '*').each((stats) => {
+                return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', true);
                 });
             }).finally(() => {
-                return cleanRecords(db, 'test', testStatsRecords);
+                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
     }).timeout(5000)
-    it('should invalidate story popularity stats when there is a new reaction to it', () => {
+    it('should invalidate story popularity stats when there is a new reaction to it', function() {
         return Database.open().then((db) => {
             var reaction = {
                 type: 'like',
@@ -187,21 +195,21 @@ describe('LiveDataInvalidator', function() {
                 target_user_id: 1,
                 published: true,
             };
-            return Reaction.insertOne(db, 'test', reaction).delay(500).then((reaction) => {
+            return Reaction.insertOne(db, schema, reaction).delay(500).then((reaction) => {
                 var ids = [
                     testStatsRecords.popularity.id,
                 ];
-                return Statistics.find(db, 'test', { id: ids }, '*').each((stats) => {
+                return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', true);
                 });
             }).finally(() => {
-                return cleanRecords(db, 'test', testStatsRecords);
+                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
     }).timeout(5000)
 
-    it('should ignore a change to a reaction that would not affect the stats', () => {
+    it('should ignore a change to a reaction that would not affect the stats', function() {
         return Database.open().then((db) => {
             var reaction = {
                 type: 'like',
@@ -210,39 +218,38 @@ describe('LiveDataInvalidator', function() {
                 target_user_id: 1,
                 published: true,
             };
-            return Reaction.insertOne(db, 'test', reaction).delay(500).then((reaction) => {
-                return cleanRecords(db, 'test', testStatsRecords).then(() => {
+            return Reaction.insertOne(db, schema, reaction).delay(500).then((reaction) => {
+                return cleanRecords(db, schema, testStatsRecords).then(() => {
                     reaction.details = { text: 'something' };
-                    return Reaction.saveOne(db, 'test', reaction).delay(500).then((reaction) => {
+                    return Reaction.saveOne(db, schema, reaction).delay(500).then((reaction) => {
                         var ids = [
                             testStatsRecords.popularity.id,
                         ];
-                        return Statistics.find(db, 'test', { id: ids }, '*').each((stats) => {
+                        return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                             expect(stats).to.have.property('dirty', false);
                         });
                     });
                 });
             }).finally(() => {
-                return cleanRecords(db, 'test', testStatsRecords);
+                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
     }).timeout(5000)
-
     after(function() {
         if (LiveDataInvalidator) {
-            return LiveDataInvalidator.exit();
+            return LiveDataInvalidator.stop();
         }
     })
 })
 
 function cleanRecords(db, schema, records) {
     var ids = _.map(records, 'id');
-    return Statistics.find(db, 'test', { id: ids }, '*').map((stats) => {
+    return Statistics.find(db, schema, { id: ids }, '*').map((stats) => {
         if (stats.dirty) {
-            return Statistics.lock(db, 'test', stats.id, '5 seconds', '*').then((stats) => {
+            return Statistics.lock(db, schema, stats.id, '5 seconds', '*').then((stats) => {
                 var details = {};
-                return Statistics.unlock(db, 'test', stats.id, { details }, '*');
+                return Statistics.unlock(db, schema, stats.id, { details }, '*');
             });
         } else {
             return stats;

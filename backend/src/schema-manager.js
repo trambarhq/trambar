@@ -1,8 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-
 var Database = require('database');
 
+// global accessors
 var Account = require('accessors/account');
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
@@ -11,6 +11,7 @@ var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
 var User = require('accessors/user');
 
+// project accessors
 var Bookmark = require('accessors/bookmark');
 var Commit = require('accessors/commit');
 var Folder = require('accessors/folder');
@@ -22,39 +23,41 @@ var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 
-exports.initialized = Database.open(true).then((db) => {
-    return db.updateJavaScriptRuntime().then(() => {
-        // reconnect, since the runtime might be different
-        db.close();
-        return Database.open(true).then((newDB) => {
-            db = newDB;
-        });
-    }).then(() => {
-        return db.updateJavaScriptFunctions();
-    }).then(() => {
-        return initializeDatabase(db);
-    }).then((created) => {
-        if (created) {
-            return upgradeDatabase(db);
-        }
-    }).then(() => {
-        return db.listen([ 'project' ], 'change', handleDatabaseChanges, 0);
-    }).then(() => {
-        var interval = setInterval(() => {
-            cleanMessageQueue(db);
-        }, 5 * 60 * 1000);
-        exports.exit = function() {
-            clearInterval(interval);
-            db.close();
-            return Promise.resolve();
-        };
-    });
-}).catch((err) => {
-    console.error(err);
-    process.exit(-1);
-});
+var database;
+var messageQueueInterval;
 
-exports.exit = function() {
+function start() {
+    return Database.open(true).then((db) => {
+        database = db;
+        return db.updateJavaScriptRuntime().then(() => {
+            // reconnect, since the runtime might be different
+            db.close();
+            return Database.open(true).then((newDB) => {
+                db = newDB;
+            });
+        }).then(() => {
+            return db.updateJavaScriptFunctions();
+        }).then(() => {
+            return initializeDatabase(db);
+        }).then((created) => {
+            if (created) {
+                return upgradeDatabase(db);
+            }
+        }).then(() => {
+            return db.listen([ 'project' ], 'change', handleDatabaseChanges, 0);
+        }).then(() => {
+            messageQueueInterval = setInterval(() => {
+                cleanMessageQueue(db);
+            }, 5 * 60 * 1000);
+        });
+    });
+}
+
+function stop() {
+    clearInterval(messageQueueInterval);
+    if (database) {
+        database.close();
+    }
     return Promise.resolve();
 };
 
@@ -109,7 +112,7 @@ function initializeDatabase(db) {
 }
 
 function addDatabaseRoles(db) {
-    var roles = ['internal_role', 'webfacing_role'];
+    var roles = [ 'internal_role', 'webfacing_role' ];
     return Promise.mapSeries(roles, (role) => {
         return db.roleExists(role).then((exists) => {
             if (exists) {
@@ -338,4 +341,14 @@ function cleanMessageQueue(db) {
     var sql = `DELETE FROM "message_queue" WHERE ctime + CAST($1 AS INTERVAL) < NOW()`;
     return db.execute(sql, [ lifetime ]).then((result) => {
     });
+}
+
+exports.start = start;
+exports.stop = stop;
+exports.createSchema = createSchema;
+exports.deleteSchema = deleteSchema;
+exports.renameSchema = renameSchema;
+
+if (process.argv[1] === __filename) {
+    start();
 }

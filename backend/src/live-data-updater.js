@@ -2,17 +2,49 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
 
-Database.open(true).then((db) => {
-    return Promise.resolve().then(() => {
-        var tables = [
-            'listing',
-            'statistics'
-        ];
-        return db.listen(tables, 'clean', handleDatabaseCleanRequests);
+// accessors
+var Statistics = require('accessors/statistics');
+var Listing = require('accessors/listing');
+
+// analysers
+var DailyActivities = require('analysers/daily-activities');
+var ProjectDateRange = require('analysers/project-date-range');
+var StoryPopularity = require('analysers/story-popularity');
+
+var analysers = [
+    DailyActivities,
+    ProjectDateRange,
+    StoryPopularity,
+];
+var database;
+
+function start() {
+    return Database.open(true).then((db) => {
+        database = db;
+        return db.need('global').then(() => {
+            var tables = [
+                'listing',
+                'statistics'
+            ];
+            return db.listen(tables, 'clean', handleDatabaseCleanRequests);
+        });
     });
-});
+}
+
+function stop() {
+    if (database) {
+        database.close();
+    }
+    return Promise.resolve();
+}
 
 function handleDatabaseCleanRequests(events) {
+    // filter out events from other tests
+    if (process.env.DOCKER_MOCHA) {
+        events = _.filter(events, (event) => {
+            return (event.schema === 'test:LiveDataUpdater');
+        });
+    }
     var now = new Date;
     _.each(events, (event) => {
         var elapsed = getTimeElapsed(event.atime, now);
@@ -166,4 +198,11 @@ function getTimeElapsed(start, end) {
     var s = (typeof(start) === 'string') ? new Date(start) : start;
     var e = (typeof(end) === 'string') ? new Date(end) : end;
     return (e - s);
+}
+
+exports.start = start;
+exports.stop = stop;
+
+if (process.argv[1] === __filename) {
+    start();
 }

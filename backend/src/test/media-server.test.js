@@ -6,15 +6,14 @@ var Path = require('path');
 var Sharp = require('sharp');
 var Request = require('request');
 
+var MediaServer = require('media-server');
+
 describe('MediaServer', function() {
-    var MediaServer;
     before(function() {
-        if (process.env.DOCKER_MOCHA) {
-            MediaServer = require('media-server');
-            return MediaServer.initialized;
-        } else {
-            this.skip()
+        if (!process.env.DOCKER_MOCHA) {
+            return this.skip();
         }
+        return MediaServer.start();
     })
     it('should accept an image upload', function() {
         var url = `http://localhost/media/images/upload/`;
@@ -86,7 +85,7 @@ describe('MediaServer', function() {
     })
     after(function() {
         if (MediaServer) {
-            return MediaServer.exit();
+            return MediaServer.stop();
         }
     })
 })

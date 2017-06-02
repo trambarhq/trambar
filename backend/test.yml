@@ -46,3 +46,8 @@ services:
     command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/test/live-data-invalidator.test.js ]
     depends_on:
       - schema_manager
+  live_data_updater:
+    extends: lib
+    command: [ ../node_modules/mocha/bin/mocha, --watch, --, ../src/test/live-data-updater.test.js ]
+    depends_on:
+      - schema_manager

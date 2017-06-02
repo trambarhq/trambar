@@ -1,19 +1,17 @@
 var _ = require('lodash');
 var Promise = require('bluebird').config({ warnings: false });
 var Chai = require('chai'), expect = Chai.expect;
-
 var Database = require('database');
 
+var SchemaManager = require('schema-manager');
+
 describe('SchemaManager', function() {
-    var SchemaManager;
     before(function() {
-        if (process.env.DOCKER_MOCHA) {
-            this.timeout(20000);
-            SchemaManager = require('schema-manager');
-            return SchemaManager.initialized;
-        } else {
-            this.skip();
+        if (!process.env.DOCKER_MOCHA) {
+            return this.skip();
         }
+        this.timeout(20000);
+        return SchemaManager.start();
     })
     it('should have created the schema "global"', function() {
         return Database.open().then((db) => {
@@ -81,7 +79,7 @@ describe('SchemaManager', function() {
     }).timeout(10000)
     after(function() {
         if (SchemaManager) {
-            return SchemaManager.exit();
+            return SchemaManager.stop();
         }
     })
 })

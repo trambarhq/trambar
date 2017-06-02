@@ -9,16 +9,36 @@ var Piexif = require("piexifjs");
 var Phantom = require('phantom');
 var Crypto = require('crypto')
 
-var app = Express();
 var server;
+var cacheFolder = '/var/cache/media';
+var imageCacheFolder = `${cacheFolder}/images`;
+var videoCacheFolder = `${cacheFolder}/videos`;
 
-exports.initialized = new Promise((resolve, reject) => {
-    server = app.listen(80, () => {
-        resolve();
+function start() {
+    return new Promise((resolve, reject) => {
+        var app = Express();
+        var upload = Multer({ dest: '/var/tmp' });
+        app.use(BodyParser.json());
+        app.set('json spaces', 2);
+        app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
+        app.post('/media/html/screenshot', handleWebsiteScreenshot);
+        app.post('/media/images/upload', upload.array('images', 16), handleImageUpload);
+        app.post('/media/videos/upload', upload.array('videos', 4), handleVideoUpload);
+        app.use('/media/images', Express.static(imageCacheFolder));
+        app.use('/media/videos', Express.static(videoCacheFolder));
+
+        createCacheFolders();
+
+        server = app.listen(80, () => {
+            resolve();
+        });
+        server.once('error', (evt) => {
+            reject(new Error(evt.message));
+        })
     });
-});
+}
 
-exports.exit = function() {
+function stop() {
     return new Promise((resolve, reject) => {
         if (server) {
             server.close();
@@ -29,38 +49,7 @@ exports.exit = function() {
             resolve();
         }
     });
-};
-
-// create the cache folders
-var cacheFolder = '/var/cache/media';
-if (!FS.existsSync(cacheFolder)) {
-    FS.mkdirSync(cacheFolder);
 }
-var imageCacheFolder = `${cacheFolder}/images`;
-if (!FS.existsSync(imageCacheFolder)) {
-    FS.mkdirSync(imageCacheFolder);
-}
-var videoCacheFolder = `${cacheFolder}/videos`;
-if (!FS.existsSync(videoCacheFolder)) {
-    FS.mkdirSync(videoCacheFolder);
-}
-
-var upload = Multer({ dest: '/var/tmp' });
-
-app.use(BodyParser.json());
-app.set('json spaces', 2);
-
-app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
-
-app.post('/media/html/screenshot', handleWebsiteScreenshot);
-
-app.post('/media/images/upload', upload.array('images', 16), handleImageUpload);
-
-app.post('/media/videos/upload', upload.array('videos', 4), handleVideoUpload);
-
-app.use('/media/images', Express.static(imageCacheFolder));
-
-app.use('/media/videos', Express.static(videoCacheFolder));
 
 function handleImageFiltersRequest(req, res) {
     var hash = req.params.hash;
@@ -219,6 +208,18 @@ function getJPEGDescription(path) {
     });
 }
 
+function createCacheFolders() {
+    if (!FS.existsSync(cacheFolder)) {
+        FS.mkdirSync(cacheFolder);
+    }
+    if (!FS.existsSync(imageCacheFolder)) {
+        FS.mkdirSync(imageCacheFolder);
+    }
+    if (!FS.existsSync(videoCacheFolder)) {
+        FS.mkdirSync(videoCacheFolder);
+    }
+}
+
 var operators = {
     background: function(r, g, b, a) {
         this.background(r / 100, g / 100, b / 100, a / 100);
@@ -329,4 +330,11 @@ function md5(data) {
 
 function B(promise) {
     return Promise.resolve(promise);
+}
+
+exports.start = start;
+exports.stop = stop;
+
+if (process.argv[1] === __filename) {
+    start();
 }

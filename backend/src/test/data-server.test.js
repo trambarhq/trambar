@@ -4,9 +4,18 @@ var Chai = require('chai'), expect = Chai.expect;
 var Request = require('request');
 
 var Database = require('database');
+var SchemaManager = require('schema-manager');
+
+// service being tested
+var DataServer = require('data-server');
+
+// accessors
+var Authentication = require('accessors/authentication');
+var User = require('accessors/user');
+
+var schema = 'test:DataServer';
 
 describe('DataServer', function() {
-    var DataServer;
     var testCredentials = {
         type: 'password',
         username: 'tester',
@@ -21,27 +30,29 @@ describe('DataServer', function() {
         }
     };
     before(function() {
-        if (process.env.DOCKER_MOCHA) {
-            // wait for the creation of the global and test schema
-            this.timeout(20000);
-            return Database.need([ 'global', 'test' ], 20000).then(() => {
-                DataServer = require('data-server');
-                return DataServer.initialized;
-            }).then(() => {
-                return Database.open().then((db) => {
-                    var User = require('accessors/user');
+        if (!process.env.DOCKER_MOCHA) {
+            return this.skip()
+        }
+        this.timeout(20000);
+        return DataServer.start().then(() => {
+            return Database.open(true).then((db) => {
+                // create test schema if it's not there
+                return db.schemaExists(schema).then((exists) => {
+                    if (!exists) {
+                        return SchemaManager.createSchema(db, schema);
+                    }
+                }).then(() => {
                     return User.saveOne(db, 'global', testUser).then((user) => {
-                        var Authentication = require('accessors/authentication');
                         var auth = _.extend({ user_id: user.id }, testCredentials);
                         return Authentication.insertOne(db, 'global', auth).then((auth) => {
                             testUser = user;
                         });
                     });
+                }).finally(() => {
+                    return db.close();
                 });
             });
-        } else {
-            this.skip()
-        }
+        });
     })
     it('should fail to authenticate as non-existing user', function() {
         var url = 'http://localhost/api/authorization/';
@@ -75,7 +86,7 @@ describe('DataServer', function() {
     })
     after(function() {
         if (DataServer) {
-            return DataServer.exit();
+            return DataServer.stop();
         }
     })
 })

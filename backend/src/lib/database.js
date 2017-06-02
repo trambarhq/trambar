@@ -77,47 +77,8 @@ Database.open = function(exclusive) {
     }
 };
 
-/**
- * Wait for schemas to come into existence
- *
- * @param  {Array<String>} schemas
- * @param  {Number} wait
- *
- * @return {Promise<Boolean>}
- */
-Database.need = function(schemas, wait) {
-    return Database.open(true).then((db) => {
-        var foundEvery;
-        var startTime;
-        Async.begin(() => {
-            foundEvery = false;
-            startTime = new Date;
-        })
-        Async.while(() => {
-            var now = new Date;
-            if ((now - startTime) > wait) {
-                return false;
-            }
-            return Promise.map(schemas, (schema) => {
-                return db.schemaExists(schema);
-            }).then((exists) => {
-                foundEvery = _.every(exists);
-                return !foundEvery;
-            });
-        })
-        Async.do(() => {
-            return Promise.delay(500);
-        })
-        Async.finally(() => {
-            db.close();
-            return foundEvery;
-        })
-        return Async.result();
-    });
-}
-
 Database.prototype.close = function() {
-    if (this.client !== pool) {
+    if (this.client !== pool && this.client) {
         this.client.removeAllListeners();
         this.client.release();
     }
@@ -180,6 +141,42 @@ Database.prototype.listen = function(tables, event, callback, delay) {
         return this.execute(`LISTEN ${channel}`);
     });
 };
+
+/**
+ * Wait for a schema to come into existence
+ *
+ * @param  {String} schema
+ * @param  {Number} wait
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.need = function(schema, wait) {
+    var found;
+    var startTime;
+    Async.begin(() => {
+        found = false;
+        startTime = new Date;
+    })
+    Async.while(() => {
+        // keep looking until the schema is found or if we're out of time
+        var now = new Date;
+        if ((now - startTime) > wait) {
+            return false;
+        }
+        return this.schemaExists(schema).then((exists) => {
+            found = exists;
+            return !found;
+        });
+    })
+    Async.do(() => {
+        // pause for half a second
+        return Promise.delay(500);
+    })
+    Async.finally(() => {
+        return found;
+    })
+    return Async.result();
+}
 
 /**
  * Check if a schema exists
