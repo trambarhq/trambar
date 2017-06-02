@@ -17,6 +17,8 @@ module.exports = _.create(Data, {
         story_id: Number,
         user_id: Number,
         target_user_id: Number,
+        published: Boolean,
+        ptime: String,
         public: Boolean,
     },
     criteria: {
@@ -26,6 +28,7 @@ module.exports = _.create(Data, {
         story_id: Number,
         user_id: Number,
         target_user_id: Number,
+        published: Boolean,
         public: Boolean,
     },
 
@@ -48,11 +51,12 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32),
-                project_id int NOT NULL,
                 story_id int NOT NULL,
                 user_id int,
                 target_user_id int,
-                public boolean NOT NULL,
+                published boolean NOT NULL DEFAULT false,
+                ptime timestamp,
+                public boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
         `;

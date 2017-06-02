@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Crypto = require('crypto')
 
 var LiveData = require('accessors/live-data');
 
@@ -17,16 +18,21 @@ module.exports = _.create(LiveData, {
         ltime: String,
         dirty: Boolean,
         type: String,
+        filters: Object,
+        filters_hash: String,
+        sample_count: Number,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         dirty: Boolean,
         type: String,
+        filters_hash: String,
     },
+    keys: [ 'type', 'filters_hash' ],
 
     /**
-     * Create table in schema
+     * Create table in schemaroot
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -47,6 +53,9 @@ module.exports = _.create(LiveData, {
                 ltime timestamp,
                 dirty boolean NOT NULL DEFAULT false,
                 type varchar(64) NOT NULL,
+                filters jsonb NOT NULL DEFAULT '{}',
+                filters_hash varchar(32),
+                sample_count int NOT NULL DEFAULT 0,
                 PRIMARY KEY (id)
             );
         `;
@@ -54,12 +63,61 @@ module.exports = _.create(LiveData, {
     },
 
     apply: function(criteria, query) {
-        LiveData.apply.call(this, _.omit(criteria, 'filters'), query);
-        if (criteria.filters) {
-            var params = query.parameters;
-            var conds = query.conditions;
-            params.push(criteria.filters);
+        var special = [ 'filters', 'match_any' ];
+        LiveData.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.match_any) {
+            params.push(criteria.match_any);
             conds.push(`"matchAny"(filters, $${params.length})`);
         }
     },
+
+    find: function(db, schema, criteria, columns) {
+        // autovivify rows when type and filters are specified
+        var type = criteria.type;
+        var filters = criteria.filters;
+        if (type && filters) {
+            // calculate hash of filters for quicker look-up
+            if (!(filters instanceof Array)) {
+                filters = [ filters ];
+            }
+            var hashes = _.map(filters, hash);
+            // key columns
+            var keys = {
+                type: type,
+                filters_hash: hashes,
+            };
+            // properties of rows that are expected
+            var expectedRows = _.map(hashes, (hash, index) => {
+                return {
+                    type: type,
+                    filters_hash: hash,
+                    filters: filters[index]
+                };
+            }) ;
+            return this.vivify(db, schema, keys, expectedRows, columns);
+        } else {
+            return LiveData.find.call(this, db, schema, criteria, columns);
+        }
+    },
 });
+
+/**
+ * Generate MD5 hash of filters object
+ *
+ * @param  {Object} filters
+ *
+ * @return {String}
+ */
+function hash(filters) {
+    var values = {};
+    var keys = _.keys(filters).sort();
+    _.each(keys, (key) => {
+        values[key] = filters[key];
+    });
+    var text = JSON.stringify(values);
+    var hash = Crypto.createHash('md5').update(text);
+    return hash.digest("hex");
+}

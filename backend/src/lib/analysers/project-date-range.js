@@ -7,6 +7,7 @@ module.exports = {
     sourceTables: [ 'story' ],
     filteredColumns: {
         story: {
+            user_ids: 'user_ids',
             role_ids: 'role_ids',
         },
     },

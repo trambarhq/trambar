@@ -2,6 +2,10 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
 
+// accessors
+var Statistics = require('accessors/statistics');
+
+// analysers
 var DailyActivities = require('analysers/daily-activities');
 var ProjectDateRange = require('analysers/project-date-range');
 var StoryPopularity = require('analysers/story-popularity');
@@ -88,23 +92,24 @@ function invalidateStatistics(db, schema, events) {
 
             // load the changed objects, fetching only columns that are filtered on
             var ids = _.map(relevantEvents, 'id');
-            var accessor = getAccessor(table);
+            var accessor = require(`accessors/${table}`);
             var objectCriteria = _.extend({ id: ids }, fixedFilters);
-            var columns = _.join(_.mapValues(filteredColumns, (column, filter) => {
+            var columns = [];
+            _.each(filteredColumns, (column, filter) => {
                 // use the filter name for the column
                 if (column !== filter) {
-                    return `${column} AS ${filter}`;
+                    columns.push(`${column} AS ${filter}`);
                 } else {
-                    return column;
+                    columns.push(column);
                 }
-            }), ', ');
-            return accessor.find(db, schema, objectCriteria, columns).then((objects) => {
+            });
+            return accessor.find(db, schema, objectCriteria, columns.join(', ')).then((objects) => {
                 if (_.isEmpty(objects)) {
                     return [];
                 }
                 // find statistics rows that cover these objects
                 var statsCriteria = {
-                    filters: objects,
+                    match_any: objects,
                     dirty: false,
                 };
                 return Statistics.find(db, schema, statsCriteria, 'id, sample_count');

@@ -242,6 +242,9 @@ module.exports = {
     },
 
     insert: function(db, schema, objects) {
+        if (_.isEmpty(objects)) {
+            return Promise.resolve([]);
+        }
         var table = this.getTableName(schema);
         var valueSets = [];
         var parameters = [];

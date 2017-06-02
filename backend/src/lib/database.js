@@ -55,7 +55,7 @@ Database.open = function(exclusive) {
                 return false;
             }).catch((err) => {
                 // try again if the number of attempts hasn't exceed the limit
-                if (attempt++ < 10) {
+                if (attempt++ < 30) {
                     return true;
                 } else {
                     throw err;
