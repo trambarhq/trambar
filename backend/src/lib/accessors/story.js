@@ -30,6 +30,7 @@ module.exports = _.create(Data, {
         role_ids: Array(Number),
         published: Boolean,
         public: Boolean,
+        time_range: String,
     },
 
     /**
@@ -61,5 +62,17 @@ module.exports = _.create(Data, {
             );
         `;
         return db.execute(sql);
+    },
+
+    apply: function(criteria, query) {
+        var special = [ 'time_range' ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.time_range) {
+            params.push(criteria.time_range);
+            conds.push(`ptime <@ $${params.length}::tsrange`);
+        }
     },
 });

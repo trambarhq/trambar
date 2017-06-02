@@ -82,7 +82,7 @@ function queueStatisticsUpdate(schema, id, priority) {
     // push item onto queue unless it's already there
     var item = { schema, id };
     var queue = statisticsUpdateQueues[priority];
-    if (_.find(queue, item) === -1) {
+    if (!_.find(queue, item)) {
         queue.push(item);
     }
 
@@ -126,6 +126,7 @@ function processNextStatisticsRow() {
                     setImmediate(processNextStatisticsRow);
                 }
             }).catch((err) => {
+                console.error(err)
                 setImmediate(processNextStatisticsRow);
             });
             return false;
@@ -149,14 +150,14 @@ function updateStatisticsRow(schema, id) {
                     // if Postgres stored-proc has bumped the gn, then the new
                     // stats are actually different
                     if (row.gn !== newRow.gn) {
-                        console.log('Updated statistics row ' + id);
+                        //console.log('Updated statistics row ' + id);
                     } else {
-                        console.log('Validated statistics row ' + id);
+                        //console.log('Validated statistics row ' + id);
                     }
                 });
             });
         }).finally(() => {
-            return db.release();
+            return db.close();
         });
     });
 }

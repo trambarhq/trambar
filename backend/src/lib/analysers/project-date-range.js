@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var Story = require('accessors/statistics');
+var Story = require('accessors/story');
 
 module.exports = {
     type: 'project-date-range',
