@@ -56,11 +56,16 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
                 requestCleaning = true;
             }
             if (requestCleaning) {
-                var id = NEW.id;
-                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, NEW.atime);
+                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, NEW.id, NEW.atime);
             }
         }
     }
 };
 exports.notifyLiveDataChange.args = '';
 exports.notifyLiveDataChange.ret = 'trigger';
+
+exports.notifyListingFinalization = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME) {
+    if (NEW.atime !== OLD.atime) {
+        sendFinalizeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, NEW.id, NEW.type, NEW.target_user_id);
+    }
+};

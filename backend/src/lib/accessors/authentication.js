@@ -95,15 +95,15 @@ module.exports = {
         }
     },
 
-    insertOne: function(db, schema, object) {
+    insertOne: function(db, schema, row) {
         var table = `"global"."${this.table}"`;
-        if (object.type === 'password') {
-            return BCrypt.hashAsync(object.password, 10).then((hash) => {
+        if (row.type === 'password') {
+            return BCrypt.hashAsync(row.password, 10).then((hash) => {
                 var details = {
-                    username: object.username,
+                    username: row.username,
                     password_hash: hash,
                 };
-                var params = [ object.type, object.user_id, details ];
+                var params = [ row.type, row.user_id, details ];
                 var sql = `
                     INSERT INTO ${table} (type, user_id, details)
                     VALUES ($1, $2, $3)

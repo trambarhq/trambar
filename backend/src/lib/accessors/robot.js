@@ -14,13 +14,11 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
-        hash: String,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         type: String,
-        hash: String,
     },
 
     /**
@@ -42,10 +40,32 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32),
-                hash varchar(64),
                 PRIMARY KEY (id)
             );
         `;
         return db.execute(sql);
     },
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Object} row
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
+    export: function(db, schema, row, credentials) {
+        return Promise.try(() => {
+            var object = {
+                id: row.id,
+                gn: row.gn,
+                details: row.details,
+                type: row.type,
+            };
+            return object;
+        });
+    }
 });

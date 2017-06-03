@@ -174,6 +174,23 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Update a row's access time
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} row
+     */
+    touch: function(db, schema, row) {
+        var now = new Date;
+        setTimeout(() => {
+            this.updateOne(db, schema, {
+                id: row.id,
+                atime: now.toISOString(),
+            });
+        }, 20);
+    },
+
+    /**
      * Look up rows from the database,
      *
      * @param  {Database} db

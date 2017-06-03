@@ -62,4 +62,31 @@ module.exports = _.create(Data, {
         `;
         return db.execute(sql);
     },
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Object} row
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
+    export: function(db, schema, row, credentials) {
+        return Promise.try(() => {
+            var object = {
+                id: row.id,
+                gn: row.gn,
+                details: row.details,
+                type: row.type,
+                story_id: row.story_id,
+                user_id: row.user_id,
+                ptime: row.ptime,
+                public: row.public,
+            };
+            return object;
+        });
+    }
 });

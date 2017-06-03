@@ -6,6 +6,7 @@ var Path = require('path');
 var Sharp = require('sharp');
 var Request = require('request');
 
+// service being tested
 var MediaServer = require('media-server');
 
 describe('MediaServer', function() {

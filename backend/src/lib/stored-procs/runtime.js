@@ -88,6 +88,14 @@ exports.sendCleanNotification = function(op, schema, table, id, atime) {
     plv8.execute(sql);
 };
 
+exports.sendFinalizeNotification = function(op, schema, table, id, type, userId) {
+    var info = { op, schema, table, id, type, userId };
+    var channel = table + '_finalize';
+    var msg = JSON.stringify(info);
+    var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
+    plv8.execute(sql);
+};
+
 exports.matchObject = function(filters, object) {
     for (var name in filters) {
         switch (name) {

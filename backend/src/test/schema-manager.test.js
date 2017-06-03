@@ -3,6 +3,7 @@ var Promise = require('bluebird').config({ warnings: false });
 var Chai = require('chai'), expect = Chai.expect;
 var Database = require('database');
 
+// service being tested
 var SchemaManager = require('schema-manager');
 
 describe('SchemaManager', function() {

@@ -14,7 +14,7 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,       // post, commit, merge, deployment, issue, task-start, task-end, survey
-        object_id: Number,
+        related_object_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
         published: Boolean,
@@ -25,7 +25,7 @@ module.exports = _.create(Data, {
         id: Number,
         deleted: Boolean,
         type: String,
-        object_id: Number,
+        related_object_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
         published: Boolean,
@@ -52,7 +52,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32),
-                object_id int,
+                related_object_id int,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 published boolean NOT NULL DEFAULT false,
@@ -75,4 +75,41 @@ module.exports = _.create(Data, {
             conds.push(`ptime <@ $${params.length}::tsrange`);
         }
     },
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Object} row
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
+    export: function(db, schema, row, credentials) {
+        return Promise.try(() => {
+            var object = {
+                id: row.id,
+                gn: row.gn,
+                details: row.details,
+                type: row.type,
+                user_ids: row.user_ids,
+                role_ids: row.role_ids,
+                ptime: row.ptime,
+                public: row.public,
+            };
+            if (row.related_object_id) {
+                switch (row.type) {
+                    case 'commit':
+                        object.commit_id = row.related_object_id;
+                        break;
+                    case 'issue':
+                        object.issue_id = row.related_object_id;
+                        break;
+                }
+            }
+            return object;
+        });
+    }
 });

@@ -84,28 +84,28 @@ module.exports = {
         }
     },
 
-    saveOne: function(db, schema, object) {
-        if (object.id) {
-            return this.updateOne(db, schema, object);
+    saveOne: function(db, schema, row) {
+        if (row.id) {
+            return this.updateOne(db, schema, row);
         } else {
-            return this.insertOne(db, schema, object);
+            return this.insertOne(db, schema, row);
         }
     },
 
-    insertOne: function(db, schema, object) {
+    insertOne: function(db, schema, row) {
         var table = `"global"."${this.table}"`;
         var sql = `
             INSERT INTO ${table} (user_id, token, expiration_date)
             VALUES ($1, $2, $3)
             RETURNING *
         `;
-        var params = [ object.user_id, object.token, object.expiration_date ];
+        var params = [ row.user_id, row.token, row.expiration_date ];
         return db.query(sql, params).get(0).then((row) => {
             return row || null;
         });
     },
 
-    updateOne: function(db, schema, object) {
+    updateOne: function(db, schema, row) {
         var table = `"global"."${this.table}"`;
         var sql = `
             UPDATE ${table}
@@ -113,7 +113,7 @@ module.exports = {
             WHERE id = $3
             RETURNING *
         `;
-        var params = [ object.token, object.expiration_date, object.id ];
+        var params = [ row.token, row.expiration_date, row.id ];
         return db.query(sql, params).get(0).then((row) => {
             return row || null;
         });

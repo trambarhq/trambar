@@ -75,7 +75,7 @@ describe('LiveDataUpdater', function() {
                         testStories = stories;
                     });
                 }).then(() => {
-                    // create test stories
+                    // create test reactions
                     return Reaction.insert(db, schema, testReactions).then((reactions) => {
                         testReactions = reactions;
                     });

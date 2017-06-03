@@ -28,6 +28,7 @@ module.exports = _.create(LiveData, {
         dirty: Boolean,
         type: String,
         filters_hash: String,
+        match_any: Array(Object),
     },
     keys: [ 'type', 'filters_hash' ],
 
@@ -102,6 +103,34 @@ module.exports = _.create(LiveData, {
             return LiveData.find.call(this, db, schema, criteria, columns);
         }
     },
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Object} row
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
+    export: function(db, schema, row, credentials) {
+        return Promise.try(() => {
+            this.touch(db, schema, row);
+            var object = {
+                id: row.id,
+                gn: row.gn,
+                details: row.details,
+                type: row.type,
+                filters: Object,
+            };
+            if (row.dirty) {
+                object.dirty = true;
+            }
+            return object;
+        });
+    }
 });
 
 /**

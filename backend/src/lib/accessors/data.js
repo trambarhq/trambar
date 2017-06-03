@@ -207,13 +207,13 @@ module.exports = {
         });
     },
 
-    update: function(db, schema, objects) {
-        return Promise.mapSeries(objects, (object) => {
-            return this.updateOne(db, schema, object);
+    update: function(db, schema, rows) {
+        return Promise.mapSeries(rows, (row) => {
+            return this.updateOne(db, schema, row);
         });
     },
 
-    updateOne: function(db, schema, object) {
+    updateOne: function(db, schema, row) {
         var table = this.getTableName(schema);
         var assignments = [];
         var columns = _.keys(this.columns);
@@ -221,8 +221,8 @@ module.exports = {
         var index = 1;
         var id = 0;
         _.each(columns, (name) => {
-            if (object.hasOwnProperty(name)) {
-                var value = object[name];
+            if (row.hasOwnProperty(name)) {
+                var value = row[name];
                 if (name !== 'id') {
                     var bound = '$' + index++;
                     parameters.push(value);
@@ -244,8 +244,8 @@ module.exports = {
         });
     },
 
-    insert: function(db, schema, objects) {
-        if (_.isEmpty(objects)) {
+    insert: function(db, schema, rows) {
+        if (_.isEmpty(rows)) {
             return Promise.resolve([]);
         }
         var table = this.getTableName(schema);
@@ -255,20 +255,20 @@ module.exports = {
         var columnsPresent = [];
         var index = 1;
         // see which columns are being set
-        _.each(objects, (object) => {
+        _.each(rows, (row) => {
             _.each(columns, (name) => {
-                if (object.hasOwnProperty(name) && name !== 'id') {
+                if (row.hasOwnProperty(name) && name !== 'id') {
                     if (columnsPresent.indexOf(name) === -1) {
                         columnsPresent.push(name);
                     }
                 }
             });
         });
-        _.each(objects, (object) => {
+        _.each(rows, (row) => {
             var values = [];
             _.each(columnsPresent, (name) => {
-                if (object.hasOwnProperty(name)) {
-                    var value = object[name];
+                if (row.hasOwnProperty(name)) {
+                    var value = row[name];
                     var bound = '$' + index++;
                     parameters.push(value);
                     values.push(bound);
@@ -286,18 +286,18 @@ module.exports = {
         return db.query(sql, parameters);
     },
 
-    insertOne: function(db, schema, object) {
-        return this.insert(db, schema, [ object ]).get(0).then((row) => {
+    insertOne: function(db, schema, row) {
+        return this.insert(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });
     },
 
-    save: function(db, schema, objects) {
-        var updates = _.filter(objects, (object) => {
-            return object.id > 0;
+    save: function(db, schema, rows) {
+        var updates = _.filter(rows, (row) => {
+            return row.id > 0;
         });
-        var inserts = _.filter(objects, (object) => {
-            return !(object.id > 0);
+        var inserts = _.filter(rows, (row) => {
+            return !(row.id > 0);
         });
         return this.update(db, schema, updates).then((updatedObjects) => {
             return this.insert(db, schema, inserts).then((insertedObjects) => {
@@ -306,17 +306,17 @@ module.exports = {
         });
     },
 
-    saveOne: function(db, schema, object) {
-        if (object.id > 0) {
-            return this.updateOne(db, schema, object);
+    saveOne: function(db, schema, row) {
+        if (row.id > 0) {
+            return this.updateOne(db, schema, row);
         } else {
-            return this.insertOne(db, schema, object);
+            return this.insertOne(db, schema, row);
         }
     },
 
-    remove: function(db, schema, objects) {
+    remove: function(db, schema, rows) {
         var table = this.getTableName(schema);
-        var ids = _.map(objects, 'id');
+        var ids = _.map(rows, 'id');
         var parameters = [ ids ];
         var bound = '$1';
         var sql = `
@@ -327,14 +327,16 @@ module.exports = {
         return db.query(sql, parameters);
     },
 
-    removeOne: function(db, object) {
-        return this.remove(db, [ object ]).get(0).then((row) => {
+    removeOne: function(db, row) {
+        return this.remove(db, [ row ]).get(0).then((row) => {
             return row || null;
         });
     },
 
-    export: function(db, schema, objects, credentials) {
-        return objects;
+    export: function(db, schema, rows, credentials) {
+        return _.map(rows, (row) => {
+            return _.omit(row, 'ctime', 'mtime', 'deleted');
+        });
     },
 
     import: function(db, schema, objects, originals, credentials) {
