@@ -22,11 +22,14 @@ function start() {
     return Database.open(true).then((db) => {
         database = db;
         return db.need('global').then(() => {
-            var tables = [
-                'listing',
-                'statistics'
-            ];
-            return db.listen(tables, 'clean', handleDatabaseCleanRequests);
+            return fetchDirtyStatistics(db);
+        }).then(() => {
+            return fetchDirtyListings(db);
+        }).then(() => {
+            var tables = [ 'listing', 'statistics' ];
+            return db.listen(tables, 'clean', handleCleanRequests);
+        }).then(() => {
+            return db.listen([ 'statistics' ], 'change', handleStatisticsChanges, 0)
         });
     });
 }
@@ -38,7 +41,7 @@ function stop() {
     return Promise.resolve();
 }
 
-function handleDatabaseCleanRequests(events) {
+function handleCleanRequests(events) {
     // filter out events from other tests
     if (process.env.DOCKER_MOCHA) {
         events = _.filter(events, (event) => {
@@ -47,29 +50,47 @@ function handleDatabaseCleanRequests(events) {
     }
     var now = new Date;
     _.each(events, (event) => {
-        var elapsed = getTimeElapsed(event.atime, now);
         switch (event.table) {
             case 'statistics':
-                var priority = 'low';
-                if (elapsed < 10 * 1000) {
-                    // last accessed within 10 sec
-                    priority = 'high';
-                } else if (elapsed < 15 * 60 * 1000) {
-                    // last accessed within 15 min
-                    priority = 'medium';
-                }
-                queueStatisticsUpdate(event.schema, event.id, priority);
+                addToStatisticsQueue(event.schema, event.id, event.atime);
                 break;
             case 'listing':
-                var priority = 'low';
-                if (elapsed < 60 * 1000) {
-                    // last accessed within 1 min
-                    priority = 'high';
-                }
-                queueListingUpdate(event.schema, event.id, priority);
+                addToListingQueue(event.schema, event.id, event.atime);
                 break;
         }
     })
+}
+
+/**
+ * Fetch dirty statistics records from database and place them in update queues
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise}
+ */
+function fetchDirtyStatistics(db) {
+    return getProjectSchemas(db).each((schema) => {
+        var criteria = { dirty: true, order: 'sample_count' };
+        return Statistics.find(db, schema, criteria, 'id, atime').each((row) => {
+            return addToStatisticsQueue(schema, row.id, row.atime);
+        });
+    });
+}
+
+/**
+ * Fetch dirty statistics records from database and place them in update queues
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise}
+ */
+function fetchDirtyListings(db) {
+    return getProjectSchemas(db).each((schema) => {
+        var criteria = { dirty: true };
+        return Listing.find(db, schema, criteria, 'id, atime').each((row) => {
+            return addToListingQueue(schema, row.id, row.atime);
+        });
+    });
 }
 
 var statisticsUpdateQueues = {
@@ -78,7 +99,18 @@ var statisticsUpdateQueues = {
     low: []
 };
 
-function queueStatisticsUpdate(schema, id, priority) {
+function addToStatisticsQueue(schema, id, atime) {
+    // use access time to determine priority of update
+    var elapsed = getTimeElapsed(atime, new Date);
+    var priority = 'low';
+    if (elapsed < 10 * 1000) {
+        // last accessed within 10 sec
+        priority = 'high';
+    } else if (elapsed < 15 * 60 * 1000) {
+        // last accessed within 15 min
+        priority = 'medium';
+    }
+
     // push item onto queue unless it's already there
     var item = { schema, id };
     var queue = statisticsUpdateQueues[priority];
@@ -95,12 +127,15 @@ function queueStatisticsUpdate(schema, id, priority) {
             }
         }
     });
-    processNextStatisticsRow();
+    processNextInStatisticsQueue();
 }
 
 var updatingStatistics = false;
 
-function processNextStatisticsRow() {
+/**
+ * Process the next item in the statistics queues
+ */
+function processNextInStatisticsQueue() {
     if (updatingStatistics) {
         // already in the middle of something
         return;
@@ -110,7 +145,7 @@ function processNextStatisticsRow() {
         var nextItem = queue.shift();
         if (nextItem) {
             updatingStatistics = true;
-            updateStatisticsRow(nextItem.schema, nextItem.id).then((success) => {
+            updateStatistics(nextItem.schema, nextItem.id).then((success) => {
                 updatingStatistics = false;
 
                 // delay the process of the next row depending on priority
@@ -121,20 +156,20 @@ function processNextStatisticsRow() {
                     case 'low': delay = 500; break;
                 }
                 if (delay) {
-                    setTimeout(processNextStatisticsRow, delay);
+                    setTimeout(processNextInStatisticsQueue, delay);
                 } else {
-                    setImmediate(processNextStatisticsRow);
+                    setImmediate(processNextInStatisticsQueue);
                 }
             }).catch((err) => {
                 console.error(err)
-                setImmediate(processNextStatisticsRow);
+                setImmediate(processNextInStatisticsQueue);
             });
             return false;
         }
     });
 }
 
-function updateStatisticsRow(schema, id) {
+function updateStatistics(schema, id) {
     return Database.open().then((db) => {
         // establish a lock on the row first, so multiple instances of this
         // script won't waste time performing the same work
@@ -146,15 +181,7 @@ function updateStatisticsRow(schema, id) {
             }
             return analyser.generate(db, schema, row.filters).then((props) => {
                 // save the new data and release the lock
-                return Statistics.unlock(db, schema, id, props, 'gn').then((newRow) => {
-                    // if Postgres stored-proc has bumped the gn, then the new
-                    // stats are actually different
-                    if (row.gn !== newRow.gn) {
-                        //console.log('Updated statistics row ' + id);
-                    } else {
-                        //console.log('Validated statistics row ' + id);
-                    }
-                });
+                return Statistics.unlock(db, schema, id, props, 'gn');
             });
         }).finally(() => {
             return db.close();
@@ -167,9 +194,15 @@ var listingUpdateQueues = {
     midium: [],
     low: []
 };
-var listingUpdateTimeout = 0;
 
-function queueListingUpdate(schema, id, priority) {
+function addToListingQueue(schema, id, atime) {
+    var elapsed = getTimeElapsed(atime, new Date);
+    var priority = 'low';
+    if (elapsed < 60 * 1000) {
+        // last accessed within 1 min
+        priority = 'high';
+    }
+
     // push item onto queue unless it's already there
     var item = { schema, id };
     var queue = listingUpdateQueues[priority];
@@ -186,7 +219,163 @@ function queueListingUpdate(schema, id, priority) {
             }
         }
     });
-    processNextListingRow();
+    processNextInListingQueue();
+}
+
+var updatingListing = false;
+
+function processNextInListingQueue() {
+    if (updatingListing) {
+        // already in the middle of something
+        return;
+    }
+    var nextItem;
+    _.each(listingUpdateQueues, (queue, priority) => {
+        var nextItem = queue.shift();
+        if (nextItem) {
+            updatingListing = true;
+            updateListing(nextItem.schema, nextItem.id).then((success) => {
+                updatingListing = false;
+
+                // delay the process of the next row depending on priority
+                var delay = 0;
+                switch (priority) {
+                    case 'high': delay = 0; break;
+                    case 'medium': delay = 100; break;
+                    case 'low': delay = 500; break;
+                }
+                if (delay) {
+                    setTimeout(processNextInListingQueue, delay);
+                } else {
+                    setImmediate(processNextInListingQueue);
+                }
+            }).catch((err) => {
+                console.error(err)
+                setImmediate(processNextInListingQueue);
+            });
+            return false;
+        }
+    });
+}
+
+function updateListing(schema, listingId) {
+    return Database.open().then((db) => {
+        // establish a lock on the row first, so multiple instances of this
+        // script won't waste time performing the same work
+        return Listing.lock(db, schema, id, '1 minute', 'gn, type, filters, details').then((row) => {
+            var criteria = {
+                published: true,
+                limit: 5000,
+            };
+            var oldStories = _.get(row.details, 'stories', []);
+            var newStories = _.get(row.details, 'candidates', []);
+            var included = {};
+            var latest = '';
+            _.each(_.concat(oldStories, newStories), (story) => {
+                included[story.id] = true;
+                if (story.ptime > latest) {
+                    latest = story.ptime;
+                }
+            });
+            if (latest) {
+                criteria.later_than = latest;
+            }
+            return Story.find(db, schema, criteria, 'id, type, ptime').then((rows) => {
+                // add additional candidate stories to list
+                newStories = _.slice(newStories);
+                _.each(rows, (row) => {
+                    if (!included[row.id]) {
+                        newStories.push(row);
+                    }
+                })
+            }).then(() => {
+                // fetch the popularity stats, from cache if possible
+                var async = false;
+                var popularity = {};
+                _.each(newStories, (story) => {
+                    var details = getStoryPopularity(schema, story.id);
+                    if (!details) {
+                        details = fetchStoryPopularity(db, schema, story.id);
+                        async = true;
+                    }
+                    popularity[story.id] = details;
+                });
+                return (async) ? Promise.props(popularity) : popularity;
+            }).then((popularity) => {
+                // calculate the rating of each story
+                _.each(newStories, (story) => {
+                    var details = popularity[story.id] || {};
+                    story.rating = calculateStoryRating(story, details);
+                });
+            }).then(() => {
+                var details = _.clone(row.details);
+                details.candidates = newStories;
+                return Statistics.unlock(db, schema, id, { details }, 'gn');                
+            });
+        }).finally(() => {
+            return db.close();
+        });
+    });
+}
+
+var popularityCache = {};
+
+function getStoryPopularity(schema, storyId) {
+    var keys = [ schema, storyId ];
+    var cacheEntry = _.get(popularityCache, keys);
+    if (cacheEntry) {
+        cacheEntry.atime = new Date;
+        return cacheEntry.details;
+    }
+}
+
+function fetchStoryPopularity(db, schema, storyId) {
+    var criteria = {
+        type: 'story-popularity',
+        filters: {
+            story_id: storyId
+        }
+    };
+    return Statistics.findOne(db, schema, criteria, 'details').then((row) => {
+        if (row) {
+            var keys = [ schema, storyId ];
+            var cacheEntry = {
+                atime: new Date,
+                details: row.details
+            };
+            _.set(popularityCache, keys, cacheEntry);
+        }
+    });
+}
+
+function handleStatisticsChanges(events) {
+    _.each(events, (event) => {
+        if (event.op === 'UPDATE') {
+            if (event.diff.details) {
+                // update cache entry if it exists
+                var details = event.diff.details[1];
+                var keys = [ event.schema, event.id ];
+                var cacheEntry = _.get(popularityCache, keys);
+                if (cacheEntry) {
+                    cacheEntry.details = details;
+                }
+            }
+        } else if (event.op === 'INSERT') {
+            if (event.diff.type && event.diff.details) {
+                var type = event.diff.type[1];
+                var details = event.diff.details[1];
+                if (type === 'story-popularity') {
+                    // create a new entry on insert even though details would
+                    // likely be empty, because the stats type is sent in an
+                    // INSERT notification but not in an UPDATE notification
+                    var atime = new Date;
+                    var keys = [ event.schema, event.id ];
+                    var cacheEntry = { details, atime };
+                    _.set(popularityCache, keys, cacheEntry);
+                }
+            }
+        }
+    });
 }
 
 function getTimeElapsed(start, end) {

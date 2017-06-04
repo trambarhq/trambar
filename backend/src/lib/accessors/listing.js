@@ -63,6 +63,22 @@ module.exports = _.create(LiveData, {
         return db.execute(sql);
     },
 
+    apply: function(criteria, query) {
+        var special = [ 'filters', 'match_any', 'has_candidates' ];
+        LiveData.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.match_any) {
+            params.push(criteria.match_any);
+            conds.push(`"matchAny"(filters, $${params.length})`);
+        }
+        if (criteria.has_candidates) {
+            params.push(criteria.has_candidates);
+            conds.push(`"hasCandidates"(filters, $${params.length})`);
+        }
+    },
+
     /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
@@ -94,6 +110,7 @@ module.exports = _.create(LiveData, {
     },
 
     finalize: function(row) {
+        var now = new Date;
         var limit = _.get(row.details, 'limit', 100);
         var retention = _.get(row.details, 'retention', 8 * HOUR);
         var newStories = _.get(row.details, 'candidates', []);
@@ -141,6 +158,7 @@ module.exports = _.create(LiveData, {
             oldStories = _.slice(oldStories, oldStories.length - oldStoryCount);
         }
         if (newStoryCount !== newStories.length) {
+            var rtime = now.toISOString();
             // remove lowly rate stories
             newStories = _.orderBy(newStories, [ 'rating', 'ptime' ], [ 'asc', 'asc' ]);
             newStories = _.slice(newStories, newStories.length - newStoryCount);
@@ -148,8 +166,8 @@ module.exports = _.create(LiveData, {
             newStories = _.map(newStories, (story) {
                 return {
                     id: story.id,
-                    rtime: now,
-                    rating: story.rating
+                    ptime: story.ptime,
+                    rtime: rtime,
                 };
             });
         }
@@ -159,3 +177,15 @@ module.exports = _.create(LiveData, {
 });
 
 var HOUR = 60 * 60 * 1000;
+
+function getTimeElapsed(start, end) {
+    if (!start) {
+        return Infinity;
+    }
+    if (!end) {
+        return 0;
+    }
+    var s = (typeof(start) === 'string') ? new Date(start) : start;
+    var e = (typeof(end) === 'string') ? new Date(end) : end;
+    return (e - s);
+}

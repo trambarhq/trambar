@@ -23,9 +23,10 @@ function start() {
         database = db;
         return db.need('global').then(() => {
             // get list of tables that the analyers make use of
+            // listings, meanwhile, are derived from story and statistics
             var tables = _.reduce(analysers, (list, analyser) => {
                 return _.union(list, analyser.sourceTables);
-            }, []);
+            }, [ 'story', 'statistics' ]);
             return db.listen(tables, 'change', handleDatabaseChanges);
         });
     });
@@ -51,7 +52,10 @@ function handleDatabaseChanges(events) {
     var schemas = _.keys(eventGroups);
     return Promise.each(schemas, (schema) => {
         var schemaEvents = eventGroups[schema];
-        return invalidateStatistics(db, schema, events);
+        return Promise.all([
+            invalidateListings(db, schema, events),
+            invalidateStatistics(db, schema, events),
+        ]);
     });
 }
 
@@ -112,13 +116,13 @@ function invalidateStatistics(db, schema, events) {
                     columns.push(column);
                 }
             });
-            return accessor.find(db, schema, objectCriteria, columns.join(', ')).then((objects) => {
-                if (_.isEmpty(objects)) {
+            return accessor.find(db, schema, objectCriteria, columns.join(', ')).then((rows) => {
+                if (_.isEmpty(rows)) {
                     return [];
                 }
                 // find statistics rows that cover these objects
                 var statsCriteria = {
-                    match_any: objects,
+                    match_any: rows,
                     dirty: false,
                 };
                 return Statistics.find(db, schema, statsCriteria, 'id, sample_count');
@@ -127,11 +131,81 @@ function invalidateStatistics(db, schema, events) {
                 var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ])
                 var ids = _.map(orderedRows, 'id');
                 var chunks = _.chunk(ids, 10);
-                return Promise.map(chunks, (ids) => {
+                return Promise.each(chunks, (ids) => {
                     return Statistics.invalidate(db, schema, ids);
                 });
             });
         });
+    });
+}
+
+function invalidateListing(db, schema, events) {
+    return Promise.all([
+        findListingsImpactedByStoryChanges(db, schema, events),
+        findListingsImpactedByStatisticsChange(db, schema, events),
+    ]).then((idLists) => {
+        var ids = _.flatten(idLists);
+        var chunks = _.chunk(ids, 10);
+        return Promise.each(chunks, (ids) => {
+            return Listing.invalidate(db, schema, ids);
+        });
+    });
+}
+
+function findListingsImpactedByStoryChanges(db, schema, events) {
+    var relevantEvents = _.filter(events, (event) => {
+        if (event.table === 'story') {
+            if (event.diff.published) {
+                return true;
+            }
+        }
+    });
+    if (_.isEmpty(relevantEvents)) {
+        return [];
+    }
+    var storyCriteria = {
+        id: _.map(relevantEvents, 'id'),
+    };
+    return Story.find(db, schema, storyCriteria, 'user_ids, role_ids').then((rows) => {
+        if (_.isEmpty(rows)) {
+            return [];
+        }
+        // find statistics rows that cover these objects
+        var listingCriteria = {
+            match_any: rows,
+            dirty: false,
+        };
+        return Statistics.find(db, schema, statsCriteria, 'id');
+    }).then((rows) => {
+        return _.map(rows, 'id');
+    });
+}
+
+function findListingsImpactedByStatisticsChange(db, schema, events) {
+    var relevantEvents = _.filter(events, (event) => {
+        if (event.table === 'statistics') {
+            return true;
+        }
+    });
+    if (_.isEmpty(relevantEvents)) {
+        return [];
+    }
+    var statsCriteria = {
+        type: 'story-popularity',
+        id: _.map(relevantEvents, 'id'),
+    };
+    return Statistics.find(db, schema, statsCriteria, 'filters').then((rows) => {
+        var storyIds = _.filter(_.map(rows, 'filters.story_id'));
+        if (_.isEmpty(storyIds)) {
+            return [];
+        }
+        var listingCriteria = {
+            has_candidates: storyIds,
+            dirty: false,
+        };
+        return Listing.find(db, schema, listingCriteria, 'id')
+    }).then((rows) => {
+        return _.map(rows, 'id');
     });
 }
 
