@@ -313,10 +313,10 @@ Database.prototype.updateJavaScriptFunctions = function(f) {
             var ret = f.ret;
             var flags = f.flags || '';
             if (args === undefined) {
-                throw new Error(`${name}() does not have args attacged`);
+                throw new Error(`${name}() does not have args attached`);
             }
             if (ret === undefined) {
-                throw new Error(`${name}() does not have ret attacged`);
+                throw new Error(`${name}() does not have ret attached`);
             }
             var sql = `
                 CREATE OR REPLACE FUNCTION "${name}"(${args}) RETURNS ${ret}

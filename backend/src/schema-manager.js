@@ -232,7 +232,10 @@ function createSchema(db, schema) {
  * @return {Promise<Boolean>}
  */
 function deleteSchema(db, schema) {
-
+    var sql = `DROP SCHEMA "${schema}" CASCADE`;
+    return db.execute(sql).then((result) => {
+        return true;
+    });
 }
 
 /**

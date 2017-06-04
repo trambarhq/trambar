@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Crypto = require('crypto')
 
 var HttpError = require('errors/http-error');
 var LiveData = require('accessors/live-data');
@@ -79,6 +80,38 @@ module.exports = _.create(LiveData, {
         }
     },
 
+    find: function(db, schema, criteria, columns) {
+        // autovivify rows when type and filters are specified
+        var type = criteria.type;
+        var filters = criteria.filters;
+        var userId = criteria.target_user_id;
+        if (type && filters && userId) {
+            // calculate hash of filters for quicker look-up
+            if (!(filters instanceof Array)) {
+                filters = [ filters ];
+            }
+            var hashes = _.map(filters, hash);
+            // key columns
+            var keys = {
+                type: type,
+                filters_hash: hashes,
+                target_user_id: userId,
+            };
+            // properties of rows that are expected
+            var expectedRows = _.map(hashes, (hash, index) => {
+                return {
+                    type: type,
+                    filters_hash: hash,
+                    filters: filters[index],
+                    target_user_id: userId,
+                };
+            }) ;
+            return this.vivify(db, schema, keys, expectedRows, columns);
+        } else {
+            return LiveData.find.call(this, db, schema, criteria, columns);
+        }
+    },
+
     /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
@@ -96,7 +129,7 @@ module.exports = _.create(LiveData, {
             if (credentials.user.id !== row.target_user_id) {
                 throw new HttpError(403);
             }
-            this.finalize(row);
+            this.finalize(db, schema, row);
             var object = {
                 id: row.id,
                 gn: row.gn,
@@ -109,51 +142,82 @@ module.exports = _.create(LiveData, {
         });
     },
 
-    finalize: function(row) {
-        var now = new Date;
-        var limit = _.get(row.details, 'limit', 100);
-        var retention = _.get(row.details, 'retention', 8 * HOUR);
-        var newStories = _.get(row.details, 'candidates', []);
-        var oldStories = _.get(row.details, 'stories', []);
-
-        // we want to know as many new stories as possible
-        var newStoryCount = Math.min(newStories.length, limit);
-        // at the same time, we want to preserve as many old stories as we can
-        var oldStoryCount = Math.min(oldStories.length, limit);
-        var extra = (oldStoryCount + newStoryCount) - limit;
-        if (extra > 0) {
-            // well, something's got to give...
-            // remove old stories that were retrieved a while ago
-            for (var i = 0; extra > 0 && oldStoryCount > 0; i++) {
-                var oldStory = oldStories[i];
-                var elapsed = getTimeElapsed(oldStory.rtime, now)
-                if (elapsed > retention) {
-                    extra--;
-                    oldStoryCount--;
-                } else {
-                    break;
+    finalize: function(db, schema, row) {
+        // move stories from candidate list into actual list
+        if (chooseStories(row)) {
+            // save the results
+            setTimeout(() => {
+                this.updateOne(db, schema, {
+                    id: row.id,
+                    details: row.details,
+                });
+            }, 20);
+        }
+        setTimeout(() => {
+            // finalize other listings now for consistency sake
+            var criteria = {
+                type: row.type,
+                target_user_id: row.target_user_id
+            };
+            return this.find(db, schema, criteria, '*').each((otherRow) => {
+                if (otherRow.id !== row.id) {
+                    if (chooseStories(otherRow)) {
+                        return this.updateOne(db, schema, {
+                            id: otherRow.id,
+                            details: otherRow.details
+                        });
+                    }
                 }
+            });
+        }, 50);
+    },
+});
+
+function chooseStories(row) {
+    var now = new Date;
+    var limit = _.get(row.filters, 'limit', 100);
+    var retention = _.get(row.filters, 'retention', 8 * HOUR);
+    var newStories = _.get(row.details, 'candidates', []);
+    var oldStories = _.get(row.details, 'stories', []);
+
+    // we want to know as many new stories as possible
+    var newStoryCount = Math.min(newStories.length, limit);
+    // at the same time, we want to preserve as many old stories as we can
+    var oldStoryCount = Math.min(oldStories.length, limit);
+    var extra = (oldStoryCount + newStoryCount) - limit;
+    if (extra > 0) {
+        // well, something's got to give...
+        // remove old stories that were retrieved a while ago
+        for (var i = 0; extra > 0 && oldStoryCount > 0; i++) {
+            var oldStory = oldStories[i];
+            var elapsed = getTimeElapsed(oldStory.rtime, now)
+            if (elapsed > retention) {
+                extra--;
+                oldStoryCount--;
+            } else {
+                break;
             }
+        }
+        if (extra > 0) {
+            // still got too many
+            // toss out at most half of the new ones
+            var removeNew = Math.min(extra, Math.floor(newStoryCount * 0.5));
+            newStoryCount -= removeNew;
+            extra -= removeNew;
+
             if (extra > 0) {
-                // still got too many
-                // toss out at most half of the new ones
-                var removeNew = Math.min(extra, Math.floor(newStoryCount * 0.5));
-                newStoryCount -= removeNew;
-                extra -= removeNew;
+                // remove additional old stories
+                var removeOld = Math.min(extra, oldStoryCount);
+                oldStoryCount -= removeOld;
+                extra -= removeOld;
 
                 if (extra > 0) {
-                    // remove additional old stories
-                    var removeOld = Math.min(extra, oldStoryCount);
-                    oldStoryCount -= removeOld;
-                    extra -= removeOld;
-
-                    if (extra > 0) {
-                        newStoryCount -= extra;
-                    }
+                    newStoryCount -= extra;
                 }
             }
         }
-
+    }
+    if (oldStoryCount !== oldStories.length || newStories.length > 0) {
         if (oldStoryCount !== oldStories.length) {
             oldStories = _.slice(oldStories, oldStories.length - oldStoryCount);
         }
@@ -163,7 +227,7 @@ module.exports = _.create(LiveData, {
             newStories = _.orderBy(newStories, [ 'rating', 'ptime' ], [ 'asc', 'asc' ]);
             newStories = _.slice(newStories, newStories.length - newStoryCount);
             newStories = _.orderBy(newStories, [ 'ptime' ], [ 'asc' ]);
-            newStories = _.map(newStories, (story) {
+            newStories = _.map(newStories, (story) => {
                 return {
                     id: story.id,
                     ptime: story.ptime,
@@ -173,8 +237,12 @@ module.exports = _.create(LiveData, {
         }
         row.details.stories = _.concat(oldStories, newStories);
         row.details.candidates = [];
+        row.gn += 1;
+        return true;
+    } else {
+        return false;
     }
-});
+}
 
 var HOUR = 60 * 60 * 1000;
 
@@ -188,4 +256,22 @@ function getTimeElapsed(start, end) {
     var s = (typeof(start) === 'string') ? new Date(start) : start;
     var e = (typeof(end) === 'string') ? new Date(end) : end;
     return (e - s);
+}
+
+/**
+ * Generate MD5 hash of filters object
+ *
+ * @param  {Object} filters
+ *
+ * @return {String}
+ */
+function hash(filters) {
+    var values = {};
+    var keys = _.keys(filters).sort();
+    _.each(keys, (key) => {
+        values[key] = filters[key];
+    });
+    var text = JSON.stringify(values);
+    var hash = Crypto.createHash('md5').update(text);
+    return hash.digest("hex");
 }

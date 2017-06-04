@@ -63,11 +63,13 @@ describe('LiveDataInvalidator', function() {
         this.timeout(30000);
         return LiveDataInvalidator.start().then(() => {
             return Database.open().then((db) => {
-                // create test schema if it's not there
+                // drop test schema if it's there
                 return db.schemaExists(schema).then((exists) => {
-                    if (!exists) {
-                        return SchemaManager.createSchema(db, schema);
+                    if (exists) {
+                        return SchemaManager.deleteSchema(db, schema);
                     }
+                }).then(() => {
+                    return SchemaManager.createSchema(db, schema);
                 }).then(() => {
                     // create test records
                     var testRecordKeys = _.keys(testStatsRecords);

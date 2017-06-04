@@ -36,11 +36,13 @@ describe('DataServer', function() {
         this.timeout(20000);
         return DataServer.start().then(() => {
             return Database.open(true).then((db) => {
-                // create test schema if it's not there
+                // drop test schema if it's there
                 return db.schemaExists(schema).then((exists) => {
-                    if (!exists) {
-                        return SchemaManager.createSchema(db, schema);
+                    if (exists) {
+                        return SchemaManager.deleteSchema(db, schema);
                     }
+                }).then(() => {
+                    return SchemaManager.createSchema(db, schema);
                 }).then(() => {
                     return User.saveOne(db, 'global', testUser).then((user) => {
                         var auth = _.extend({ user_id: user.id }, testCredentials);

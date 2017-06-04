@@ -5,6 +5,8 @@ var Database = require('database');
 // accessors
 var Statistics = require('accessors/statistics');
 var Listing = require('accessors/listing');
+var Project = require('accessors/project');
+var Story = require('accessors/story');
 
 // analysers
 var DailyActivities = require('analysers/daily-activities');
@@ -206,7 +208,7 @@ function addToListingQueue(schema, id, atime) {
     // push item onto queue unless it's already there
     var item = { schema, id };
     var queue = listingUpdateQueues[priority];
-    if (_.find(queue, item) === -1) {
+    if (!_.find(queue, item)) {
         queue.push(item);
     }
 
@@ -258,15 +260,15 @@ function processNextInListingQueue() {
     });
 }
 
-function updateListing(schema, listingId) {
+function updateListing(schema, id) {
     return Database.open().then((db) => {
         // establish a lock on the row first, so multiple instances of this
         // script won't waste time performing the same work
         return Listing.lock(db, schema, id, '1 minute', 'gn, type, filters, details').then((row) => {
-            var criteria = {
+            var criteria = _.extend({}, row.filters, {
                 published: true,
                 limit: 5000,
-            };
+            });
             var oldStories = _.get(row.details, 'stories', []);
             var newStories = _.get(row.details, 'candidates', []);
             var included = {};
@@ -310,12 +312,16 @@ function updateListing(schema, listingId) {
             }).then(() => {
                 var details = _.clone(row.details);
                 details.candidates = newStories;
-                return Statistics.unlock(db, schema, id, { details }, 'gn');                
+                return Listing.unlock(db, schema, id, { details }, 'gn');
             });
         }).finally(() => {
             return db.close();
         });
     });
+}
+
+function calculateStoryRating(story, popularity) {
+    return 1;
 }
 
 var popularityCache = {};
@@ -375,6 +381,13 @@ function handleStatisticsChanges(events) {
                 }
             }
         }
+    });
+}
+
+function getProjectSchemas(db) {
+    return Project.find(db, 'global', { deleted: false }, 'name').then((rows) => {
+        var names = _.map(_.sortBy(rows, 'name'), 'name');
+        return names;
     });
 }
 

@@ -63,9 +63,3 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
 };
 exports.notifyLiveDataChange.args = '';
 exports.notifyLiveDataChange.ret = 'trigger';
-
-exports.notifyListingFinalization = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME) {
-    if (NEW.atime !== OLD.atime) {
-        sendFinalizeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, NEW.id, NEW.type, NEW.target_user_id);
-    }
-};

@@ -24,6 +24,6 @@ exports.hasCandidates = function(details, storyIds) {
     }
     return false;
 };
-exports.hasCandidate.args = 'details jsonb, storyId int';
-exports.hasCandidate.ret = 'boolean';
-exports.hasCandidate.flags = 'IMMUTABLE';
+exports.hasCandidates.args = 'details jsonb, storyId int';
+exports.hasCandidates.ret = 'boolean';
+exports.hasCandidates.flags = 'IMMUTABLE';

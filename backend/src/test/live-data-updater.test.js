@@ -9,6 +9,7 @@ var SchemaManager = require('schema-manager');
 var LiveDataUpdater = require('live-data-updater');
 
 // accessors
+var Listing = require('accessors/listing');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
@@ -64,11 +65,13 @@ describe('LiveDataUpdater', function() {
         this.timeout(30000);
         return LiveDataUpdater.start().then(() => {
             return Database.open(true).then((db) => {
-                // create test schema if it's not there
+                // drop test schema if it's there
                 return db.schemaExists(schema).then((exists) => {
-                    if (!exists) {
-                        return SchemaManager.createSchema(db, schema);
+                    if (exists) {
+                        return SchemaManager.deleteSchema(db, schema);
                     }
+                }).then(() => {
+                    return SchemaManager.createSchema(db, schema);
                 }).then(() => {
                     // create test stories
                     return Story.insert(db, schema, testStories).then((stories) => {
@@ -92,7 +95,7 @@ describe('LiveDataUpdater', function() {
         };
         return Database.open().then((db) => {
             return Statistics.findOne(db, schema, stats, 'id').then((stats) => {
-                return Statistics.invalidate(db, schema, [ stats.id ]).delay(500).then(() => {
+                return Statistics.invalidate(db, schema, [ stats.id ]).delay(800).then(() => {
                     // fetch the record again, after giving the updater some time to update it
                     return Statistics.findOne(db, schema, { id: stats.id }, '*').then((stats) => {
                         var relevantStories = testStories;
@@ -114,7 +117,7 @@ describe('LiveDataUpdater', function() {
         };
         return Database.open().then((db) => {
             return Statistics.findOne(db, schema, stats, 'id').then((stats) => {
-                return Statistics.invalidate(db, schema, [ stats.id ]).delay(500).then(() => {
+                return Statistics.invalidate(db, schema, [ stats.id ]).delay(800).then(() => {
                     // fetch the record again, after giving the updater some time to update it
                     return Statistics.findOne(db, schema, { id: stats.id }, '*').then((stats) => {
                         var relevantStories = _.filter(testStories, (story) => {
@@ -138,7 +141,7 @@ describe('LiveDataUpdater', function() {
         };
         return Database.open().then((db) => {
             return Statistics.findOne(db, schema, stats, 'id').then((stats) => {
-                return Statistics.invalidate(db, schema, [ stats.id ]).delay(500).then(() => {
+                return Statistics.invalidate(db, schema, [ stats.id ]).delay(800).then(() => {
                     // fetch the record again, after giving the updater some time to update it
                     return Statistics.findOne(db, schema, { id: stats.id }, '*').then((stats) => {
                         var relevantStories = _.filter(testStories, (story) => {
@@ -162,7 +165,7 @@ describe('LiveDataUpdater', function() {
         };
         return Database.open().then((db) => {
             return Statistics.findOne(db, schema, stats, 'id').then((stats) => {
-                return Statistics.invalidate(db, schema, [ stats.id ]).delay(500).then(() => {
+                return Statistics.invalidate(db, schema, [ stats.id ]).delay(800).then(() => {
                     // fetch the record again, after giving the updater some time to update it
                     return Statistics.findOne(db, schema, { id: stats.id }, '*').then((stats) => {
                         expect(stats).to.have.deep.property('details.2016-01-01.story').that.is.above(0);
@@ -180,7 +183,7 @@ describe('LiveDataUpdater', function() {
         };
         return Database.open().then((db) => {
             return Statistics.findOne(db, schema, stats, 'id').then((stats) => {
-                return Statistics.invalidate(db, schema, [ stats.id ]).delay(500).then(() => {
+                return Statistics.invalidate(db, schema, [ stats.id ]).delay(800).then(() => {
                     // fetch the record again, after giving the updater some time to update it
                     return Statistics.findOne(db, schema, { id: stats.id }, '*').then((stats) => {
                         expect(stats).to.have.deep.property('details.like').that.is.above(0);
@@ -190,7 +193,42 @@ describe('LiveDataUpdater', function() {
             });
         });
     }).timeout(5000);
-
+    it('should correctly generate a news listing object', function() {
+        var listing = {
+            type: 'news',
+            filters: {},
+            target_user_id: 235,
+        };
+        return Database.open().then((db) => {
+            return Listing.findOne(db, schema, listing, 'id').then((listing) => {
+                return Listing.invalidate(db, schema, [ listing.id ]).delay(800).then(() => {
+                    // fetch the record again, after giving the updater some time to update it
+                    return Listing.findOne(db, schema, { id: listing.id }, '*').then((listing) => {
+                        expect(listing).to.have.deep.property('details.candidates.length').that.is.above(0);
+                    });
+                });
+            });
+        });
+    }).timeout(5000);
+    it('should correctly generate a role-specific news listing object', function() {
+        var listing = {
+            type: 'news',
+            filters: {
+                role_ids: [ 2 ]
+            },
+            target_user_id: 235,
+        };
+        return Database.open().then((db) => {
+            return Listing.findOne(db, schema, listing, 'id').then((listing) => {
+                return Listing.invalidate(db, schema, [ listing.id ]).delay(800).then(() => {
+                    // fetch the record again, after giving the updater some time to update it
+                    return Listing.findOne(db, schema, { id: listing.id }, '*').then((listing) => {
+                        expect(listing).to.have.deep.property('details.candidates.length', 1);
+                    });
+                });
+            });
+        });
+    }).timeout(5000);
     after(function() {
         if (LiveDataUpdater) {
             return LiveDataUpdater.stop();
