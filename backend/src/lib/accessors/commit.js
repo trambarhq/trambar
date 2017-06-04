@@ -66,7 +66,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, row, credentials) {
-        return Promise.try(() => {
+        return Promise.map(rows, (row) => {
             var object = {
                 id: row.id,
                 gn: row.gn,

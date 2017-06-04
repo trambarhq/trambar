@@ -58,13 +58,13 @@ module.exports = _.create(Data, {
      *
      * @param  {Database} db
      * @param  {Schema} schema
-     * @param  {Object} row
+     * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, row, credentials) {
-        return Promise.try(() => {
+    export: function(db, schema, rows, credentials) {
+        return Promise.map(rows, (row) => {
             var object = {
                 id: row.id,
                 gn: row.gn,
