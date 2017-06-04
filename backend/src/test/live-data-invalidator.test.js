@@ -10,13 +10,14 @@ var LiveDataInvalidator = require('live-data-invalidator');
 
 // accessors
 var Statistics = require('accessors/statistics');
+var Listing = require('accessors/listing');
 var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
 
 var schema = 'test:LiveDataInvalidator';
 
 describe('LiveDataInvalidator', function() {
-    var testStatsRecords = {
+    var testStatistics = {
         rangeOverall: {
             type: 'project-date-range',
             filters: {},
@@ -56,6 +57,34 @@ describe('LiveDataInvalidator', function() {
             }
         },
     };
+    var testListings = {
+        newsAll: {
+            type: 'news',
+            filters: {},
+            target_user_id: 235,
+        },
+        newsRoles: {
+            type: 'news',
+            filters: {
+                role_ids: [ 2 ]
+            },
+            target_user_id: 235,
+        },
+        withCandidates: {
+            type: 'news',
+            details: {
+                candidates: [
+                    {
+                        id: 101,
+                        ptime: '2017-06-04T20:02:42.060Z',
+                        rating: 1,
+                    }
+                ]
+            },
+            filters: {},
+            target_user_id: 235,
+        }
+    }
     before(function() {
         if (!process.env.DOCKER_MOCHA) {
             return this.skip();
@@ -72,17 +101,31 @@ describe('LiveDataInvalidator', function() {
                     return SchemaManager.createSchema(db, schema);
                 }).then(() => {
                     // create test records
-                    var testRecordKeys = _.keys(testStatsRecords);
-                    var testRecords = _.values(testStatsRecords);
+                    var testRecordKeys = _.keys(testStatistics);
+                    var testRecords = _.values(testStatistics);
                     return Promise.each(testRecords, (record, index) => {
                         // rely on auto-generation
                         return Statistics.findOne(db, schema, record, '*').then((stats) => {
                             var key = testRecordKeys[index];
-                            testStatsRecords[key] = stats;
+                            testStatistics[key] = stats;
                         });
                     }).then(() => {
                         // set dirty to false
-                        return cleanRecords(db, schema, testStatsRecords);
+                        return cleanStatistics(db, schema, testStatistics);
+                    });
+                }).then(() => {
+                    // create test records
+                    var testRecordKeys = _.keys(testListings);
+                    var testRecords = _.values(testListings);
+                    return Promise.each(testRecords, (record, index) => {
+                        // rely on auto-generation
+                        return Listing.findOne(db, schema, record, '*').then((listing) => {
+                            var key = testRecordKeys[index];
+                            testListings[key] = listing;
+                        });
+                    }).then(() => {
+                        // set dirty to false
+                        return cleanListings(db, schema, testListings);
                     });
                 });
             });
@@ -97,16 +140,16 @@ describe('LiveDataInvalidator', function() {
                 published: true,
                 ptime: now(),
             };
-            return Story.insertOne(db, schema, story).delay(500).then((story) => {
+            return cleanStatistics(db, schema, testStatistics).then(() => {
+                return Story.insertOne(db, schema, story).delay(800);
+            }).then((story) => {
                 var ids = [
-                    testStatsRecords.rangeOverall.id,
-                    testStatsRecords.activitiesOverall.id,
+                    testStatistics.rangeOverall.id,
+                    testStatistics.activitiesOverall.id,
                 ];
                 return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', true);
                 });
-            }).finally(() => {
-                return cleanRecords(db, schema, testStatsRecords);
             });
         });
     }).timeout(5000)
@@ -118,16 +161,16 @@ describe('LiveDataInvalidator', function() {
                 role_ids: [ 2 ],
                 published: false,
             };
-            return Story.insertOne(db, schema, story).delay(500).then((story) => {
+            return cleanStatistics(db, schema, testStatistics).then(() => {
+                return Story.insertOne(db, schema, story).delay(800);
+            }).then((story) => {
                 var ids = [
-                    testStatsRecords.rangeOverall.id,
-                    testStatsRecords.activitiesOverall.id,
+                    testStatistics.rangeOverall.id,
+                    testStatistics.activitiesOverall.id,
                 ];
                 return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', false);
                 });
-            }).finally(() => {
-                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
@@ -148,15 +191,15 @@ describe('LiveDataInvalidator', function() {
                     cleaningIds.push(evt.id);
                 });
             };
-            return db.listen([ 'statistics' ], 'clean', onClean, 100).then(() => {
-                return Story.insertOne(db, schema, story).delay(500).then((story) => {
-                    expect(cleaningIds).to.include(testStatsRecords.rangeOverall.id);
-                    expect(cleaningIds).to.include(testStatsRecords.activitiesOverall.id);
+            return cleanStatistics(db, schema, testStatistics).then(() => {
+                return db.listen([ 'statistics' ], 'clean', onClean, 100).then(() => {
+                    return Story.insertOne(db, schema, story).delay(800).then((story) => {
+                        expect(cleaningIds).to.include(testStatistics.rangeOverall.id);
+                        expect(cleaningIds).to.include(testStatistics.activitiesOverall.id);
+                    });
                 });
             }).finally(() => {
-                return cleanRecords(db, schema, testStatsRecords).then(() => {
-                    db.close();
-                });
+                db.close();
             });
         });
         return Story.insertOne()
@@ -170,20 +213,20 @@ describe('LiveDataInvalidator', function() {
                 published: true,
                 ptime: now(),
             };
-            return Story.insertOne(db, schema, story).delay(500).then((story) => {
+            return cleanStatistics(db, schema, testStatistics).then(() => {
+                return Story.insertOne(db, schema, story).delay(800)
+            }).then((story) => {
                 var ids = [
-                    testStatsRecords.rangeOverall.id,
-                    testStatsRecords.rangeRoles.id,
-                    testStatsRecords.rangeUser.id,
-                    testStatsRecords.activitiesOverall.id,
-                    testStatsRecords.activitiesRoles.id,
-                    testStatsRecords.activitiesUser.id,
+                    testStatistics.rangeOverall.id,
+                    testStatistics.rangeRoles.id,
+                    testStatistics.rangeUser.id,
+                    testStatistics.activitiesOverall.id,
+                    testStatistics.activitiesRoles.id,
+                    testStatistics.activitiesUser.id,
                 ];
                 return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', true);
                 });
-            }).finally(() => {
-                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
@@ -197,20 +240,19 @@ describe('LiveDataInvalidator', function() {
                 target_user_id: 1,
                 published: true,
             };
-            return Reaction.insertOne(db, schema, reaction).delay(500).then((reaction) => {
+            return cleanStatistics(db, schema, testStatistics).then(() => {
+                return Reaction.insertOne(db, schema, reaction).delay(800);
+            }).then((reaction) => {
                 var ids = [
-                    testStatsRecords.popularity.id,
+                    testStatistics.popularity.id,
                 ];
                 return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                     expect(stats).to.have.property('dirty', true);
                 });
-            }).finally(() => {
-                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
     }).timeout(5000)
-
     it('should ignore a change to a reaction that would not affect the stats', function() {
         return Database.open().then((db) => {
             var reaction = {
@@ -220,23 +262,109 @@ describe('LiveDataInvalidator', function() {
                 target_user_id: 1,
                 published: true,
             };
-            return Reaction.insertOne(db, schema, reaction).delay(500).then((reaction) => {
-                return cleanRecords(db, schema, testStatsRecords).then(() => {
+            return cleanStatistics(db, schema, testStatistics).then(() => {
+                return Reaction.insertOne(db, schema, reaction).delay(800);
+            }).then((reaction) => {
+                return cleanStatistics(db, schema, testStatistics).then(() => {
                     reaction.details = { text: 'something' };
-                    return Reaction.saveOne(db, schema, reaction).delay(500).then((reaction) => {
+                    return Reaction.saveOne(db, schema, reaction).delay(800).then((reaction) => {
                         var ids = [
-                            testStatsRecords.popularity.id,
+                            testStatistics.popularity.id,
                         ];
                         return Statistics.find(db, schema, { id: ids }, '*').each((stats) => {
                             expect(stats).to.have.property('dirty', false);
                         });
                     });
                 });
-            }).finally(() => {
-                return cleanRecords(db, schema, testStatsRecords);
             });
         });
         return Story.insertOne()
+    }).timeout(5000)
+    it('should mark listing as dirty when a published story is inserted', function() {
+        return Database.open().then((db) => {
+            var story = {
+                type: 'story',
+                user_ids: [ 1 ],
+                role_ids: [ 2 ],
+                published: true,
+                ptime: now(),
+            };
+            return cleanListings(db, schema, testStatistics).then(() => {
+                return Story.insertOne(db, schema, story).delay(800);
+            }).then((story) => {
+                var ids = [
+                    testListings.newsAll.id,
+                ];
+                return Listing.find(db, schema, { id: ids }, '*').each((listing) => {
+                    expect(listing).to.have.property('dirty', true);
+                });
+            }).finally(() => {
+                return cleanListings(db, schema, testStatistics);
+            });
+        });
+    }).timeout(5000)
+    it('should invalidate a listing when a story satisfies filters', function() {
+        return Database.open().then((db) => {
+            var story = {
+                type: 'story',
+                user_ids: [ 1 ],
+                role_ids: [ 2 ],
+                published: true,
+                ptime: now(),
+            };
+            return cleanListings(db, schema, testStatistics).then(() => {
+                return Story.insertOne(db, schema, story).delay(800);
+            }).then((story) => {
+                var ids = [
+                    testListings.newsRoles.id,
+                ];
+                return Listing.find(db, schema, { id: ids }, '*').each((listing) => {
+                    expect(listing).to.have.property('dirty', false);
+                });
+            });
+        });
+    }).timeout(5000)
+    it('should not invalidate a listing when a story does not satisfy filters', function() {
+        return Database.open().then((db) => {
+            var story = {
+                type: 'story',
+                user_ids: [ 1 ],
+                role_ids: [ 1 ],
+                published: true,
+                ptime: now(),
+            };
+            return cleanListings(db, schema, testStatistics).then(() => {
+                return Story.insertOne(db, schema, story).delay(800);
+            }).then((story) => {
+                var ids = [
+                    testListings.newsRoles.id,
+                ];
+                return Listing.find(db, schema, { id: ids }, '*').each((listing) => {
+                    expect(listing).to.have.property('dirty', false);
+                });
+            });
+        });
+    }).timeout(5000)
+    it('should invalidate a listing when a story popularity changes', function() {
+        return Database.open().then((db) => {
+            var statistics = {
+                type: 'story-popularity',
+                filters: { story_id: 101 }
+            };
+            return Statistics.findOne(db, schema, statistics, '*').then((stats) => {
+                return cleanListings(db, schema, testStatistics);
+            }).then(() => {
+                var details = { like: 1 };
+                return Statistics.updateOne(db, schema, { details }, '*');
+            }).then((stats) => {
+                var ids = [
+                    testListings.withCandidates.id,
+                ];
+                return Listing.find(db, schema, { id: ids }, '*').each((listing) => {
+                    expect(listing).to.have.property('dirty', false);
+                });
+            });
+        });
     }).timeout(5000)
     after(function() {
         if (LiveDataInvalidator) {
@@ -245,7 +373,7 @@ describe('LiveDataInvalidator', function() {
     })
 })
 
-function cleanRecords(db, schema, records) {
+function cleanStatistics(db, schema, records) {
     var ids = _.map(records, 'id');
     return Statistics.find(db, schema, { id: ids }, '*').map((stats) => {
         if (stats.dirty) {
@@ -255,6 +383,20 @@ function cleanRecords(db, schema, records) {
             });
         } else {
             return stats;
+        }
+    });
+}
+
+function cleanListings(db, schema, records) {
+    var ids = _.map(records, 'id');
+    return Listing.find(db, schema, { id: ids }, '*').map((listing) => {
+        if (listing.dirty) {
+            return Listing.lock(db, schema, listing.id, '5 seconds', '*').then((listing) => {
+                var details = {};
+                return Listing.unlock(db, schema, listing.id, { details }, '*');
+            });
+        } else {
+            return listing;
         }
     });
 }

@@ -5,6 +5,7 @@ var Database = require('database');
 // accessors
 var Statistics = require('accessors/statistics');
 var Listing = require('accessors/listing');
+var Story = require('accessors/story');
 
 // analysers
 var DailyActivities = require('analysers/daily-activities');
@@ -139,7 +140,7 @@ function invalidateStatistics(db, schema, events) {
     });
 }
 
-function invalidateListing(db, schema, events) {
+function invalidateListings(db, schema, events) {
     return Promise.all([
         findListingsImpactedByStoryChanges(db, schema, events),
         findListingsImpactedByStatisticsChange(db, schema, events),
@@ -175,7 +176,7 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
             match_any: rows,
             dirty: false,
         };
-        return Statistics.find(db, schema, statsCriteria, 'id');
+        return Statistics.find(db, schema, listingCriteria, 'id');
     }).then((rows) => {
         return _.map(rows, 'id');
     });
