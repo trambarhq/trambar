@@ -7,12 +7,17 @@ var Multer  = require('multer');
 var Sharp = require('sharp');
 var Piexif = require("piexifjs");
 var Phantom = require('phantom');
-var Crypto = require('crypto')
+var Crypto = require('crypto');
+var Moment = require('moment');
+
+var HttpError = require('errors/http-error');
 
 var server;
 var cacheFolder = '/var/cache/media';
 var imageCacheFolder = `${cacheFolder}/images`;
 var videoCacheFolder = `${cacheFolder}/videos`;
+
+process.env.VIPS_WARNING = false;
 
 function start() {
     return new Promise((resolve, reject) => {
@@ -21,11 +26,11 @@ function start() {
         app.use(BodyParser.json());
         app.set('json spaces', 2);
         app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
-        app.post('/media/html/screenshot', handleWebsiteScreenshot);
-        app.post('/media/images/upload', upload.array('images', 16), handleImageUpload);
-        app.post('/media/videos/upload', upload.array('videos', 4), handleVideoUpload);
-        app.use('/media/images', Express.static(imageCacheFolder));
-        app.use('/media/videos', Express.static(videoCacheFolder));
+        app.post('/media/html/screenshot/', handleWebsiteScreenshot);
+        app.post('/media/images/upload/', upload.array('images', 16), handleImageUpload);
+        app.post('/media/videos/upload/', upload.array('videos', 4), handleVideoUpload);
+        app.use('/media/images/', Express.static(imageCacheFolder));
+        app.use('/media/videos/', Express.static(videoCacheFolder));
 
         createCacheFolders();
 
@@ -73,27 +78,29 @@ function handleImageFiltersRequest(req, res) {
 
 function handleWebsiteScreenshot(req, res) {
     // generate hash from URL + date
-    var url = _.get(req.body, 'url');
-    var date = (new Date).toISOString().substr(0, 10);
-    var hash = md5(`${url} ${date}`);
-    var path = `${imageCacheFolder}/${hash}`;
-    return FS.statAsync(path).then((stats) => {
-        // just get title from the JPEG file if it already exists
-        return getJPEGDescription(path);
-    }).catch((err) => {
+    return Promise.try(() => {
+        var url = _.get(req.body, 'url');
         if (!url) {
-            throw new Error;
+            throw new HttpError(400);
         }
-        // save to temp path first, as PhantomJS needs the extension
-        var tempPath = `${path}.jpeg`;
+        var date = (new Date).toISOString();
+        var urlHash = md5(`${url} ${date}`);
+        var tempPath = `${imageCacheFolder}/${urlHash}.jpeg`;
         return createWebsiteScreenshot(url, tempPath).then((title) => {
-            return FS.renameAsync(tempPath, path).return(title);
+            return FS.readFileAsync(tempPath).then((buffer) => {
+                var hash = md5(buffer);
+                var path = `${imageCacheFolder}/${hash}`;
+                return FS.statAsync(path).catch(() => {
+                    return FS.renameAsync(tempPath, path);
+                }).then(() => {
+                    var url = `/media/images/${hash}`;
+                    res.json({ url, title });
+                });
+            });
         });
-    }).then((title) => {
-        var url = `/media/images/${hash}`;
-        res.json({ url, title });
     }).catch((err) => {
-        res.status(400).json({ message: 'Invalid request' });
+        var statusCode = err.statusCode || 500;
+        res.status(statusCode).json({ message: err.message });
     });
 }
 
@@ -184,6 +191,10 @@ function addJPEGDescription(description, destPath) {
         var data = buffer.toString('binary');
         var zeroth = {};
         zeroth[Piexif.ImageIFD.ImageDescription] = description;
+        zeroth[Piexif.ImageIFD.XResolution] = [96, 1];
+        zeroth[Piexif.ImageIFD.YResolution] = [96, 1];
+        zeroth[Piexif.ImageIFD.Software] = 'PhantomJS';
+        zeroth[Piexif.ImageIFD.DateTime] = Moment().format('YYYY:MM:DD HH:mm:ss');
         var exifObj = { '0th': zeroth };
         var exifbytes = Piexif.dump(exifObj);
         var newData = Piexif.insert(exifbytes, data);

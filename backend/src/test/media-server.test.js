@@ -84,12 +84,48 @@ describe('MediaServer', function() {
             });
         });
     })
+    it('should generate a screenshot of a website', function() {
+        var url = `http://localhost/media/html/screenshot/`;
+        var payload = {
+            url: 'http://www.google.com/'
+        };
+        return retrieveData(url, payload).then((resp) => {
+            var screenshot = resp.body;
+            var screenshotUrl = `http://localhost${screenshot.url}`;
+            return retrieveFile(screenshotUrl).then((resp) => {
+                var image = Sharp(resp.body);
+                return Promise.resolve(image.metadata()).then((metadata) => {
+                    expect(metadata).to.have.property('format', 'jpeg');
+                    expect(metadata).to.have.property('width').that.is.above(500);
+                    expect(screenshot).to.have.property('title', 'Google');
+                });
+            });
+
+        });
+    }).timeout(20000)
     after(function() {
         if (MediaServer) {
             return MediaServer.stop();
         }
     })
 })
+
+function retrieveData(url, payload) {
+    return new Promise((resolve, reject) => {
+        var options = {
+            body: payload,
+            json: true,
+            url,
+        };
+        var req = Request.post(options, function(err, resp, body) {
+            if (!err) {
+                resolve(resp);
+            } else {
+                reject(err);
+            }
+        });
+    });
+}
 
 function retrieveFile(url) {
     return new Promise((resolve, reject) => {
