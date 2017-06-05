@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Database = require('database');
 
 var Data = require('accessors/data');
 
@@ -183,9 +184,11 @@ module.exports = _.create(Data, {
     touch: function(db, schema, row) {
         var now = new Date;
         setTimeout(() => {
-            this.updateOne(db, schema, {
-                id: row.id,
-                atime: now.toISOString(),
+            Database.open().then((db) => {
+                this.updateOne(db, schema, {
+                    id: row.id,
+                    atime: now.toISOString(),
+                });
             });
         }, 20);
     },

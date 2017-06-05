@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Crypto = require('crypto')
+var Database = require('database');
 
 var HttpError = require('errors/http-error');
 var LiveData = require('accessors/live-data');
@@ -125,10 +126,12 @@ module.exports = _.create(LiveData, {
      */
     export: function(db, schema, rows, credentials) {
         return Promise.map(rows, (row) => {
-            this.touch(db, schema, row);
             if (credentials.user.id !== row.target_user_id) {
                 throw new HttpError(403);
             }
+            // update access time so regeneration can be expedited
+            this.touch(db, schema, row);
+            // add new stories from list of candidates
             this.finalize(db, schema, row);
             var object = {
                 id: row.id,
@@ -147,27 +150,31 @@ module.exports = _.create(LiveData, {
         if (chooseStories(row)) {
             // save the results
             setTimeout(() => {
-                this.updateOne(db, schema, {
-                    id: row.id,
-                    details: row.details,
+                Database.open().then((db) => {
+                    this.updateOne(db, schema, {
+                        id: row.id,
+                        details: row.details,
+                    });
                 });
-            }, 20);
+            }, 50);
         }
         setTimeout(() => {
-            // finalize other listings now for consistency sake
-            var criteria = {
-                type: row.type,
-                target_user_id: row.target_user_id
-            };
-            return this.find(db, schema, criteria, '*').each((otherRow) => {
-                if (otherRow.id !== row.id) {
-                    if (chooseStories(otherRow)) {
-                        return this.updateOne(db, schema, {
-                            id: otherRow.id,
-                            details: otherRow.details
-                        });
+            Database.open().then((db) => {
+                // finalize other listings now for consistency sake
+                var criteria = {
+                    type: row.type,
+                    target_user_id: row.target_user_id
+                };
+                return this.find(db, schema, criteria, '*').each((otherRow) => {
+                    if (otherRow.id !== row.id) {
+                        if (chooseStories(otherRow)) {
+                            return this.updateOne(db, schema, {
+                                id: otherRow.id,
+                                details: otherRow.details
+                            });
+                        }
                     }
-                }
+                });
             });
         }, 50);
     },
@@ -181,9 +188,9 @@ function chooseStories(row) {
     var oldStories = _.get(row.details, 'stories', []);
 
     // we want to know as many new stories as possible
-    var newStoryCount = Math.min(newStories.length, limit);
+    var newStoryCount = newStories.length;
     // at the same time, we want to preserve as many old stories as we can
-    var oldStoryCount = Math.min(oldStories.length, limit);
+    var oldStoryCount = oldStories.length;
     var extra = (oldStoryCount + newStoryCount) - limit;
     if (extra > 0) {
         // well, something's got to give...

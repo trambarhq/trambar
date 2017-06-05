@@ -333,6 +333,17 @@ module.exports = {
         });
     },
 
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
     export: function(db, schema, rows, credentials) {
         return _.map(rows, (row) => {
             return _.omit(row, 'ctime', 'mtime', 'deleted');
