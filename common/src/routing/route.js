@@ -4,17 +4,78 @@ var Promise = require('bluebird');
 module.exports = Route;
 
 function Route(routeManager) {
-    this.callbacks = [];
     this.url = routeManager.getUrl();
     this.component = routeManager.getComponent();
     this.parameters = routeManager.getParameters();
     this.query = routeManager.getQuery();
 
-    Object.defineProperty(this, 'routeManager', {
-        value: routeManager
-    });
-}
+    var callbacks = [];
+    var self = this;
 
+    /**
+     * Change the route
+     *
+     * @param  {String} url
+     *
+     * @return {Promise}
+     */
+    this.change = function(url, replacing) {
+        if (typeof(url) !== 'string') {
+            throw new Error('Invalid argument')
+        }
+        return self.ask(url, true).then((ok) => {
+            if (ok) {
+                return routeManager.change(url, replacing);
+            } else {
+                throw new Error('');
+            }
+        });
+    };
+
+    /**
+     * Check if the route can be changed
+     *
+     * @param  {Boolean} interactive
+     *
+     * @return {Promise<Boolean>|Boolean}
+     */
+    this.ask = function(url, interactive) {
+        if (interactive) {
+            return Promise.reduce(callbacks, (aborted, callback) => {
+                if (aborted) {
+                    return true;
+                }
+                var blocking = callback(url, true);
+                return Promise.resolve(blocking);
+            }, false).then((blocking) => {
+                return !blocking;
+            });
+        } else {
+            var blocking = _.reduce(callbacks, (aborted, callback) => {
+                if (aborted) {
+                    return true;
+                }
+                var blocking = callback(false);
+                if (typeof(blocking) !== 'boolean' || typeof(blocking) !== 'undefined') {
+                    throw new Error('Callback passed to keep() should return a boolean when interactive (2nd argument) is true');
+                }
+                return blocking;
+            }, false);
+            return !blocking;
+        }
+    };
+
+    this.keep = function(callback) {
+        callbacks.push(callback);
+    };
+
+    this.free = function(callback) {
+        var index = callbacks.indexOf(callback);
+        if (index !== -1) {
+            callbacks.splice(index, 1);
+        }
+    };
+}
 
 Route.match = function(route, url) {
     var names = [];
@@ -33,68 +94,6 @@ Route.match = function(route, url) {
     }
 };
 
-/**
- * Change the route
- *
- * @param  {String} url
- *
- * @return {Promise}
- */
-Route.prototype.change = function(url, replacing) {
-    if (typeof(url) !== 'string') {
-        throw new Error('Invalid argument')
-    }
-    return this.ask(url, true).then((ok) => {
-        if (ok) {
-            return this.routeManager.change(url, replacing);
-        } else {
-            throw new Error('');
-        }
-    });
+Route.prototype.toString = function() {
+    return this.url;
 };
-
-/**
- * Check if the route can be changed
- *
- * @param  {Boolean} interactive
- *
- * @return {Promise<Boolean>|Boolean}
- */
-Route.prototype.ask = function(url, interactive) {
-    if (interactive) {
-        return Promise.reduce(this.callbacks, (aborted, callback) => {
-            if (aborted) {
-                return true;
-            }
-            var blocking = callback(url, true);
-            return Promise.resolve(blocking);
-        }, false).then((blocking) => {
-            return !blocking;
-        });
-    } else {
-        var blocking = _.reduce(this.callbacks, (aborted, callback) => {
-            if (aborted) {
-                return true;
-            }
-            var blocking = callback(false);
-            if (typeof(blocking) !== 'boolean' || typeof(blocking) !== 'undefined') {
-                throw new Error('Callback passed to keep() should return a boolean when interactive (2nd argument) is true');
-            }
-            return blocking;
-        }, false);
-        return !blocking;
-    }
-};
-
-Route.prototype.keep = function(callback) {
-    this.callbacks.push(callback);
-};
-
-Route.prototype.free = function(callback) {
-    var index = this.callbacks.indexOf(callback);
-    if (index !== -1) {
-        this.callbacks.splice(index, 1);
-    }
-};
-
-Route.prototype.toString = Route.prototype.get;
