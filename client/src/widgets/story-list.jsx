@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var MemoizeWeak = require('memoizee/weak');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -26,7 +27,6 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        console.log('renderAsync');
         var route = this.props.route;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
@@ -100,29 +100,20 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        var stories = this.props.stories ? sortStories(this.props.stories) : null;
         return (
             <div className="story-list">
-                {_.map(this.props.stories, this.renderStory)}
+                {_.map(stories, this.renderStory)}
             </div>
         );
     },
 
     renderStory: function(story, index) {
-        var reactions;
-        var users;
-        if (this.props.reactions) {
-            reactions = _.filter(this.props.reactions, { story_id: story.id });
-        }
-        if (this.props.users) {
-            var userIds = _.concat(story.user_ids, _.map(reactions, 'user_id'));
-            users = _.map(_.uniq(userIds), (userId) => {
-               return _.find(this.props.users, { id: userId }) || {}
-            });
-        }
+        var userIds = _.concat(story.user_ids, _.map(this.props.reactions, 'user_id'))
         var storyProps = {
             story,
-            reactions,
-            users,
+            reactions: this.props.reactions ? findReactions(this.props.reactions, story.id) : null,
+            users: this.props.users ? findUsers(this.props.users, userIds) : null,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -130,9 +121,23 @@ var StoryListSync = module.exports.Sync = React.createClass({
             key: story.id,
         };
         return (
-            <OnDemand key={index} initial={index < 10}>
+            <OnDemand key={story.id} initial={index < 10}>
                 <StoryView {...storyProps} />
             </OnDemand>
         );
     },
+});
+
+var sortStories = MemoizeWeak(function(stories) {
+    return _.orderBy(stories, [ 'ptime' ], [ 'desc' ]);
+});
+
+var findReactions = MemoizeWeak(function(reactions, storyId) {
+    return _.filter(reactions, { story_id: storyId });
+});
+
+var findUsers = MemoizeWeak(function(users, userIds) {
+    return _.map(_.uniq(userIds), (userId) => {
+       return _.find(users, { id: userId }) || {}
+    });
 });
