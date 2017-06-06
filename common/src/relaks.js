@@ -68,12 +68,10 @@ function render() {
     // normal rerendering--we need to call renderAsync()
     // first cancel any unfinished rendering cycle
     if (relaks.meanwhile) {
-        relaks.meanwhile = null;
         if (relaks.progressElementTimeout) {
             clearTimeout(relaks.progressElementTimeout);
             relaks.progressElementTimeout = 0;
         }
-
         var onCancel = relaks.meanwhile.onCancel;
         if (onCancel) {
             try {
@@ -87,6 +85,7 @@ function render() {
                 return element;
             }
         }
+        relaks.meanwhile = null;
     }
 
     /* Methods of the meanwhile object: */
