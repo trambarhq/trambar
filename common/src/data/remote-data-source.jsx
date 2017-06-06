@@ -358,7 +358,7 @@ module.exports = React.createClass({
         var schema = query.schema;
         var table = query.table;
         var url = `${protocol}://${server}/api/discovery/${schema}/${table}/`;
-        var payload = _.omit(query, 'server', 'schema', 'table');
+        var payload = query.criteria;
         payload.token = getAuthToken(server);
         var options = {
             contentType: 'json',

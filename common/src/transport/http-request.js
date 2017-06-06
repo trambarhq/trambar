@@ -40,7 +40,7 @@ exports.fetch = function(method, url, payload, options) {
         xhr.responseType = _.get(options, 'responseType', '');
         xhr.open(method, url, true, username, password);
         if (contentType) {
-            xhr.setRequestHeader("Content-type", contentType);
+            xhr.setRequestHeader("Content-Type", contentType);
         }
         xhr.send(payload);
 
