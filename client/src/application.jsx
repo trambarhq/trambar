@@ -104,6 +104,7 @@ module.exports = React.createClass({
         var setters = this.components.setters;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
+            locale: this.state.locale,
             onChange: this.handleDatabaseChange,
             onAuthRequest: this.handleDatabaseAuthRequest,
         };

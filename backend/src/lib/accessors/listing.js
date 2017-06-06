@@ -29,6 +29,7 @@ module.exports = _.create(LiveData, {
         deleted: Boolean,
         dirty: Boolean,
         type: String,
+        filters: Object,
         filters_hash: String,
         target_user_id: Number,
         match_any: Array(Object),

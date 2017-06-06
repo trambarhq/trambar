@@ -93,10 +93,9 @@ module.exports = Relaks.createClass({
                 var criteria = {};
                 criteria.type = 'news';
                 criteria.target_user_id = userId;
+                criteria.filters = {};
                 if (!_.isEmpty(roleIds)) {
-                    criteria.filters = {
-                        role_id: roleIds
-                    };
+                    criteria.filters.role_ids = roleIds;
                 }
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
                     if (!listing) {

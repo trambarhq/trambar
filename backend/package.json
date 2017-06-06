@@ -29,7 +29,8 @@
     "piexifjs": "^1.0.3",
     "request": "^2.81.0",
     "sharp": "0.17.3",
-    "sockjs": "^0.3.18"
+    "sockjs": "^0.3.18",
+    "yamljs": "^0.2.10"
   },
   "devDependencies": {
     "chai": "^3.5.0",

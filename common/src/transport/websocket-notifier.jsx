@@ -8,7 +8,7 @@ var Locale = require('locale/locale');
 module.exports = React.createClass({
     displayName: 'WebsocketNotifier',
     propTypes: {
-        locale: PropTypes.instanceOf(Locale).isRequired,
+        locale: PropTypes.instanceOf(Locale),
         onNotify: PropTypes.func,
         onNotificationClick: PropTypes.func,
     },
