@@ -17,6 +17,7 @@ module.exports = Relaks.createClass({
     displayName: 'StoryList',
     propTypes: {
         stories: PropTypes.arrayOf(PropTypes.object).isRequired,
+        currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -32,9 +33,9 @@ module.exports = Relaks.createClass({
         var props = {
             reactions: null,
             users: null,
-            currentUser: null,
 
             stories: this.props.stories,
+            currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -43,13 +44,6 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<StoryListSync {...props} />);
         return db.start().then((userId) => {
-            // load current user
-            var criteria = {};
-            criteria.id = userId;
-            return db.findOne({ schema: 'global', table: 'user', criteria });
-        }).then((currentUser) => {
-            props.currentUser = currentUser;
-        }).then(() => {
             // load authors of stories
             var criteria = {};
             criteria.id = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));

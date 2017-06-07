@@ -8,7 +8,7 @@ exports.match = function(table, object, criteria) {
             var actualValue = object[name];
             if (desiredValue instanceof Array) {
                 if (actualValue instanceof Array) {
-                    if (_.intersect(desiredValue, actualValue).length === 0) {
+                    if (_.intersection(desiredValue, actualValue).length === 0) {
                         matching = false;
                         break;
                     }
