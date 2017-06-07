@@ -1,3 +1,38 @@
 .story-view {
+    background-color: #362a2a;
+    border: 2px solid #211a1a;
+    margin: 1em 1em 1em 1em;
+}
 
+.story-view.columns-1 {
+}
+
+.story-view.columns-2 {
+    display: flex;
+    flex-direction: row;
+
+    .column-1 {
+        flex: 1;
+    }
+
+    .column-2 {
+        flex: 1;
+    }
+}
+
+.story-view.columns-3 {
+    display: flex;
+    flex-direction: row;
+
+    .column-1 {
+        flex: 1;
+    }
+
+    .column-2 {
+        flex: 1;
+    }
+
+    .column-3 {
+        flex: 1;
+    }
 }

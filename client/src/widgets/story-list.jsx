@@ -109,11 +109,12 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     renderStory: function(story, index) {
-        var userIds = _.concat(story.user_ids, _.map(this.props.reactions, 'user_id'))
+        var respondentIds = _.map(this.props.reactions, 'id');
         var storyProps = {
             story,
             reactions: this.props.reactions ? findReactions(this.props.reactions, story.id) : null,
-            users: this.props.users ? findUsers(this.props.users, userIds) : null,
+            authors: this.props.users ? findUsers(this.props.users, story.user_ids) : null,
+            respondents: this.props.users ? findUsers(this.props.users, respondentIds) : null,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -121,7 +122,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             key: story.id,
         };
         return (
-            <OnDemand key={story.id} initial={index < 10}>
+            <OnDemand key={story.id} type="stories" initial={index < 10}>
                 <StoryView {...storyProps} />
             </OnDemand>
         );

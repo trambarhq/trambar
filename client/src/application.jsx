@@ -125,6 +125,11 @@ module.exports = React.createClass({
         var themeManagerProps = {
             ref: setters.themeManager,
             database: this.state.database,
+            modes: {
+                'columns-1': 0,
+                'columns-2': 1000,
+                'columns-3': 1400,
+            },
             onChange: this.handleThemeChange,
         };
         return (

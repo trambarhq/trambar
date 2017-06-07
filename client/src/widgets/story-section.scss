@@ -1,0 +1,44 @@
+.story-section {
+    .header {
+        background-color: #211a1a;
+        color: #eeeeee;
+        padding: 0.5em 0.5em 0.45em 0.5em;
+    }
+
+    .subheader {
+        padding: 0.3em 0.5em 0.2em 0.5em;
+    }
+
+    .body {
+        color: #cccccc;
+        padding: 0.3em 0.5em 0.4em 0.5em;
+        clear: both;
+    }
+
+    .profile-img {
+        float: left;
+        width: 3em;
+        margin: 0 0.5em 0.4em 0;
+
+        IMG {
+            display: block;
+            max-width: 100%;
+        }
+    }
+
+    .time {
+        color: #666666;
+        font-size: 0.9em;
+    }
+
+    .button {
+        display: inline-block;
+        cursor: pointer;
+        margin-right: 0.5em;
+
+        .label {
+            font-size: 0.9em;
+            margin-left: 0.1em;
+        }
+    }
+}

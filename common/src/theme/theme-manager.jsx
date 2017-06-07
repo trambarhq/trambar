@@ -7,20 +7,47 @@ module.exports = React.createClass({
     displayName: 'ThemeManager',
     propTypes: {
         database: PropTypes.instanceOf(Database),
+        modes: PropTypes.object,
         onChange: PropTypes.func,
     },
 
     getInitialState: function() {
         return {
-            theme: null
+            mode: this.selectMode(),
+            details: null
         };
     },
 
-    change: function(theme) {
-        if (_.isEqual(this.state.theme, theme)) {
+    getMode: function() {
+        return this.state.mode;
+    },
+
+    getDetails: function() {
+        return this.state.details;
+    },
+
+    /**
+     * Return a mode suitable for the current viewport width
+     *
+     * @return {String}
+     */
+    selectMode: function() {
+        var viewPortWidth = document.body.clientWidth;
+        var selected = '';
+        for (var mode in this.props.modes) {
+            var minWidth = this.props.modes[mode];
+            if (viewPortWidth >= minWidth) {
+                selected = mode;
+            }
+        }
+        return selected;
+    },
+
+    change: function(details) {
+        if (_.isEqual(this.state.details, details)) {
             return Promise.resolve(true);
         }
-        this.setState({ theme }, () => {
+        this.setState({ details }, () => {
             this.triggerChangeEvent();
         });
         return Promise.resolve(true);
@@ -33,6 +60,10 @@ module.exports = React.createClass({
                 target: this,
             });
         }
+    },
+
+    componentWillMount: function() {
+        window.addEventListener('resize', this.handleWindowResize);
     },
 
     render: function() {
@@ -62,6 +93,19 @@ module.exports = React.createClass({
                     this.change(settings.theme);
                 }
             })
+        }
+    },
+
+    componentWillUnmount: function() {
+        window.removeEventListener('resize', this.handleWindowResize);
+    },
+
+    handleWindowResize: function(evt) {
+        var mode = this.selectMode();
+        if (this.state.mode !== mode) {
+            this.setState({ mode }, () => {
+                this.triggerChangeEvent();
+            });
         }
     },
 });
