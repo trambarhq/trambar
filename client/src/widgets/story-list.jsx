@@ -7,9 +7,7 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+var ChangeDetector = require('utils/change-detector');
 
 // widgets
 var OnDemand = require('widgets/on-demand');
@@ -17,7 +15,6 @@ var StoryView = require('widgets/story-view');
 
 module.exports = Relaks.createClass({
     displayName: 'StoryList',
-    mixings: [ UpdateCheck ],
     propTypes: {
         stories: PropTypes.arrayOf(PropTypes.object).isRequired,
 
@@ -86,7 +83,6 @@ module.exports = Relaks.createClass({
 
 var StoryListSync = module.exports.Sync = React.createClass({
     displayName: 'StoryList.Sync',
-    mixins: [ UpdateCheck ],
     propTypes: {
         stories: PropTypes.arrayOf(PropTypes.object).isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
@@ -98,6 +94,16 @@ var StoryListSync = module.exports.Sync = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         loading: PropTypes.bool,
+    },
+
+    shouldComponentUpdate: function(nextProps, nextState) {
+        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'database', 'route', 'locale', 'theme', 'currentUser' ])) {
+            return true;
+        }
+        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'stories', 'reactions', 'users' ])) {
+            return true;
+        }
+        return false;
     },
 
     render: function() {

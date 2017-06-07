@@ -19,7 +19,13 @@ exports.match = function(table, object, criteria) {
                     }
                 }
             } else if (actualValue !== desiredValue) {
-                matching = false;
+                if (typeof(actualValue) === 'object' && typeof(desiredValue) === 'object') {
+                    if (!_.isEqual(actualValue, desiredValue)) {
+                        return false;
+                    }
+                } else {
+                    matching = false;
+                }
                 break;
             }
         } else {

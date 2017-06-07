@@ -4,9 +4,7 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+var ChangeDetector = require('utils/change-detector');
 
 // widgets
 var StorySection = require('widgets/story-section');
@@ -14,7 +12,6 @@ var Time = require('widgets/time');
 
 module.exports = React.createClass({
     displayName: 'StoryContents',
-    mixings: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -23,6 +20,16 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    shouldComponentUpdate: function(nextProps, nextState) {
+        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'locale', 'theme', 'story' ])) {
+            return true;
+        }
+        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'authors' ])) {
+            return true;
+        }
+        return false;
     },
 
     render: function() {

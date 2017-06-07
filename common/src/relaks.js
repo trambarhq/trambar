@@ -110,7 +110,7 @@ function render() {
     var show = (element, delay) => {
         check();
 
-        var displayingProgressAlready = !!relaks.progressElement;
+        var displayingProgressAlready = !!relaks.progressElement && !relaks.progressElementTimeout;
         relaks.progressElement = element;
         var update = () => {
             if (!synchronous) {
@@ -133,7 +133,7 @@ function render() {
             // it to be bypassed by fast-resolving promises
             if (!relaks.progressElementTimeout) {
                 if (delay === undefined) {
-                    delay = 50;
+                    delay = 250;
                 }
                 if (delay > 0) {
                     relaks.progressElementTimeout = setTimeout(update, delay);
