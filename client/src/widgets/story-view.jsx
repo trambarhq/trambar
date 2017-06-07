@@ -5,6 +5,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 // widgets
 var StoryContents = require('widgets/story-contents');
 var StoryComments = require('widgets/story-comments');
@@ -14,6 +17,7 @@ require('./story-view.scss');
 
 module.exports = React.createClass({
     displayName: 'StoryView',
+    mixings: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -32,6 +36,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        console.log(`Rending ${this.props.story.id}`)
         if (this.props.theme.mode === 'columns-1') {
             return (
                 <div className="story-view columns-1">

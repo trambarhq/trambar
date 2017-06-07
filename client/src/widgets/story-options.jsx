@@ -23,12 +23,16 @@ module.exports = React.createClass({
         return (
             <StorySection>
                 <header>
-                    Options
+                    <div className="button disabled">
+                        <i className="fa fa-chevron-circle-right"/>
+                        <span className="label">Options</span>
+                    </div>
                 </header>
                 <body>
                     <ul>
                         <li>Option 1</li>
                         <li>Option 2</li>
+                        <li>Option 3</li>
                     </ul>
                 </body>
             </StorySection>

@@ -17,6 +17,7 @@ var StoryView = require('widgets/story-view');
 
 module.exports = Relaks.createClass({
     displayName: 'StoryList',
+    mixings: [ UpdateCheck ],
     propTypes: {
         stories: PropTypes.arrayOf(PropTypes.object).isRequired,
 

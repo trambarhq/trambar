@@ -223,7 +223,7 @@ module.exports = React.createClass({
             var elapsed = getTimeElapsed(search.finish, new Date);
             var interval = this.props.refreshInterval * 1000;
             if (!(elapsed > interval)) {
-                console.log('checkSearchFreshness: true');
+                //console.log('checkSearchFreshness: true');
                 return true;
             }
         }
@@ -233,7 +233,7 @@ module.exports = React.createClass({
                 this.triggerChangeEvent();
             }
         });
-        console.log('checkSearchFreshness: false');
+        //console.log('checkSearchFreshness: false');
         return false;
     },
 
@@ -248,7 +248,7 @@ module.exports = React.createClass({
         }
         var count = search.results.length;
         if (count < minimum) {
-            console.log('checkSearchValidity: false');
+            //console.log('checkSearchValidity: false');
             return false;
         }
         // we have the minimum number of objects requested
@@ -277,7 +277,7 @@ module.exports = React.createClass({
                 }
             });
         }
-        console.log('checkSearchValidity: true');
+        //console.log('checkSearchValidity: true');
         return true;
     },
 
@@ -364,7 +364,7 @@ module.exports = React.createClass({
             contentType: 'json',
             responseType: 'json',
         };
-        console.log(`Discovery: ${table}`);
+        //console.log(`Discovery: ${table}`);
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         });
@@ -382,7 +382,7 @@ module.exports = React.createClass({
             contentType: 'json',
             responseType: 'json',
         };
-        console.log(`Retrieval: ${table}`);
+        //console.log(`Retrieval: ${table}`);
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         });

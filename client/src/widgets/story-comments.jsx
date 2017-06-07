@@ -25,12 +25,31 @@ module.exports = React.createClass({
         return (
             <StorySection>
                 <header>
-                    Something
+                    {this.renderButtons()}
                 </header>
                 <body>
-                    A comment
+                    {this.renderComments()}
                 </body>
             </StorySection>
         );
+    },
+
+    renderButtons: function() {
+        return (
+            <div>
+                <div className="button">
+                    <i className="fa fa-thumbs-up"/>
+                    <span className="label">Like</span>
+                </div>
+                <div className="button">
+                    <i className="fa fa-comment"/>
+                    <span className="label">Comment</span>
+                </div>
+            </div>
+        );
+    },
+
+    renderComments: function() {
+
     },
 });

@@ -26,11 +26,11 @@ function start() {
         app.use(BodyParser.json());
         app.set('json spaces', 2);
         app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
+        app.get('/media/images/:hash', handleImageOriginalRequest);
+        app.get('/media/videos/:hash', handleVideoOriginalRequest);
         app.post('/media/html/screenshot/', handleWebsiteScreenshot);
         app.post('/media/images/upload/', upload.array('images', 16), handleImageUpload);
         app.post('/media/videos/upload/', upload.array('videos', 4), handleVideoUpload);
-        app.use('/media/images/', Express.static(imageCacheFolder));
-        app.use('/media/videos/', Express.static(videoCacheFolder));
 
         createCacheFolders();
 
@@ -74,6 +74,18 @@ function handleImageFiltersRequest(req, res) {
     }).catch((err) => {
         res.status(400).json({ message: err.message });
     });
+}
+
+function handleImageOriginalRequest(req, res) {
+    var hash = req.params.hash;
+    var path = `${imageCacheFolder}/${hash}`;
+    B(Sharp(path).metadata()).then((metadata) => {
+        res.type(metadata.format).sendFile(path);
+    });
+}
+
+function handleVideoOriginalRequest(req, res) {
+    
 }
 
 function handleWebsiteScreenshot(req, res) {

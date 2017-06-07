@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 // widgets
 var StoryList = require('widgets/story-list');
 
@@ -117,6 +120,7 @@ module.exports = Relaks.createClass({
 
 var NewsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NewsPage.Sync',
+    mixings: [ UpdateCheck ],
     propTypes: {
         loading: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
