@@ -33,18 +33,24 @@ function AbsoluteTime(props) {
 var RelativeTime = React.createClass({
     getInitialState: function() {
         return {
-            text: this.getText()
+            text: this.getText(this.props.time)
         };
     },
 
-    getText: function() {
-        var time = this.props.time;
+    getText: function(time) {
         var locale = this.props.locale;
         return time.clone().locale(locale.languageCode).fromNow();
     },
 
     update: function() {
-        var text = this.getText();
+        var text = this.getText(this.props.time);
+        if (text !== this.state.text) {
+            this.setState({ text });
+        }
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        var text = this.getText(nextProps.time);
         if (text !== this.state.text) {
             this.setState({ text });
         }
