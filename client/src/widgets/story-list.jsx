@@ -87,7 +87,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         stories: PropTypes.arrayOf(PropTypes.object).isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         users: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
+        currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -122,6 +122,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             reactions: this.props.reactions ? findReactions(this.props.reactions, story.id) : null,
             authors: this.props.users ? findUsers(this.props.users, story.user_ids) : null,
             respondents: this.props.users ? findUsers(this.props.users, respondentIds) : null,
+            currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,

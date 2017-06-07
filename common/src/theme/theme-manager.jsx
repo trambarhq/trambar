@@ -32,7 +32,7 @@ module.exports = React.createClass({
      * @return {String}
      */
     selectMode: function() {
-        var viewPortWidth = document.body.clientWidth;
+        var viewPortWidth = document.body.parentNode.offsetWidth;
         var selected = '';
         for (var mode in this.props.modes) {
             var minWidth = this.props.modes[mode];

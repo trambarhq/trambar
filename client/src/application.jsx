@@ -127,8 +127,8 @@ module.exports = React.createClass({
             database: this.state.database,
             modes: {
                 'columns-1': 0,
-                'columns-2': 1000,
-                'columns-3': 1400,
+                'columns-2': 800,
+                'columns-3': 1300,
             },
             onChange: this.handleThemeChange,
         };

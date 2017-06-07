@@ -4,6 +4,7 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+var ChangeDetector = require('utils/change-detector');
 
 // widgets
 var StorySection = require('widgets/story-section');
@@ -21,6 +22,16 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    shouldComponentUpdate: function(nextProps, nextState) {
+        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'locale', 'theme', 'story' ])) {
+            return true;
+        }
+        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'reactions', 'respondents' ])) {
+            return true;
+        }
+        return false;
+    },
+
     render: function() {
         return (
             <StorySection>
@@ -35,9 +46,10 @@ module.exports = React.createClass({
     },
 
     renderButtons: function() {
+        var like = this.getCurrentUserLike();
         return (
             <div>
-                <div className="button">
+                <div className={'button' + (like ? ' lit' : '')} onClick={this.handleLikeClick}>
                     <i className="fa fa-thumbs-up"/>
                     <span className="label">Like</span>
                 </div>
@@ -51,5 +63,32 @@ module.exports = React.createClass({
 
     renderComments: function() {
 
+    },
+
+    getCurrentUserLike: function() {
+        var criteria = {
+            type: 'like',
+            user_id: _.get(this.props.currentUser, 'id'),
+        };
+        return _.find(this.props.reactions, criteria);
+    },
+
+    handleLikeClick: function(evt) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        var like = this.getCurrentUserLike();
+        if (like) {
+            db.removeOne({ table: 'reaction' }, like);
+        } else {
+            like = {
+                type: 'like',
+                story_id: _.get(this.props.story, 'id'),
+                user_id: _.get(this.props.currentUser, 'id'),
+                target_user_id: _.get(this.props.story, 'user_ids.0'),
+            };
+            db.saveOne({ table: 'reaction' }, like);
+        }
     },
 });

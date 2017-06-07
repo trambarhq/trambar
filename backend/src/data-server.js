@@ -40,7 +40,7 @@ function start() {
             app.route('/api/authorization/').post(handleAuthorization);
             app.route('/api/discovery/:schema/:table/').post(handleDiscovery).get(handleDiscovery);
             app.route('/api/retrieval/:schema/:table/:id?').post(handleRetrieval).get(handleRetrieval);
-            app.route('/api/storage/:schema/:table/:id?').post(handleStorage);
+            app.route('/api/storage/:schema/:table/').post(handleStorage);
             return new Promise((resolve, reject) => {
                 server = app.listen(80, () => {
                     resolve();
@@ -230,32 +230,20 @@ function handleRetrieval(req, res) {
  * @param  {Response} res
  */
 function handleStorage(req, res) {
-    var body = req.body;
+    var params = req.body;
     var schema = req.params.schema;
     var table = req.params.table;
     return Database.open(schema).then((db) => {
         return checkAuthorization(db, params.token).then((auth) => {
             return fetchCredentials(db, auth.user_id);
         }).then((credentials) => {
-            // check the id if there's one in the URL
-            if (req.params.id !== undefined) {
-                var id = parseInt(req.params.id);
-                if (typeof(body) !== 'object' || body instanceof Array) {
-                    throw new HttpError(500);
-                }
-                if (body.id !== undefined && body.id !== id) {
-                    throw new HttpError(500);
-                }
-                body.id = id;
-            }
-            // handle single object as well as array of objects
-            var objects = body;
-            if (!(objects instanceof Array)) {
-                objects = [ objects ];
-            }
+            var objects = params.objects;
             // make sure objects are such
+            if (!_.isArray(objects) || _.isEmpty(objects)) {
+                throw new HttpError(400);
+            }
             if (!_.every(objects, _.isObject)) {
-                throw new HttpError(500);
+                throw new HttpError(400);
             }
 
             // load the original objects if id list isn't empty
@@ -263,7 +251,7 @@ function handleStorage(req, res) {
             var ids = _.filter(_.map(objects, 'id'));
             var originalsPromise;
             if (!_.isEmpty(ids)) {
-                originalsPromise = accessor.find(db, schema, { id: ids });
+                originalsPromise = accessor.find(db, schema, { id: ids }, '*');
             }
             return Promise.resolve(originalsPromise || []).then((originals) => {
                 // create an array that pairs the original with the new version

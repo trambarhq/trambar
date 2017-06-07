@@ -104,12 +104,27 @@ module.exports = React.createClass({
         }
     },
 
-    store: function(location, objects) {
-
+    save: function(location, objects) {
+        var rtime = getCurrentTime();
+        return this.storeRemoteObjects(location, objects).then((objects) => {
+            _.each(objects, (object) => {
+                object.rtime = rtime;
+            });
+            this.updateCachedObjects(location, objects);
+            return objects;
+        });
     },
 
     remove: function(location, objects) {
-
+        objects = _.map(objects, (object) => {
+            object = _.clone(object);
+            object.deleted = true;
+            return object;
+        });
+        return this.storeRemoteObjects(location, objects).then((objects) => {
+            this.removeCachedObjects(location, objects);
+            return objects;
+        });
     },
 
     triggerChangeEvent: function() {
@@ -376,13 +391,31 @@ module.exports = React.createClass({
         var schema = location.schema;
         var table = location.table;
         var url = `${protocol}://${server}/api/retrieval/${schema}/${table}/`;
-        var payload = { ids: ids };
+        var payload = { ids };
         payload.token = getAuthToken(server);
         var options = {
             contentType: 'json',
             responseType: 'json',
         };
         //console.log(`Retrieval: ${table}`);
+        return HttpRequest.fetch('POST', url, payload, options).then((result) => {
+            return result;
+        });
+    },
+
+    storeRemoteObjects: function(location, objects) {
+        var server = getServerName(location);
+        var protocol = getProtocol(server);
+        var schema = location.schema;
+        var table = location.table;
+        var url = `${protocol}://${server}/api/storage/${schema}/${table}/`;
+        var payload = { objects };
+        payload.token = getAuthToken(server);
+        var options = {
+            contentType: 'json',
+            responseType: 'json',
+        };
+        //console.log(`Storage: ${table}`);
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         });

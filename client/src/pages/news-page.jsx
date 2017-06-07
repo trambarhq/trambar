@@ -60,7 +60,6 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             stories: null,
-            currentUser: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -148,7 +147,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
 
     renderList: function() {
         if (!this.props.stories) {
-            console.log('Nothing')
             return;
         }
         var listProps = {

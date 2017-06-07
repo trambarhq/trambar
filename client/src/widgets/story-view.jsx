@@ -20,6 +20,7 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -97,6 +98,7 @@ module.exports = React.createClass({
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
+            currentUser: this.props.currentUser,
 
             database: this.props.database,
             route: this.props.route,
