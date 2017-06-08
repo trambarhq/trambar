@@ -1,0 +1,32 @@
+.story-section {
+    .body {
+        TEXTAREA {
+            width: 100%;
+        }
+    }
+
+    .footer {
+        text-align: right;
+
+        .buttons {
+            BUTTON {
+                min-width: 5em;
+                margin-left: 0.4em;
+                margin-bottom: 0.1em;
+                padding: 0.5em 1em 0.5em 1em;
+            }
+
+            .cancel {
+                color: #999999;
+                background-color: #4d3936;
+                border: 0;
+            }
+
+            .post {
+                color: #eeeeee;
+                background-color: #806666;
+                border: 0;
+            }
+        }
+    }
+}

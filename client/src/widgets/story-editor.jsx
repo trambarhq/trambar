@@ -8,6 +8,7 @@ var ChangeDetector = require('utils/change-detector');
 
 // widgets
 var StoryTextEditor = require('widgets/story-text-editor');
+var StoryMediaEditor = require('widgets/story-media-editor');
 var StoryOptions = require('widgets/story-options');
 
 require('./story-editor.scss');
@@ -117,6 +118,15 @@ module.exports = React.createClass({
     },
 
     renderSupplementalEditors: function() {
+        var props = {
+            story: this.state.story,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <StoryMediaEditor {...props} />
     },
 
     renderOptions: function() {

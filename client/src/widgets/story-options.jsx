@@ -24,7 +24,7 @@ module.exports = React.createClass({
             <StorySection>
                 <header>
                     <div className="button disabled">
-                        <i className="fa fa-chevron-circle-right"/>
+                        <i className="fa fa-caret-square-o-right"/>
                         <span className="label">Options</span>
                     </div>
                 </header>

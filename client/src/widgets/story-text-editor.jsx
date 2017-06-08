@@ -10,6 +10,8 @@ var ChangeDetector = require('utils/change-detector');
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
 
+require('./story-text-editor.scss');
+
 module.exports = React.createClass({
     displayName: 'StoryTextEditor',
     propTypes: {
@@ -77,19 +79,33 @@ module.exports = React.createClass({
 
     renderCoauthoringButtons: function() {
         return (
-            <span className="">
-                + Co-write post with a colleague
-            </span>
+            <div>
+                <span className="button">
+                    <i className="fa fa-plus-square" />
+                    <span className="label">
+                        Co-write post with a colleague
+                    </span>
+                </span>
+            </div>
         )
     },
 
     renderTextArea: function() {
-        return <textarea />;
+        var p = this.props.locale.pick;
+        var text = _.get(this.props.story, 'details.text');
+        return <textarea value={p(text)} />;
     },
 
     renderButtons: function() {
-        var p = this.props.locale.pick;
-        var text = _.get(this.props.story, 'details.text');
-        return p(text);
+        return (
+            <div className="buttons">
+                <button className="cancel">
+                    Cancel
+                </button>
+                <button className="post">
+                    Post
+                </button>
+            </div>
+        );
     }
 });
