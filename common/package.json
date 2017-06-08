@@ -19,6 +19,7 @@
     "bin-loader": "^0.1.0",
     "bluebird": "^3.5.0",
     "chai": "^3.5.0",
+    "diff": "^3.2.0",
     "enzyme": "^2.8.2",
     "karma": "^1.7.0",
     "karma-babel-preprocessor": "^6.0.1",

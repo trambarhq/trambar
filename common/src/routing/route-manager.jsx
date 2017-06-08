@@ -153,6 +153,17 @@ module.exports = React.createClass({
     },
 
     /**
+     * Set the initial route if database is available
+     */
+    componentDidMount: function() {
+        if (this.props.database) {
+            this.goTo(window.location, true).catch((err) => {
+                console.error(err);
+            });
+        }
+    },
+
+    /**
      * Set the initial route once database is available
      *
      * @param  {Object} prevProps

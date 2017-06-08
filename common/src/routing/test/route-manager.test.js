@@ -5,6 +5,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var Enzyme = require('enzyme');
 
 var RouteManager = require('routing/route-manager.jsx');
+var Database = require('data/database');
 
 function MockPage(url, params) {
     this.url = url;
@@ -31,10 +32,12 @@ describe('RouteManager', function() {
 
     var changeCount = 0;
     var redirectionCount = 0;
+    var database = new Database();
     var managerReady = new Promise((resolve, reject) => {
         var props = {
             pages,
             baseUrls: [ '/test' ],
+            database: database,
 
             onChange: (evt) => {
                 if (resolve) {
