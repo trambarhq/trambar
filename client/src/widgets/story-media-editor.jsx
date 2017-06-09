@@ -4,15 +4,19 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-var ChangeDetector = require('utils/change-detector');
+
+// mixins
+var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var PhotoCaptureDialog = require('widgets/photo-capture-dialog');
 
 require('./story-media-editor.scss');
 
 module.exports = React.createClass({
     displayName: 'StoryMediaEditor',
+    mixins: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
 
@@ -22,14 +26,10 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    shouldComponentUpdate: function(nextProps, nextState) {
-        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'locale', 'theme', 'story' ])) {
-            return true;
-        }
-        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'reactions', 'respondents' ])) {
-            return true;
-        }
-        return false;
+    getInitialState: function() {
+        return {
+            capturingPhoto: false,
+        };
     },
 
     render: function() {
@@ -37,6 +37,7 @@ module.exports = React.createClass({
             <StorySection>
                 <header>
                     {this.renderButtons()}
+                    {this.renderPhotoDialog()}
                 </header>
                 <body>
                 </body>
@@ -45,17 +46,40 @@ module.exports = React.createClass({
     },
 
     renderButtons: function() {
+        var t = this.props.locale.translate;
         return (
             <div>
-                <div className="button">
+                <div className="button" onClick={this.handlePhotoClick}>
                     <i className="fa fa-camera"/>
-                    <span className="label">Photo</span>
+                    <span className="label">{t('story-photo')}</span>
                 </div>
                 <div className="button">
                     <i className="fa fa-video-camera"/>
-                    <span className="label">Video</span>
+                    <span className="label">{t('story-video')}</span>
                 </div>
             </div>
         );
     },
+
+    renderPhotoDialog: function() {
+        if (process.env.PLATFORM === 'browser') {
+            var props = {
+                show: this.state.capturingPhoto,
+                onCancel: this.handlePhotoCancel,
+            };
+            return <PhotoCaptureDialog {...props} />
+        }
+    },
+
+    handlePhotoClick: function() {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingPhoto: true });
+        }
+    },
+
+    handlePhotoCancel: function() {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingPhoto: false });
+        }
+    }
 });

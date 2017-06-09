@@ -4,16 +4,20 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-var ChangeDetector = require('utils/change-detector');
+
+// mixins
+var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
+var Overlay = require('widgets/overlay');
 
 require('./story-text-editor.scss');
 
 module.exports = React.createClass({
     displayName: 'StoryTextEditor',
+    mixins: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -24,14 +28,8 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    shouldComponentUpdate: function(nextProps, nextState) {
-        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'locale', 'theme', 'story' ])) {
-            return true;
-        }
-        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'authors' ])) {
-            return true;
-        }
-        return false;
+    getInitialState: function() {
+        return {};
     },
 
     render: function() {
@@ -43,6 +41,11 @@ module.exports = React.createClass({
                 </header>
                 <subheader>
                     {this.renderCoauthoringButtons()}
+                    <Overlay show={this.state.addingCoauthor} onBackgroundClick={this.handleAddCoauthorCancel}>
+                        <h1 style={{ backgroundColor: '#fff'}}>
+                            Hello world
+                        </h1>
+                    </Overlay>
                 </subheader>
                 <body>
                     {this.renderTextArea()}
@@ -80,7 +83,7 @@ module.exports = React.createClass({
     renderCoauthoringButtons: function() {
         return (
             <div>
-                <span className="button">
+                <span className="button" onClick={this.handleAddCoauthorClick}>
                     <i className="fa fa-plus-square" />
                     <span className="label">
                         Co-write post with a colleague
@@ -107,5 +110,13 @@ module.exports = React.createClass({
                 </button>
             </div>
         );
-    }
+    },
+
+    handleAddCoauthorClick: function(evt) {
+        this.setState({ addingCoauthor: true });
+    },
+
+    handleAddCoauthorCancel: function(evt) {
+        this.setState({ addingCoauthor: false });
+    },
 });

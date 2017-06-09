@@ -7,7 +7,9 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-var ChangeDetector = require('utils/change-detector');
+
+// mixins
+var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryList = require('widgets/story-list');
@@ -155,6 +157,7 @@ module.exports = Relaks.createClass({
 
 var NewsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NewsPage.Sync',
+    mixins: [ UpdateCheck ],
     propTypes: {
         loading: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
@@ -172,16 +175,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         return {
             newStory: null
         };
-    },
-
-    shouldComponentUpdate: function(nextProps, nextState) {
-        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'database', 'route', 'locale', 'theme' ])) {
-            return true;
-        }
-        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'stories' ])) {
-            return true;
-        }
-        return false;
     },
 
     render: function() {

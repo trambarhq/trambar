@@ -6,6 +6,9 @@ module.exports = function(languageCode) {
         'bottom-nav-notifications': 'notifications',
         'bottom-nav-people': 'people',
         'bottom-nav-settings': 'settings',
+
+        'story-photo': 'Photo',
+        'story-video': 'Video',
     };
     var languageName = 'English';
     var scriptDirection = 'ltr';

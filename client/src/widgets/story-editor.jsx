@@ -4,7 +4,9 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-var ChangeDetector = require('utils/change-detector');
+
+// mixins
+var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryTextEditor = require('widgets/story-text-editor');
@@ -15,6 +17,7 @@ require('./story-editor.scss');
 
 module.exports = React.createClass({
     displayName: 'StoryEditor',
+    mixins: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -44,19 +47,6 @@ module.exports = React.createClass({
         if (!_.isEmpty(state)) {
             this.setState(state);
         }
-    },
-
-    shouldComponentUpdate: function(nextProps, nextState) {
-        if (ChangeDetector.detectShallowChanges(this.state, nextState, [ 'story' ])) {
-            return true;
-        }
-        if (ChangeDetector.detectArrayChanges(this.state, nextState, [ 'authors' ])) {
-            return true;
-        }
-        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'locale', 'theme' ])) {
-            return true;
-        }
-        return false;
     },
 
     /**

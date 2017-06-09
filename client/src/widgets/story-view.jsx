@@ -4,7 +4,9 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-var ChangeDetector = require('utils/change-detector');
+
+// mixins
+var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryContents = require('widgets/story-contents');
@@ -15,6 +17,7 @@ require('./story-view.scss');
 
 module.exports = React.createClass({
     displayName: 'StoryView',
+    mixins: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -26,16 +29,6 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    shouldComponentUpdate: function(nextProps, nextState) {
-        if (ChangeDetector.detectShallowChanges(this.props, nextProps, [ 'locale', 'theme', 'story' ])) {
-            return true;
-        }
-        if (ChangeDetector.detectArrayChanges(this.props, nextProps, [ 'authors', 'reactions', 'respondents' ])) {
-            return true;
-        }
-        return false;
     },
 
     /**

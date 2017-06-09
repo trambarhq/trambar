@@ -1,0 +1,50 @@
+.overlay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+
+    .background {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background-color: #000;
+        transition: opacity 0.5s;
+        z-index: -100;
+    }
+
+    .foreground {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        transition: opacity 0.25s, top 0.25s;
+    }
+
+    &.show {
+        .background {
+            opacity: 0.75;
+        }
+        .foreground {
+            opacity: 1;
+        }
+    }
+
+    &.hide {
+        .background {
+            opacity: 0;
+        }
+        .foreground {
+            top: -30px;
+            opacity: 0;
+        }
+    }
+}
