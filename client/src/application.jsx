@@ -167,15 +167,14 @@ module.exports = React.createClass({
                     if (!credential) {
                         credential = { server: evt.server };
                     }
-                    var authRequest = { resolve, reject, credential };
-                    this.setState({ authRequest });
+                    this.authRequest = { resolve, reject, credential };
 
                     setTimeout(() => {
                         var credentials = {
                             username: 'tester',
                             password: 'qwerty'
                         };
-                        this.state.authRequest.resolve(credentials);
+                        this.authRequest.resolve(credentials);
                     }, 10);
                 });
             }

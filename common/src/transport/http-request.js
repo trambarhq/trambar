@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
+var HttpError = require('errors/http-error');
+
 exports.fetch = function(method, url, payload, options) {
     var xhr = new XMLHttpRequest();
     var promise = new Promise((resolve, reject) => {
@@ -45,8 +47,13 @@ exports.fetch = function(method, url, payload, options) {
         xhr.send(payload);
 
         xhr.onload = function(evt) {
-            var result = evt.target.response;
-            resolve(result);
+            if (xhr.status >= 400) {
+                var error = new HttpError(xhr.status)
+                reject(error);
+            } else {
+                var result = xhr.response;
+                resolve(result);
+            }
         };
         xhr.ontimeout = function(evt) {
             reject(new Error('Request timed out'));

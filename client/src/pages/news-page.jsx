@@ -152,7 +152,7 @@ module.exports = Relaks.createClass({
             props.loading = false;
             return <NewsPageSync {...props} />;
         });
-    }
+    },
 });
 
 var NewsPageSync = module.exports.Sync = React.createClass({

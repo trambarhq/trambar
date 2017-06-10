@@ -363,6 +363,7 @@ module.exports = React.createClass({
             responseType: 'json',
         };
         return HttpRequest.fetch('POST', url, credentials, options).then((result) => {
+            console.log(result);
             return result;
         });
     },

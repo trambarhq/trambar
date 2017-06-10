@@ -7,7 +7,9 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'people',
         'bottom-nav-settings': 'settings',
 
+        'story-cancel': 'Cancel',
         'story-photo': 'Photo',
+        'story-post': 'Post',
         'story-video': 'Video',
     };
     var languageName = 'English';

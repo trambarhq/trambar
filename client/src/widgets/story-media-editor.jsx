@@ -40,6 +40,7 @@ module.exports = React.createClass({
                     {this.renderPhotoDialog()}
                 </header>
                 <body>
+                    {this.renderPreview()}
                 </body>
             </StorySection>
         );
@@ -61,25 +62,77 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render dialogbox for capturing picture through MediaStream API
+     *
+     * @return {ReactElement|null}
+     */
     renderPhotoDialog: function() {
         if (process.env.PLATFORM === 'browser') {
             var props = {
                 show: this.state.capturingPhoto,
+                onAdd: this.handlePhotoAdd,
                 onCancel: this.handlePhotoCancel,
             };
             return <PhotoCaptureDialog {...props} />
+        } else {
+            return null;
         }
     },
 
-    handlePhotoClick: function() {
+    renderPreview: function() {
+
+    },
+
+    /**
+     * Call onStoryChange handler
+     *
+     * @param  {Story} story
+     */
+    triggerStoryChangeEvent: function(story) {
+        if (this.props.onStoryChange) {
+            this.props.onStoryChange({
+                type: 'storychange',
+                target: this,
+                story,
+            })
+        }
+    },
+
+    /**
+     * Called when user click on photo button
+     *
+     * @param  {Event} evt
+     */
+    handlePhotoClick: function(evt) {
         if (process.env.PLATFORM === 'browser') {
             this.setState({ capturingPhoto: true });
         }
     },
 
-    handlePhotoCancel: function() {
+    /**
+     * Called when user clicks x or outside the photo dialog
+     *
+     * @param  {Event} evt
+     */
+    handlePhotoCancel: function(evt) {
         if (process.env.PLATFORM === 'browser') {
             this.setState({ capturingPhoto: false });
         }
-    }
+    },
+
+    /**
+     * Called after a user has taken a photo
+     *
+     * @param  {Object} evt
+     */
+    handlePhotoAdd: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            var image = evt.image;
+            var story = _.clone(this.props.story);
+            var images = _.slice(story.details.images);
+            images.push(image);
+            this.triggerStoryChangeEvent(story);
+        }
+    },
 });

@@ -154,6 +154,7 @@ function render() {
         synchronous = false;
     } catch (err) {
         // a synchronouse error occurred, return a rendering of the error immediately
+        console.error(err);
         var element = this.renderError(err);
         relaks.promisedElement = element;
         relaks.meanwhile = null;
@@ -182,6 +183,7 @@ function render() {
             }
         };
         var reject = (err) => {
+            console.error(err);
             var element = this.renderError(err);
             resolve(element);
         };
@@ -229,10 +231,10 @@ function renderError(err) {
 }
 
 function shouldComponentUpdate(nextProps, nextState) {
-    if (!compare(nextProps, this.props)) {
+    if (!compare(this.props, nextProps)) {
         return true;
     }
-    if (!compare(nextState, this.state)) {
+    if (!compare(this.state, nextState)) {
         return true;
     }
     return false;
