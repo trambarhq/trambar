@@ -9,8 +9,6 @@ var Collection = JsDAVPromise.Collection;
 var Database = require('database');
 
 var Account = require('accessors/account');
-var Authentication = require('accessors/authentication');
-var Authorization = require('accessors/authorization');
 var Configuration = require('accessors/configuration');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
@@ -29,8 +27,6 @@ var Story = require('accessors/story');
 
 var globalAccessors = [
     Account,
-    Authentication,
-    Authorization,
     Configuration,
     Project,
     User,
@@ -119,7 +115,7 @@ function start() {
                     if (row) {
                         throw new JsDAVPromise.Conflict;
                     }
-                    return this.accessor.saveOne(db, this.schema, object).then((row) => {
+                    return this.accessor.insertOne(db, this.schema, object).then((row) => {
                         return true;
                     });
                 });
@@ -185,15 +181,20 @@ function start() {
                     if (this.name !== this.id + '.json') {
                         _.set(row, 'details.fn', this.name);
                     }
-                    return this.accessor.saveOne(db, this.schema, row).then((row) => {
+                    return this.accessor.updateOne(db, this.schema, row).then((row) => {
                         return !!row;
                     });
                 });
             },
 
             deleteAsync: function() {
+                console.log('deleteAsync')
+                console.log(this.accessor.removeOne);
                 return this.accessor.removeOne(db, this.schema, { id: this.id }).then((row) => {
+                    console.log('???')
                     return true;
+                }).catch((err) => {
+                    console.error(err);
                 });
             },
 
@@ -214,10 +215,10 @@ function start() {
             },
 
             setNameAsync: function(name) {
-                return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'details').then((row) => {
+                return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'id, details').then((row) => {
                     if (row) {
                         _.set(row, 'details.fn', name);
-                        return this.accessor.saveOne(db, this.schema, row).then((row) => {
+                        return this.accessor.updateOne(db, this.schema, row).then((row) => {
                             return true;
                         });
                     }

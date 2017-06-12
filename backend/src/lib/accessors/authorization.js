@@ -9,7 +9,6 @@ module.exports = {
         user_id: Number,
         token: String,
         expiration_date: String,
-        details: Object,
     },
     criteria: {
         token: String,
@@ -31,7 +30,6 @@ module.exports = {
                 user_id int NOT NULL,
                 token varchar(64) NOT NULL,
                 expiration_date date NOT NULL,
-                details jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
         `;

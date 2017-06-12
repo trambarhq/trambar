@@ -321,14 +321,14 @@ module.exports = {
         var bound = '$1';
         var sql = `
             DELETE FROM ${table}
-            WHERE id = ANY(${bound});
+            WHERE id = ANY(${bound})
             RETURNING *
         `;
         return db.query(sql, parameters);
     },
 
-    removeOne: function(db, row) {
-        return this.remove(db, [ row ]).get(0).then((row) => {
+    removeOne: function(db, schema, row) {
+        return this.remove(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });
     },
