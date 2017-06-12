@@ -1,4 +1,44 @@
 .story-section {
+    .header {
+        .profile-image {
+            float: left;
+            width: 3em;
+            height: 3em;
+            margin: 0 0.5em 0.4em 0;
+
+            IMG {
+                display: block;
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
+
+        .name {
+            color: #eeeeee;
+        }
+    }
+
+    .subheader {
+        .button {
+            font-size: 0.9em;
+            color: #666666;
+            cursor: pointer;
+
+            .label {
+                margin-left: 0.2em;
+            }
+
+            &:hover {
+                color: #eeeeee;
+            }
+        }
+
+        .time {
+            color: #666666;
+            font-size: 0.9em;
+        }
+    }
+
     .body {
         TEXTAREA {
             width: 100%;

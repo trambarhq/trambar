@@ -37,7 +37,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        console.log(`Rending ${this.props.story.id}`)
+        //console.log(`Rending ${this.props.story.id}`)
         if (this.props.theme.mode === 'columns-1') {
             return (
                 <div className="story-view columns-1">

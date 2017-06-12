@@ -10,7 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
-var PhotoCaptureDialog = require('widgets/photo-capture-dialog');
+var PhotoCaptureDialogBox = require('widgets/photo-capture-dialog-box');
 
 require('./story-media-editor.scss');
 
@@ -74,7 +74,7 @@ module.exports = React.createClass({
                 onAdd: this.handlePhotoAdd,
                 onCancel: this.handlePhotoCancel,
             };
-            return <PhotoCaptureDialog {...props} />
+            return <PhotoCaptureDialogBox {...props} />
         } else {
             return null;
         }

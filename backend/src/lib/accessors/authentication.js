@@ -28,7 +28,7 @@ module.exports = {
         var sql = `
             CREATE TABLE ${table} (
                 id serial,
-                type varchar(32),
+                type varchar(32) NOT NULL,
                 user_id int NOT NULL,
                 details jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)

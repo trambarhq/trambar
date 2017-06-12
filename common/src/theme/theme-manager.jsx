@@ -10,7 +10,7 @@ module.exports = React.createClass({
         modes: PropTypes.object,
 
         database: PropTypes.instanceOf(Database),
-        route: PropTypes.instanceOf(Route).isRequired,
+        route: PropTypes.instanceOf(Route),
 
         onChange: PropTypes.func,
     },
@@ -35,16 +35,33 @@ module.exports = React.createClass({
     /**
      * Return URL of resized image
      *
-     * @param  {String} baseUrl
+     * @param  {String|Object} image
      * @param  {Number|String|undefined} width
      * @param  {Number|String|undefined} height
      *
-     * @return {String}
+     * @return {String|undefined}
      */
-    getImageUrl: function(baseUrl, width, height) {
+    getImageUrl: function(image, width, height) {
         var server = this.state.server;
         var protocol = (server === 'localhost') ? 'http' : 'https';
-        var filters = '';
+        var filters = [];
+        var baseUrl;
+        if (typeof(image) === 'object') {
+            baseUrl = image.url;
+            if (image.clip) {
+                var rect = [
+                    image.clip.left,
+                    image.clip.top,
+                    image.clip.width,
+                    image.clip.height,
+                ];
+                filters.push(`cr${rect.join('-')}`)
+            }
+        } else if (typeof(image) === 'string') {
+            baseUrl = image;
+        } else {
+            return;
+        }
         if (typeof(width) === 'string') {
             width = decodeLength(width);
         }
@@ -53,16 +70,21 @@ module.exports = React.createClass({
         }
         if (this.state.devicePixelRatio !== 1) {
             width = Math.round(width * this.state.devicePixelRatio);
-            height = Math.round(width * this.state.devicePixelRatio);
+            height = Math.round(height * this.state.devicePixelRatio);
         }
         if (width !== undefined && height !== undefined) {
-            filters = `/rs${width}-${height}`;
+            filters.push(`rs${width}-${height}`);
         } else if (width === undefined && height !== undefined) {
-            filters = `/h${height}`;
+            filters.push(`h${height}`);
         } else if (height === undefined && width !== undefined) {
-            filters = `/w${width}`
+            filters.push(`w${width}`);
         }
-        return `${protocol}://${server}${baseUrl}${filters}`;
+        var path = '';
+        if (filters.length > 0) {
+            path = `/${filters.join('-')}`;
+        }
+        console.log(filters);
+        return `${protocol}://${server}${baseUrl}${path}`;
     },
 
     /**
@@ -101,6 +123,9 @@ module.exports = React.createClass({
         if (this.props.route !== nextProps.route) {
             var serverBefore = _.get(this.props.route, 'parameters.server');
             var serverAfter = _.get(nextProps.route, 'parameters.server');
+            if (serverAfter === '~') {
+                serverAfter = window.location.hostname;
+            }
             if (serverBefore !== serverAfter) {
                 this.setState({ server: serverAfter }, () => {
                     this.triggerChangeEvent();

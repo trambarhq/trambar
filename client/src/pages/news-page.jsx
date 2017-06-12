@@ -143,7 +143,7 @@ module.exports = Relaks.createClass({
                 var criteria = {
                     id: coauthorIds
                 };
-                return db.find({ table: 'user', criteria });
+                return db.find({ schema: 'global', table: 'user', criteria });
             }
         }).then((users) => {
             if (users) {

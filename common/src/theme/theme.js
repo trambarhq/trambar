@@ -7,4 +7,8 @@ function Theme(themeManager) {
     this.change = function(details) {
         return themeManager.change(details);
     };
+
+    this.getImageUrl = function(image, width, height) {
+        return themeManager.getImageUrl(image, width, height);
+    };
 }

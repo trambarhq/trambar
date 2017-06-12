@@ -50,7 +50,7 @@ module.exports = React.createClass({
         var nextState = {};
         if (this.props.story !== nextProps.story) {
             // perform three-way merge
-            var current = state.story;
+            var current = this.state.story;
             var remoteBefore = this.props.story;
             var remoteAfter = nextProps.story;
             if (current !== remoteBefore) {
@@ -62,7 +62,7 @@ module.exports = React.createClass({
         if (this.props.authors !== nextProps.authors) {
             var story = nextState.story || this.state.story;
             // update the list, include ones that have just been added
-            nextState.authors = findUsers(_.concat(this.props.authors, state.authors), story.user_ids);
+            nextState.authors = findUsers(_.concat(this.props.authors, this.state.authors), story.user_ids);
         }
         if (!_.isEmpty(nextState)) {
             this.setState(nextState);
