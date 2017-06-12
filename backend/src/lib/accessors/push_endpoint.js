@@ -8,8 +8,7 @@ module.exports = {
         id: Number,
         handle_token: String,
         device_registration_id: String,
-        endpoint_arn: String,
-        subscription_arn: String,
+        details: Object,
     },
     criteria: {
         device_registration_id: String,
@@ -31,8 +30,7 @@ module.exports = {
                 id serial,
                 handle_token varchar(64) NOT NULL,
                 device_registration_id varchar(1024) NOT NULL,
-                endpoint_arn varchar(256) NOT NULL,
-                subscription_arn varchar(256) NOT NULL,
+                details jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
         `;
@@ -58,7 +56,7 @@ module.exports = {
 
     /**
      * Not watching table
-     * 
+     *
      * @param  {Database} db
      * @param  {String} schema
      *

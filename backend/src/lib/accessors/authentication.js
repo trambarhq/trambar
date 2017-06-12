@@ -13,7 +13,6 @@ module.exports = {
     },
     criteria: {
         type: String,
-        details: Number,
     },
 
     /**
