@@ -130,6 +130,7 @@ module.exports = React.createClass({
                 'columns-2': 800,
                 'columns-3': 1300,
             },
+            route: this.state.route,
             onChange: this.handleThemeChange,
         };
         return (
@@ -142,6 +143,9 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Hide the splash screen once app is ready
+     */
     componentDidUpdate: function() {
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
@@ -151,11 +155,23 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when the database queries might yield new results
+     *
+     * @param  {Object} evt
+     */
     handleDatabaseChange: function(evt) {
         var database = new Database(evt.target);
         this.setState({ database });
     },
 
+    /**
+     * Called when RemoteDataSource needs credentials for accessing a server
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Object>}
+     */
     handleDatabaseAuthRequest: function(evt) {
         var db = this.state.database.use({ by: this, schema: 'local' });
         var criteria = { server: evt.server };
@@ -181,16 +197,28 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when the locale changes
+     *
+     * @param  {Object} evt
+     */
     handleLocaleChange: function(evt) {
         var locale = new Locale(evt.target);
         this.setState({ locale });
         document.title = locale.translate('app-name');
     },
 
+    /**
+     * Called when LocaleManager needs a language module
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Module>}
+     */
     handleLanguageModuleRequest: function(evt) {
         var languageCode = evt.languageCode.substr(0, 2);
         return new Promise((resolve, reject) => {
-            // list the modules here so Webpack can codesplit them
+            // list the modules here so Webpack can code-split them
             //
             // require.ensure() will become a "new Promise(...)" statement
             // use native Promise instead of Bluebird to avoid warning of
@@ -205,11 +233,23 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when the route changes
+     *
+     * @param  {Object} evt
+     */
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
         this.setState({ route });
     },
 
+    /**
+     * Called when RouteManager fails to find a route
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<String>}
+     */
     handleRedirectionRequest: function(evt) {
         return Promise.try(() => {
             if (evt.url === '/') {
@@ -237,11 +277,19 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when the UI theme changes
+     *
+     * @param  {Object} evt
+     */
     handleThemeChange: function(evt) {
         var theme = new Theme(evt.target);
         this.setState({ theme });
     },
 
+    /**
+     * Fade out and then remove splash screen
+     */
     hideSplashScreen: function() {
         var screen = document.getElementById('splash-screen');
         var style = document.getElementById('splash-screen-style');

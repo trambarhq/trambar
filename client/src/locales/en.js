@@ -7,6 +7,9 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'people',
         'bottom-nav-settings': 'settings',
 
+        'selection-cancel': 'Cancel',
+        'selection-ok': 'OK',
+
         'story-cancel': 'Cancel',
         'story-photo': 'Photo',
         'story-post': 'Post',

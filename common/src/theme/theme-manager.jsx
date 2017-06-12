@@ -2,19 +2,25 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
+var Route = require('routing/route');
 
 module.exports = React.createClass({
     displayName: 'ThemeManager',
     propTypes: {
-        database: PropTypes.instanceOf(Database),
         modes: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database),
+        route: PropTypes.instanceOf(Route).isRequired,
+
         onChange: PropTypes.func,
     },
 
     getInitialState: function() {
         return {
             mode: this.selectMode(),
-            details: null
+            devicePixelRatio: window.devicePixelRatio,
+            details: null,
+            server: null,
         };
     },
 
@@ -24,6 +30,39 @@ module.exports = React.createClass({
 
     getDetails: function() {
         return this.state.details;
+    },
+
+    /**
+     * Return URL of resized image
+     *
+     * @param  {String} baseUrl
+     * @param  {Number|String|undefined} width
+     * @param  {Number|String|undefined} height
+     *
+     * @return {String}
+     */
+    getImageUrl: function(baseUrl, width, height) {
+        var server = this.state.server;
+        var protocol = (server === 'localhost') ? 'http' : 'https';
+        var filters = '';
+        if (typeof(width) === 'string') {
+            width = decodeLength(width);
+        }
+        if (typeof(height) === 'string') {
+            height = decodeLength(height);
+        }
+        if (this.state.devicePixelRatio !== 1) {
+            width = Math.round(width * this.state.devicePixelRatio);
+            height = Math.round(width * this.state.devicePixelRatio);
+        }
+        if (width !== undefined && height !== undefined) {
+            filters = `/rs${width}-${height}`;
+        } else if (width === undefined && height !== undefined) {
+            filters = `/h${height}`;
+        } else if (height === undefined && width !== undefined) {
+            filters = `/w${width}`
+        }
+        return `${protocol}://${server}${baseUrl}${filters}`;
     },
 
     /**
@@ -53,12 +92,20 @@ module.exports = React.createClass({
         return Promise.resolve(true);
     },
 
-    triggerChangeEvent: function() {
-        if (this.props.onChange) {
-            this.props.onChange({
-                type: 'change',
-                target: this,
-            });
+    /**
+     * Update the server name if it's different
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.route !== nextProps.route) {
+            var serverBefore = _.get(this.props.route, 'parameters.server');
+            var serverAfter = _.get(nextProps.route, 'parameters.server');
+            if (serverBefore !== serverAfter) {
+                this.setState({ server: serverAfter }, () => {
+                    this.triggerChangeEvent();
+                });
+            }
         }
     },
 
@@ -100,10 +147,26 @@ module.exports = React.createClass({
         window.removeEventListener('resize', this.handleWindowResize);
     },
 
+    triggerChangeEvent: function() {
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
+                target: this,
+            });
+        }
+    },
+
     handleWindowResize: function(evt) {
+        var nextState = {};
         var mode = this.selectMode();
         if (this.state.mode !== mode) {
-            this.setState({ mode }, () => {
+            nextState.mode = mode;
+        }
+        if (this.state.devicePixelRatio !== window.devicePixelRatio) {
+            nextState.devicePixelRatio = window.devicePixelRatio;
+        }
+        if (!_.isEmpty(nextState)) {
+            this.setState(nextState, () => {
                 this.triggerChangeEvent();
             });
         }
@@ -111,3 +174,14 @@ module.exports = React.createClass({
 });
 
 var defaultTheme = {};
+
+function decodeLength(s) {
+    var m;
+    if (m = /^(\d+)\s*vw/.exec(s)) {
+        var n = parseInt(m[1]);
+        return Math.round(n * document.body.offsetWidth / 100);
+    } else if (m = /^(\d+)\s*vh/.exec(s)) {
+        var n = parseInt(m[1]);
+        return Math.round(n * document.body.offsetHeight / 100);
+    }
+}

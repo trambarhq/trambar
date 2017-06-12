@@ -4,10 +4,10 @@ var ComponentRefs = require('utils/component-refs');
 // widgets
 var Overlay = require('widgets/overlay');
 
-require('./photo-capture-dialog.scss');
+require('./photo-capture-dialog-box.scss');
 
 module.exports = React.createClass({
-    displayName: 'PhotoCaptureDialog',
+    displayName: 'PhotoCaptureDialogBox',
     propTypes: {
         show: PropTypes.bool,
         onCancel: PropTypes.func,

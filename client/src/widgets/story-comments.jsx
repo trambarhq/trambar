@@ -10,6 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var CommentView = require('widgets/comment-view');
 
 module.exports = React.createClass({
     displayName: 'StoryComments',
