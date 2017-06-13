@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var CollapsibleContainer = require('widgets/collapsible-container');
+var Calendar = require('widgets/calendar');
 
 require('./top-navigation.scss');
 
@@ -115,10 +116,21 @@ module.exports = React.createClass({
 
     renderControl: function() {
         switch (this.state.selectedControl) {
-            case 'calendar': return <div><p>Calendar</p></div>;
+            case 'calendar': return this.renderCalendarBar();
             case 'filter': return <div><p>Filter</p></div>;
             case 'search': return <div><p>Search</p></div>;
         }
+    },
+
+    renderCalendarBar: function() {
+        var props = {
+            year: 2017,
+            month: 6,
+            locale: this.props.locale,
+        };
+        return (
+            <Calendar {...props} />
+        );
     },
 
     handleCalendarClick: function(evt) {

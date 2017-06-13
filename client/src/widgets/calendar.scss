@@ -1,0 +1,55 @@
+TABLE.calendar {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #aaaaaa;
+
+    .title {
+        TH {
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #999999;
+            border: 1px solid #444444;
+            padding: 0.1em 0.1em 0.1em 0.1em;
+        }
+    }
+
+    .headings {
+        TH {
+            font-size: 0.6em;
+            font-weight: normal;
+            color: #999999;
+            border: 1px solid #444444;
+            padding: 0.2em 0 0.2em 0;
+        }
+
+        TH.weekend {
+            background-color: #333333;
+        }
+    }
+
+    .dates {
+        TD {
+            width: 1.6em;
+            height: 1.4em;
+            font-size: 0.8em;
+            color: #cccccc;
+            text-align: center;
+            border: 1px solid #444444;
+            cursor: pointer;
+        }
+
+        TD.weekend {
+            background-color: #333333;
+        }
+
+        TD.disabled {
+            color: #666666;
+            cursor: default;
+        }
+
+        TD.selected {
+            color: #000000;
+            background-color: #ffffff;
+        }
+    }
+}

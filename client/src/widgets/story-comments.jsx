@@ -64,6 +64,7 @@ module.exports = React.createClass({
             currentUser: null,
             locale: this.props.locale,
             theme: this.props.theme,
+            key: reaction.id,
         };
         return <CommentView {...props} />;
     },

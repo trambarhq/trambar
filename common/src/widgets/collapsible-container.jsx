@@ -71,22 +71,25 @@ module.exports = React.createClass({
     },
 
     /**
-     * Force component to rerender when state.hidden goes from false to true,
-     * as height couldn't be determined without actual DOM elements
+     * Render if the content height is different from the height set for the
+     * container
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        if (prevState.hidden !== this.state.hidden) {
-            if (prevState.hidden) {
-                var height = this.getContentHeight();
-                if (height > 0) {
+        if (this.props.open) {
+            if (this.domNode) {
+                var styleHeight = parseInt(this.domNode.style.height);
+                var contentHeight = this.getContentHeight();
+                if (styleHeight !== contentHeight) {
                     this.forceUpdate();
                 }
-            } else {
-                this.domNode = null;
             }
+        }
+        if (this.state.hidden) {
+            // DOM node is no longer in the tree
+            this.domNode = null;
         }
     },
 
