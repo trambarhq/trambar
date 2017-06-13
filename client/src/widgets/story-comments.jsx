@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var MemoizeWeak = require('memoizee/weak');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -27,13 +28,14 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var reactions = this.props.reactions ? sortReactions(this.props.reactions) : null;
         return (
             <StorySection>
                 <header>
                     {this.renderButtons()}
                 </header>
                 <body>
-                    {this.renderComments()}
+                    {_.map(reactions, this.renderReaction)}
                 </body>
             </StorySection>
         );
@@ -55,8 +57,15 @@ module.exports = React.createClass({
         );
     },
 
-    renderComments: function() {
-
+    renderReaction: function(reaction) {
+        var props = {
+            reaction,
+            respondent: findUser(this.props.respondents, reaction.user_id),
+            currentUser: null,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <CommentView {...props} />;
     },
 
     getCurrentUserLike: function() {
@@ -85,4 +94,12 @@ module.exports = React.createClass({
             db.saveOne({ table: 'reaction' }, like);
         }
     },
+});
+
+var sortReactions = MemoizeWeak(function(reactions) {
+    return _.orderBy(reactions, [ 'ptime' ], [ 'desc' ]);
+});
+
+var findUser = MemoizeWeak(function(users, id) {
+    return _.find(users, { id });
 });

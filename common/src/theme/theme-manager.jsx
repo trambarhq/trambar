@@ -73,7 +73,7 @@ module.exports = React.createClass({
             height = Math.round(height * this.state.devicePixelRatio);
         }
         if (width !== undefined && height !== undefined) {
-            filters.push(`rs${width}-${height}`);
+            filters.push(`re${width}-${height}`);
         } else if (width === undefined && height !== undefined) {
             filters.push(`h${height}`);
         } else if (height === undefined && width !== undefined) {
@@ -81,9 +81,8 @@ module.exports = React.createClass({
         }
         var path = '';
         if (filters.length > 0) {
-            path = `/${filters.join('-')}`;
+            path = `/${filters.join('+')}`;
         }
-        console.log(filters);
         return `${protocol}://${server}${baseUrl}${path}`;
     },
 

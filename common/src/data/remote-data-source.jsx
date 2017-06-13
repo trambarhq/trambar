@@ -549,7 +549,7 @@ function getUpdateList(ids, gns, objects) {
     _.each(ids, (id, i) => {
         var gn = gns[i];
         var index = _.sortedIndexBy(objects, { id }, 'id');
-        var object = objects[index];
+        var object = (objects) ? objects[index] : null;
         if (!object || object.id !== id || object.gn !== gn) {
             updated.push(id);
         }
@@ -574,7 +574,7 @@ function removeObjects(objects, ids) {
     objects = _.slice(objects);
     _.each(ids, (id) => {
         var index = _.sortedIndexBy(objects, { id }, 'id');
-        var object = objects[index];
+        var object = (objects) ? objects[index] : null;
         if (object && object.id === id) {
             objects.splice(index, 1);
         }

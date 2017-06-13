@@ -132,11 +132,11 @@ module.exports = Relaks.createClass({
             };
             return db.find({ table: 'story', criteria });
         }).then((stories) => {
-            props.drafts = stories;
+            props.storyDrafts = stories;
             meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
             // load other users also working on these stories
-            var userIds = _.flatten(_.map(props.drafts, 'user_ids'));
+            var userIds = _.flatten(_.map(props.storyDrafts, 'user_ids'));
             userIds = _.uniq(userIds);
             var coauthorIds = _.difference(userIds, [ props.currentUser.id ]);
             if (!_.isEmpty(coauthorIds)) {
@@ -144,11 +144,11 @@ module.exports = Relaks.createClass({
                     id: coauthorIds
                 };
                 return db.find({ schema: 'global', table: 'user', criteria });
+            } else {
+                return [];
             }
         }).then((users) => {
-            if (users) {
-                props.authors = _.concat(props.authors, users);
-            }
+            props.authors = _.unionBy(props.authors, users, [ props.currentUser ], 'id');
             props.loading = false;
             return <NewsPageSync {...props} />;
         });
@@ -161,7 +161,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         loading: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
-        drafts: PropTypes.arrayOf(PropTypes.object),
+        storyDrafts: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
@@ -173,55 +173,32 @@ var NewsPageSync = module.exports.Sync = React.createClass({
 
     getInitialState: function() {
         return {
-            newStory: null
         };
     },
 
     render: function() {
+        var drafts = this.props.storyDrafts ? sortStoryDrafts(this.props.storyDrafts, this.props.currentUser) : [];
+        if (drafts.length === 0 || drafts[0].user_ids[0] !== this.props.currentUser.id) {
+            // add empty story when current user doesn't have an active draft
+            var blank = {
+                user_ids: this.props.currentUser ? [ this.props.currentUser.id ] : [],
+                details: {}
+            }
+            drafts.unshift(blank);
+        }
         return (
             <div>
-                {this.renderEditors()}
+                {_.map(drafts, this.renderEditor)}
                 {this.renderList()}
             </div>
         );
     },
 
-    renderEditors: function() {
-        var editors;
-        var drafts = this.props.draft;
-        if (_.isEmpty(drafts)) {
-            editors = [ this.renderEditor(null) ];
-        } else {
-            var newStoryIndex = _.findIndex(drafts, { id: _.get(this.state.newStory, 'id') });
-            if (newStoryIndex !== -1 && newStoryIndex !== 0) {
-                // move newly created story to beginning
-                var newStory = drafts[newStoryIndex];
-                drafts = _.slice(drafts);
-                drafts.splice(newStoryIndex, 1);
-                drafts.unshift(newStory);
-            }
-            editors = _.map(drafts, this.renderEditor);
-        }
-        return editors;
-    },
-
-    renderEditor: function(story) {
-        var key;
-        var authors;
-        if (!story) {
-            // use 0 when there's draft story yet
-            key = 0;
-            authors = this.props.currentUser ? [ this.props.currentUser ] : null;
-        } else {
-            // keep using 0 as the key if it's the newly created story
-            // otherwise
-            if (story.id === _.get(this.state.newStory, 'id')) {
-                key = 0;
-            } else {
-                key = story.id;
-            }
-            authors = this.props.authors ? findUsers(this.props.authors, story.user_ids) : null;
-        }
+    renderEditor: function(story, index) {
+        // always use 0 as the key for the top story, so we don't lose focus
+        // when the new story acquires an id after being saved automatically
+        var key = (index > 0) ? story.id : 0;
+        var authors = this.props.authors ? findUsers(this.props.authors, story.user_ids) : null;
         var editorProps = {
             story,
             authors: authors,
@@ -255,4 +232,11 @@ var findUsers = MemoizeWeak(function(users, userIds) {
     return _.map(_.uniq(userIds), (userId) => {
        return _.find(users, { id: userId }) || {}
     });
+});
+
+var sortStoryDrafts = MemoizeWeak(function(stories, currentUser) {
+    var ownStory = function(story) {
+        return story.user_ids[0] = currentUser.id;
+    };
+    return _.orderBy(stories, [ ownStory, 'ptime' ], [ 'desc', 'desc' ]);
 });

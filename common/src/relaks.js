@@ -183,9 +183,11 @@ function render() {
             }
         };
         var reject = (err) => {
-            console.error(err);
-            var element = this.renderError(err);
-            resolve(element);
+            if (!(err instanceof AsyncRenderingInterrupted)) {
+                console.error(err);
+                var element = this.renderError(err);
+                resolve(element);
+            }
         };
         promise.then(resolve, reject);
     } else {

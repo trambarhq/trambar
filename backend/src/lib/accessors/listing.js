@@ -142,6 +142,7 @@ module.exports = _.create(LiveData, {
                 filters: row.filters,
                 story_ids: _.map(row.details.stories, 'id')
             };
+            console.log(object);
             return object;
         });
     },

@@ -93,9 +93,9 @@ module.exports = React.createClass({
         var text = _.get(this.props.story, 'details.text');
         var code = this.props.languageCode.substr(0, 2);
         var props = {
-            value: _.get(text, code),
+            value: _.get(text, code, ''),
             onChange: this.handleTextChange,
-        }
+        };
         return <textarea {...props} />;
     },
 
@@ -103,10 +103,10 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="buttons">
-                <button className="cancel">
+                <button className="cancel" onClick={this.handleCancelClick}>
                     {t('story-cancel')}
                 </button>
-                <button className="post">
+                <button className="post" onClick={this.handlePostClick}>
                     {t('story-post')}
                 </button>
             </div>
@@ -139,6 +139,34 @@ module.exports = React.createClass({
                 type: 'authorschange',
                 target: this,
                 authors,
+            })
+        }
+    },
+
+    /**
+     * Call onPost handler
+     *
+     * @param  {Array<User>} authors
+     */
+    triggerPostEvent: function(authors) {
+        if (this.props.onPost) {
+            this.props.onPost({
+                type: 'post',
+                target: this,
+            })
+        }
+    },
+
+    /**
+     * Call onCancel handler
+     *
+     * @param  {Array<User>} authors
+     */
+    triggerCancelEvent: function(authors) {
+        if (this.props.onCancel) {
+            this.props.onCancel({
+                type: 'cancel',
+                target: this,
             })
         }
     },
@@ -194,8 +222,27 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleTextChange: function(evt) {
+        var text = evt.currentTarget.value;
         var story = _.cloneDeep(this.props.story);
-        _.set(story.details, [ 'text', this.props.languageCode.substr(0, 2) ]);
+        _.set(story.details, [ 'text', this.props.languageCode.substr(0, 2) ], text);
         this.triggerStoryChangeEvent(story);
+    },
+
+    /**
+     * Called when user click Post button
+     *
+     * @param  {Event} evt
+     */
+    handlePostClick: function(evt) {
+        this.triggerPostEvent();
+    },
+
+    /**
+     * Called when user click Cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelClick: function(evt) {
+        this.triggerCancelEvent();
     },
 });

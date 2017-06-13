@@ -13,7 +13,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         reaction: PropTypes.object.isRequired,
-        author: PropTypes.object,
+        respondent: PropTypes.object,
         currentUser: PropTypes.object.isRequired,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -23,16 +23,36 @@ module.exports = React.createClass({
     render: function() {
         return (
             <div className="comment-view">
-                <div className="profile-image">
-                    <img src={imageUrl} />
-                    <span className="name">{name}</span>
-                    {this.renderText()}
-                </div>
+                {this.renderProfileImage()}
+                {this.renderName()}
+                {this.renderText()}
             </div>
         );
     },
 
-    renderText: function() {
+    renderProfileImage: function() {
+        var profileImage = _.get(this.props.respondent, 'details.profile_image');
+        var url = this.props.theme.getImageUrl(profileImage, 24, 24);
+        return (
+            <div className="profile-image">
+                <img src={url} />
+            </div>
+        );
+    },
 
+    renderName: function() {
+        var name = _.get(this.props.respondent, 'details.name');
+        return <span className="name">{name}</span>;
+    },
+
+    renderText: function() {
+        var type = this.props.reaction.type;
+        if (type === 'like') {
+            return <span> likes this story</span>
+        } else if (type === 'comment') {
+            var p = this.props.locale.pick;
+            var text = _.get(this.props.reaction, 'details.text');
+            return <span>: {p(text)}</span>;
+        }
     },
 });

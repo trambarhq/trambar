@@ -54,8 +54,8 @@ function handleDatabaseChanges(events) {
     return Promise.each(schemas, (schema) => {
         var schemaEvents = eventGroups[schema];
         return Promise.all([
-            invalidateListings(db, schema, events),
-            invalidateStatistics(db, schema, events),
+            invalidateListings(db, schema, schemaEvents),
+            invalidateStatistics(db, schema, schemaEvents),
         ]);
     });
 }
@@ -176,7 +176,7 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
             match_any: rows,
             dirty: false,
         };
-        return Statistics.find(db, schema, listingCriteria, 'id');
+        return Listing.find(db, schema, listingCriteria, 'id');
     }).then((rows) => {
         return _.map(rows, 'id');
     });
