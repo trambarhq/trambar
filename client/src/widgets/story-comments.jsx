@@ -18,6 +18,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
+        currentUser: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
 
@@ -27,34 +28,93 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    getInitialState: function() {
+        return {
+            expanded: this.shouldExpandAutomatically(this.props)
+        };
+    },
+
+    shouldExpandAutomatically: function(props) {
+        if (!props.reactions || !props.respondents) {
+            return;
+        }
+        // expand automatically when it's the current user's story
+        var currentUserId = _.get(this.props.currentUser, 'id');
+        if (_.includes(props.story.user_ids, currentUserId)) {
+            return true;
+        }
+        // expand automatically when the current user has reacted to story
+        if (_.some(props.reactions, { user_id: currentUserId })) {
+            return true;
+        }
+        return false;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.state.expanded === undefined) {
+            // see if we have enough props to determine whether reactions
+            // should be shown initially
+            var expanded = this.shouldExpandAutomatically(nextProps);
+            if (expanded !== undefined) {
+                this.setState({ expanded });
+            }
+        }
+    },
+
     render: function() {
-        var reactions = this.props.reactions ? sortReactions(this.props.reactions) : null;
         return (
             <StorySection>
                 <header>
                     {this.renderButtons()}
                 </header>
                 <body>
-                    {_.map(reactions, this.renderReaction)}
+                    {this.renderReactions()}
                 </body>
             </StorySection>
         );
     },
 
     renderButtons: function() {
-        var like = this.getCurrentUserLike();
         return (
             <div>
-                <div className={'button' + (like ? ' lit' : '')} onClick={this.handleLikeClick}>
-                    <i className="fa fa-thumbs-up"/>
-                    <span className="label">Like</span>
-                </div>
-                <div className="button">
-                    <i className="fa fa-comment"/>
-                    <span className="label">Comment</span>
-                </div>
+                {this.renderLikeButton()}
+                {this.renderCommentButton()}
             </div>
         );
+    },
+
+    renderLikeButton: function() {
+        var classNames = [ 'button' ];
+        if (this.getCurrentUserLike()) {
+            classNames.push('lit');
+        }
+        return (
+            <div className={classNames.join(' ')} onClick={this.handleLikeClick}>
+                <i className="fa fa-thumbs-up"/>
+                <span className="label">Like</span>
+            </div>
+        );
+    },
+
+    renderCommentButton: function() {
+        var classNames = [ 'button' ];
+        if (this.getCurrentUserComments().length > 0) {
+            classNames.push('lit');
+        }
+        return (
+            <div className={classNames.join(' ')} onClick={this.handleCommentClick}>
+                <i className="fa fa-comment"/>
+                <span className="label">Comment</span>
+            </div>
+        );
+    },
+
+    renderReactions: function() {
+        if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
+            return null;
+        }
+        var reactions = this.props.reactions ? sortReactions(this.props.reactions) : null;
+        return _.map(reactions, this.renderReaction)
     },
 
     renderReaction: function(reaction) {
@@ -70,11 +130,17 @@ module.exports = React.createClass({
     },
 
     getCurrentUserLike: function() {
-        var criteria = {
+        return _.find(this.props.reactions, {
             type: 'like',
             user_id: _.get(this.props.currentUser, 'id'),
-        };
-        return _.find(this.props.reactions, criteria);
+        });
+    },
+
+    getCurrentUserComments: function() {
+        return _.filter(this.props.reactions, {
+            type: 'comment',
+            user_id: _.get(this.props.currentUser, 'id'),
+        });
     },
 
     handleLikeClick: function(evt) {
@@ -94,6 +160,10 @@ module.exports = React.createClass({
             };
             db.saveOne({ table: 'reaction' }, like);
         }
+    },
+
+    handleCommentClick: function(evt) {
+        
     },
 });
 
