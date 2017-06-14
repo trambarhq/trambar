@@ -8,7 +8,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var CollapsibleContainer = require('widgets/collapsible-container');
-var Calendar = require('widgets/calendar');
+var CalendarBar = require('widgets/calendar-bar');
 
 require('./top-navigation.scss');
 
@@ -70,21 +70,21 @@ module.exports = React.createClass({
         var selected = (this.state.expanded) ? this.state.selectedControl : '';
         var calendarProps = {
             icon: 'calendar',
-            className: 'calendar',
+            id: 'calendar',
             disabled: !params.dateSelection,
             active: selected === 'calendar',
             onClick: this.handleCalendarClick,
         };
         var filterProps = {
             icon: 'filter',
-            className: 'filter',
+            id: 'filter',
             disabled: !params.roleSelection,
             active: selected === 'filter',
             onClick: this.handleFilterClick,
         };
         var searchProps = {
             icon: 'search',
-            className: 'search',
+            id: 'search',
             disabled: !params.textSearch,
             active: selected === 'search',
             onClick: this.handleSearchClick,
@@ -124,12 +124,12 @@ module.exports = React.createClass({
 
     renderCalendarBar: function() {
         var props = {
-            year: 2017,
-            month: 6,
+            database: this.props.database,
+            route: this.props.route,
             locale: this.props.locale,
         };
         return (
-            <Calendar {...props} />
+            <CalendarBar {...props} />
         );
     },
 
@@ -149,9 +149,6 @@ module.exports = React.createClass({
 function Button(props) {
     var classes = [ 'button' ];
     var clickHandler = props.onClick;
-    if (props.className) {
-        classes.push(props.className);
-    }
     if (props.active) {
         classes.push('active');
     }
@@ -160,7 +157,7 @@ function Button(props) {
         clickHandler = null;
     }
     return (
-        <div className={classes.join(' ')} onClick={clickHandler}>
+        <div id={props.id} className={classes.join(' ')} onClick={clickHandler}>
             <i className={`fa fa-${props.icon}`} />
         </div>
     );

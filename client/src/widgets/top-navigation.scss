@@ -26,10 +26,10 @@
             cursor: not-allowed;
         }
 
-        &.calendar, &.filter {
+        &#calendar, &#filter {
             float: left;
         }
-        &.search {
+        &#search {
             float: right;
         }
     }

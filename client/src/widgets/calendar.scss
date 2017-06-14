@@ -1,7 +1,10 @@
-TABLE.calendar {
+.calendar {
+    display: inline-block;
     border-collapse: collapse;
     border-spacing: 0;
-    border: 1px solid #aaaaaa;
+    direction: ltr;
+    margin-left: 0.2em;
+    margin-right: 0.2em;
 
     .title {
         TH {
