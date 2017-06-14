@@ -69,21 +69,21 @@ module.exports = React.createClass({
         var selected = (this.state.expanded) ? this.state.selectedControl : '';
         var calendarProps = {
             icon: 'calendar',
-            id: 'calendar',
+            className: 'calendar-btn',
             disabled: !params.dateSelection,
             active: selected === 'calendar',
             onClick: this.handleCalendarClick,
         };
         var filterProps = {
             icon: 'filter',
-            id: 'filter',
+            className: 'filter-btn',
             disabled: !params.roleSelection,
             active: selected === 'filter',
             onClick: this.handleFilterClick,
         };
         var searchProps = {
             icon: 'search',
-            id: 'search',
+            className: 'search-btn',
             disabled: !params.textSearch,
             active: selected === 'search',
             onClick: this.handleSearchClick,
@@ -177,6 +177,9 @@ module.exports = React.createClass({
 function Button(props) {
     var classes = [ 'button' ];
     var clickHandler = props.onClick;
+    if (props.className) {
+        classes.push(props.className);
+    }
     if (props.active) {
         classes.push('active');
     }
@@ -185,7 +188,7 @@ function Button(props) {
         clickHandler = null;
     }
     return (
-        <div id={props.id} className={classes.join(' ')} onClick={clickHandler}>
+        <div className={classes.join(' ')} onClick={clickHandler}>
             <i className={`fa fa-${props.icon}`} />
         </div>
     );

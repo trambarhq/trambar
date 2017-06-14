@@ -13,6 +13,8 @@ var UpdateCheck = require('mixins/update-check');
 var StorySection = require('widgets/story-section');
 var CommentView = require('widgets/comment-view');
 
+require('./story-comments.scss');
+
 module.exports = React.createClass({
     displayName: 'StoryComments',
     mixins: [ UpdateCheck ],
@@ -75,36 +77,35 @@ module.exports = React.createClass({
     },
 
     renderButtons: function() {
+        var t = this.props.locale.translate;
+        var likeButtonProps = {
+            icon: 'thumb-up',
+            label: t('story-like'),
+            highlighted: !!this.getCurrentUserLike(),
+            onClick: this.handleLikeClick,
+        };
+        var commentButtonProps = {
+            icon: 'comment',
+            label: t('story-comment'),
+            highlighted: this.getCurrentUserComments().length > 0,
+            onClick: this.handleCommentClick,
+        };
+        var showButtonProps = {
+            className: 'show-btn',
+            hidden: true,
+            label: t('story-$1-user-reacted-to-story', _.size(this.props.respondents)),
+            onClick: this.handleShowClick,
+        };
+        if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
+            if (!_.isEmpty(this.props.reactions)) {
+                showButtonProps.hidden = false;
+            }
+        }
         return (
             <div>
-                {this.renderLikeButton()}
-                {this.renderCommentButton()}
-            </div>
-        );
-    },
-
-    renderLikeButton: function() {
-        var classNames = [ 'button' ];
-        if (this.getCurrentUserLike()) {
-            classNames.push('lit');
-        }
-        return (
-            <div className={classNames.join(' ')} onClick={this.handleLikeClick}>
-                <i className="fa fa-thumbs-up"/>
-                <span className="label">Like</span>
-            </div>
-        );
-    },
-
-    renderCommentButton: function() {
-        var classNames = [ 'button' ];
-        if (this.getCurrentUserComments().length > 0) {
-            classNames.push('lit');
-        }
-        return (
-            <div className={classNames.join(' ')} onClick={this.handleCommentClick}>
-                <i className="fa fa-comment"/>
-                <span className="label">Comment</span>
+                <Button {...likeButtonProps} />
+                <Button {...commentButtonProps} />
+                <Button {...showButtonProps} />
             </div>
         );
     },
@@ -121,7 +122,7 @@ module.exports = React.createClass({
         var props = {
             reaction,
             respondent: findUser(this.props.respondents, reaction.user_id),
-            currentUser: null,
+            currentUser: this.props.currentUser,
             locale: this.props.locale,
             theme: this.props.theme,
             key: reaction.id,
@@ -163,7 +164,11 @@ module.exports = React.createClass({
     },
 
     handleCommentClick: function(evt) {
-        
+
+    },
+
+    handleShowClick: function(evt) {
+        this.setState({ expanded: true });
     },
 });
 
@@ -174,3 +179,22 @@ var sortReactions = MemoizeWeak(function(reactions) {
 var findUser = MemoizeWeak(function(users, id) {
     return _.find(users, { id });
 });
+
+function Button(props) {
+    if (props.hidden) {
+        return null;
+    }
+    var classNames = [ 'button' ];
+    if (props.className) {
+        classNames.push(props.className);
+    }
+    if (props.highlighted) {
+        classNames.push('highlighted');
+    }
+    return (
+        <div className={classNames.join(' ')} onClick={props.onClick}>
+            <i className={props.icon ? `fa fa-${props.icon}` : null}/>
+            <span className="label">{props.label}</span>
+        </div>
+    );
+}

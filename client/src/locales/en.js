@@ -10,7 +10,13 @@ module.exports = function(languageCode) {
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 
+        'story-$1-user-reacted-to-story': ($1) => {
+            var users = ($1 === 1) ? `${$1} user` : `${$1} users`;
+            return `${users} reacted to this story`;
+        },
         'story-cancel': 'Cancel',
+        'story-comment': 'Comment',
+        'story-like': 'Like',
         'story-photo': 'Photo',
         'story-post': 'Post',
         'story-video': 'Video',

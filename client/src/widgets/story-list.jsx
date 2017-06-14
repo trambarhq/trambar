@@ -103,12 +103,15 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     renderStory: function(story, index) {
-        var respondentIds = _.map(this.props.reactions, 'id');
+        var reactions = this.props.reactions ? findReactions(this.props.reactions, story.id) : null;
+        var authors = this.props.users ? findUsers(this.props.users, story.user_ids) : null;
+        var respondentIds = _.map(reactions, 'user_id');
+        var respondents = this.props.users ? findUsers(this.props.users, respondentIds) : null
         var storyProps = {
             story,
-            reactions: this.props.reactions ? findReactions(this.props.reactions, story.id) : null,
-            authors: this.props.users ? findUsers(this.props.users, story.user_ids) : null,
-            respondents: this.props.users ? findUsers(this.props.users, respondentIds) : null,
+            reactions,
+            authors,
+            respondents,
             currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
