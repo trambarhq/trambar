@@ -79,7 +79,7 @@ module.exports = React.createClass({
         }
         if (this.nearViewPort === undefined) {
             var list = componentLists[type];
-            this.adjustVisibility(list.viewPortRect);
+            this.adjustVisibility(list.viewPortRect, true);
         }
     },
 
@@ -96,7 +96,7 @@ module.exports = React.createClass({
         this.placeholderNode = node;
     },
 
-    adjustVisibility: function(viewPortRect) {
+    adjustVisibility: function(viewPortRect, noRemoval) {
         if (!viewPortRect) {
             return false;
         }
@@ -139,8 +139,13 @@ module.exports = React.createClass({
         if (this.nearViewPort !== near) {
             this.nearViewPort = near;
             if (!!this.containerNode !== near) {
-                this.forceUpdate();
-                return true;
+                // don't remove node during initial mounting of components, as
+                // layout could be in flux and the reported position might be
+                // wrong
+                if (!noRemoval || !this.containerNode) {
+                    this.forceUpdate();
+                    return true;
+                }
             }
         }
         return false;
