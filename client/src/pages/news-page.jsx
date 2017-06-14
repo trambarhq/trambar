@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var Moment = require('moment');
 var MemoizeWeak = require('memoizee/weak');
 var Relaks = require('relaks');
 
@@ -91,7 +92,12 @@ module.exports = Relaks.createClass({
                 // load story matching filters
                 var criteria = {};
                 if (date) {
-                    criteria.date = date;
+                    var s = Moment(date);
+                    var e = s.clone().endOf('day');
+                    var rangeStart = s.toISOString();
+                    var rangeEnd = e.toISOString();
+                    var range = `[${rangeStart},${rangeEnd}]`;
+                    criteria.time_range = range;
                 }
                 if (!_.isEmpty(roleIds)) {
                     criteria.role_ids = roleIds;
