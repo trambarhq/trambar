@@ -34,7 +34,6 @@ module.exports = React.createClass({
                 this.setState({ hidden: false });
                 setTimeout(() => {
                     var height = this.getContentHeight();
-                    console.log(height);
                     this.domNode.style.height = height + 'px';
                 }, 0);
                 setTimeout(() => {

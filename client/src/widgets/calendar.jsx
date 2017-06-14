@@ -10,8 +10,23 @@ module.exports = React.createClass({
     propTypes: {
         year: PropTypes.number.isRequired,
         month: PropTypes.number.isRequired,
+        showYear: PropTypes.bool,
+        dailyActivities: PropTypes.object,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
+
+        onSelect: PropTypes.func,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            showYear: false
+        };
     },
 
     /**
@@ -21,7 +36,10 @@ module.exports = React.createClass({
      */
     render: function() {
         var localeData = Moment.localeData(this.props.locale.languageCode);
-        var firstDay = Moment(date(this.props.year, this.props.month, 1));
+        var year = this.props.year;
+        var month = this.props.month;
+        var dailyActivities = this.props.dailyActivities;
+        var firstDay = Moment(date(year, month, 1));
         var firstDayOfWeek = localeData.firstDayOfWeek();
         var daysInMonth = firstDay.daysInMonth();
         var dayOfWeek = firstDay.day();
@@ -51,7 +69,8 @@ module.exports = React.createClass({
             dayLabels.push(dayLabels.shift());
             isWeekend.push(isWeekend.shift());
         }
-        var monthLabel = firstDay.format('MMMM');
+        var titleFormat = (this.props.showYear) ? 'MMMM YYYY' : 'MMMM';
+        var title = firstDay.format(titleFormat);
         var headings = _.map(dayLabels, (label, index) => {
             var classNames = [
                 isWeekend[index] ? 'weekend' : 'workweek'
@@ -67,20 +86,38 @@ module.exports = React.createClass({
                 var classNames = [
                     isWeekend[index] ? 'weekend' : 'workweek'
                 ];
-                var label = day || '\u00a0';
+                var label;
+                var activities;
+                if (day) {
+                    var date = `${year}-${pad(month)}-${pad(day)}`;
+                    if (dailyActivities) {
+                        activities = dailyActivities[date];
+                    }
+                    label = day;
+                } else {
+                    label = '\u00a0';
+                }
+                if (!activities) {
+                    classNames.push('disabled');
+                }
+                var props = {
+                    className: classNames.join(' '),
+                    'data-date': date,
+                    key: index
+                };
                 return (
-                    <td className={classNames.join(' ')} key={index}>
+                    <td {...props}>
                         {label}
                     </td>
                 );
             });
         });
         return (
-            <table className="calendar">
+            <table className="calendar" onClick={this.handleClick}>
                 <thead>
                     <tr className="title">
                         <th colSpan={7}>
-                            {monthLabel}
+                            {title}
                         </th>
                     </tr>
                     <tr className="headings">
@@ -97,6 +134,33 @@ module.exports = React.createClass({
                 </tbody>
             </table>
         );
+    },
+
+    /**
+     * Call onSelect handler
+     *
+     * @param  {String} date
+     */
+    triggerSelectEvent: function(date) {
+        if (this.props.onSelect) {
+            this.props.onSelect({
+                type: 'select',
+                target: this,
+                selection: date,
+            });
+        }
+    },
+
+    /**
+     * Called when user clicks on the calendar
+     *
+     * @param  {Event} evt
+     */
+    handleClick: function(evt) {
+        var date = evt.target.getAttribute('data-date');
+        if (date) {
+            this.triggerSelectEvent(date);
+        }
     },
 });
 

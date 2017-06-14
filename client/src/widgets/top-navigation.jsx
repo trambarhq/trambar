@@ -28,14 +28,6 @@ module.exports = React.createClass({
         };
     },
 
-    toggleControl: function(name) {
-        if (this.state.expanded && name === this.state.selectedControl) {
-            this.setState({ expanded: false });
-        } else {
-            this.setState({ selectedControl: name, expanded: true });
-        }
-    },
-
     /**
      * Render component
      *
@@ -104,9 +96,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderCollapsibleControl: function() {
-        if (!this.state.selectedControl) {
-            return null;
-        }
         return (
             <CollapsibleContainer open={this.state.expanded}>
                 {this.renderControl()}
@@ -127,10 +116,35 @@ module.exports = React.createClass({
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
+            onSelect: this.handleCalendarSelect,
         };
         return (
             <CalendarBar {...props} />
         );
+    },
+
+    toggleControl: function(name) {
+        if (this.state.expanded && name === this.state.selectedControl) {
+            this.setState({ expanded: false }, () => {
+                this.clearRouteParameters();
+            });
+        } else {
+            this.setState({ selectedControl: name, expanded: true });
+        }
+    },
+
+    clearRouteParameters: function() {
+        var route = this.props.route;
+        var params = _.omit(route.parameters, 'date', 'roleIds');
+        var url = route.component.getUrl(params);
+        route.change(url, true);
+    },
+
+    changeRoute: function(newParam) {
+        var route = this.props.route;
+        var params = _.assign({}, route.parameters, newParam)
+        var url = route.component.getUrl(params);
+        route.change(url, true);
     },
 
     handleCalendarClick: function(evt) {
@@ -144,6 +158,10 @@ module.exports = React.createClass({
     handleSearchClick: function(evt) {
         this.toggleControl('search');
     },
+
+    handleCalendarSelect: function(evt) {
+        this.changeRoute({ date: evt.selection });
+    }
 });
 
 function Button(props) {

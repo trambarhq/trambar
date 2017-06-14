@@ -11,7 +11,6 @@ var Locale = require('locale/locale');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var OnDemand = require('widgets/on-demand');
 var Calendar = require('widgets/calendar');
 
 require('./calendar-bar.scss');
@@ -22,6 +21,7 @@ module.exports = Relaks.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
+        onSelect: PropTypes.func,
     },
 
     renderAsync: function(meanwhile) {
@@ -33,6 +33,7 @@ module.exports = Relaks.createClass({
             projectRange: null,
 
             locale: this.props.locale,
+            onSelect: this.props.onSelect,
             loading: true,
         };
         meanwhile.show(<CalendarBarSync {...props} />);
@@ -44,7 +45,6 @@ module.exports = Relaks.createClass({
             };
             return db.findOne({ table: 'statistics', criteria });
         }).then((statistics) => {
-            console.log(statistics);
             props.projectRange = statistics;
             meanwhile.show(<CalendarBarSync {...props} />);
         }).then(() => {
@@ -85,38 +85,55 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
     displayName: 'CalendarBar.Sync',
     propTypes: {
         projectRange: PropTypes.object,
+        dailyActivities: PropTypes.array(PropTypes.object),
 
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
+
+        onSelect: PropTypes.func,
     },
 
     render: function() {
-        var now = Moment();
+        var endOfThisMonth = Moment().endOf('month');
         var months = [];
+        var multiyear = false;
         var startTime = _.get(this.props.projectRange, 'details.start_time');
         var endTime = _.get(this.props.projectRange, 'details.end_time');
-        var dateRange = null;
         if (startTime && endTime) {
-            var s = Moment(startTime);
-            var e = Moment(endTime);
-            dateRange = {
-                start: s.format('YYYY-MM-DD'),
-                end: s.format('YYYY-MM-DD'),
-            };
-            if (now > e) {
-                // always render to current month
-                e = now;
+            var s = Moment(startTime).startOf('month');
+            var e = Moment(endTime).endOf('month');
+            s = s.subtract(1, 'year');
+            if (s.year() != e.year()) {
+                multiyear = true;
             }
-            for (var m = s.clone(); m.month() <= e.month(); m.add(1, 'month')) {
+            if (endOfThisMonth > e) {
+                // always render to current month
+                e = endOfThisMonth;
+            }
+            for (var m = s.clone(); m <= e; m.add(1, 'month')) {
+                var activities = undefined;
+                if (this.props.dailyActivities) {
+                    var rangeStart = m.toISOString();
+                    var rangeEnd = m.clone().endOf('month').toISOString();
+                    var range = `[${rangeStart},${rangeEnd}]`;
+                    var stats = _.find(this.props.dailyActivities, (s) => {
+                        return s.filters.time_range === range;
+                    });
+                    if (stats) {
+                        activities = stats.details;
+                    }
+                }
                 months.push({
                     year: m.year(),
                     month: m.month() + 1,
+                    activities,
                 });
             }
         } else {
             // just render the current month when there's no range info yet
             months.push({
-                year: now.year(),
-                month: now.month() + 1,
+                year: endOfThisMonth.year(),
+                month: endOfThisMonth.month() + 1,
             });
         }
         months.reverse();
@@ -124,7 +141,10 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
             var props = {
                 year: month.year,
                 month: month.month,
+                showYear: multiyear,
+                dailyActivities: month.activities,
                 locale: this.props.locale,
+                onSelect: this.props.onSelect,
                 key: index,
             };
             return <Calendar {...props} />;
