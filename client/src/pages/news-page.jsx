@@ -60,6 +60,9 @@ module.exports = Relaks.createClass({
 
     renderAsync: function(meanwhile) {
         var route = this.props.route;
+        var date = route.parameters.date;
+        var roleIds = route.parameters.roleIds;
+        var searchString = route.query.q;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
@@ -69,6 +72,7 @@ module.exports = Relaks.createClass({
             drafts: null,
             authors: null,
 
+            showEditors: !(date || !_.isEmpty(roleIds) || searchString),
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -85,9 +89,6 @@ module.exports = Relaks.createClass({
             props.currentUser = user;
             props.authors = [ user ];
         }).then(() => {
-            var date = route.parameters.date;
-            var roleIds = route.parameters.roleIds;
-            var searchString = route.query.q;
             if (date || searchString) {
                 // load story matching filters
                 var criteria = {};
@@ -166,6 +167,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         loading: PropTypes.bool,
+        showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         storyDrafts: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -177,12 +179,19 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    getInitialState: function() {
-        return {
-        };
+    render: function() {
+        return (
+            <div>
+                {this.renderEditors()}
+                {this.renderList()}
+            </div>
+        );
     },
 
-    render: function() {
+    renderEditors: function() {
+        if (!this.props.showEditors) {
+            return null;
+        }
         var drafts = this.props.storyDrafts ? sortStoryDrafts(this.props.storyDrafts, this.props.currentUser) : [];
         if (drafts.length === 0 || drafts[0].user_ids[0] !== this.props.currentUser.id) {
             // add empty story when current user doesn't have an active draft
@@ -192,12 +201,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             }
             drafts.unshift(blank);
         }
-        return (
-            <div>
-                {_.map(drafts, this.renderEditor)}
-                {this.renderList()}
-            </div>
-        );
+        return _.map(drafts, this.renderEditor);
     },
 
     renderEditor: function(story, index) {

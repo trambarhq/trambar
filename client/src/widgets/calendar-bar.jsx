@@ -18,9 +18,12 @@ require('./calendar-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'CalendarBar',
     propTypes: {
+        selection: PropTypes.string,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
+
         onSelect: PropTypes.func,
     },
 
@@ -32,6 +35,7 @@ module.exports = Relaks.createClass({
         var props = {
             projectRange: null,
 
+            selection: this.props.selection,
             locale: this.props.locale,
             onSelect: this.props.onSelect,
             loading: true,
@@ -84,10 +88,10 @@ module.exports = Relaks.createClass({
 var CalendarBarSync = module.exports.Sync = React.createClass({
     displayName: 'CalendarBar.Sync',
     propTypes: {
+        selection: PropTypes.string,
         projectRange: PropTypes.object,
-        dailyActivities: PropTypes.array(PropTypes.object),
+        dailyActivities: PropTypes.arrayOf(PropTypes.object),
 
-        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
         onSelect: PropTypes.func,
@@ -102,7 +106,6 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
         if (startTime && endTime) {
             var s = Moment(startTime).startOf('month');
             var e = Moment(endTime).endOf('month');
-            s = s.subtract(1, 'year');
             if (s.year() != e.year()) {
                 multiyear = true;
             }
@@ -142,6 +145,7 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
                 year: month.year,
                 month: month.month,
                 showYear: multiyear,
+                selection: this.props.selection,
                 dailyActivities: month.activities,
                 locale: this.props.locale,
                 onSelect: this.props.onSelect,

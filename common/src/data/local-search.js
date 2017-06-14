@@ -32,7 +32,6 @@ exports.match = function(table, object, criteria) {
             // if field is not in the object then check if it's a special
             // search criteria
             if (name === 'time_range') {
-                debugger;
                 if (desiredValue) {
                     var times = desiredValue.substr(1, desiredValue.length - 2).split(',');
                     var start = times[0];

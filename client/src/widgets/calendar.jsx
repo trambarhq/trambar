@@ -12,6 +12,7 @@ module.exports = React.createClass({
         month: PropTypes.number.isRequired,
         showYear: PropTypes.bool,
         dailyActivities: PropTypes.object,
+        selection: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
 
@@ -39,6 +40,7 @@ module.exports = React.createClass({
         var year = this.props.year;
         var month = this.props.month;
         var dailyActivities = this.props.dailyActivities;
+        var selection = this.props.selection;
         var firstDay = Moment(date(year, month, 1));
         var firstDayOfWeek = localeData.firstDayOfWeek();
         var daysInMonth = firstDay.daysInMonth();
@@ -88,8 +90,9 @@ module.exports = React.createClass({
                 ];
                 var label;
                 var activities;
+                var date;
                 if (day) {
-                    var date = `${year}-${pad(month)}-${pad(day)}`;
+                    date = `${year}-${pad(month)}-${pad(day)}`;
                     if (dailyActivities) {
                         activities = dailyActivities[date];
                     }
@@ -97,7 +100,9 @@ module.exports = React.createClass({
                 } else {
                     label = '\u00a0';
                 }
-                if (!activities) {
+                if (selection && selection === date) {
+                    classNames.push('selected');
+                } else if (!activities) {
                     classNames.push('disabled');
                 }
                 var props = {

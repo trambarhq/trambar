@@ -22,9 +22,16 @@ module.exports = React.createClass({
     },
 
     getInitialState: function() {
+        var route = this.props.route;
+        var selectedControl = null;
+        if (route.parameters.date) {
+            selectedControl = 'calendar';
+        } else if (!_.isEmpty(route.parameters.roleIds)) {
+            selectedControl = 'filter';
+        }
         return {
-            selectedControl: null,
-            expanded: false,
+            selectedControl,
+            expanded: !!selectedControl,
         };
     },
 
@@ -112,7 +119,10 @@ module.exports = React.createClass({
     },
 
     renderCalendarBar: function() {
+        var route = this.props.route;
+        var selection = route.parameters.date;
         var props = {
+            selection,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
