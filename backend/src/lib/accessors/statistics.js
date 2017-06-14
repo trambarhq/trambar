@@ -123,7 +123,7 @@ module.exports = _.create(LiveData, {
                 gn: row.gn,
                 details: row.details,
                 type: row.type,
-                filters: Object,
+                filters: row.filters,
             };
             if (row.dirty) {
                 object.dirty = true;
