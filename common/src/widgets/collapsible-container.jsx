@@ -28,14 +28,34 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.open != nextProps.open) {
             if (nextProps.open) {
+                if (this.domNode.style.height === '') {
+                    this.domNode.style.height = '0px';
+                }
                 this.setState({ hidden: false });
-            } else {
-                // stop rendering the component after it has fully transitioned out
                 setTimeout(() => {
+                    var height = this.getContentHeight();
+                    console.log(height);
+                    this.domNode.style.height = height + 'px';
+                }, 0);
+                setTimeout(() => {
+                    if (this.props.open) {
+                        this.domNode.style.height = '';
+                    }
+                }, 300);
+            } else {
+                if (this.domNode.style.height === '') {
+                    var height = this.getContentHeight();
+                    this.domNode.style.height = height + 'px';
+                }
+                setTimeout(() => {
+                    this.domNode.style.height = '0px';
+                }, 0);
+                setTimeout(() => {
+                    // stop rendering the component after it has fully transitioned out
                     if (!this.props.open) {
                         this.setState({ hidden: true });
                     }
-                }, 1000);
+                }, 300);
             }
         }
     },
@@ -46,51 +66,11 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        if (this.state.hidden) {
-            return null;
-        }
-        var style = {};
-        if (this.props.open) {
-            style.height = this.getContentHeight();
-        } else {
-            style.height = 0;
-        }
-        var ref = this.setDOMNode;
         return (
-            <div ref={ref} style={style} className="collapsible-container">
-                {this.props.children}
+            <div ref={this.setDOMNode} className="collapsible-container">
+                {!this.state.hidden ? this.props.children : null}
             </div>
         );
-    },
-
-    /**
-     * Call componentDidUpdate() to handle case where open is true initially
-     */
-    componentDidMount: function() {
-        this.componentDidUpdate({}, { hidden: true });
-    },
-
-    /**
-     * Render if the content height is different from the height set for the
-     * container
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (this.props.open) {
-            if (this.domNode) {
-                var styleHeight = parseInt(this.domNode.style.height);
-                var contentHeight = this.getContentHeight();
-                if (styleHeight !== contentHeight) {
-                    this.forceUpdate();
-                }
-            }
-        }
-        if (this.state.hidden) {
-            // DOM node is no longer in the tree
-            this.domNode = null;
-        }
     },
 
     /**
