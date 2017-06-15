@@ -7,10 +7,12 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+require('./user-selection-list.scss');
+
 module.exports = Relaks.createClass({
     displayName: 'UserSelectionList',
     propTypes: {
-        selection: PropTypes.arrayOf(PropType.number),
+        selection: PropTypes.arrayOf(PropTypes.number),
         disabled: PropTypes.arrayOf(PropTypes.number),
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -18,7 +20,7 @@ module.exports = Relaks.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onChange: PropTypes.func,
+        onSelect: PropTypes.func,
     },
 
     renderAsync: function(meanwhile) {
@@ -33,7 +35,7 @@ module.exports = Relaks.createClass({
             disabled: this.props.disabled,
             locale: this.props.locale,
             theme: this.props.theme,
-            onChange: this.props.onChange,
+            onSelect: this.props.onSelect,
             loading: true,
         };
         meanwhile.show(<UserSelectionListSync {...props} />);
@@ -46,7 +48,6 @@ module.exports = Relaks.createClass({
             props.loading = false;
             return <UserSelectionListSync {...props} />
         });
-
     }
 });
 
@@ -54,17 +55,17 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
     displayName: 'UserSelectionList.Sync',
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object),
-        selection: PropTypes.arrayOf(PropType.number),
+        selection: PropTypes.arrayOf(PropTypes.number),
         disabled: PropTypes.arrayOf(PropTypes.number),
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onChange: PropTypes.func,
+        onSelect: PropTypes.func,
     },
 
     render: function() {
-        var users = sortUsers(this.props.users);
+        var users = this.props.users ? sortUsers(this.props.users) : null;
         return (
             <div className="user-selection-list">
                 {_.map(users, this.renderUser)}
@@ -76,18 +77,19 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
         var props = {
             user,
             selected: _.includes(this.props.selection, user.id),
-            disabled: _.include(this.props.disabled, user.id),
+            disabled: _.includes(this.props.disabled, user.id),
             locale: this.props.locale,
             theme: this.props.theme,
             onClick: this.handleUserClick,
+            key: user.id,
         };
         return <User {...props} />
-    }
+    },
 
-    triggerChangeEvent: function(selection) {
-        if (this.props.onChange) {
-            this.props.onChange({
-                type: 'change',
+    triggerSelectEvent: function(selection) {
+        if (this.props.onSelect) {
+            this.props.onSelect({
+                type: 'select',
                 target: this,
                 selection,
             });
@@ -102,7 +104,7 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
         } else {
             selection = _.union(selection, [ userId ]);
         }
-        this.triggerChangeEvent(selection);
+        this.triggerSelectEvent(selection);
     }
 });
 
@@ -114,10 +116,16 @@ function User(props) {
     if (props.disabled) {
         classNames.push('disabled');
     }
-    var imageUrl = '';
+    var profileImage = _.get(props.user, 'details.profile_image');
+    var imageUrl = props.theme.getImageUrl(profileImage, 24, 24);
     var name = _.get(props.user, 'details.name');
+    var containerProps = {
+        className: classNames.join(' '),
+        'data-user-id': props.user.id,
+        onClick: !props.disabled ? props.onClick : null,
+    }
     return (
-        <div className="user" data-user-id={props.user.id} onClick={!props.disabled ? this.props.onClick : null}>
+        <div {...containerProps}>
             <img className="profile-image" src={imageUrl} />
             <span className="name">{name}</span>
         </div>

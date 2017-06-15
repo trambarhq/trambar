@@ -11,7 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
-var Overlay = require('widgets/overlay');
+var UserSelectionDialogBox = require('widgets/user-selection-dialog-box');
 
 require('./story-text-editor.scss');
 
@@ -33,7 +33,9 @@ module.exports = React.createClass({
     },
 
     getInitialState: function() {
-        return {};
+        return {
+            selectingCoauthor: true,
+        };
     },
 
     render: function() {
@@ -45,6 +47,7 @@ module.exports = React.createClass({
                 </header>
                 <subheader>
                     {this.renderCoauthoringButtons()}
+                    {this.renderUserSelectionDialogBox()}
                 </subheader>
                 <body>
                     {this.renderTextArea()}
@@ -79,7 +82,7 @@ module.exports = React.createClass({
     renderCoauthoringButtons: function() {
         return (
             <div>
-                <span className="button" onClick={this.handleAddCoauthorClick}>
+                <span className="button" onClick={this.handleCoauthoringClick}>
                     <i className="fa fa-plus-square" />
                     <span className="label">
                         Co-write post with a colleague
@@ -87,6 +90,23 @@ module.exports = React.createClass({
                 </span>
             </div>
         )
+    },
+
+    renderUserSelectionDialogBox: function() {
+        var props = {
+            show: this.state.selectingCoauthor,
+            selection: this.props.story.user_ids,
+            disabled: _.slice(this.props.story.user_ids, 0, 1),
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onSelect: this.handleCoauthoringSelect,
+            onCancel: this.handleCoauthoringCancel,
+        };
+        return <UserSelectionDialogBox {...props} />;
     },
 
     renderTextArea: function() {
@@ -176,8 +196,8 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleAddCoauthorClick: function(evt) {
-        this.setState({ addingCoauthor: true });
+    handleCoauthoringClick: function(evt) {
+        this.setState({ selectingCoauthor: true });
     },
 
     /**
@@ -185,22 +205,8 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleAddCoauthorCancel: function(evt) {
-        this.setState({ addingCoauthor: false });
-    },
-
-    /**
-     * Called when user clicks remove co-author button
-     *
-     * @param  {Event} evt
-     */
-    handleRemoveCoauthorClick: function(evt) {
-        var authors = _.slice(this.props.authors);
-        if (authors.length > 1) {
-            // remove the last one
-            authors.pop();
-            this.triggerAuthorsChangeEvent(authors);
-        }
+    handleCoauthoringCancel: function(evt) {
+        this.setState({ selectingCoauthor: false });
     },
 
     /**
@@ -208,12 +214,12 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleCoauthorAdd: function(evt) {
+    handleCoauthoringSelect: function(evt) {
         // parent component will update user_ids in story
         var author = evt.user;
         var authors = _.uniqBy(_.concat(this.props.authors, author), 'id');
         this.triggerAuthorsChangeEvent(authors);
-        this.setState({ addingCoauthor: false });
+        this.setState({ selectingCoauthor: false });
     },
 
     /**

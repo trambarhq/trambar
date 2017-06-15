@@ -1,12 +1,26 @@
 .user-selection-list {
-    overflow: scroll;
-    
     .user {
-        .profile-image {
+        cursor: pointer;
+        padding: 0.2em 0.2em 0.2em 0.2em;
 
+        .profile-image {
+            vertical-align: middle;
         }
 
         .name {
+            margin-left: 0.2em;
+        }
+
+        &:hover {
+            color: #cccccc;
+        }
+
+        &.selected {
+            background-color: #e24329;
+            color: #eeeeee;
+        }
+
+        &.disabled {
 
         }
     }

@@ -8,9 +8,9 @@ var Theme = require('theme/theme');
 
 // widgets
 var Overlay = require('widgets/overlay');
-var UserSelectionList = require('user-selection-list');
+var UserSelectionList = require('widgets/user-selection-list');
 
-require('./user-selection-dialog.scss');
+require('./user-selection-dialog-box.scss');
 
 module.exports = React.createClass({
     displayName: 'UserSelectionDialogBox',
@@ -24,7 +24,7 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onChange: PropTypes.func,
+        onSelect: PropTypes.func,
         onCancel: PropTypes.func,
     },
 
@@ -62,7 +62,7 @@ module.exports = React.createClass({
         };
         return (
             <Overlay {...overlayProps}>
-                <div className="user-selection-dialog">
+                <div className="user-selection-dialog-box">
                     {this.renderList()}
                     {this.renderButtons()}
                 </div>
@@ -85,9 +85,13 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onChange: this.handleListChange,
+            onSelect: this.handleListSelect,
         };
-        return <UserSelectionList {...listProps} />
+        return (
+            <div className="scrollable">
+                <UserSelectionList {...listProps} />
+            </div>
+        );
     },
 
     /**
@@ -99,8 +103,12 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="buttons">
-                <button>{t('selection-cancel')}</button>
-                <button>{t('selection-ok')}</button>
+                <button onClick={this.handleCancelClick}>
+                    {t('selection-cancel')}
+                </button>
+                <button onClick={this.handleOKClick}>
+                    {t('selection-ok')}
+                </button>
             </div>
         );
     },
@@ -110,7 +118,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleListChange: function(evt) {
+    handleListSelect: function(evt) {
         var selection = evt.selection;
         if (_.isEqual(selection, this.props.selection)) {
             selection = this.props.selection;
@@ -124,9 +132,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleOKClick: function(evt) {
-        if (this.props.onChange) {
-            this.props.onChange({
-                type: 'change',
+        if (this.props.onSelect) {
+            this.props.onSelect({
+                type: 'select',
                 target: this,
                 selection: this.state.selection,
             })

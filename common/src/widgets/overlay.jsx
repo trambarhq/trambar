@@ -23,22 +23,23 @@ module.exports = React.createClass({
         }
     },
 
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.show !== nextProps.show) {
-            if (nextProps.show) {
+    render: function() {
+        return null;
+    },
+
+    componentDidUpdate: function(prevProps) {
+        if (prevProps.show !== this.props.show) {
+            if (this.props.show) {
                 this.show();
             } else {
                 this.hide();
             }
-        } else if (this.props.children !== nextProps.children) {
-            if (nextProps.show) {
-                this.show();
+        } else if (prevProps.children !== this.props.children) {
+            if (this.props.show) {
+                console.log('redraw');
+                this.redraw();
             }
         }
-    },
-
-    render: function() {
-        return null;
     },
 
     componentWillUnmount: function() {
@@ -65,6 +66,15 @@ module.exports = React.createClass({
             props.show = true;
             ReactDOM.render(<Overlay {...props} />, this.containerNode);
         }, 10);
+    },
+
+    redraw: function() {
+        var props = {
+            show: true,
+            onClick: this.handleClick,
+            children: this.props.children
+        };
+        ReactDOM.render(<Overlay {...props} />, this.containerNode);
     },
 
     hide: function() {
