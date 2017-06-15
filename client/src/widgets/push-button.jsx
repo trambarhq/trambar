@@ -5,6 +5,9 @@ require('./push-button.scss');
 module.exports = PushButton;
 
 function PushButton(props) {
+    if (props.hidden) {
+        return null;
+    }
     var classNames = [ 'push-button' ];
     if (props.emphasized) {
         classNames.push('emphasized');

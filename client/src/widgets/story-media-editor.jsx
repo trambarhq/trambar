@@ -71,7 +71,8 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'browser') {
             var props = {
                 show: this.state.capturingPhoto,
-                onAdd: this.handlePhotoAdd,
+                locale: this.props.locale,
+                onCapture: this.handlePhotoCapture,
                 onCancel: this.handlePhotoCancel,
             };
             return <PhotoCaptureDialogBox {...props} />
@@ -126,8 +127,10 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      */
-    handlePhotoAdd: function(evt) {
+    handlePhotoCapture: function(evt) {
         if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingPhoto: false });
+
             var image = evt.image;
             var story = _.clone(this.props.story);
             var images = _.slice(story.details.images);

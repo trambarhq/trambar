@@ -7,6 +7,11 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'people',
         'bottom-nav-settings': 'settings',
 
+        'photo-capture-accept': 'Accept',
+        'photo-capture-cancel': 'Cancel',
+        'photo-capture-retake': 'Retake',
+        'photo-capture-snap': 'Snap',        
+
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 
