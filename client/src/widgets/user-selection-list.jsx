@@ -128,6 +128,7 @@ function User(props) {
         <div {...containerProps}>
             <img className="profile-image" src={imageUrl} />
             <span className="name">{name}</span>
+            <i className="fa fa-check-circle" />
         </div>
     );
 }

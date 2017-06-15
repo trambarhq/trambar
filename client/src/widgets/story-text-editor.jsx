@@ -34,7 +34,7 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         return {
-            selectingCoauthor: true,
+            selectingCoauthor: false,
         };
     },
 
