@@ -11,6 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
+var PushButton = require('widgets/push-button');
 var UserSelectionDialogBox = require('widgets/user-selection-dialog-box');
 
 require('./story-text-editor.scss');
@@ -121,14 +122,19 @@ module.exports = React.createClass({
 
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var cancelButtonProps = {
+            label: t('story-cancel'),
+            onClick: this.handleCancelClick,
+        };
+        var postButtonProps = {
+            label: t('story-post'),
+            onClick: this.handlePostClick,
+            emphasized: true,
+        };
         return (
             <div className="buttons">
-                <button className="cancel" onClick={this.handleCancelClick}>
-                    {t('story-cancel')}
-                </button>
-                <button className="post" onClick={this.handlePostClick}>
-                    {t('story-post')}
-                </button>
+                <PushButton {...cancelButtonProps} />
+                <PushButton {...postButtonProps} />
             </div>
         );
     },

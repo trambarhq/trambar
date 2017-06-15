@@ -1,0 +1,21 @@
+.push-button {
+    min-width: 5em;
+    margin-left: 0.4em;
+    margin-bottom: 0.1em;
+    padding: 0.4em 1em 0.4em 1em;
+    color: #666666;
+    background-color: #4d3936;
+    border: 2px solid #4d3936;
+
+    &:not(:disabled) {
+        &.emphasized, &:hover, &:active {
+            color: #eeeeee;
+            background-color: #806666;
+            border: 2px solid #806666;
+        }
+
+        &:active {
+            border: 2px inset #4d3936;
+        }
+    }
+}

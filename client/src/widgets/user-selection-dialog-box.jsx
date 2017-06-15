@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var Overlay = require('widgets/overlay');
+var PushButton = require('widgets/push-button');
 var UserSelectionList = require('widgets/user-selection-list');
 
 require('./user-selection-dialog-box.scss');
@@ -101,14 +102,19 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var cancelButtonProps = {
+            label: t('selection-cancel'),
+            onClick: this.handleCancelClick,
+        };
+        var okButtonProps = {
+            label: t('selection-ok'),
+            onClick: this.handleOKClick,
+            emphasized: true,
+        };
         return (
             <div className="buttons">
-                <button onClick={this.handleCancelClick}>
-                    {t('selection-cancel')}
-                </button>
-                <button onClick={this.handleOKClick}>
-                    {t('selection-ok')}
-                </button>
+                <PushButton {...cancelButtonProps} />
+                <PushButton {...okButtonProps} />
             </div>
         );
     },
