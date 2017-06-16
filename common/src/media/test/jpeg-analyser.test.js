@@ -15,6 +15,13 @@ var imagesWithOrientation = [
 ];
 
 describe('JpegAnalyser', function() {
+    describe('#getDimensions()', function() {
+        it('should find dimensions of a JPEG file', function() {
+            var dimensions = JpegAnalyser.getDimensions(imageWithPaths);
+            expect(dimensions).to.have.property('width', 640);
+            expect(dimensions).to.have.property('height', 463);
+        })
+    })
     describe('#getOrientation()', function() {
         it('should find orientation of JPEG files', function() {
             var orientations = _.map(imagesWithOrientation, (image) => {

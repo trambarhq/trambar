@@ -3,10 +3,33 @@
  *
  * @param  {Uint8Array} bytes
  *
- * @return {Object|null}
+ * @return {Object|undefined}
+ */
+exports.getDimensions = function(bytes) {
+	var p = findSegment(bytes, (marker, p, length) => {
+		if (marker === 0xFFC0 || marker === 0xFFC2) {
+			return p;
+		}
+	});
+	if (p > 0) {
+		var precision = bytes[p++];
+		var height = beShort(bytes[p++], bytes[p++]);
+		var width = beShort(bytes[p++], bytes[p++]);
+		return { width, height };
+	}
+}
+
+/**
+ * Get the orientation of a JPEG image
+ *
+ * @param  {Uint8Array} bytes
+ *
+ * @return {Number|undefined}
  */
 exports.getOrientation = function(bytes) {
-	var orientation = findSegment(bytes, (marker, start, length) => {
+	var short = beShort;
+	var long = beLong;
+	var p = findSegment(bytes, (marker, start, length) => {
 		// look for APP1
 		if (marker === 0xFFE1) {
 			// see if the identifier is "Exif\0\0"
@@ -18,8 +41,10 @@ exports.getOrientation = function(bytes) {
 				var base = p;
 				// see if data is stored in Big Endian (MM) or Little Endian (II)
 				var endian = String.fromCharCode(bytes[p++]) + String.fromCharCode(bytes[p++]);
-				var short = (endian === 'MM') ? bigEndianShort : littleEndianShort;
-				var long = (endian === 'MM') ? bigEndianLong : littleEndianLong;
+				if (endian === 'II') {
+					short = leShort;
+					long = leLong;
+				}
 				var magic = short(bytes[p++], bytes[p++]);
 				if (magic !== 42) {
 					return;
@@ -39,8 +64,7 @@ exports.getOrientation = function(bytes) {
 						var tagType = short(bytes[p++], bytes[p++]);
 						var valueCount = long(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
 						if (tagId === 0x0112 && tagType === 3 && valueCount === 1) {
-							var value = short(bytes[p++], bytes[p++]);
-							return value;
+							return p;
 						} else {
 							p += 4;
 						}
@@ -49,24 +73,25 @@ exports.getOrientation = function(bytes) {
 			}
 		}
 	});
-	if (orientation > 0) {
-		return orientation;
+	if (p > 0) {
+		var value = short(bytes[p++], bytes[p++]);
+		return value;
 	}
 }
 
-function bigEndianShort(b1, b2) {
+function beShort(b1, b2) {
 	return b1 << 8 | b2;
 }
 
-function littleEndianShort() {
+function leShort() {
 	return b2 << 8 | b1;
 }
 
-function bigEndianLong(b1, b2, b3, b4) {
+function beLong(b1, b2, b3, b4) {
 	return b1 << 24 | b2 << 16 | b3 << 8 | b4;
 }
 
-function littleEndianLong() {
+function leLong() {
 	return b4 << 24 | b3 << 16 | b2 << 8 | b1;
 }
 
@@ -96,12 +121,12 @@ exports.extractPaths = function(bytes) {
 function findSegment(bytes, callback) {
 	var size = bytes.length;
 	var p = 0;
-	var signature = bigEndianShort(bytes[p++], bytes[p++]);
+	var signature = beShort(bytes[p++], bytes[p++]);
 	if(signature == 0xFFD8) {
 		// look for segment with the APP13 marker
 		while(p < size) {
-			var marker = bigEndianShort(bytes[p++], bytes[p++]);
-			var length = bigEndianShort(bytes[p++], bytes[p++]);
+			var marker = beShort(bytes[p++], bytes[p++]);
+			var length = beShort(bytes[p++], bytes[p++]);
 			if(marker == 0xFFDA) {
 				// image data starts--time to stop
 				break;
@@ -156,15 +181,15 @@ function parse8BIMData(bytes, offset) {
 		// look for '8BIM' marker
 		if(bytes[p+0] == 0x38 && bytes[p+1] == 0x42 && bytes[p+2] == 0x49 && bytes[p+3] == 0x4D) {
 			p += 4;
-			var segmentType = bigEndianShort(bytes[p++], bytes[p++]);
+			var segmentType = beShort(bytes[p++], bytes[p++]);
 			var nameLength = bytes[p++];
 			var name = '';
 			for(var i = 0; i < nameLength; i++) {
 				name += String.fromCharCode(bytes[p++]);
 			}
 			p++;
-			var unknown = bigEndianShort(bytes[p++], bytes[p++]);
-			var segmentSize = bigEndianShort(bytes[p++], bytes[p++]);
+			var unknown = beShort(bytes[p++], bytes[p++]);
+			var segmentSize = beShort(bytes[p++], bytes[p++]);
 			if(segmentType >= 1999 && segmentType <= 2998) {
 				if(!paths) {
 					paths = {};
@@ -195,11 +220,11 @@ function parsePathData(bytes, offset, size) {
 	var subPath = [];
 	var p = offset;
 	for(var i = 0; i < recordCount; i++) {
-		var selector = bigEndianShort(bytes[p++], bytes[p++]);
+		var selector = beShort(bytes[p++], bytes[p++]);
 		switch(selector) {
 			case 0:
 			case 3:
-				knotCount = bigEndianShort(bytes[p++], bytes[p++]);
+				knotCount = beShort(bytes[p++], bytes[p++]);
 				p += 22;
 				break;
 			case 1:
@@ -207,8 +232,8 @@ function parsePathData(bytes, offset, size) {
 			case 4:
 			case 5:
 				for(var j = 0; j < 3; j++) {
-					var y = bigEndianLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
-					var x = bigEndianLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
+					var y = beLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
+					var x = beLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
 					if(y >= 2147483648) {
 						y = (2147483647 - y) / 16777216.0;
 					} else {
