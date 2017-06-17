@@ -21,9 +21,9 @@ describe('LocalImageDisplay', function() {
             var wrapper = Enzyme.mount(<LocalImageDisplay {...props} />);
         }).then((wrapper) => {
             var comp = wrapper.instance();
-            expect(comp.state).to.have.property('width', 4);
-            expect(comp.state).to.have.property('height', 16);
-            expect(comp.state).to.have.property('orientation', 5);
+            expect(comp).to.have.property('width', 4);
+            expect(comp).to.have.property('height', 16);
+            expect(comp).to.have.property('orientation', 5);
         });
     })
 })
