@@ -48,16 +48,20 @@ module.exports = React.createClass({
 
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var photoButtonProps = {
+            label: t('story-photo'),
+            icon: 'camera',
+            onClick: this.handlePhotoClick,
+        };
+        var videoButtonProps = {
+            label: t('story-video'),
+            icon: 'video-camera',
+            onClick: this.handleVideoClick,
+        };
         return (
             <div>
-                <div className="button" onClick={this.handlePhotoClick}>
-                    <i className="fa fa-camera"/>
-                    <span className="label">{t('story-photo')}</span>
-                </div>
-                <div className="button">
-                    <i className="fa fa-video-camera"/>
-                    <span className="label">{t('story-video')}</span>
-                </div>
+                <Button {...photoButtonProps} />
+                <Button {...videoButtonProps} />
             </div>
         );
     },
@@ -139,3 +143,22 @@ module.exports = React.createClass({
         }
     },
 });
+
+function Button(props) {
+    if (props.hidden) {
+        return null;
+    }
+    var classNames = [ 'button' ];
+    if (props.className) {
+        classNames.push(props.className);
+    }
+    if (props.highlighted) {
+        classNames.push('highlighted');
+    }
+    return (
+        <div className={classNames.join(' ')} onClick={props.onClick}>
+            <i className={props.icon ? `fa fa-${props.icon}` : null}/>
+            <span className="label">{props.label}</span>
+        </div>
+    );
+}

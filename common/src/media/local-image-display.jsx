@@ -1,5 +1,6 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var BlobReader = require('utils/blob-reader');
 var JpegAnalyser = require('media/jpeg-analyser');
 
 var Database = require('data/database');
@@ -13,18 +14,12 @@ module.exports = React.createClass({
     },
 
     componentDidMount: function() {
-        if (this.props.file) {
-            this.load(this.props.file);
-        }
+        this.load(this.props.file);
     },
 
     componentWillReceiveProps: function(nextProps) {
         if (this.props.file !== nextProps.file) {
-            if (nextProps.file) {
-                this.load(nextProps.file);
-            } else {
-                this.clear();
-            }
+            this.load(nextProps.file);
         }
     },
 
@@ -42,45 +37,36 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Load the file or clear the canvas if it's null
+     *
+     * @param  {Blob|null} file
+     *
+     * @return {Promise}
+     */
     load: function(file) {
-        var imageP = this.loadImage(file);
-        var orientationP = this.getOrientation(file);
-        return Promise.join(imageP, orientationP, (image, orientation) => {
-            this.drawImage(image, orientation || 1, this.props.clippingRect);
-            this.triggerLoadEvent();
-        });
+        if (file) {
+            var imageP = BlobReader.loadImage(file);
+            var orientationP = BlobReader.loadUint8Array(file).then((bytes) => {
+                return JpegAnalyser.getOrientation(bytes);
+            });
+            return Promise.join(imageP, orientationP, (image, orientation) => {
+                this.drawImage(image, orientation || 1, this.props.clippingRect);
+                this.triggerLoadEvent();
+            });
+        } else {
+            this.clearCanvas();
+            return Promise.resolve();
+        }
     },
 
-    loadImage: function(blob) {
-        return new Promise((resolve, reject) => {
-            var url = URL.createObjectURL(blob);
-            var image = document.createElement('IMG');
-            image.src = url;
-            image.onload = function(evt) {
-                resolve(image);
-            };
-            image.onerror = function(evt) {
-                reject(new Error(`Unable to load ${url}`));
-            };
-        });
-    },
-
-    getOrientation: function(blob) {
-        return new Promise((resolve, reject) => {
-            var reader = new FileReader();
-            reader.onload = function(evt) {
-                console.log('reader.onload');
-                var bytes = new Uint8Array(reader.result);
-                var orientation = JpegAnalyser.getOrientation(bytes);
-                resolve(orientation);
-            };
-            reader.onerror = function(evt) {
-                reject(new Error(`Unable to load blob`));
-            };
-            reader.readAsArrayBuffer(this.props.file);
-        });
-    },
-
+    /**
+     * Set the canvas's dimensions and draw an image into it
+     *
+     * @param  {HTMLImageElement} image
+     * @param  {Number} orientation
+     * @param  {Object} rect
+     */
     drawImage: function(image, orientation, rect) {
         var imageWidth = image.naturalWidth;
     	var imageHeight = image.naturalHeight;
@@ -151,7 +137,20 @@ module.exports = React.createClass({
         this.width = rect.width;
         this.height = rect.height;
         this.orientation = orientation;
-    }
+    },
+
+    /**
+     * Collapsed the canvas
+     */
+    clearCanvas: function() {
+        var canvas = this.refs.canvas;
+        canvas.width = 0;
+    	canvas.height = 0;
+
+        this.width = 0;
+        this.height = 0;
+        this.orientation = undefined;
+    },
 });
 
 /**

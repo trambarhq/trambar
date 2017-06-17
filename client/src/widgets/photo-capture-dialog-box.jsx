@@ -107,10 +107,6 @@ module.exports = React.createClass({
             ref: 'video',
             src: this.state.liveVideoUrl,
             autoPlay: true,
-
-            // supply the dimensions if we know them
-            width: this.videoWidth,
-            height: this.videoHeight,
         };
         return (
             <div className="container">
@@ -168,16 +164,6 @@ module.exports = React.createClass({
                     <PushButton {...acceptButtonProps} />
                 </div>
             );
-        }
-    },
-
-    componentDidUpdate: function() {
-        if (!this.videoWidth && !this.videoHeight) {
-            var video = this.refs.video;
-            if (video) {
-                this.videoWidth = video.videoWidth;
-                this.videoHeight = video.videoHeight;
-            }
         }
     },
 
