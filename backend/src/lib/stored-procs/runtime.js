@@ -56,8 +56,8 @@ exports.isEqual = function(before, after) {
 };
 var isEqual = exports.isEqual;
 
-exports.sendChangeNotification = function(op, schema, table, id, diff) {
-    var info = { op, schema, table, id, diff };
+exports.sendChangeNotification = function(op, schema, table, id, gn, diff) {
+    var info = { op, schema, table, id, gn, diff };
     var channel = table + '_change';
     try {
         var msg = JSON.stringify(info);
@@ -80,8 +80,8 @@ exports.sendChangeNotification = function(op, schema, table, id, diff) {
     }
 };
 
-exports.sendCleanNotification = function(op, schema, table, id, atime) {
-    var info = { op, schema, table, id, atime };
+exports.sendCleanNotification = function(op, schema, table, id, gn, atime, sample_count) {
+    var info = { op, schema, table, id, gn, atime, sample_count };
     var channel = table + '_clean';
     var msg = JSON.stringify(info);
     var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;

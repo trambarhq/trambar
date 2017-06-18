@@ -27,6 +27,7 @@ function start() {
         'reaction',
         'repo',
         'robot',
+        'role',
         'statistics',
         'story',
     ];

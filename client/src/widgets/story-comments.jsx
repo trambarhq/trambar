@@ -79,7 +79,7 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var likeButtonProps = {
-            icon: 'thumb-up',
+            icon: 'thumbs-up',
             label: t('story-like'),
             highlighted: !!this.getCurrentUserLike(),
             onClick: this.handleLikeClick,

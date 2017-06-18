@@ -15,12 +15,14 @@ module.exports = _.create(Data, {
         type: String,
         name: String,
         project_ids: Array(Number),
+        role_ids: Array(Number),
     },
     criteria: {
         id: Number,
         type: String,
         name: String,
         project_ids: Array(Number),
+        role_ids: Array(Number),
     },
 
     /**
@@ -44,6 +46,7 @@ module.exports = _.create(Data, {
                 type varchar(32),
                 name varchar(256),
                 project_ids int[] NOT NULL DEFAULT '{}'::int[],
+                role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 PRIMARY KEY (id)
             );
         `;
@@ -70,6 +73,7 @@ module.exports = _.create(Data, {
                 type: row.type,
                 name: row.name,
                 project_ids: row.project_ids,
+                role_ids: row.project_ids,
             };
             return object;
         });

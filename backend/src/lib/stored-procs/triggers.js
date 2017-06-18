@@ -15,7 +15,8 @@ exports.notifyDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_N
     var diff = findChanges(OLD, NEW, omit);
     if (diff) {
         var id = (NEW) ? NEW.id : OLD.id;
-        sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, diff);
+        var gn = (NEW) ? NEW.gn : OLD.gn;
+        sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, gn, diff);
     }
 };
 exports.notifyDataChange.args = '';
@@ -38,7 +39,8 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
     var diff = findChanges(OLD, NEW, omit);
     if (diff) {
         var id = (NEW) ? NEW.id : OLD.id;
-        sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, diff);
+        var gn = (NEW) ? NEW.gn : OLD.gn;
+        sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, gn, diff);
     }
 
     // if the roll is dirty, we might need to do something to expedite its update
@@ -56,7 +58,10 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
                 requestCleaning = true;
             }
             if (requestCleaning) {
-                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, NEW.id, NEW.atime);
+                var id = NEW.id;
+                var atime = NEW.atime;
+                var sampleCount = NEW.sample_count || 0;
+                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, atime, sampleCount);
             }
         }
     }
