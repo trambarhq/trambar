@@ -5,6 +5,7 @@ var MemoizeWeak = require('memoizee/weak');
 var Relaks = require('relaks');
 
 var Database = require('data/database');
+var UploadQueue = require('transport/upload-queue');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -20,6 +21,7 @@ module.exports = Relaks.createClass({
     displayName: 'NewsPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
+        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,

@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
+var UploadQueue = require('transport/upload-queue');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -24,6 +25,7 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
+        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -62,7 +64,7 @@ module.exports = React.createClass({
         if (this.props.authors !== nextProps.authors) {
             var story = nextState.story || this.state.story;
             // update the list, include ones that have just been added
-            nextState.authors = findUsers(_.concat(this.props.authors, this.state.authors), story.user_ids);
+            nextState.authors = findUsers(_.concat(nextProps.authors, this.state.authors), story.user_ids);
         }
         if (!_.isEmpty(nextState)) {
             this.setState(nextState);
