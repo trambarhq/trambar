@@ -113,7 +113,6 @@ function fetchCredentials(db, userId) {
 }
 
 function handleDatabaseChanges(events) {
-    console.log(events);
     _.each(sockets, (socket) => {
         var changes = {};
         _.each(events, (event) => {
@@ -126,7 +125,6 @@ function handleDatabaseChanges(events) {
                 idList.push(event.id);
             }
         });
-        console.log(changes);
         if (!_.isEmpty(changes)) {
             var payload = { changes: changes };
             socket.write(JSON.stringify(payload));

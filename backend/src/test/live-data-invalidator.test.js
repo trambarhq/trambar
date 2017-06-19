@@ -237,7 +237,7 @@ describe('LiveDataInvalidator', function() {
                 type: 'like',
                 story_id: 500,
                 user_id: 3,
-                target_user_id: 1,
+                target_user_ids: [ 1 ],
                 published: true,
             };
             return cleanStatistics(db, schema, testStatistics).then(() => {
@@ -259,7 +259,7 @@ describe('LiveDataInvalidator', function() {
                 type: 'like',
                 story_id: 500,
                 user_id: 3,
-                target_user_id: 1,
+                target_user_ids: [ 1 ],
                 published: true,
             };
             return cleanStatistics(db, schema, testStatistics).then(() => {

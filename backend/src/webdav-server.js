@@ -188,10 +188,7 @@ function start() {
             },
 
             deleteAsync: function() {
-                console.log('deleteAsync')
-                console.log(this.accessor.removeOne);
                 return this.accessor.removeOne(db, this.schema, { id: this.id }).then((row) => {
-                    console.log('???')
                     return true;
                 }).catch((err) => {
                     console.error(err);
