@@ -4,7 +4,7 @@ var Promise = require('bluebird');
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
-    schema: 'project',
+    schema: 'global',
     table: 'role',
     columns: {
         id: Number,

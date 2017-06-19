@@ -15,6 +15,7 @@ var Authorization = require('accessors/authorization');
 var Configuration = require('accessors/configuration');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
+var Role = require('accessors/role');
 var User = require('accessors/user');
 
 // project-specific accessors
@@ -28,6 +29,7 @@ var Repo = require('accessors/repo');
 var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
+var Task = require('accessors/task');
 
 var server;
 
@@ -252,27 +254,29 @@ function handleStorage(req, res) {
             if (!_.isEmpty(ids)) {
                 originalsPromise = accessor.find(db, schema, { id: ids }, '*');
             }
-            return Promise.resolve(originalsPromise || []).then((originals) => {
+            return Promise.resolve(originalsPromise).then((originals) => {
                 // create an array that pairs the original with the new version
                 return _.map(objects, (object) => {
                     return _.find(originals, { id: object.id }) || null;
                 });
             }).then((originals) => {
-                return accessor.import(db, schema, objects, originals, credentials);
-            }).then((rows) => {
-                return db.begin().then(() => {
-                    return accessor.save(db, schema, rows).then(function(rows) {
-                        return accessor.export(db, schema, rows, credentials);
+                return accessor.import(db, schema, objects, originals, credentials).then((rows) => {
+                    return db.begin().then(() => {
+                        return accessor.save(db, schema, rows);
+                    }).then((rows) => {
+                        return accessor.associate(db, schema, rows, originals, credentials);
+                    }).then((rows) => {
+                        return db.commit().then(() => {
+                            return rows;
+                        });
+                    }).catch((err) => {
+                        return db.rollback().then(() => {
+                            throw err;
+                        })
                     });
-                }).then((objects) => {
-                    return db.commit().then(() => {
-                        return objects;
-                    });
-                }).catch((err) => {
-                    return db.rollback().then(() => {
-                        throw err;
-                    })
                 });
+            }).then((rows) => {
+                return accessor.export(db, schema, rows, credentials);
             });
         }).finally(() => {
             return db.close();
@@ -381,6 +385,7 @@ var globalAccessors = [
     Configuration,
     Preferences,
     Project,
+    Role,
     User,
 ];
 var projectAccessors = [
@@ -394,6 +399,7 @@ var projectAccessors = [
     Robot,
     Statistics,
     Story,
+    Task,
 ];
 
 /**

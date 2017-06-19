@@ -144,20 +144,35 @@ module.exports = Relaks.createClass({
             props.storyDrafts = stories;
             meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
-            // load other users also working on these stories
+            // load users working on these stories
             var userIds = _.flatten(_.map(props.storyDrafts, 'user_ids'));
-            userIds = _.uniq(userIds);
-            var coauthorIds = _.difference(userIds, [ props.currentUser.id ]);
-            if (!_.isEmpty(coauthorIds)) {
-                var criteria = {
-                    id: coauthorIds
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            } else {
-                return [];
-            }
+            var criteria = {
+                id: _.uniq(userIds)
+            };
+            return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
-            props.authors = _.unionBy(props.authors, users, [ props.currentUser ], 'id');
+            props.authors = _.unionBy(props.authors, users, 'id');
+            meanwhile.show(<NewsPageSync {...props} />);
+        }).then(() => {
+            // look for pending stories
+            var criteria = {
+                published: true,
+                ready: false,
+                user_ids: [ props.currentUser.id ],
+            };
+            return db.find({ table: 'story', criteria });
+        }).then((stories) => {
+            props.pendingStories = stories;
+            meanwhile.show(<NewsPageSync {...props} />);
+        }).then(() => {
+            // load users working on these stories
+            var userIds = _.flatten(_.map(props.pendingStories, 'user_ids'));
+            var criteria = {
+                id: _.uniq(userIds)
+            };
+            return db.find({ schema: 'global', table: 'user', criteria });
+        }).then((users) => {
+            props.authors = _.unionBy(props.authors, users, 'id');
             props.loading = false;
             return <NewsPageSync {...props} />;
         });

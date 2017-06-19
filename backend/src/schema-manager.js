@@ -9,6 +9,7 @@ var Authorization = require('accessors/authorization');
 var Configuration = require('accessors/configuration');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
+var Role = require('accessors/role');
 var User = require('accessors/user');
 
 // project accessors
@@ -22,6 +23,7 @@ var Repo = require('accessors/repo');
 var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
+var Task = require('accessors/task');
 
 var database;
 var messageQueueInterval;
@@ -153,6 +155,7 @@ var globalAccessors = [
     Configuration,
     Preferences,
     Project,
+    Role,
     User,
 ];
 var projectAccessors = [
@@ -166,6 +169,7 @@ var projectAccessors = [
     Robot,
     Statistics,
     Story,
+    Task,
 ];
 
 /**

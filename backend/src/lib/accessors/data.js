@@ -342,15 +342,41 @@ module.exports = {
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array>}
      */
     export: function(db, schema, rows, credentials) {
-        return _.map(rows, (row) => {
+        return Promise.map(rows, (row) => {
             return _.omit(row, 'ctime', 'mtime', 'deleted');
         });
     },
 
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
     import: function(db, schema, objects, originals, credentials) {
-        return objects;
+        return Promise.resolve(objects);
+    },
+
+    /**
+     * [description]
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+    associate: function(db, schema, rows, originals, credentials) {
+        return Promise.resolve(objects);
     },
 };

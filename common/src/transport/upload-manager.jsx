@@ -143,18 +143,16 @@ module.exports = React.createClass({
      * Update progress of file transfer
      *
      * @param  {Number} taskId
-     * @param  {Number} transferred
-     * @param  {Number} total
+     * @param  {Object} props
      */
-    updateTransferProgress: function(taskId, transferred, total) {
+    updateTransfer: function(taskId, props) {
         var index = _.findIndex(this.state.queue, { id: taskId });
         if (index === -1) {
             return;
         }
         var queue = _.slice(this.state.queue);
         var transfer = queue[index] = _.clone(queue[index]);
-        transfer.transferred = transferred;
-        transfer.total = total;
+        _.assign(transfer, props);
         this.setState({ queue }, () => {
             this.triggerChangeEvent();
         });
@@ -176,7 +174,10 @@ module.exports = React.createClass({
         }
         var options = {
             onProgress: (evt) => {
-                this.updateTransferProgress(taskId, evt.loaded, evt.total);
+                this.updateTransfer(taskId, {
+                    transferred: evt.loaded,
+                    total: evt.total
+                });
             },
         };
         var payload;
@@ -200,11 +201,8 @@ module.exports = React.createClass({
                 url += '/media/html/screenshot/';
                 break;
         }
-        return HttpRequest.fetch('POST', url, payload, options).then((resp) => {
-            var queue = _.difference(this.state.queue, [ transfer ]);
-            this.setState({ queue }, () => {
-                this.triggerChangeEvent();
-            });
+        return HttpRequest.fetch('POST', url, payload, options).then((response) => {
+            this.updateTransfer(taskId, { response });
         });
     },
 
