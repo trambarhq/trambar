@@ -53,7 +53,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                type varchar(32),
+                type varchar(32) NOT NULL DEFAULT '',
                 related_object_id int,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
@@ -98,7 +98,7 @@ module.exports = _.create(Data, {
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array>}
      */
     export: function(db, schema, rows, credentials) {
         return Promise.map(rows, (row) => {
@@ -126,6 +126,17 @@ module.exports = _.create(Data, {
         });
     },
 
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
     import: function(db, schema, objects, originals, credentials) {
         return Promise.map(objects, (object, index) => {
             var original = originals[index];
@@ -145,7 +156,10 @@ module.exports = _.create(Data, {
                     }
                 }
             } else {
-                // TODO: check permission concerning posting
+                if (object.user_ids[0] !== credentials.user.id) {
+                    // the main author must be the current user
+                    throw new HttpError(403);
+                }
             }
 
             // set the ptime if published is set and there're no outstanding
@@ -157,7 +171,7 @@ module.exports = _.create(Data, {
                 }
             }
             return object;
-        }).return(objects);
+        });
     },
 
     associate: function(db, schema, rows, originals, credentials) {

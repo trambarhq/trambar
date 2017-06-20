@@ -56,10 +56,10 @@ module.exports = _.create(LiveData, {
                 atime timestamp,
                 ltime timestamp,
                 dirty boolean NOT NULL DEFAULT false,
-                type varchar(32) NOT NULL,
-                target_user_id int NOT NULL,
+                type varchar(32) NOT NULL DEFAULT '',
+                target_user_id int NOT NULL DEFAULT 0,
                 filters jsonb NOT NULL DEFAULT '{}',
-                filters_hash varchar(32),
+                filters_hash varchar(32) DEFAULT '',
                 PRIMARY KEY (id)
             );
         `;

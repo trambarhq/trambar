@@ -39,7 +39,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                name varchar(64),
+                name varchar(64) NOT NULL DEFAULT '',
                 PRIMARY KEY (id)
             );
         `;
