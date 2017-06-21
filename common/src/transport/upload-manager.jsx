@@ -128,6 +128,7 @@ module.exports = React.createClass({
             var transfer = _.assign({
                 id: task.id,
                 action: task.action,
+                token: task.token,
                 transferred: 0,
                 total: 0,
                 promise: null
@@ -193,18 +194,22 @@ module.exports = React.createClass({
         var route = this.props.route;
         var server = getServerName(route.parameters);
         var protocol = getProtocol(server);
+        var schema = route.parameters.schema;
         var url = `${protocol}://${server}`;
         switch (transfer.action) {
             case 'upload image':
-                url += '/media/images/upload/';
+                url += `/media/images/upload/${schema}/${taskId}`;
                 break;
             case 'upload and transcode video':
-                url += '/media/videos/upload/';
+                url += `/media/videos/upload/${schema}/${taskId}`;
                 break;
             case 'generate website thumbnail':
-                url += '/media/html/screenshot/';
+                url += `/media/html/screenshot/${schema}/${taskId}`;
                 break;
+            default:
+                return;
         }
+        url += `?token=${transfer.token}`;
         var promise = HttpRequest.fetch('POST', url, payload, options).then((response) => {
             this.updateTransfer(taskId, { response });
         });

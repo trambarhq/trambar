@@ -10,6 +10,11 @@ var Phantom = require('phantom');
 var Crypto = require('crypto');
 var Moment = require('moment');
 
+var Database = require('database');
+var Task = require('accessors/task');
+var Reaction = require('accessors/reaction');
+var Story = require('accessors/story');
+var User = require('accessors/user');
 var HttpError = require('errors/http-error');
 
 var server;
@@ -28,9 +33,9 @@ function start() {
         app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
         app.get('/media/images/:hash', handleImageOriginalRequest);
         app.get('/media/videos/:hash', handleVideoOriginalRequest);
-        app.post('/media/html/screenshot/', handleWebsiteScreenshot);
-        app.post('/media/images/upload/', upload.array('file', 16), handleImageUpload);
-        app.post('/media/videos/upload/', upload.array('file', 4), handleVideoUpload);
+        app.post('/media/html/screenshot/:schema/:taskId', handleWebsiteScreenshot);
+        app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
+        app.post('/media/videos/upload/:schema/:taskId', upload.single('file'), handleVideoUpload);
 
         createCacheFolders();
 
@@ -117,25 +122,50 @@ function handleWebsiteScreenshot(req, res) {
 }
 
 function handleImageUpload(req, res) {
-    Promise.mapSeries(req.files, (file) => {
-        return FS.readFileAsync(file.path).then((buffer) => {
-            var hash = md5(buffer);
-            var destPath = `${imageCacheFolder}/${hash}`;
-            return FS.statAsync(destPath).catch((err) => {
-                return FS.writeFileAsync(destPath, buffer);
-            }).then(() => {
-                return hash;
+    var schema = req.params.schema;
+    var taskId = parseInt(req.params.taskId);
+    var token = req.query.token;
+    return Database.open().then((db) => {
+        return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
+            if (!task || task.token !== token) {
+                throw new HttpError(403);
+            }
+            return task;
+        }).then((task) => {
+            var file = req.file;
+            return FS.readFileAsync(file.path).then((buffer) => {
+                var hash = md5(buffer);
+                var destPath = `${imageCacheFolder}/${hash}`;
+                return FS.statAsync(destPath).catch((err) => {
+                    return FS.writeFileAsync(destPath, buffer);
+                }).then(() => {
+                    return `/media/images/${hash}`;
+                });
+            }).then((url) => {
+                // update the object associated with task
+                var associate = _.get(task, 'details.associated_object');
+                var table = _.get(associate, 'type');
+                var id = _.get(associate, 'id');
+                var accessor = getAccessor(associate.type);
+                if (accessor) {
+                    return accessor.findOne(db, schema, { id }, 'id, details').then((row) => {
+                        var params = { url, file: undefined };
+                        var images = row.details.images;
+                        if (!images && row.details.profile_image) {
+                            images = [ row.details.profile_image ];
+                        }
+                        updateResources(images, taskId, params);
+                        return accessor.updateOne(db, schema, row);
+                    }).return(url);
+                }
+                return url;
             });
         });
-    }).then((hashes) => {
-        var files = _.map(hashes, (hash) => {
-            return {
-                url: `/media/images/${hash}`
-            };
-        });
-        res.json({ files });
+    }).then((url) => {
+        res.json({ url });
     }).catch((err) => {
-        res.status(500).json({ message: err.message });
+        var statusCode = err.statusCode || 500;
+        res.status(err.statusCode || 500).json({ message: err.message });
     });
 }
 
@@ -337,6 +367,28 @@ function applyFilters(image, filters, format) {
             break;
     }
     return image;
+}
+
+/**
+ * Return database accessor
+ *
+ * @param  {String} table
+ *
+ * @return {Accessor|undefined}
+ */
+function getAccessor(table) {
+    switch (table) {
+        case 'story': return Story;
+        case 'reaction': return Reaction;
+        case 'user': return User;
+    }
+}
+
+function updateResources(resources, taskId, params) {
+    var res = _.find(resources, { task_id: taskId });
+    if (res) {
+        _.assign(res, params, { task_id: undefined });
+    }
 }
 
 /**
