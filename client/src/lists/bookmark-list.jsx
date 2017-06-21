@@ -14,6 +14,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var OnDemand = require('widgets/on-demand');
+var BookmarkFrame = require('widgets/bookmark-frame');
 var StoryView = require('views/story-view');
 var StoryEditor = require('editors/story-editor');
 
@@ -190,9 +191,19 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
             key: story.id,
         };
+        var bookmarkers = this.props.bookmarkers ? findUsers(this.props.bookmarkers, bookmark.user_ids) : null;
+        var frameProps = {
+            bookmark,
+            bookmarkers,
+            currentUser: this.props.currentUser,
+            locale: this.props.locale,
+            onClose: this.handleBookmarkClose,
+        }
         return (
             <OnDemand key={story.id} type="stories" initial={index < 10}>
-                <StoryView {...storyProps} />
+                <BookmarkFrame {...frameProps}>
+                    <StoryView {...storyProps} />
+                </BookmarkFrame>
             </OnDemand>
         );
     },

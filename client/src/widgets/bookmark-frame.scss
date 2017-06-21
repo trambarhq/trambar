@@ -1,0 +1,21 @@
+.bookmark-frame {
+    border: 2px solid #111;
+    background-color: #111;
+    margin: 1em 1em 1em 1em;
+
+    .title {
+        color: #eeeeee;
+        padding: 0.25em 0.25em 0.25em 0.25em;
+
+        .close-btn {
+            float: right;
+        }
+    }
+
+    .contents {
+        .story-view {
+            margin: 0;
+            border: 0;
+        }
+    }
+}
