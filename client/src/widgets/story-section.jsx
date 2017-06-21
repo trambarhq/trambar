@@ -9,8 +9,12 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var classNames = [ 'story-section' ];
+        if (this.props.className) {
+            classNames.push(this.props.className)
+        }
         return (
-            <div className="story-section">
+            <div className={classNames.join(' ')}>
                 {this.renderPart('header')}
                 {this.renderPart('subheader')}
                 {this.renderPart('body')}

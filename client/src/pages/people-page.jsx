@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var UserList = require('widgets/user-list');
+
 require('./people-page.scss')
 
 module.exports = Relaks.createClass({
@@ -73,7 +76,7 @@ module.exports = Relaks.createClass({
             var searchString = route.query.q;
             var criteria = {};
             if (!_.isEmpty(roleIds)) {
-                criteria.role_id = roleIds;
+                criteria.role_ids = roleIds;
             }
             if (searchString) {
                 criteria.search = searchString;
@@ -103,7 +106,26 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>People page</div>
+            <div>
+                {this.renderEditors()}
+                {this.renderList()}
+            </div>
         );
+    },
+
+    renderList: function() {
+        if (!this.props.currentUser || !this.props.users) {
+            return null;
+        }
+        var listProps = {
+            users: this.props.users,
+            currentUser: this.props.currentUser,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <UserList {...listProps} />
     },
 });

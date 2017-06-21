@@ -12,6 +12,8 @@ var UpdateCheck = require('mixins/update-check');
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
 
+require('./story-contents.scss');
+
 module.exports = React.createClass({
     displayName: 'StoryContents',
     mixins: [ UpdateCheck ],
@@ -27,7 +29,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <StorySection>
+            <StorySection className="contents">
                 <header>
                     {this.renderProfileImage()}
                     {this.renderNames()}

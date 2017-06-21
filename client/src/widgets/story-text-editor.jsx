@@ -29,19 +29,21 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onStoryChange: PropTypes.func,
-        onAuthorsChange: PropTypes.func,
+        onChange: PropTypes.func,
+        onCommit: PropTypes.func,
+        onCancel: PropTypes.func,
     },
 
     getInitialState: function() {
         return {
             selectingCoauthor: false,
+            uncommittedText: '',
         };
     },
 
     render: function() {
         return (
-            <StorySection>
+            <StorySection className="text-editor">
                 <header>
                     {this.renderProfileImage()}
                     {this.renderNames()}
@@ -111,10 +113,13 @@ module.exports = React.createClass({
     },
 
     renderTextArea: function() {
-        var text = _.get(this.props.story, 'details.text');
+        var text = this.state.uncommittedText;
         var code = this.props.languageCode.substr(0, 2);
+        if (!text) {
+            text = _.get(this.props.story, [ 'details', 'text', code ], '');
+        }
         var props = {
-            value: _.get(text, code, ''),
+            value: text,
             onChange: this.handleTextChange,
         };
         return <textarea {...props} />;
@@ -144,10 +149,10 @@ module.exports = React.createClass({
      *
      * @param  {Story} story
      */
-    triggerStoryChangeEvent: function(story) {
-        if (this.props.onStoryChange) {
-            this.props.onStoryChange({
-                type: 'storychange',
+    triggerChangeEvent: function(story) {
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
                 target: this,
                 story,
             })
@@ -155,29 +160,14 @@ module.exports = React.createClass({
     },
 
     /**
-     * Call onAuthorsChange handler
+     * Call onCommit handler
      *
      * @param  {Array<User>} authors
      */
-    triggerAuthorsChangeEvent: function(authors) {
-        if (this.props.onAuthorsChange) {
-            this.props.onAuthorsChange({
-                type: 'authorschange',
-                target: this,
-                authors,
-            })
-        }
-    },
-
-    /**
-     * Call onPost handler
-     *
-     * @param  {Array<User>} authors
-     */
-    triggerPostEvent: function(authors) {
-        if (this.props.onPost) {
-            this.props.onPost({
-                type: 'post',
+    triggerCommitEvent: function(authors) {
+        if (this.props.onCommit) {
+            this.props.onCommit({
+                type: 'commit',
                 target: this,
             })
         }
@@ -195,6 +185,27 @@ module.exports = React.createClass({
                 target: this,
             })
         }
+    },
+
+    /**
+     * [description]
+     * @return {Promise}
+     */
+    commitText: function() {
+        return new Promise((resolve, reject) => {
+            var text = this.state.uncommittedText;
+            if (text) {
+                var story = _.cloneDeep(this.props.story);
+                var lang = this.props.languageCode.substr(0, 2);
+                _.set(story, [ 'details', 'text', lang ], text);
+                this.triggerChangeEvent(story);
+                this.setState({ uncommittedText: '' }, () => {
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
     },
 
     /**
@@ -222,9 +233,9 @@ module.exports = React.createClass({
      */
     handleCoauthoringSelect: function(evt) {
         // parent component will update user_ids in story
-        var author = evt.user;
-        var authors = _.uniqBy(_.concat(this.props.authors, author), 'id');
-        this.triggerAuthorsChangeEvent(authors);
+        var story = _.clone(this.props.story);
+        story.user_ids = evt.selection;
+        this.triggerChangeEvent(authors);
         this.setState({ selectingCoauthor: false });
     },
 
@@ -235,9 +246,12 @@ module.exports = React.createClass({
      */
     handleTextChange: function(evt) {
         var text = evt.currentTarget.value;
-        var story = _.cloneDeep(this.props.story);
-        _.set(story.details, [ 'text', this.props.languageCode.substr(0, 2) ], text);
-        this.triggerStoryChangeEvent(story);
+        this.setState({ uncommittedText: text }, () => {
+            if (this.commitTextTimeout) {
+                clearTimeout(this.commitTextTimeout);
+            }
+            this.commitTextTimeout = setTimeout(this.commitText, 2000);
+        });
     },
 
     /**
@@ -246,7 +260,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePostClick: function(evt) {
-        this.triggerPostEvent();
+        this.commitText().then(() => {
+            this.triggerCommitEvent();
+        });
     },
 
     /**
@@ -256,5 +272,6 @@ module.exports = React.createClass({
      */
     handleCancelClick: function(evt) {
         this.triggerCancelEvent();
+        this.setState({ uncommittedText: '' });
     },
 });

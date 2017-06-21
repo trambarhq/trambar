@@ -1,4 +1,4 @@
-.story-section.text-editor {
+.story-section.contents {
     .header {
         .profile-image {
             float: left;
@@ -19,28 +19,15 @@
     }
 
     .subheader {
-        .button {
-            font-size: 0.9em;
+        .time {
             color: #666666;
-            cursor: pointer;
-
-            .label {
-                margin-left: 0.2em;
-            }
-
-            &:hover {
-                color: #eeeeee;
-            }
+            font-size: 0.9em;
         }
     }
 
     .body {
-        TEXTAREA {
-            width: 100%;
-        }
     }
 
     .footer {
-        text-align: right;
     }
 }

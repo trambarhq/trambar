@@ -12,6 +12,7 @@ var Account = require('accessors/account');
 var Configuration = require('accessors/configuration');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
+var Role = require('accessors/role');
 var User = require('accessors/user');
 
 var Bookmark = require('accessors/bookmark');
@@ -24,11 +25,13 @@ var Repo = require('accessors/repo');
 var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
+var Task = require('accessors/task');
 
 var globalAccessors = [
     Account,
     Configuration,
     Project,
+    Role,
     User,
 ];
 var projectAccessors = [
@@ -43,6 +46,7 @@ var projectAccessors = [
     Robot,
     Statistics,
     Story,
+    Task,
 ];
 var server;
 

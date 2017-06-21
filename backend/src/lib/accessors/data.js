@@ -254,12 +254,16 @@ module.exports = {
         var columns = _.keys(this.columns);
         var columnsPresent = [];
         var index = 1;
+        var manualId = false;
         // see which columns are being set
         _.each(rows, (row) => {
             _.each(columns, (name) => {
-                if (row.hasOwnProperty(name) && name !== 'id') {
+                if (row.hasOwnProperty(name)) {
                     if (columnsPresent.indexOf(name) === -1) {
                         columnsPresent.push(name);
+                        if (name === 'id') {
+                            manualId = true;
+                        }
                     }
                 }
             });
@@ -273,7 +277,7 @@ module.exports = {
                     parameters.push(value);
                     values.push(bound);
                 } else {
-                    values.push('null');
+                    values.push('DEFAULT');
                 }
             });
             valueSets.push(`(${values.join(',')})`);
@@ -283,7 +287,17 @@ module.exports = {
             VALUES ${valueSets.join(',')}
             RETURNING *
         `;
-        return db.query(sql, parameters);
+        return db.query(sql, parameters).then((rows) => {
+            if (manualId) {
+                var sequence = `"${schema}"."${this.table}_id_seq"`;
+                var sql = `
+                    SELECT setval('${sequence}', COALESCE((SELECT MAX(id) FROM ${table}), 0));
+                `;
+                return db.query(sql).return(rows);
+            } else {
+                return rows;
+            }
+        });
     },
 
     insertOne: function(db, schema, row) {

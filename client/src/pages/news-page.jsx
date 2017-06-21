@@ -15,7 +15,6 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryList = require('widgets/story-list');
-var StoryEditor = require('widgets/story-editor');
 
 module.exports = Relaks.createClass({
     displayName: 'NewsPage',
@@ -70,12 +69,12 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             stories: null,
+            storyDrafts: null,
             currentUser: null,
-            drafts: null,
-            authors: null,
 
             showEditors: !(date || !_.isEmpty(roleIds) || searchString),
             database: this.props.database,
+            queue: this.props.queue,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -89,7 +88,7 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.currentUser = user;
-            props.authors = [ user ];
+            meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
             if (date || searchString) {
                 // load story matching filters
@@ -142,37 +141,6 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'story', criteria });
         }).then((stories) => {
             props.storyDrafts = stories;
-            meanwhile.show(<NewsPageSync {...props} />);
-        }).then(() => {
-            // load users working on these stories
-            var userIds = _.flatten(_.map(props.storyDrafts, 'user_ids'));
-            var criteria = {
-                id: _.uniq(userIds)
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.authors = _.unionBy(props.authors, users, 'id');
-            meanwhile.show(<NewsPageSync {...props} />);
-        }).then(() => {
-            // look for pending stories
-            var criteria = {
-                published: true,
-                ready: false,
-                user_ids: [ props.currentUser.id ],
-            };
-            return db.find({ table: 'story', criteria });
-        }).then((stories) => {
-            props.pendingStories = stories;
-            meanwhile.show(<NewsPageSync {...props} />);
-        }).then(() => {
-            // load users working on these stories
-            var userIds = _.flatten(_.map(props.pendingStories, 'user_ids'));
-            var criteria = {
-                id: _.uniq(userIds)
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.authors = _.unionBy(props.authors, users, 'id');
             props.loading = false;
             return <NewsPageSync {...props} />;
         });
@@ -187,10 +155,10 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         storyDrafts: PropTypes.arrayOf(PropTypes.object),
-        authors: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
+        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -199,71 +167,24 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     render: function() {
         return (
             <div>
-                {this.renderEditors()}
                 {this.renderList()}
             </div>
         );
     },
 
-    renderEditors: function() {
-        if (!this.props.showEditors) {
-            return null;
-        }
-        var drafts = this.props.storyDrafts ? sortStoryDrafts(this.props.storyDrafts, this.props.currentUser) : [];
-        if (drafts.length === 0 || drafts[0].user_ids[0] !== this.props.currentUser.id) {
-            // add empty story when current user doesn't have an active draft
-            var blank = {
-                user_ids: this.props.currentUser ? [ this.props.currentUser.id ] : [],
-                details: {}
-            }
-            drafts.unshift(blank);
-        }
-        return _.map(drafts, this.renderEditor);
-    },
-
-    renderEditor: function(story, index) {
-        // always use 0 as the key for the top story, so we don't lose focus
-        // when the new story acquires an id after being saved automatically
-        var key = (index > 0) ? story.id : 0;
-        var authors = this.props.authors ? findUsers(this.props.authors, story.user_ids) : null;
-        var editorProps = {
-            story,
-            authors: authors,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            key,
-        };
-        return <StoryEditor {...editorProps}/>
-    },
-
     renderList: function() {
-        if (!this.props.currentUser || !this.props.stories) {
-            return;
-        }
         var listProps = {
+            showEditors: this.props.showEditors,
             stories: this.props.stories,
+            storyDrafts: this.props.storyDrafts,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
+            queue: this.props.queue,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
         return <StoryList {...listProps} />
     },
-});
-
-var findUsers = MemoizeWeak(function(users, userIds) {
-    return _.map(_.uniq(userIds), (userId) => {
-       return _.find(users, { id: userId }) || {}
-    });
-});
-
-var sortStoryDrafts = MemoizeWeak(function(stories, currentUser) {
-    var ownStory = function(story) {
-        return story.user_ids[0] = currentUser.id;
-    };
-    return _.orderBy(stories, [ ownStory, 'ptime' ], [ 'desc', 'desc' ]);
 });

@@ -24,6 +24,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
     },
 
     getInitialState: function() {
@@ -90,14 +92,14 @@ module.exports = React.createClass({
     },
 
     /**
-     * Call onStoryChange handler
+     * Call onChange handler
      *
      * @param  {Story} story
      */
-    triggerStoryChangeEvent: function(story) {
-        if (this.props.onStoryChange) {
-            this.props.onStoryChange({
-                type: 'storychange',
+    triggerSChangeEvent: function(story) {
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
                 target: this,
                 story,
             })

@@ -63,6 +63,8 @@ module.exports = React.createClass({
             route: null,
             locale: null,
             theme: null,
+
+            authenticationDetails: null,
         };
     },
 
@@ -185,28 +187,48 @@ module.exports = React.createClass({
      * @return {Promise<Object>}
      */
     handleDatabaseAuthRequest: function(evt) {
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server: evt.server };
-        return db.findOne({ table: 'user_credential', criteria }).then((credential) => {
-            if (credential && credential.token) {
-                return credential;
-            } else {
-                return new Promise((resolve, reject) => {
-                    if (!credential) {
-                        credential = { server: evt.server };
-                    }
-                    this.authRequest = { resolve, reject, credential };
+        var server = evt.server
+        if (this.authRequest) {
+            if (this.authRequest.server === server) {
+                return this.authRequest.promise;
+            }
+            this.authRequest.reject(new Error('Request cancelled'));
+            this.authRequest = null;
+        }
 
+        this.authRequest = {};
+        this.authRequest.server = server;
+        this.authRequest.promise = new Promise((resolve, reject) => {
+            this.authRequest.resolve = resolve;
+            this.authRequest.reject = reject;
+        });
+
+        // retrieve credential from database
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var criteria = { server };
+        db.findOne({ table: 'user_credential', criteria }).then((credential) => {
+            if (credential && credential.token) {
+                this.authRequest.resolve(credential)
+            } else {
+                if (!credential) {
+                    credential = { server };
+                }
+                this.setState({ authenticationDetails: credential }, () => {
+                    // TODO: retrieve info from dialog box
                     setTimeout(() => {
-                        var credentials = {
+                        var credential = {
+                            server,
                             username: 'tester',
                             password: 'qwerty'
                         };
-                        this.authRequest.resolve(credentials);
+                        this.authRequest.resolve(credential);
                     }, 10);
                 });
             }
-        });
+        }).catch((err) => {
+            this.authRequest.reject(err);
+        })
+        return this.authRequest.promise;
     },
 
     /**

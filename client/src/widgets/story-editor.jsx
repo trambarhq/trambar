@@ -1,7 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
-var UploadQueue = require('transport/upload-queue');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -25,16 +24,31 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+        onCommit: PropTypes.func,
+        onCancel: PropTypes.func,
     },
 
     getInitialState: function() {
-        var story = this.props.story || {};
-        var authors = findUsers(this.props.authors, story.user_ids);
-        var languageCode = this.props.locale.languageCode;
+        return {
+            languageCode: this.updateLanguage(this.props.story, this.props.locale)
+        };
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.story !== nextProps.story || this.props.locale !== nextProps.locale) {
+            this.setState({
+                languageCode: this.updateLanguage(nextProps.story, nextProps.locale)
+            });
+        }
+    },
+
+    updateLanguage: function(story, locale) {
+        var languageCode = locale.languageCode;
         var text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
             // use the first language of the text object, but only if it's
@@ -45,30 +59,7 @@ module.exports = React.createClass({
                 languageCode = firstLanguage;
             }
         }
-        return { story, authors, languageCode };
-    },
-
-    componentWillReceiveProps: function(nextProps) {
-        var nextState = {};
-        if (this.props.story !== nextProps.story) {
-            // perform three-way merge
-            var current = this.state.story;
-            var remoteBefore = this.props.story;
-            var remoteAfter = nextProps.story;
-            if (current !== remoteBefore) {
-                nextState.story = Merger.mergeObjects(current, remoteAfter, remoteBefore);
-            } else {
-                nextState.story = remoteAfter;
-            }
-        }
-        if (this.props.authors !== nextProps.authors) {
-            var story = nextState.story || this.state.story;
-            // update the list, include ones that have just been added
-            nextState.authors = findUsers(_.concat(nextProps.authors, this.state.authors), story.user_ids);
-        }
-        if (!_.isEmpty(nextState)) {
-            this.setState(nextState);
-        }
+        return languageCode;
     },
 
     /**
@@ -114,8 +105,8 @@ module.exports = React.createClass({
 
     renderTextEditor: function() {
         var props = {
-            story: this.state.story,
-            authors: this.state.authors,
+            story: this.props.story,
+            authors: this.props.authors,
             languageCode: this.state.languageCode,
 
             database: this.props.database,
@@ -123,10 +114,9 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onStoryChange: this.handleStoryChange,
-            onAuthorsChange: this.handleAuthorsChange,
-            onPost: this.handleStoryPost,
-            onCancel: this.handleStoryCancel,
+            onChange: this.props.onChange,
+            onCommit: this.props.onCommit,
+            onCancel: this.props.onCancel,
         };
         return <StoryTextEditor {...props} />;
     },
@@ -137,14 +127,14 @@ module.exports = React.createClass({
 
     renderMediaEditor: function() {
         var props = {
-            story: this.state.story,
+            story: this.props.story,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onStoryChange: this.handleStoryChange,
+            onChange: this.props.onChange,
         };
         return <StoryMediaEditor {...props} />
     },
@@ -159,58 +149,6 @@ module.exports = React.createClass({
             theme: this.props.theme,
         };
         return <StoryOptions {...props} />;
-    },
-
-    saveStory: function(story) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
-        return db.saveOne({ table: 'story' }, story);
-    },
-
-    removeStory: function(story) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
-        return db.removeOne({ table: 'story' }, story);
-    },
-
-    handleStoryChange: function(evt) {
-        var story = evt.story;
-        var remote = this.props.story;
-        if (_.isEqual(story, remote)) {
-            story = remote;
-        }
-        this.setState({ story });
-    },
-
-    handleAuthorsChange: function(evt) {
-        // assume the order match how they should be listed in the story
-        var authors = evt.authors;
-        var story = _.clone(this.state.story)
-        story.user_ids = _.map(authors);
-        this.setState({ story, authors });
-    },
-
-    handleStoryPost: function(evt) {
-        var story = this.state.story;
-        story = _.clone(story);
-        story.published = true;
-        this.saveStory(story);
-    },
-
-    handleStoryCancel: function(evt) {
-        var story = this.state.story;
-        if (story.ptime) {
-            // the story was published previously--republish it
-            story = _.clone(story);
-            story.published = true;
-            this.saveStory(story);
-        } else {
-            this.removeStory(story);
-        }
     },
 });
 
