@@ -117,10 +117,9 @@ module.exports = React.createClass({
 
     renderCapturedImage: function() {
         var image = this.state.capturedImage;
+        var url = URL.createObjectURL(image.file);
         var props = {
-            src: image.url,
-            width: image.width,
-            height: image.height,
+            src: url,
         };
         return (
             <div className="container">
@@ -195,17 +194,20 @@ module.exports = React.createClass({
     },
 
     captureImage: function() {
-        var canvas = document.createElement('CANVAS');
-        var context = canvas.getContext('2d');
-        var video = this.refs.video;
-        var width = video.videoWidth;
-        var height = video.videoHeight;
-        canvas.width = width;
-        canvas.height = height;
-        context.drawImage(video, 0, 0, width, height);
-        var type = 'image/jpeg';
-        var url = canvas.toDataURL(type);
-        return { type, url, width, height };
+        return new Promise((resolve, reject) => {
+            var type = 'image/jpeg';
+            var canvas = document.createElement('CANVAS');
+            var context = canvas.getContext('2d');
+            var video = this.refs.video;
+            var width = video.videoWidth;
+            var height = video.videoHeight;
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+            canvas.toBlob((file) => {
+                resolve({ type, file, width, height });
+            }, type, 90);
+        });
     },
 
     triggerCaptureEvent: function(image) {
@@ -219,8 +221,9 @@ module.exports = React.createClass({
     },
 
     handleSnapClick: function(evt) {
-        var image = this.captureImage();
-        this.setState({ capturedImage: image });
+        this.captureImage().then((image) => {
+            this.setState({ capturedImage: image });
+        });
     },
 
     handleRetakeClick: function(evt) {

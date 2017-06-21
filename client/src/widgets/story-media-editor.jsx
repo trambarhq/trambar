@@ -96,7 +96,7 @@ module.exports = React.createClass({
      *
      * @param  {Story} story
      */
-    triggerSChangeEvent: function(story) {
+    triggerChangeEvent: function(story) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -138,10 +138,12 @@ module.exports = React.createClass({
             this.setState({ capturingPhoto: false });
 
             var image = evt.image;
-            var story = _.clone(this.props.story);
-            var images = _.slice(story.details.images);
-            images.push(image);
-            this.triggerStoryChangeEvent(story);
+            var story = _.cloneDeep(this.props.story);
+            if (!story.details.images) {
+                story.details.images = [];
+            }
+            story.details.images.push(image);
+            this.triggerChangeEvent(story);
         }
     },
 });

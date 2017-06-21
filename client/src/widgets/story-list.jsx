@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var MemoizeWeak = require('memoizee/weak');
+var Merger = require('data/merger');
 
 var Database = require('data/database');
 var Route = require('routing/route');
