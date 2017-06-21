@@ -10,7 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
-var PhotoCaptureDialogBox = require('widgets/photo-capture-dialog-box');
+var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 
 require('./story-media-editor.scss');
 

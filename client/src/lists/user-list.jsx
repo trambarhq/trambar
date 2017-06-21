@@ -14,7 +14,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var OnDemand = require('widgets/on-demand');
-var UserView = require('widgets/user-view');
+var UserView = require('views/user-view');
 
 require('./user-list.scss');
 

@@ -4,31 +4,62 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+var Merger = require('data/merger');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var StoryContents = require('widgets/story-contents');
-var StoryComments = require('widgets/story-comments');
-var StoryOptions = require('widgets/story-options');
+var StoryTextEditor = require('editors/story-text-editor');
+var StoryMediaEditor = require('editors/story-media-editor');
+var StoryOptions = require('views/story-options');
 
-require('./story-view.scss');
+require('./story-editor.scss');
 
 module.exports = React.createClass({
-    displayName: 'StoryView',
+    displayName: 'StoryEditor',
     mixins: [ UpdateCheck ],
     propTypes: {
-        story: PropTypes.object.isRequired,
+        story: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+        onCommit: PropTypes.func,
+        onCancel: PropTypes.func,
+    },
+
+    getInitialState: function() {
+        return {
+            languageCode: this.updateLanguage(this.props.story, this.props.locale)
+        };
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.story !== nextProps.story || this.props.locale !== nextProps.locale) {
+            this.setState({
+                languageCode: this.updateLanguage(nextProps.story, nextProps.locale)
+            });
+        }
+    },
+
+    updateLanguage: function(story, locale) {
+        var languageCode = locale.languageCode;
+        var text = _.get(story, 'details.text');
+        if (!_.isEmpty(text)) {
+            // use the first language of the text object, but only if it's
+            // different from the selected locale so that the country code
+            // is kept when it's the same
+            var firstLanguage = _.first(_.keys(text));
+            if (languageCode.substr(0, 2) !== firstLanguage) {
+                languageCode = firstLanguage;
+            }
+        }
+        return languageCode;
     },
 
     /**
@@ -37,22 +68,21 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        //console.log(`Rending ${this.props.story.id}`)
         if (this.props.theme.mode === 'columns-1') {
             return (
                 <div className="story-view columns-1">
-                    {this.renderContents()}
-                    {this.renderComments()}
+                    {this.renderTextEditor()}
+                    {this.renderSupplementalEditors()}
                 </div>
             );
         } else if (this.props.theme.mode === 'columns-2') {
             return (
                 <div className="story-view columns-2">
                     <div className="column-1">
-                        {this.renderContents()}
+                        {this.renderTextEditor()}
                     </div>
                     <div className="column-2">
-                        {this.renderComments()}
+                        {this.renderSupplementalEditors()}
                     </div>
                 </div>
             );
@@ -60,10 +90,10 @@ module.exports = React.createClass({
             return (
                 <div className="story-view columns-3">
                     <div className="column-1">
-                        {this.renderContents()}
+                        {this.renderTextEditor()}
                     </div>
                     <div className="column-2">
-                        {this.renderComments()}
+                        {this.renderSupplementalEditors()}
                     </div>
                     <div className="column-3">
                         {this.renderOptions()}
@@ -73,32 +103,40 @@ module.exports = React.createClass({
         }
     },
 
-    renderContents: function() {
+    renderTextEditor: function() {
         var props = {
             story: this.props.story,
             authors: this.props.authors,
+            languageCode: this.state.languageCode,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onChange: this.props.onChange,
+            onCommit: this.props.onCommit,
+            onCancel: this.props.onCancel,
         };
-        return <StoryContents {...props} />;
+        return <StoryTextEditor {...props} />;
     },
 
-    renderComments: function() {
+    renderSupplementalEditors: function() {
+        return this.renderMediaEditor();
+    },
+
+    renderMediaEditor: function() {
         var props = {
             story: this.props.story,
-            reactions: this.props.reactions,
-            respondents: this.props.respondents,
-            currentUser: this.props.currentUser,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onChange: this.props.onChange,
         };
-        return <StoryComments {...props} />;
+        return <StoryMediaEditor {...props} />
     },
 
     renderOptions: function() {
@@ -113,3 +151,9 @@ module.exports = React.createClass({
         return <StoryOptions {...props} />;
     },
 });
+
+function findUsers(users, userIds) {
+    return _.filter(_.map(userIds, (id) => {
+        return _.find(users, { id });
+    }));
+}

@@ -8,7 +8,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var BookmarkList = require('widgets/bookmark-list');
+var BookmarkList = require('lists/bookmark-list');
 
 module.exports = Relaks.createClass({
     displayName: 'BookmarksPage',

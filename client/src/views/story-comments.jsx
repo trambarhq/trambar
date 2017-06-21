@@ -11,7 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
-var CommentView = require('widgets/comment-view');
+var CommentView = require('views/comment-view');
 
 require('./story-comments.scss');
 

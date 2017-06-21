@@ -9,9 +9,9 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var UserStory = require('widgets/user-story');
-var UserStatistics = require('widgets/user-statistics');
-var UserOptions = require('widgets/user-options');
+var UserStory = require('views/user-story');
+var UserStatistics = require('views/user-statistics');
+var UserOptions = require('views/user-options');
 
 require('./user-view.scss');
 

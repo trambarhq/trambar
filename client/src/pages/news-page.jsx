@@ -14,7 +14,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var StoryList = require('widgets/story-list');
+var StoryList = require('lists/story-list');
 
 module.exports = Relaks.createClass({
     displayName: 'NewsPage',

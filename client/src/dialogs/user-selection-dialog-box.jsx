@@ -9,7 +9,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
-var UserSelectionList = require('widgets/user-selection-list');
+var UserSelectionList = require('lists/user-selection-list');
 
 require('./user-selection-dialog-box.scss');
 

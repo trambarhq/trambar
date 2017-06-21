@@ -8,7 +8,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var UserList = require('widgets/user-list');
+var UserList = require('lists/user-list');
 
 require('./people-page.scss')
 

@@ -12,7 +12,7 @@ var UpdateCheck = require('mixins/update-check');
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
-var UserSelectionDialogBox = require('widgets/user-selection-dialog-box');
+var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 
 require('./story-text-editor.scss');
 

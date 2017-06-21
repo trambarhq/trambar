@@ -14,8 +14,8 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var OnDemand = require('widgets/on-demand');
-var StoryView = require('widgets/story-view');
-var StoryEditor = require('widgets/story-editor');
+var StoryView = require('views/story-view');
+var StoryEditor = require('editors/story-editor');
 
 require('./bookmark-list.scss');
 
