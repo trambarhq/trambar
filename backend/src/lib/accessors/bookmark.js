@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var HttpError = require('errors/http-error');
 
 var Data = require('accessors/data');
 
@@ -76,5 +77,65 @@ module.exports = _.create(Data, {
             };
             return object;
         });
-    }
+    },
+
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials) {
+        return Promise.map(objects, (object, index) => {
+            var original = originals[index];
+            if (original) {
+                // the only operation permitted is the removal of the bookmark
+                if (object.deleted) {
+                    var object = { id: original.id };
+                    if (original.target_user_id === credentials.user.id) {
+                        object.deleted = true;
+                    } else if (_.includes(original.user_ids, credentials.user.id)) {
+                        if (original.user_ids.length === 1) {
+                            object.deleted = true;
+                        } else {
+                            // someone else is recommending this story still
+                            object.user_ids =_.difference(original.user_ids, [ credentials.user.id ]);
+                        }
+                    } else {
+                        throw new HttpError(403);
+                    }
+                } else {
+                    throw new HttpError(400);
+                }
+                return object;
+            } else {
+                // must be the current user
+                if (!_.isEqual(object.user_ids, [ credentials.user.id ])) {
+                    throw new HttpError(403);
+                }
+                if (!object.story_id || !object.target_user_id) {
+                    throw new HttpError(400);
+                }
+
+                // see if there's a existing bookmark already
+                var criteria = {
+                    story_id: object.story_id,
+                    target_user_id: object.target_user_id,
+                };
+                return this.findOne(db, schema, criteria, 'id, user_ids').then((row) => {
+                    if (row) {
+                        // add the user to the list
+                        row.user_ids = _.union(row.user_ids, object.user_ids);
+                        object = row;
+                    }
+                    return object;
+                });
+            }
+        });
+    },
 });
