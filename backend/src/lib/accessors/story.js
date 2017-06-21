@@ -141,7 +141,7 @@ module.exports = _.create(Data, {
         return Promise.map(objects, (object, index) => {
             var original = originals[index];
             if (original) {
-                if (_.includes(original.user_ids), credentials.user.id) {
+                if (!_.includes(original.user_ids, credentials.user.id)) {
                     // can't modify an object that doesn't belong to the user
                     throw new HttpError(403);
                 }
@@ -150,7 +150,7 @@ module.exports = _.create(Data, {
                         // only the main author can modify the list
                         throw new HttpError(403);
                     }
-                    if (object.user_ids[0] !== origin.user_ids[0]) {
+                    if (object.user_ids[0] !== original.user_ids[0]) {
                         // cannot make someone else the main author
                         throw new HttpError(403);
                     }
@@ -175,10 +175,11 @@ module.exports = _.create(Data, {
     },
 
     associate: function(db, schema, rows, originals, credentials) {
-        return Promise.map(rows, (row) => {
+        return Promise.map(rows, (row, index) => {
+            var original = originals[index];
             var taskIdsBefore = getTaskIds(original);
             var taskIdsAfter = getTaskIds(row);
-            var newTaskIds = _.different(taskIdsAfter, taskIdsBefore);
+            var newTaskIds = _.difference(taskIdsAfter, taskIdsBefore);
             if (!_.isEmpty(newTaskIds)) {
                 return Task.find(db, schema, { id: newTaskIds }, '*').then((tasks) => {
                     _.each(tasks, (task) => {
@@ -194,3 +195,38 @@ module.exports = _.create(Data, {
         });
     },
 });
+
+/**
+ * Return task ids in the object
+ *
+ * @param  {Object} object
+ *
+ * @return {Array<Number>}
+ */
+function getTaskIds(object) {
+    var taskIds = [];
+    var resourceLists = getResources(object);
+    _.forIn(resourceLists, (resources) => {
+        _.each(resources, (res) => {
+            if (res.task_id) {
+                taskIds.push(res.task_id);
+            }
+        });
+    });
+    return taskIds;
+}
+
+/**
+ * Return list of media objects
+ *
+ * @param  {Object} object
+ *
+ * @return {Object}
+ */
+function getResources(object) {
+    return _.pickBy({
+        image: _.get(object, 'details.images'),
+        video: _.get(object, 'details.videos'),
+        website: _.get(object, 'details.websites'),
+    }, 'length');
+}

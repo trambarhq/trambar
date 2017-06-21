@@ -235,7 +235,7 @@ module.exports = React.createClass({
         // parent component will update user_ids in story
         var story = _.clone(this.props.story);
         story.user_ids = evt.selection;
-        this.triggerChangeEvent(authors);
+        this.triggerChangeEvent(story);
         this.setState({ selectingCoauthor: false });
     },
 

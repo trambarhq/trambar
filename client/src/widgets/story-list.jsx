@@ -206,6 +206,7 @@ module.exports = Relaks.createClass({
         });
         storyDrafts[index] = story;
         this.setState({ storyDrafts });
+        this.saveStory(story);
     },
 
     handleStoryCommit: function(evt) {
