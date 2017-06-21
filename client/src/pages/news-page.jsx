@@ -78,7 +78,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            loading: true,
         };
         meanwhile.show(<NewsPageSync {...props} />);
         return db.start().then((userId) => {
@@ -141,7 +140,6 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'story', criteria });
         }).then((stories) => {
             props.storyDrafts = stories;
-            props.loading = false;
             return <NewsPageSync {...props} />;
         });
     },
@@ -151,7 +149,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NewsPage.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
-        loading: PropTypes.bool,
         showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         storyDrafts: PropTypes.arrayOf(PropTypes.object),

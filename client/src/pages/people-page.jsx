@@ -61,7 +61,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            loading: true,
         };
         meanwhile.show(<PeoplePageSync {...props} />);
         return db.start().then((userId) => {
@@ -93,7 +92,6 @@ module.exports = Relaks.createClass({
 var PeoplePageSync = module.exports.Sync = React.createClass({
     displayName: 'PeoplePageSync',
     propTypes: {
-        loading: PropTypes.bool,
         users: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 

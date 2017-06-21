@@ -42,7 +42,6 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                project_id int NOT NULL DEFAULT 0,
                 story_id int NOT NULL DEFAULT 0,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 target_user_id int NOT NULL DEFAULT 0,
@@ -72,6 +71,8 @@ module.exports = _.create(Data, {
                 details: row.details,
                 story_id: row.story_id,
                 user_ids: row.user_ids,
+                target_user_id: row.target_user_id,
+                public: row.public
             };
             return object;
         });

@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var BookmarkList = require('widgets/bookmark-list');
+
 module.exports = Relaks.createClass({
     displayName: 'BookmarksPage',
     propTypes: {
@@ -45,48 +48,35 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
         var props = {
             bookmarks: null,
+            stories: null,
             currentUserId: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            loading: true,
         };
         meanwhile.show(<BookmarksPageSync {...props} />);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
             criteria.id = userId;
-            return db.findOne({ tabel: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((currentUser) => {
             props.currentUser = currentUser;
+            meanwhile.check();
         }).then(() => {
             // load boomarks
             var criteria = {};
             criteria.target_user_id = _.get(props.currentUser, 'id', 0);
+            console.log(criteria);
             return db.find({ table: 'bookmark', criteria });
         }).then((bookmarks) => {
             props.bookmarks = bookmarks;
-        }).then(() => {
-            var criteria = {}
-            criteria.id = _.map(props.bookmarks, 'story_id');
-
-            return db.find({ table: 'story', criteria });
-        }).then((stories) => {
-            // save last piece of data and render the page with everything
-            props.stories = stories
-            meanwhile.show(<BookmarksPageSync {...props} />);
-        }).then(() => {
-            // load users who created the bookmarks
-            var criteria = {};
-            criteria.id = _.map(props.bookmarks, 'user_id');
-            return db.find({ table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
             return <BookmarksPageSync {...props} />;
         });
     }
@@ -95,9 +85,7 @@ module.exports = Relaks.createClass({
 var BookmarksPageSync = module.exports.Sync = React.createClass({
     displayName: 'BookmarksPage.Sync',
     propTypes: {
-        loading: PropTypes.bool,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -108,7 +96,22 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Bookmarks page</div>
+            <div>
+                {this.renderList()}
+            </div>
         );
     },
+
+    renderList: function() {
+        var listProps = {
+            bookmarks: this.props.bookmarks,
+            currentUser: this.props.currentUser,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <BookmarkList {...listProps} />
+    }
 });
