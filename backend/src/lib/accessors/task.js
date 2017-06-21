@@ -6,7 +6,7 @@ var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
     schema: 'project',
-    table: 'role',
+    table: 'task',
     columns: {
         id: Number,
         gn: Number,
@@ -14,11 +14,13 @@ module.exports = _.create(Data, {
         ctime: String,
         mtime: String,
         details: Object,
+        action: String,
         token: String,
         user_id: Number,
     },
     criteria: {
         id: Number,
+        action: String,
         token: String,
         deleted: Boolean,
     },
@@ -41,6 +43,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
+                action varchar(64) NOT NULL,
                 token varchar(64) NOT NULL,
                 user_id int NOT NULL DEFAULT 0,
                 PRIMARY KEY (id)
@@ -66,6 +69,9 @@ module.exports = _.create(Data, {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
+                action: row.action,
+                token: row.token,
+                user_id: row.user_id,
             };
             return object;
         });

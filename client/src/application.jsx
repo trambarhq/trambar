@@ -119,6 +119,7 @@ module.exports = React.createClass({
         var uploadManagerProps = {
             ref: setters.uploadManager,
             database: this.state.database,
+            route: this.state.route,
             onChange: this.handleUploadQueueChange,
         };
         var routeManagerProps = {

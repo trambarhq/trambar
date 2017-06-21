@@ -184,11 +184,16 @@ module.exports = Relaks.createClass({
     },
 
     saveStory: function(story) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
-        return db.saveOne({ table: 'story' }, story);
+        var queue = this.props.queue;
+        return queue.queueResources(story).then(() => {
+            var route = this.props.route;
+            var server = route.parameters.server;
+            var schema = route.parameters.schema;
+            var db = this.props.database.use({ server, schema, by: this });
+            return db.saveOne({ table: 'story' }, story).then((copy) => {
+                return queue.sendResources(story);
+            });
+        });
     },
 
     removeStory: function(story) {
@@ -207,7 +212,7 @@ module.exports = Relaks.createClass({
         });
         storyDrafts[index] = story;
         this.setState({ storyDrafts });
-        this.saveStory(story);
+        return this.saveStory(story);
     },
 
     handleStoryCommit: function(evt) {

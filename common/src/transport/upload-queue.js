@@ -3,14 +3,14 @@ module.exports = UploadQueue;
 function UploadQueue(uploadManager) {
 
     this.attachResources = function(object) {
-        uploadManager.attachResources(object);
+        return uploadManager.attachResources(object);
     };
 
     this.queueResources = function(object) {
-        uploadManager.queueResources(object);
+        return uploadManager.queueResources(object);
     };
 
     this.sendResources = function(object) {
-        uploadManager.sendResources(object);
+        return uploadManager.sendResources(object);
     };
 }

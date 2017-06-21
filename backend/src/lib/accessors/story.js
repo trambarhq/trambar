@@ -4,6 +4,7 @@ var Moment = require('moment');
 var HttpError = require('errors/http-error');
 
 var Data = require('accessors/data');
+var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'project',
@@ -145,17 +146,22 @@ module.exports = _.create(Data, {
                     // can't modify an object that doesn't belong to the user
                     throw new HttpError(403);
                 }
-                if (!_.isEqual(object.user_ids, original.user_ids)) {
-                    if (original.user_ids[0] !== credentials.user.id) {
-                        // only the main author can modify the list
-                        throw new HttpError(403);
-                    }
-                    if (object.user_ids[0] !== original.user_ids[0]) {
-                        // cannot make someone else the main author
-                        throw new HttpError(403);
+                if (object.hasOwnProperty('user_ids')) {
+                    if (!_.isEqual(object.user_ids, original.user_ids)) {
+                        if (original.user_ids[0] !== credentials.user.id) {
+                            // only the main author can modify the list
+                            throw new HttpError(403);
+                        }
+                        if (object.user_ids[0] !== original.user_ids[0]) {
+                            // cannot make someone else the main author
+                            throw new HttpError(403);
+                        }
                     }
                 }
             } else {
+                if (!object.hasOwnProperty('user_ids')) {
+                    throw new HttpError(403);
+                }
                 if (object.user_ids[0] !== credentials.user.id) {
                     // the main author must be the current user
                     throw new HttpError(403);

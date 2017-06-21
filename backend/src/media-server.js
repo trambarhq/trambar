@@ -29,8 +29,8 @@ function start() {
         app.get('/media/images/:hash', handleImageOriginalRequest);
         app.get('/media/videos/:hash', handleVideoOriginalRequest);
         app.post('/media/html/screenshot/', handleWebsiteScreenshot);
-        app.post('/media/images/upload/', upload.array('images', 16), handleImageUpload);
-        app.post('/media/videos/upload/', upload.array('videos', 4), handleVideoUpload);
+        app.post('/media/images/upload/', upload.array('file', 16), handleImageUpload);
+        app.post('/media/videos/upload/', upload.array('file', 4), handleVideoUpload);
 
         createCacheFolders();
 
@@ -85,7 +85,7 @@ function handleImageOriginalRequest(req, res) {
 }
 
 function handleVideoOriginalRequest(req, res) {
-    
+
 }
 
 function handleWebsiteScreenshot(req, res) {

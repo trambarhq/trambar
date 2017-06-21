@@ -391,6 +391,6 @@ module.exports = {
      * @return {Promise<Array>}
      */
     associate: function(db, schema, rows, originals, credentials) {
-        return Promise.resolve(objects);
+        return Promise.resolve(rows);
     },
 };

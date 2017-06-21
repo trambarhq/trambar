@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var HttpRequest = require('transport/http-request');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -61,9 +62,9 @@ module.exports = React.createClass({
             _.each(resources, (res) => {
                 var params;
                 if (type === 'image' || type === 'video') {
-                    if (res.file && !res.task_id) {
+                    if (res.file instanceof Blob && !res.task_id) {
                         // a local file
-                        params = { file: image.file };
+                        params = { file: res.file };
                     } else if (res.external_url && !res.task_id) {
                         // a file at cloud-storage provider
                         params = { url: image.external_url };
@@ -92,7 +93,6 @@ module.exports = React.createClass({
      * Send files queued earlier after, after task id is saved
      *
      * @param  {Object} object
-     * @return {[type]}
      */
     sendResources: function(object) {
         var resourceLists = getResources(object);
@@ -111,7 +111,7 @@ module.exports = React.createClass({
      * @param  {String} action
      * @param  {Object} params
      *
-     * @return {Promise}
+     * @return {Promise<Number>}
      */
     queueTask: function(action, params) {
         var route = this.props.route;
@@ -123,7 +123,7 @@ module.exports = React.createClass({
                 action: action,
                 user_id: userId,
             };
-            return db.saveOne(server, schema, task);
+            return db.saveOne({ table: 'task' }, task);
         }).then((task) => {
             var transfer = _.assign({
                 id: task.id,
@@ -136,6 +136,7 @@ module.exports = React.createClass({
             this.setState({ queue }, () => {
                 this.triggerChangeEvent();
             });
+            return task.id;
         })
     },
 
@@ -181,13 +182,16 @@ module.exports = React.createClass({
             },
         };
         var payload;
-        if (transfer.file) {
+        if (transfer.file instanceof Blob) {
             payload = new FormData;
             payload.append('file', transfer.file);
         } else if (transfer.url) {
             payload = { url: transfer.url };
+        } else {
+            return;
         }
-        var server = route.parameters.server;
+        var route = this.props.route;
+        var server = getServerName(route.parameters);
         var protocol = getProtocol(server);
         var url = `${protocol}://${server}`;
         switch (transfer.action) {
@@ -201,9 +205,11 @@ module.exports = React.createClass({
                 url += '/media/html/screenshot/';
                 break;
         }
-        return HttpRequest.fetch('POST', url, payload, options).then((response) => {
+        var promise = HttpRequest.fetch('POST', url, payload, options).then((response) => {
             this.updateTransfer(taskId, { response });
         });
+        transfer.promise = promise;
+        return promise;
     },
 
     render: function() {
@@ -225,6 +231,21 @@ module.exports = React.createClass({
         }
     },
 });
+
+/**
+ * Get the domain name or ip address from a location object
+ *
+ * @param  {Object} location
+ *
+ * @return {String}
+ */
+function getServerName(location) {
+    if (location.server === '~') {
+        return window.location.hostname;
+    } else {
+        return location.server;
+    }
+}
 
 /**
  * Return 'http' if server is localhost, 'https' otherwise
