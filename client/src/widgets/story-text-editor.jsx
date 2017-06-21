@@ -76,7 +76,7 @@ module.exports = React.createClass({
         var names = _.map(this.props.authors, 'details.name');
         return (
             <span className="name">
-                {_.join(names)}
+                {_.join(names, ', ')}
                 &nbsp;
             </span>
         )

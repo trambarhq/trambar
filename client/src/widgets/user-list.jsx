@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var MemoizeWeak = require('memoizee/weak');
+var Moment = require('moment');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -35,6 +36,7 @@ module.exports = Relaks.createClass({
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
+            roles: null,
             dailyActivities: null,
 
             users: this.props.users,
@@ -47,10 +49,29 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<UserListSync {...props} />);
         return db.start().then((userId) => {
+            // load roles
+            var roleIds = _.flatten(_.map(props.users, 'role_ids'));
+            var criteria = {
+                id: _.uniq(roleIds)
+            };
+            return db.find({ schema: 'global', table: 'role', criteria });
+        }).then((roles) => {
+            props.roles = roles;
+            meanwhile.show(<UserListSync {...props} />);
+        }).then(() => {
             // load daily-activities statistics
+            var now = Moment();
+            var end = now.clone().endOf('month');
+            var start = now.clone().startOf('month').subtract(1, 'month');
+            var range = `[${start.toISOString()},${end.toISOString()}]`;
             var criteria = {
                 type: 'daily-activities',
-
+                filters: _.map(props.users, (user) => {
+                    return {
+                        user_ids: [ user.id ],
+                        time_range: range,
+                    };
+                }),
             };
             return db.find({ table: 'statistics', criteria });
         }).then((statistics) => {
@@ -66,6 +87,7 @@ var UserListSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
+        roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
 
@@ -86,8 +108,12 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 
     renderUser: function(user, index) {
+        var roles = this.props.roles ? findRoles(this.props.roles, user.role_ids) : null;
+        var dailyActivities = this.props.dailyActivities ? findDailyActivities(this.props.dailyActivities, user.id) : null;
         var userProps = {
             user,
+            roles,
+            dailyActivities,
             currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
@@ -104,5 +130,17 @@ var UserListSync = module.exports.Sync = React.createClass({
 });
 
 var sortUsers = MemoizeWeak(function(users) {
-    return _.orderBy(users, [ 'ptime' ], [ 'desc' ]);
+    return _.orderBy(users, [ 'details.name' ], [ 'asc' ]);
+});
+
+var findRoles = MemoizeWeak(function(roles, roleIds) {
+    return _.map(_.uniq(roleIds), (roleId) => {
+       return _.find(roles, { id: roleId }) || {}
+    });
+});
+
+var findDailyActivities = MemoizeWeak(function(dailyActivities, userId) {
+    return _.find(dailyActivities, (stats) => {
+        return stats.filters.user_ids[0] === userId;
+    });
 });

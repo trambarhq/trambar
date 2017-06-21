@@ -51,7 +51,8 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
         var props = {
             stories: null,
             currentUserId: null,
@@ -67,7 +68,7 @@ module.exports = Relaks.createClass({
             // load current user
             var criteria = {};
             criteria.id = userId;
-            return db.findOne({ table: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((currentUser) => {
             props.currentUser = currentUser;
             meanwhile.check();
@@ -81,11 +82,9 @@ module.exports = Relaks.createClass({
             if (searchString) {
                 criteria.search = searchString;
             }
-            return db.find({ table: 'user', criteria });
+            return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
-            // save last piece of data and render the page with everything
-            props.stories = users
-            props.loading = false;
+            props.users = users
             return <PeoplePageSync {...props} />;
         });
     }
@@ -107,7 +106,6 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
     render: function() {
         return (
             <div>
-                {this.renderEditors()}
                 {this.renderList()}
             </div>
         );

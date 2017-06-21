@@ -20,7 +20,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         user: PropTypes.object.isRequired,
-        story: PropTypes.object.isRequired,
+        story: PropTypes.object,
         currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -73,6 +73,7 @@ module.exports = React.createClass({
     renderStory: function() {
         var props = {
             user: this.props.user,
+            roles: this.props.roles,
             story: this.props.story,
 
             database: this.props.database,
