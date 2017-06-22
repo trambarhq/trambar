@@ -3,10 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var BlobReader = require('utils/blob-reader');
 var JpegAnalyser = require('media/jpeg-analyser');
 
-var Database = require('data/database');
-
 module.exports = React.createClass({
-    displayName: 'RouteManager',
+    displayName: 'LocalImageDisplay',
     propTypes: {
         file: PropTypes.instanceOf(Blob),
         clippingRect: PropTypes.object,
@@ -20,6 +18,9 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.file !== nextProps.file) {
             this.load(nextProps.file);
+        }
+        if (this.clippingRect !== nextProps.clippingRect) {
+            this.drawImage(this.image, this.orientation, nextProps.clippingRect);
         }
     },
 
@@ -70,18 +71,6 @@ module.exports = React.createClass({
     drawImage: function(image, orientation, rect) {
         var imageWidth = image.naturalWidth;
     	var imageHeight = image.naturalHeight;
-        if (!rect) {
-            rect = {
-                left: 0,
-                top: 0,
-                width: (orientation < 5) ? imageWidth : imageHeight,
-                height: (orientation < 5) ? imageHeight : imageWidth,
-            };
-        }
-        var canvas = this.refs.canvas;
-        canvas.width = rect.width;
-    	canvas.height = rect.height;
-        var context = canvas.getContext('2d');
     	var matrix;
     	switch (orientation) {
     		case 1:
@@ -119,23 +108,29 @@ module.exports = React.createClass({
     	}
         // clipping rect has coordinates in post-transform space
         // need to map them to the pre-transform space
-    	var inverse = invert(matrix);
-    	var corner1 = [ rect.left, rect.top ];
-    	var corner2 = [ rect.left + rect.width, rect.top + rect.height ];
-    	var srcCorner1 = transform(inverse, corner1);
-    	var srcCorner2 = transform(inverse, corner2);
-    	var [x1, y1] = srcCorner1;
-    	var [x2, y2] = srcCorner2;
-    	var width = Math.abs(x2 - x1);
-    	var height = Math.abs(y2 - y1);
-    	var left = Math.min(x1, x2);
-    	var top = Math.min(y1, y2);
-        // set transform matrix of context and draw image on canvas
+        if (!rect) {
+            rect = {
+                left: 0,
+                top: 0,
+                width: (orientation < 5) ? imageWidth : imageHeight,
+                height: (orientation < 5) ? imageHeight : imageWidth,
+            };
+        }
+        var inverse = invert(matrix);
+    	var src = transformRect(inverse, rect);
+    	var dst = transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
+        var canvas = this.refs.canvas;
+    	canvas.width = dst.width;
+    	canvas.height = dst.height;
+    	var context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
-        context.drawImage(image, left, top, width, height, left, top, width, height);
+        context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
 
+        this.image = image;
         this.width = rect.width;
         this.height = rect.height;
+        this.naturalWidth = imageWidth;
+        this.naturalHeight = imageHeight;
         this.orientation = orientation;
     },
 
@@ -188,4 +183,25 @@ function transform(m, p) {
 		a * x + c * y + e,
 		b * x + d * y + f,
 	];
+}
+
+/**
+ * Transform a rectangle using affine matrix
+ *
+ * @param  {Array<Number>} m
+ * @param  {Object} r
+ *
+ * @return {Object}
+ */
+function transformRect(m, r) {
+	var c1 = [ r.left, r.top ];
+	var c2 = [ r.left + r.width, r.top + r.height ];
+	c1 = transform(m, c1);
+	c2 = transform(m, c2);
+	return {
+		width: Math.abs(c2[0] - c1[0]),
+		height: Math.abs(c2[1] - c1[1]),
+		left: Math.min(c2[0], c1[0]),
+		top: Math.min(c2[1], c1[1]),
+	};
 }

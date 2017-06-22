@@ -13,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
+var LocalImageCropper = require('media/local-image-cropper');
 
 require('./story-media-editor.scss');
 
@@ -96,7 +97,19 @@ module.exports = React.createClass({
     },
 
     renderPreview: function() {
-
+        var image = _.get(this.props.story, 'details.images.0');
+        if (image && image.file) {
+            var props = {
+                file: image.file,
+                clippingRect: {
+                    left: 10,
+                    top: 10,
+                    width: 300,
+                    height: 300,
+                }
+            };
+            return <LocalImageCropper {...props} />;
+        }
     },
 
     /**

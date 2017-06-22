@@ -83,7 +83,7 @@ function beShort(b1, b2) {
 	return b1 << 8 | b2;
 }
 
-function leShort() {
+function leShort(b1, b2) {
 	return b2 << 8 | b1;
 }
 
@@ -91,7 +91,7 @@ function beLong(b1, b2, b3, b4) {
 	return b1 << 24 | b2 << 16 | b3 << 8 | b4;
 }
 
-function leLong() {
+function leLong(b1, b2, b3, b4) {
 	return b4 << 24 | b3 << 16 | b2 << 8 | b1;
 }
 
