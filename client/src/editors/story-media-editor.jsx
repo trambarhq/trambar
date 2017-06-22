@@ -5,6 +5,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var BlobReader = require('utils/blob-reader');
+
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
@@ -60,10 +62,16 @@ module.exports = React.createClass({
             icon: 'video-camera',
             onClick: this.handleVideoClick,
         };
+        var selectButtonProps = {
+            label: t('story-file'),
+            icon: 'file',
+            onChange: this.handleFileSelect,
+        }
         return (
             <div>
                 <Button {...photoButtonProps} />
                 <Button {...videoButtonProps} />
+                <FileButton {...selectButtonProps} />
             </div>
         );
     },
@@ -106,6 +114,15 @@ module.exports = React.createClass({
         }
     },
 
+    attachImage: function(image) {
+        var story = _.cloneDeep(this.props.story);
+        if (!story.details.images) {
+            story.details.images = [];
+        }
+        story.details.images.push(image);
+        this.triggerChangeEvent(story);
+    },
+
     /**
      * Called when user click on photo button
      *
@@ -136,14 +153,20 @@ module.exports = React.createClass({
     handlePhotoCapture: function(evt) {
         if (process.env.PLATFORM === 'browser') {
             this.setState({ capturingPhoto: false });
+            this.attachImage(evt.image);
+        }
+    },
 
-            var image = evt.image;
-            var story = _.cloneDeep(this.props.story);
-            if (!story.details.images) {
-                story.details.images = [];
-            }
-            story.details.images.push(image);
-            this.triggerChangeEvent(story);
+    handleFileSelect: function(evt) {
+        var file = evt.target.files[0];
+        if (file) {
+            return BlobReader.loadImage(file).then((img) => {
+                var type = file.type;
+                var width = img.naturalWidth;
+                var height = img.naturalHeight;
+                var image = { type, file, width, height };
+                this.attachImage(image);
+            });
         }
     },
 });
@@ -164,5 +187,25 @@ function Button(props) {
             <i className={props.icon ? `fa fa-${props.icon}` : null}/>
             <span className="label">{props.label}</span>
         </div>
+    );
+}
+
+function FileButton(props) {
+    if (props.hidden) {
+        return null;
+    }
+    var classNames = [ 'button' ];
+    if (props.className) {
+        classNames.push(props.className);
+    }
+    if (props.highlighted) {
+        classNames.push('highlighted');
+    }
+    return (
+        <label className={classNames.join(' ')}>
+            <i className={props.icon ? `fa fa-${props.icon}` : null}/>
+            <span className="label">{props.label}</span>
+            <input type="file" value="" onChange={props.onChange} />
+        </label>
     );
 }

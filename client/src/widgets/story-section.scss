@@ -1,6 +1,6 @@
 .story-section {
     margin: 0 0 0 0;
-    
+
     .header {
         background-color: #211a1a;
         padding: 0.5em 0.5em 0.4em 0.5em;
@@ -29,6 +29,13 @@
             .label {
                 font-size: 0.9em;
                 margin-left: 0.3em;
+            }
+
+            INPUT[type="file"] {
+                position: absolute;
+                z-index: -50000;
+                width: 1px;
+                height: 1px;
             }
         }
 

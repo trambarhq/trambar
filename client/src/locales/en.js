@@ -10,7 +10,7 @@ module.exports = function(languageCode) {
         'photo-capture-accept': 'Accept',
         'photo-capture-cancel': 'Cancel',
         'photo-capture-retake': 'Retake',
-        'photo-capture-snap': 'Snap',        
+        'photo-capture-snap': 'Snap',
 
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
@@ -21,6 +21,7 @@ module.exports = function(languageCode) {
         },
         'story-cancel': 'Cancel',
         'story-comment': 'Comment',
+        'story-file': 'File',
         'story-like': 'Like',
         'story-photo': 'Photo',
         'story-post': 'Post',
