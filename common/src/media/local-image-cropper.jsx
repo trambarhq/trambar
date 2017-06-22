@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
+var ComponentRefs = require('utils/component-refs');
 
 var LocalImageDisplay = require('media/local-image-display');
 
@@ -13,6 +14,10 @@ module.exports = React.createClass({
         clippingRect: PropTypes.object.isRequired,
         onChange: PropTypes.func,
     },
+    components: ComponentRefs({
+        container: HTMLElement,
+        image: LocalImageDisplay,
+    }),
 
     getInitialState: function() {
         return {
@@ -27,17 +32,18 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var setters = this.components.setters;
         var containerProps = {
-            ref: this.setDOMNode,
+            ref: setters.container,
             className: 'local-image-cropper',
             onMouseDown: this.handleMouseDown,
             onMouseUp: this.handleMouseUp,
             onWheel: this.handleMouseWheel,
         };
         var imageProps = {
+            ref: setters.image,
             file: this.props.file,
             clippingRect: this.state.clippingRect,
-            onLoad: this.handleImageLoad,
         };
         return (
             <div {...containerProps}>
@@ -46,12 +52,7 @@ module.exports = React.createClass({
         );
     },
 
-    setDOMNode: function(node) {
-        this.domNode = node;
-    },
-
     componentWillUnmount: function() {
-        this.domNode = null;
         if (this.dragStart) {
             this.handleMouseUp();
         }
@@ -61,6 +62,9 @@ module.exports = React.createClass({
     },
 
     triggerChangeEvent: function(clippingRect) {
+        if (!_.isEqual(this.props.clippingRect, clippingRect)) {
+            return;
+        }
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -70,33 +74,17 @@ module.exports = React.createClass({
         }
     },
 
-    triggerChangeEventDeferred: function(clippingRect) {
-        if (this.changeTimeout) {
-            clearTimeout(this.changeTimeout);
-        }
-        this.changeTimeout = setTimeout(() => {
-            this.triggerChangeEvent(clippingRect);
-        }, 1000)
-    },
-
-    handleImageLoad: function(evt) {
-        this.imageSize = {
-            width: evt.target.width,
-            height: evt.target.height,
-            naturalWidth: evt.target.naturalWidth,
-            naturalHeight: evt.target.naturalHeight,
-        };
-    },
-
     handleMouseDown: function(evt) {
-        var rect = this.domNode.getBoundingClientRect();
+        var image = this.components.image;
+        var container = this.components.container;
+        var rect = container.getBoundingClientRect();
         this.dragStart = {
             clippingRect: this.state.clippingRect,
             pageX: evt.pageX,
             pageY: evt.pageY,
             scale: {
-                x: this.imageSize.width / rect.width,
-                y: this.imageSize.height / rect.height,
+                x: image.width / rect.width,
+                y: image.height / rect.height,
             }
         };
         document.addEventListener('mousemove', this.handleMouseMove);
@@ -113,39 +101,40 @@ module.exports = React.createClass({
             x: evt.pageX - this.dragStart.pageX,
             y: evt.pageY - this.dragStart.pageY,
         };
+        var image = this.components.image;
         var clippingRect = _.clone(this.dragStart.clippingRect);
         clippingRect.left -= Math.round(diff.x * this.dragStart.scale.x);
         clippingRect.top -= Math.round(diff.y * this.dragStart.scale.y);
 
         // keep rect within the image
-        constrainPosition(clippingRect, this.imageSize.naturalWidth, this.imageSize.naturalHeight);
+        constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
         this.setState({ clippingRect });
     },
 
     handleMouseUp: function(evt) {
         document.removeEventListener('mousemove', this.handleMouseMove);
-        if (!_.isEqual(this.props.clippingRect, this.state.clippingRect)) {
-            this.triggerChangeEventDeferred(this.state.clippingRect);
-        }
+        this.triggerChangeEvent(this.state.clippingRect);
         this.dragStart = null;
     },
 
     handleMouseWheel: function(evt) {
         evt.preventDefault();
 
-        var rect = this.domNode.getBoundingClientRect();
+        var image = this.components.image;
+        var container = this.components.container;
+        var rect = container.getBoundingClientRect();
         var scale = {
-            x: this.imageSize.width / rect.width,
-            y: this.imageSize.height / rect.height,
+            x: image.width / rect.width,
+            y: image.height / rect.height,
         };
         var delta = (evt.deltaY * scale.y) / 4;
         var clippingRect = _.clone(this.state.clippingRect);
         // prevent expansion of the clipping rect that'd that it outside the image
-        if (clippingRect.width + delta > this.imageSize.naturalWidth) {
-            delta = this.imageSize.naturalWidth - clippingRect.width;
+        if (clippingRect.width + delta > image.naturalWidth) {
+            delta = image.naturalWidth - clippingRect.width;
         }
-        if (clippingRect.height + delta > this.imageSize.naturalHeight) {
-            delta = this.imageSize.naturalHeight - clippingRect.height;
+        if (clippingRect.height + delta > image.naturalHeight) {
+            delta = image.naturalHeight - clippingRect.height;
         }
         clippingRect.width += delta;
         clippingRect.height += delta;
@@ -156,14 +145,14 @@ module.exports = React.createClass({
             y: evt.pageY - rect.top
         };
         var diff = {
-            x: cursorPos.x * (delta / this.imageSize.width),
-            y: cursorPos.y * (delta / this.imageSize.height),
+            x: cursorPos.x * (delta / image.width),
+            y: cursorPos.y * (delta / image.height),
         };
         clippingRect.left -= Math.round(diff.x * scale.x);
         clippingRect.top -= Math.round(diff.y * scale.y);
-        constrainPosition(clippingRect, this.imageSize.naturalWidth, this.imageSize.naturalHeight);
+        constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
         this.setState({ clippingRect });
-        this.triggerChangeEventDeferred(clippingRect);
+        this.triggerChangeEvent(clippingRect);
 
         // if the zooming occur during dragging, update the drag-start state
         if (this.dragStart) {
