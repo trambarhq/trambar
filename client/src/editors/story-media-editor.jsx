@@ -97,16 +97,13 @@ module.exports = React.createClass({
     },
 
     renderPreview: function() {
-        var image = _.get(this.props.story, 'details.images.0');
-        if (image && image.file) {
+        var resources = _.get(this.props.story, 'details.resources');
+        var image = _.find(resources, { type: 'image' });
+        if (image && image.file instanceof Blob) {
             var props = {
                 file: image.file,
-                clippingRect: {
-                    left: 10,
-                    top: 10,
-                    width: 300,
-                    height: 300,
-                }
+                clippingRect: image.clip || getDefaultClippingRect(image),
+                onChange: this.handleClipRectChange,
             };
             return <LocalImageCropper {...props} />;
         }
@@ -129,10 +126,13 @@ module.exports = React.createClass({
 
     attachImage: function(image) {
         var story = _.cloneDeep(this.props.story);
-        if (!story.details.images) {
-            story.details.images = [];
+        if (!story.details.resources) {
+            story.details.resources = [];
         }
-        story.details.images.push(image);
+        var res = _.clone(image);
+        res.type = 'image';
+        res.clip = getDefaultClippingRect(image);
+        story.details.resources.push(res);
         this.triggerChangeEvent(story);
     },
 
@@ -159,7 +159,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called after a user has taken a photo
+     * Called after user has taken a photo
      *
      * @param  {Object} evt
      */
@@ -170,6 +170,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called after user has selected a file
+     *
+     * @param  {Event} evt
+     */
     handleFileSelect: function(evt) {
         var file = evt.target.files[0];
         if (file) {
@@ -181,6 +186,22 @@ module.exports = React.createClass({
                 this.attachImage(image);
             });
         }
+    },
+
+    /**
+     * Called after user has made adjustments to an image's clipping rect
+     *
+     * @param  {Object} evt
+     */
+    handleClipRectChange: function(evt) {
+        var file = evt.target.props.file;
+        var story = _.cloneDeep(this.props.story);
+        var resources = _.get(story, 'details.resources');
+        var res = _.find(resources, { file });
+        if (res) {
+            res.clip = evt.rect;
+        }
+        this.triggerChangeEvent(story);
     },
 });
 
@@ -221,4 +242,25 @@ function FileButton(props) {
             <input type="file" value="" onChange={props.onChange} />
         </label>
     );
+}
+
+/**
+ * Return a clipping rect that centers the image
+ *
+ * @param  {Object} image
+ *
+ * @return {Object}
+ */
+function getDefaultClippingRect(image) {
+    var left, top, width, height;
+    if (image.width > image.height) {
+        width = height = image.height;
+        left = Math.floor((image.width - width) / 2);
+        top = 0;
+    } else {
+        width = height = image.width;
+        left = 0;
+        top = Math.floor((image.height - height) / 2);
+    }
+    return { left, top, width, height };
 }

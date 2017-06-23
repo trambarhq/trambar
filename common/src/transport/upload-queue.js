@@ -6,6 +6,10 @@ function UploadQueue(uploadManager) {
         return uploadManager.attachResources(object);
     };
 
+    this.downloadNextResource = function(object) {
+        return uploadManager.downloadNextResource(object);
+    },
+
     this.queueResources = function(object) {
         return uploadManager.queueResources(object);
     };

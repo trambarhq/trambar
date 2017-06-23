@@ -171,7 +171,7 @@ module.exports = _.create(Data, {
             // set the ptime if published is set and there're no outstanding
             // media tasks
             if (object.published && !object.ptime) {
-                var taskIds = getTaskIds(objects);
+                var taskIds = getTaskIds(object);
                 if (_.isEmpty(taskIds)) {
                     object.ptime = Moment().toISOString();
                 }
@@ -211,28 +211,12 @@ module.exports = _.create(Data, {
  */
 function getTaskIds(object) {
     var taskIds = [];
-    var resourceLists = getResources(object);
-    _.forIn(resourceLists, (resources) => {
-        _.each(resources, (res) => {
+    if (object && object.details) {
+        _.each(object.details.resources, (res) => {
             if (res.task_id) {
                 taskIds.push(res.task_id);
             }
         });
-    });
+    }
     return taskIds;
-}
-
-/**
- * Return list of media objects
- *
- * @param  {Object} object
- *
- * @return {Object}
- */
-function getResources(object) {
-    return _.pickBy({
-        image: _.get(object, 'details.images'),
-        video: _.get(object, 'details.videos'),
-        website: _.get(object, 'details.websites'),
-    }, 'length');
 }

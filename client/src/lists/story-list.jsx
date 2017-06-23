@@ -74,7 +74,7 @@ module.exports = Relaks.createClass({
 
     updateStoryDrafts: function(prevDrafts, nextDrafts, currentUser) {
         nextDrafts = nextDrafts ? sortStoryDrafts(nextDrafts, currentUser) : [];
-        var storyDrafts = _.each(nextDrafts, (nextDraft) => {
+        var storyDrafts = _.map(nextDrafts, (nextDraft) => {
             var currentDraft = _.find(this.state.storyDrafts, { id: nextDraft.id });
             if (!currentDraft) {
                 // maybe it's the saved copy of a new story
@@ -89,8 +89,15 @@ module.exports = Relaks.createClass({
                 }
                 if (currentDraft !== prevDraft) {
                     // merge changes into remote copy
-                    return Merger.mergeObjects(currentDraft, nextDraft, prevDraft);
+                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, prevDraft);
                 }
+            }
+
+            // reattach blobs that are lost when the object is saved
+            var queue = this.props.queue;
+            if (!queue.attachResources(nextDraft)) {
+                // not every file is available locally
+                this.downloadStoryResources(nextDraft);
             }
             return nextDraft;
         });
@@ -106,6 +113,28 @@ module.exports = Relaks.createClass({
             user_ids: currentUser ? [ currentUser.id ] : [],
             details: {}
         };
+    },
+
+    downloadStoryResources: function(story) {
+        var queue = this.props.queue;
+        return queue.downloadNextResource(story).then((succeeded) => {
+            if (succeeded) {
+                // find the object again as it could have changed during
+                // the time it takes to download the file
+                var storyDrafts = _.slice(this.state.storyDrafts);
+                var index = _.findIndex(storyDrafts, { id: story.id });
+                var currentDraft = storyDrafts[index];
+                if (currentDraft) {
+                    var nextDraft = _.clone(currentDraft);
+                    if (!queue.attachResources(nextDraft)) {
+                        // more files to download
+                        this.downloadStoryResources(nextDraft);
+                    }
+                    storyDrafts[index] = nextDraft;
+                    this.setState({ storyDrafts });
+                }
+            }
+        });
     },
 
     renderAsync: function(meanwhile) {

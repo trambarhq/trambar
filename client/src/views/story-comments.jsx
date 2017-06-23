@@ -121,7 +121,7 @@ module.exports = React.createClass({
     renderReaction: function(reaction) {
         var props = {
             reaction,
-            respondent: findUser(this.props.respondents, reaction.user_id),
+            respondent: this.props.respondents ? findUser(this.props.respondents, reaction.user_id) : null,
             currentUser: this.props.currentUser,
             locale: this.props.locale,
             theme: this.props.theme,

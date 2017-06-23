@@ -150,11 +150,7 @@ function handleImageUpload(req, res) {
                 if (accessor) {
                     return accessor.findOne(db, schema, { id }, 'id, details').then((row) => {
                         var params = { url, file: undefined };
-                        var images = row.details.images;
-                        if (!images && row.details.profile_image) {
-                            images = [ row.details.profile_image ];
-                        }
-                        updateResources(images, taskId, params);
+                        updateResources(row, taskId, params);
                         return accessor.updateOne(db, schema, row);
                     }).return(url);
                 }
@@ -384,7 +380,8 @@ function getAccessor(table) {
     }
 }
 
-function updateResources(resources, taskId, params) {
+function updateResources(object, taskId, params) {
+    var resources = _.get(object, 'details.resources');
     var res = _.find(resources, { task_id: taskId });
     if (res) {
         _.assign(res, params, { task_id: undefined });

@@ -12,12 +12,19 @@ module.exports = React.createClass({
     propTypes: {
         file: PropTypes.instanceOf(Blob).isRequired,
         clippingRect: PropTypes.object.isRequired,
+        aspectRatio: PropTypes.number,
         onChange: PropTypes.func,
     },
     components: ComponentRefs({
         container: HTMLElement,
         image: LocalImageDisplay,
     }),
+
+    getDefaultProps: function() {
+        return {
+            aspectRatio: 1
+        };
+    },
 
     getInitialState: function() {
         return {
@@ -27,6 +34,13 @@ module.exports = React.createClass({
 
     componentWillReceiveProps: function(nextProps) {
         if (this.props.file !== nextProps.file || this.props.clippingRect !== nextProps.clippingRect) {
+            if (this.zoomChangeTimeout) {
+                // set the deferred zoom changes before we switch to a different image
+                clearTimeout(this.zoomChangeTimeout);
+                if (this.props.file !== nextProps.file) {
+                    this.triggerChangeEvent(this.state.clippingRect);
+                }
+            }
             this.setState({ clippingRect: nextProps.clippingRect });
         }
     },
@@ -56,13 +70,14 @@ module.exports = React.createClass({
         if (this.dragStart) {
             this.handleMouseUp();
         }
-        if (this.changeTimeout) {
-            clearTimeout(this.changeTimeout);
+        if (this.zoomChangeTimeout) {
+            clearTimeout(this.zoomChangeTimeout);
+            this.triggerChangeEvent(this.state.clippingRect);
         }
     },
 
     triggerChangeEvent: function(clippingRect) {
-        if (!_.isEqual(this.props.clippingRect, clippingRect)) {
+        if (_.isEqual(this.props.clippingRect, clippingRect)) {
             return;
         }
         if (this.props.onChange) {
@@ -129,6 +144,7 @@ module.exports = React.createClass({
         };
         var delta = (evt.deltaY * scale.y) / 4;
         var clippingRect = _.clone(this.state.clippingRect);
+        // TODO: rework this code to handle different aspect ratio
         // prevent expansion of the clipping rect that'd that it outside the image
         if (clippingRect.width + delta > image.naturalWidth) {
             delta = image.naturalWidth - clippingRect.width;
@@ -151,8 +167,15 @@ module.exports = React.createClass({
         clippingRect.left -= Math.round(diff.x * scale.x);
         clippingRect.top -= Math.round(diff.y * scale.y);
         constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
-        this.setState({ clippingRect });
-        this.triggerChangeEvent(clippingRect);
+        this.setState({ clippingRect }, () => {
+            if (this.zoomChangeTimeout) {
+                clearTimeout(this.zoomChangeTimeout);
+            }
+            this.zoomChangeTimeout = setTimeout(() => {
+                this.triggerChangeEvent(clippingRect);
+                this.zoomChangeTimeout = 0;
+            }, 1000);
+        });
 
         // if the zooming occur during dragging, update the drag-start state
         if (this.dragStart) {

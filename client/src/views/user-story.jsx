@@ -50,7 +50,8 @@ module.exports = React.createClass({
     },
 
     renderProfileImage: function() {
-        var profileImage = _.get(this.props.user, 'details.profile_image');
+        var resources = _.get(this.props.user, 'details.resources');
+        var profileImage = _.find(resources, { type: 'image' });
         var url = this.props.theme.getImageUrl(profileImage, 96, 96);
         return (
             <div className="profile-image">

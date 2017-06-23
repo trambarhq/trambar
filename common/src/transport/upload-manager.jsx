@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
 
@@ -17,28 +18,61 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             queue: [],
+            files: {},
         };
     },
 
     /**
-     * Reattach blob that disappeared after saving
+     * Reattach blob that disappeared after saving, returning false if
+     * downloading of files from server is required
      *
      * @param  {Object} object
+     *
+     * @return {Boolean}
      */
     attachResources: function(object) {
-        var resourceLists = getResources(object);
-        _.forIn(resourceLists, (resources, type) => {
-            _.each(resources, (res) => {
-                if (res.file && _.isEmpty(res.file)) {
-                    if (res.task_id) {
-                        var transfer = _.find(this.state.queue, { id: taskId });
-                        if (transfer && transfer.file) {
-                            res.file = transfer.file;
-                        }
+        var resources = _.get(object, 'details.resources');
+        var downloadingRequired = false;
+        _.each(resources, (res) => {
+            switch (res.type) {
+                case 'image':
+                    if (!this.attachLocalFile(res, 'file', 'url')) {
+                        downloadingRequired = true;
                     }
-                }
-            });
+                    break;
+                case 'video':
+                case 'website':
+                    if (!this.attachLocalFile(res, 'thumbnail_file', 'thumbnail_url')) {
+                        downloadingRequired = true;
+                    }
+                    break;
+            }
         });
+        return !downloadingRequired;
+    },
+
+    /**
+     * Download the file that's not available locally
+     *
+     * @param  {Object} object
+     *
+     * @return {Promise<Boolean>}
+     */
+    downloadNextResource: function(object) {
+        var resources = _.get(object, 'details.resources');
+        var downloadingRequired = false;
+        return Promise.reduce(resources, (downloaded, res) => {
+            if (downloaded) {
+                return true;
+            }
+            switch (res.type) {
+                case 'image':
+                    return this.downloadRemoteFile(res, 'file', 'url');
+                case 'video':
+                case 'website':
+                    return this.downloadRemoteFile(res, 'thumbnail_file', 'thumbnail_url');
+            }
+        }, false);
     },
 
     /**
@@ -49,44 +83,59 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     queueResources: function(object) {
-        var promises = [];
-        var resourceLists = getResources(object);
-        _.forIn(resourceLists, (resources, type) => {
-            var action;
-            switch (type) {
-                case 'image': action = 'upload image'; break;
-                case 'video': action = 'upload and transcode video'; break;
-                case 'website': action = 'generate website thumbnail'; break;
+        var tasks = [];
+        var resources = _.get(object, 'details.resources', []);
+        return Promise.each(resources, (res) => {
+            if (res.task_id) {
+                return;
             }
-            // go through each
-            _.each(resources, (res) => {
-                var params;
-                if (type === 'image' || type === 'video') {
-                    if (res.file instanceof Blob && !res.task_id) {
-                        // a local file
-                        params = { file: res.file };
-                    } else if (res.external_url && !res.task_id) {
-                        // a file at cloud-storage provider
-                        params = { url: image.external_url };
+            var action, params;
+            switch (res.type) {
+                case 'image':
+                    if (!res.url) {
+                        if (res.file instanceof Blob) {
+                            // a local file
+                            action = 'upload image';
+                            params = { file: res.file };
+                        } else if (res.external_url) {
+                            // a file at cloud-storage provider
+                            action = 'copy image';
+                            params = { url: image.external_url };
+                        }
                     }
-                } else if (type === 'website') {
-                    if (res.url && !res.thumbnail_url && !res.task_id) {
-                        // ask server to create thumbnail image
-                        params = { url: res.url };
+                    break;
+                case 'video':
+                    if (!res.url) {
+                        if (res.file instanceof Blob) {
+                            action = 'upload and transcode video';
+                            params = {
+                                file: res.file,
+                                thumbnail: res.thumbnail_file,
+                            };
+                        } else if (res.external_url) {
+                            action = 'copy and transcode video';
+                            params = { url: image.external_url };
+                        }
                     }
-                }
-                if (params) {
-                    var promise = this.queueTask(action, params).then((taskId) => {
-                        // save the task id into the object
-                        // we'll use it to update the container object when
-                        // the task is done
-                        res.task_id = taskId;
-                    });
-                    promises.push(promise);
-                }
-            });
+                    break;
+                case 'website':
+                    if (!res.thumbnail_url) {
+                        if (res.url) {
+                            action = 'generate website thumbnail';
+                            params = { url: res.url };
+                        }
+                    }
+                    break;
+            }
+            if (action && params) {
+                return this.queueTask(action, params).then((taskId) => {
+                    // save the task id into the object
+                    // we'll use it to update the container object when
+                    // the task is done
+                    res.task_id = taskId;
+                });
+            }
         });
-        return Promise.all(promises);
     },
 
     /**
@@ -95,13 +144,89 @@ module.exports = React.createClass({
      * @param  {Object} object
      */
     sendResources: function(object) {
-        var resourceLists = getResources(object);
-        _.forIn(resourceLists, (resources, type) => {
-            _.each(resources, (res) => {
-                if (res.task_id) {
-                    this.startTask(res.task_id);
-                }
-            });
+        var resources = _.get(object, 'details.resources');
+        _.each(resources, (res) => {
+            if (res.task_id) {
+                this.startTask(res.task_id);
+            }
+        });
+    },
+
+    /**
+     * Look for a file in the state and attach it to the resource object
+     *
+     * @param  {Object} res
+     * @param  {String} filePropName
+     * @param  {String} urlPropName
+     *
+     * @return {Boolean}
+     */
+    attachLocalFile: function(res, filePropName, urlPropName) {
+        if (res[filePropName] instanceof Blob) {
+            return true;
+        } else if (res.task_id) {
+            // file is still being uploaded--look for it in the queue
+            var transfer = _.find(this.state.queue, { id: res.task_id });
+            if (transfer && transfer.file) {
+                res[filePropName] = transfer.file;
+                return true;
+            } else {
+                // upload was interrupted or it's being done on another computer
+            }
+        } else if (res[urlPropName]) {
+            var url = res[urlPropName];
+            var file = this.state.files[url];
+            if (file) {
+                // file was successfully uploaded earlier or we had downloaded it
+                res[filePropName] = file;
+                console.log('Found local copy of ' + url);
+                return true;
+            } else {
+                // need to download it
+                console.log('Need to download ' + url);
+                return false;
+            }
+        } else {
+            return true;
+        }
+    },
+
+    /**
+     * Download a file and save it in the state
+     *
+     * @param  {Object} res
+     * @param  {String} filePropName
+     * @param  {String} urlPropName
+     *
+     * @return {Promise<Boolean>}
+     */
+    downloadRemoteFile: function(res, filePropName, urlPropName) {
+        return Promise.resolve().then(() => {
+            if (res[filePropName] instanceof Blob) {
+                return false;
+            } else if (res.task_id) {
+                return false;
+            } else if (res[urlPropName]) {
+                var url = res[urlPropName];
+                var route = this.props.route;
+                var server = getServerName(route.parameters);
+                var protocol = getProtocol(server);
+                var schema = route.parameters.schema;
+                var fullUrl = `${protocol}://${server}` + url;
+                var options = { responseType: 'blob' };
+                return HttpRequest.fetch('GET', fullUrl, null, options).then((blob) => {
+                    return new Promise((resolve, reject) => {
+                        var files = _.clone(this.state.files);
+                        files[url] = blob;
+                        this.setState({ files }, () => {
+                            resolve(true);
+                        });
+                    });
+                }).catch((err) => {
+                    console.error(err);
+                    return false;
+                });
+            }
         });
     },
 
@@ -158,6 +283,18 @@ module.exports = React.createClass({
         this.setState({ queue }, () => {
             this.triggerChangeEvent();
         });
+
+        if (props.done) {
+            // take it out after a minute
+            setTimeout(() => {
+                var queue = _.slice(this.state.queue);
+                var index = _.findIndex(queue, { id: taskId });
+                queue.splice(index, 1);
+                this.setState({ queue }, () => {
+                    this.triggerChangeEvent();
+                });
+            }, 60 * 1000);
+        }
     },
 
     /**
@@ -175,6 +312,7 @@ module.exports = React.createClass({
             return;
         }
         var options = {
+            responseType: 'json',
             onProgress: (evt) => {
                 this.updateTransfer(taskId, {
                     transferred: evt.loaded,
@@ -186,6 +324,9 @@ module.exports = React.createClass({
         if (transfer.file instanceof Blob) {
             payload = new FormData;
             payload.append('file', transfer.file);
+            if (transfer.thumbnail instanceof Blob) {
+                payload.append('thumbnail', transfer.thumbnail);
+            }
         } else if (transfer.url) {
             payload = { url: transfer.url };
         } else {
@@ -200,8 +341,14 @@ module.exports = React.createClass({
             case 'upload image':
                 url += `/media/images/upload/${schema}/${taskId}`;
                 break;
+            case 'copy image':
+                url += `/media/images/copy/${schema}/${taskId}`;
+                break;
             case 'upload and transcode video':
                 url += `/media/videos/upload/${schema}/${taskId}`;
+                break;
+            case 'copy and transcode video':
+                url += `/media/videos/copy/${schema}/${taskId}`;
                 break;
             case 'generate website thumbnail':
                 url += `/media/html/screenshot/${schema}/${taskId}`;
@@ -211,7 +358,22 @@ module.exports = React.createClass({
         }
         url += `?token=${transfer.token}`;
         var promise = HttpRequest.fetch('POST', url, payload, options).then((response) => {
-            this.updateTransfer(taskId, { response });
+            if (transfer.file instanceof Blob) {
+                // associate the blob with this URL so we can obtain the data
+                var files = _.clone(this.state.files);
+                var resourceUrl = _.get(response, 'url');
+                if (resourceUrl) {
+                    files[resourceUrl] = transfer.file;
+                }
+                if (transfer.thumbnail instanceof Blob) {
+                    var thumbnailUrl = _get(response, 'thumbnail_url');
+                    if (thumbnailUrl) {
+                        files[thumbnailUrl] = transfer.thumbnail;
+                    }
+                }
+                this.setState({ files });
+            }
+            this.updateTransfer(taskId, { done: true });
         });
         transfer.promise = promise;
         return promise;
@@ -261,19 +423,4 @@ function getServerName(location) {
  */
 function getProtocol(server) {
     return /^localhost\b/.test(server) ? 'http' : 'https'    ;
-}
-
-/**
- * Return list of media objects
- *
- * @param  {Object} object
- *
- * @return {Object}
- */
-function getResources(object) {
-    return _.pickBy({
-        image: _.get(object, 'details.images'),
-        video: _.get(object, 'details.videos'),
-        website: _.get(object, 'details.websites'),
-    }, 'length');
 }

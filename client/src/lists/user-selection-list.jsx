@@ -116,7 +116,8 @@ function User(props) {
     if (props.disabled) {
         classNames.push('disabled');
     }
-    var profileImage = _.get(props.user, 'details.profile_image');
+    var resources = _.get(props.user, 'details.resources');
+    var profileImage = _.find(resources, { type: 'image' });
     var imageUrl = props.theme.getImageUrl(profileImage, 24, 24);
     var name = _.get(props.user, 'details.name');
     var containerProps = {
