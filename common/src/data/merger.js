@@ -31,7 +31,9 @@ function mergeObjects(a, b, c) {
             valueD = _.cloneDeep(valueA);
         } else {
             // conflict
-            if (valueA instanceof Object || valueB instanceof Object) {
+            if (valueA instanceof Array || valueB instanceof Array) {
+                valueD = mergeArrays(valueA, valueB, valueC);
+            } else if (valueA instanceof Object || valueB instanceof Object) {
                 valueD = mergeObjects(valueA, valueB, valueC);
             } else if (typeof(valueA) === 'string' || typeof(valueB) === 'string') {
                 valueD = mergeStrings(valueA, valueB, valueC);
@@ -99,6 +101,18 @@ function mergeStrings(a, b, c) {
         }
     }
     return chosen.join('');
+}
+
+function mergeArrays(a, b, c) {
+    var d = _.slice(b);
+    if (a.length > c.length) {
+        if (_.isEqual(a.slice(0, c.length), c)) {
+            for (var i = c.length; i < a.length; i++) {
+                d.push(a[i]);
+            }
+        }
+    }
+    return d;
 }
 
 function getUnchangedRanges(before, after) {

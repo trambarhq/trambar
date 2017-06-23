@@ -20,7 +20,9 @@ module.exports = React.createClass({
             this.load(nextProps.file);
         }
         if (this.clippingRect !== nextProps.clippingRect) {
-            this.drawImage(this.image, this.orientation, nextProps.clippingRect);
+            if (this.image) {
+                this.drawImage(this.image, this.orientation, nextProps.clippingRect);
+            }
         }
     },
 
