@@ -18,6 +18,7 @@ module.exports = _.create(Data, {
         details: Object,
         type: String,       // post, commit, merge, deployment, issue, task-start, task-end, survey
         related_object_id: Number,
+        published_version_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
         published: Boolean,
@@ -56,6 +57,7 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
                 related_object_id int,
+                published_version_id int,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 published boolean NOT NULL DEFAULT false,
@@ -123,6 +125,9 @@ module.exports = _.create(Data, {
                         break;
                 }
             }
+            if (row.published_version_id) {
+                object.published_version_id = published_version_id;
+            }
             return object;
         });
     },
@@ -176,7 +181,18 @@ module.exports = _.create(Data, {
                     object.ptime = Moment().toISOString();
                 }
             }
-            return object;
+
+            if (object.published && original.published_version_id) {
+                // this is a temporary copy created for editing a published story
+                // save the contents to the original object and delete this
+                return this.removeOne(db, schema, object).then(() => {
+                    object.id = original.published_version_id;
+                    object.published_version_id = null;
+                    return object;
+                });
+            } else {
+                return object;
+            }
         });
     },
 
