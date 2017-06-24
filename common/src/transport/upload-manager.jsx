@@ -169,6 +169,7 @@ module.exports = React.createClass({
             var transfer = _.find(this.state.queue, { id: res.task_id });
             if (transfer && transfer.file) {
                 res[filePropName] = transfer.file;
+                console.log('Found local copy of ' + url + ' in upload queue');
                 return true;
             } else {
                 // upload was interrupted or it's being done on another computer
@@ -214,6 +215,7 @@ module.exports = React.createClass({
                 var schema = route.parameters.schema;
                 var fullUrl = `${protocol}://${server}` + url;
                 var options = { responseType: 'blob' };
+                console.log('Downloading ' + fullUrl);
                 return HttpRequest.fetch('GET', fullUrl, null, options).then((blob) => {
                     return new Promise((resolve, reject) => {
                         var files = _.clone(this.state.files);
@@ -357,6 +359,7 @@ module.exports = React.createClass({
                 return;
         }
         url += `?token=${transfer.token}`;
+        console.log('Uploading to ' + url);
         var promise = HttpRequest.fetch('POST', url, payload, options).then((response) => {
             if (transfer.file instanceof Blob) {
                 // associate the blob with this URL so we can obtain the data

@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var HttpRequest = require('transport/http-request');
+var LocalSearch = require('data/local-search');
 
 var IndexedDBCache = (process.env.PLATFORM === 'browser') ? require('data/indexed-db-cache') : null;
 var SQLiteCache = (process.env.PLATFORM === 'cordova') ? require('data/sqlite-cache') : null;
@@ -94,28 +95,37 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
-        var recentSearch = this.findRecentSearch(query);
+        var byComponent = _.get(query, 'by.constructor.displayName',)
+        query = getSearchQuery(query);
+        var recentSearch = this.findRecentSearch(query, byComponent);
         if (recentSearch) {
             this.checkSearchFreshness(recentSearch);
             return recentSearch.promise;
         } else {
-            var newSearch = this.addSearch(query);
+            var newSearch = this.addSearch(query, byComponent);
             return newSearch.promise;
         }
     },
 
     save: function(location, objects) {
         var rtime = getCurrentTime();
+        var byComponent = _.get(location, 'by.constructor.displayName',)
+        location = getSearchLocation(location);
         return this.storeRemoteObjects(location, objects).then((objects) => {
             _.each(objects, (object) => {
                 object.rtime = rtime;
             });
             this.updateCachedObjects(location, objects);
+            this.updateRecentSearchResults(location, objects);
+            this.triggerChangeEvent();
             return objects;
         });
     },
 
     remove: function(location, objects) {
+        var byComponent = _.get(location, 'by.constructor.displayName',)
+        location = getSearchLocation(location);
+        // set the deleted flag
         objects = _.map(objects, (object) => {
             object = _.clone(object);
             object.deleted = true;
@@ -123,6 +133,8 @@ module.exports = React.createClass({
         });
         return this.storeRemoteObjects(location, objects).then((objects) => {
             this.removeCachedObjects(location, objects);
+            this.removeFromRecentSearchResults(location, objects);
+            this.triggerChangeEvent();
             return objects;
         });
     },
@@ -156,21 +168,26 @@ module.exports = React.createClass({
         }
     },
 
-    findRecentSearch: function(query) {
-        // remove "by"
-        var baseQuery = getSearchQuery(query);
+    /**
+     * Look for a recent search that has the same criteria
+     *
+     * @param  {Object} query
+     * @param  {String} byComponent
+     *
+     * @return {Object|null}
+     */
+    findRecentSearch: function(query, byComponent) {
         var index = _.findIndex(this.state.recentSearchResults, (search) => {
             var searchQuery = getSearchQuery(search);
-            return _.isEqual(baseQuery, searchQuery);
+            return _.isEqual(query, searchQuery);
         });
         if (index !== -1) {
             // move the matching search to the top
             var searchResultsAfter = _.slice(this.state.recentSearchResults);
             var search = searchResultsAfter[index];
-            // add the component to the "by" array so we can figure out
-            // who requested the data
-            var byComponent = _.get(query, 'by.constructor.displayName',)
             if (byComponent) {
+                // add the component to the "by" array so we can figure out
+                // who requested the data
                 if (!_.includes(search.by, byComponent)) {
                     search.by.push(byComponent);
                 }
@@ -184,33 +201,23 @@ module.exports = React.createClass({
         }
     },
 
-    replaceRecentSearch: function(before, after) {
-        var searchResultsAfter = _.slice(this.state.recentSearchResults);
-        var index = (before) ? _.indexOf(searchResultsAfter, before) : -1;
-        if (index !== -1) {
-            searchResultsAfter[index] = after;
-        } else {
-            searchResultsAfter.unshift(after);
-        }
-        while (searchResultsAfter.length > 256) {
-            searchResultsAfter.pop();
-        }
-        this.setState({ recentSearchResults: searchResultsAfter });
-    },
-
-    addSearch: function(query) {
+    /**
+     * Add search to list of recent searches
+     *
+     * @param  {Objet} query
+     * @param  {String} byComponent
+     *
+     * @return {Object}
+     */
+    addSearch: function(query, byComponent) {
         var search = _.extend({}, query, {
             start: null,
             finish: null,
             results: null,
             promise: null,
-            by: [],
+            by: byComponent ? [ byComponent ] : [],
             dirty: false,
         });
-        var byComponent = _.get(query, 'by.constructor.displayName',)
-        if (byComponent) {
-            search.by.push(byComponent);
-        }
         search.promise = this.searchLocalCache(search).then(() => {
             if (this.checkSearchValidity(search)) {
                 // there are enough records to warrent the immediate display
@@ -224,7 +231,8 @@ module.exports = React.createClass({
             }
         });
         // save the search
-        this.replaceRecentSearch(null, search);
+        var recentSearchResults = _.union(this.state.recentSearchResults, [ search ]);
+        this.setState({ recentSearchResults });
         return search;
     },
 
@@ -341,7 +349,8 @@ module.exports = React.createClass({
             search.dirty = false;
 
             // update this.state.recentSearchResults
-            this.replaceRecentSearch(search, _.clone(search));
+            var recentSearchResults = _.slice(this.state.recentSearchResults);
+            this.setState({ recentSearchResults });
 
             // update retrieval time and save to cache
             var rtime = search.finish;
@@ -459,6 +468,68 @@ module.exports = React.createClass({
         }).catch((err) => {
             console.error(err);
             return false;
+        });
+    },
+
+    updateRecentSearchResults: function(location, objects) {
+        var relevantSearches = this.getRelevantRecentSearches(location);
+        _.each(relevantSearches, (search) => {
+            _.each(objects, (object) => {
+                var index = _.sortedIndexBy(search.results, object, 'id');
+                var target = search.results[index];
+                var present = (target && target.id === object.id);
+                var match = LocalSearch.match(search.table, object, search.criteria);
+                if (target || match) {
+                    // create new array so memoized functions won't return old results
+                    search.results = _.slice(search.results);
+                    if (match && present) {
+                        // update the object with new one
+                        search.results[index] = object;
+                    } else if (match && !present) {
+                        // insert a new object
+                        search.results.splice(index, 0, object);
+                    } else if (!match && present) {
+                        // remove object from the list as it no longer
+                        // meets the criteria
+                        search.results.splice(index, 1);
+                    }
+                    search.promise = Promise.resolve(search.results);
+                }
+            });
+        });
+    },
+
+    removeFromRecentSearchResults: function(location, objects) {
+        var relevantSearches = this.getRelevantRecentSearches(location);
+        _.each(relevantSearches, (search) => {
+            _.each(objects, (object) => {
+                var index = _.sortedIndexBy(search.results, object, 'id');
+                var target = search.results[index];
+                var present = (target && target.id === object.id);
+                if (present) {
+                    // remove object from the list as it no longer
+                    // meets the criteria
+                    search.results = _.slice(search.results);
+                    search.results.splice(index, 1);
+                    search.promise = Promise.resolve(search.results);
+                }
+            });
+        });
+    },
+
+    /**
+     * Return recent searches that were done at the given location
+     *
+     * @param  {Object} location
+     *
+     * @return {Array<Object>}
+     */
+    getRelevantRecentSearches: function(location) {
+        return _.filter(this.state.recentSearchResults, (search) => {
+            var searchLocation = getSearchLocation(search);
+            if (search.results && _.isEqual(location, searchLocation)) {
+                return true;
+            }
         });
     },
 
