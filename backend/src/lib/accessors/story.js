@@ -114,6 +114,7 @@ module.exports = _.create(Data, {
                 role_ids: row.role_ids,
                 ptime: row.ptime,
                 public: row.public,
+                published: row.published,
             };
             if (row.related_object_id) {
                 switch (row.type) {

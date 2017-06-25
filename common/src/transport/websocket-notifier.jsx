@@ -21,32 +21,32 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         return {
-            url: '',
+            server: '',
             socket: null,
         };
     },
 
     connect: function(protocol, server, token) {
-        var url = `${protocol}://${server}/socket`;
-        if (this.state.url === url) {
+        if (this.state.server === server) {
             return Promise.resolve(true);
         }
         // close previous socket
         if (this.state.socket) {
             this.state.socket.close();
-            this.setState({ socket: null, url: '' });
+            this.setState({ socket: null, server: '' });
         }
         // create an object to track the connection attempt
         var attempt = this.connectionAttempt;
         if (attempt) {
-            if (attempt.url === url) {
-                // already connecting to URL
+            if (attempt.server === server) {
+                // already connecting to server
                 return attempt.promise;
             }
         }
         attempt = this.connectionAttempt = {};
-        attempt.url = url;
+        attempt.server = server;
         attempt.promise = new Promise((resolve, reject) => {
+            var url = `${protocol}://${server}/socket`;
             var socket = new SockJS(url);
             socket.onopen = (evt) => {
                 if (attempt === this.connectionAttempt) {
@@ -56,7 +56,7 @@ module.exports = React.createClass({
                         authorization: { token, locale },
                     };
                     socket.send(JSON.stringify(payload));
-                    this.setState({ socket, url }, () => {
+                    this.setState({ socket, server }, () => {
                         this.connectionAttempt = undefined;
                         resolve(true);
                     });
@@ -81,7 +81,7 @@ module.exports = React.createClass({
                     this.connectionAttempt = undefined;
                 }
                 if (this.state.socket === socket) {
-                    this.setState({ socket: null, url: '' });
+                    this.setState({ socket: null, server: '' });
                 }
             };
             socket.onerror = (evt) => {
@@ -99,6 +99,7 @@ module.exports = React.createClass({
             this.props.onNotify({
                 type: 'notify',
                 target: this,
+                server: this.state.server,
                 changes: changes
             });
         }

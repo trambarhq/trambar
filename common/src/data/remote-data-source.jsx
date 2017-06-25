@@ -572,33 +572,33 @@ module.exports = React.createClass({
         var changed = false;
         _.forIn(evt.changes, (idList, name) => {
             var parts = _.split(name, '.');
-            var schema = parts[0];
-            var table = parts[1];
-            _.each(this.state.recentSearchResults, (search) => {
-                if (search.schema === schema && search.table === table) {
-                    if (search.results) {
-                        var dirty = false;
-                        var expectedCount = getExpectedObjectCount(search.criteria);
-                        if (expectedCount === search.results.length) {
-                            // see if the ids show up in the results
-                            _.each(idList, (id) => {
-                                var index = _.sortedIndexBy(search.results, { id }, 'id');
-                                var object = search.results[index];
-                                if (object && object.id === id) {
-                                    dirty = true;
-                                    return false;
-                                }
-                            });
-                        } else {
-                            // we can't tell if new objects won't sudden show up
-                            // in the search results
+            var location = {
+                server: evt.server,
+                schema: parts[0],
+                table: parts[1]
+            };
+            var relevantSearches = this.getRelevantRecentSearches(location);
+            _.each(relevantSearches, (search) => {
+                var dirty = false;
+                var expectedCount = getExpectedObjectCount(search.criteria);
+                if (expectedCount === search.results.length) {
+                    // see if the ids show up in the results
+                    _.each(idList, (id) => {
+                        var index = _.sortedIndexBy(search.results, { id }, 'id');
+                        var object = search.results[index];
+                        if (object && object.id === id) {
                             dirty = true;
+                            return false;
                         }
-                    }
-                    if (dirty) {
-                        search.dirty = true;
-                        changed = true;
-                    }
+                    });
+                } else {
+                    // we can't tell if new objects won't sudden show up
+                    // in the search results
+                    dirty = true;
+                }
+                if (dirty) {
+                    search.dirty = true;
+                    changed = true;
                 }
             });
         });

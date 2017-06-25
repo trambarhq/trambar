@@ -116,6 +116,12 @@ module.exports = React.createClass({
                 var transaction = db.transaction(storeName, 'readwrite');
                 var path = `${server}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
+                transaction.oncomplete = (evt) => {
+                    resolve(objects);
+                };
+                transaction.onerror = (evt) => {
+                    reject(new Error(evt.message));
+                };
                 _.each(objects, (object) => {
                     var key = (local) ? object.key : `${path}/${object.id}`;
                     var record = {
@@ -124,13 +130,8 @@ module.exports = React.createClass({
                         data: object,
                     };
                     objectStore.put(record, key);
+                    console.log('caching ' + key + ', ' + storeName)
                 });
-                transaction.oncomplete = (evt) => {
-                    resolve(objects);
-                };
-                transaction.onerror = (evt) => {
-                    reject(new Error(evt.message));
-                };
             });
         });
     },
@@ -146,16 +147,17 @@ module.exports = React.createClass({
                 var transaction = db.transaction(storeName, 'readwrite');
                 var path = `${server}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
-                _.each(objects, (object) => {
-                    var key = (local) ? object.key : `${path}/${object.id}`;
-                    objectStore.delete(key);
-                });
                 transaction.oncomplete = (evt) => {
                     resolve(objects);
                 };
                 transaction.onerror = (evt) => {
                     reject(new Error(evt.message));
                 };
+                _.each(objects, (object) => {
+                    var key = (local) ? object.key : `${path}/${object.id}`;
+                    objectStore.delete(key);
+                    console.log('removing ' + key + ', ' + storeName);
+                });
             });
         });
     },
@@ -238,9 +240,9 @@ module.exports = React.createClass({
                     db.onerror = (evt) => {
                         reject(new Error(evt.message));
                     };
-                    var localStore = db.createObjectStore("local-data");
+                    var localStore = db.createObjectStore('local-data');
                     localStore.createIndex('location', 'location', { unique: false });
-                    var remoteStore = db.createObjectStore("remote-data");
+                    var remoteStore = db.createObjectStore('remote-data');
                     remoteStore.createIndex('location', 'location', { unique: false });
                     remoteStore.createIndex('server', 'server', { unique: false });
                     remoteStore.createIndex('rtime', 'data.rtime', { unique: false });

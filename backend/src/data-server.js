@@ -159,6 +159,9 @@ function handleDiscovery(req, res) {
             } else {
                 criteria.limit = 5000;
             }
+            if (criteria.deleted !== true) {
+                criteria.deleted = false;
+            }
             var accessor = getAccessor(schema, table);
             return accessor.find(db, schema, criteria, 'id, gn');
         }).then((rows) => {
