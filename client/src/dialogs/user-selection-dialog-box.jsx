@@ -47,7 +47,7 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.selection !== nextProps.selection) {
-            this.setState({ selection: this.props.selection });
+            this.setState({ selection: nextProps.selection });
         }
     },
 

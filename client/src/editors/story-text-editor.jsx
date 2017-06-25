@@ -85,13 +85,18 @@ module.exports = React.createClass({
     },
 
     renderCoauthoringButtons: function() {
+        var t = this.props.locale.translate;
+        var label;
+        if (this.props.story.user_ids.length > 1) {
+            label = t('story-add-remove-coauthor');
+        } else {
+            label = t('story-add-coauthor');
+        }
         return (
             <div>
                 <span className="button" onClick={this.handleCoauthoringClick}>
                     <i className="fa fa-plus-square" />
-                    <span className="label">
-                        Co-write post with a colleague
-                    </span>
+                    <span className="label">{label}</span>
                 </span>
             </div>
         )
@@ -122,6 +127,7 @@ module.exports = React.createClass({
         }
         var props = {
             value: text,
+            lang: this.props.languageCode,
             onChange: this.handleTextChange,
         };
         return <textarea {...props} />;

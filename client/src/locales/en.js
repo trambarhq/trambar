@@ -19,6 +19,8 @@ module.exports = function(languageCode) {
             var users = ($1 === 1) ? `${$1} user` : `${$1} users`;
             return `${users} reacted to this story`;
         },
+        'story-add-coauthor': 'Add coauthor',
+        'story-add-remove-coauthor': 'Remove coauthor',
         'story-cancel': 'Cancel',
         'story-comment': 'Comment',
         'story-file': 'File',
