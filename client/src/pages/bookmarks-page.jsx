@@ -73,7 +73,6 @@ module.exports = Relaks.createClass({
             // load boomarks
             var criteria = {};
             criteria.target_user_id = _.get(props.currentUser, 'id', 0);
-            console.log(criteria);
             return db.find({ table: 'bookmark', criteria });
         }).then((bookmarks) => {
             props.bookmarks = bookmarks;

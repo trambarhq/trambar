@@ -130,7 +130,6 @@ module.exports = React.createClass({
                         data: object,
                     };
                     objectStore.put(record, key);
-                    console.log('caching ' + key + ', ' + storeName)
                 });
             });
         });
@@ -156,7 +155,6 @@ module.exports = React.createClass({
                 _.each(objects, (object) => {
                     var key = (local) ? object.key : `${path}/${object.id}`;
                     objectStore.delete(key);
-                    console.log('removing ' + key + ', ' + storeName);
                 });
             });
         });

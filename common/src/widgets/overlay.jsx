@@ -36,7 +36,6 @@ module.exports = React.createClass({
             }
         } else if (prevProps.children !== this.props.children) {
             if (this.props.show) {
-                console.log('redraw');
                 this.redraw();
             }
         }
