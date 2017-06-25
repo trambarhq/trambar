@@ -24,6 +24,8 @@ module.exports = function(languageCode) {
                 return `${$1} человек отреагировало на новости`;
             }
         },
+        'story-add-coauthor': 'Добавить соавтора',
+        'story-add-remove-coauthor': 'Добавить/удалить соавтора',
         'story-cancel': 'Отмена',
         'story-comment': 'Комментировать',
         'story-like': 'Любить',

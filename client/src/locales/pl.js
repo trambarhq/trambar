@@ -24,6 +24,8 @@ module.exports = function(languageCode) {
                 return `${$1} osób zareagowało na wiadomość`;
             }
         },
+        'story-add-coauthor': 'Dodaj współautora',
+        'story-add-remove-coauthor': 'Dodaj/Usuń współautora',
         'story-cancel': 'Anuluj',
         'story-comment': 'Komentuj',
         'story-like': 'Polub',
