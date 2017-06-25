@@ -40,56 +40,62 @@ module.exports = Relaks.createClass({
     },
 
     getInitialState: function() {
-        return {
-            blankStory: this.updateBlankStory(this.props.currentUser),
+        var nextState = {
+            blankStory: null,
             priorStoryDrafts: [],
             storyDrafts: [],
             pendingStories: [],
         };
-    },
-
-    componentWillMount: function() {
-        this.setState({
-            storyDrafts: this.updateStoryDrafts(this.state.priorStoryDrafts, this.props.storyDrafts, this.props.currentUser)
-        });
+        this.updateBlankStory(nextState, this.props);
+        this.updateStoryDrafts(nextState, this.props);
+        return nextState;
     },
 
     componentWillReceiveProps: function(nextProps) {
-        var nextState = {};
+        var nextState = _.clone(this.state);
         if (this.props.currentUser !== nextProps.currentUser) {
-            nextState.blankStory = this.updateBlankStory(nextProps.currentUser);
+            this.updateBlankStory(nextState, nextProps);
             nextState.priorStoryDrafts = [];
             nextState.storyDrafts = [];
             nextState.pendingStories = [];
-        } else if (this.props.storyDrafts !== nextProps.storyDrafts) {
-            if (nextProps.storyDrafts) {
-                nextState.storyDrafts = this.updateStoryDrafts(this.state.priorStoryDrafts, nextProps.storyDrafts, nextProps.currentUser);
-                nextState.priorStoryDrafts = nextProps.storyDrafts;
-            }
         }
-        if (!_.isEmpty(nextState)) {
-            this.setState(nextState);
+        if (this.props.storyDrafts !== nextProps.storyDrafts) {
+            this.updateStoryDrafts(nextState, nextProps);
+        }
+        var changes = _.pickBy(nextState, (value, name) => {
+            return this.state[name] !== value;
+        });
+        if (!_.isEmpty(changes)) {
+            this.setState(changes);
         }
     },
 
-    updateStoryDrafts: function(prevDrafts, nextDrafts, currentUser) {
-        nextDrafts = nextDrafts ? sortStoryDrafts(nextDrafts, currentUser) : [];
-        var storyDrafts = _.map(nextDrafts, (nextDraft) => {
-            var currentDraft = _.find(this.state.storyDrafts, { id: nextDraft.id });
+    updateStoryDrafts: function(nextState, nextProps) {
+        var priorDrafts = nextState.priorStoryDrafts;
+        var currentUser = nextProps.currentUser;
+        var currentDrafts = nextState.storyDraft;
+        var blankStory = nextState.blankStory;
+        var nextDrafts;
+        if (nextProps.storyDrafts) {
+            nextDrafts = sortStoryDrafts(nextProps.storyDrafts, currentUser);
+        }
+        nextState.priorStoryDrafts = nextProps.storyDrafts;
+        nextState.storyDrafts = _.map(nextDrafts, (nextDraft) => {
+            var currentDraft = _.find(currentDrafts, { id: nextDraft.id });
             if (!currentDraft) {
                 // maybe it's the saved copy of a new story
                 if (nextDraft.user_ids[0] === currentUser.id) {
-                    currentDraft = _.find(this.state.storyDrafts, { id: undefined });
+                    currentDraft = _.find(currentDrafts, { id: undefined });
                 }
             }
             if (currentDraft) {
-                var prevDraft = _.find(prevDrafts, { id: nextDraft.id });
-                if (!prevDraft) {
-                    prevDraft = this.state.blankStory;
+                var priorDraft = _.find(priorDrafts, { id: nextDraft.id });
+                if (!priorDraft) {
+                    priorDrafts = blankStory;
                 }
                 if (currentDraft !== prevDraft) {
                     // merge changes into remote copy
-                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, prevDraft);
+                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
                 }
             }
 
@@ -101,16 +107,20 @@ module.exports = Relaks.createClass({
             }
             return nextDraft;
         });
-        if (storyDrafts.length === 0 || storyDrafts[0].user_ids[0] !== currentUser.id) {
+        var currentUserDraft = _.find(nextState.storyDrafts, (story) => {
+            if (story.user_ids[0] === currentUser.id) {
+                return true;
+            }
+        });
+        if (!currentUserDraft) {
             // add empty story when current user doesn't have an active draft
-            storyDrafts.unshift(this.state.blankStory);
+            nextState.storyDrafts.unshift(blankStory);
         }
-        return storyDrafts;
     },
 
-    updateBlankStory: function(currentUser) {
-        return {
-            user_ids: currentUser ? [ currentUser.id ] : [],
+    updateBlankStory: function(nextState, nextProps) {
+        nextState.blankStory = {
+            user_ids: nextProps.currentUser ? [ nextProps.currentUser.id ] : [],
             details: {}
         };
     },

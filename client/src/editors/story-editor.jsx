@@ -34,20 +34,29 @@ module.exports = React.createClass({
     },
 
     getInitialState: function() {
-        return {
-            languageCode: this.updateLanguage(this.props.story, this.props.locale)
+        var nextState = {
+            languageCode: ''
         };
+        this.updateLanguage(nextState, this.props);
+        return nextState;
     },
 
     componentWillReceiveProps: function(nextProps) {
+        var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story || this.props.locale !== nextProps.locale) {
-            this.setState({
-                languageCode: this.updateLanguage(nextProps.story, nextProps.locale)
-            });
+            this.updateLanguage(nextState, nextProps);
+        }
+        var changes = _.pickBy(nextState, (value, name) => {
+            return this.state[name] !== value;
+        });
+        if (!_.isEmpty(changes)) {
+            this.setState(changes);
         }
     },
 
-    updateLanguage: function(story, locale) {
+    updateLanguage: function(nextState, nextProps) {
+        var story = nextProps.story;
+        var locale = nextProps.locale;
         var languageCode = locale.languageCode;
         var text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
@@ -59,7 +68,7 @@ module.exports = React.createClass({
                 languageCode = firstLanguage;
             }
         }
-        return languageCode;
+        nextState.languageCode = languageCode;
     },
 
     /**
