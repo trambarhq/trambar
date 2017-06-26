@@ -44,6 +44,7 @@ module.exports = Relaks.createClass({
             blankStory: null,
             priorStoryDrafts: [],
             storyDrafts: [],
+            draftAuthors: [],
             pendingStories: [],
         };
         this.updateBlankStory(nextState, this.props);
@@ -58,6 +59,7 @@ module.exports = Relaks.createClass({
             nextState.priorStoryDrafts = [];
             nextState.storyDrafts = [];
             nextState.pendingStories = [];
+            nextState.draftAuthors = [ nextProps.currentUser ];
         }
         if (this.props.storyDrafts !== nextProps.storyDrafts) {
             this.updateStoryDrafts(nextState, nextProps);
@@ -148,35 +150,26 @@ module.exports = Relaks.createClass({
         var queue = this.props.queue;
         return queue.downloadNextResource(story).then((succeeded) => {
             if (succeeded) {
-                // find the object again as it could have changed during
-                // the time it takes to download the file
-                var index = _.findIndex(this.state.storyDrafts, { id: story.id });
-                if (index !== -1) {
-                    var storyDrafts = _.slice(this.state.storyDrafts);
-                    var currentDraft = storyDrafts[index];
+                var update = function(propName) {
+                    var stories = this.state[propName];
+                    var index = _.findIndex(this.state.storyDrafts, { id: story.id });
+                    if (index === -1) {
+                        return false;
+                    }
+                    var currentDraft = stories[index];
                     var nextDraft = _.clone(currentDraft);
                     if (!queue.attachResources(nextDraft)) {
                         // more files to download
                         this.downloadStoryResources(nextDraft);
                     }
-                    storyDrafts[index] = nextDraft;
-                    this.setState({ storyDrafts });
-                } else {
-                    // maybe the story has been published before the resources
-                    // are done downloading
-                    index = _.findIndex(this.state.pendingStories, { id: story.id });
-                    if (index !== -1) {
-                        var pendingStories = _.slice(this.state.pendingStories);
-                        var currentDraft = pendingStories[index];
-                        var nextDraft = _.clone(currentDraft);
-                        if (!queue.attachResources(nextDraft)) {
-                            // more files to download
-                            this.downloadStoryResources(nextDraft);
-                        }
-                        pendingStories[index] = nextDraft;
-                        this.setState({ pendingStories });
-                    }
-                }
+                    stories = _.slice(stories);
+                    stories[index] = nextDraft;
+                    var nextState = {};
+                    nextState[propName] = stories;
+                    this.setState(nextState);
+                    return true;
+                };
+                return update('storyDrafts') || update('pendingStories');
             }
         });
     },
@@ -195,7 +188,7 @@ module.exports = Relaks.createClass({
             stories: this.props.stories,
             storyDrafts: this.state.storyDrafts,
             pendingStories: this.state.pendingStories,
-            draftAuthors: [ this.props.currentUser ],
+            draftAuthors: this.state.draftAuthors,
 
             currentUser: this.props.currentUser,
             database: this.props.database,
@@ -237,26 +230,36 @@ module.exports = Relaks.createClass({
                 _.flatten(_.map(props.storyDrafts, 'user_ids')),
                 _.flatten(_.map(props.pendingStories, 'user_ids')),
             );
-            var coauthorIds = _.uniq(userIds);
             if (props.currentUser) {
-                coauthorIds = _.difference(coauthorIds, [ props.currentUser.id ]);
+                userIds.push(props.currentUser.id);
             }
-            if (coauthorIds.length > 0) {
+            var authorIds = _.uniq(userIds);
+            if (authorIds.length > 1) {
                 var criteria = {
-                    id: coauthorIds
+                    id: authorIds
                 };
                 return db.find({ schema: 'global', table: 'user', criteria });
             }
         }).then((users) => {
             if (users) {
-                props.draftAuthors = _.concat(props.draftAuthors, users);
+                props.draftAuthors = users;
             }
             props.loading = false;
             return <StoryListSync {...props} />;
         });
     },
 
-    saveStory: function(story) {
+    saveStory: function(story, delay) {
+        if (this.autosaveTimeout) {
+            clearTimeout(this.autosaveTimeout);
+            this.autosaveTimeout = 0;
+        }
+        if (delay) {
+            this.autosaveTimeout = setTimeout(() => {
+                this.saveStory(story);
+            }, delay);
+            return;
+        }
         var queue = this.props.queue;
         return queue.queueResources(story).then(() => {
             var route = this.props.route;
@@ -285,8 +288,18 @@ module.exports = Relaks.createClass({
         var index = _.findIndex(storyDrafts, { id: story.id });
         if (index !== -1) {
             storyDrafts[index] = story;
+
+            var delay;
+            switch (evt.path) {
+                case 'details.resources':
+                case 'user_ids':
+                    delay = 0;
+                    break;
+                default:
+                    delay = 2000;
+            }
             this.setState({ storyDrafts });
-            return this.saveStory(story);
+            this.saveStory(story, delay);
         }
     },
 
@@ -320,14 +333,6 @@ module.exports = Relaks.createClass({
             this.addUserDraft(storyDrafts, this.props.currentUser, this.state.blankStory);
             this.setState({ storyDrafts });
             if (story.id > 0) {
-                return this.removeStory(story);
-            }
-        } else {
-            index = _.findIndex(this.state.pendingStories, { id: story.id });
-            if (index !== -1) {
-                var pendingStories = _.slice(this.state.pendingStories);
-                pendingStories.splice(index, 1);
-                this.setState({ pendingStories });
                 return this.removeStory(story);
             }
         }
@@ -381,7 +386,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         // always use 0 as the key for the top story, so we don't lose focus
         // when the new story acquires an id after being saved automatically
         var key = (index > 0) ? story.id : 0;
-        var authors = this.props.draftAuthors ? findUsers(this.props.draftAuthors, story.user_ids) : [];
+        var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : [];
         var editorProps = {
             story,
             authors,
@@ -407,7 +412,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     renderPendingStory: function(story, index) {
-        var authors = this.props.draftAuthors ? findUsers(this.props.draftAuthors, story.user_ids) : null;
+        var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : null;
         var storyProps = {
             story,
             authors,
@@ -428,10 +433,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     renderPublishedStory: function(story, index) {
-        var reactions = this.props.reactions ? findReactions(this.props.reactions, story.id) : null;
-        var authors = this.props.authors ? findUsers(this.props.authors, story.user_ids) : null;
-        var respondentIds = _.map(reactions, 'user_id');
-        var respondents = this.props.respondents ? findUsers(this.props.respondents, respondentIds) : null
+        var reactions = this.props.reactions ? findReactions(this.props.reactions, story) : null;
+        var authors = this.props.authors ? findAuthors(this.props.authors, story) : null;
+        var respondents = this.props.respondents ? findRespondents(this.props.respondents, reactions) : null
         var storyProps = {
             story,
             reactions,
@@ -464,12 +468,27 @@ var sortStoryDrafts = MemoizeWeak(function(stories, currentUser) {
     return _.orderBy(stories, [ ownStory, 'id' ], [ 'desc', 'desc' ]);
 });
 
-var findReactions = MemoizeWeak(function(reactions, storyId) {
-    return _.filter(reactions, { story_id: storyId });
+var findReactions = MemoizeWeak(function(reactions, story) {
+    if (story) {
+        return _.filter(reactions, { story_id: story.id });
+    } else {
+        return [];
+    }
 });
 
-var findUsers = MemoizeWeak(function(users, userIds) {
-    return _.map(_.uniq(userIds), (userId) => {
-       return _.find(users, { id: userId }) || {}
-    });
+var findAuthors = MemoizeWeak(function(users, story) {
+    if (story) {
+        return _.map(story.user_ids, (userId) => {
+            return _.find(users, { id: userId }) || {}
+        });
+    } else {
+        return [];
+    }
 });
+
+var findRespondents = MemoizeWeak(function(users, reactions) {
+    var respondentIds = _.uniq(_.map(reactions, 'user_id'));
+    return _.map(respondentIds, (userId) => {
+        return _.find(users, { id: userId }) || {}
+    });
+})

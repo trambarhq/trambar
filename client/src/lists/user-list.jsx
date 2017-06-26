@@ -108,8 +108,8 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 
     renderUser: function(user, index) {
-        var roles = this.props.roles ? findRoles(this.props.roles, user.role_ids) : null;
-        var dailyActivities = this.props.dailyActivities ? findDailyActivities(this.props.dailyActivities, user.id) : null;
+        var roles = this.props.roles ? findRoles(this.props.roles, user) : null;
+        var dailyActivities = this.props.dailyActivities ? findDailyActivities(this.props.dailyActivities, user) : null;
         var userProps = {
             user,
             roles,
@@ -133,14 +133,22 @@ var sortUsers = MemoizeWeak(function(users) {
     return _.orderBy(users, [ 'details.name' ], [ 'asc' ]);
 });
 
-var findRoles = MemoizeWeak(function(roles, roleIds) {
-    return _.map(_.uniq(roleIds), (roleId) => {
-       return _.find(roles, { id: roleId }) || {}
-    });
+var findRoles = MemoizeWeak(function(roles, user) {
+    if (user) {
+        return _.filter(_.map(user.role_ids, (roleId) => {
+            return _.find(roles, { id: roleId });
+        }));
+    } else {
+        return [];
+    }
 });
 
-var findDailyActivities = MemoizeWeak(function(dailyActivities, userId) {
-    return _.find(dailyActivities, (stats) => {
-        return stats.filters.user_ids[0] === userId;
-    });
+var findDailyActivities = MemoizeWeak(function(dailyActivities, user) {
+    if (user) {
+        return _.find(dailyActivities, (stats) => {
+            return stats.filters.user_ids[0] === userId;
+        });
+    } else {
+        return null;
+    }
 });

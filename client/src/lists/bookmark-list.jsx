@@ -174,11 +174,10 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     },
 
     renderBookmark: function(bookmark, index) {
-        var story = this.props.stories ? findStory(this.props.stories, bookmark.story_id) : null;
-        var reactions = this.props.reactions && story ? findReactions(this.props.reactions, story.id) : null;
-        var authors = this.props.authors && story ? findUsers(this.props.authors, story.user_ids) : null;
-        var respondentIds = _.map(reactions, 'user_id');
-        var respondents = this.props.respondents ? findUsers(this.props.respondents, respondentIds) : null
+        var story = this.props.stories ? findStory(this.props.stories, bookmark) : null;
+        var reactions = this.props.reactions ? findReactions(this.props.reactions, story) : null;
+        var authors = this.props.authors ? findAuthors(this.props.authors, story) : null;
+        var respondents = this.props.respondents ? findRespondents(this.props.respondents, reactions) : null
         var storyProps = {
             story,
             reactions,
@@ -213,16 +212,35 @@ var sortBookmark = MemoizeWeak(function(bookmarks) {
     return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
 });
 
-var findStory = MemoizeWeak(function(stories, storyId) {
-    return _.find(stories, { id: storyId });
+var findStory = MemoizeWeak(function(stories, bookmark) {
+    if (bookmark) {
+        return _.find(stories, { id: bookmark.story_id });
+    } else {
+        return null;
+    }
 });
 
-var findReactions = MemoizeWeak(function(reactions, storyId) {
-    return _.filter(reactions, { story_id: storyId });
+var findReactions = MemoizeWeak(function(reactions, story) {
+    if (story) {
+        return _.filter(reactions, { story_id: story.id });
+    } else {
+        return [];
+    }
 });
 
-var findUsers = MemoizeWeak(function(users, userIds) {
-    return _.map(_.uniq(userIds), (userId) => {
-       return _.find(users, { id: userId }) || {}
-    });
+var findAuthors = MemoizeWeak(function(users, story) {
+    if (story) {
+        return _.filter(_.map(story.user_ids, (userId) => {
+           return _.find(users, { id: userId });
+        }));
+    } else {
+        return [];
+    }
 });
+
+var findRespondents = MemoizeWeak(function(users, reactions) {
+    var respondentIds = _.uniq(_.map(reactions, 'user_id'));
+    return _.filter(_.map(respondentIds, (userId) => {
+        return _.find(users, { id: userId });
+    }));
+})

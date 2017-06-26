@@ -43,6 +43,7 @@ module.exports = React.createClass({
                 <header>
                     {this.renderButtons()}
                     {this.renderPhotoDialog()}
+                    {this.renderVideoDialog()}
                 </header>
                 <body>
                     {this.renderPreview()}
@@ -113,27 +114,32 @@ module.exports = React.createClass({
      * Call onChange handler
      *
      * @param  {Story} story
+     * @param  {String} path
      */
-    triggerChangeEvent: function(story) {
+    triggerChangeEvent: function(story, path) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
                 target: this,
                 story,
+                path,
             })
         }
     },
 
     attachImage: function(image) {
-        var story = _.cloneDeep(this.props.story);
-        if (!story.details.resources) {
+        var story = _.clone(this.props.story);
+        story.details = _.clone(story.details);
+        if (story.details.resources) {
+            story.details.resources = _.slice(story.details.resources);
+        } else {
             story.details.resources = [];
         }
         var res = _.clone(image);
         res.type = 'image';
         res.clip = getDefaultClippingRect(image);
         story.details.resources.push(res);
-        this.triggerChangeEvent(story);
+        this.triggerChangeEvent(story, 'details.resources');
     },
 
     /**
@@ -197,11 +203,12 @@ module.exports = React.createClass({
         var file = evt.target.props.file;
         var story = _.cloneDeep(this.props.story);
         var resources = _.get(story, 'details.resources');
-        var res = _.find(resources, { file });
-        if (res) {
+        var index = _.findIndex(resources, { file });
+        if (index !== -1) {
+            var res = resources[index];
             res.clip = evt.rect;
         }
-        this.triggerChangeEvent(story);
+        this.triggerChangeEvent(story, `details.resources.${index}.clip`);
     },
 });
 
