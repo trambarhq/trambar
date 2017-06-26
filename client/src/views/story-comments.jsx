@@ -1,5 +1,4 @@
 var React = require('react'), PropTypes = React.PropTypes;
-var MemoizeWeak = require('memoizee/weak');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -11,7 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
-var CommentView = require('views/comment-view');
+var CommentList = require('lists/comment-list');
 
 require('./story-comments.scss');
 
@@ -114,20 +113,16 @@ module.exports = React.createClass({
         if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
             return null;
         }
-        var reactions = this.props.reactions ? sortReactions(this.props.reactions) : null;
-        return _.map(reactions, this.renderReaction)
-    },
-
-    renderReaction: function(reaction) {
-        var props = {
-            reaction,
-            respondent: this.props.respondents ? findUser(this.props.respondents, reaction.user_id) : null,
+        var listProps = {
+            reactions: this.props.reactions,
+            respondents: this.props.respondents,
             currentUser: this.props.currentUser,
+            database: this.props.database,
+            route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: reaction.id,
         };
-        return <CommentView {...props} />;
+        return <CommentList {...listProps} />
     },
 
     getCurrentUserLike: function() {
@@ -170,14 +165,6 @@ module.exports = React.createClass({
     handleShowClick: function(evt) {
         this.setState({ expanded: true });
     },
-});
-
-var sortReactions = MemoizeWeak(function(reactions) {
-    return _.orderBy(reactions, [ 'ptime' ], [ 'desc' ]);
-});
-
-var findUser = MemoizeWeak(function(users, id) {
-    return _.find(users, { id });
 });
 
 function Button(props) {
