@@ -13,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
+var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
 var LocalImageCropper = require('media/local-image-cropper');
 
 require('./story-media-editor.scss');
@@ -34,6 +35,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             capturingPhoto: false,
+            capturingVideo: false,
         };
     },
 
@@ -84,17 +86,34 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderPhotoDialog: function() {
-        if (process.env.PLATFORM === 'browser') {
-            var props = {
-                show: this.state.capturingPhoto,
-                locale: this.props.locale,
-                onCapture: this.handlePhotoCapture,
-                onCancel: this.handlePhotoCancel,
-            };
-            return <PhotoCaptureDialogBox {...props} />
-        } else {
+        if (process.env.PLATFORM !== 'browser') {
             return null;
         }
+        var props = {
+            show: this.state.capturingPhoto,
+            locale: this.props.locale,
+            onCapture: this.handlePhotoCapture,
+            onCancel: this.handlePhotoCancel,
+        };
+        return <PhotoCaptureDialogBox {...props} />
+    },
+
+    /**
+     * Render dialogbox for capturing video through MediaStream API
+     *
+     * @return {ReactElement|null}
+     */
+    renderVideoDialog: function() {
+        if (process.env.PLATFORM !== 'browser') {
+            return null;
+        }
+        var props = {
+            show: this.state.capturingVideo,
+            locale: this.props.locale,
+            onCapture: this.handleVideoCapture,
+            onCancel: this.handleVideoCancel,
+        };
+        return <VideoCaptureDialogBox {...props} />
     },
 
     renderPreview: function() {
@@ -127,7 +146,7 @@ module.exports = React.createClass({
         }
     },
 
-    attachImage: function(image) {
+    attachResource: function(res) {
         var story = _.clone(this.props.story);
         story.details = _.clone(story.details);
         if (story.details.resources) {
@@ -135,11 +154,22 @@ module.exports = React.createClass({
         } else {
             story.details.resources = [];
         }
+        story.details.resources.push(res);
+        this.triggerChangeEvent(story, 'details.resources');
+    },
+
+    attachImage: function(image) {
         var res = _.clone(image);
         res.type = 'image';
         res.clip = getDefaultClippingRect(image);
-        story.details.resources.push(res);
-        this.triggerChangeEvent(story, 'details.resources');
+        attachResource(res);
+    },
+
+    attachVideo: function(video) {
+        var res = _.clone(video);
+        res.type = 'video';
+        res.clip = getDefaultClippingRect(image);
+        attachResource(res);
     },
 
     /**
@@ -173,6 +203,40 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'browser') {
             this.setState({ capturingPhoto: false });
             this.attachImage(evt.image);
+        }
+    },
+
+    /**
+     * Called when user click on video button
+     *
+     * @param  {Event} evt
+     */
+    handleVideoClick: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingVideo: true });
+        }
+    },
+
+    /**
+     * Called when user clicks x or outside the photo dialog
+     *
+     * @param  {Event} evt
+     */
+    handleVideoCancel: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingVideo: false });
+        }
+    },
+
+    /**
+     * Called after user has shot a video
+     *
+     * @param  {Object} evt
+     */
+    handleVideoCapture: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingVideo: false });
+            this.attachVideo(evt.video);
         }
     },
 

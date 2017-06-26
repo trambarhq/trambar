@@ -29,6 +29,12 @@ module.exports = function(languageCode) {
         'story-post': 'Post',
         'story-pending': 'Pending...',
         'story-video': 'Video',
+
+        'video-capture-accept': 'Accept',
+        'video-capture-cancel': 'Cancel',
+        'video-capture-retake': 'Retake',
+        'video-capture-start': 'Start',
+        'video-capture-stop': 'Stop',
     };
     var languageName = 'English';
     var scriptDirection = 'ltr';
