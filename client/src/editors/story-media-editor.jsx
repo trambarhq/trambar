@@ -162,14 +162,14 @@ module.exports = React.createClass({
         var res = _.clone(image);
         res.type = 'image';
         res.clip = getDefaultClippingRect(image);
-        attachResource(res);
+        this.attachResource(res);
     },
 
     attachVideo: function(video) {
         var res = _.clone(video);
         res.type = 'video';
         res.clip = getDefaultClippingRect(image);
-        attachResource(res);
+        this.attachResource(res);
     },
 
     /**

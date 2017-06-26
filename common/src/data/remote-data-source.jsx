@@ -779,7 +779,7 @@ function getServerName(location) {
  * @return {String}
  */
 function getProtocol(server) {
-    return /^localhost\b/.test(server) ? 'http' : 'https'    ;
+    return /^localhost\b/.test(server) ? 'http' : 'http';
 }
 
 function getExpectedObjectCount(criteria) {

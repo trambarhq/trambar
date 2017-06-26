@@ -43,7 +43,7 @@ module.exports = React.createClass({
      */
     getImageUrl: function(image, width, height) {
         var server = this.state.server;
-        var protocol = (server === 'localhost') ? 'http' : 'https';
+        var protocol = (server === 'localhost') ? 'http' : 'http';
         var filters = [];
         var baseUrl;
         if (typeof(image) === 'object') {
