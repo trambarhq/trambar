@@ -156,7 +156,7 @@ function invalidateListings(db, schema, events) {
 function findListingsImpactedByStoryChanges(db, schema, events) {
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
-            if (event.diff.published) {
+            if (event.diff.ptime) {
                 return true;
             }
         }

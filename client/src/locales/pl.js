@@ -29,6 +29,7 @@ module.exports = function(languageCode) {
         'story-cancel': 'Anuluj',
         'story-comment': 'Komentuj',
         'story-like': 'Polub',
+        'story-pending': 'Operacja w toku...',
         'story-photo': 'Zdjęcie',
         'story-post': 'Wysłaj',
         'story-video': 'Wideo',

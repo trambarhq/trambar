@@ -124,11 +124,15 @@ function matchTimeRanges(a, b) {
 }
 
 function parseRange(r) {
-    if (r.charAt(0) === '[' && r.charAt(r.length - 1) === ']' && r.indexOf(',') !== -1) {
-        return r.substr(1, r.length - 1).split(',')
+    if (r) {
+        if (r.charAt(0) === '[' && r.charAt(r.length - 1) === ']' && r.indexOf(',') !== -1) {
+            return r.substr(1, r.length - 1).split(',')
+        } else {
+            // it's actually a timestamp
+            return [ r, r ];
+        }
     } else {
-        // it's actually a timestamp
-        return [r, r];
+        return [ '', '' ];
     }
 }
 

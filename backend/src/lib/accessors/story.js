@@ -35,6 +35,8 @@ module.exports = _.create(Data, {
         published: Boolean,
         public: Boolean,
         time_range: String,
+        newer_than: String,
+        older_than: String,
     },
 
     /**
@@ -70,7 +72,7 @@ module.exports = _.create(Data, {
     },
 
     apply: function(criteria, query) {
-        var special = [ 'time_range', 'ready' ];
+        var special = [ 'time_range', 'newer_than', 'older_than', 'ready' ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
@@ -80,8 +82,12 @@ module.exports = _.create(Data, {
             conds.push(`ptime <@ $${params.length}::tsrange`);
         }
         if (criteria.newer_than !== undefined) {
-            params.push(criteria.time_range);
+            params.push(criteria.newer_than);
             conds.push(`ptime > $${params.length}`);
+        }
+        if (criteria.older_than !== undefined) {
+            params.push(criteria.older_than);
+            conds.push(`ptime < $${params.length}`);
         }
         if (criteria.ready !== undefined) {
             if (criteria.ready === true) {
@@ -183,7 +189,7 @@ module.exports = _.create(Data, {
                 }
             }
 
-            if (object.published && original.published_version_id) {
+            if (original && original.published_version_id && object.published) {
                 // this is a temporary copy created for editing a published story
                 // save the contents to the original object and delete this
                 return this.removeOne(db, schema, object).then(() => {

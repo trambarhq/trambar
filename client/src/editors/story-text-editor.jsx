@@ -37,7 +37,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             selectingCoauthor: false,
-            uncommittedText: '',
+            uncommittedText: undefined,
         };
     },
 
@@ -135,14 +135,18 @@ module.exports = React.createClass({
 
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var noText = !_.get(this.props.story, 'details.text') && !this.state.uncommittedText;
+        var publishing = _.get(this.props.story, 'published', false);
         var cancelButtonProps = {
             label: t('story-cancel'),
             onClick: this.handleCancelClick,
+            disabled: noText || publishing,
         };
         var postButtonProps = {
             label: t('story-post'),
             onClick: this.handlePostClick,
             emphasized: true,
+            disabled: noText || publishing,
         };
         return (
             <div className="buttons">
@@ -177,7 +181,8 @@ module.exports = React.createClass({
             this.props.onCommit({
                 type: 'commit',
                 target: this,
-            })
+                story: this.props.story,
+            });
         }
     },
 
@@ -191,7 +196,8 @@ module.exports = React.createClass({
             this.props.onCancel({
                 type: 'cancel',
                 target: this,
-            })
+                story: this.props.story,
+            });
         }
     },
 
@@ -200,15 +206,28 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     commitText: function() {
+        if (this.commitTextTimeout) {
+            clearTimeout(this.commitTextTimeout);
+            this.commitTextTimeout = 0;
+        }
         return new Promise((resolve, reject) => {
             var text = this.state.uncommittedText;
-            if (text) {
+            if (text !== undefined) {
                 var story = _.cloneDeep(this.props.story);
                 var lang = this.props.languageCode.substr(0, 2);
-                _.set(story, [ 'details', 'text', lang ], text);
+                if (text) {
+                    _.set(story, [ 'details', 'text', lang ], text);
+                } else {
+                    if (story.text) {
+                        delete story.text[lang];
+                        if (_.isEmpty(story.text)) {
+                            delete story.text;
+                        }
+                    }
+                }
                 this.triggerChangeEvent(story);
-                this.setState({ uncommittedText: '' }, () => {
-                    resolve();
+                this.setState({ uncommittedText: undefined }, () => {
+                    setTimeout(resolve, 50);
                 });
             } else {
                 resolve();

@@ -27,6 +27,7 @@ module.exports = function(languageCode) {
         'story-like': 'Like',
         'story-photo': 'Photo',
         'story-post': 'Post',
+        'story-pending': 'Pending...',
         'story-video': 'Video',
     };
     var languageName = 'English';

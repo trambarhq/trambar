@@ -41,6 +41,8 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             recentSearchResults: [],
+            recentStorageResults: [],
+            recentRemovalResults: [],
         };
     },
 
@@ -108,21 +110,36 @@ module.exports = React.createClass({
     },
 
     save: function(location, objects) {
-        var rtime = getCurrentTime();
+        var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
         return this.storeRemoteObjects(location, objects).then((objects) => {
+            var endTime = getCurrentTime();
             _.each(objects, (object) => {
-                object.rtime = rtime;
+                object.startTime = startTime;
             });
             this.updateCachedObjects(location, objects);
             this.updateRecentSearchResults(location, objects);
             this.triggerChangeEvent();
+
+            var recentStorageResults = _.clone(this.state.recentStorageResults);
+            recentStorageResults.unshift({
+                start: startTime,
+                finish: endTime,
+                duration: getTimeElapsed(startTime, endTime),
+                results: objects,
+                by: byComponent,
+            });
+            while (recentStorageResults.length > 32) {
+                recentStorageResults.pop();
+            }
+            this.setState({ recentStorageResults });
             return objects;
         });
     },
 
     remove: function(location, objects) {
+        var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
         // set the deleted flag
@@ -132,9 +149,23 @@ module.exports = React.createClass({
             return object;
         });
         return this.storeRemoteObjects(location, objects).then((objects) => {
+            var endTime = getCurrentTime();
             this.removeCachedObjects(location, objects);
             this.removeFromRecentSearchResults(location, objects);
             this.triggerChangeEvent();
+
+            var recentRemovalResults = _.clone(this.state.recentRemovalResults);
+            recentRemovalResults.unshift({
+                start: startTime,
+                finish: endTime,
+                duration: getTimeElapsed(startTime, endTime),
+                results: objects,
+                by: byComponent,
+            });
+            while (recentRemovalResults.length > 32) {
+                recentRemovalResults.pop();
+            }
+            this.setState({ recentRemovalResults });
             return objects;
         });
     },
@@ -231,7 +262,11 @@ module.exports = React.createClass({
             }
         });
         // save the search
-        var recentSearchResults = _.union(this.state.recentSearchResults, [ search ]);
+        var recentSearchResults = _.slice(this.state.recentSearchResults);
+        recentSearchResults.unshift(search);
+        while (recentSearchResults.length > 256) {
+            recentSearchResults.pop();
+        }
         this.setState({ recentSearchResults });
         return search;
     },
@@ -571,9 +606,13 @@ module.exports = React.createClass({
     handleChangeNotification: function(evt) {
         var changed = false;
         _.forIn(evt.changes, (idList, name) => {
+            var server = evt.server;
+            if (server === window.location.hostname) {
+                server = '~';
+            }
             var parts = _.split(name, '.');
             var location = {
-                server: evt.server,
+                server,
                 schema: parts[0],
                 table: parts[1]
             };

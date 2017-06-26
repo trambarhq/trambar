@@ -62,12 +62,23 @@ module.exports = Relaks.createClass({
         if (this.props.storyDrafts !== nextProps.storyDrafts) {
             this.updateStoryDrafts(nextState, nextProps);
         }
+        if (this.props.stories !== nextProps.stories) {
+            this.updatePendingStories(nextState, nextProps);
+        }
         var changes = _.pickBy(nextState, (value, name) => {
             return this.state[name] !== value;
         });
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
+    },
+
+    updateBlankStory: function(nextState, nextProps) {
+        nextState.blankStory = {
+            id: undefined,  // without this _.find() wouldn't work
+            user_ids: nextProps.currentUser ? [ nextProps.currentUser.id ] : [],
+            details: {}
+        };
     },
 
     updateStoryDrafts: function(nextState, nextProps) {
@@ -107,22 +118,30 @@ module.exports = Relaks.createClass({
             }
             return nextDraft;
         });
-        var currentUserDraft = _.find(nextState.storyDrafts, (story) => {
+        this.addUserDraft(nextState.storyDrafts, currentUser, blankStory);
+    },
+
+    updatePendingStories: function(nextState, nextProps) {
+        var stories = nextProps.stories;
+        var pendingStories = nextState.pendingStories;
+        nextState.pendingStories = _.filter(pendingStories, (pendingStory) => {
+            // it's still pending if it hasn't gotten onto the list
+            if (!_.find(stories, { id: pendingStory.id })) {
+                return true;
+            }
+        });
+    },
+
+    addUserDraft: function(storyDrafts, currentUser, blankStory) {
+        var currentUserDraft = _.find(storyDrafts, (story) => {
             if (story.user_ids[0] === currentUser.id) {
                 return true;
             }
         });
         if (!currentUserDraft) {
             // add empty story when current user doesn't have an active draft
-            nextState.storyDrafts.unshift(blankStory);
+            storyDrafts.unshift(blankStory);
         }
-    },
-
-    updateBlankStory: function(nextState, nextProps) {
-        nextState.blankStory = {
-            user_ids: nextProps.currentUser ? [ nextProps.currentUser.id ] : [],
-            details: {}
-        };
     },
 
     downloadStoryResources: function(story) {
@@ -131,10 +150,10 @@ module.exports = Relaks.createClass({
             if (succeeded) {
                 // find the object again as it could have changed during
                 // the time it takes to download the file
-                var storyDrafts = _.slice(this.state.storyDrafts);
-                var index = _.findIndex(storyDrafts, { id: story.id });
-                var currentDraft = storyDrafts[index];
-                if (currentDraft) {
+                var index = _.findIndex(this.state.storyDrafts, { id: story.id });
+                if (index !== -1) {
+                    var storyDrafts = _.slice(this.state.storyDrafts);
+                    var currentDraft = storyDrafts[index];
                     var nextDraft = _.clone(currentDraft);
                     if (!queue.attachResources(nextDraft)) {
                         // more files to download
@@ -142,6 +161,21 @@ module.exports = Relaks.createClass({
                     }
                     storyDrafts[index] = nextDraft;
                     this.setState({ storyDrafts });
+                } else {
+                    // maybe the story has been published before the resources
+                    // are done downloading
+                    index = _.findIndex(this.state.pendingStories, { id: story.id });
+                    if (index !== -1) {
+                        var pendingStories = _.slice(this.state.pendingStories);
+                        var currentDraft = pendingStories[index];
+                        var nextDraft = _.clone(currentDraft);
+                        if (!queue.attachResources(nextDraft)) {
+                            // more files to download
+                            this.downloadStoryResources(nextDraft);
+                        }
+                        pendingStories[index] = nextDraft;
+                        this.setState({ pendingStories });
+                    }
                 }
             }
         });
@@ -230,7 +264,9 @@ module.exports = Relaks.createClass({
             var schema = route.parameters.schema;
             var db = this.props.database.use({ server, schema, by: this });
             return db.saveOne({ table: 'story' }, story).then((copy) => {
-                return queue.sendResources(story);
+                queue.sendResources(story);
+                queue.attachResources(copy);
+                return copy;
             });
         });
     },
@@ -246,20 +282,56 @@ module.exports = Relaks.createClass({
     handleStoryChange: function(evt) {
         var story = evt.story;
         var storyDrafts = _.slice(this.state.storyDrafts);
-        var index = _.findIndex(storyDrafts, (s) => {
-            return s.id === story.id;
-        });
-        storyDrafts[index] = story;
-        this.setState({ storyDrafts });
-        return this.saveStory(story);
+        var index = _.findIndex(storyDrafts, { id: story.id });
+        if (index !== -1) {
+            storyDrafts[index] = story;
+            this.setState({ storyDrafts });
+            return this.saveStory(story);
+        }
     },
 
     handleStoryCommit: function(evt) {
-
+        var story = _.clone(evt.story);
+        story.published = true;
+        var storyDrafts = _.slice(this.state.storyDrafts);
+        var index = _.findIndex(storyDrafts, { id: story.id });
+        if (index !== -1) {
+            storyDrafts[index] = story;
+            this.setState({ storyDrafts });
+            return this.saveStory(story).then((story) => {
+                if (story) {
+                    var pendingStories = _.slice(this.state.pendingStories);
+                    pendingStories.unshift(story);
+                    this.setState({ pendingStories });
+                }
+            });
+        }
+        return Promise.resolve();
     },
 
     handleStoryCancel: function(evt) {
-
+        var story = evt.story;
+        var index = _.findIndex(this.state.storyDrafts, { id: story.id });
+        // TODO: cancel uploads
+        if (index !== -1) {
+            // cancel a draft
+            var storyDrafts = _.slice(this.state.storyDrafts);
+            storyDrafts.splice(index, 1);
+            this.addUserDraft(storyDrafts, this.props.currentUser, this.state.blankStory);
+            this.setState({ storyDrafts });
+            if (story.id > 0) {
+                return this.removeStory(story);
+            }
+        } else {
+            index = _.findIndex(this.state.pendingStories, { id: story.id });
+            if (index !== -1) {
+                var pendingStories = _.slice(this.state.pendingStories);
+                pendingStories.splice(index, 1);
+                this.setState({ pendingStories });
+                return this.removeStory(story);
+            }
+        }
+        return Promise.resolve();
     },
 });
 

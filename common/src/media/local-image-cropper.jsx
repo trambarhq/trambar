@@ -92,6 +92,9 @@ module.exports = React.createClass({
     handleMouseDown: function(evt) {
         var image = this.components.image;
         var container = this.components.container;
+        if (!image || !container) {
+            return;
+        }
         var rect = container.getBoundingClientRect();
         this.dragStart = {
             clippingRect: this.state.clippingRect,
@@ -127,6 +130,9 @@ module.exports = React.createClass({
     },
 
     handleMouseUp: function(evt) {
+        if (!this.dragStart) {
+            return;
+        }
         document.removeEventListener('mousemove', this.handleMouseMove);
         this.triggerChangeEvent(this.state.clippingRect);
         this.dragStart = null;
@@ -137,6 +143,9 @@ module.exports = React.createClass({
 
         var image = this.components.image;
         var container = this.components.container;
+        if (!image || !container) {
+            return;
+        }
         var rect = container.getBoundingClientRect();
         var scale = {
             x: image.width / rect.width,

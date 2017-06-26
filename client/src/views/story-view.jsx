@@ -24,11 +24,23 @@ module.exports = React.createClass({
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
+        pending: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            pending: false,
+        };
     },
 
     /**
@@ -77,6 +89,7 @@ module.exports = React.createClass({
         var props = {
             story: this.props.story,
             authors: this.props.authors,
+            pending: this.props.pending,
 
             database: this.props.database,
             route: this.props.route,

@@ -20,6 +20,7 @@ module.exports = React.createClass({
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
+        pending: PropTypes.bool.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -60,13 +61,17 @@ module.exports = React.createClass({
         var names = _.map(this.props.authors, 'details.name');
         return (
             <span className="name">
-                {_.join(names)}
+                {_.join(names, ', ')}
                 &nbsp;
             </span>
         )
     },
 
     renderTime: function() {
+        if (this.props.pending) {
+            var t = this.props.locale.translate;
+            return <span className="time">{t('story-pending')}</span>;
+        }
         var props = {
             time: this.props.story.ptime,
             locale: this.props.locale,
