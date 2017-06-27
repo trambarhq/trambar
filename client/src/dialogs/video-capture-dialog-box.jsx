@@ -2,6 +2,8 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Locale = require('locale/locale');
+var UploadQueue = require('transport/upload-queue');
+var BlobStream = require('transport/blob-stream');
 
 // widgets
 var Overlay = require('widgets/overlay');
@@ -14,6 +16,7 @@ module.exports = React.createClass({
     propTypes: {
         show: PropTypes.bool,
 
+        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
         onCancel: PropTypes.func,
@@ -27,6 +30,7 @@ module.exports = React.createClass({
             liveVideoError : null,
             capturingStarted: false,
             capturedVideo: null,
+            capturedImage: null,
         };
     },
 
@@ -220,6 +224,25 @@ module.exports = React.createClass({
         });
     },
 
+    beginRecording: function() {
+        var segmentDuration = 15 * 1000;
+        var options = {
+            audioBitsPerSecond : 128000,
+            videoBitsPerSecond : 2500000,
+            mimeType : 'video/webm'
+        };
+        this.recorder = new MediaRecorder(this.state.liveVideoStream, options);
+        this.recorder.addEventListener('dataavailable', this.handleVideoData);
+        this.recorder.start(segmentDuration);
+        this.blobStream = new BlobStream;
+        this.props.queue.sendStream(this.blobStream);
+    },
+
+    endRecording: function() {
+        this.blobStream.close();
+        this.recorder.stop();
+    },
+
     triggerCaptureEvent: function(image) {
         if (this.props.onCapture) {
             this.props.onCapture({
@@ -232,14 +255,19 @@ module.exports = React.createClass({
 
     handleStartClick: function(evt) {
         this.captureImage().then((image) => {
-            this.setState({ capturedVideo: image });
+            this.setState({ capturedImage: image, capturingStarted: true });
+            this.beginRecording();
         });
     },
 
+    handleVideoData: function(evt) {
+        var data = evt.data;
+        this.blobStream.push(data);
+    },
+
     handleStopClick: function(evt) {
-        this.captureImage().then((image) => {
-            this.setState({ capturedVideo: image });
-        });
+        this.setState({ capturingStarted: false });
+        this.endRecording();
     },
 
     handleRetakeClick: function(evt) {

@@ -21,6 +21,7 @@ var server;
 var cacheFolder = '/var/cache/media';
 var imageCacheFolder = `${cacheFolder}/images`;
 var videoCacheFolder = `${cacheFolder}/videos`;
+var streamCacheFolder = `${cacheFolder}/stream`;
 
 process.env.VIPS_WARNING = false;
 
@@ -36,6 +37,7 @@ function start() {
         app.post('/media/html/screenshot/:schema/:taskId', handleWebsiteScreenshot);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
         app.post('/media/videos/upload/:schema/:taskId', upload.single('file'), handleVideoUpload);
+        app.post('/media/stream', upload.single('file'), handleStreamUpload);
 
         createCacheFolders();
 
@@ -169,6 +171,22 @@ function handleVideoUpload(req, res) {
 
 }
 
+function handleStreamUpload(req, res) {
+    var file = req.file;
+    return FS.readFileAsync(file.path).then((buffer) => {
+        var hash = md5(buffer);
+        var destPath = `${streamCacheFolder}/${hash}`;
+        return FS.writeFileAsync(destPath, buffer).then(() => {
+            return `/media/stream/${hash}`;
+        });
+    }).then((url) => {
+        res.json({ url });
+    }).catch((err) => {
+        var statusCode = err.statusCode || 500;
+        res.status(err.statusCode || 500).json({ message: err.message });
+    });
+}
+
 /**
  * Make screencap of website, returning the document title
  *
@@ -266,6 +284,9 @@ function createCacheFolders() {
     }
     if (!FS.existsSync(videoCacheFolder)) {
         FS.mkdirSync(videoCacheFolder);
+    }
+    if (!FS.existsSync(streamCacheFolder)) {
+        FS.mkdirSync(streamCacheFolder);
     }
 }
 

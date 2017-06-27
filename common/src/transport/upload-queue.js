@@ -17,4 +17,8 @@ function UploadQueue(uploadManager) {
     this.sendResources = function(object) {
         return uploadManager.sendResources(object);
     };
+
+    this.sendStream = function(stream) {
+        return uploadManager.sendStream(stream);
+    };
 }

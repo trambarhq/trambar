@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
+var UploadQueue = require('transport/upload-queue');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -25,6 +26,7 @@ module.exports = React.createClass({
         story: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
+        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -109,6 +111,7 @@ module.exports = React.createClass({
         }
         var props = {
             show: this.state.capturingVideo,
+            queue: this.props.queue,
             locale: this.props.locale,
             onCapture: this.handleVideoCapture,
             onCancel: this.handleVideoCancel,

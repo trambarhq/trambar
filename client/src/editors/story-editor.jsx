@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
+var UploadQueue = require('transport/upload-queue');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -24,6 +25,7 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
+        queue: PropTypes.instanceOf(UploadQueue).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -140,6 +142,7 @@ module.exports = React.createClass({
             story: this.props.story,
 
             database: this.props.database,
+            queue: this.props.queue,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,

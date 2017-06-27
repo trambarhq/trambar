@@ -2,6 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
+var BlobStream = require('transport/blob-stream');
+var Async = require('utils/async-do-while');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -151,6 +153,55 @@ module.exports = React.createClass({
             }
         });
     },
+
+    /**
+     * Send a blobs to server as they're added into a BlobStream
+     *
+     * @param  {BlobStream} stream
+     */
+    sendStream: function(stream) {
+        var route = this.props.route;
+        var server = getServerName(route.parameters);
+        var protocol = getProtocol(server);
+        var failureCount = 0;
+        var error;
+        var done = false;
+        Async.do(() => {
+            // get the next unsent part and send it
+            return stream.pull().then((blob) => {
+                if (blob) {
+                    var url = `${protocol}://${server}/media/stream`;
+                    var payload = new FormData;
+                    payload.append('file', blob);
+                    var options = { responseType: 'json' };
+                    return HttpRequest.fetch('POST', url, payload, options).then((response) => {
+                        // set the part's URL to one given by server
+                        stream.finalize(blob, response.url);
+                    });
+                } else {
+                    done = true;
+                }
+            }).catch((err) => {
+                failureCount++;
+                if (failureCount < 10) {
+                    return Promise.delay(5000);
+                } else {
+                    error = err;
+                    done = true;
+                }
+            });
+        });
+        Async.while(() => {
+            return !done;
+        });
+        Async.finally(() => {
+            if (error) {
+                stream.abandon(error);
+            }
+        });
+        Async.end();
+    },
+
 
     /**
      * Look for a file in the state and attach it to the resource object
