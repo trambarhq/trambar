@@ -11,7 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StoryContents = require('views/story-contents');
 var StoryComments = require('views/story-comments');
-var StoryOptions = require('views/story-options');
+var StoryViewOptions = require('views/story-view-options');
 
 require('./story-view.scss');
 
@@ -117,12 +117,13 @@ module.exports = React.createClass({
     renderOptions: function() {
         var props = {
             story: this.props.story,
+            options: {},
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        return <StoryOptions {...props} />;
+        return <StoryViewOptions {...props} />;
     },
 });

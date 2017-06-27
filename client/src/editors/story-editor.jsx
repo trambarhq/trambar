@@ -12,7 +12,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StoryTextEditor = require('editors/story-text-editor');
 var StoryMediaEditor = require('editors/story-media-editor');
-var StoryOptions = require('views/story-options');
+var StoryEditorOptions = require('editors/story-editor-options');
 
 require('./story-editor.scss');
 
@@ -35,7 +35,8 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         var nextState = {
-            languageCode: ''
+            languageCode: '',
+            options: {},
         };
         this.updateLanguage(nextState, this.props);
         return nextState;
@@ -151,13 +152,21 @@ module.exports = React.createClass({
     renderOptions: function() {
         var props = {
             story: this.props.story,
+            options: this.state.options,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onChange: this.handleOptionsChange,
         };
-        return <StoryOptions {...props} />;
+        return <StoryEditorOptions {...props} />;
+    },
+
+    handleOptionsChange: function(evt) {
+        var options = evt.options;
+        this.setState({ options });
     },
 });
 

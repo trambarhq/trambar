@@ -7,6 +7,18 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'people',
         'bottom-nav-settings': 'settings',
 
+        'option-add-bookmark': 'Add bookmark to this story',
+        'option-add-issue': 'Add post to issue tracker',
+        'option-contact-by-phone': 'Contact by phone',
+        'option-contact-by-email': 'Contact by e-mail',
+        'option-hide-post': 'Hide from non-team members',
+        'option-send-bookmarks': 'Send bookmarks to other users',
+        'option-send-bookmarks-to-$1-users': ($1) => {
+            var users = ($1 === 1) ? `${$1} user` : `${$1} users`;
+            return `Send bookmarks to ${users}`;
+        },
+        'option-view-gitlab-page': 'View Gitlab profile page',
+
         'photo-capture-accept': 'Accept',
         'photo-capture-cancel': 'Cancel',
         'photo-capture-retake': 'Retake',
@@ -25,6 +37,7 @@ module.exports = function(languageCode) {
         'story-comment': 'Comment',
         'story-file': 'File',
         'story-like': 'Like',
+        'story-options': 'Options',
         'story-photo': 'Photo',
         'story-post': 'Post',
         'story-pending': 'Pending...',
