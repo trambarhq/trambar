@@ -8,6 +8,7 @@ function BlobStream() {
     this.error = null;
     this.pullResult = null;
     this.waitResult = null;
+    this.id = null;
 }
 
 /**
@@ -17,21 +18,23 @@ function BlobStream() {
  */
 BlobStream.prototype.toBlob = function() {
     var blobs = _.map(this.parts, 'blob');
-    if (blobs.length > 0) {
+    if (blobs.length > 1) {
         var type = blobs[0].type;
         return new Blob(blobs, { type });
+    } else if (blobs.length === 1) {
+        return blobs[0];
     } else {
         return new Blob;
     }
 };
 
 /**
- * Concatenate contents into a single blob
+ * Return the stream id
  *
- * @return {Array<String>}
+ * @return {String}
  */
-BlobStream.prototype.toURLArray = function() {
-    return _.map(this.parts, 'url');
+BlobStream.prototype.toJSON = function() {
+    return this.id;
 };
 
 /**
@@ -40,9 +43,14 @@ BlobStream.prototype.toURLArray = function() {
  * @param  {Blob} blob
  */
 BlobStream.prototype.push = function(blob) {
+    if (process.env.NODE_ENV !== 'production') {
+        if (this.closed) {
+            console.warn('Pushing into a closed stream');
+        }
+    }
     this.parts.push({
         blob,
-        url: null,
+        sent: false,
     });
     if (this.pullResult) {
         this.pullResult.resolve(blob);
@@ -55,13 +63,13 @@ BlobStream.prototype.push = function(blob) {
  */
 BlobStream.prototype.close = function() {
     this.closed = true;
-    if (this.pullResult) {
-        this.pullResult.resolve(null);
-        this.pullResult = null;
-    }
-    if (this.waitResult) {        
-        var unsent = _.find(this.parts, { url: null });
-        if (!unsent) {
+    var unsent = _.find(this.parts, { sent: false });
+    if (!unsent) {
+        if (this.pullResult) {
+            this.pullResult.resolve(null);
+            this.pullResult = null;
+        }
+        if (this.waitResult) {
             this.waitResult.resolve();
             this.waitResult = null;
         }
@@ -74,9 +82,13 @@ BlobStream.prototype.close = function() {
  * @return {Promise<Blob>}
  */
 BlobStream.prototype.pull = function() {
-    var unsent = _.find(this.parts, { url: null });
+    var unsent = _.find(this.parts, { sent: false });
     if (unsent) {
         return Promise.resolve(unsent.blob);
+    } else {
+        if (this.closed) {
+            return Promise.resolve(null);
+        }
     }
     if (!this.pullResult) {
         this.pullResult = deferResult();
@@ -85,18 +97,17 @@ BlobStream.prototype.pull = function() {
 };
 
 /**
- * Associate a part with the URL returned by server
+ * Mark a part of the stream as sent
  *
  * @param  {Blob} blob
- * @param  {String} url
  */
-BlobStream.prototype.finalize = function(blob, url) {
+BlobStream.prototype.finalize = function(blob) {
     var part = _.find(this.parts, { blob });
     if (part) {
-        part.url = url;
+        part.sent = true;
     }
     if (this.waitResult) {
-        var unsent = _.find(this.parts, { url: null });
+        var unsent = _.find(this.parts, { sent: false });
         if (!unsent && this.closed) {
             this.waitResult.resolve();
         }
@@ -122,12 +133,12 @@ BlobStream.prototype.abandon = function(err) {
  */
 BlobStream.prototype.wait = function() {
     if (this.closed) {
-        var unsent = _.find(this.parts, { url: null });
-        if (!unsent) {
-            return Promise.resolve();
-        }
         if (this.error) {
             return Promise.reject(this.error);
+        }
+        var unsent = _.find(this.parts, { sent: false });
+        if (!unsent) {
+            return Promise.resolve();
         }
     }
     if (!this.waitResult) {

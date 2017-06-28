@@ -26,6 +26,7 @@ module.exports = React.createClass({
             liveVideoUrl: null,
             liveVideoError : null,
             capturedImage: null,
+            previewUrl: null,
         };
     },
 
@@ -38,14 +39,24 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
-                this.setState({ capturedImage: null });
+                this.clearCapturedImage();
                 this.initializeCamera();
             } else {
                 setTimeout(() => {
                     this.shutdownCamera();
-                    this.setState({ capturedImage: null });
+                    this.clearCapturedImage();
                 }, 500);
             }
+        }
+    },
+
+    clearCapturedImage: function() {
+        if (this.state.capturedImage) {
+            URL.revokeObjectURL(this.state.previewUrl);
+            this.setState({
+                capturedImage: null,
+                previewUrl: null,
+            });
         }
     },
 
@@ -64,6 +75,9 @@ module.exports = React.createClass({
     },
 
     setLiveVideoState: function(err, stream) {
+        if (this.state.liveVideoUrl) {
+            URL.revokeObjectURL(this.state.liveVideoUrl);
+        }
         var url = (stream) ? URL.createObjectURL(stream) : null;
         this.setState({
             liveVideoStream: stream,
@@ -107,6 +121,7 @@ module.exports = React.createClass({
             ref: 'video',
             src: this.state.liveVideoUrl,
             autoPlay: true,
+            muted: true,
         };
         return (
             <div className="container">
@@ -116,10 +131,8 @@ module.exports = React.createClass({
     },
 
     renderCapturedImage: function() {
-        var image = this.state.capturedImage;
-        var url = URL.createObjectURL(image.file);
         var props = {
-            src: url,
+            src: this.state.previewUrl,
         };
         return (
             <div className="container">
@@ -168,6 +181,7 @@ module.exports = React.createClass({
 
     componentWillUnmount: function() {
         this.destroyLiveVideoStream();
+        this.clearCapturedImage();
     },
 
     createLiveVideoStream: function() {
@@ -222,12 +236,16 @@ module.exports = React.createClass({
 
     handleSnapClick: function(evt) {
         this.captureImage().then((image) => {
-            this.setState({ capturedImage: image });
+            var url = URL.createObjectURL(image.file);
+            this.setState({
+                capturedImage: image,
+                previewUrl: url,
+            });
         });
     },
 
     handleRetakeClick: function(evt) {
-        this.setState({ capturedImage: null });
+        this.clearCapturedImage();
     },
 
     handleAcceptClick: function(evt) {

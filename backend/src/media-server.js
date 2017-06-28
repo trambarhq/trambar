@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var FS = Promise.promisifyAll(require('fs'));
+var ChildProcess = require('child_process');
 var Express = require('express');
 var BodyParser = require('body-parser');
 var Multer  = require('multer');
@@ -37,7 +38,8 @@ function start() {
         app.post('/media/html/screenshot/:schema/:taskId', handleWebsiteScreenshot);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
         app.post('/media/videos/upload/:schema/:taskId', upload.single('file'), handleVideoUpload);
-        app.post('/media/stream', upload.single('file'), handleStreamUpload);
+        app.post('/media/stream/:streamId', upload.single('file'), handleStreamAppend);
+        app.post('/media/stream', upload.single('file'), handleStreamCreate);
 
         createCacheFolders();
 
@@ -171,17 +173,40 @@ function handleVideoUpload(req, res) {
 
 }
 
-function handleStreamUpload(req, res) {
-    var file = req.file;
-    return FS.readFileAsync(file.path).then((buffer) => {
-        var hash = md5(buffer);
-        var destPath = `${streamCacheFolder}/${hash}`;
-        return FS.writeFileAsync(destPath, buffer).then(() => {
-            return `/media/stream/${hash}`;
-        });
-    }).then((url) => {
-        res.json({ url });
+function handleStreamCreate(req, res) {
+    return Promise.try(() => {
+        return createStreamId();
+    }).then((streamId) => {
+        startTranscoding(streamId);
+        var file = req.file;
+        if (file) {
+            var inputStream = FS.createReadStream(file.path);
+            transcodeChunk(streamId, inputStream);
+        }
+        return streamId;
+    }).then((streamId) => {
+        res.json({ id: streamId });
     }).catch((err) => {
+        console.error(err);
+        var statusCode = err.statusCode || 500;
+        res.status(err.statusCode || 500).json({ message: err.message });
+    });
+}
+
+function handleStreamAppend(req, res) {
+    return Promise.try(() => {
+        var file = req.file;
+        var streamId = req.params.streamId;
+        if (file) {
+            var inputStream = FS.createReadStream(file.path);
+            return transcodeChunk(streamId, inputStream);
+        } else {
+            return endTranscoding(streamId);
+        }
+    }).then(() => {
+        res.json({ status: 'OK' });
+    }).catch((err) => {
+        console.error(err);
         var statusCode = err.statusCode || 500;
         res.status(err.statusCode || 500).json({ message: err.message });
     });
@@ -407,6 +432,166 @@ function updateResources(object, taskId, params) {
     if (res) {
         _.assign(res, params, { task_id: undefined });
     }
+}
+
+function createStreamId() {
+    return new Promise((resolve, reject) => {
+        Crypto.randomBytes(16, function(err, buffer) {
+            var token = buffer.toString('hex');
+            resolve(token);
+        });
+    });
+}
+
+var transcodeTasks = [];
+
+/**
+ * Start up instances of ffmpeg
+ *
+ * @param  {String} streamId
+ */
+function startTranscoding(streamId) {
+    var profiles = {
+        '2500kbps': {
+            videoBitrate: '2500k',
+            audioBitrate: '128k',
+            extension: 'mp4',
+        },
+        '1000kbps': {
+            videoBitrate: '1000k',
+            audioBitrate: '128k',
+            extension: 'mp4',
+        },
+    };
+    var outputFiles = _.mapValues(profiles, (profile, name) => {
+        return `${streamCacheFolder}/${streamId}.${name}.${profile.extension}`;
+    });
+    // launch instances of FFmpeg
+    var processes = _.mapValues(outputFiles, (destPath, name) => {
+        return spawnFFmpeg(destPath, profiles[name]);
+    });
+    // create promises that resolve when FFmpeg exits
+    var promises = _.map(processes, (childProcess) => {
+        return new Promise((resolve, reject) => {
+            childProcess.once('exit', (code, signal) => {
+                if (code >= 0) {
+                    resolve()
+                } else {
+                    reject(new Error(`Process exited with error code ${code}`));
+                }
+            });
+            childProcess.on('error', (evt) => {
+                console.error(evt);
+            });
+        });
+    })
+    transcodeTasks.push({
+        streamId,
+        profiles,
+        outputFiles,
+        processes,
+        promise: Promise.all(promises),
+        queue: [],
+        working: false,
+        finished: false,
+    });
+}
+
+/**
+ * Add a file to the transcode queue
+ *
+ * @param  {String} streamId
+ * @param  {ReadableStream} file
+ */
+function transcodeChunk(streamId, inputStream) {
+    var task = _.find(transcodeTasks, { streamId });
+    if (!task) {
+        throw new HttpError(404);
+    }
+    task.queue.push(inputStream);
+    if (!task.working) {
+        processNextStreamSegment(task);
+    }
+}
+
+/**
+ * Indicate that there will be no more additional files
+ *
+ * @param  {String} streamId
+ */
+function endTranscoding(streamId) {
+    var task = _.find(transcodeTasks, { streamId });
+    if (!task) {
+        throw new HttpError(404);
+    }
+    task.finished = true;
+    if (!task.working) {
+        processNextStreamSegment(task);
+    }
+}
+
+/**
+ * Get the next stream segment and pipe it to FFmpeg
+ *
+ * @param  {Object} task
+ */
+function processNextStreamSegment(task) {
+    var inputStream = task.queue.shift();
+    if (inputStream) {
+        task.working = true;
+        // pipe stream to stdin of FFmpeg, leaving stdin open afterward
+        _.each(task.processes, (childProcess) => {
+            inputStream.pipe(childProcess.stdin, { end: false });
+        });
+        inputStream.once('end', () => {
+            // done, try processing the next segment
+            processNextStreamSegment(task);
+        });
+    } else {
+        task.working = false;
+        if (task.finished) {
+            // there are no more segments--close stdin of FFmpeg so it'd exit
+            // after processing remaining data
+            _.each(task.processes, (childProcess) => {
+                childProcess.stdin.end();
+            });
+        }
+    }
+}
+
+/**
+ * Spawn an instance of FFmpeg that gets its input from stdin
+ *
+ * @param  {String} destPath
+ * @param  {Object} profile
+ *
+ * @return {ChildProcess}
+ */
+function spawnFFmpeg(destPath, profile) {
+    var cmd = 'ffmpeg';
+    var options = {
+        stdio: [ 'pipe', 'inherit', 'inherit' ]
+    };
+    var inputArgs = [], input = Array.prototype.push.bind(inputArgs);
+    var outputArgs = [], output = Array.prototype.push.bind(outputArgs);
+
+    // add input options
+    input('-i', 'pipe:0');
+
+    // add output options
+    if (profile.videoBitrate) {
+        output('-b:v', profile.videoBitrate);
+    }
+    if (profile.audioBitrate) {
+        output('-b:a', profile.audioBitrate);
+    }
+    if (profile.frameRate) {
+        output('-r', profile.frameRate);
+    }
+    output(destPath);
+
+    var args = _.concat(inputArgs, outputArgs);
+    return ChildProcess.spawn(cmd, args, options);
 }
 
 /**

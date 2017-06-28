@@ -28,9 +28,10 @@ module.exports = React.createClass({
             liveVideoStream: null,
             liveVideoUrl: null,
             liveVideoError : null,
-            capturingStarted: false,
+            mediaRecorder: null,
             capturedVideo: null,
             capturedImage: null,
+            previewUrl: null,
         };
     },
 
@@ -43,14 +44,24 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
-                this.setState({ capturedVideo: null });
+                this.clearCapturedVideo();
                 this.initializeCamera();
             } else {
                 setTimeout(() => {
                     this.shutdownCamera();
-                    this.setState({ capturedVideo: null });
+                    this.clearCapturedVideo();
                 }, 500);
             }
+        }
+    },
+
+    clearCapturedVideo: function() {
+        if (this.state.capturedVideo) {
+            URL.revokeObjectURL(this.state.previewUrl);
+            this.setState({
+                capturedVideo: null,
+                previewUrl: null,
+            });
         }
     },
 
@@ -112,6 +123,7 @@ module.exports = React.createClass({
             ref: 'video',
             src: this.state.liveVideoUrl,
             autoPlay: true,
+            muted: true,
         };
         return (
             <div className="container">
@@ -122,20 +134,37 @@ module.exports = React.createClass({
 
     renderCapturedVideo: function() {
         var image = this.state.capturedVideo;
-        var url = URL.createObjectURL(image.file);
         var props = {
-            src: url,
+            src: this.state.previewUrl,
+            controls: true
         };
         return (
             <div className="container">
-                <img {...props} />
+                <video {...props} />
             </div>
         )
     },
 
     renderButtons: function() {
         var t = this.props.locale.translate;
-        if (!this.state.capturedVideo) {
+        if (this.state.mediaRecorder) {
+            var pauseButtonProps = {
+                label: t('video-capture-pause'),
+                onClick: this.handlePauseClick,
+                disabled: this.state.mediaRecorder.state === 'paused'
+            };
+            var stopButtonProps = {
+                label: t('video-capture-stop'),
+                onClick: this.handleStopClick,
+                emphasized: true,
+            };
+            return (
+                <div className="buttons">
+                    <PushButton {...pauseButtonProps} />
+                    <PushButton {...stopButtonProps} />
+                </div>
+            );
+        } else if (!this.state.capturedVideo) {
             var cancelButtonProps = {
                 label: t('video-capture-cancel'),
                 onClick: this.handleCancelClick,
@@ -144,21 +173,12 @@ module.exports = React.createClass({
                 label: t('video-capture-start'),
                 onClick: this.handleStartClick,
                 disabled: !this.state.liveVideoStream,
-                hidden: this.state.capturingStarted,
-                emphasized: true,
-            };
-            var stopButtonProps = {
-                label: t('video-capture-stop'),
-                onClick: this.handleStopClick,
-                disabled: !this.state.liveVideoStream,
-                hidden: !this.state.capturingStarted,
                 emphasized: true,
             };
             return (
                 <div className="buttons">
                     <PushButton {...cancelButtonProps} />
                     <PushButton {...startButtonProps} />
-                    <PushButton {...stopButtonProps} />
                 </div>
             );
         } else {
@@ -187,7 +207,7 @@ module.exports = React.createClass({
     createLiveVideoStream: function() {
         var promise = this.videoStreamPromise;
         if (!promise) {
-            var constraints = { video: true };
+            var constraints = { video: true, audio: true };
             promise = navigator.mediaDevices.getUserMedia(constraints);
             this.videoStreamPromise = promise;
         }
@@ -225,53 +245,94 @@ module.exports = React.createClass({
     },
 
     beginRecording: function() {
-        var segmentDuration = 15 * 1000;
-        var options = {
-            audioBitsPerSecond : 128000,
-            videoBitsPerSecond : 2500000,
-            mimeType : 'video/webm'
-        };
-        this.recorder = new MediaRecorder(this.state.liveVideoStream, options);
-        this.recorder.addEventListener('dataavailable', this.handleVideoData);
-        this.recorder.start(segmentDuration);
-        this.blobStream = new BlobStream;
-        this.props.queue.sendStream(this.blobStream);
+        return Promise.try(() => {
+            var segmentDuration = 3 * 1000;
+            var options = {
+                audioBitsPerSecond : 128000,
+                videoBitsPerSecond : 2500000,
+                mimeType : 'video/webm'
+            };
+            var recorder = new MediaRecorder(this.state.liveVideoStream, options);
+            recorder.outputStream = new BlobStream;
+            recorder.addEventListener('dataavailable', function(evt) {
+                this.outputStream.push(evt.data)
+            });
+            recorder.addEventListener('stop', function(evt) {
+                this.outputStream.close();
+            });
+            recorder.start(segmentDuration);
+            return recorder;
+        });
+    },
+
+    pauseRecording: function() {
+        return Promise.try(() => {
+            var recorder = this.state.mediaRecorder;
+            if (recorder) {
+                recorder.pause();
+            }
+        });
     },
 
     endRecording: function() {
-        this.blobStream.close();
-        this.recorder.stop();
+        return Promise.try(() => {
+            var recorder = this.state.mediaRecorder;
+            var poster = this.state.capturedImage;
+            if (recorder) {
+                recorder.stop();
+                return {
+                    width: poster.width,
+                    height: poster.height,
+                    poster_file: poster.file,
+                    type: recorder.mimeType,
+                    audio_bitrate: recorder.audioBitsPerSecond,
+                    video_bitrate: recorder.videoBitsPerSecond,
+                    stream: recorder.outputStream,
+                };
+            }
+        });
     },
 
-    triggerCaptureEvent: function(image) {
+    triggerCaptureEvent: function(video) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                image,
+                video,
             })
         }
     },
 
     handleStartClick: function(evt) {
-        this.captureImage().then((image) => {
-            this.setState({ capturedImage: image, capturingStarted: true });
-            this.beginRecording();
+        return Promise.join(this.captureImage(), this.beginRecording(), (image, recorder) => {
+            // start uploading immediately upon receiving data from MediaRecorder
+            this.props.queue.sendStream(recorder.outputStream);
+            this.setState({
+                capturedImage: image,
+                mediaRecorder: recorder
+            });
         });
     },
 
-    handleVideoData: function(evt) {
-        var data = evt.data;
-        this.blobStream.push(data);
+    handlePauseClick: function(evt) {
+        return this.pauseRecording();
     },
 
     handleStopClick: function(evt) {
-        this.setState({ capturingStarted: false });
-        this.endRecording();
+        return this.endRecording().then((video) => {
+            var blob = video.stream.toBlob();
+            var url = URL.createObjectURL(blob);
+            this.setState({
+                capturedVideo: video,
+                previewUrl: url,
+                capturedImage: null,
+                mediaRecorder: null
+            });
+        });
     },
 
     handleRetakeClick: function(evt) {
-        this.setState({ capturedVideo: null });
+        this.clearCapturedVideo();
     },
 
     handleAcceptClick: function(evt) {

@@ -44,7 +44,7 @@ module.exports = React.createClass({
                     break;
                 case 'video':
                 case 'website':
-                    if (!this.attachLocalFile(res, 'thumbnail_file', 'thumbnail_url')) {
+                    if (!this.attachLocalFile(res, 'poster_file', 'poster_url')) {
                         downloadingRequired = true;
                     }
                     break;
@@ -72,7 +72,7 @@ module.exports = React.createClass({
                     return this.downloadRemoteFile(res, 'file', 'url');
                 case 'video':
                 case 'website':
-                    return this.downloadRemoteFile(res, 'thumbnail_file', 'thumbnail_url');
+                    return this.downloadRemoteFile(res, 'poster_file', 'poster_url');
             }
         }, false);
     },
@@ -112,7 +112,7 @@ module.exports = React.createClass({
                             action = 'upload and transcode video';
                             params = {
                                 file: res.file,
-                                thumbnail: res.thumbnail_file,
+                                poster: res.poster_file,
                             };
                         } else if (res.external_url) {
                             action = 'copy and transcode video';
@@ -121,9 +121,9 @@ module.exports = React.createClass({
                     }
                     break;
                 case 'website':
-                    if (!res.thumbnail_url) {
+                    if (!res.poster_url) {
                         if (res.url) {
-                            action = 'generate website thumbnail';
+                            action = 'generate website poster';
                             params = { url: res.url };
                         }
                     }
@@ -163,36 +163,45 @@ module.exports = React.createClass({
         var route = this.props.route;
         var server = getServerName(route.parameters);
         var protocol = getProtocol(server);
+        var attempts = 1;
         var failureCount = 0;
         var error;
         var done = false;
+        Async.while(() => { return !done });
         Async.do(() => {
             // get the next unsent part and send it
             return stream.pull().then((blob) => {
+                var url = `${protocol}://${server}/media/stream`;
+                if (stream.id) {
+                    // append to existing stream
+                    url += `/${stream.id}`;
+                }
+                var payload = new FormData;
                 if (blob) {
-                    var url = `${protocol}://${server}/media/stream`;
-                    var payload = new FormData;
                     payload.append('file', blob);
-                    var options = { responseType: 'json' };
-                    return HttpRequest.fetch('POST', url, payload, options).then((response) => {
-                        // set the part's URL to one given by server
-                        stream.finalize(blob, response.url);
-                    });
                 } else {
+                    // the server recognize that an empty payload means we've
+                    // reached the end of the stream
                     done = true;
                 }
+                var options = { responseType: 'json' };
+                return HttpRequest.fetch('POST', url, payload, options).then((response) => {
+                    if (!stream.id) {
+                        stream.id = response.id;
+                    }
+                    if (blob) {
+                        stream.finalize(blob);
+                    }
+                });
             }).catch((err) => {
-                failureCount++;
-                if (failureCount < 10) {
+                if (++failureCount < attempts) {
+                    // wait five seconds then try again
                     return Promise.delay(5000);
                 } else {
                     error = err;
                     done = true;
                 }
             });
-        });
-        Async.while(() => {
-            return !done;
         });
         Async.finally(() => {
             if (error) {
@@ -201,7 +210,6 @@ module.exports = React.createClass({
         });
         Async.end();
     },
-
 
     /**
      * Look for a file in the state and attach it to the resource object
@@ -377,8 +385,8 @@ module.exports = React.createClass({
         if (transfer.file instanceof Blob) {
             payload = new FormData;
             payload.append('file', transfer.file);
-            if (transfer.thumbnail instanceof Blob) {
-                payload.append('thumbnail', transfer.thumbnail);
+            if (transfer.poster instanceof Blob) {
+                payload.append('poster', transfer.poster);
             }
         } else if (transfer.url) {
             payload = { url: transfer.url };
@@ -403,7 +411,7 @@ module.exports = React.createClass({
             case 'copy and transcode video':
                 url += `/media/videos/copy/${schema}/${taskId}`;
                 break;
-            case 'generate website thumbnail':
+            case 'generate website poster':
                 url += `/media/html/screenshot/${schema}/${taskId}`;
                 break;
             default:
@@ -419,10 +427,10 @@ module.exports = React.createClass({
                 if (resourceUrl) {
                     files[resourceUrl] = transfer.file;
                 }
-                if (transfer.thumbnail instanceof Blob) {
-                    var thumbnailUrl = _get(response, 'thumbnail_url');
-                    if (thumbnailUrl) {
-                        files[thumbnailUrl] = transfer.thumbnail;
+                if (transfer.poster instanceof Blob) {
+                    var posterUrl = _get(response, 'poster_url');
+                    if (posterUrl) {
+                        files[posterUrl] = transfer.poster;
                     }
                 }
                 this.setState({ files });
