@@ -1,16 +1,28 @@
 <style id="splash-screen-style">
 
+BODY {
+    margin: 0;
+}
+
 #splash-screen {
+    position: absolute;
     height: 100%;
     width: 100%;
-    margin-left: -0%;
-    background-color: #006699;
-    transition: margin-left 1s;
     pointer-events: none;
 }
 
-#splash-screen.transition-out {
-    margin-left: -100%;
+#splash-screen .background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #006699;
+    transition: left 1s;
+}
+
+#splash-screen.transition-out .background {
+    left: -100%;
 }
 
 #splash-screen .logo {
@@ -21,19 +33,23 @@
     right: 0px;
     bottom: 0px;
     margin: auto;
-    transition: padding-left 0.5s, padding-top 0.5s, left 0.5s, top 0.5s, width 0.5s;
+    transition: padding-left 0.5s, padding-top 0.5s, left 0.5s, top 0.5s, width 0.5s, height 0.5s;
+    box-sizing: content-box;
 }
 
 #splash-screen.transition-out .logo {
-    width: 24px;
+    width: 32px;
+    height: 40px;
     left: -100%;
     top: -100%;
-    padding-left: 40px;
-    padding-top: 50px;
+    padding-left: 63px;
+    padding-top: 60px;
+    background-color: #006699;
 }
 
 </style>
 <div id="splash-screen">
+    <div class="background"></div>
     <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="1000 1000 5080 6299" preserveAspectRatio="xMidYMid" style="stroke-linejoin:round;stroke-width:30">
       <defs class="ClipPathGroup">
         <clipPath clipPathUnits="userSpaceOnUse">
