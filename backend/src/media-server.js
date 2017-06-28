@@ -484,12 +484,17 @@ function startTranscoding(streamId) {
                 console.error(evt);
             });
         });
-    })
+    });
+    // create write stream to save original
+    var originalFile = `${streamCacheFolder}/${streamId}.webm`;
+    var writeStream = FS.createWriteStream(originalFile);
     transcodeTasks.push({
         streamId,
         profiles,
+        originalFile,
         outputFiles,
         processes,
+        writeStream,
         promise: Promise.all(promises),
         queue: [],
         working: false,
@@ -539,6 +544,8 @@ function processNextStreamSegment(task) {
     var inputStream = task.queue.shift();
     if (inputStream) {
         task.working = true;
+        // save the original
+        inputStream.pipe(task.writeStream, { end: false });
         // pipe stream to stdin of FFmpeg, leaving stdin open afterward
         _.each(task.processes, (childProcess) => {
             inputStream.pipe(childProcess.stdin, { end: false });
@@ -555,6 +562,7 @@ function processNextStreamSegment(task) {
             _.each(task.processes, (childProcess) => {
                 childProcess.stdin.end();
             });
+            task.writeStream.end();
         }
     }
 }
