@@ -339,7 +339,7 @@ module.exports = React.createClass({
         var screen = document.getElementById('splash-screen');
         var style = document.getElementById('splash-screen-style');
         if (screen) {
-            screen.style.opacity = 0;
+            screen.className = 'transition-out';
             setTimeout(() => {
                 if (screen.parentNode) {
                     screen.parentNode.removeChild(screen);
