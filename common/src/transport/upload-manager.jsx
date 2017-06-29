@@ -102,7 +102,7 @@ module.exports = React.createClass({
                         } else if (res.external_url) {
                             // a file at cloud-storage provider
                             action = 'copy image';
-                            params = { url: image.external_url };
+                            params = { url: res.external_url };
                         }
                     }
                     break;
@@ -116,7 +116,13 @@ module.exports = React.createClass({
                             };
                         } else if (res.external_url) {
                             action = 'copy and transcode video';
-                            params = { url: image.external_url };
+                            params = { url: res.external_url };
+                        } else if (res.stream) {
+                            action = 'copy and transcode video';
+                            params = {
+                                stream: res.stream,
+                                poster: res.poster_file,
+                            };
                         }
                     }
                     break;
@@ -381,17 +387,16 @@ module.exports = React.createClass({
                 });
             },
         };
-        var payload;
+        var payload = new FormData;
         if (transfer.file instanceof Blob) {
-            payload = new FormData;
             payload.append('file', transfer.file);
-            if (transfer.poster instanceof Blob) {
-                payload.append('poster', transfer.poster);
-            }
         } else if (transfer.url) {
-            payload = { url: transfer.url };
-        } else {
-            return;
+            payload.append('url', transfer.url);
+        } else if (transfer.stream) {
+            payload.append('stream', transfer.stream.id);
+        }
+        if (transfer.poster instanceof Blob) {
+            payload.append('poster', transfer.poster);
         }
         var route = this.props.route;
         var server = getServerName(route.parameters);
@@ -400,16 +405,12 @@ module.exports = React.createClass({
         var url = `${protocol}://${server}`;
         switch (transfer.action) {
             case 'upload image':
+            case 'copy image':
                 url += `/media/images/upload/${schema}/${taskId}`;
                 break;
-            case 'copy image':
-                url += `/media/images/copy/${schema}/${taskId}`;
-                break;
+            case 'copy and transcode video':
             case 'upload and transcode video':
                 url += `/media/videos/upload/${schema}/${taskId}`;
-                break;
-            case 'copy and transcode video':
-                url += `/media/videos/copy/${schema}/${taskId}`;
                 break;
             case 'generate website poster':
                 url += `/media/html/screenshot/${schema}/${taskId}`;

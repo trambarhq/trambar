@@ -22,7 +22,7 @@ var server;
 var cacheFolder = '/var/cache/media';
 var imageCacheFolder = `${cacheFolder}/images`;
 var videoCacheFolder = `${cacheFolder}/videos`;
-var streamCacheFolder = `${cacheFolder}/stream`;
+var audioCacheFolder = `${cacheFolder}/audios`;
 
 process.env.VIPS_WARNING = false;
 
@@ -33,12 +33,14 @@ function start() {
         app.use(BodyParser.json());
         app.set('json spaces', 2);
         app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
-        app.get('/media/images/:hash', handleImageOriginalRequest);
-        app.get('/media/videos/:hash', handleVideoOriginalRequest);
+        app.get('/media/images/:filename', handleImageOriginalRequest);
+        app.get('/media/videos/:filename', handleVideoRequest);
+        app.get('/media/audios/:filename', handleAudioRequest);
         app.post('/media/html/screenshot/:schema/:taskId', handleWebsiteScreenshot);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
-        app.post('/media/videos/upload/:schema/:taskId', upload.single('file'), handleVideoUpload);
-        app.post('/media/stream/:streamId', upload.single('file'), handleStreamAppend);
+        app.post('/media/videos/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), handleVideoUpload);
+        app.post('/media/audios/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), handleAudioUpload);
+        app.post('/media/stream/:jobId', upload.single('file'), handleStreamAppend);
         app.post('/media/stream', upload.single('file'), handleStreamCreate);
 
         createCacheFolders();
@@ -65,6 +67,49 @@ function stop() {
     });
 }
 
+/**
+ * Send a JSON object to browser
+ *
+ * @param  {Response} res
+ * @param  {Object} result
+ */
+function sendJson(res, result) {
+    res.json(result);
+}
+
+/**
+ * Send binary data to browser
+ *
+ * @param  {Response} res
+ * @param  {Buffer} buffer
+ * @param  {String} type
+ */
+function sendFile(res, buffer, type) {
+    res.type(type).send(buffer);
+}
+
+/**
+ * Send error to browser as JSON object
+ *
+ * @param  {Response} res
+ * @param  {Object} err
+ */
+function sendError(res, err) {
+    var statusCode = err.statusCode;
+    var message = err.message;
+    if (!statusCode || process.env.NODE_ENV !== 'production') {
+        console.error(err);
+    }
+    if (!statusCode) {
+        // not an expected error
+        statusCode = 500;
+        if (process.env.NODE_ENV === 'production') {
+            message = 'Internal server error';
+        }
+    }
+    res.status(statusCode).json({ message });
+}
+
 function handleImageFiltersRequest(req, res) {
     var hash = req.params.hash;
     var filename = req.params.filename;
@@ -79,22 +124,30 @@ function handleImageFiltersRequest(req, res) {
     var path = `${imageCacheFolder}/${hash}`;
     var image = applyFilters(Sharp(path), filters, format);
     image.toBuffer().then((buffer) => {
-        res.type(format).send(buffer);
+        sendFile(res, buffer, format);
     }).catch((err) => {
-        res.status(400).json({ message: err.message });
+        sendError(res, err);
     });
 }
 
 function handleImageOriginalRequest(req, res) {
-    var hash = req.params.hash;
-    var path = `${imageCacheFolder}/${hash}`;
+    var filename = req.params.filename;
+    var path = `${imageCacheFolder}/${filename}`;
     B(Sharp(path).metadata()).then((metadata) => {
         res.type(metadata.format).sendFile(path);
     });
 }
 
-function handleVideoOriginalRequest(req, res) {
+function handleVideoRequest(req, res) {
+    var filename = req.params.filename;
+    var path = `${videoCacheFolder}/${filename}`;
+    res.sendFile(path);
+}
 
+function handleAudioRequest(req, res) {
+    var filename = req.params.filename;
+    var path = `${audioCacheFolder}/${filename}`;
+    res.sendFile(path);
 }
 
 function handleWebsiteScreenshot(req, res) {
@@ -120,95 +173,133 @@ function handleWebsiteScreenshot(req, res) {
             });
         });
     }).catch((err) => {
-        var statusCode = err.statusCode || 500;
-        res.status(statusCode).json({ message: err.message });
+        sendError(res, err);
     });
 }
 
 function handleImageUpload(req, res) {
     var schema = req.params.schema;
     var taskId = parseInt(req.params.taskId);
-    var token = req.query.token;
-    return Database.open().then((db) => {
-        return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
-            if (!task || task.token !== token) {
-                throw new HttpError(403);
-            }
-            return task;
-        }).then((task) => {
-            var file = req.file;
-            return FS.readFileAsync(file.path).then((buffer) => {
-                var hash = md5(buffer);
-                var destPath = `${imageCacheFolder}/${hash}`;
-                return FS.statAsync(destPath).catch((err) => {
-                    return FS.writeFileAsync(destPath, buffer);
-                }).then(() => {
-                    return `/media/images/${hash}`;
-                });
-            }).then((url) => {
-                // update the object associated with task
-                var associate = _.get(task, 'details.associated_object');
-                var table = _.get(associate, 'type');
-                var id = _.get(associate, 'id');
-                var accessor = getAccessor(associate.type);
-                if (accessor) {
-                    return accessor.findOne(db, schema, { id }, 'id, details').then((row) => {
-                        var params = { url, file: undefined };
-                        updateResources(row, taskId, params);
-                        return accessor.updateOne(db, schema, row);
-                    }).return(url);
-                }
-                return url;
-            });
-        });
-    }).then((url) => {
-        res.json({ url });
+    return checkTaskToken(schema, taskId, req.query.token).then(() => {
+        if (req.file) {
+            return saveFile(req.file.path, imageCacheFolder);
+        } else if (req.url) {
+            return copyFile(req.url, imageCacheFolder);
+        } else {
+            throw new HttpError(400);
+        }
+    }).then((hash) => {
+        // update the object associated with task (no need to wait for it)
+        var image = { url: `/media/images/${hash}` };
+        updateAssociatedObject(schema, taskId, image, true);
+        return image;
+    }).then((image) => {
+        sendJson(res, image);
     }).catch((err) => {
-        var statusCode = err.statusCode || 500;
-        res.status(err.statusCode || 500).json({ message: err.message });
+        sendError(res, err);
     });
 }
 
 function handleVideoUpload(req, res) {
+    return handleMediaUpload(req, res, 'video');
+}
 
+function handleAudioUpload(req, res) {
+    return handleMediaUpload(req, res, 'audio');
+}
+
+function handleMediaUpload(req, res, type) {
+    var schema = req.params.schema;
+    var taskId = parseInt(req.params.taskId);
+    return checkTaskToken(schema, taskId, req.query.token).then(() => {
+        // handle the poster first
+        var posterFile = _.get(req.files, 'poster.0');
+        if (posterFile) {
+            return saveFile(posterFile.path, imageCacheFolder);
+        } else if (req.poster_url) {
+            return copyFile(req.poster_url, imageCacheFolder);
+        }
+    }).then((hash) => {
+        var poster = {};
+        if (hash) {
+            poster.poster_url = `/media/images/${hash}`;
+            updateAssociatedObject(schema, taskId, poster, false);
+        }
+        return poster;
+    }).then((poster) => {
+        sendJson(res, poster);
+    }).then(() => {
+        // then process the video (which might a long time)
+        var file = _.get(req.files, 'file.0');
+        if (file) {
+            return saveFile(req.file.path, videoCacheFolder);
+        } else if (req.body.url) {
+            return copyFile(req.body.url, videoCacheFolder);
+        } else if (req.body.stream) {
+            // use video that was streamed in earlier
+            return req.body.stream;
+        } else {
+            throw new HttpError(404);
+        }
+    }).then((jobId) => {
+        var job = findTranscodingJob(jobId);
+        if (!job) {
+            var srcFile = `${videoCacheFolder}/${jobId}`;
+            job = startTranscodingJob(srcFile, type, jobId);
+        }
+        return awaitTranscodingJob(job);
+    }).then((job) => {
+        var video = {
+            url: job.baseUrl,
+            versions: job.profiles,
+        };
+        updateAssociatedObject(schema, taskId, video, true);
+        return null;
+    }).catch((err) => {
+        sendError(res, err);
+    });
 }
 
 function handleStreamCreate(req, res) {
     return Promise.try(() => {
-        return createStreamId();
-    }).then((streamId) => {
-        startTranscoding(streamId);
+        return createJobId();
+    }).then((jobId) => {
         var file = req.file;
-        if (file) {
-            var inputStream = FS.createReadStream(file.path);
-            transcodeChunk(streamId, inputStream);
+        if (!file) {
+            throw new HttpError(400);
         }
-        return streamId;
-    }).then((streamId) => {
-        res.json({ id: streamId });
+        var type = _.first(_.split(file.mimetype, '/'));
+        if (type !== 'video' && type !== 'audio') {
+            throw new HttpError(400);
+        }
+        var inputStream = FS.createReadStream(file.path);
+        var job = startTranscodingJob(null, type, jobId);
+        transcodeSegment(job, inputStream);
+        return jobId;
+    }).then((jobId) => {
+        sendJson(res, { id: jobId });
     }).catch((err) => {
-        console.error(err);
-        var statusCode = err.statusCode || 500;
-        res.status(err.statusCode || 500).json({ message: err.message });
+        sendError(res, err);
     });
 }
 
 function handleStreamAppend(req, res) {
     return Promise.try(() => {
         var file = req.file;
-        var streamId = req.params.streamId;
+        var job = findTranscodingJob(req.params.jobId);
+        if (!job) {
+            throw new HttpError(404);
+        }
         if (file) {
             var inputStream = FS.createReadStream(file.path);
-            return transcodeChunk(streamId, inputStream);
+            return transcodeSegment(job, inputStream);
         } else {
-            return endTranscoding(streamId);
+            return endTranscodingJob(job);
         }
     }).then(() => {
-        res.json({ status: 'OK' });
+        sendJson(res, { status: 'OK' });
     }).catch((err) => {
-        console.error(err);
-        var statusCode = err.statusCode || 500;
-        res.status(err.statusCode || 500).json({ message: err.message });
+        sendError(res, err);
     });
 }
 
@@ -216,11 +307,11 @@ function handleStreamAppend(req, res) {
  * Make screencap of website, returning the document title
  *
  * @param  {String} url
- * @param  {String} destPath
+ * @param  {String} dstPath
  *
  * @return {Promise<String>}
  */
-function createWebsiteScreenshot(url, destPath) {
+function createWebsiteScreenshot(url, dstPath) {
     return B(Phantom.create(['--ignore-ssl-errors=yes'])).then((instance) => {
         return B(instance.createPage()).then((page) => {
             var dimensions = { width: 1024, height: 768 };
@@ -247,13 +338,13 @@ function createWebsiteScreenshot(url, destPath) {
                     }, 100);
                 });
             }).then(() => {
-                return page.render(destPath);
+                return page.render(dstPath);
             }).then(() => {
                 return page.invokeMethod('evaluate', function() {
                     return document.title;
                 });
             }).then((title) => {
-                return addJPEGDescription(title, destPath).return(title);
+                return addJPEGDescription(title, dstPath).return(title);
             });
         }).finally(() => {
             instance.exit();
@@ -265,10 +356,10 @@ function createWebsiteScreenshot(url, destPath) {
  * Embed description into JPEG file
  *
  * @param {String} description
- * @param {String} destPath
+ * @param {String} dstPath
  */
-function addJPEGDescription(description, destPath) {
-    return FS.readFileAsync(destPath).then((buffer) => {
+function addJPEGDescription(description, dstPath) {
+    return FS.readFileAsync(dstPath).then((buffer) => {
         var data = buffer.toString('binary');
         var zeroth = {};
         zeroth[Piexif.ImageIFD.ImageDescription] = description;
@@ -281,7 +372,7 @@ function addJPEGDescription(description, destPath) {
         var newData = Piexif.insert(exifbytes, data);
         return new Buffer(newData, 'binary');
     }).then((buffer) => {
-        return FS.writeFileAsync(destPath, buffer);
+        return FS.writeFileAsync(dstPath, buffer);
     });
 }
 
@@ -310,8 +401,8 @@ function createCacheFolders() {
     if (!FS.existsSync(videoCacheFolder)) {
         FS.mkdirSync(videoCacheFolder);
     }
-    if (!FS.existsSync(streamCacheFolder)) {
-        FS.mkdirSync(streamCacheFolder);
+    if (!FS.existsSync(audioCacheFolder)) {
+        FS.mkdirSync(audioCacheFolder);
     }
 }
 
@@ -426,15 +517,95 @@ function getAccessor(table) {
     }
 }
 
-function updateResources(object, taskId, params) {
-    var resources = _.get(object, 'details.resources');
-    var res = _.find(resources, { task_id: taskId });
-    if (res) {
-        _.assign(res, params, { task_id: undefined });
-    }
+/**
+ * Save file to cache folder, using the MD5 hash of its content as name
+ *
+ * @param  {String} srcPath
+ * @param  {String} dstFolder
+ *
+ * @return {String}
+ */
+function saveFile(srcPath, dstFolder) {
+    return md5File(srcPath).then((hash) => {
+        var dstPath = `${dstFolder}/${hash}`;
+        return FS.statAsync(dstPath).catch((err) => {
+            return new Promise((resolve, reject) => {
+                var inputStream = FS.createReadStream(srcPath);
+                var outputStream = FS.createWriteStream(dstPath);
+                inputStream.once('error', reject);
+                outputStream.once('finish', resolve);
+                inputStream.pipe(outputStream);
+            });
+        }).return(hash);
+    });
 }
 
-function createStreamId() {
+/**
+ * Throw an 403 exception if a task token isn't valid
+ *
+ * @param  {String} schema
+ * @param  {Number} taskId
+ * @param  {String} token
+ *
+ * @return {Promise}
+ */
+function checkTaskToken(schema, taskId, token) {
+    return Database.open().then((db) => {
+        return Task.findOne(db, schema, { id: taskId }, 'token').then((task) => {
+            if (!task || task.token !== token) {
+                throw new HttpError(403);
+            }
+            return task;
+        });
+    });
+}
+
+/**
+ * Update resources in an object associated with a task
+ *
+ * @param  {String} schema
+ * @param  {Number} taskId
+ * @param  {Object} params
+ * @param  {Boolean} taskCompleted
+ *
+ * @return {Promise}
+ */
+function updateAssociatedObject(schema, taskId, params, taskCompleted) {
+    return Database.open().then((db) => {
+        return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
+            var associate = _.get(task, 'details.associated_object');
+            var table = _.get(associate, 'type');
+            var id = _.get(associate, 'id');
+            var accessor = getAccessor(associate.type);
+            if (!accessor) {
+                return;
+            }
+            return accessor.findOne(db, schema, { id }, '*').then((row) => {
+                var resources = _.get(row, 'details.resources');
+                var res = _.find(resources, { task_id: taskId });
+                if (res) {
+                    _.assign(res, params);
+                    if (taskCompleted) {
+                        delete res.task_id;
+
+                        if (row.published === true && !row.ptime) {
+                            // set ptime when all tasks are done
+                            var ready = _.every(resources, (res) => {
+                                return !res.task_id;
+                            });
+                            if (ready) {
+                                row.ptime = Moment().toISOString();
+                            }
+                        }
+                    }
+                    return accessor.updateOne(db, schema, row);
+                }
+            })
+        });
+    });
+}
+
+function createJobId() {
     return new Promise((resolve, reject) => {
         Crypto.randomBytes(16, function(err, buffer) {
             var token = buffer.toString('hex');
@@ -443,35 +614,70 @@ function createStreamId() {
     });
 }
 
-var transcodeTasks = [];
+var transcodingJobs = [];
+
+/**
+ * Find a transcoding job by id
+ *
+ * @param  {String} jobId
+ *
+ * @return {Object|null}
+ */
+function findTranscodingJob(jobId) {
+    return _.find(transcodingJobs, { jobId }) || null;
+}
 
 /**
  * Start up instances of ffmpeg
  *
- * @param  {String} streamId
+ * @param  {String|null} srcPath
+ * @param  {String} type
+ * @param  {String|null} streamId
+ *
+ * @return {Object}
  */
-function startTranscoding(streamId) {
-    var profiles = {
-        '2500kbps': {
-            videoBitrate: '2500k',
-            audioBitrate: '128k',
-            extension: 'mp4',
-        },
-        '1000kbps': {
-            videoBitrate: '1000k',
-            audioBitrate: '128k',
-            extension: 'mp4',
-        },
+function startTranscodingJob(srcPath, type, jobId) {
+    var job = {
+        jobId,
+        type,
+        streaming: !srcPath,
     };
-    var outputFiles = _.mapValues(profiles, (profile, name) => {
-        return `${streamCacheFolder}/${streamId}.${name}.${profile.extension}`;
+    if (type === 'video') {
+        job.profiles = {
+            '2500kbps': {
+                videoBitrate: 2500 * 1000,
+                audioBitrate: 128 * 1000,
+                format: 'mp4',
+            },
+            '1000kbps': {
+                videoBitrate: 1000 * 1000,
+                audioBitrate: 128 * 1000,
+                format: 'mp4',
+            },
+        };
+        job.destination = videoCacheFolder;
+        job.baseUrl = `/media/videos/${jobId}`;
+    } else if (type === 'audio') {
+        job.profiles = {
+            '128kbps': {
+                audioBitrate: 128  * 1000,
+                format: 'mp3',
+            },
+        };
+        job.destination = audioCacheFolder;
+        job.baseUrl = `/media/audios/${jobId}`;
+    }
+
+    // launch instances of FFmpeg to create files for various profiles
+    job.outputFiles = _.mapValues(job.profiles, (profile, name) => {
+        return `${job.destination}/${jobId}.${name}.${profile.format}`;
     });
-    // launch instances of FFmpeg
-    var processes = _.mapValues(outputFiles, (destPath, name) => {
-        return spawnFFmpeg(destPath, profiles[name]);
+    job.processes = _.mapValues(job.outputFiles, (dstPath, name) => {
+        return spawnFFmpeg(srcPath, dstPath, job.profiles[name]);
     });
+
     // create promises that resolve when FFmpeg exits
-    var promises = _.map(processes, (childProcess) => {
+    job.promise = Promise.map(_.values(job.processes), (childProcess) => {
         return new Promise((resolve, reject) => {
             childProcess.once('exit', (code, signal) => {
                 if (code >= 0) {
@@ -485,106 +691,156 @@ function startTranscoding(streamId) {
             });
         });
     });
-    // create write stream to save original
-    var originalFile = `${streamCacheFolder}/${streamId}.webm`;
-    var writeStream = FS.createWriteStream(originalFile);
-    transcodeTasks.push({
-        streamId,
-        profiles,
-        originalFile,
-        outputFiles,
-        processes,
-        writeStream,
-        promise: Promise.all(promises),
-        queue: [],
-        working: false,
-        finished: false,
-    });
+
+    if (job.streaming) {
+        // add queue and other variables needed for streaming in video
+        job.queue = [];
+        job.working = false;
+        job.finished = false;
+
+        // create write stream to save original
+        job.originalFile = `${job.destination}/${jobId}`;
+        job.writeStream = FS.createWriteStream(job.originalFile);
+        var filePromise = new Promise((resolve, reject) => {
+            job.writeStream.once('error', reject);
+            job.writeStream.once('finish', resolve);
+        });
+
+        // calculate MD5 hash along the way
+        job.md5Hash = Crypto.createHash('md5');
+        var hashPromise = new Promise((resolve, reject) => {
+            job.md5Hash.once('readable', () => {
+                resolve(job.md5Hash.read().toString('hex'));
+            });
+        });
+
+        job.promise.then(() => {
+            // rename the files once we have the MD5 hash
+            return Promise.join(hashPromise, filePromise, (hash) => {
+                var originalFile = _.replace(job.originalFile, job.jobId, hash);
+                var outputFiles = _.mapValues(job.outputFiles, (outputFile) => {
+                    return _.replace(outputFile, job.jobId, hash);
+                });
+                var baseUrl = _.replace(job.baseUrl, job.jobId, hash);
+                var srcFiles = _.concat(job.originalFile, _.values(job.outputFiles));
+                var dstFiles = _.concat(originalFile, _.values(outputFiles));
+                return Promise.map(srcFiles, (srcFile, index) => {
+                    var dstFile = dstFiles[index];
+                    return FS.statAsync(dstFile).then(() => {
+                        // file exists already
+                        if (srcFile !== dstFile) {
+                            return FS.unlinkAsync(srcFile);
+                        }
+                    }).catch((err) => {
+                        return FS.renameAsync(srcFile, dstFile);
+                    });
+                }).then(() => {
+                    job.originalFile = originalFile;
+                    job.outputFiles = outputFiles;
+                    job.baseUrl = baseUrl;
+                });
+            });
+        });
+    }
+
+    transcodingJobs.push(job);
+    return job;
+}
+
+/**
+ * Wait for transcoding job to finish
+ *
+ * @param  {Object} job
+ * @return {Promise<Object>}
+ */
+function awaitTranscodingJob(job) {
+    return job.promise.return(job);
 }
 
 /**
  * Add a file to the transcode queue
  *
- * @param  {String} streamId
+ * @param  {Object} job
  * @param  {ReadableStream} file
  */
-function transcodeChunk(streamId, inputStream) {
-    var task = _.find(transcodeTasks, { streamId });
-    if (!task) {
-        throw new HttpError(404);
-    }
-    task.queue.push(inputStream);
-    if (!task.working) {
-        processNextStreamSegment(task);
+function transcodeSegment(job, inputStream) {
+    job.queue.push(inputStream);
+    if (!job.working) {
+        processNextStreamSegment(job);
     }
 }
 
 /**
  * Indicate that there will be no more additional files
  *
- * @param  {String} streamId
+ * @param  {Object} job
  */
-function endTranscoding(streamId) {
-    var task = _.find(transcodeTasks, { streamId });
-    if (!task) {
-        throw new HttpError(404);
-    }
-    task.finished = true;
-    if (!task.working) {
-        processNextStreamSegment(task);
+function endTranscodingJob(job) {
+    job.finished = true;
+    if (!job.working) {
+        processNextStreamSegment(job);
     }
 }
 
 /**
  * Get the next stream segment and pipe it to FFmpeg
  *
- * @param  {Object} task
+ * @param  {Object} job
  */
-function processNextStreamSegment(task) {
-    var inputStream = task.queue.shift();
+function processNextStreamSegment(job) {
+    var inputStream = job.queue.shift();
     if (inputStream) {
-        task.working = true;
+        job.working = true;
         // save the original
-        inputStream.pipe(task.writeStream, { end: false });
+        inputStream.pipe(job.writeStream, { end: false });
+        // calculate MD5
+        inputStream.pipe(job.md5Hash, { end: false });
         // pipe stream to stdin of FFmpeg, leaving stdin open afterward
-        _.each(task.processes, (childProcess) => {
+        _.each(job.processes, (childProcess) => {
             inputStream.pipe(childProcess.stdin, { end: false });
         });
         inputStream.once('end', () => {
             // done, try processing the next segment
-            processNextStreamSegment(task);
+            processNextStreamSegment(job);
         });
     } else {
-        task.working = false;
-        if (task.finished) {
-            // there are no more segments--close stdin of FFmpeg so it'd exit
-            // after processing remaining data
-            _.each(task.processes, (childProcess) => {
+        job.working = false;
+        if (job.finished) {
+            // there are no more segments
+            job.writeStream.end();
+            job.md5Hash.end();
+            // close stdin of FFmpeg so it'd exit after processing remaining data
+            _.each(job.processes, (childProcess) => {
                 childProcess.stdin.end();
             });
-            task.writeStream.end();
         }
     }
 }
 
 /**
- * Spawn an instance of FFmpeg that gets its input from stdin
+ * Spawn an instance of FFmpeg
  *
- * @param  {String} destPath
+ * @param  {String} srcPath
+ * @param  {String} dstPath
  * @param  {Object} profile
  *
  * @return {ChildProcess}
  */
-function spawnFFmpeg(destPath, profile) {
+function spawnFFmpeg(srcPath, dstPath, profile) {
     var cmd = 'ffmpeg';
-    var options = {
-        stdio: [ 'pipe', 'inherit', 'inherit' ]
-    };
     var inputArgs = [], input = Array.prototype.push.bind(inputArgs);
     var outputArgs = [], output = Array.prototype.push.bind(outputArgs);
+    var options = {
+        stdio: [ 'inherit', 'ignore', 'ignore' ]
+    };
 
-    // add input options
-    input('-i', 'pipe:0');
+    if (srcPath) {
+        input('-i', srcPath);
+    } else {
+        // get input from stdin
+        input('-i', 'pipe:0');
+        options.stdio[0] = 'pipe';
+    }
 
     // add output options
     if (profile.videoBitrate) {
@@ -596,7 +852,7 @@ function spawnFFmpeg(destPath, profile) {
     if (profile.frameRate) {
         output('-r', profile.frameRate);
     }
-    output(destPath);
+    output(dstPath);
 
     var args = _.concat(inputArgs, outputArgs);
     return ChildProcess.spawn(cmd, args, options);
@@ -611,7 +867,26 @@ function spawnFFmpeg(destPath, profile) {
  */
 function md5(data) {
     var hash = Crypto.createHash('md5').update(data);
-    return hash.digest("hex");
+    return hash.digest('hex');
+}
+
+/**
+ * Generate MD5 hash of file contents
+ *
+ * @param  {String} srcPath
+ *
+ * @return {Promise<String>}
+ */
+function md5File(srcPath) {
+    return new Promise((resolve, reject) => {
+        var hash = Crypto.createHash('md5');
+        var stream = FS.createReadStream(srcPath);
+        stream.once('error', reject);
+        hash.once('readable', () => {
+            resolve(hash.read().toString('hex'));
+        });
+        stream.pipe(hash);
+    });
 }
 
 function B(promise) {

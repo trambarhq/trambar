@@ -152,7 +152,7 @@ module.exports = Relaks.createClass({
         var queue = this.props.queue;
         return queue.downloadNextResource(story).then((succeeded) => {
             if (succeeded) {
-                var update = function(propName) {
+                var update = (propName) => {
                     var stories = this.state[propName];
                     var index = _.findIndex(this.state.storyDrafts, { id: story.id });
                     if (index === -1) {
