@@ -249,11 +249,15 @@ function handleMediaUpload(req, res, type) {
         }
         return awaitTranscodingJob(job);
     }).then((job) => {
-        var video = {
+        var media = {
             url: job.baseUrl,
             versions: job.profiles,
         };
-        updateAssociatedObject(schema, taskId, video, true);
+        if (req.body.stream) {
+            // remove the stream id
+            media.stream = undefined;
+        }
+        updateAssociatedObject(schema, taskId, media, true);
         return null;
     }).catch((err) => {
         sendError(res, err);
@@ -723,7 +727,7 @@ function startTranscodingJob(srcPath, type, jobId) {
                 });
                 var baseUrl = _.replace(job.baseUrl, job.jobId, hash);
                 var srcFiles = _.concat(job.originalFile, _.values(job.outputFiles));
-                var dstFiles = _.concat(job.originalFile, _.values(outputFiles));
+                var dstFiles = _.concat(originalFile, _.values(outputFiles));
                 return Promise.map(srcFiles, (srcFile, index) => {
                     var dstFile = dstFiles[index];
                     return FS.statAsync(dstFile).then(() => {

@@ -63,7 +63,7 @@ module.exports = React.createClass({
     initializeCamera: function() {
         this.createLiveVideoStream().then((stream) => {
             this.setLiveVideoState(null, stream);
-        }).catch(function(err) {
+        }).catch((err) => {
             this.setLiveVideoState(err, null);
         });
     },

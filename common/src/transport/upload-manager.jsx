@@ -106,6 +106,24 @@ module.exports = React.createClass({
                         }
                     }
                     break;
+                case 'audio':
+                    if (!res.url) {
+                        if (res.file instanceof Blob) {
+                            action = 'upload and transcode audio';
+                            params = {
+                                file: res.file,
+                            };
+                        } else if (res.external_url) {
+                            action = 'copy and transcode audio';
+                            params = { url: res.external_url };
+                        } else if (res.stream) {
+                            action = 'copy and transcode audio';
+                            params = {
+                                stream: res.stream,
+                            };
+                        }
+                    }
+                break;
                 case 'video':
                     if (!res.url) {
                         if (res.file instanceof Blob) {
@@ -411,6 +429,10 @@ module.exports = React.createClass({
             case 'copy and transcode video':
             case 'upload and transcode video':
                 url += `/media/videos/upload/${schema}/${taskId}`;
+                break;
+            case 'copy and transcode audio':
+            case 'upload and transcode audio':
+                url += `/media/audios/upload/${schema}/${taskId}`;
                 break;
             case 'generate website poster':
                 url += `/media/html/screenshot/${schema}/${taskId}`;

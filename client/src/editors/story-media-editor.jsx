@@ -14,6 +14,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
+var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
 var LocalImageCropper = require('media/local-image-cropper');
 
@@ -37,6 +38,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             capturingPhoto: false,
+            capturingAudio: false,
             capturingVideo: false,
         };
     },
@@ -47,6 +49,7 @@ module.exports = React.createClass({
                 <header>
                     {this.renderButtons()}
                     {this.renderPhotoDialog()}
+                    {this.renderAudioDialog()}
                     {this.renderVideoDialog()}
                 </header>
                 <body>
@@ -68,6 +71,11 @@ module.exports = React.createClass({
             icon: 'video-camera',
             onClick: this.handleVideoClick,
         };
+        var audioButtonProps = {
+            label: t('story-audio'),
+            icon: 'microphone',
+            onClick: this.handleAudioClick,
+        };
         var selectButtonProps = {
             label: t('story-file'),
             icon: 'file',
@@ -77,6 +85,7 @@ module.exports = React.createClass({
             <div>
                 <Button {...photoButtonProps} />
                 <Button {...videoButtonProps} />
+                <Button {...audioButtonProps} />
                 <FileButton {...selectButtonProps} />
             </div>
         );
@@ -117,6 +126,25 @@ module.exports = React.createClass({
             onCancel: this.handleVideoCancel,
         };
         return <VideoCaptureDialogBox {...props} />
+    },
+
+    /**
+     * Render dialogbox for capturing video through MediaStream API
+     *
+     * @return {ReactElement|null}
+     */
+    renderAudioDialog: function() {
+        if (process.env.PLATFORM !== 'browser') {
+            return null;
+        }
+        var props = {
+            show: this.state.capturingAudio,
+            queue: this.props.queue,
+            locale: this.props.locale,
+            onCapture: this.handleAudioCapture,
+            onCancel: this.handleAudioCancel,
+        };
+        return <AudioCaptureDialogBox {...props} />
     },
 
     renderPreview: function() {
@@ -172,6 +200,12 @@ module.exports = React.createClass({
         var res = _.clone(video);
         res.type = 'video';
         res.clip = getDefaultClippingRect(video);
+        this.attachResource(res);
+    },
+
+    attachAudio: function(audio) {
+        var res = _.clone(audio);
+        res.type = 'audio';
         this.attachResource(res);
     },
 
@@ -240,6 +274,40 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'browser') {
             this.setState({ capturingVideo: false });
             this.attachVideo(evt.video);
+        }
+    },
+
+    /**
+     * Called when user click on audio button
+     *
+     * @param  {Event} evt
+     */
+    handleAudioClick: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingAudio: true });
+        }
+    },
+
+    /**
+     * Called when user clicks x or outside the photo dialog
+     *
+     * @param  {Event} evt
+     */
+    handleAudioCancel: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingAudio: false });
+        }
+    },
+
+    /**
+     * Called after user has shot a video
+     *
+     * @param  {Object} evt
+     */
+    handleAudioCapture: function(evt) {
+        if (process.env.PLATFORM === 'browser') {
+            this.setState({ capturingAudio: false });
+            this.attachAudio(evt.audio);
         }
     },
 

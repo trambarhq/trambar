@@ -1,6 +1,14 @@
 module.exports = function(languageCode) {
     var phrases = {
         'app-name': 'Trambar',
+
+        'audio-capture-accept': 'Accept',
+        'audio-capture-cancel': 'Cancel',
+        'audio-capture-pause': 'Pause',
+        'audio-capture-rerecord': 'Rerecord',
+        'audio-capture-start': 'Start',
+        'audio-capture-stop': 'Stop',
+
         'bottom-nav-bookmarks': 'bookmarks',
         'bottom-nav-news': 'news',
         'bottom-nav-notifications': 'notifications',
@@ -33,6 +41,7 @@ module.exports = function(languageCode) {
         },
         'story-add-coauthor': 'Add coauthor',
         'story-add-remove-coauthor': 'Remove coauthor',
+        'story-audio': 'Audio',
         'story-cancel': 'Cancel',
         'story-comment': 'Comment',
         'story-file': 'File',
