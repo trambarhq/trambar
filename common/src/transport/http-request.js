@@ -34,7 +34,7 @@ exports.fetch = function(method, url, payload, options) {
             contentType = 'application/json';
         }
         if (contentType === 'application/json' && _.isObject(payload)) {
-            payload = JSON.stringify(payload);
+            payload = JSON.stringify(payload, omitBlob);
         }
 
         xhr.timeout = _.get(options, 'timeout');
@@ -81,4 +81,11 @@ exports.fetch = function(method, url, payload, options) {
         xhr.abort();
     };
     return promise;
+}
+
+function omitBlob(key, value) {
+    if (value instanceof Blob) {
+        return undefined;
+    }
+    return value;
 }

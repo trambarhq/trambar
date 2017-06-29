@@ -723,7 +723,7 @@ function startTranscodingJob(srcPath, type, jobId) {
                 });
                 var baseUrl = _.replace(job.baseUrl, job.jobId, hash);
                 var srcFiles = _.concat(job.originalFile, _.values(job.outputFiles));
-                var dstFiles = _.concat(originalFile, _.values(outputFiles));
+                var dstFiles = _.concat(job.originalFile, _.values(outputFiles));
                 return Promise.map(srcFiles, (srcFile, index) => {
                     var dstFile = dstFiles[index];
                     return FS.statAsync(dstFile).then(() => {
