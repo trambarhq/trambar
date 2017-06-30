@@ -14,6 +14,8 @@ require('./story-editor-options.scss');
 module.exports = React.createClass({
     displayName: 'StoryEditorOptions',
     propTypes: {
+        inMenu: PropTypes.bool,
+        section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
         story: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
 
@@ -25,6 +27,13 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
     },
 
+    getDefaultProps: function() {
+        return {
+            inMenu: false,
+            section: 'both',
+        }
+    },
+
     getInitialState: function() {
         return {
             selectingRecipients: false,
@@ -32,6 +41,13 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        if (this.props.inMenu) {
+            return (
+                <div className="story-editor-options in-menu">
+                    {this.renderButtons(this.props.section)}
+                </div>
+            );
+        }
         var t = this.props.locale.translate;
         return (
             <StorySection className="story-editor-options">
@@ -42,40 +58,48 @@ module.exports = React.createClass({
                     </div>
                 </header>
                 <body>
-                    {this.renderButtons()}
-                    {this.renderUserSelectionDialogBox()}
+                    {this.renderButtons('main')}
+                    {this.renderButtons('supplemental')}
                 </body>
             </StorySection>
         );
     },
 
-    renderButtons: function() {
+    renderButtons: function(section) {
         var t = this.props.locale.translate;
         var options = this.props.options;
-        var addIssueProps = {
-            label: t('option-add-issue'),
-            selected: options.addIssue,
-            onClick: this.handleAddIssueClick,
-        };
-        var sendBookmarkProps = {
-            label: options.bookmarkRecipients
-                ? t('option-send-bookmarks-to-$1-users', options.bookmarkRecipients.length)
-                : t('option-send-bookmarks'),
-            selected: !!options.bookmarkRecipients,
-            onClick: this.handleSendBookmarkClick,
-        };
-        var hidePostProps = {
-            label: t('option-hide-post'),
-            selected: options.hidePost,
-            onClick: this.handleHidePostClick,
-        };
-        return (
-            <ul>
-                <Button {...addIssueProps} />
-                <Button {...sendBookmarkProps} />
-                <Button {...hidePostProps} />
-            </ul>
-        );
+        if (section === 'main') {
+            var addIssueProps = {
+                label: t('option-add-issue'),
+                selected: options.addIssue,
+                onClick: this.handleAddIssueClick,
+            };
+            var sendBookmarkProps = {
+                label: options.bookmarkRecipients
+                    ? t('option-send-bookmarks-to-$1-users', options.bookmarkRecipients.length)
+                    : t('option-send-bookmarks'),
+                selected: !!options.bookmarkRecipients,
+                onClick: this.handleSendBookmarkClick,
+            };
+            var hidePostProps = {
+                label: t('option-hide-post'),
+                selected: options.hidePost,
+                onClick: this.handleHidePostClick,
+            };
+            return (
+                <ul className={section}>
+                    <Button {...addIssueProps} />
+                    <Button {...sendBookmarkProps} />
+                    <Button {...hidePostProps} />
+                    {this.renderUserSelectionDialogBox()}
+                </ul>
+            );
+        } else if (section === 'supplemental') {
+            return (
+                <ul className={section}>
+                </ul>
+            )
+        }
     },
 
     renderUserSelectionDialogBox: function() {

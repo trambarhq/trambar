@@ -11,7 +11,6 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
-var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./story-contents.scss');
 
@@ -22,6 +21,7 @@ module.exports = React.createClass({
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
         pending: PropTypes.bool.isRequired,
+        cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -35,7 +35,7 @@ module.exports = React.createClass({
                 <header>
                     {this.renderProfileImage()}
                     {this.renderNames()}
-                    {this.renderCornerPopUp()}
+                    {this.props.cornerPopUp}
                 </header>
                 <subheader>
                     {this.renderTime()}
@@ -67,19 +67,6 @@ module.exports = React.createClass({
                 &nbsp;
             </span>
         )
-    },
-
-    renderCornerPopUp: function() {
-        if (this.props.theme.mode === 'columns-3') {
-            return null;
-        }
-        return (
-            <CornerPopUp>
-                <div style={{ width: '10em' }}>
-                    Hello world
-                </div>
-            </CornerPopUp>
-        );
     },
 
     renderTime: function() {

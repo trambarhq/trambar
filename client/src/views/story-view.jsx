@@ -12,6 +12,7 @@ var UpdateCheck = require('mixins/update-check');
 var StoryContents = require('views/story-contents');
 var StoryComments = require('views/story-comments');
 var StoryViewOptions = require('views/story-view-options');
+var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./story-view.scss');
 
@@ -90,6 +91,7 @@ module.exports = React.createClass({
             story: this.props.story,
             authors: this.props.authors,
             pending: this.props.pending,
+            cornerPopUp: this.renderPopUpMenu('main'),
 
             database: this.props.database,
             route: this.props.route,
@@ -114,8 +116,21 @@ module.exports = React.createClass({
         return <StoryComments {...props} />;
     },
 
-    renderOptions: function() {
+    renderPopUpMenu: function(section) {
+        if (this.props.theme.mode === 'columns-3') {
+            return null;
+        }
+        return (
+            <CornerPopUp>
+                {this.renderOptions(true, section)}
+            </CornerPopUp>
+        );
+    },
+
+    renderOptions: function(inMenu, section) {
         var props = {
+            inMenu,
+            section,
             story: this.props.story,
             options: {},
 

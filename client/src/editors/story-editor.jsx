@@ -14,6 +14,7 @@ var UpdateCheck = require('mixins/update-check');
 var StoryTextEditor = require('editors/story-text-editor');
 var StoryMediaEditor = require('editors/story-media-editor');
 var StoryEditorOptions = require('editors/story-editor-options');
+var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./story-editor.scss');
 
@@ -120,6 +121,7 @@ module.exports = React.createClass({
             story: this.props.story,
             authors: this.props.authors,
             languageCode: this.state.languageCode,
+            cornerPopUp: this.renderPopUpMenu('main'),
 
             database: this.props.database,
             route: this.props.route,
@@ -140,6 +142,7 @@ module.exports = React.createClass({
     renderMediaEditor: function() {
         var props = {
             story: this.props.story,
+            cornerPopUp: this.renderPopUpMenu('supplemental'),
 
             database: this.props.database,
             queue: this.props.queue,
@@ -152,8 +155,21 @@ module.exports = React.createClass({
         return <StoryMediaEditor {...props} />
     },
 
-    renderOptions: function() {
+    renderPopUpMenu: function(section) {
+        if (this.props.theme.mode === 'columns-3') {
+            return null;
+        }
+        return (
+            <CornerPopUp>
+                {this.renderOptions(true, section)}
+            </CornerPopUp>
+        );
+    },
+
+    renderOptions: function(inMenu, section) {
         var props = {
+            inMenu,
+            section,
             story: this.props.story,
             options: this.state.options,
 

@@ -13,7 +13,6 @@ var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
-var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./story-text-editor.scss');
 
@@ -24,6 +23,7 @@ module.exports = React.createClass({
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
         languageCode: PropTypes.string.isRequired,
+        cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -47,7 +47,7 @@ module.exports = React.createClass({
                 <header>
                     {this.renderProfileImage()}
                     {this.renderNames()}
-                    {this.renderCornerPopUp()}
+                    {this.props.cornerPopUp}
                 </header>
                 <subheader>
                     {this.renderCoauthoringButtons()}
@@ -83,19 +83,6 @@ module.exports = React.createClass({
                 &nbsp;
             </span>
         )
-    },
-
-    renderCornerPopUp: function() {
-        if (this.props.theme.mode === 'columns-3') {
-            return null;
-        }
-        return (
-            <CornerPopUp>
-                <div style={{ width: '10em' }}>
-                    Hello world
-                </div>
-            </CornerPopUp>
-        );
     },
 
     renderCoauthoringButtons: function() {

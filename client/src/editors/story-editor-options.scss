@@ -1,6 +1,7 @@
 .story-editor-options {
     UL {
         margin-top: 0;
+        margin-bottom: 0;
         padding-left: 0;
 
         LI {
@@ -23,5 +24,25 @@
                 vertical-align: middle;
             }
         }
+    }
+}
+
+.story-editor-options.in-menu {
+    UL {
+        LI {
+            color: #666666;
+
+            &.selected, &:hover {
+                color: #000000;
+            }
+        }
+    }
+
+    .main {
+        width: 15em;
+    }
+
+    .supplemental {
+        width: 15em;
     }
 }

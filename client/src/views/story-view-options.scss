@@ -2,6 +2,7 @@
     UL {
         margin-top: 0;
         padding-left: 0;
+        margin-bottom: 0;
 
         LI {
             list-style: none;
@@ -23,5 +24,25 @@
                 vertical-align: middle;
             }
         }
+    }
+}
+
+.story-view-options.in-menu {
+    UL {
+        LI {
+            color: #666666;
+
+            &.selected, &:hover {
+                color: #000000;
+            }
+        }
+    }
+
+    .main {
+        width: 15em;
+    }
+
+    .supplemental {
+        width: 15em;
     }
 }
