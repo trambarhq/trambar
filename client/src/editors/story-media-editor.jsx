@@ -1,3 +1,5 @@
+var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
@@ -41,20 +43,23 @@ module.exports = React.createClass({
             capturingPhoto: false,
             capturingAudio: false,
             capturingVideo: false,
+            dropZoneStatus: 'idle',
+            selectedResourceIndex: 0,
         };
     },
 
     render: function() {
         return (
-            <StorySection>
+            <StorySection className="story-media-editor">
                 <header>
                     {this.renderButtons()}
                     {this.renderPhotoDialog()}
                     {this.renderAudioDialog()}
                     {this.renderVideoDialog()}
                 </header>
-                <body>
-                    {this.renderPreview()}
+                <body onDragEnter={this.handleDragEnter}>
+                    {this.renderResourceEditor()}
+                    {this.renderDropZone()}
                 </body>
             </StorySection>
         );
@@ -149,17 +154,65 @@ module.exports = React.createClass({
         return <AudioCaptureDialogBox {...props} />
     },
 
-    renderPreview: function() {
-        var resources = _.get(this.props.story, 'details.resources');
-        var image = _.find(resources, { type: 'image' });
-        if (image && image.file instanceof Blob) {
-            var props = {
-                file: image.file,
-                clippingRect: image.clip || getDefaultClippingRect(image),
-                onChange: this.handleClipRectChange,
-            };
-            return <LocalImageCropper {...props} />;
+    renderResourceEditor: function() {
+        var resources = _.get(this.props.story, 'details.resources', []);
+        var res = resources[this.state.selectedResourceIndex] || _.last(resources);
+        if (!res) {
+            var t = this.props.locale.translate;
+            return (
+                <div className="message">Drop and drop files here</div>
+            );
         }
+        switch (res.type) {
+            case 'image':
+            case 'video':
+            case 'website':
+                return this.renderImageCropper(res);
+            case 'audio':
+                return (
+                    <div className="audio-placeholder">
+                        <i className="fa fa-microphone" />
+                    </div>
+                );
+        }
+    },
+
+    renderImageCropper: function(res) {
+        var file;
+        switch (res.type) {
+            case 'image':
+                file = res.file;
+                break;
+            case 'video':
+            case 'audio':
+            case 'website':
+                file = res.poster_file;
+                break;
+        }
+        if (!file) {
+            return <div>Loading</div>;
+        }
+        var props = {
+            file: file,
+            clippingRect: res.clip || getDefaultClippingRect(res),
+            onChange: this.handleClipRectChange,
+        };
+        return <LocalImageCropper {...props} />;
+    },
+
+    renderDropZone: function() {
+        if (this.state.dropZoneStatus === 'idle') {
+            return;
+        }
+        var classNames = [ 'drop-zone', this.state.dropZoneStatus ];
+        var props = {
+            className: classNames.join(' '),
+            onDragEnter: this.handleDragEnter,
+            onDragLeave: this.handleDragLeave,
+            onDragOver: this.handleDragOver,
+            onDrop: this.handleDrop,
+        };
+        return <div {...props} />
     },
 
     /**
@@ -203,12 +256,57 @@ module.exports = React.createClass({
         res.type = 'video';
         res.clip = getDefaultClippingRect(video);
         this.attachResource(res);
+
     },
 
     attachAudio: function(audio) {
         var res = _.clone(audio);
         res.type = 'audio';
         this.attachResource(res);
+    },
+
+    importFile: function(file) {
+        if (/^image/.test(file.type)) {
+            return BlobReader.loadImage(file).then((img) => {
+                var type = file.type;
+                var width = img.naturalWidth;
+                var height = img.naturalHeight;
+                var image = { type, file, width, height };
+                image.clip = getDefaultClippingRect(image);
+                this.attachImage(image);
+            });
+        } else if (/^video/.test(file.type)) {
+        }
+    },
+
+    importFiles: function(files) {
+        var resources = _.get(this.props.story, 'details.resources', []);
+        var firstIndex = resources.length;
+        return Promise.each(files, (file) => {
+            return this.importFile(file);
+        }).delay(50).finally(() => {
+            // select the first import item
+            var resources = _.get(this.props.story, 'details.resources', []);
+            if (firstIndex < resources.length) {
+                this.setState({ selectedResourceIndex: firstIndex });
+            }
+        });
+    },
+
+    checkFile: function(file) {
+        if (/^image/.test(file.type)) {
+            return true;
+        } else if (/^video/.test(file.type)) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    checkFiles: function(files) {
+        return _.every(files, (file) => {
+            return this.checkFile(file);
+        });
     },
 
     /**
@@ -319,16 +417,37 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleFileSelect: function(evt) {
-        var file = evt.target.files[0];
-        if (file) {
-            return BlobReader.loadImage(file).then((img) => {
-                var type = file.type;
-                var width = img.naturalWidth;
-                var height = img.naturalHeight;
-                var image = { type, file, width, height };
-                this.attachImage(image);
-            });
+        var files = evt.target.files;
+        this.importFiles(files);
+        return null;
+    },
+
+    handleDragEnter: function(evt) {
+        var files = evt.dataTransfer.files;
+        if (this.checkFiles(files)) {
+            this.setState({ dropZoneStatus: 'valid' });
+        } else {
+            this.setState({ dropZoneStatus: 'invalid' });
+            evt.dataTransfer.dropEffect = 'none';
         }
+    },
+
+    handleDragLeave: function(evt) {
+        this.setState({ dropZoneStatus: 'idle' });
+    },
+
+    handleDragOver: function(evt) {
+        evt.preventDefault();
+    },
+
+    handleDrop: function(evt) {
+        evt.preventDefault();
+        if (this.state.status !== 'valid') {
+            var files = evt.dataTransfer.files;
+            this.importFiles(files);
+        }
+        this.setState({ dropZoneStatus: 'idle' });
+        return null;
     },
 
     /**
@@ -337,15 +456,17 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleClipRectChange: function(evt) {
-        var file = evt.target.props.file;
         var story = _.cloneDeep(this.props.story);
-        var resources = _.get(story, 'details.resources');
-        var index = _.findIndex(resources, { file });
-        if (index !== -1) {
-            var res = resources[index];
-            res.clip = evt.rect;
+        var resources = _.get(story, 'details.resources', []);
+        var index = this.state.selectedResourceIndex;
+        if (index > resources.length) {
+            index = resources.length - 1;
         }
-        this.triggerChangeEvent(story, `details.resources.${index}.clip`);
+        var res = resources[index];
+        if (res) {
+            res.clip = evt.rect;
+            this.triggerChangeEvent(story, `details.resources.${index}.clip`);
+        }
     },
 });
 

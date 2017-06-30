@@ -1,0 +1,51 @@
+.story-media-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .header {
+        flex: 0 1 auto;
+    }
+
+    .body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        position: relative;
+    }
+
+    .drop-zone {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+    }
+
+    .drop-zone.valid {
+        border: 2px solid yellow;
+    }
+
+    .drop-zone.invalid {
+        border: 2px solid red;
+        cursor: no-drop;
+    }
+
+    .audio-placeholder {
+        font-size: 4em;
+    }
+
+    .message {
+        border: 2px dashed #666666;
+        padding: 2em;
+        color: #666666;
+    }
+
+    .local-image-cropper {
+        max-width: 800px;
+        width: 100%;
+    }
+}
