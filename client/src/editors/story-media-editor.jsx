@@ -13,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var CornerPopUp = require('widgets/corner-pop-up');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
@@ -87,7 +88,21 @@ module.exports = React.createClass({
                 <Button {...videoButtonProps} />
                 <Button {...audioButtonProps} />
                 <FileButton {...selectButtonProps} />
+                {this.renderCornerPopUp()}
             </div>
+        );
+    },
+
+    renderCornerPopUp: function() {
+        if (this.props.theme.mode === 'columns-3') {
+            return null;
+        }
+        return (
+            <CornerPopUp>
+                <div style={{ width: '10em' }}>
+                    Hello world
+                </div>
+            </CornerPopUp>
         );
     },
 
