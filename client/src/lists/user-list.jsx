@@ -146,7 +146,7 @@ var findRoles = MemoizeWeak(function(roles, user) {
 var findDailyActivities = MemoizeWeak(function(dailyActivities, user) {
     if (user) {
         return _.find(dailyActivities, (stats) => {
-            return stats.filters.user_ids[0] === userId;
+            return stats.filters.user_ids[0] === user.id;
         });
     } else {
         return null;

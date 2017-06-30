@@ -11,7 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var UserStory = require('views/user-story');
 var UserStatistics = require('views/user-statistics');
-var UserOptions = require('views/user-options');
+var UserViewOptions = require('views/user-view-options');
 
 require('./user-view.scss');
 
@@ -107,6 +107,6 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        return <UserOptions {...props} />;
+        return <UserViewOptions {...props} />;
     },
 });

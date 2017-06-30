@@ -2,6 +2,15 @@ module.exports = function(languageCode) {
     var phrases = {
         'app-name': 'Trambar',
 
+        'action-contact-by-phone': 'Contact by phone',
+        'action-contact-by-email': 'Contact by e-mail',
+        'action-contact-by-skype': 'Contact by Skype',
+        'action-contact-by-slack': 'Contact by Slack',
+        'action-contact-by-ichat': 'Contact by iChat',
+        'action-view-gitlab-page': 'View Gitlab page',
+        'action-view-github-page': 'View Github page',
+        'action-view-stackoverflow-page': 'View Stack Overflow Page',
+
         'audio-capture-accept': 'Accept',
         'audio-capture-cancel': 'Cancel',
         'audio-capture-pause': 'Pause',
@@ -51,6 +60,8 @@ module.exports = function(languageCode) {
         'story-post': 'Post',
         'story-pending': 'Pending...',
         'story-video': 'Video',
+
+        'user-actions': 'Actions',
 
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',
