@@ -5,40 +5,6 @@
         background-color: #211a1a;
         padding: 0.5em 0.5em 0.4em 0.5em;
 
-        .button {
-            display: inline-block;
-            color: #666666;
-            margin-right: 0.5em;
-            cursor: pointer;
-
-            &:hover {
-                color: #eeeeee;
-            }
-
-            &.disabled {
-                cursor: default;
-                &:hover {
-                    color: #666666;
-                }
-            }
-
-            &.highlighted {
-                color: #e24329;
-            }
-
-            .label {
-                font-size: 0.9em;
-                margin-left: 0.3em;
-            }
-
-            INPUT[type="file"] {
-                position: absolute;
-                z-index: -50000;
-                width: 1px;
-                height: 1px;
-            }
-        }
-
         &:empty {
            display: none;
         }

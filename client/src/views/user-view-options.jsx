@@ -7,6 +7,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var UserSection = require('widgets/user-section');
+var HeaderButton = require('widgets/header-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 
 require('./user-view-options.scss');
@@ -51,10 +52,7 @@ module.exports = React.createClass({
             return (
                 <UserSection className="view-options">
                     <header>
-                        <div className="button disabled">
-                            <i className="fa fa-chevron-circle-right"/>
-                            <span className="label">{t('user-actions')}</span>
-                        </div>
+                        <HeaderButton icon="chevron-circle-right" label={t('user-actions')} disabled />
                     </header>
                     <body>
                         {this.renderButtons('main')}

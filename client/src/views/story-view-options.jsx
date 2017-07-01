@@ -7,6 +7,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var HeaderButton = require('widgets/header-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 
 require('./story-view-options.scss');
@@ -52,10 +53,7 @@ module.exports = React.createClass({
             return (
                 <StorySection className="view-options">
                     <header>
-                        <div className="button disabled">
-                            <i className="fa fa-chevron-circle-right"/>
-                            <span className="label">{t('story-options')}</span>
-                        </div>
+                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled /> 
                     </header>
                     <body>
                         {this.renderButtons('main')}

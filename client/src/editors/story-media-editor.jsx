@@ -15,6 +15,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var HeaderButton = require('widgets/header-button');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
@@ -89,10 +90,10 @@ module.exports = React.createClass({
         }
         return (
             <div>
-                <Button {...photoButtonProps} />
-                <Button {...videoButtonProps} />
-                <Button {...audioButtonProps} />
-                <FileButton {...selectButtonProps} />
+                <HeaderButton {...photoButtonProps} />
+                <HeaderButton {...videoButtonProps} />
+                <HeaderButton {...audioButtonProps} />
+                <HeaderButton.File {...selectButtonProps} />
                 {this.props.cornerPopUp}
             </div>
         );
@@ -469,45 +470,6 @@ module.exports = React.createClass({
         }
     },
 });
-
-function Button(props) {
-    if (props.hidden) {
-        return null;
-    }
-    var classNames = [ 'button' ];
-    if (props.className) {
-        classNames.push(props.className);
-    }
-    if (props.highlighted) {
-        classNames.push('highlighted');
-    }
-    return (
-        <div className={classNames.join(' ')} onClick={props.onClick}>
-            <i className={props.icon ? `fa fa-${props.icon}` : null}/>
-            <span className="label">{props.label}</span>
-        </div>
-    );
-}
-
-function FileButton(props) {
-    if (props.hidden) {
-        return null;
-    }
-    var classNames = [ 'button' ];
-    if (props.className) {
-        classNames.push(props.className);
-    }
-    if (props.highlighted) {
-        classNames.push('highlighted');
-    }
-    return (
-        <label className={classNames.join(' ')}>
-            <i className={props.icon ? `fa fa-${props.icon}` : null}/>
-            <span className="label">{props.label}</span>
-            <input type="file" value="" onChange={props.onChange} />
-        </label>
-    );
-}
 
 /**
  * Return a clipping rect that centers the image

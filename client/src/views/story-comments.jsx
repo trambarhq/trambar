@@ -10,6 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var HeaderButton = require('widgets/header-button');
 var CommentList = require('lists/comment-list');
 
 require('./story-comments.scss');
@@ -102,9 +103,9 @@ module.exports = React.createClass({
         }
         return (
             <div>
-                <Button {...likeButtonProps} />
-                <Button {...commentButtonProps} />
-                <Button {...showButtonProps} />
+                <HeaderButton {...likeButtonProps} />
+                <HeaderButton {...commentButtonProps} />
+                <HeaderButton {...showButtonProps} />
             </div>
         );
     },
@@ -166,22 +167,3 @@ module.exports = React.createClass({
         this.setState({ expanded: true });
     },
 });
-
-function Button(props) {
-    if (props.hidden) {
-        return null;
-    }
-    var classNames = [ 'button' ];
-    if (props.className) {
-        classNames.push(props.className);
-    }
-    if (props.highlighted) {
-        classNames.push('highlighted');
-    }
-    return (
-        <div className={classNames.join(' ')} onClick={props.onClick}>
-            <i className={props.icon ? `fa fa-${props.icon}` : null}/>
-            <span className="label">{props.label}</span>
-        </div>
-    );
-}
