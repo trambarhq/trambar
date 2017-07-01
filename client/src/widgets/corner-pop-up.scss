@@ -2,7 +2,18 @@
     position: relative;
     float: right;
 
-    .icon {
+    .button {
+        color: #666666;
+        cursor: pointer;
+
+        &:hover {
+            color: #eeeeee;
+        }
+
+        .label {
+            font-size: 0.9em;
+            margin-left: 0.3em;
+        }
     }
 
     .menu {
@@ -13,9 +24,5 @@
         box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.75);
         right: 0.4em;
         top: 1.5em;
-    }
-
-    .button {
-        margin-right: 0 !important;
     }
 }
