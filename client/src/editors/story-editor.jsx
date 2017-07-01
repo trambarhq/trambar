@@ -13,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StoryTextEditor = require('editors/story-text-editor');
 var StoryMediaEditor = require('editors/story-media-editor');
+var StoryTextPreview = require('editors/story-text-preview');
 var StoryEditorOptions = require('editors/story-editor-options');
 var CornerPopUp = require('widgets/corner-pop-up');
 
@@ -38,8 +39,13 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         var nextState = {
-            languageCode: '',
-            options: {},
+            options: {
+                languageCode: '',
+                addIssue: false,
+                hidePost: false,
+                bookmarkRecipients: [],
+                supplementalEditor: 'preview',
+            },
         };
         this.updateLanguage(nextState, this.props);
         return nextState;
@@ -72,7 +78,8 @@ module.exports = React.createClass({
                 languageCode = firstLanguage;
             }
         }
-        nextState.languageCode = languageCode;
+        nextState.options = _.clone(nextState.options);
+        nextState.options.languageCode = languageCode;
     },
 
     /**
@@ -85,7 +92,7 @@ module.exports = React.createClass({
             return (
                 <div className="story-view columns-1">
                     {this.renderTextEditor()}
-                    {this.renderSupplementalEditors()}
+                    {this.renderSupplementalEditor()}
                 </div>
             );
         } else if (this.props.theme.mode === 'columns-2') {
@@ -95,7 +102,7 @@ module.exports = React.createClass({
                         {this.renderTextEditor()}
                     </div>
                     <div className="column-2">
-                        {this.renderSupplementalEditors()}
+                        {this.renderSupplementalEditor()}
                     </div>
                 </div>
             );
@@ -106,7 +113,7 @@ module.exports = React.createClass({
                         {this.renderTextEditor()}
                     </div>
                     <div className="column-2">
-                        {this.renderSupplementalEditors()}
+                        {this.renderSupplementalEditor()}
                     </div>
                     <div className="column-3">
                         {this.renderOptions()}
@@ -116,11 +123,16 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render editor for entering text
+     *
+     * @return {ReactElement}
+     */
     renderTextEditor: function() {
         var props = {
             story: this.props.story,
             authors: this.props.authors,
-            languageCode: this.state.languageCode,
+            languageCode: this.state.options.languageCode,
             cornerPopUp: this.renderPopUpMenu('main'),
 
             database: this.props.database,
@@ -135,10 +147,46 @@ module.exports = React.createClass({
         return <StoryTextEditor {...props} />;
     },
 
-    renderSupplementalEditors: function() {
-        return this.renderMediaEditor();
+    /**
+     * Render one of the supplemental editors
+     *
+     * @return {ReactElement}
+     */
+    renderSupplementalEditor: function() {
+        if (this.state.options.supplementalEditor === 'preview') {
+            return this.renderTextPreview();
+        } else {
+            return this.renderMediaEditor();
+        }
     },
 
+    /**
+     * Render MarkDown preview
+     *
+     * @return {ReactElement}
+     */
+    renderTextPreview: function() {
+        var props = {
+            story: this.props.story,
+            cornerPopUp: this.renderPopUpMenu('supplemental'),
+            languageCode: this.state.options.languageCode,
+
+            database: this.props.database,
+            queue: this.props.queue,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onChange: this.props.onChange,
+        };
+        return <StoryTextPreview {...props} />
+    },
+
+    /**
+     * Render editor for adding images and videos
+     *
+     * @return {ReactElement}
+     */
     renderMediaEditor: function() {
         var props = {
             story: this.props.story,
@@ -155,6 +203,11 @@ module.exports = React.createClass({
         return <StoryMediaEditor {...props} />
     },
 
+    /**
+     * Render popup menu
+     *
+     * @return {ReactElement}
+     */
     renderPopUpMenu: function(section) {
         if (this.props.theme.mode === 'columns-3') {
             return null;
@@ -166,6 +219,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render editor options
+     *
+     * @return {ReactElement}
+     */
     renderOptions: function(inMenu, section) {
         var props = {
             inMenu,
@@ -183,14 +241,13 @@ module.exports = React.createClass({
         return <StoryEditorOptions {...props} />;
     },
 
+    /**
+     * Called when options are changed
+     *
+     * @param  {Object} evt
+     */
     handleOptionsChange: function(evt) {
         var options = evt.options;
         this.setState({ options });
     },
 });
-
-function findUsers(users, userIds) {
-    return _.filter(_.map(userIds, (id) => {
-        return _.find(users, { id });
-    }));
-}

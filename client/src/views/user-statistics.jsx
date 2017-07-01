@@ -22,7 +22,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <UserSection>
+            <UserSection className="statistics">
                 <header>
                 </header>
                 <body>

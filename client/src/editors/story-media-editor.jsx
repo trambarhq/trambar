@@ -50,7 +50,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <StorySection className="story-media-editor">
+            <StorySection className="media-editor">
                 <header>
                     {this.renderButtons()}
                     {this.renderPhotoDialog()}

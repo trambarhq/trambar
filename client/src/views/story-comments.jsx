@@ -64,7 +64,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <StorySection>
+            <StorySection className="comments">
                 <header>
                     {this.renderButtons()}
                 </header>

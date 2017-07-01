@@ -42,25 +42,26 @@ module.exports = React.createClass({
     render: function() {
         if (this.props.inMenu) {
             return (
-                <div className="user-view-options in-menu">
+                <div className="view-options in-menu">
                     {this.renderButtons(this.props.section)}
                 </div>
             );
+        } else {
+            var t = this.props.locale.translate;
+            return (
+                <UserSection className="view-options">
+                    <header>
+                        <div className="button disabled">
+                            <i className="fa fa-chevron-circle-right"/>
+                            <span className="label">{t('user-actions')}</span>
+                        </div>
+                    </header>
+                    <body>
+                        {this.renderButtons('main')}
+                    </body>
+                </UserSection>
+            );
         }
-        var t = this.props.locale.translate;
-        return (
-            <UserSection className="user-view-options">
-                <header>
-                    <div className="button disabled">
-                        <i className="fa fa-chevron-circle-right"/>
-                        <span className="label">{t('user-actions')}</span>
-                    </div>
-                </header>
-                <body>
-                    {this.renderButtons('main')}
-                </body>
-            </UserSection>
-        );
     },
 
     renderButtons: function(section) {

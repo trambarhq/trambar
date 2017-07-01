@@ -43,26 +43,27 @@ module.exports = React.createClass({
     render: function() {
         if (this.props.inMenu) {
             return (
-                <div className="story-editor-options in-menu">
+                <div className="editor-options in-menu">
                     {this.renderButtons(this.props.section)}
                 </div>
             );
+        } else {
+            var t = this.props.locale.translate;
+            return (
+                <StorySection className="editor-options">
+                    <header>
+                        <div className="button disabled">
+                            <i className="fa fa-chevron-circle-right"/>
+                            <span className="label">{t('story-options')}</span>
+                        </div>
+                    </header>
+                    <body>
+                        {this.renderButtons('main')}
+                        {this.renderButtons('supplemental')}
+                    </body>
+                </StorySection>
+            );
         }
-        var t = this.props.locale.translate;
-        return (
-            <StorySection className="story-editor-options">
-                <header>
-                    <div className="button disabled">
-                        <i className="fa fa-chevron-circle-right"/>
-                        <span className="label">{t('story-options')}</span>
-                    </div>
-                </header>
-                <body>
-                    {this.renderButtons('main')}
-                    {this.renderButtons('supplemental')}
-                </body>
-            </StorySection>
-        );
     },
 
     renderButtons: function(section) {
@@ -72,13 +73,14 @@ module.exports = React.createClass({
             var addIssueProps = {
                 label: t('option-add-issue'),
                 selected: options.addIssue,
+                hidden: false, // TODO
                 onClick: this.handleAddIssueClick,
             };
             var sendBookmarkProps = {
-                label: options.bookmarkRecipients
-                    ? t('option-send-bookmarks-to-$1-users', options.bookmarkRecipients.length)
-                    : t('option-send-bookmarks'),
-                selected: !!options.bookmarkRecipients,
+                label: _.isEmpty(options.bookmarkRecipients)
+                    ? t('option-send-bookmarks')
+                    : t('option-send-bookmarks-to-$1-users', _.size(options.bookmarkRecipients)),
+                selected: !_.isEmpty(options.bookmarkRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
             var hidePostProps = {
@@ -105,7 +107,7 @@ module.exports = React.createClass({
     renderUserSelectionDialogBox: function() {
         var props = {
             show: this.state.selectingRecipients,
-            selection: this.props.options.bookmarkRecipients || [],
+            selection: this.props.options.bookmarkRecipients,
 
             database: this.props.database,
             route: this.props.route,
@@ -146,12 +148,7 @@ module.exports = React.createClass({
 
     handleRecipientsSelect: function(evt) {
         var options = _.clone(this.props.options);
-        var userIds = evt.selection;
-        if (!_.isEmpty(userIds)) {
-            options.bookmarkRecipients = userIds;
-        } else {
-            delete options.bookmarkRecipients;
-        }
+        options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
         this.setState({ selectingRecipients: false });
     },
