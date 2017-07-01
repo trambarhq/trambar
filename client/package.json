@@ -45,6 +45,7 @@
     "react": "~15.4.0",
     "react-addons-test-utils": "~15.4.0",
     "react-dom": "~15.4.0",
+    "react-marked": "^0.3.1",
     "sass-loader": "^6.0.5",
     "style-loader": "^0.17.0",
     "svg-inline-loader": "^0.7.1",

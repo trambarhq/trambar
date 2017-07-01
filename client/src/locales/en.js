@@ -59,11 +59,14 @@ module.exports = function(languageCode) {
         'story-comment': 'Comment',
         'story-file': 'File',
         'story-like': 'Like',
+        'story-markdown': 'Markdown',
         'story-options': 'Options',
         'story-photo': 'Photo',
         'story-post': 'Post',
         'story-pending': 'Pending...',
+        'story-tasks': 'Task list',
         'story-video': 'Video',
+        'story-vote': 'Vote',
 
         'user-actions': 'Actions',
 

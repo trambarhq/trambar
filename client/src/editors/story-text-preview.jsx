@@ -10,6 +10,8 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var HeaderButton = require('widgets/header-button');
+var MarkDown = require('widgets/mark-down');
 
 require('./story-text-preview.scss');
 
@@ -43,18 +45,44 @@ module.exports = React.createClass({
                     {this.props.cornerPopUp}
                 </header>
                 <body>
-                    {this.renderMarkDownText()}
+                    {this.renderText()}
                 </body>
             </StorySection>
         );
     },
 
     renderButtons: function() {
-        return <span>Preview</span>
+        var t = this.props.locale.translate;
+        var markdownProps = {
+            label: t('story-markdown'),
+            icon: 'pencil-square',
+        };
+        var taskListProps = {
+            label: t('story-tasks'),
+            icon: 'list',
+        };
+        var voteProps = {
+            label: t('story-vote'),
+            icon: 'check-square-o',
+        };
+        return (
+            <div>
+                <HeaderButton {...markdownProps} />
+                <HeaderButton {...taskListProps} />
+                <HeaderButton {...voteProps} />
+            </div>
+        );
     },
 
-    renderMarkDownText: function() {
-        return <div>Text</div>;
+    renderText: function() {
+        var p = this.props.locale.pick;
+        var text = _.get(this.props.story, 'details.text');
+        var markdown = _.get(this.props.story, 'details.markdown', false);
+        if (markdown) {
+            return <MarkDown>{p(text)}</MarkDown>
+        } else {
+            return <div className="plain-text">{p(text)}</div>;
+        }
     },
 
     /**

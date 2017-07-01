@@ -10,6 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var MarkDown = require('widgets/mark-down');
 var Time = require('widgets/time');
 
 require('./story-contents.scss');
@@ -82,8 +83,29 @@ module.exports = React.createClass({
     },
 
     renderContents: function() {
+        return (
+            <div>
+                {this.renderText()}
+                {this.renderResources()}
+            </div>
+        )
+    },
+
+    renderText: function() {
         var p = this.props.locale.pick;
         var text = _.get(this.props.story, 'details.text');
-        return p(text);
+        var markdown = _.get(this.props.story, 'details.markdown', false);
+        if (markdown) {
+            return <MarkDown>{p(text)}</MarkDown>
+        } else {
+            return <div className="plain-text">{p(text)}</div>;
+        }
+    },
+
+    renderResources: function() {
+        var resources = _.get(this.props.story, 'details.resources');
+        if (_.isEmpty(resources)) {
+            return null;
+        }
     }
 });
