@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 // widgets
 var UserSection = require('widgets/user-section');
 var HeaderButton = require('widgets/header-button');
+var OptionButton = require('widgets/option-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 
 require('./user-view-options.scss');
@@ -101,18 +102,17 @@ module.exports = React.createClass({
                 label: t('action-view-stackoverflow-page'),
                 icon: 'stack-overflow',
             };
-
             return (
-                <ul className={section}>
-                    <Button {...phoneProps} />
-                    <Button {...emailProps} />
-                    <Button {...skypeProps} />
-                    <Button {...slackProps} />
-                    <Button {...ichatProps} />
-                    <Button {...gitlabProps} />
-                    <Button {...githubProps} />
-                    <Button {...stackOverflowProps} />
-                </ul>
+                <div className={section}>
+                    <OptionButton {...phoneProps} />
+                    <OptionButton {...emailProps} />
+                    <OptionButton {...skypeProps} />
+                    <OptionButton {...slackProps} />
+                    <OptionButton {...ichatProps} />
+                    <OptionButton {...gitlabProps} />
+                    <OptionButton {...githubProps} />
+                    <OptionButton {...stackOverflowProps} />
+                </div>
             );
         }
     },
@@ -120,20 +120,3 @@ module.exports = React.createClass({
     handlePhoneClick: function(evt) {
     },
 });
-
-function Button(props) {
-    if (props.hidden) {
-        return null;
-    }
-    var classNames = [];
-    var iconClassNames = [ 'fa', 'fa-fw', `fa-${props.icon}` ];
-    if (props.disabled) {
-        classNames.push('disabled');
-    }
-    return (
-        <li className={classNames.join(' ')} onClick={!props.disabled ? props.onClick : null}>
-            <i className={iconClassNames.join(' ')} />
-            <span className="label">{props.label}</span>
-        </li>
-    )
-}

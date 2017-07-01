@@ -1,60 +1,7 @@
 .user-section.view-options {
-    UL {
-        margin-top: 0;
-        margin-bottom: 0;
-        padding-left: 0;
-
-        LI {
-            list-style: none;
-            cursor: pointer;
-            color: #666666;
-            margin-bottom: 0.2em;
-
-            .fa {
-                margin-right: 0.1em;
-                vertical-align: middle;
-            }
-
-            &.selected, &:hover {
-                color: #eeeeee;
-            }
-
-            .label {
-                font-size: 0.9em;
-                vertical-align: middle;
-            }
-        }
-    }
 }
 
 .view-options.in-menu {
-    UL {
-        margin-top: 0;
-        margin-bottom: 0;
-        padding-left: 0;
-
-        LI {
-            list-style: none;
-            cursor: pointer;
-            color: #666666;
-            margin-bottom: 0.2em;
-
-            .fa {
-                margin-right: 0.3em;
-                vertical-align: middle;
-            }
-
-            &.selected, &:hover {
-                color: #000000;
-            }
-
-            .label {
-                font-size: 0.9em;
-                vertical-align: middle;
-            }
-        }
-    }
-
     .main {
         width: 15em;
     }

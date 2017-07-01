@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 // widgets
 var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
+var OptionButton = require('widgets/option-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 
 require('./story-editor-options.scss');
@@ -87,17 +88,17 @@ module.exports = React.createClass({
                 onClick: this.handleHidePostClick,
             };
             return (
-                <ul className={section}>
-                    <Button {...addIssueProps} />
-                    <Button {...sendBookmarkProps} />
-                    <Button {...hidePostProps} />
+                <div className={section}>
+                    <OptionButton {...addIssueProps} />
+                    <OptionButton {...sendBookmarkProps} />
+                    <OptionButton {...hidePostProps} />
                     {this.renderUserSelectionDialogBox()}
-                </ul>
+                </div>
             );
         } else if (section === 'supplemental') {
             return (
-                <ul className={section}>
-                </ul>
+                <div className={section}>
+                </div>
             )
         }
     },
@@ -155,26 +156,3 @@ module.exports = React.createClass({
         this.setState({ selectingRecipients: false });
     },
 });
-
-function Button(props) {
-    if (props.hidden) {
-        return null;
-    }
-    var classNames = [];
-    var iconClassNames = [ 'fa' ];
-    if (props.selected) {
-        classNames.push('selected');
-        iconClassNames.push('fa-check-circle');
-    } else {
-        iconClassNames.push('fa-circle-o');
-    }
-    if (props.disabled) {
-        classNames.push('disabled');
-    }
-    return (
-        <li className={classNames.join(' ')} onClick={!props.disabled ? props.onClick : null}>
-            <i className={iconClassNames.join(' ')} />
-            <span className="label">{props.label}</span>
-        </li>
-    )
-}

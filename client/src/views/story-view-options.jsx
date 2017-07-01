@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 // widgets
 var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
+var OptionButton = require('widgets/option-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 
 require('./story-view-options.scss');
@@ -53,7 +54,7 @@ module.exports = React.createClass({
             return (
                 <StorySection className="view-options">
                     <header>
-                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled /> 
+                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
                     </header>
                     <body>
                         {this.renderButtons('main')}
@@ -73,10 +74,10 @@ module.exports = React.createClass({
                 onClick: this.handleAddIssueClick,
             };
             var sendBookmarkProps = {
-                label: options.bookmarkRecipients
-                    ? t('option-send-bookmarks-to-$1-users', options.bookmarkRecipients.length)
-                    : t('option-send-bookmarks'),
-                selected: !!options.bookmarkRecipients,
+                label: _.isEmpty(options.bookmarkRecipients)
+                    ? t('option-send-bookmarks')
+                    : t('option-send-bookmarks-to-$1-users', _.size(options.bookmarkRecipients)),
+                selected: !_.isEmpty(options.bookmarkRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
             var hidePostProps = {
@@ -85,12 +86,12 @@ module.exports = React.createClass({
                 onClick: this.handleHidePostClick,
             };
             return (
-                <ul className={section}>
-                    <Button {...addIssueProps} />
-                    <Button {...sendBookmarkProps} />
-                    <Button {...hidePostProps} />
+                <div className={section}>
+                    <OptionButton {...addIssueProps} />
+                    <OptionButton {...sendBookmarkProps} />
+                    <OptionButton {...hidePostProps} />
                     {this.renderUserSelectionDialogBox()}
-                </ul>
+                </div>
             );
         }
     },
@@ -98,7 +99,7 @@ module.exports = React.createClass({
     renderUserSelectionDialogBox: function() {
         var props = {
             show: this.state.selectingRecipients,
-            selection: this.props.options.bookmarkRecipients || [],
+            selection: this.props.options.bookmarkRecipients,
 
             database: this.props.database,
             route: this.props.route,
@@ -139,12 +140,7 @@ module.exports = React.createClass({
 
     handleRecipientsSelect: function(evt) {
         var options = _.clone(this.props.options);
-        var userIds = evt.selection;
-        if (!_.isEmpty(userIds)) {
-            options.bookmarkRecipients = userIds;
-        } else {
-            delete options.bookmarkRecipients;
-        }
+        options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
         this.setState({ selectingRecipients: false });
     },
@@ -153,26 +149,3 @@ module.exports = React.createClass({
         this.setState({ selectingRecipients: false });
     },
 });
-
-function Button(props) {
-    if (props.hidden) {
-        return null;
-    }
-    var classNames = [];
-    var iconClassNames = [ 'fa' ];
-    if (props.selected) {
-        classNames.push('selected');
-        iconClassNames.push('fa-check-circle');
-    } else {
-        iconClassNames.push('fa-circle-o');
-    }
-    if (props.disabled) {
-        classNames.push('disabled');
-    }
-    return (
-        <li className={classNames.join(' ')} onClick={!props.disabled ? props.onClick : null}>
-            <i className={iconClassNames.join(' ')} />
-            <span className="label">{props.label}</span>
-        </li>
-    )
-}

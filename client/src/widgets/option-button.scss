@@ -1,0 +1,33 @@
+.option-button {
+    display: block;
+    cursor: pointer;
+    color: #666666;
+    margin-bottom: 0.2em;
+
+    &:link, &:visited {
+        text-decoration: none;
+    }
+
+    .fa {
+        width: 1em;
+        margin-right: 0.2em;
+        vertical-align: middle;
+    }
+
+    &.selected, &:hover {
+        color: #eeeeee;
+    }
+
+    .label {
+        font-size: 0.9em;
+        vertical-align: middle;
+    }
+}
+
+.in-menu {
+    .option-button {
+        &.selected, &:hover {
+            color: #000000;
+        }
+    }
+}

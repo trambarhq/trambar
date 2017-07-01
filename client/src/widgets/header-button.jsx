@@ -10,7 +10,7 @@ function HeaderButton(props) {
         return null;
     }
     return (
-        <label className={buttonClasses(props)} onClick={props.disabled ? props.onClick : null}>
+        <label className={buttonClasses(props)} onClick={!props.disabled ? props.onClick : null}>
             <i className={iconClasses(props)}/>
             <span className="label">{props.label}</span>
         </label>
