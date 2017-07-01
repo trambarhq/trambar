@@ -1,11 +1,11 @@
 module.exports = function(languageCode) {
     var phrases = {
         'app-name': 'Трамбар',
-        'bottom-nav-bookmarks': 'закладки',
-        'bottom-nav-news': 'новости',
-        'bottom-nav-notifications': 'уведомления',
-        'bottom-nav-people': 'люди',
-        'bottom-nav-settings': 'настройки',
+        'bottom-nav-bookmarks': 'Закладки',
+        'bottom-nav-news': 'Новости',
+        'bottom-nav-notifications': 'Уведомления',
+        'bottom-nav-people': 'Люди',
+        'bottom-nav-settings': 'Настройки',
 
         'photo-capture-accept': 'Принять',
         'photo-capture-cancel': 'Отмена',

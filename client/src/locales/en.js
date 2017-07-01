@@ -18,11 +18,11 @@ module.exports = function(languageCode) {
         'audio-capture-start': 'Start',
         'audio-capture-stop': 'Stop',
 
-        'bottom-nav-bookmarks': 'bookmarks',
-        'bottom-nav-news': 'news',
-        'bottom-nav-notifications': 'notifications',
-        'bottom-nav-people': 'people',
-        'bottom-nav-settings': 'settings',
+        'bottom-nav-bookmarks': 'Bookmarks',
+        'bottom-nav-news': 'News',
+        'bottom-nav-notifications': 'Notifications',
+        'bottom-nav-people': 'People',
+        'bottom-nav-settings': 'Settings',
 
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
@@ -40,6 +40,10 @@ module.exports = function(languageCode) {
         'photo-capture-cancel': 'Cancel',
         'photo-capture-retake': 'Retake',
         'photo-capture-snap': 'Snap',
+
+        'statistics-bar': 'Bar',
+        'statistics-line': 'Line',
+        'statistics-pie': 'Pie',
 
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',

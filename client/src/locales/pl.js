@@ -1,11 +1,11 @@
 module.exports = function(languageCode) {
     var phrases = {
         'app-name': 'Trambar',
-        'bottom-nav-bookmarks': 'zakładki',
-        'bottom-nav-news': 'wiadomości',
-        'bottom-nav-notifications': 'notyfikacje',
-        'bottom-nav-people': 'ludzie',
-        'bottom-nav-settings': 'ustawienia',
+        'bottom-nav-bookmarks': 'Zakładki',
+        'bottom-nav-news': 'Wiadomości',
+        'bottom-nav-notifications': 'Notyfikacje',
+        'bottom-nav-people': 'Ludzie',
+        'bottom-nav-settings': 'Ustawienia',
 
         'photo-capture-accept': 'Przyjmij',
         'photo-capture-cancel': 'Anuluj',

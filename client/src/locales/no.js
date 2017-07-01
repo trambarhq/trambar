@@ -1,11 +1,11 @@
 module.exports = function(languageCode) {
     var phrases = {
         'app-name': 'Trambar',
-        'bottom-nav-bookmarks': 'bokmerker',
-        'bottom-nav-news': 'nyheter',
-        'bottom-nav-notifications': 'varslinger',
-        'bottom-nav-people': 'mennesker',
-        'bottom-nav-settings': 'innstillinger',
+        'bottom-nav-bookmarks': 'Bokmerker',
+        'bottom-nav-news': 'Nyheter',
+        'bottom-nav-notifications': 'Varslinger',
+        'bottom-nav-people': 'Mennesker',
+        'bottom-nav-settings': 'Innstillinger',
     };
     var languageName = 'Norsk';
     var scriptDirection = 'ltr';

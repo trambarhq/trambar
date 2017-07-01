@@ -1,11 +1,11 @@
 module.exports = function(languageCode) {
     var phrases = {
         'app-name': 'Trambar',
-        'bottom-nav-bookmarks': 'kirjanmerkit',
-        'bottom-nav-news': 'uutiset',
-        'bottom-nav-notifications': 'ilmoitukset',
-        'bottom-nav-people': 'ihmiset',
-        'bottom-nav-settings': 'asetukset',
+        'bottom-nav-bookmarks': 'Kirjanmerkit',
+        'bottom-nav-news': 'Uutiset',
+        'bottom-nav-notifications': 'Ilmoitukset',
+        'bottom-nav-people': 'Ihmiset',
+        'bottom-nav-settings': 'Asetukset',
     };
     var languageName = 'Suomi';
     var scriptDirection = 'ltr';
