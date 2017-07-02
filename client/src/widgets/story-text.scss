@@ -1,0 +1,13 @@
+.story-text {
+    .list-item {
+        display: block;
+    }
+
+    &.plain-text {
+        white-space: pre-wrap;
+
+        .list-item {
+            display: inline-block;
+        }
+    }
+}

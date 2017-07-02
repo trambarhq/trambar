@@ -10,7 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
-var MarkDown = require('widgets/mark-down');
+var StoryText = require('widgets/story-text');
 var Time = require('widgets/time');
 
 require('./story-contents.scss');
@@ -92,14 +92,11 @@ module.exports = React.createClass({
     },
 
     renderText: function() {
-        var p = this.props.locale.pick;
-        var text = _.get(this.props.story, 'details.text');
-        var markdown = _.get(this.props.story, 'details.markdown', false);
-        if (markdown) {
-            return <MarkDown>{p(text)}</MarkDown>
-        } else {
-            return <div className="plain-text">{p(text)}</div>;
-        }
+        var props = {
+            story: this.props.story,
+            locale: this.props.locale,
+        };
+        return <StoryText {...props} />;
     },
 
     renderResources: function() {

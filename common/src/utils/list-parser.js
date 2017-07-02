@@ -18,6 +18,7 @@ function extract(text) {
     var m;
     var currentList = null;
     var key = 1;
+    var list = 1;
     while (m = regExp.exec(text)) {
         var textBefore = text.substring(si, m.index);
         if (textBefore) {
@@ -25,6 +26,7 @@ function extract(text) {
             if (currentList) {
                 if (_.trim(textBefore)) {
                     currentList = null;
+                    list++;
                     tokens.push(textBefore);
                 } else {
                     // append the whitespaces onto the last time
@@ -41,7 +43,7 @@ function extract(text) {
         var between = m[3]
         var label = m[4];
         var after = m[5];
-        var item = { label, checked, answer, before, between, after, key };
+        var item = { label, checked, answer, before, between, after, list, key };
         if (currentList) {
             currentList.push(item);
         } else {

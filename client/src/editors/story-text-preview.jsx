@@ -11,7 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
-var MarkDown = require('widgets/mark-down');
+var StoryText = require('widgets/story-text');
 
 require('./story-text-preview.scss');
 
@@ -42,7 +42,6 @@ module.exports = React.createClass({
             <StorySection className="text-preview">
                 <header>
                     {this.renderButtons()}
-                    {this.props.cornerPopUp}
                 </header>
                 <body>
                     {this.renderText()}
@@ -53,36 +52,43 @@ module.exports = React.createClass({
 
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var storyType = _.get(this.props.story, 'type');
+        var markdown = _.get(this.props.story, 'details.markdown', false);
         var markdownProps = {
             label: t('story-markdown'),
             icon: 'pencil-square',
+            highlighted: markdown,
+            onClick: this.handleMarkdownClick,
         };
         var taskListProps = {
-            label: t('story-tasks'),
-            icon: 'list',
+            label: t('story-task-list'),
+            icon: 'list-ol',
+            highlighted: (storyType === 'task-list'),
+            onClick: this.handleTaslListClick,
         };
         var voteProps = {
             label: t('story-vote'),
-            icon: 'check-square-o',
+            icon: 'list-ul',
+            highlighted: (storyType === 'vote'),
+            onClick: this.handleVoteClick,
         };
         return (
             <div>
                 <HeaderButton {...markdownProps} />
                 <HeaderButton {...taskListProps} />
                 <HeaderButton {...voteProps} />
+                {this.props.cornerPopUp}
             </div>
         );
     },
 
     renderText: function() {
-        var p = this.props.locale.pick;
-        var text = _.get(this.props.story, 'details.text');
-        var markdown = _.get(this.props.story, 'details.markdown', false);
-        if (markdown) {
-            return <MarkDown>{p(text)}</MarkDown>
-        } else {
-            return <div className="plain-text">{p(text)}</div>;
-        }
+        var textProps = {
+            story: this.props.story,
+            locale: this.props.locale,
+            languageCode: this.props.languageCode,
+        };
+        return <StoryText {...textProps}/>
     },
 
     /**
@@ -102,4 +108,44 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Attach a list template to the story if there's no list yet
+     *
+     * @param  {Story} story
+     */
+    attachListTemplate: function(story) {
+        if (story.type === 'task-list' || story.type === 'vote') {
+            var text = _.get(story, 'details.text');
+            var lang = this.props.languageCode.substr(0, 2);
+            var string = _.get(text, lang, '');
+            if (!StoryText.hasLists(string)) {
+                string += StoryText.createListTemplate(story.type, this.props.locale);
+                text = _.clone(text) || {};
+                text[lang] = string;
+                story.details = _.clone(story.details);
+                story.details.text = text;
+            }
+        }
+    },
+
+    handleMarkdownClick: function(evt) {
+        var story = _.clone(this.props.story);
+        story.details = _.clone(story.details);
+        story.details.markdown = !story.details.markdown;
+        this.triggerChangeEvent(story, 'story.details.markdown');
+    },
+
+    handleTaslListClick: function(evt) {
+        var story = _.clone(this.props.story);
+        story.type = (story.type !== 'task-list') ? 'task-list' : 'story';
+        this.attachListTemplate(story);
+        this.triggerChangeEvent(story, 'story.details.markdown');
+    },
+
+    handleVoteClick: function(evt) {
+        var story = _.clone(this.props.story);
+        story.type = (story.type !== 'vote') ? 'vote' : 'story';
+        this.attachListTemplate(story);
+        this.triggerChangeEvent(story, 'story.details.markdown');
+    },
 });
