@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ListParser = require('utils/list-parser');
-var ReactMarked = require('react-marked');
+var MarkGor = require('mark-gor/react');
 
 module.exports = StoryText;
 module.exports.hasLists = hasLists;
@@ -31,9 +31,15 @@ function StoryText(props) {
     }
 
     if (listType) {
-        contents = renderLists(contents, listType, markdown);
+        contents = renderLists({
+            text: contents,
+            type: listType,
+            onClick: props.onItemClick,
+            markdown,
+            story,
+        });
     } else if (markdown){
-        contents = ReactMarked.parse(contents);
+        contents = MarkGor.parse(contents);
     }
 
     var containerProps = _.omit(props, 'locale', 'languageCode', 'story');
@@ -53,80 +59,104 @@ function StoryText(props) {
  *
  * @return {Array<ReactElement|String>}
  */
-function renderLists(text, type, markdown) {
-    var tokens = ListParser.extract(text);
-    return _.map(tokens, (token) => {
-        if (token instanceof Array) {
-            var items = token;
-            return renderListItems({ items, type, markdown });
-        } else {
-            if (markdown) {
-                return ReactMarked.parse(token);
-            } else {
-                return token;
-            }
-        }
-    });
-}
-
-/**
- * Render list items
- *
- * @param  {Object}
- *
- * @return {ReactElement|Array<ReactElement>}
- */
-function renderListItems(props) {
-    var elements = [];
-    var itemProps = _.omit(props, 'items');
-    _.each(props.items, (item, index) => {
-        var element = renderListItem(_.extend(itemProps, { item, key: index }));
-        if (props.markdown) {
-            elements.push(element);
-        } else {
-            // retain whitespaces when it's plain text
-            elements.push(item.before);
-            elements.push(element);
-            elements.push(item.after);
-        }
-    });
+function renderLists(props) {
+    var listTokens = ListParser.extract(props.text);
     if (props.markdown) {
-        return <div>{elements}</div>;
+        // process the text fully at block level, so ref links are captured
+        var parser = createMarkdownParser(props.story);
+        var blockTokenLists = [];
+        _.each(listTokens, (listToken, index) => {
+            var blockTokens;
+            if (listToken instanceof Array) {
+                // process the label of each item
+                blockTokens = _.map(listToken, (item) => {
+                    return parser.extractBlocks(item.label);
+                });
+            } else {
+                blockTokens = parser.extractBlocks(listToken);
+            }
+            blockTokenLists[index] = blockTokens;
+        });
+        // process at the inline level
+        _.each(listTokens, (listToken, index) => {
+            var blockTokens = blockTokenLists[index];
+            if (listToken instanceof Array) {
+                _.each(blockTokens, (blockTokens) => {
+                    parser.processInline(blockTokens);
+                });
+            } else {
+                parser.processInline(blockTokens);
+            }
+        });
+        // render
+        var renderer = new MarkGor.Renderer;
+        return _.map(listTokens, (listToken, index) => {
+            var blockTokens = blockTokenLists[index];
+            if (listToken instanceof Array) {
+                var elements = [];
+                _.each(listToken, (item, index) => {
+                    var label = _.first(renderer.render(blockTokens[index]));
+                    if (label && label.props && label.type === 'p') {
+                        // take text out from <p>
+                        label = label.props.children;
+                    }
+                    var itemProps = {
+                        type: props.type,
+                        label: label,
+                        name: `list-${item.list}`,
+                        value: item.key,
+                        checked: item.checked,
+                        onClick: props.onClick,
+                        key: index,
+                    };
+                    elements.push(<ListItem {...itemProps} />);
+                });
+                return <div key={index}>{elements}</div>;
+            } else {
+                return renderer.render(blockTokens);
+            }
+        });
     } else {
-        return elements;
+        // lists within plain text
+        return _.map(listTokens, (listToken, index) => {
+            if (listToken instanceof Array) {
+                var elements = [];
+                _.each(listToken, (item, index) => {
+                    var itemProps = {
+                        type: props.type,
+                        label: item.between + item.label,
+                        name: `list-${item.list}`,
+                        value: item.key,
+                        checked: item.checked,
+                        onClick: props.onClick,
+                        key: index
+                    };
+                    // retain whitespaces
+                    elements.push(item.before);
+                    elements.push(<ListItem {...itemProps} />);
+                    elements.push(item.after);
+                });
+                return elements;
+            } else {
+                // plain text
+                return listToken;
+            }
+        });
     }
 }
 
-/**
- * Render one list item
- *
- * @param  {Object}
- *
- * @return {ReactElement}
- */
-function renderListItem(props) {
-    var item = props.item;
+function ListItem(props) {
     var inputProps = {
         type: (props.type === 'vote') ? 'radio' : 'checkbox',
-        name: `list-${item.list}`,
-        defaultChecked: item.checked,
-        'data-list': item.list,
-        'data-key': item.key,
+        name: props.name,
+        value: props.value,
+        checked: props.checked,
+        onClick: props.onClick,
     };
-    var label = item.label;
-    if (props.markdown) {
-        var elements = ReactMarked.parse(label);
-        // grab elements from P tag
-        var first = _.first(elements);
-        if (first && first.props) {
-            label = first.props.children;
-        }
-    }
     return (
         <label className="list-item" key={props.key}>
             <input {...inputProps} />
-            {item.between}
-            {label}
+            {props.label}
         </label>
     );
 }
@@ -149,40 +179,104 @@ function createListTemplate(type, locale) {
 }
 
 /**
- * Check if given text contains lists
+ * Check if given story contains lists
  *
- * @param  {String} text
+ * @param  {Story} story
  *
  * @return {Boolean}
  */
-function hasLists(text) {
-    var tokens = ListParser.extract(text);
-    return _.some(tokens, (token) => {
-        return token instanceof Array;
+function hasLists(story, languageCode) {
+    var text = _.get(story, 'details.text');
+    // check text of each language
+    return _.some(text, (langText) => {
+        var tokens = ListParser.extract(langText);
+        return _.some(tokens, (token) => {
+            // lists are arrays
+            return token instanceof Array;
+        });
     });
 }
 
 /**
- * Check if given text contains Markdown formatting
+ * Check if given story contains Markdown formatting
  *
- * @param  {String}  text
- * @param  {Options}  options
+ * @param  {Story} story
  *
  * @return {Boolean}
  */
-function hasMarkdownFormatting(text, options) {
-    var check = function(children) {
-        children = React.Children.toArray(children);
-        return _.some(children, (element) => {
-            if (element && element.type && element.props) {
-                if (element.type !== 'p') {
+function hasMarkdownFormatting(story) {
+    var text = _.get(story, 'details.text');
+    // check text of each language
+    return _.some(text, (langText) => {
+        // process the text fully at block level, so ref links are captured
+        var parser = createMarkdownParser();
+        var tokens = parser.extractBlocks(langText);
+        return _.some(tokens, (token) => {
+            switch (token.type) {
+                case 'space':
+                    return false;
+                case 'paragraph':
+                case 'text_block':
+                    // scan for inline markup
+                    var iToken;
+                    var inlineLexer = parser.inlineLexer;
+                    inlineLexer.start(token.markdown);
+                    while (iToken = inlineLexer.captureToken()) {
+                        switch (iToken.type) {
+                            case 'url':
+                            case 'text':
+                            case 'autolink':
+                            case 'br':
+                                // ignore these, as they can occur in plain text
+                                break;
+                            default:
+                                return true;
+                        }
+                    }
+                    break;
+                default:
                     return true;
-                } else if (element.props.children) {
-                    return check(element.props.children);
-                }
             }
-        })
-    };
-    var contents = ReactMarked(text, options);
-    return check(contents);
+        });
+    });
+}
+
+function createMarkdownParser(story) {
+    var blockLexer = new MarkGor.BlockLexer();
+    var inlineLexer = new MarkGor.InlineLexer({
+        links: blockLexer.links,
+        findRefLink: findMarkdownRefLink,
+        story,
+    });
+    var parser = new MarkGor.Parser({ blockLexer, inlineLexer });
+    return parser;
+}
+
+function findMarkdownRefLink(name) {
+    console.log('Look up: ' + name)
+    var link = this.links[name];
+    if (link) {
+        return link;
+    }
+    var match = /^(picture|video|audio|website)-(\d+)$/.exec(name);
+    if (match) {
+        var type = match[1];
+        var number = parseInt(match[2]);
+        var index = number -1 ;
+        var resources = _.get(this.story, 'details.resources');
+        var res = _.get(resources, index);
+        var url;
+        if (res) {
+            url = res.url;
+        } else {
+            // TODO: return placeholder image
+            url = '/todo';
+        }
+        return {
+            href: url,
+            title: '',
+        };
+    } else {
+        return null;
+    }
 }

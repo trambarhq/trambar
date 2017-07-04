@@ -1,6 +1,16 @@
 .story-text {
     .list-item {
         display: block;
+
+        H1, H2, H3, H4, H5, H6 {
+            display: inline-block;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        IMG {
+            vertical-align: top;
+        }
     }
 
     &.plain-text {
