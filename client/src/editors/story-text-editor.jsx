@@ -13,6 +13,7 @@ var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
+var StoryText = require('widgets/story-text');
 
 require('./story-text-editor.scss');
 
@@ -173,26 +174,30 @@ module.exports = React.createClass({
 
     /**
      * Call onCommit handler
+     *
+     * @param  {Story} story
      */
-    triggerCommitEvent: function() {
+    triggerCommitEvent: function(story) {
         if (this.props.onCommit) {
             this.props.onCommit({
                 type: 'commit',
                 target: this,
-                story: this.props.story,
+                story,
             });
         }
     },
 
     /**
      * Call onCancel handler
+     *
+     * @param  {Story} story
      */
-    triggerCancelEvent: function() {
+    triggerCancelEvent: function(story) {
         if (this.props.onCancel) {
             this.props.onCancel({
                 type: 'cancel',
                 target: this,
-                story: this.props.story,
+                story,
             });
         }
     },
@@ -254,6 +259,17 @@ module.exports = React.createClass({
                 }
             }
         }
+
+        if (story.details.markdown === undefined) {
+            if (StoryText.hasMarkdownFormatting(story)) {
+                story.details.markdown = true;
+            }
+        }
+        if (!story.type) {
+            if (StoryText.hasLists(story)) {
+                story.type = 'task-list';
+            }
+        }
         this.triggerChangeEvent(story, 'details.text');
     },
 
@@ -263,7 +279,11 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePostClick: function(evt) {
-        this.triggerCommitEvent();
+        var story = this.props.story;
+        if (!story.type) {
+            story.type = 'story';
+        }
+        this.triggerCommitEvent(story);
     },
 
     /**
@@ -272,6 +292,6 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        this.triggerCancelEvent();
+        this.triggerCancelEvent(this.props.story);
     },
 });

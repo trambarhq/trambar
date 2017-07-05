@@ -39,22 +39,16 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         var nextState = {
-            options: {
-                languageCode: '',
-                addIssue: false,
-                hidePost: false,
-                bookmarkRecipients: [],
-                supplementalEditor: 'preview',
-            },
+            options: defaultOptions,
         };
-        this.updateLanguage(nextState, this.props);
+        this.updateOptions(nextState, this.props);
         return nextState;
     },
 
     componentWillReceiveProps: function(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story || this.props.locale !== nextProps.locale) {
-            this.updateLanguage(nextState, nextProps);
+            this.updateOptions(nextState, nextProps);
         }
         var changes = _.pickBy(nextState, (value, name) => {
             return this.state[name] !== value;
@@ -64,22 +58,47 @@ module.exports = React.createClass({
         }
     },
 
-    updateLanguage: function(nextState, nextProps) {
+    updateOptions: function(nextState, nextProps) {
         var story = nextProps.story;
         var locale = nextProps.locale;
-        var languageCode = locale.languageCode;
-        var text = _.get(story, 'details.text');
-        if (!_.isEmpty(text)) {
-            // use the first language of the text object, but only if it's
-            // different from the selected locale so that the country code
-            // is kept when it's the same
-            var firstLanguage = _.first(_.keys(text));
-            if (languageCode.substr(0, 2) !== firstLanguage) {
-                languageCode = firstLanguage;
+        var options = nextState.options;
+
+        if (!story.id) {
+            // reset options to default when a new story starts
+            options = defaultOptions;
+        }
+        options = nextState.options = _.clone(options);
+
+        if (!options.languageCode) {
+            // set language code
+            var languageCode = locale.languageCode;
+            var text = _.get(story, 'details.text');
+            if (!_.isEmpty(text)) {
+                // use the first language of the text object, but only if it's
+                // different from the selected locale so that the country code
+                // is kept when it's the same
+                var firstLanguage = _.first(_.keys(text));
+                if (languageCode.substr(0, 2) !== firstLanguage) {
+                    languageCode = firstLanguage;
+                }
+            }
+            options.languageCode = languageCode;
+        }
+
+        if (!options.supplementalEditor) {
+            // show preview when text is formatted
+            if (story.type === 'vote' || story.type === 'task-list') {
+                options.supplementalEditor = 'preview';
+            }
+            if (_.get(story, 'details.markdown', false)) {
+                options.supplementalEditor = 'preview';
+            }
+        } else {
+            if (!story.id) {
+                // clear selection when a new story starts
+                options.supplementalEditor = '';
             }
         }
-        nextState.options = _.clone(nextState.options);
-        nextState.options.languageCode = languageCode;
     },
 
     /**
@@ -251,3 +270,11 @@ module.exports = React.createClass({
         this.setState({ options });
     },
 });
+
+var defaultOptions = {
+    languageCode: '',
+    addIssue: false,
+    hidePost: false,
+    bookmarkRecipients: [],
+    supplementalEditor: '',
+};
