@@ -34,6 +34,8 @@ module.exports = function(languageCode) {
             var users = ($1 === 1) ? `${$1} user` : `${$1} users`;
             return `Send bookmarks to ${users}`;
         },
+        'option-show-media': 'Show attached media',
+        'option-show-preview': 'Show text preview',
         'option-view-gitlab-page': 'View Gitlab profile page',
 
         'photo-capture-accept': 'Accept',

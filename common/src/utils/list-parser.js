@@ -64,33 +64,31 @@ function extract(text) {
  * Check or uncheck item
  *
  * @param  {String} text
+ * @param  {Number} list
  * @param  {Number} key
  * @param  {Boolean} checked
+ * @param  {Boolean} clearOthers
  *
  * @return {String}
  */
-function update(text, key, checked) {
+function update(text, list, key, checked, clearOthers) {
+    // find the items on the list
     var tokens = extract(text);
     tokens = _.flattenDeep(tokens);
-    var item = _.find(tokens, { key });
-    if (item) {
-        item.checked = checked;
-        if (checked) {
-            switch (item.answer.length) {
-                case 0:
-                case 1:
-                case 2: item.answer = 'x'; break;
-                case 3: item.answer = ' x '; break;
-            }
+    var items = _.filter(tokens, { list });
+    // update .checked then .answer of items
+    _.each(items, (item) => {
+        if (item.key === key) {
+            item.checked = checked;
+            updateAnswerText(item);
         } else {
-            switch (item.answer.length) {
-                case 0: item.answer = ''; break
-                case 1: item.answer = ' '; break
-                case 2: item.answer = '  '; break;
-                case 3: item.answer = '   '; break;
+            if (checked && clearOthers) {
+                item.checked = false;
+                updateAnswerText(item);
             }
         }
-    }
+    });
+    // concatenate tokens into a string again
     return _.reduce(tokens, (result, token) => {
         if (token instanceof Object) {
             return result + token.before + '[' + token.answer + ']' + token.between + token.label + token.after;
@@ -98,4 +96,22 @@ function update(text, key, checked) {
             return result + token;
         }
     }, '');
+}
+
+function updateAnswerText(item) {
+    if (item.checked) {
+        switch (item.answer.length) {
+            case 0:
+            case 1:
+            case 2: item.answer = 'x'; break;
+            case 3: item.answer = ' x '; break;
+        }
+    } else {
+        switch (item.answer.length) {
+            case 0: item.answer = ''; break
+            case 1: item.answer = ' '; break
+            case 2: item.answer = '  '; break;
+            case 3: item.answer = '   '; break;
+        }
+    }
 }

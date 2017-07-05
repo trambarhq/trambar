@@ -96,10 +96,22 @@ module.exports = React.createClass({
                 </div>
             );
         } else if (section === 'supplemental') {
+            var mediaProps = {
+                label: t('option-show-media'),
+                selected: options.supplementalEditor === 'media' || !options.supplementalEditor,
+                onClick: this.handleShowMediaClick,
+            };
+            var previewProps = {
+                label: t('option-show-preview'),
+                selected: options.supplementalEditor === 'preview',
+                onClick: this.handleShowPreviewClick,
+            };
             return (
                 <div className={section}>
+                    <OptionButton {...mediaProps} />
+                    <OptionButton {...previewProps} />
                 </div>
-            )
+            );
         }
     },
 
@@ -154,5 +166,17 @@ module.exports = React.createClass({
 
     handleRecipientsCancel: function(evt) {
         this.setState({ selectingRecipients: false });
+    },
+
+    handleShowMediaClick: function(evt) {
+        var options = _.clone(this.props.options);
+        options.supplementalEditor = 'media';
+        this.triggerChangeEvent(options);
+    },
+
+    handleShowPreviewClick: function(evt) {
+        var options = _.clone(this.props.options);
+        options.supplementalEditor = 'preview';
+        this.triggerChangeEvent(options);
     },
 });

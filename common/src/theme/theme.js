@@ -11,4 +11,8 @@ function Theme(themeManager) {
     this.getImageUrl = function(image, width, height) {
         return themeManager.getImageUrl(image, width, height);
     };
+
+    this.getVideoUrl = function(image, bandwidth) {
+        return themeManager.getVideoUrl(image);
+    };
 }

@@ -86,6 +86,22 @@ module.exports = React.createClass({
         return `${protocol}://${server}${baseUrl}${path}`;
     },
 
+    getVideoUrl: function(video, bandwidth) {
+        var server = this.state.server;
+        var protocol = (server === 'localhost') ? 'http' : 'http';
+        var filters = [];
+        var baseUrl;
+        if (typeof(video) === 'object') {
+            baseUrl = video.url;
+        } else if (typeof(video) === 'string') {
+            baseUrl = video;
+        } else {
+            return;
+        }
+        var path = '';
+        return `${protocol}://${server}${baseUrl}${path}`;
+    },
+
     /**
      * Return a mode suitable for the current viewport width
      *

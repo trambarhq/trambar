@@ -86,7 +86,9 @@ module.exports = React.createClass({
         var textProps = {
             story: this.props.story,
             locale: this.props.locale,
+            theme: this.props.theme,
             languageCode: this.props.languageCode,
+            onItemChange: this.handleItemChange,
         };
         return <StoryText {...textProps}/>
     },
@@ -115,15 +117,8 @@ module.exports = React.createClass({
      */
     attachListTemplate: function(story) {
         if (story.type === 'task-list' || story.type === 'vote') {
-            var text = _.get(story, 'details.text');
-            var lang = this.props.languageCode.substr(0, 2);
-            var string = _.get(text, lang, '');
-            if (!StoryText.hasLists(string)) {
-                string += StoryText.createListTemplate(story.type, this.props.locale);
-                text = _.clone(text) || {};
-                text[lang] = string;
-                story.details = _.clone(story.details);
-                story.details.text = text;
+            if (!StoryText.hasLists(story)) {
+                StoryText.addListTemplate(story, this.props.languageCode, this.props.locale);
             }
         }
     },
@@ -146,6 +141,13 @@ module.exports = React.createClass({
         var story = _.clone(this.props.story);
         story.type = (story.type !== 'vote') ? 'vote' : 'story';
         this.attachListTemplate(story);
-        this.triggerChangeEvent(story, 'story.details.markdown');
+        this.triggerChangeEvent(story, 'story.type');
+    },
+
+    handleItemChange: function(evt) {
+        var input = evt.target;
+        var story = _.clone(this.props.story);
+        StoryText.updateList(story, this.props.languageCode, input);
+        this.triggerChangeEvent(story, 'story.details.text');
     },
 });
