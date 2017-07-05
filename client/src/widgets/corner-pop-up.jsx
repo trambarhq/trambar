@@ -53,6 +53,10 @@ module.exports = React.createClass({
         }
     },
 
+    componentWillUnmount: function() {
+        document.body.removeEventListener('mousedown', this.handleBodyMouseDown);
+    },
+
     handleClick: function(evt) {
         this.setState({ open: !this.state.open });
     },
