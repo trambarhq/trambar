@@ -156,14 +156,15 @@ module.exports = React.createClass({
     },
 
     renderResourceEditor: function() {
-        var resources = _.get(this.props.story, 'details.resources', []);
-        var res = resources[this.state.selectedResourceIndex] || _.last(resources);
-        if (!res) {
+        var maxIndex = _.get(this.props.story, 'details.resources.length', 0) - 1;
+        var index = _.min([ this.state.selectedResourceIndex, maxIndex ]);
+        if (index < 0) {
             var t = this.props.locale.translate;
             return (
                 <div className="message">Drop and drop files here</div>
             );
         }
+        var res = this.props.story.details.resources[index];
         switch (res.type) {
             case 'image':
             case 'video':
@@ -234,14 +235,8 @@ module.exports = React.createClass({
     },
 
     attachResource: function(res) {
-        var story = _.clone(this.props.story);
-        story.details = _.clone(story.details);
-        if (story.details.resources) {
-            story.details.resources = _.slice(story.details.resources);
-        } else {
-            story.details.resources = [];
-        }
-        story.details.resources.push(res);
+        var path = 'details.resources'
+        var story = _.decouplePush(this.props.story, path, res);
         this.triggerChangeEvent(story, 'details.resources');
     },
 
@@ -281,14 +276,13 @@ module.exports = React.createClass({
     },
 
     importFiles: function(files) {
-        var resources = _.get(this.props.story, 'details.resources', []);
-        var firstIndex = resources.length;
+        var firstIndex = _.get(this.props.story, 'details.resources.length', 0);
         return Promise.each(files, (file) => {
             return this.importFile(file);
         }).delay(50).finally(() => {
             // select the first import item
-            var resources = _.get(this.props.story, 'details.resources', []);
-            if (firstIndex < resources.length) {
+            var count = _.get(this.props.story, 'details.resources.length', 0);
+            if (firstIndex < count) {
                 this.setState({ selectedResourceIndex: firstIndex });
             }
         });
@@ -457,17 +451,11 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleClipRectChange: function(evt) {
-        var story = _.cloneDeep(this.props.story);
-        var resources = _.get(story, 'details.resources', []);
-        var index = this.state.selectedResourceIndex;
-        if (index > resources.length) {
-            index = resources.length - 1;
-        }
-        var res = resources[index];
-        if (res) {
-            res.clip = evt.rect;
-            this.triggerChangeEvent(story, `details.resources.${index}.clip`);
-        }
+        var maxIndex = _.get(this.props.story, 'details.resources.length', 0) - 1;
+        var index = _.min([ this.state.selectedResourceIndex, maxIndex ]);
+        var path = `details.resources.${index}.clip`;
+        var story = _.decoupleSet(this.props.story, path, evt.rect);
+        this.triggerChangeEvent(story, path);
     },
 });
 

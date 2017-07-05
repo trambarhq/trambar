@@ -64,7 +64,7 @@ module.exports = React.createClass({
             label: t('story-task-list'),
             icon: 'list-ol',
             highlighted: (storyType === 'task-list'),
-            onClick: this.handleTaslListClick,
+            onClick: this.handleTaskListClick,
         };
         var voteProps = {
             label: t('story-vote'),
@@ -124,13 +124,12 @@ module.exports = React.createClass({
     },
 
     handleMarkdownClick: function(evt) {
-        var story = _.clone(this.props.story);
-        story.details = _.clone(story.details);
+        var story = _.decouple(this.props.story, 'details');
         story.details.markdown = !story.details.markdown;
         this.triggerChangeEvent(story, 'story.details.markdown');
     },
 
-    handleTaslListClick: function(evt) {
+    handleTaskListClick: function(evt) {
         var story = _.clone(this.props.story);
         story.type = (story.type !== 'task-list') ? 'task-list' : 'story';
         this.attachListTemplate(story);

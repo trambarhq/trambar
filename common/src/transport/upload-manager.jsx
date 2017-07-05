@@ -372,9 +372,7 @@ module.exports = React.createClass({
         if (props.done) {
             // take it out after a minute
             setTimeout(() => {
-                var queue = _.slice(this.state.queue);
-                var index = _.findIndex(queue, { id: taskId });
-                queue.splice(index, 1);
+                var queue = _.filter(this.state.queue, { id: taskId });
                 this.setState({ queue }, () => {
                     this.triggerChangeEvent();
                 });

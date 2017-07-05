@@ -70,10 +70,7 @@ function Route(routeManager) {
     };
 
     this.free = function(callback) {
-        var index = callbacks.indexOf(callback);
-        if (index !== -1) {
-            callbacks.splice(index, 1);
-        }
+        _.pull(callbacks, callback);
     };
 }
 

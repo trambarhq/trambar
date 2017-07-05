@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 module.exports = React.createClass({
@@ -232,15 +233,12 @@ function removeComponent(type, component) {
     if (!list) {
         return;
     }
-    var index = list.components.indexOf(component);
-    if (index !== -1) {
-        list.components.splice(index, 1);
-    }
+    _.pull(list.components, component);
     if (list.components.length === 0) {
         if (list.viewPort) {
             list.viewPort.removeEventListener('scroll', handleViewportScroll);
         }
-        delete componentLists[type];
+        componentLists = _.omit(componentLists, type);
     }
 }
 

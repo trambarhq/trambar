@@ -227,9 +227,9 @@ module.exports = React.createClass({
      */
     handleCoauthoringSelect: function(evt) {
         // parent component will update user_ids in story
-        var story = _.clone(this.props.story);
-        story.user_ids = evt.selection;
-        this.triggerChangeEvent(story, 'user_ids');
+        var path = 'user_ids';
+        var story = _.decoupleSet(this.props.story, path, evt.selection);
+        this.triggerChangeEvent(story, path);
         this.setState({ selectingCoauthor: false });
     },
 
@@ -239,38 +239,31 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleTextChange: function(evt) {
-        var text = evt.currentTarget.value;
+        var langText = evt.currentTarget.value;
         var lang = this.props.languageCode.substr(0, 2);
-        var story = _.clone(this.props.story);
-        story.details = _.clone(story.details);
-        if (story.details.text) {
-            story.details.text = _.clone(story.details.text);
-        } else {
-            story.details.text = {};
-        }
-        if (text) {
-            story.details.text[lang] = text;
-        } else {
-            if (story.details.text) {
-                story.details.text = _.clone(story.details.text);
-                delete story.details.text[lang];
-                if (_.isEmpty(story.details.text)) {
-                    delete story.details.text;
-                }
-            }
+        var path = `details.text.${lang}`;
+        var story = _.decoupleSet(this.props.story, path, langText);
+
+        // remove zero-length text
+        story.details.text = _.pickBy(story.details.text, 'length');
+        if (_.isEmpty(story.details.text)) {
+            // remove the text object altogether
+            story.details = _.omit(story.details, 'text');
         }
 
+        // automatically enable Markdown formatting
         if (story.details.markdown === undefined) {
             if (StoryText.hasMarkdownFormatting(story)) {
                 story.details.markdown = true;
             }
         }
+        // automatically set story type to task list
         if (!story.type) {
             if (StoryText.hasLists(story)) {
                 story.type = 'task-list';
             }
         }
-        this.triggerChangeEvent(story, 'details.text');
+        this.triggerChangeEvent(story, path);
     },
 
     /**

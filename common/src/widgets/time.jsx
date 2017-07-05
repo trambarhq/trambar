@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 
@@ -65,8 +66,7 @@ var RelativeTime = React.createClass({
     },
 
     componentWillUnmount: function() {
-        var index = relativeTimeComponents.indexOf(this);
-        relativeTimeComponents.splice(index, 1);
+        _.pull(relativeTimeComponents, this);
     },
 })
 

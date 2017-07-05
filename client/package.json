@@ -37,7 +37,7 @@
     "karma-webpack": "^2.0.3",
     "less": "^2.7.2",
     "lodash": "^4.17.4",
-    "mark-gor": "^0.0.3",
+    "mark-gor": "^0.0.4",
     "memoizee": "^0.4.5",
     "mocha": "^3.4.1",
     "moment": "^2.18.1",
