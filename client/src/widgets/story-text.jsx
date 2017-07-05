@@ -196,13 +196,14 @@ function ListItem(props) {
  * @param  {Locale} locale
  */
 function addListTemplate(story, languageCode, locale) {
-    var lang = this.props.languageCode.substr(0, 2);
+    var lang = languageCode.substr(0, 2);
     var text = _.get(story, 'details.text');
     text = _.clone(text) || {};
     var langText = _.get(text, lang, '');
-    if (_.rtrim(langText)) {
-        langText = _.rtrim(langText) + '\n\n';
+    if (_.trimEnd(langText)) {
+        langText = _.trimEnd(langText) + '\n\n';
     }
+    var type = story.type;
     var t = locale.translate;
     var items = _.map(_.range(1, 4), (number) => {
         var label = t(`${type}-item-$1`, number);
