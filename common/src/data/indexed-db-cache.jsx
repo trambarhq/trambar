@@ -47,7 +47,9 @@ module.exports = React.createClass({
                         if (!_.isEmpty(ids)) {
                             var maxId = _.max(ids);
                             var minId = _.min(ids);
-                            var range = IDBKeyRange.bound(`${path}/${minId}`, `${path}/${maxId}`);
+                            var maxKey = primaryKey(path, maxId);
+                            var minKey = primaryKey(path, minId);
+                            var range = IDBKeyRange.bound(minKey, maxKey);
                             var req = objectStore.openCursor(range);
                             req.onsuccess = (evt) => {
                                 var cursor = evt.target.result;
@@ -70,7 +72,7 @@ module.exports = React.createClass({
                             resolve(results);
                         }
                     } else {
-                        var key = `${path}/${ids}`;
+                        var key = primaryKey(path, ids);
                         var req = objectStore.get(key);
                         req.onsuccess = (evt) => {
                             var record = evt.target.result;
@@ -123,7 +125,7 @@ module.exports = React.createClass({
                     reject(new Error(evt.message));
                 };
                 _.each(objects, (object) => {
-                    var key = (local) ? object.key : `${path}/${object.id}`;
+                    var key = (local) ? object.key : primaryKey(path, object.id);
                     var record = {
                         server: server,
                         location: path,
@@ -153,7 +155,7 @@ module.exports = React.createClass({
                     reject(new Error(evt.message));
                 };
                 _.each(objects, (object) => {
-                    var key = (local) ? object.key : `${path}/${object.id}`;
+                    var key = (local) ? object.key : primaryKey(path, object.id);
                     objectStore.delete(key);
                 });
             });
@@ -273,3 +275,8 @@ module.exports = React.createClass({
         return <div />;
     },
 });
+
+function primaryKey(path, id) {
+    var idStr = ('0000000000' + id).slice(-10);
+    return path + '/' + idStr;
+}
