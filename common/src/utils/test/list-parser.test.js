@@ -110,11 +110,11 @@ Pick an item:
                 [ ] item 4
                 [ ] item 5
             `
-            text = ListParser.update(text, 1, false);
-            text = ListParser.update(text, 4, false);
-            expect(text).to.be.a('string').that.equals(text);
+            var output = ListParser.update(text, 1, 1, false);
+            output = ListParser.update(output, 2, 4, false);
+            expect(output).to.be.a('string').that.equals(text);
         })
-        it('should not alter whitespace within the text', function() {
+        it('should correctly set items', function() {
             var text = `
                 Pick an item:
 
@@ -127,9 +127,9 @@ Pick an item:
                 [ ] item 4
                 [ ] item 5
             `
-            text = ListParser.update(text, 1, true);
-            text = ListParser.update(text, 4, true);
-            var tokens = ListParser.extract(text);
+            var output = ListParser.update(text, 1, 1, true);
+            output = ListParser.update(output, 2, 4, true);
+            var tokens = ListParser.extract(output);
             tokens = _.flattenDeep(tokens);
             var item1 = _.find(tokens, { key: 1 });
             var item2 = _.find(tokens, { key: 2 });
@@ -137,6 +137,30 @@ Pick an item:
             expect(item1).to.have.property('checked').that.equals(true);
             expect(item2).to.have.property('checked').that.equals(false);
             expect(item4).to.have.property('checked').that.equals(true);
+        })
+        it('should correctly unset items', function() {
+            var text = `
+                Pick an item:
+
+                [x] item 1
+                [x] item 2
+                [ ] item 3
+
+                Pick another item:
+
+                [X] item 4
+                [ ] item 5
+            `
+            var output = ListParser.update(text, 1, 1, false);
+            output = ListParser.update(output, 2, 4, false);
+            var tokens = ListParser.extract(output);
+            tokens = _.flattenDeep(tokens);
+            var item1 = _.find(tokens, { key: 1 });
+            var item2 = _.find(tokens, { key: 2 });
+            var item4 = _.find(tokens, { key: 4 });
+            expect(item1).to.have.property('checked').that.equals(false);
+            expect(item2).to.have.property('checked').that.equals(true);
+            expect(item4).to.have.property('checked').that.equals(false);
         })
     })
 })
