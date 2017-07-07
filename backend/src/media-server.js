@@ -38,8 +38,8 @@ function start() {
         app.get('/media/audios/:filename', handleAudioRequest);
         app.post('/media/html/screenshot/:schema/:taskId', handleWebsiteScreenshot);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
-        app.post('/media/videos/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), handleVideoUpload);
-        app.post('/media/audios/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), handleAudioUpload);
+        app.post('/media/videos/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster_file', maxCount: 1 }]), handleVideoUpload);
+        app.post('/media/audios/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster_file', maxCount: 1 }]), handleAudioUpload);
         app.post('/media/stream/:jobId', upload.single('file'), handleStreamAppend);
         app.post('/media/stream', upload.single('file'), handleStreamCreate);
 
@@ -183,8 +183,8 @@ function handleImageUpload(req, res) {
     return checkTaskToken(schema, taskId, req.query.token).then(() => {
         if (req.file) {
             return saveFile(req.file.path, imageCacheFolder);
-        } else if (req.url) {
-            return copyFile(req.url, imageCacheFolder);
+        } else if (req.external_url) {
+            return copyFile(req.external_url, imageCacheFolder);
         } else {
             throw new HttpError(400);
         }
@@ -213,7 +213,7 @@ function handleMediaUpload(req, res, type) {
     var taskId = parseInt(req.params.taskId);
     return checkTaskToken(schema, taskId, req.query.token).then(() => {
         // handle the poster first
-        var posterFile = _.get(req.files, 'poster.0');
+        var posterFile = _.get(req.files, 'poster_file.0');
         if (posterFile) {
             return saveFile(posterFile.path, imageCacheFolder);
         } else if (req.poster_url) {
@@ -233,8 +233,8 @@ function handleMediaUpload(req, res, type) {
         var file = _.get(req.files, 'file.0');
         if (file) {
             return saveFile(req.file.path, videoCacheFolder);
-        } else if (req.body.url) {
-            return copyFile(req.body.url, videoCacheFolder);
+        } else if (req.body.external_url) {
+            return copyFile(req.body.external_url, videoCacheFolder);
         } else if (req.body.stream) {
             // use video that was streamed in earlier
             return req.body.stream;
@@ -585,17 +585,22 @@ function updateAssociatedObject(schema, taskId, params, taskCompleted) {
                 return;
             }
             return accessor.findOne(db, schema, { id }, '*').then((row) => {
+                if (!row) {
+                    return;
+                }
+                // task ids are used as payload ids on frontend
                 var resources = _.get(row, 'details.resources');
-                var res = _.find(resources, { task_id: taskId });
+                var res = _.find(resources, { payload_id: taskId });
                 if (res) {
                     _.assign(res, params);
+                    // clear the payload id if the task is finished
                     if (taskCompleted) {
-                        delete res.task_id;
+                        res.payload_id = undefined;
 
-                        if (row.published === true && !row.ptime) {
-                            // set ptime when all tasks are done
+                        if (row.published === true && row.ptime === null) {
+                            // set ptime if all tasks are done
                             var ready = _.every(resources, (res) => {
-                                return !res.task_id;
+                                return !res.payload_id;
                             });
                             if (ready) {
                                 row.ptime = Moment().toISOString();

@@ -2,7 +2,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Locale = require('locale/locale');
-var UploadQueue = require('transport/upload-queue');
+var Payloads = require('transport/payloads');
 var BlobStream = require('transport/blob-stream');
 
 // widgets
@@ -16,7 +16,7 @@ module.exports = React.createClass({
     propTypes: {
         show: PropTypes.bool,
 
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
         onCancel: PropTypes.func,
@@ -292,7 +292,7 @@ module.exports = React.createClass({
                     type: recorder.mimeType,
                     audio_bitrate: recorder.audioBitsPerSecond,
                     video_bitrate: recorder.videoBitsPerSecond,
-                    stream: recorder.outputStream,
+                    stream: recorder.outputStream.id,
                 };
             }
         });
@@ -311,7 +311,7 @@ module.exports = React.createClass({
     handleStartClick: function(evt) {
         return Promise.join(this.captureImage(), this.beginRecording(), (image, recorder) => {
             // start uploading immediately upon receiving data from MediaRecorder
-            this.props.queue.sendStream(recorder.outputStream);
+            this.props.payloads.stream(recorder.outputStream);
             this.setState({
                 capturedImage: image,
                 mediaRecorder: recorder

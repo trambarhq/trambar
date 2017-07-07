@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var MemoizeWeak = require('memoizee/weak');
@@ -16,6 +17,7 @@ var UpdateCheck = require('mixins/update-check');
 var OnDemand = require('widgets/on-demand');
 var BookmarkFrame = require('widgets/bookmark-frame');
 var StoryView = require('views/story-view');
+var StoryList = require('lists/story-list');
 var StoryEditor = require('editors/story-editor');
 
 require('./bookmark-list.scss');
@@ -96,45 +98,11 @@ module.exports = Relaks.createClass({
         });
     },
 
-    saveStory: function(story) {
-        var queue = this.props.queue;
-        return queue.queueResources(story).then(() => {
-            var route = this.props.route;
-            var server = route.parameters.server;
-            var schema = route.parameters.schema;
-            var db = this.props.database.use({ server, schema, by: this });
-            return db.saveOne({ table: 'story' }, story).then((copy) => {
-                return queue.sendResources(story);
-            });
-        });
-    },
+    handleStoryChange: StoryList.prototype.handleStoryChange,
 
-    removeStory: function(story) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
-        return db.removeOne({ table: 'story' }, story);
-    },
+    handleStoryCommit: StoryList.prototype.handleStoryChange,
 
-    handleStoryChange: function(evt) {
-        var story = evt.story;
-        var storyDrafts = _.slice(this.state.storyDrafts);
-        var index = _.findIndex(storyDrafts, (s) => {
-            return s.id === story.id;
-        });
-        storyDrafts[index] = story;
-        this.setState({ storyDrafts });
-        return this.saveStory(story);
-    },
-
-    handleStoryCommit: function(evt) {
-
-    },
-
-    handleStoryCancel: function(evt) {
-
-    },
+    handleStoryCancel: StoryList.prototype.handleCancel,
 });
 
 var BookmarkListSync = module.exports.Sync = React.createClass({
@@ -244,3 +212,18 @@ var findRespondents = MemoizeWeak(function(users, reactions) {
         return _.find(users, { id: userId });
     }));
 })
+
+function getPendingResources(story) {
+    return _.filter(story.details.resources, (res) => {
+        if (res.file instanceof Blob || res.external_url) {
+            if (!res.url && !res.payload_id) {
+                return true;
+            }
+        }
+        if (res.poster_file instanceof Blob || res.poster_external_url) {
+            if (!res.poster_url && !res.payload_id) {
+                return true;
+            }
+        }
+    });
+}

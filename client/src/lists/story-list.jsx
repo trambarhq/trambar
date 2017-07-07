@@ -1,11 +1,12 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var MemoizeWeak = require('memoizee/weak');
 var Merger = require('data/merger');
 
 var Database = require('data/database');
-var UploadQueue = require('transport/upload-queue');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -29,7 +30,7 @@ module.exports = Relaks.createClass({
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -114,15 +115,24 @@ module.exports = Relaks.createClass({
                 }
             }
 
-            // reattach blobs that are lost when the object is saved
-            var queue = this.props.queue;
-            if (!queue.attachResources(nextDraft)) {
-                // not every file is available locally
-                this.downloadStoryResources(nextDraft);
-            }
+            // reattach blobs lost after saving
+            var payloads = this.props.payloads;
+            var resources = _.get(nextDraft, 'details.resources');
+            _.each(resources, (res) => {
+                // these properties also exist in the corresponding payload objects
+                var criteria = _.pick(res, 'payload_id', 'url', 'poster_url');
+                var payload = payloads.find(criteria);
+                if (payload) {
+                    // blob are stored under the same names as well
+                    var blobs = _.pickBy(payload, (value) => {
+                        return value instanceof Blob;
+                    });
+                    _.assign(res, blobs);
+                }
+            });
             return nextDraft;
         });
-        this.addUserDraft(nextState.storyDrafts, currentUser, blankStory);
+        addBlankDraft(nextState.storyDrafts, currentUser, blankStory);
     },
 
     updatePendingStories: function(nextState, nextProps) {
@@ -132,46 +142,6 @@ module.exports = Relaks.createClass({
             // it's still pending if it hasn't gotten onto the list
             if (!_.find(stories, { id: pendingStory.id })) {
                 return true;
-            }
-        });
-    },
-
-    addUserDraft: function(storyDrafts, currentUser, blankStory) {
-        var currentUserDraft = _.find(storyDrafts, (story) => {
-            if (story.user_ids[0] === currentUser.id) {
-                return true;
-            }
-        });
-        if (!currentUserDraft) {
-            // add empty story when current user doesn't have an active draft
-            storyDrafts.unshift(blankStory);
-        }
-    },
-
-    downloadStoryResources: function(story) {
-        var queue = this.props.queue;
-        return queue.downloadNextResource(story).then((succeeded) => {
-            if (succeeded) {
-                var update = (propName) => {
-                    var stories = this.state[propName];
-                    var index = _.findIndex(this.state.storyDrafts, { id: story.id });
-                    if (index === -1) {
-                        return false;
-                    }
-                    var currentDraft = stories[index];
-                    var nextDraft = _.clone(currentDraft);
-                    if (!queue.attachResources(nextDraft)) {
-                        // more files to download
-                        this.downloadStoryResources(nextDraft);
-                    }
-                    stories = _.slice(stories);
-                    stories[index] = nextDraft;
-                    var nextState = {};
-                    nextState[propName] = stories;
-                    this.setState(nextState);
-                    return true;
-                };
-                return update('storyDrafts') || update('pendingStories');
             }
         });
     },
@@ -201,7 +171,7 @@ module.exports = Relaks.createClass({
 
             currentUser: this.props.currentUser,
             database: this.props.database,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -259,27 +229,45 @@ module.exports = Relaks.createClass({
         });
     },
 
-    saveStory: function(story, delay) {
+    autosaveStory: function(story, delay) {
+        if (delay) {
+            setTimeout(() => {
+                this.saveStory(story);
+            }, delay);
+        } else {
+            this.saveStory(story);
+        }
+    },
+
+    saveStory: function(story) {
+        // clear autosave timeout
         if (this.autosaveTimeout) {
             clearTimeout(this.autosaveTimeout);
             this.autosaveTimeout = 0;
         }
-        if (delay) {
-            this.autosaveTimeout = setTimeout(() => {
-                this.saveStory(story);
-            }, delay);
-            return;
-        }
-        var queue = this.props.queue;
-        return queue.queueResources(story).then(() => {
+
+        // send images and videos to server
+        var resources = story.details.resources || [];
+        var payloads = this.props.payloads;
+        var payloadIds = [];
+        return Promise.each(resources, (res) => {
+            if (!res.payload_id) {
+                return payloads.queue(res).then((payloadId) => {
+                    if (payloadId) {
+                        res.payload_id = payloadId;
+                        payloadIds.push(payloadId);
+                    }
+                });
+            }
+        }).then(() => {
             var route = this.props.route;
             var server = route.parameters.server;
             var schema = route.parameters.schema;
             var db = this.props.database.use({ server, schema, by: this });
             return db.saveOne({ table: 'story' }, story).then((copy) => {
-                queue.sendResources(story);
-                queue.attachResources(copy);
-                return copy;
+                return Promise.each(payloadIds, (payloadId) => {
+                    return payloads.send(payloadId);
+                }).return(copy);
             });
         });
     },
@@ -293,60 +281,59 @@ module.exports = Relaks.createClass({
     },
 
     handleStoryChange: function(evt) {
-        var story = evt.story;
-        var storyDrafts = _.slice(this.state.storyDrafts);
-        var index = _.findIndex(storyDrafts, { id: story.id });
-        if (index !== -1) {
-            storyDrafts[index] = story;
+        return new Promise((resolve, reject) => {
+            var story = evt.story;
+            var storyDrafts = _.slice(this.state.storyDrafts);
+            var index = _.findIndex(storyDrafts, { id: story.id });
+            if (index !== -1) {
+                storyDrafts[index] = story;
 
-            var delay;
-            switch (evt.path) {
-                case 'details.resources':
-                case 'user_ids':
-                    delay = 0;
-                    break;
-                default:
-                    delay = 2000;
+                var delay;
+                switch (evt.path) {
+                    // save changes immediately when resources or
+                    // co-authors are added
+                    case 'details.resources':
+                    case 'user_ids':
+                        delay = 0;
+                        break;
+                    default:
+                        delay = 2000;
+                }
+                this.autosaveStory(story, delay);
+                this.setState({ storyDrafts }, () => {
+                    resolve(story);
+                });
             }
-            this.setState({ storyDrafts });
-            this.saveStory(story, delay);
-        }
+        });
     },
 
     handleStoryCommit: function(evt) {
-        var story = _.clone(evt.story);
-        story.published = true;
-        var storyDrafts = _.slice(this.state.storyDrafts);
-        var index = _.findIndex(storyDrafts, { id: story.id });
-        if (index !== -1) {
-            storyDrafts[index] = story;
-            this.setState({ storyDrafts });
-            return this.saveStory(story).then((story) => {
-                if (story) {
-                    var pendingStories = _.slice(this.state.pendingStories);
-                    pendingStories.unshift(story);
-                    this.setState({ pendingStories });
-                }
-            });
-        }
-        return Promise.resolve();
+        var story = evt.story;
+        var storyDrafts = _.map(this.state.storyDrafts, (s) => {
+            return (s.id === story.id) ? story : s;
+        });
+        this.setState({ storyDrafts });
+        return this.saveStory(story).then((story) => {
+            if (story) {
+                var pendingStories = _.concat(story, this.state.pendingStories);
+                this.setState({ pendingStories });
+            }
+        });
     },
 
     handleStoryCancel: function(evt) {
-        var story = evt.story;
-        var index = _.findIndex(this.state.storyDrafts, { id: story.id });
         // TODO: cancel uploads
-        if (index !== -1) {
-            // cancel a draft
-            var storyDrafts = _.slice(this.state.storyDrafts);
-            storyDrafts.splice(index, 1);
-            this.addUserDraft(storyDrafts, this.props.currentUser, this.state.blankStory);
-            this.setState({ storyDrafts });
-            if (story.id > 0) {
-                return this.removeStory(story);
-            }
+        var story = evt.story;
+        var storyDrafts = _.filter(this.state.storyDrafts, (s) => {
+            return (s.id === story.id);
+        });
+        addBlankDraft(storyDrafts, this.props.currentUser, this.state.blankStory);
+        this.setState({ storyDrafts });
+        if (story.id > 0) {
+            return this.removeStory(story);
+        } else {
+            return Promise.resolve();
         }
-        return Promise.resolve();
     },
 });
 
@@ -365,7 +352,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         draftAuthors: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -403,7 +390,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             authors,
             currentUser: this.props.currentUser,
             database: this.props.database,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -503,4 +490,13 @@ var findRespondents = MemoizeWeak(function(users, reactions) {
     return _.map(respondentIds, (userId) => {
         return _.find(users, { id: userId }) || {}
     });
-})
+});
+
+function addBlankDraft(storyDrafts, currentUser, blankStory) {
+    var currentDraft = _.find(storyDrafts, (story) => {
+        return story.user_ids[0] === currentUser.id;
+    });
+    if (!currentDraft) {
+        storyDrafts.unshift(blankStory);
+    }
+}

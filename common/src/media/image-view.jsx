@@ -1,23 +1,23 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-var BlobReader = require('utils/blob-reader');
+var HttpRequest = require('transport/http-request');
 var JpegAnalyser = require('media/jpeg-analyser');
 
 module.exports = React.createClass({
-    displayName: 'LocalImageDisplay',
+    displayName: 'ImageView',
     propTypes: {
-        file: PropTypes.instanceOf(Blob),
+        url: PropTypes.string,
         clippingRect: PropTypes.object,
         onLoad: PropTypes.func,
     },
 
     componentDidMount: function() {
-        this.load(this.props.file);
+        this.load(this.props.url);
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.file !== nextProps.file) {
-            this.load(nextProps.file);
+        if (this.props.url !== nextProps.url) {
+            this.load(nextProps.url);
         }
         if (this.clippingRect !== nextProps.clippingRect) {
             if (this.image) {
@@ -27,7 +27,7 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        var props = _.omit(this.props, 'onLoad', 'file', 'clippingRect');
+        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
         return <canvas ref="canvas" {...props} />
     },
 
@@ -41,20 +41,17 @@ module.exports = React.createClass({
     },
 
     /**
-     * Load the file or clear the canvas if it's null
+     * Load file at given URL or clear the canvas if it's empty
      *
-     * @param  {Blob|null} file
+     * @param  {String} url
      *
      * @return {Promise}
      */
-    load: function(file) {
-        if (file) {
-            var imageP = BlobReader.loadImage(file);
-            var orientationP = BlobReader.loadUint8Array(file).then((bytes) => {
-                return JpegAnalyser.getOrientation(bytes);
-            });
-            return Promise.join(imageP, orientationP, (image, orientation) => {
-                this.drawImage(image, orientation || 1, this.props.clippingRect);
+    load: function(url) {
+        if (url) {
+            return Promise.join(loadImage(url), loadBytes(url), (image, bytes) => {
+                var orientation = JpegAnalyser.getOrientation(bytes) || 1;
+                this.drawImage(image, orientation, this.props.clippingRect);
                 this.triggerLoadEvent();
             });
         } else {
@@ -149,6 +146,29 @@ module.exports = React.createClass({
         this.orientation = undefined;
     },
 });
+
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        var image = document.createElement('IMG');
+        image.src = url;
+        image.onload = function(evt) {
+            resolve(image);
+        };
+        image.onerror = function(evt) {
+            reject(new Error(`Unable to load ${url}`));
+        };
+    });
+}
+
+function loadBytes(url) {
+    var options = {
+        responseType: 'arraybuffer'
+    };
+    return HttpRequest.fetch('GET', url, null, options).then((result) => {
+        var bytes = new Uint8Array(result);
+        return bytes;
+    });
+}
 
 /**
  * Calculate inverse of affine matrix

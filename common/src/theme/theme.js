@@ -15,4 +15,8 @@ function Theme(themeManager) {
     this.getVideoUrl = function(image, bandwidth) {
         return themeManager.getVideoUrl(image);
     };
+
+    this.getPosterUrl = function(video, width, height) {
+        return themeManager.getPosterUrl(video, width, height);
+    };
 }

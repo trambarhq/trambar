@@ -62,6 +62,9 @@ module.exports = React.createClass({
         } else {
             return;
         }
+        if (!baseUrl) {
+            return;
+        }
         if (typeof(width) === 'string') {
             width = decodeLength(width);
         }
@@ -100,6 +103,16 @@ module.exports = React.createClass({
         }
         var path = '';
         return `${protocol}://${server}${baseUrl}${path}`;
+    },
+
+    getPosterUrl: function(video, width, height) {
+        var image = {
+            url: video.poster_url,
+            width: video.width,
+            height: video.height,
+            clip: video.clip,
+        };
+        return this.getImageUrl(image, width, height);
     },
 
     /**

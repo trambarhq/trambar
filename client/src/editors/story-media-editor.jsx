@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
-var UploadQueue = require('transport/upload-queue');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -19,7 +19,7 @@ var HeaderButton = require('widgets/header-button');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
-var LocalImageCropper = require('media/local-image-cropper');
+var ImageCropper = require('media/image-cropper');
 
 require('./story-media-editor.scss');
 
@@ -31,7 +31,7 @@ module.exports = React.createClass({
         cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -47,6 +47,46 @@ module.exports = React.createClass({
             dropZoneStatus: 'idle',
             selectedResourceIndex: 0,
         };
+    },
+
+    getSelectedResourceIndex: function() {
+        var maxIndex = _.get(this.props.story, 'details.resources.length', 0) - 1;
+        var index = _.min([ this.state.selectedResourceIndex, maxIndex ]);
+        return index;
+    },
+
+    getResourceImageUrl: function(res) {
+        var theme = this.props.theme;
+        var url, file;
+        switch (res.type) {
+            case 'image':
+                // get absolute URL of unclipped image
+                url = theme.getImageUrl(_.omit(res, 'clip'));
+                file = res.file;
+                break;
+            case 'video':
+            case 'audio':
+            case 'website':
+                url = theme.getPosterUrl(_.omit(res, 'clip'));
+                file = res.poster_file;
+            break;
+        }
+        if (url) {
+            // convert relative URL to absolute URL
+        }
+        // don't download files that we'd earlier uploaded
+        if (file) {
+            if (file === this.imageBlob) {
+                url = this.imageBlobUrl;
+            } else {
+                if (this.imageBlobUrl) {
+                    URL.revokeObjectURL(this.imageBlobUrl);
+                }
+                url = this.imageBlobUrl = URL.createObjectURL(file);
+                this.imageBlob = file;
+            }
+        }
+        return url;
     },
 
     render: function() {
@@ -128,7 +168,7 @@ module.exports = React.createClass({
         }
         var props = {
             show: this.state.capturingVideo,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             locale: this.props.locale,
             onCapture: this.handleVideoCapture,
             onCancel: this.handleVideoCancel,
@@ -147,7 +187,7 @@ module.exports = React.createClass({
         }
         var props = {
             show: this.state.capturingAudio,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             locale: this.props.locale,
             onCapture: this.handleAudioCapture,
             onCancel: this.handleAudioCancel,
@@ -156,8 +196,7 @@ module.exports = React.createClass({
     },
 
     renderResourceEditor: function() {
-        var maxIndex = _.get(this.props.story, 'details.resources.length', 0) - 1;
-        var index = _.min([ this.state.selectedResourceIndex, maxIndex ]);
+        var index = this.getSelectedResourceIndex();
         if (index < 0) {
             var t = this.props.locale.translate;
             return (
@@ -180,26 +219,16 @@ module.exports = React.createClass({
     },
 
     renderImageCropper: function(res) {
-        var file;
-        switch (res.type) {
-            case 'image':
-                file = res.file;
-                break;
-            case 'video':
-            case 'audio':
-            case 'website':
-                file = res.poster_file;
-                break;
-        }
-        if (!file) {
+        var url = this.getResourceImageUrl(res);
+        if (!url) {
             return <div>Loading</div>;
         }
         var props = {
-            file: file,
+            url: url,
             clippingRect: res.clip || getDefaultClippingRect(res),
             onChange: this.handleClipRectChange,
         };
-        return <LocalImageCropper {...props} />;
+        return <ImageCropper {...props} />;
     },
 
     renderDropZone: function() {
@@ -215,6 +244,12 @@ module.exports = React.createClass({
             onDrop: this.handleDrop,
         };
         return <div {...props} />
+    },
+
+    componentWillUnmount: function() {
+        if (this.imageBlobUrl) {
+            URL.revokeObjectURL(this.imageBlobUrl);
+        }
     },
 
     /**
@@ -252,7 +287,6 @@ module.exports = React.createClass({
         res.type = 'video';
         res.clip = getDefaultClippingRect(video);
         this.attachResource(res);
-
     },
 
     attachAudio: function(audio) {
@@ -451,8 +485,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleClipRectChange: function(evt) {
-        var maxIndex = _.get(this.props.story, 'details.resources.length', 0) - 1;
-        var index = _.min([ this.state.selectedResourceIndex, maxIndex ]);
+        var index = this.getSelectedResourceIndex();
         var path = `details.resources.${index}.clip`;
         var story = _.decoupleSet(this.props.story, path, evt.rect);
         this.triggerChangeEvent(story, path);

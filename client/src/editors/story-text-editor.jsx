@@ -276,6 +276,14 @@ module.exports = React.createClass({
         if (!story.type) {
             story.type = 'story';
         }
+        story.published = true;
+        if (!story.type) {
+            story.type = 'story';
+        }
+        if (_.isEmpty(story.role_ids)) {
+            var roleIds = _.map(this.props.authors, 'role_ids');
+            story.role_ids = _.uniq(_.flatten(roleIds));
+        }
         this.triggerCommitEvent(story);
     },
 

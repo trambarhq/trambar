@@ -3,21 +3,21 @@ var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 var ComponentRefs = require('utils/component-refs');
 
-var LocalImageDisplay = require('media/local-image-display');
+var ImageView = require('media/image-view');
 
-require('./local-image-cropper.scss');
+require('./image-cropper.scss');
 
 module.exports = React.createClass({
-    displayName: 'LocalImageDisplay',
+    displayName: 'ImageDisplay',
     propTypes: {
-        file: PropTypes.instanceOf(Blob).isRequired,
+        url: PropTypes.string.isRequired,
         clippingRect: PropTypes.object.isRequired,
         aspectRatio: PropTypes.number,
         onChange: PropTypes.func,
     },
     components: ComponentRefs({
         container: HTMLElement,
-        image: LocalImageDisplay,
+        image: ImageView,
     }),
 
     getDefaultProps: function() {
@@ -33,11 +33,11 @@ module.exports = React.createClass({
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.file !== nextProps.file || this.props.clippingRect !== nextProps.clippingRect) {
+        if (this.props.url !== nextProps.url || this.props.clippingRect !== nextProps.clippingRect) {
             if (this.zoomChangeTimeout) {
                 // set the deferred zoom changes before we switch to a different image
                 clearTimeout(this.zoomChangeTimeout);
-                if (this.props.file !== nextProps.file) {
+                if (this.props.url !== nextProps.url) {
                     this.triggerChangeEvent(this.state.clippingRect);
                 }
             }
@@ -49,19 +49,19 @@ module.exports = React.createClass({
         var setters = this.components.setters;
         var containerProps = {
             ref: setters.container,
-            className: 'local-image-cropper',
+            className: 'image-cropper',
             onMouseDown: this.handleMouseDown,
             onMouseUp: this.handleMouseUp,
             onWheel: this.handleMouseWheel,
         };
         var imageProps = {
             ref: setters.image,
-            file: this.props.file,
+            url: this.props.url,
             clippingRect: this.state.clippingRect,
         };
         return (
             <div {...containerProps}>
-                <LocalImageDisplay {...imageProps} />
+                <ImageView {...imageProps} />
             </div>
         );
     },

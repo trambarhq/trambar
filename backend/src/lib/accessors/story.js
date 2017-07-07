@@ -183,8 +183,8 @@ module.exports = _.create(Data, {
             // set the ptime if published is set and there're no outstanding
             // media tasks
             if (object.published && !object.ptime) {
-                var taskIds = getTaskIds(object);
-                if (_.isEmpty(taskIds)) {
+                var payloadIds = getPayloadIds(object);
+                if (_.isEmpty(payloadIds)) {
                     object.ptime = Moment().toISOString();
                 }
             }
@@ -203,14 +203,27 @@ module.exports = _.create(Data, {
         });
     },
 
+    /**
+     * Create associations between newly created or modified rows with
+     * rows in other tables
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array<Object>>}
+     */
     associate: function(db, schema, rows, originals, credentials) {
         return Promise.map(rows, (row, index) => {
             var original = originals[index];
-            var taskIdsBefore = getTaskIds(original);
-            var taskIdsAfter = getTaskIds(row);
-            var newTaskIds = _.difference(taskIdsAfter, taskIdsBefore);
-            if (!_.isEmpty(newTaskIds)) {
-                return Task.find(db, schema, { id: newTaskIds }, '*').then((tasks) => {
+            var payloadIdsBefore = getPayloadIds(original);
+            var payloadIdsAfter = getPayloadIds(row);
+            var newPayloadIds = _.difference(payloadIdsAfter, payloadIdsBefore);
+            if (!_.isEmpty(newPayloadIds)) {
+                // payload ids are actually task ids
+                return Task.find(db, schema, { id: newPayloadIds }, '*').then((tasks) => {
                     _.each(tasks, (task) => {
                         task.details.associated_object = {
                             type: this.table,
@@ -232,14 +245,14 @@ module.exports = _.create(Data, {
  *
  * @return {Array<Number>}
  */
-function getTaskIds(object) {
-    var taskIds = [];
+function getPayloadIds(object) {
+    var payloadIds = [];
     if (object && object.details) {
         _.each(object.details.resources, (res) => {
-            if (res.task_id) {
-                taskIds.push(res.task_id);
+            if (res.payload_id) {
+                payloadIds.push(res.payload_id);
             }
         });
     }
-    return taskIds;
+    return payloadIds;
 }

@@ -4,7 +4,7 @@ var Moment = require('moment');
 var Relaks = require('relaks');
 
 var Database = require('data/database');
-var UploadQueue = require('transport/upload-queue');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -19,7 +19,7 @@ module.exports = Relaks.createClass({
     displayName: 'NewsPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -73,7 +73,7 @@ module.exports = Relaks.createClass({
 
             showEditors: !(date || !_.isEmpty(roleIds) || searchString),
             database: this.props.database,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -154,7 +154,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -176,7 +176,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             currentUser: this.props.currentUser,
 
             database: this.props.database,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,

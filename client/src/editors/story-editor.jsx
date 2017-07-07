@@ -1,7 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
-var UploadQueue = require('transport/upload-queue');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -27,7 +27,7 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
-        queue: PropTypes.instanceOf(UploadQueue).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -191,7 +191,7 @@ module.exports = React.createClass({
             languageCode: this.state.options.languageCode,
 
             database: this.props.database,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -212,7 +212,7 @@ module.exports = React.createClass({
             cornerPopUp: this.renderPopUpMenu('supplemental'),
 
             database: this.props.database,
-            queue: this.props.queue,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,

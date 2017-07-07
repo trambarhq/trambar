@@ -10,8 +10,8 @@ var RemoteDataSource = require('data/remote-data-source');
 var Database = require('data/database');
 var RouteManager = require('routing/route-manager');
 var Route = require('routing/route');
-var UploadManager = require('transport/upload-manager');
-var UploadQueue = require('transport/upload-queue');
+var PayloadManager = require('transport/payload-manager');
+var Payloads = require('transport/payloads');
 var LocaleManager = require('locale/locale-manager');
 var Locale = require('locale/locale');
 var ThemeManager = require('theme/theme-manager');
@@ -54,13 +54,13 @@ module.exports = React.createClass({
         routeManager: RouteManager,
         localeManager: LocaleManager,
         themeManager: ThemeManager,
-        uploadManager: UploadManager,
+        uploadManager: PayloadManager,
     }),
 
     getInitialState: function() {
         return {
             database: null,
-            queue: null,
+            payloads: null,
             route: null,
             locale: null,
             theme: null,
@@ -71,7 +71,7 @@ module.exports = React.createClass({
 
     isReady: function() {
         return !!this.state.database
-            && !!this.state.queue
+            && !!this.state.payloads
             && !!this.state.route
             && !!this.state.locale
             && !!this.state.theme;
@@ -94,7 +94,7 @@ module.exports = React.createClass({
         var props = {
             database: this.state.database,
             route: this.state.route,
-            queue: this.state.queue,
+            payloads: this.state.payloads,
             locale: this.state.locale,
             theme: this.state.theme,
         };
@@ -121,7 +121,7 @@ module.exports = React.createClass({
             ref: setters.uploadManager,
             database: this.state.database,
             route: this.state.route,
-            onChange: this.handleUploadQueueChange,
+            onChange: this.handlePayloadsChange,
         };
         var routeManagerProps = {
             ref: setters.routeManager,
@@ -151,7 +151,7 @@ module.exports = React.createClass({
         return (
             <div>
                 <RemoteDataSource {...remoteDataSourceProps} />
-                <UploadManager {...uploadManagerProps} />
+                <PayloadManager {...uploadManagerProps} />
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
@@ -234,13 +234,13 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when upload queue changes
+     * Called when media payloads changes
      *
      * @param  {Object} evt
      */
-    handleUploadQueueChange: function(evt) {
-        var queue = new UploadQueue(evt.target);
-        this.setState({ queue });
+    handlePayloadsChange: function(evt) {
+        var payloads = new Payloads(evt.target);
+        this.setState({ payloads });
     },
 
     /**
