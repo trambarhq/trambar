@@ -11,7 +11,7 @@ module.exports = React.createClass({
         onLoad: PropTypes.func,
     },
 
-    componentDidMount: function() {
+    componentWillMount: function() {
         this.load(this.props.url);
     },
 
@@ -21,7 +21,7 @@ module.exports = React.createClass({
         }
         if (this.clippingRect !== nextProps.clippingRect) {
             if (this.image) {
-                this.drawImage(this.image, this.orientation, nextProps.clippingRect);
+                this.drawImage(nextProps.clippingRect);
             }
         }
     },
@@ -29,6 +29,13 @@ module.exports = React.createClass({
     render: function() {
         var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
         return <canvas ref="canvas" {...props} />
+    },
+
+    componentDidMount: function() {
+        if (this.image && this.redrawNeeded) {
+            // image was loaded before first render
+            this.drawImage(this.props.clippingRect);
+        }
     },
 
     triggerLoadEvent: function() {
@@ -51,7 +58,16 @@ module.exports = React.createClass({
         if (url) {
             return Promise.join(loadImage(url), loadBytes(url), (image, bytes) => {
                 var orientation = JpegAnalyser.getOrientation(bytes) || 1;
-                this.drawImage(image, orientation, this.props.clippingRect);
+                var rect = this.props.clippingRect;
+
+                this.image = image;
+                this.width = rect.width;
+                this.height = rect.height;
+                this.naturalWidth = image.naturalWidth;
+                this.naturalHeight = image.naturalHeight;
+                this.orientation = orientation;
+
+                this.drawImage(rect);
                 this.triggerLoadEvent();
             });
         } else {
@@ -63,11 +79,19 @@ module.exports = React.createClass({
     /**
      * Set the canvas's dimensions and draw an image into it
      *
-     * @param  {HTMLImageElement} image
-     * @param  {Number} orientation
      * @param  {Object} rect
      */
-    drawImage: function(image, orientation, rect) {
+    drawImage: function(rect) {
+        var image = this.image;
+        if (!image) {
+            return;
+        }
+        var canvas = this.refs.canvas;
+        if (!canvas) {
+            this.redrawNeeded = true;
+            return;
+        }
+        var orientation = this.orientation;
         var imageWidth = image.naturalWidth;
     	var imageHeight = image.naturalHeight;
     	var matrix;
@@ -118,19 +142,11 @@ module.exports = React.createClass({
         var inverse = invert(matrix);
     	var src = transformRect(inverse, rect);
     	var dst = transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
-        var canvas = this.refs.canvas;
     	canvas.width = dst.width;
     	canvas.height = dst.height;
     	var context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
         context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
-
-        this.image = image;
-        this.width = rect.width;
-        this.height = rect.height;
-        this.naturalWidth = imageWidth;
-        this.naturalHeight = imageHeight;
-        this.orientation = orientation;
     },
 
     /**
