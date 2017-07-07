@@ -40,7 +40,7 @@ module.exports = Relaks.createClass({
             onSelect: this.props.onSelect,
             loading: true,
         };
-        meanwhile.show(<CalendarBarSync {...props} />);
+        meanwhile.show(<CalendarBarSync {...props} />, 250);
         return db.start().then((userId) => {
             // load project-date-range statistics
             var criteria = {

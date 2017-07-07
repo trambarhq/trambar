@@ -47,7 +47,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             loading: true,
         };
-        meanwhile.show(<UserListSync {...props} />);
+        meanwhile.show(<UserListSync {...props} />, 250);
         return db.start().then((userId) => {
             // load roles
             var roleIds = _.flatten(_.map(props.users, 'role_ids'));

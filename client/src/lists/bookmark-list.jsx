@@ -54,7 +54,7 @@ module.exports = Relaks.createClass({
             onStoryCommit: this.handleStoryCommit,
             onStoryCancel: this.handleStoryCancel,
         };
-        meanwhile.show(<BookmarkListSync {...props} />);
+        meanwhile.show(<BookmarkListSync {...props} />, 250);
         return db.start().then((userId) => {
             // load stories
             var criteria = {}

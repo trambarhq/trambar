@@ -210,7 +210,7 @@ module.exports = Relaks.createClass({
             onStoryCancel: this.handleStoryCancel,
             loading: true,
         });
-        meanwhile.show(<StoryListSync {...props} />, 0);
+        meanwhile.show(<StoryListSync {...props} />);
         return db.start().then((userId) => {
             // load authors of stories
             var criteria = {};

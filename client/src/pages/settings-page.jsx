@@ -53,7 +53,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<SettingsPageSync {...props} />);
+        meanwhile.show(<SettingsPageSync {...props} />, 250);
         return db.start().then((userId) => {
             return <SettingsPageSync {...props} />;
         });

@@ -62,7 +62,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<PeoplePageSync {...props} />);
+        meanwhile.show(<PeoplePageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};

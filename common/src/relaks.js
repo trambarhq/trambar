@@ -132,10 +132,7 @@ function render() {
             // show progress after a brief delay, to allow
             // it to be bypassed by fast-resolving promises
             if (!relaks.progressElementTimeout) {
-                if (delay === undefined) {
-                    delay = 250;
-                }
-                if (delay > 0) {
+                if (delay) {
                     relaks.progressElementTimeout = setTimeout(update, delay);
                 } else {
                     update();

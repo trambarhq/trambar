@@ -38,7 +38,7 @@ module.exports = Relaks.createClass({
             onSelect: this.props.onSelect,
             loading: true,
         };
-        meanwhile.show(<UserSelectionListSync {...props} />);
+        meanwhile.show(<UserSelectionListSync {...props} />, 250);
         return db.start().then((userId) => {
             // load all users
             var criteria = {};
