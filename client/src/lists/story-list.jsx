@@ -181,13 +181,20 @@ module.exports = Relaks.createClass({
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
-        var props = {
-            authors: null,
-            reactions: null,
-            respondents: null,
 
+        // render StoryListSync with previously retrieved props initially
+        // so we can render it without delay
+        if (!this.childProps) {
+            this.childProps = {
+                authors: null,
+                reactions: null,
+                respondents: null,
+            };
+        }
+        var props = _.assign(this.childProps, {
             showEditors: this.props.showEditors,
             stories: this.props.stories,
+
             storyDrafts: this.state.storyDrafts,
             pendingStories: this.state.pendingStories,
             draftAuthors: this.state.draftAuthors,
@@ -202,8 +209,8 @@ module.exports = Relaks.createClass({
             onStoryCommit: this.handleStoryCommit,
             onStoryCancel: this.handleStoryCancel,
             loading: true,
-        };
-        meanwhile.show(<StoryListSync {...props} />);
+        });
+        meanwhile.show(<StoryListSync {...props} />, 0);
         return db.start().then((userId) => {
             // load authors of stories
             var criteria = {};
