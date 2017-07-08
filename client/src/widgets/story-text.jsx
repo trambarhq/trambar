@@ -15,7 +15,8 @@ module.exports.updateList = updateList;
 require('./story-text.scss');
 
 function StoryText(props) {
-    var languageCode = props.languageCode || props.locale.languageCode;
+    var options = props.options;
+    var languageCode = options.languageCode || props.locale.languageCode;
     var storyType = _.get(props.story, 'type');
     var markdown = _.get(props.story, 'details.markdown', false);
     var listType;
@@ -47,7 +48,7 @@ function StoryText(props) {
         contents = MarkGor.parse(contents);
     }
 
-    var containerProps = _.omit(props, 'locale', 'theme', 'languageCode', 'story', 'onItemChange');
+    var containerProps = _.omit(props, 'locale', 'theme', 'options', 'story', 'onItemChange');
     containerProps.className = classNames.join(' ');
     containerProps.lang = languageCode;
     if (markdown) {
@@ -60,16 +61,20 @@ function StoryText(props) {
 
 StoryText.propTypes = {
     story: PropTypes.object.isRequired,
-    languageCode: PropTypes.string,
+    options: PropTypes.object,
     answers: PropTypes.objectOf(PropTypes.oneOfType([
         PropTypes.number,
         PropTypes.arrayOf(PropTypes.number)
     ])),
 
-    locale: PropTypes.instanceOf(Locale),
-    theme: PropTypes.instanceOf(Theme),
+    locale: PropTypes.instanceOf(Locale).isRequired,
+    theme: PropTypes.instanceOf(Theme).isRequired,
 
     onItemClick: PropTypes.func,
+};
+
+StoryText.defaultProps = {
+    options: {}
 };
 
 /**

@@ -48,7 +48,7 @@ module.exports = Relaks.createClass({
             blankStory: null,
             priorStoryDrafts: [],
             storyDrafts: [],
-            draftAuthors: [],
+            defaultDraftAuthors: this.props.currentUser ? [ this.props.currentUser ] : [],
             pendingStories: [],
         };
         this.updateBlankStory(nextState, this.props);
@@ -63,7 +63,7 @@ module.exports = Relaks.createClass({
             nextState.priorStoryDrafts = [];
             nextState.storyDrafts = [];
             nextState.pendingStories = [];
-            nextState.draftAuthors = [ nextProps.currentUser ];
+            nextState.defaultDraftAuthors = nextProps.currentUser ? [ nextProps.currentUser ] : [];
         }
         if (this.props.storyDrafts !== nextProps.storyDrafts) {
             this.updateStoryDrafts(nextState, nextProps);
@@ -83,7 +83,8 @@ module.exports = Relaks.createClass({
         nextState.blankStory = {
             id: undefined,  // without this _.find() wouldn't work
             user_ids: nextProps.currentUser ? [ nextProps.currentUser.id ] : [],
-            details: {}
+            details: {},
+            public: true,
         };
     },
 
@@ -165,7 +166,7 @@ module.exports = Relaks.createClass({
         var props = _.assign(this.childProps, {
             storyDrafts: this.state.storyDrafts,
             pendingStories: this.state.pendingStories,
-            draftAuthors: this.state.draftAuthors,
+            draftAuthors: this.state.defaultDraftAuthors,
 
             showEditors: this.props.showEditors,
             stories: this.props.stories,
@@ -398,7 +399,7 @@ module.exports = Relaks.createClass({
             return (s.id === story.id) ? story : s;
         });
         this.setState({ storyDrafts });
-        return this.saveStory(story).then((copy) => {
+        return this.saveStory(story).finally(() => {
             if (!story.published_version_id) {
                 var pendingStories = _.concat(story, this.state.pendingStories);
                 this.setState({ pendingStories });
@@ -451,16 +452,16 @@ module.exports = Relaks.createClass({
      * @return {Promise<Story>}
      */
     handleStoryBookmark: function(evt) {
-        var recipientIds = evt.selection;
         var story = evt.story;
-        var userId = this.props.currentUser.id;
+        var userId = evt.senderId;
+        var recipientIds = evt.recipientIds;
         var bookmarks = findRecommendations(this.childProps.recommendations, story);
         var newBookmarks = [];
         // add bookmarks that don't exist yet
         _.each(recipientIds, (recipientId) => {
             if (!_.find(bookmarks, { target_user_id: recipientId })) {
                 var newBookmark = {
-                    story_id: story.id,
+                    story_id: story.published_version_id || story.id,
                     user_ids: [ userId ],
                     target_user_id: recipientId,
                 };
@@ -550,7 +551,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         // always use 0 as the key for the top story, so we don't lose focus
         // when the new story acquires an id after being saved automatically
         var key = (index === 0) ? 0 : story.id;
-        var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : [];
+        var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : null;
         var recommendations = this.props.recommendations ? findRecommendations(this.props.recommendations, story) : null;
         var recipients = this.props.recipients ? findRecipients(this.props.recipients, recommendations) : null;
         var editorProps = {
@@ -567,6 +568,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             onChange: this.props.onStoryChange,
             onCommit: this.props.onStoryCommit,
             onCancel: this.props.onStoryCancel,
+            onBookmark: this.props.onStoryBookmark,
             key,
         };
         return <StoryEditor {...editorProps}/>
@@ -607,6 +609,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             pending: true,
+            onCancel: this.props.onStoryCancel,
             key: story.id,
         };
         return <StoryView {...storyProps} />;
@@ -690,7 +693,7 @@ var findReactions = MemoizeWeak(function(reactions, story) {
 var findAuthors = MemoizeWeak(function(users, story) {
     if (story) {
         return _.map(story.user_ids, (userId) => {
-            return _.find(users, { id: userId }) || {}
+            return _.find(users, { id: userId });
         });
     } else {
         return [];
@@ -700,13 +703,14 @@ var findAuthors = MemoizeWeak(function(users, story) {
 var findRespondents = MemoizeWeak(function(users, reactions) {
     var respondentIds = _.uniq(_.map(reactions, 'user_id'));
     return _.map(respondentIds, (userId) => {
-        return _.find(users, { id: userId }) || {}
+        return _.find(users, { id: userId });
     });
 });
 
 var findRecommendations = MemoizeWeak(function(recommendations, story) {
     if (story) {
-        return _.filter(recommendations, { story_id: story.id });
+        var storyId = story.published_version_id || story.id;
+        return _.filter(recommendations, { story_id: storyId });
     } else {
         return [];
     }

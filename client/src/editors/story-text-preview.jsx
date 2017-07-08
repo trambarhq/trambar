@@ -21,7 +21,7 @@ module.exports = React.createClass({
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
-        languageCode: PropTypes.string.isRequired,
+        options: PropTypes.object.isRequired,
         cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -87,7 +87,7 @@ module.exports = React.createClass({
             story: this.props.story,
             locale: this.props.locale,
             theme: this.props.theme,
-            languageCode: this.props.languageCode,
+            options: this.props.options,
             onItemChange: this.handleItemChange,
         };
         return <StoryText {...textProps}/>

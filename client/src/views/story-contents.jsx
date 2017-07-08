@@ -95,6 +95,7 @@ module.exports = React.createClass({
         var props = {
             story: this.props.story,
             locale: this.props.locale,
+            theme: this.props.theme,
         };
         return <StoryText {...props} />;
     },

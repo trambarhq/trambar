@@ -69,7 +69,7 @@ module.exports = React.createClass({
             this.updateOptions(nextState, nextProps);
         }
         var changes = _.pickBy(nextState, (value, name) => {
-            return value !== this.state[name];
+            return this.state[name] !== value;
         });
         if (!_.isEmpty(changes)) {
             this.setState(changes);
@@ -83,10 +83,9 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     updateOptions: function(nextState, nextProps) {
-        var options = _.clone(nextState.options);
+        var options = nextState.options = _.clone(nextState.options);
         options.hidePost = !nextProps.story.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
-        nextState.options = options;
     },
 
     /**
@@ -253,17 +252,20 @@ module.exports = React.createClass({
     /**
      * Ask parent component to add/remove bookmarks
      *
+     * @param  {Story} story
+     * @param  {Number} senderId,
      * @param  {Array<Number>} recipientIds
      *
      * @return {Promise<Array<Object>>}
      */
-    triggerBookmarkEvent: function(recipientIds) {
+    triggerBookmarkEvent: function(story, senderId, recipientIds) {
         if (this.props.onBookmark) {
             return this.props.onBookmark({
                 type: 'edit',
                 target: this,
-                story: this.props.story,
-                selection: recipientIds,
+                story,
+                senderId,
+                recipientIds,
             });
         }
     },
@@ -275,7 +277,9 @@ module.exports = React.createClass({
                 this.triggerEditEvent();
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
-                this.triggerBookmarkEvent(options.bookmarkRecipients);
+                var sender = this.props.currentUser;
+                var story = this.props.story;
+                this.triggerBookmarkEvent(story, sender.id, options.bookmarkRecipients);
             }
             if (options.hidePost !== before.hidePost) {
                 var story = _.clone(this.props.story);

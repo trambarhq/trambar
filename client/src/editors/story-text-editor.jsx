@@ -24,7 +24,7 @@ module.exports = React.createClass({
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
-        languageCode: PropTypes.string.isRequired,
+        options: PropTypes.object.isRequired,
         cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -33,7 +33,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onChange: PropTypes.func,
-        onCommit: PropTypes.func,
+        onPublish: PropTypes.func,
         onCancel: PropTypes.func,
     },
 
@@ -123,11 +123,12 @@ module.exports = React.createClass({
     },
 
     renderTextArea: function() {
-        var code = this.props.languageCode.substr(0, 2);
-        var text = _.get(this.props.story, [ 'details', 'text', code ], '');
+        var languageCode = this.props.options.languageCode;
+        var lang = languageCode.substr(0, 2);
+        var langText = _.get(this.props.story, [ 'details', 'text', lang ], '');
         var props = {
-            value: text,
-            lang: this.props.languageCode,
+            value: langText,
+            lang: lang,
             onChange: this.handleTextChange,
         };
         return <AutosizeTextArea {...props} />;
@@ -139,12 +140,12 @@ module.exports = React.createClass({
         var publishing = _.get(this.props.story, 'published', false);
         var cancelButtonProps = {
             label: t('story-cancel'),
-            onClick: this.handleCancelClick,
+            onClick: this.props.onCancel,
             disabled: noText || publishing,
         };
         var postButtonProps = {
             label: t('story-post'),
-            onClick: this.handlePostClick,
+            onClick: this.props.onPublish,
             emphasized: true,
             disabled: noText || publishing,
         };
@@ -170,36 +171,6 @@ module.exports = React.createClass({
                 story,
                 path,
             })
-        }
-    },
-
-    /**
-     * Call onCommit handler
-     *
-     * @param  {Story} story
-     */
-    triggerCommitEvent: function(story) {
-        if (this.props.onCommit) {
-            this.props.onCommit({
-                type: 'commit',
-                target: this,
-                story,
-            });
-        }
-    },
-
-    /**
-     * Call onCancel handler
-     *
-     * @param  {Story} story
-     */
-    triggerCancelEvent: function(story) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
-                target: this,
-                story,
-            });
         }
     },
 
@@ -241,7 +212,8 @@ module.exports = React.createClass({
      */
     handleTextChange: function(evt) {
         var langText = evt.currentTarget.value;
-        var lang = this.props.languageCode.substr(0, 2);
+        var languageCode = this.props.options.languageCode;
+        var lang = languageCode.substr(0, 2);
         var path = `details.text.${lang}`;
         var story = _.decoupleSet(this.props.story, path, langText);
 
@@ -265,35 +237,5 @@ module.exports = React.createClass({
             }
         }
         this.triggerChangeEvent(story, path);
-    },
-
-    /**
-     * Called when user click Post button
-     *
-     * @param  {Event} evt
-     */
-    handlePostClick: function(evt) {
-        var story = this.props.story;
-        if (!story.type) {
-            story.type = 'story';
-        }
-        story.published = true;
-        if (!story.type) {
-            story.type = 'story';
-        }
-        if (_.isEmpty(story.role_ids)) {
-            var roleIds = _.map(this.props.authors, 'role_ids');
-            story.role_ids = _.uniq(_.flatten(roleIds));
-        }
-        this.triggerCommitEvent(story);
-    },
-
-    /**
-     * Called when user click Cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick: function(evt) {
-        this.triggerCancelEvent(this.props.story);
     },
 });

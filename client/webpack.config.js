@@ -85,7 +85,7 @@ module.exports = {
             filename: `${folders.www}/index.html`,
         })
     ],
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     devServer: {
         inline: true,
         historyApiFallback: true

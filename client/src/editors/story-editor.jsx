@@ -37,6 +37,7 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
         onCommit: PropTypes.func,
         onCancel: PropTypes.func,
+        onBookmark: PropTypes.func,
     },
 
     getInitialState: function() {
@@ -49,7 +50,7 @@ module.exports = React.createClass({
 
     componentWillReceiveProps: function(nextProps) {
         var nextState = _.clone(this.state);
-        if (this.props.story !== nextProps.story || this.props.locale !== nextProps.locale) {
+        if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations || this.props.locale !== nextProps.locale) {
             this.updateOptions(nextState, nextProps);
         }
         var changes = _.pickBy(nextState, (value, name) => {
@@ -60,6 +61,12 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Update state.options based on props
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
     updateOptions: function(nextState, nextProps) {
         var story = nextProps.story;
         var locale = nextProps.locale;
@@ -70,6 +77,8 @@ module.exports = React.createClass({
             options = defaultOptions;
         }
         options = nextState.options = _.clone(options);
+        options.hidePost = !nextProps.story.public;
+        options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
 
         if (!options.languageCode) {
             // set language code
@@ -153,7 +162,7 @@ module.exports = React.createClass({
         var props = {
             story: this.props.story,
             authors: this.props.authors,
-            languageCode: this.state.options.languageCode,
+            options: this.state.options,
             cornerPopUp: this.renderPopUpMenu('main'),
 
             database: this.props.database,
@@ -162,8 +171,8 @@ module.exports = React.createClass({
             theme: this.props.theme,
 
             onChange: this.props.onChange,
-            onCommit: this.props.onCommit,
-            onCancel: this.props.onCancel,
+            onPublish: this.handlePublish,
+            onCancel: this.handleCancel,
         };
         return <StoryTextEditor {...props} />;
     },
@@ -189,8 +198,8 @@ module.exports = React.createClass({
     renderTextPreview: function() {
         var props = {
             story: this.props.story,
+            options: this.state.options,
             cornerPopUp: this.renderPopUpMenu('supplemental'),
-            languageCode: this.state.options.languageCode,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -260,6 +269,91 @@ module.exports = React.createClass({
             onChange: this.handleOptionsChange,
         };
         return <StoryEditorOptions {...props} />;
+    },
+
+    /**
+     * Call onCommit handler
+     *
+     * @param  {Story} story
+     */
+    triggerCommitEvent: function(story) {
+        if (this.props.onCommit) {
+            return this.props.onCommit({
+                type: 'commit',
+                target: this,
+                story,
+            });
+        }
+    },
+
+    /**
+     * Call onCancel handler
+     *
+     * @param  {Story} story
+     */
+    triggerCancelEvent: function(story) {
+        if (this.props.onCancel) {
+            return this.props.onCancel({
+                type: 'cancel',
+                target: this,
+                story,
+            });
+        }
+    },
+
+    /**
+     * Ask parent component to add/remove bookmarks
+     *
+     * @param  {Story} story
+     * @param  {Number} senderId,
+     * @param  {Array<Number>} recipientIds
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    triggerBookmarkEvent: function(story, senderId, recipientIds) {
+        if (this.props.onBookmark) {
+            return this.props.onBookmark({
+                type: 'edit',
+                target: this,
+                story,
+                senderId,
+                recipientIds,
+            });
+        }
+    },
+
+    /**
+     * Called when user click Post button
+     *
+     * @param  {Event} evt
+     */
+    handlePublish: function(evt) {
+        var story = this.props.story;
+        var options = this.state.options;
+        var sender = this.props.currentUser;
+        if (!story.type) {
+            story.type = 'story';
+        }
+        story.published = true;
+        story.public = !options.hidePost;
+        if (_.isEmpty(story.role_ids)) {
+            var roleIds = _.map(this.props.authors, 'role_ids');
+            story.role_ids = _.uniq(_.flatten(roleIds));
+        }
+        this.triggerCommitEvent(story).then((story) => {
+            return this.triggerBookmarkEvent(story, sender.id, options.bookmarkRecipients);
+        });
+        return null;
+    },
+
+    /**
+     * Called when user click Cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancel: function(evt) {
+        this.triggerCancelEvent(this.props.story);
+        return null;
     },
 
     /**
