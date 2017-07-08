@@ -19,6 +19,7 @@ module.exports = React.createClass({
         inMenu: PropTypes.bool,
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
         story: PropTypes.object.isRequired,
+        currentUser: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -40,6 +41,16 @@ module.exports = React.createClass({
         return {
             selectingRecipients: false,
         };
+    },
+
+    isEditable: function() {
+        var story = this.props.story;
+        if (_.includes(editableStoryType, story.type)) {
+            var userId = this.props.currentUser;
+            if (_.includes(story.userIds, userId)) {
+                return true;
+            }
+        }
     },
 
     render: function() {
@@ -85,11 +96,18 @@ module.exports = React.createClass({
                 selected: options.hidePost,
                 onClick: this.handleHidePostClick,
             };
+            var editPostProps = {
+                label: t('option-edit-post'),
+                hidden: this.isEditable(),
+                selected: options.editPost,
+                onClick: this.handleEditPostClick,
+            };
             return (
                 <div className={section}>
                     <OptionButton {...addIssueProps} />
                     <OptionButton {...sendBookmarkProps} />
                     <OptionButton {...hidePostProps} />
+                    <OptionButton {...editPostProps} />
                     {this.renderUserSelectionDialogBox()}
                 </div>
             );
@@ -138,6 +156,12 @@ module.exports = React.createClass({
         this.triggerChangeEvent(options);
     },
 
+    handleEditPostClick: function(evt) {
+        var options = _.clone(this.props.options);
+        options.editPost = true;
+        this.triggerChangeEvent(options);
+    },
+
     handleRecipientsSelect: function(evt) {
         var options = _.clone(this.props.options);
         options.bookmarkRecipients = evt.selection;
@@ -149,3 +173,9 @@ module.exports = React.createClass({
         this.setState({ selectingRecipients: false });
     },
 });
+
+var editableStoryType = [
+    'story',
+    'task-list',
+    'vote',
+];

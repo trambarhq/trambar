@@ -179,6 +179,7 @@ module.exports = Relaks.createClass({
             onStoryChange: this.handleStoryChange,
             onStoryCommit: this.handleStoryCommit,
             onStoryCancel: this.handleStoryCancel,
+            onStoryEdit: this.handleStoryEdit,
             loading: true,
         });
         meanwhile.show(<StoryListSync {...props} />);
@@ -284,6 +285,13 @@ module.exports = Relaks.createClass({
         return db.removeOne({ table: 'story' }, story);
     },
 
+    /**
+     * Called when user makes changes to a story
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Object>}
+     */
     handleStoryChange: function(evt) {
         return new Promise((resolve, reject) => {
             var story = evt.story;
@@ -311,6 +319,13 @@ module.exports = Relaks.createClass({
         });
     },
 
+    /**
+     * Called when user posts a new story or finish editting a published one
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Object>}
+     */
     handleStoryCommit: function(evt) {
         var story = evt.story;
         var storyDrafts = _.map(this.state.storyDrafts, (s) => {
@@ -325,6 +340,13 @@ module.exports = Relaks.createClass({
         });
     },
 
+    /**
+     * Called when user cancel a new story
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Story>}
+     */
     handleStoryCancel: function(evt) {
         // TODO: cancel uploads
         var story = evt.story;
@@ -336,8 +358,23 @@ module.exports = Relaks.createClass({
         if (story.id > 0) {
             return this.removeStory(story);
         } else {
-            return Promise.resolve();
+            return Promise.resolve(null);
         }
+    },
+
+    /**
+     * Called when a user wants to edit a published story
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Story>}
+     */
+    handleStoryEdit: function(evt) {
+        var story = evt.story;
+        var tempCopy = _.omit(story, 'id', 'ptime');
+        tempCopy.published_version_id = story.id;
+        tempCopy.published = false;
+        return this.saveStory(tempCopy);
     },
 });
 
@@ -365,6 +402,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         onStoryChange: PropTypes.func,
         onStoryCommit: PropTypes.func,
         onStoryCancel: PropTypes.func,
+        onStoryEdit: PropTypes.func,
     },
 
     render: function() {
@@ -500,6 +538,8 @@ var StoryListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            onChange: this.props.onStoryChange,
+            onEdit: this.props.onStoryEdit,
             key: story.id,
         };
         return (
@@ -549,7 +589,11 @@ var findRespondents = MemoizeWeak(function(users, reactions) {
 
 function addBlankDraft(storyDrafts, currentUser, blankStory) {
     var currentDraft = _.find(storyDrafts, (story) => {
-        return story.user_ids[0] === currentUser.id;
+        if (story.user_ids[0] === currentUser.id) {
+            if (!story.published_version_id) {
+                return true;
+            }
+        }
     });
     if (!currentDraft) {
         storyDrafts.unshift(blankStory);

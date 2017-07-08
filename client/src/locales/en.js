@@ -28,6 +28,7 @@ module.exports = function(languageCode) {
         'option-add-issue': 'Add post to issue tracker',
         'option-contact-by-phone': 'Contact by phone',
         'option-contact-by-email': 'Contact by e-mail',
+        'option-edit-post': 'Edit post',
         'option-hide-post': 'Hide from non-team members',
         'option-send-bookmarks': 'Send bookmarks to other users',
         'option-send-bookmarks-to-$1-users': ($1) => {

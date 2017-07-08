@@ -31,6 +31,9 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+        onEdit: PropTypes.func,
     },
 
     /**
@@ -42,6 +45,17 @@ module.exports = React.createClass({
         return {
             pending: false,
         };
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            options: defaultOptions
+        }
     },
 
     /**
@@ -86,6 +100,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render the main contents, including media attached to story
+     *
+     * @return {ReactElement}
+     */
     renderContents: function() {
         var props = {
             story: this.props.story,
@@ -101,6 +120,11 @@ module.exports = React.createClass({
         return <StoryContents {...props} />;
     },
 
+    /**
+     * Render comments panel
+     *
+     * @return {ReactElement}
+     */
     renderComments: function() {
         var props = {
             story: this.props.story,
@@ -116,6 +140,13 @@ module.exports = React.createClass({
         return <StoryComments {...props} />;
     },
 
+    /**
+     * Render popup menu containing options for given section
+     *
+     * @param  {String} section
+     *
+     * @return {ReactElement}
+     */
     renderPopUpMenu: function(section) {
         if (this.props.theme.mode === 'columns-3') {
             return null;
@@ -127,18 +158,84 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render options pane or simply the list of options when it's in a menu
+     *
+     * @param  {Boolean} inMenu
+     * @param  {String} section
+     *
+     * @return {ReactElement}
+     */
     renderOptions: function(inMenu, section) {
         var props = {
             inMenu,
             section,
             story: this.props.story,
-            options: {},
+            currentUser: this.props.currentUser,
+            options: this.state.options,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onChange: this.handleOptionsChange,
+            onEdit: this.props.onEdit,
         };
         return <StoryViewOptions {...props} />;
     },
+
+    /**
+     * Ask parent component to change a story
+     *
+     * @param  {Story} story
+     *
+     * @return {Promise<Story>}
+     */
+    triggerChangeEvent: function(story) {
+        if (this.props.onChange) {
+            return this.props.onChange({
+                type: 'change',
+                target: this,
+                story
+            });
+        }
+    },
+
+    /**
+     * Ask parent component to begin editing of a published story
+     *
+     * @return {Promise<Story>}
+     */
+    triggerEditEvent: function() {
+        if (this.props.onEdit) {
+            return this.props.onEdit({
+                type: 'edit',
+                target: this,
+                story: this.props.story
+            });
+        }
+    },
+
+    /**
+     * Called when options are changed
+     *
+     * @param  {Object} evt
+     */
+    handleOptionsChange: function(evt) {
+        var optionsBefore = this.state.options;
+        var options = evt.options;
+        this.setState({ options }, () => {
+            if (!optionsBefore.editPost && options.editPost) {
+                this.triggerEditEvent();
+            }
+        });
+    },
 });
+
+var defaultOptions = {
+    addIssue: false,
+    hidePost: false,
+    editPost: false,
+    bookmarkRecipients: [],
+};
