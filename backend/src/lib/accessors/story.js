@@ -30,6 +30,7 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         type: String,
         related_object_id: Number,
+        published_version_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
         published: Boolean,
@@ -133,7 +134,7 @@ module.exports = _.create(Data, {
                 }
             }
             if (row.published_version_id) {
-                object.published_version_id = published_version_id;
+                object.published_version_id = row.published_version_id;
             }
             return object;
         });
@@ -171,6 +172,9 @@ module.exports = _.create(Data, {
                     }
                 }
             } else {
+                if (object.id) {
+                    throw new HttpError(400);
+                }
                 if (!object.hasOwnProperty('user_ids')) {
                     throw new HttpError(403);
                 }
@@ -188,18 +192,49 @@ module.exports = _.create(Data, {
                     object.ptime = Moment().toISOString();
                 }
             }
+            return object;
+        }).then((objects) => {
+            // look for temporary copies created for editing published stories
+            var publishedTempCopies = _.filter(objects, (object) => {
+                if (object.published_version_id) {
+                    if (object.published) {
+                        return true;
+                    }
+                }
+            });
+            if (!_.isEmpty(publishedTempCopies)) {
+                // create copies of the temp objects that save to the published version
+                var publishedStories = _.map(publishedTempCopies, (tempCopy) => {
+                    // don't need the object any more
+                    tempCopy.deleted = true;
 
-            if (original && original.published_version_id && object.published) {
-                // this is a temporary copy created for editing a published story
-                // save the contents to the original object and delete this
-                return this.removeOne(db, schema, object).then(() => {
-                    object.id = original.published_version_id;
-                    object.published_version_id = null;
-                    return object;
+                    var publishedStory = _.omit(tempCopy, 'deleted', 'published_version_id', 'ptime');
+                    publishedStory.details = _.omit(tempCopy.details, 'fn');
+                    publishedStory.id = tempCopy.published_version_id;
+                    return publishedStory;
+                });
+                console.log(publishedStories);
+                // load the original objects
+                var publishedStoryIds = _.map(publishedStories, 'id');
+                return this.find(db, schema, { id: publishedStoryIds }, '*').then((publishedOriginals) => {
+                    console.log(publishedOriginals)
+                    publishedOriginals = _.map(publishedStories, (object) => {
+                        return _.find(publishedOriginals, { id: object.id }) || null;
+                    });
+                    // check permission
+                    return this.import(db, schema, publishedStories, publishedOriginals, credentials);
+                }).then((publishedStories) => {
+                    return _.concat(objects, publishedStories);
                 });
             } else {
-                return object;
+                return objects;
             }
+        }).then((objects) => {
+            /*if (!_.every(publishedOriginals, { published_version_id: null })) {
+                // prevent recursion
+                throw new HttpError(400);
+            }*/
+            return objects;
         });
     },
 

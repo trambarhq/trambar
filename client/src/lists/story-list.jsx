@@ -43,6 +43,7 @@ module.exports = Relaks.createClass({
     },
 
     getInitialState: function() {
+        this.autosaveTimeouts = {};
         var nextState = {
             blankStory: null,
             priorStoryDrafts: [],
@@ -231,7 +232,10 @@ module.exports = Relaks.createClass({
 
     autosaveStory: function(story, delay) {
         if (delay) {
-            setTimeout(() => {
+            if (this.autosaveTimeouts[story.id]) {
+                clearTimeout(this.autosaveTimeouts[story.id]);
+            }
+            this.autosaveTimeouts[story.id] = setTimeout(() => {
                 this.saveStory(story);
             }, delay);
         } else {
@@ -241,9 +245,9 @@ module.exports = Relaks.createClass({
 
     saveStory: function(story) {
         // clear autosave timeout
-        if (this.autosaveTimeout) {
-            clearTimeout(this.autosaveTimeout);
-            this.autosaveTimeout = 0;
+        if (this.autosaveTimeouts[story.id]) {
+            clearTimeout(this.autosaveTimeouts[story.id]);
+            this.autosaveTimeouts = _.omit(this.autosaveTimeouts, story.id);
         }
 
         // send images and videos to server
@@ -313,8 +317,8 @@ module.exports = Relaks.createClass({
             return (s.id === story.id) ? story : s;
         });
         this.setState({ storyDrafts });
-        return this.saveStory(story).then((story) => {
-            if (story) {
+        return this.saveStory(story).then((copy) => {
+            if (!story.published_version_id) {
                 var pendingStories = _.concat(story, this.state.pendingStories);
                 this.setState({ pendingStories });
             }
@@ -373,17 +377,33 @@ var StoryListSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render editors for new drafts at the top of the page
+     *
+     * @return {Array<ReactElement>}
+     */
     renderEditors: function() {
         if (!this.props.showEditors) {
             return null;
         }
-        return _.map(this.props.storyDrafts, this.renderEditor);
+        var newDrafts = _.filter(this.props.storyDrafts, (story) => {
+            return !story.published_version_id;
+        });
+        return _.map(newDrafts, this.renderEditor);
     },
 
+    /**
+     * Render editor for story
+     *
+     * @param  {Story} story
+     * @param  {Number} index
+     *
+     * @return {ReactElement}
+     */
     renderEditor: function(story, index) {
         // always use 0 as the key for the top story, so we don't lose focus
         // when the new story acquires an id after being saved automatically
-        var key = (index > 0) ? story.id : 0;
+        var key = (index === 0) ? 0 : story.id;
         var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : [];
         var editorProps = {
             story,
@@ -402,14 +422,30 @@ var StoryListSync = module.exports.Sync = React.createClass({
         return <StoryEditor {...editorProps}/>
     },
 
+    /**
+     * Render pending stories
+     *
+     * @return {Array<ReactElement>}
+     */
     renderPendingStories: function() {
         if (!this.props.showEditors) {
             return null;
         }
         var pendingStories = this.props.pendingStories ? sortStories(this.props.pendingStories) : null;
+        var newPendingStories = _.filter(pendingStories, (story) => {
+            return !story.published_version_id;
+        });
         return _.map(pendingStories, this.renderPendingStory);
     },
 
+    /**
+     * Render view of story in pending state
+     *
+     * @param  {Story} story
+     * @param  {Number} index
+     *
+     * @return {ReactElement}
+     */
     renderPendingStory: function(story, index) {
         var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : null;
         var storyProps = {
@@ -426,12 +462,31 @@ var StoryListSync = module.exports.Sync = React.createClass({
         return <StoryView {...storyProps} />;
     },
 
+    /**
+     * Render published stories
+     *
+     * @return {ReactElement}
+     */
     renderPublishedStories: function() {
         var stories = this.props.stories ? sortStories(this.props.stories) : null;
         return _.map(stories, this.renderPublishedStory);
     },
 
+    /**
+     * Render a published story
+     *
+     * @param  {Story} story
+     * @param  {Number} index
+     *
+     * @return {ReactElement}
+     */
     renderPublishedStory: function(story, index) {
+        // see if it's being editted
+        var draft = _.find(this.props.storyDrafts, { published_version_id: story.id });
+        if (draft) {
+            return this.renderEditor(draft);
+        }
+
         var reactions = this.props.reactions ? findReactions(this.props.reactions, story) : null;
         var authors = this.props.authors ? findAuthors(this.props.authors, story) : null;
         var respondents = this.props.respondents ? findRespondents(this.props.respondents, reactions) : null

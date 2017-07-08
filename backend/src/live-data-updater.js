@@ -280,6 +280,7 @@ function updateListing(schema, id) {
                 }
             });
             if (latest) {
+                criteria.published_version_id = null;
                 criteria.newer_than = latest;
             }
             return Story.find(db, schema, criteria, 'id, type, ptime').then((rows) => {
