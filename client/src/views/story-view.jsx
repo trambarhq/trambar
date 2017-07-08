@@ -24,6 +24,8 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         pending: PropTypes.bool,
 
@@ -34,6 +36,7 @@ module.exports = React.createClass({
 
         onChange: PropTypes.func,
         onEdit: PropTypes.func,
+        onBookmark: PropTypes.func,
     },
 
     /**
@@ -53,9 +56,37 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        return {
+        var nextState = {
             options: defaultOptions
+        };
+        this.updateOptions(nextState, this.props);
+        return nextState;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        var nextState = _.clone(this.state);
+        if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations) {
+            this.updateOptions(nextState, nextProps);
         }
+        var changes = _.pickBy(nextState, (value, name) => {
+            return value !== this.state[name];
+        });
+        if (!_.isEmpty(changes)) {
+            this.setState(changes);
+        }
+    },
+
+    /**
+     * Update state.options based on props
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
+    updateOptions: function(nextState, nextProps) {
+        var options = _.clone(nextState.options);
+        options.hidePost = !nextProps.story.public;
+        options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
+        nextState.options = options;
     },
 
     /**
@@ -189,15 +220,17 @@ module.exports = React.createClass({
      * Ask parent component to change a story
      *
      * @param  {Story} story
+     * @param  {String} path
      *
      * @return {Promise<Story>}
      */
-    triggerChangeEvent: function(story) {
+    triggerChangeEvent: function(story, path) {
         if (this.props.onChange) {
             return this.props.onChange({
                 type: 'change',
                 target: this,
-                story
+                story,
+                path,
             });
         }
     },
@@ -218,18 +251,47 @@ module.exports = React.createClass({
     },
 
     /**
+     * Ask parent component to add/remove bookmarks
+     *
+     * @param  {Array<Number>} recipientIds
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    triggerBookmarkEvent: function(recipientIds) {
+        if (this.props.onBookmark) {
+            return this.props.onBookmark({
+                type: 'edit',
+                target: this,
+                story: this.props.story,
+                selection: recipientIds,
+            });
+        }
+    },
+
+    setOptions: function(options) {
+        var before = this.state.options;
+        this.setState({ options }, () => {
+            if (options.editPost && !before.editPost) {
+                this.triggerEditEvent();
+            }
+            if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
+                this.triggerBookmarkEvent(options.bookmarkRecipients);
+            }
+            if (options.hidePost !== before.hidePost) {
+                var story = _.clone(this.props.story);
+                story.public = !options.hidePost;
+                this.triggerChangeEvent(story, 'public');
+            }
+        });
+    },
+
+    /**
      * Called when options are changed
      *
      * @param  {Object} evt
      */
     handleOptionsChange: function(evt) {
-        var optionsBefore = this.state.options;
-        var options = evt.options;
-        this.setState({ options }, () => {
-            if (!optionsBefore.editPost && options.editPost) {
-                this.triggerEditEvent();
-            }
-        });
+        this.setOptions(evt.options);
     },
 });
 

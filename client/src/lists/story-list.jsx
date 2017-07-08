@@ -163,13 +163,12 @@ module.exports = Relaks.createClass({
             };
         }
         var props = _.assign(this.childProps, {
-            showEditors: this.props.showEditors,
-            stories: this.props.stories,
-
             storyDrafts: this.state.storyDrafts,
             pendingStories: this.state.pendingStories,
             draftAuthors: this.state.draftAuthors,
 
+            showEditors: this.props.showEditors,
+            stories: this.props.stories,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -180,7 +179,7 @@ module.exports = Relaks.createClass({
             onStoryCommit: this.handleStoryCommit,
             onStoryCancel: this.handleStoryCancel,
             onStoryEdit: this.handleStoryEdit,
-            loading: true,
+            onStoryBookmark: this.handleStoryBookmark,
         });
         meanwhile.show(<StoryListSync {...props} />);
         return db.start().then((userId) => {
@@ -226,7 +225,28 @@ module.exports = Relaks.createClass({
             if (users) {
                 props.draftAuthors = users;
             }
-            props.loading = false;
+        }).then(() => {
+            // look for bookmark sent by current user
+            if (props.currentUser) {
+                var criteria = {
+                    story_id: _.map(props.stories, 'id'),
+                    user_ids: [ props.currentUser.id ],
+                };
+                return db.find({ table: 'bookmark', criteria });
+            }
+        }).then((recommendations) => {
+            props.recommendations = recommendations;
+            return <StoryListSync {...props} />;
+        }).then(() => {
+            // look for recipient of these bookmarks
+            if (props.recommendations) {
+                var criteria = {
+                    id: _.map(props.recommendations, 'target_user_id')
+                };
+                return db.find({ schema: 'global', table: 'user', criteria });
+            }
+        }).then((recipients) => {
+            props.recipients = recipients;
             return <StoryListSync {...props} />;
         });
     },
@@ -269,10 +289,12 @@ module.exports = Relaks.createClass({
             var server = route.parameters.server;
             var schema = route.parameters.schema;
             var db = this.props.database.use({ server, schema, by: this });
-            return db.saveOne({ table: 'story' }, story).then((copy) => {
-                return Promise.each(payloadIds, (payloadId) => {
-                    return payloads.send(payloadId);
-                }).return(copy);
+            return db.start().then(() => {
+                return db.saveOne({ table: 'story' }, story).then((copy) => {
+                    return Promise.each(payloadIds, (payloadId) => {
+                        return payloads.send(payloadId);
+                    }).return(copy);
+                });
             });
         });
     },
@@ -286,6 +308,46 @@ module.exports = Relaks.createClass({
     },
 
     /**
+     * Save bookmarks to remote database
+     *
+     * @param  {Array<Bookmark>} bookmarks
+     *
+     * @return {Promise<Array<Bookmark>>}
+     */
+    saveBookmarks: function(bookmarks) {
+        if (_.isEmpty(bookmarks)) {
+            return Promise.resolve([]);
+        }
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.save({ table: 'bookmark' }, bookmarks);
+        });
+    },
+
+    /**
+     * Remove bookmarks from remote database
+     *
+     * @param  {Array<Bookmark>} bookmarks
+     *
+     * @return {Promise<Array<Bookmark>>}
+     */
+    removeBookmarks: function(bookmarks) {
+        if (_.isEmpty(bookmarks)) {
+            return Promise.resolve([]);
+        }
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.remove({ table: 'bookmark' }, bookmarks);
+        });
+    },
+
+    /**
      * Called when user makes changes to a story
      *
      * @param  {Object} evt
@@ -293,11 +355,12 @@ module.exports = Relaks.createClass({
      * @return {Promise<Object>}
      */
     handleStoryChange: function(evt) {
-        return new Promise((resolve, reject) => {
-            var story = evt.story;
-            var storyDrafts = _.slice(this.state.storyDrafts);
-            var index = _.findIndex(storyDrafts, { id: story.id });
-            if (index !== -1) {
+        var story = evt.story;
+        var index = _.findIndex(this.state.storyDrafts, { id: story.id });
+        if (index !== -1) {
+            // preserve changes in state first
+            return new Promise((resolve, reject) => {
+                var storyDrafts = _.slice(this.state.storyDrafts);
                 storyDrafts[index] = story;
 
                 var delay;
@@ -315,8 +378,11 @@ module.exports = Relaks.createClass({
                 this.setState({ storyDrafts }, () => {
                     resolve(story);
                 });
-            }
-        });
+            });
+        } else {
+            // coming from StoryView--save immediately
+            return this.saveStory(story);
+        }
     },
 
     /**
@@ -376,6 +442,45 @@ module.exports = Relaks.createClass({
         tempCopy.published = false;
         return this.saveStory(tempCopy);
     },
+
+    /**
+     * Called when a user wants create bookmarks to a story
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise<Story>}
+     */
+    handleStoryBookmark: function(evt) {
+        var recipientIds = evt.selection;
+        var story = evt.story;
+        var userId = this.props.currentUser.id;
+        var bookmarks = findRecommendations(this.childProps.recommendations, story);
+        var newBookmarks = [];
+        // add bookmarks that don't exist yet
+        _.each(recipientIds, (recipientId) => {
+            if (!_.find(bookmarks, { target_user_id: recipientId })) {
+                var newBookmark = {
+                    story_id: story.id,
+                    user_ids: [ userId ],
+                    target_user_id: recipientId,
+                };
+                newBookmarks.push(newBookmark);
+            }
+        });
+        // delete bookmarks that aren't needed anymore
+        // the backend will handle the fact a bookmark can belong to multiple users
+        var redundantBookmarks = [];
+        _.each(bookmarks, (bookmark) => {
+            if (!_.includes(recipientIds, bookmark.target_user_id)) {
+                redundantBookmarks.push(bookmark);
+            }
+        });
+        return this.saveBookmarks(newBookmarks).then((newBookmarks) => {
+            return this.removeBookmarks(redundantBookmarks).then((redundantBookmarks) => {
+                return _.concat(newBookmarks, redundantBookmarks);
+            });
+        });
+    },
 });
 
 var StoryListSync = module.exports.Sync = React.createClass({
@@ -386,6 +491,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
+
         currentUser: PropTypes.object,
 
         storyDrafts: PropTypes.arrayOf(PropTypes.object),
@@ -397,12 +505,12 @@ var StoryListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-        loading: PropTypes.bool,
 
         onStoryChange: PropTypes.func,
         onStoryCommit: PropTypes.func,
         onStoryCancel: PropTypes.func,
         onStoryEdit: PropTypes.func,
+        onStoryBookmark: PropTypes.func,
     },
 
     render: function() {
@@ -443,9 +551,13 @@ var StoryListSync = module.exports.Sync = React.createClass({
         // when the new story acquires an id after being saved automatically
         var key = (index === 0) ? 0 : story.id;
         var authors = this.props.draftAuthors ? findAuthors(this.props.draftAuthors, story) : [];
+        var recommendations = this.props.recommendations ? findRecommendations(this.props.recommendations, story) : null;
+        var recipients = this.props.recipients ? findRecipients(this.props.recipients, recommendations) : null;
         var editorProps = {
             story,
             authors,
+            recommendations,
+            recipients,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -527,12 +639,16 @@ var StoryListSync = module.exports.Sync = React.createClass({
 
         var reactions = this.props.reactions ? findReactions(this.props.reactions, story) : null;
         var authors = this.props.authors ? findAuthors(this.props.authors, story) : null;
-        var respondents = this.props.respondents ? findRespondents(this.props.respondents, reactions) : null
+        var respondents = this.props.respondents ? findRespondents(this.props.respondents, reactions) : null;
+        var recommendations = this.props.recommendations ? findRecommendations(this.props.recommendations, story) : null;
+        var recipients = this.props.recipients ? findRecipients(this.props.recipients, recommendations) : null;
         var storyProps = {
             story,
             reactions,
             authors,
             respondents,
+            recommendations,
+            recipients,
             currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
@@ -540,6 +656,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
             onChange: this.props.onStoryChange,
             onEdit: this.props.onStoryEdit,
+            onBookmark: this.props.onStoryBookmark,
             key: story.id,
         };
         return (
@@ -584,6 +701,20 @@ var findRespondents = MemoizeWeak(function(users, reactions) {
     var respondentIds = _.uniq(_.map(reactions, 'user_id'));
     return _.map(respondentIds, (userId) => {
         return _.find(users, { id: userId }) || {}
+    });
+});
+
+var findRecommendations = MemoizeWeak(function(recommendations, story) {
+    if (story) {
+        return _.filter(recommendations, { story_id: story.id });
+    } else {
+        return [];
+    }
+});
+
+var findRecipients = MemoizeWeak(function(recipients, recommendations) {
+    return _.filter(recipients, (recipient) => {
+        return _.some(recommendations, { target_user_id: recipient.id });
     });
 });
 
