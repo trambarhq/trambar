@@ -158,6 +158,10 @@ module.exports = {
                     if (value instanceof Array) {
                         // equals any
                         conds.push(`${name} = ANY(${bound})`);
+                    } else if (value === null) {
+                        params.pop();
+                        index--;
+                        conds.push(`${name} IS NULL`);
                     } else {
                         // equals
                         conds.push(`${name} = ${bound}`);
