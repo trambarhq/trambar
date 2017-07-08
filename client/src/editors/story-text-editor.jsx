@@ -13,6 +13,7 @@ var StorySection = require('widgets/story-section');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
+var AutosizeTextArea = require('widgets/autosize-text-area');
 var StoryText = require('widgets/story-text');
 
 require('./story-text-editor.scss');
@@ -129,7 +130,7 @@ module.exports = React.createClass({
             lang: this.props.languageCode,
             onChange: this.handleTextChange,
         };
-        return <textarea {...props} />;
+        return <AutosizeTextArea {...props} />;
     },
 
     renderButtons: function() {
