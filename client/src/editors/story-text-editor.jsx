@@ -10,6 +10,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
+var MultipleUserNames = require('widgets/multiple-user-names');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
@@ -48,7 +49,7 @@ module.exports = React.createClass({
             <StorySection className="text-editor">
                 <header>
                     {this.renderProfileImage()}
-                    {this.renderNames()}
+                    {this.renderAuthorNames()}
                     {this.props.cornerPopUp}
                 </header>
                 <subheader>
@@ -77,16 +78,53 @@ module.exports = React.createClass({
         );
     },
 
-    renderNames: function() {
-        var names = _.map(this.props.authors, 'details.name');
-        return (
-            <span className="name">
-                {_.join(names, ', ')}
-                &nbsp;
-            </span>
-        )
+    /**
+     * Render the names of the author and co-authors
+     *
+     * @return {ReactElement}
+     */
+    renderAuthorNames: function() {
+        var t = this.props.locale.translate;
+        var authors = this.props.authors;
+        if (!_.every(authors, _.isObject)) {
+            authors = [];
+        }
+        var contents;
+        switch (_.size(authors)) {
+            // the list can be empty during loading
+            case 0:
+                contents = '\u00a0';
+                break;
+            case 1:
+                contents = authors[0].details.name;
+                break;
+            case 2:
+                var name1 = authors[0].details.name;
+                var name2 = authors[1].details.name;
+                contents = t('story-author-two-names', name1, name2);
+                break;
+            default:
+                var name1 = authors[0].details.name;
+                var coauthors = _.slice(authors, 1);
+                var props = {
+                    users: coauthors,
+                    label: t('story-author-$count-others', coauthors.length),
+                    title: t('story-coauthors'),
+                    locale: this.props.locale,
+                    theme: this.props.theme,
+                    key: 2,
+                };
+                var others = <MultipleUserNames {...props} />
+                contents = t('story-author-two-names', name1, others);
+        }
+        return <span className="name">{contents}</span>;
     },
 
+    /**
+     * Render button that opens coauthor selection dialog box
+     *
+     * @return {ReactElement}
+     */
     renderCoauthoringButtons: function() {
         var t = this.props.locale.translate;
         var label;

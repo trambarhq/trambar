@@ -24,6 +24,10 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'People',
         'bottom-nav-settings': 'Settings',
 
+        'list-$count-more': (count) => {
+            return `${count} more...`;
+        },
+
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
         'option-contact-by-phone': 'Contact by phone',
@@ -58,7 +62,14 @@ module.exports = function(languageCode) {
         'story-add-coauthor': 'Add coauthor',
         'story-add-remove-coauthor': 'Remove coauthor',
         'story-audio': 'Audio',
+        'story-author-two-names': (name1, name2) => {
+            return [ name1, ' and ', name2 ];
+        },
+        'story-author-$count-others': (count) =>{
+            return `${count} others`;
+        },
         'story-cancel': 'Cancel',
+        'story-coauthors': 'Coauthors',
         'story-comment': 'Comment',
         'story-file': 'File',
         'story-like': 'Like',
