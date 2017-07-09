@@ -31,8 +31,8 @@ module.exports = function(languageCode) {
         'option-edit-post': 'Edit post',
         'option-hide-post': 'Hide from non-team members',
         'option-send-bookmarks': 'Send bookmarks to other users',
-        'option-send-bookmarks-to-$1-users': ($1) => {
-            var users = ($1 === 1) ? `${$1} user` : `${$1} users`;
+        'option-send-bookmarks-to-$count-users': (count) => {
+            var users = (count === 1) ? `${count} user` : `${count} users`;
             return `Send bookmarks to ${users}`;
         },
         'option-show-media': 'Show attached media',
@@ -51,8 +51,8 @@ module.exports = function(languageCode) {
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 
-        'story-$1-user-reacted-to-story': ($1) => {
-            var users = ($1 === 1) ? `${$1} user` : `${$1} users`;
+        'story-$count-user-reacted-to-story': (count) => {
+            var users = (count === 1) ? `${count} user` : `${count} users`;
             return `${users} reacted to this story`;
         },
         'story-add-coauthor': 'Add coauthor',
@@ -71,8 +71,8 @@ module.exports = function(languageCode) {
         'story-video': 'Video',
         'story-vote': 'Vote',
 
-        'task-list-item-$1': ($1) => {
-            return `task ${$1}`;
+        'task-list-item-$number': (number) => {
+            return `task ${number}`;
         },
 
         'user-actions': 'Actions',
@@ -84,8 +84,8 @@ module.exports = function(languageCode) {
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stop',
 
-        'vote-item-$1': ($1) => {
-            return `choice ${$1}`;
+        'vote-item-$number': (number) => {
+            return `choice ${number}`;
         },
     };
     var languageName = 'English';

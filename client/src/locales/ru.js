@@ -15,13 +15,13 @@ module.exports = function(languageCode) {
         'selection-cancel': 'Отмена',
         'selection-ok': 'ОК',
 
-        'story-$1-user-reacted-to-story': ($1) => {
-            if (singularN($1)) {
+        'story-$count-user-reacted-to-story': (count) => {
+            if (singularN(count)) {
                 return `1 человек отреагировал на новости`;
-            } else if (singularG($1)) {
-                return `${$1} человека отреагировало на новости`;
+            } else if (singularG(count)) {
+                return `${count} человека отреагировало на новости`;
             } else {
-                return `${$1} человек отреагировало на новости`;
+                return `${count} человек отреагировало на новости`;
             }
         },
         'story-add-coauthor': 'Добавить соавтора',

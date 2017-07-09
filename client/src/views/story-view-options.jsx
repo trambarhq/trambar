@@ -87,7 +87,7 @@ module.exports = React.createClass({
             var sendBookmarkProps = {
                 label: _.isEmpty(options.bookmarkRecipients)
                     ? t('option-send-bookmarks')
-                    : t('option-send-bookmarks-to-$1-users', _.size(options.bookmarkRecipients)),
+                    : t('option-send-bookmarks-to-$count-users', _.size(options.bookmarkRecipients)),
                 selected: !_.isEmpty(options.bookmarkRecipients),
                 onClick: this.handleSendBookmarkClick,
             };

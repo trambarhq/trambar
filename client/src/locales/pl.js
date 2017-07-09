@@ -15,13 +15,13 @@ module.exports = function(languageCode) {
         'selection-cancel': 'Anuluj',
         'selection-ok': 'OK',
 
-        'story-$1-user-reacted-to-story': ($1) => {
-            if (singular($1)) {
+        'story-$count-user-reacted-to-story': (count) => {
+            if (singular(count)) {
                 return `1 osoba zareagowała na wiadomość`;
-            } else if (plural($1)) {
-                return `${$1} osoby zareagowały na wiadomość`;
+            } else if (plural(count)) {
+                return `${count} osoby zareagowały na wiadomość`;
             } else {
-                return `${$1} osób zareagowało na wiadomość`;
+                return `${count} osób zareagowało na wiadomość`;
             }
         },
         'story-add-coauthor': 'Dodaj współautora',

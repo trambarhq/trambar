@@ -211,7 +211,7 @@ function addListTemplate(story, languageCode, locale) {
     var type = story.type;
     var t = locale.translate;
     var items = _.map(_.range(1, 4), (number) => {
-        var label = t(`${type}-item-$1`, number);
+        var label = t(`${type}-item-$number`, number);
         return `[ ] ${label}`;
     });
     langText += items.join('\n');

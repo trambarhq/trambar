@@ -93,7 +93,7 @@ module.exports = React.createClass({
         var showButtonProps = {
             className: 'show-btn',
             hidden: true,
-            label: t('story-$1-user-reacted-to-story', _.size(this.props.respondents)),
+            label: t('story-$count-user-reacted-to-story', _.size(this.props.respondents)),
             onClick: this.handleShowClick,
         };
         if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
