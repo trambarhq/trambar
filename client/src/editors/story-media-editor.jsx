@@ -16,6 +16,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
+var MediaButton = require('widgets/media-button');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
@@ -49,8 +50,22 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Return the number of resources attached to story
+     *
+     * @return {Number}
+     */
+    getResourceCount: function() {
+        return _.get(this.props.story, 'details.resources.length', 0);
+    },
+
+    /**
+     * Return the index of the currently selected resource
+     *
+     * @return {Number}
+     */
     getSelectedResourceIndex: function() {
-        var maxIndex = _.get(this.props.story, 'details.resources.length', 0) - 1;
+        var maxIndex = this.getResourceCount() - 1;
         var index = _.min([ this.state.selectedResourceIndex, maxIndex ]);
         return index;
     },
@@ -99,7 +114,7 @@ module.exports = React.createClass({
                     {this.renderVideoDialog()}
                 </header>
                 <body onDragEnter={this.handleDragEnter}>
-                    {this.renderResourceEditor()}
+                    {this.renderResources()}
                     {this.renderDropZone()}
                 </body>
             </StorySection>
@@ -195,8 +210,14 @@ module.exports = React.createClass({
         return <AudioCaptureDialogBox {...props} />
     },
 
-    renderResourceEditor: function() {
+    /**
+     * Render resource navigation and editor
+     *
+     * @return {ReactElement}
+     */
+    renderResources: function() {
         var index = this.getSelectedResourceIndex();
+        var count = this.getResourceCount();
         if (index < 0) {
             var t = this.props.locale.translate;
             return (
@@ -204,6 +225,22 @@ module.exports = React.createClass({
             );
         }
         var res = this.props.story.details.resources[index];
+        return (
+            <div className="resources">
+                {this.renderResourceEditor(res)}
+                {this.renderResourceNavigation(index, count)}
+            </div>
+        );
+    },
+
+    /**
+     * Render edit for the currently selected resource
+     *
+     * @param  {Object} res
+     *
+     * @return {ReactElement}
+     */
+    renderResourceEditor: function(res) {
         switch (res.type) {
             case 'image':
             case 'video':
@@ -216,6 +253,46 @@ module.exports = React.createClass({
                     </div>
                 );
         }
+    },
+
+    /**
+     * Render navigation bar for selecting resource
+     *
+     * @param  {Number} index
+     * @param  {Number} count
+     *
+     * @return {ReactElement}
+     */
+    renderResourceNavigation: function(index, count) {
+        var shiftProps = {
+            label: 'Shift',
+            icon: 'chevron-left',
+            disabled: !(index > 0),
+            onClick: this.handleShiftClick,
+        };
+        var removeProps = {
+            label: 'Remove',
+            icon: 'remove',
+            onClick: this.handleRemoveClick,
+        };
+        var directionProps = {
+            index,
+            count,
+            hidden: !(count > 1),
+            onBackwardClick: this.handleBackwardClick,
+            onForwardClick: this.handleForwardClick,
+        };
+        return (
+            <div className="navigation">
+                <div className="left">
+                    <MediaButton {...shiftProps} />
+                    <MediaButton {...removeProps} />
+                </div>
+                <div className="right">
+                    <MediaButton.Direction {...directionProps} />
+                </div>
+            </div>
+        );
     },
 
     renderImageCropper: function(res) {
@@ -257,10 +334,12 @@ module.exports = React.createClass({
      *
      * @param  {Story} story
      * @param  {String} path
+     *
+     * @return {Promise<Story>}
      */
     triggerChangeEvent: function(story, path) {
         if (this.props.onChange) {
-            this.props.onChange({
+            return this.props.onChange({
                 type: 'change',
                 target: this,
                 story,
@@ -489,6 +568,80 @@ module.exports = React.createClass({
         var path = `details.resources.${index}.clip`;
         var story = _.decoupleSet(this.props.story, path, evt.rect);
         this.triggerChangeEvent(story, path);
+    },
+
+    /**
+     * Called when user clicks shift button
+     *
+     * @param  {Event} evt
+     */
+    handleShiftClick: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        if (index < 1) {
+            return 0;
+        }
+        var path = 'details.resource';
+        var story = _.decouple(this.props.story, path, []);
+        var resources = this.props.story.details.resources;
+        var res = resources[index];
+        resources.splice(index, 1);
+        resources.splice(index - 1, 0, res);
+        this.triggerChangeEvent(story, path).then(() => {
+            this.setState({ selectedResourceIndex: index - 1 });
+        });
+    },
+
+    /**
+     * Called when user clicks remove button
+     *
+     * @param  {Event} evt
+     */
+    handleRemoveClick: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        var count = this.getResourceCount();
+        if (index < 1) {
+            return 0;
+        }
+        var path = 'details.resource';
+        var story = _.decouple(this.props.story, path, []);
+        var resources = this.props.story.details.resources;
+        var res = resources[index];
+        resources.splice(index, 1);
+        count--;
+        this.triggerChangeEvent(story, path).then(() => {
+            if (!(index < count)) {
+                this.setState({ selectedResourceIndex: count - 1 });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks backward button
+     *
+     * @param  {Event} evt
+     */
+    handleBackwardClick: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        if (index < 1) {
+            return 0;
+        }
+        var selectedResourceIndex = index - 1;
+        this.setState({ selectedResourceIndex });
+    },
+
+    /**
+     * Called when user clicks forward button
+     *
+     * @param  {Event} evt
+     */
+    handleForwardClick: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        var count = this.getResourceCount();
+        if (index + 1 >= count) {
+            return 0;
+        }
+        var selectedResourceIndex = index + 1;
+        this.setState({ selectedResourceIndex });
     },
 });
 

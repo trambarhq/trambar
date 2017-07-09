@@ -48,4 +48,30 @@
         max-width: 600px;
         width: 100%;
     }
+
+    .resources {
+        position: relative;
+        width: 100%;
+
+        .navigation {
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 1;
+            transition: opacity .5s;
+
+            .left {
+                float: left;
+            }
+
+            .right {
+                float: right;
+            }
+
+            &.hidden {
+                opacity: 0;
+            }
+        }
+    }
 }

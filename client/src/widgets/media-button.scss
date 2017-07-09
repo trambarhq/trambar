@@ -1,0 +1,49 @@
+.media-button {
+    display: inline-block;
+    color: #666666;
+    padding: 0.45em 0.5em 0.3em 0.5em;
+    margin-left: 0.2em;
+    margin-right: 0.1em;
+    cursor: pointer;
+
+    &:hover {
+        color: #eeeeee;
+    }
+
+    &.disabled {
+        cursor: default;
+        &:hover {
+            color: #666666;
+        }
+    }
+
+    .label {
+        font-size: 0.9em;
+        margin-left: 0.3em;
+    }
+}
+
+.media-direction {
+    padding: 0.2em 0.3em 0.1em 0.3em;
+
+    .backward-button, .forward-button {
+        display: inline-block;
+        font-size: 1.2em;
+        color: #666666;
+        padding: 0.1em 0.5em 0.1em 0.5em;
+        cursor: pointer;
+        vertical-align: middle;
+    }
+
+    .position {
+        display: inline-block;
+        font-size: 0.9em;
+        vertical-align: middle;
+    }
+
+    &:hover {
+        .backward-button, .forward-button {
+            color: #eeeeee;
+        }
+    }
+}
