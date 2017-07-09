@@ -82,7 +82,9 @@ module.exports = React.createClass({
                 var notifier = this.components.notifier;
                 if (notifier) {
                     var protocol = getProtocol(server);
-                    notifier.connect(protocol, server, authorization.token);
+                    notifier.connect(protocol, server, authorization.token).catch((err) => {
+                        console.error(`Unable to establish WebSocket connection: ${server}`);
+                    });
                 }
                 return authorization.user_id;
             });

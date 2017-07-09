@@ -93,6 +93,8 @@ function run() {
 		return this.loop();
 	}).then(() => {
 		return this.finally();
+	}).catch((err) => {
+		return this.finally(err);
 	});
 }
 
