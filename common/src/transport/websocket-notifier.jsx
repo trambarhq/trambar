@@ -15,7 +15,7 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale),
 
         onNotify: PropTypes.func,
-        onNotificationClick: PropTypes.func,
+        onAlertClick: PropTypes.func,
     },
 
     statics: {
@@ -44,8 +44,10 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
+            protocol: '',
             server: '',
             socket: null,
+            showingAlert: false,
         };
     },
 
@@ -59,14 +61,14 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     connect: function(protocol, server, token) {
-        if (this.state.server === server) {
+        if (this.state.protocol === protocol && this.state.server === server) {
             return Promise.resolve(true);
         }
         // close previous socket
         if (this.state.socket) {
             // store socket in variable as state might change in meantime
             var socket = this.state.socket;
-            this.setState({ socket: null, server: '' }, () => {
+            this.setState({ socket: null, protocol: '', server: '' }, () => {
                 socket.close();
             });
         }
@@ -105,7 +107,7 @@ module.exports = React.createClass({
                             if (object.changes) {
                                 this.triggerNotifyEvent(object.changes);
                             } else if (object.alert) {
-                                this.showNotificationMessage(object.alert);
+                                this.showAlert(object.alert);
                             }
                         }
                     };
@@ -118,7 +120,7 @@ module.exports = React.createClass({
                             });
                         }
                     };
-                    this.setState({ socket, server });
+                    this.setState({ socket, protocol, server });
                 }
                 connected = true;
                 lastError = null;
@@ -195,14 +197,47 @@ module.exports = React.createClass({
         }
     },
 
-    showNotificationMessage: function(msg) {
+    triggerAlertClickEvent: function(alert) {
+        if (this.props.onAlertClick) {
+            this.props.onAlertClick({
+                type: 'alertclick',
+                target: this,
+                alert,
+            })
+        }
+    },
 
+    componentWillMount: function() {
+        requestNotificationPermission().then(() => {
+            this.setState({ showingAlert: true })
+        }).catch((err) => {
+        })
+    },
+
+    showAlert: function(alert) {
+        if (this.state.showingAlert) {
+            var options = {};
+            var server = this.state.server;
+            var protocol = this.state.protocol;
+            if (alert.profile_image) {
+                options.icon = `${protocol}://${server}${alert.profile_image}`;
+            }
+            if (alert.message) {
+                options.body = alert.message;
+            } else if (alert.attached_image) {
+                // show attach image only if there's no text
+                options.image = `${protocol}://${server}${alert.attached_image}`;
+            }
+            options.lang = this.props.locale.languageCode;
+            var notification = new Notification(alert.title, options);
+            notification.addEventListener('click', () => {
+                this.triggerAlertClickEvent(alert);
+            });
+        }
     },
 
     render: function() {
-        return (
-            <div></div>
-        );
+        return null;
     },
 });
 
@@ -211,4 +246,16 @@ function parseJSON(text) {
         return JSON.parse(text);
     } catch (err) {
     }
+}
+
+function requestNotificationPermission() {
+    return new Promise((resolve, reject) => {
+        Notification.requestPermission((status) => {
+            if (status === 'granted') {
+                resolve();
+            } else {
+                reject(new Error('Unable to gain permission'))
+            }
+        })
+    });
 }

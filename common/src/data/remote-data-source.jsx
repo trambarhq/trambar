@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var HttpRequest = require('transport/http-request');
 var LocalSearch = require('data/local-search');
+var Locale = require('locale/locale');
 
 var IndexedDBCache = (process.env.PLATFORM === 'browser') ? require('data/indexed-db-cache') : null;
 var SQLiteCache = (process.env.PLATFORM === 'cordova') ? require('data/sqlite-cache') : null;
@@ -19,8 +20,10 @@ module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     propTypes: {
         refreshInterval: PropTypes.number,
+        locale: PropTypes.instanceOf(Locale),
         onChange: PropTypes.func,
         onAuthRequest: PropTypes.func,
+        onAlertClick: PropTypes.func,
     },
     components: ComponentRefs({
         cache: LocalCache,
@@ -596,6 +599,7 @@ module.exports = React.createClass({
                 ref: setters.notifier,
                 locale: this.props.locale,
                 onNotify: this.handleChangeNotification,
+                onAlertClick: this.props.onAlertClick,
             };
             return <Notifier {...notifierProps} />;
         }

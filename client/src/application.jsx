@@ -116,6 +116,7 @@ module.exports = React.createClass({
             locale: this.state.locale,
             onChange: this.handleDatabaseChange,
             onAuthRequest: this.handleDatabaseAuthRequest,
+            onAlertClick: this.handleAlertClick,
         };
         var uploadManagerProps = {
             ref: setters.uploadManager,
@@ -331,6 +332,18 @@ module.exports = React.createClass({
     handleThemeChange: function(evt) {
         var theme = new Theme(evt.target);
         this.setState({ theme });
+    },
+
+    /**
+     * Called when user clicks on alert message
+     *
+     * @param  {Object} evt
+     */
+    handleAlertClick: function(evt) {
+        var alert = evt.alert;
+        console.log(alert);
+        // this is needed in Chrome
+        window.focus();
     },
 
     /**

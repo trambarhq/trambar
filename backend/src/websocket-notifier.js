@@ -9,6 +9,8 @@ var HttpError = require('errors/http-error');
 // accessors
 var Authorization = require('accessors/authorization');
 var User = require('accessors/user');
+var Reaction = require('accessors/reaction');
+var Story = require('accessors/story');
 
 var server;
 var sockets = [];
@@ -113,6 +115,7 @@ function fetchCredentials(db, userId) {
 }
 
 function handleDatabaseChanges(events) {
+    var db = this;
     _.each(sockets, (socket) => {
         var changes = {};
         _.each(events, (event) => {
@@ -130,9 +133,38 @@ function handleDatabaseChanges(events) {
             socket.write(JSON.stringify(payload));
         }
     });
+
+    var reactionInsertions = _.filter(events, { table: 'reaction' });
+    Promise.each(reactionInsertions, (event) => {
+        var schema = event.schema;
+        var published = _.get(event.diff, [ 'published', 1, ]);
+        if (published) {
+            return Reaction.findOne(db, schema, { id: event.id }, '*').then((reaction) => {
+                return User.findOne(db, 'global', { id: reaction.user_id }, '*').then((sender) => {
+                    return Story.findOne(db, schema, { id: reaction.story_id }, '*').then((story) => {
+                        if (!sender || !story) {
+                            return;
+                        }
+                        return Promise.each(reaction.target_user_ids, (userId) => {
+                            // TODO: employ user preference
+                            var socket = _.find(sockets, (s) => {
+                                return s.credentials.user.id === userId;
+                            });
+                            if (socket) {
+                                var alert = Reaction.createAlert(schema, reaction, story, sender, socket.locale)
+                                var payload = { alert };
+                                socket.write(JSON.stringify(payload));
+                            }
+                        });
+                    });
+                });
+            });
+        }
+    });
 }
 
 function canUserSeeEvent(event, credentials) {
+    // TODO
     if (event.schema === 'global') {
     }
     return true;
