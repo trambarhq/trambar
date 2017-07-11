@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var MemoizeWeak = require('memoizee/weak');
+var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
 
 var Database = require('data/database');
@@ -32,7 +32,7 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        var reactions = this.props.reactions ? sortReactions(this.props.reactions) : null;
+        var reactions = sortReactions(this.props.reactions);
         return (
             <div className="comment-list">
                 {_.map(reactions, this.renderReaction)}
@@ -41,9 +41,10 @@ module.exports = React.createClass({
     },
 
     renderReaction: function(reaction) {
+        var respondent = findRespondent(this.props.respondents, reaction);
         var props = {
             reaction,
-            respondent: this.props.respondents ? findRespondent(this.props.respondents, reaction) : null,
+            respondent,
             currentUser: this.props.currentUser,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -53,11 +54,11 @@ module.exports = React.createClass({
     },
 });
 
-var sortReactions = MemoizeWeak(function(reactions) {
+var sortReactions = Memoize(function(reactions) {
     return _.orderBy(reactions, [ 'ptime' ], [ 'desc' ]);
 });
 
-var findRespondent = MemoizeWeak(function(users, reaction) {
+var findRespondent = Memoize(function(users, reaction) {
     if (reaction) {
         return _.find(users, { id: reaction.user_id });
     } else {

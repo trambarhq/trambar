@@ -154,6 +154,7 @@ module.exports = React.createClass({
                 story_id: _.get(this.props.story, 'id'),
                 user_id: _.get(this.props.currentUser, 'id'),
                 target_user_ids: _.get(this.props.story, 'user_ids'),
+                published: true,
             };
             db.saveOne({ table: 'reaction' }, like);
         }

@@ -153,6 +153,7 @@ function handleDatabaseChanges(events) {
                             if (socket) {
                                 var alert = Reaction.createAlert(schema, reaction, story, sender, socket.locale)
                                 var payload = { alert };
+                                console.log(alert);
                                 socket.write(JSON.stringify(payload));
                             }
                         });

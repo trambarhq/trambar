@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var MemoizeWeak = require('memoizee/weak');
+var Memoize = require('utils/memoize');
 var Moment = require('moment');
 
 var Database = require('data/database');
@@ -99,7 +99,7 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        var users = this.props.users ? sortUsers(this.props.users) : null;
+        var users = sortUsers(this.props.users);
         return (
             <div className="user-list">
                 {_.map(users, this.renderUser)}
@@ -108,8 +108,8 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 
     renderUser: function(user, index) {
-        var roles = this.props.roles ? findRoles(this.props.roles, user) : null;
-        var dailyActivities = this.props.dailyActivities ? findDailyActivities(this.props.dailyActivities, user) : null;
+        var roles = findRoles(this.props.roles, user);
+        var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
         var userProps = {
             user,
             roles,
@@ -129,11 +129,11 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 });
 
-var sortUsers = MemoizeWeak(function(users) {
+var sortUsers = Memoize(function(users) {
     return _.orderBy(users, [ 'details.name' ], [ 'asc' ]);
 });
 
-var findRoles = MemoizeWeak(function(roles, user) {
+var findRoles = Memoize(function(roles, user) {
     if (user) {
         return _.filter(_.map(user.role_ids, (roleId) => {
             return _.find(roles, { id: roleId });
@@ -143,7 +143,7 @@ var findRoles = MemoizeWeak(function(roles, user) {
     }
 });
 
-var findDailyActivities = MemoizeWeak(function(dailyActivities, user) {
+var findDailyActivities = Memoize(function(dailyActivities, user) {
     if (user) {
         return _.find(dailyActivities, (stats) => {
             return stats.filters.user_ids[0] === user.id;

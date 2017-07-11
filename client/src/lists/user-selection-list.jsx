@@ -1,6 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var MemoizeWeak = require('memoizee/weak');
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -65,7 +65,7 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        var users = this.props.users ? sortUsers(this.props.users) : null;
+        var users = sortUsers(this.props.users);
         return (
             <div className="user-selection-list">
                 {_.map(users, this.renderUser)}
@@ -134,6 +134,6 @@ function User(props) {
     );
 }
 
-var sortUsers = MemoizeWeak(function(users) {
+var sortUsers = Memoize(function(users) {
     return _.orderBy(users, [ 'details.name' ], [ 'asc' ]);
 });

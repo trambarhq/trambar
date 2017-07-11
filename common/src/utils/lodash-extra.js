@@ -82,4 +82,18 @@ _.mixin({
         array.push(value);
         return dstObj;
     },
+
+    /**
+     * Return properties in objA that are different in objB
+     *
+     * @param  {Object} objA
+     * @param  {Object} objB
+     *
+     * @return {Object}
+     */
+    shallowDiff: function(objA, objB) {
+        return _.pickBy(objA, (value, name) => {
+            return objB[name] !== value;
+        });
+    }
 });

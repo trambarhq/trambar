@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var MemoizeWeak = require('memoizee/weak');
+var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
 
 var Database = require('data/database');
@@ -137,15 +137,15 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     },
 
     renderBookmarks: function() {
-        var bookmarks = this.props.bookmarks ? sortBookmark(this.props.bookmarks) : null;
+        var bookmarks = sortBookmark(this.props.bookmarks);
         return _.map(bookmarks, this.renderBookmark);
     },
 
     renderBookmark: function(bookmark, index) {
-        var story = this.props.stories ? findStory(this.props.stories, bookmark) : null;
-        var reactions = this.props.reactions ? findReactions(this.props.reactions, story) : null;
-        var authors = this.props.authors ? findAuthors(this.props.authors, story) : null;
-        var respondents = this.props.respondents ? findRespondents(this.props.respondents, reactions) : null
+        var story = findStory(this.props.stories, bookmark);
+        var reactions = findReactions(this.props.reactions, story);
+        var authors = findAuthors(this.props.authors, story);
+        var respondents = findRespondents(this.props.respondents, reactions);
         var storyProps = {
             story,
             reactions,
@@ -176,11 +176,11 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     },
 });
 
-var sortBookmark = MemoizeWeak(function(bookmarks) {
+var sortBookmark = Memoize(function(bookmarks) {
     return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
 });
 
-var findStory = MemoizeWeak(function(stories, bookmark) {
+var findStory = Memoize(function(stories, bookmark) {
     if (bookmark) {
         return _.find(stories, { id: bookmark.story_id });
     } else {
@@ -188,7 +188,7 @@ var findStory = MemoizeWeak(function(stories, bookmark) {
     }
 });
 
-var findReactions = MemoizeWeak(function(reactions, story) {
+var findReactions = Memoize(function(reactions, story) {
     if (story) {
         return _.filter(reactions, { story_id: story.id });
     } else {
@@ -196,7 +196,7 @@ var findReactions = MemoizeWeak(function(reactions, story) {
     }
 });
 
-var findAuthors = MemoizeWeak(function(users, story) {
+var findAuthors = Memoize(function(users, story) {
     if (story) {
         return _.filter(_.map(story.user_ids, (userId) => {
            return _.find(users, { id: userId });
@@ -206,7 +206,7 @@ var findAuthors = MemoizeWeak(function(users, story) {
     }
 });
 
-var findRespondents = MemoizeWeak(function(users, reactions) {
+var findRespondents = Memoize(function(users, reactions) {
     var respondentIds = _.uniq(_.map(reactions, 'user_id'));
     return _.filter(_.map(respondentIds, (userId) => {
         return _.find(users, { id: userId });

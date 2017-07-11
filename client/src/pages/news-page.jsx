@@ -68,7 +68,8 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             stories: null,
-            storyDrafts: null,
+            draftStories: null,
+            pendingStories: null,
             currentUser: null,
 
             showEditors: !(date || !_.isEmpty(roleIds) || searchString),
@@ -78,7 +79,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<NewsPageSync {...props} />);
+        meanwhile.show(<NewsPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
@@ -138,7 +139,16 @@ module.exports = Relaks.createClass({
             };
             return db.find({ table: 'story', criteria });
         }).then((stories) => {
-            props.storyDrafts = stories;
+            props.draftStories = stories;
+        }).then(() => {
+            // look for pending stories
+            var criteria = {
+                published: true,
+                ready: false,
+                user_ids: [ props.currentUser.id ],
+            };
+        }).then((stories) => {
+            props.pendingStories = stories;
             return <NewsPageSync {...props} />;
         });
     },
@@ -150,7 +160,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
-        storyDrafts: PropTypes.arrayOf(PropTypes.object),
+        draftStories: PropTypes.arrayOf(PropTypes.object),
+        pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -172,7 +183,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             showEditors: this.props.showEditors,
             stories: this.props.stories,
-            storyDrafts: this.props.storyDrafts,
+            draftStories: this.props.draftStories,
+            pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
