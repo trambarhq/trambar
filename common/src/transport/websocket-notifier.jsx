@@ -232,6 +232,7 @@ module.exports = React.createClass({
             var notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
                 this.triggerAlertClickEvent(alert);
+                notification.close();
             });
         }
     },
