@@ -38,6 +38,7 @@ module.exports = _.create(Data, {
         time_range: String,
         newer_than: String,
         older_than: String,
+        ready: Boolean,
     },
 
     /**

@@ -450,12 +450,16 @@ module.exports = React.createClass({
     importFile: function(file) {
         if (/^image\//.test(file.type)) {
             return BlobReader.loadImage(file).then((img) => {
-                var type = file.type;
+                var format = _.last(_.split(file.type, '/'));
                 var width = img.naturalWidth;
                 var height = img.naturalHeight;
-                var image = { type, file, width, height };
+                var image = { format, file, width, height };
                 return this.attachImage(image);
             });
+        } else if (/^video\//.test(file.type)) {
+            var format = _.last(_.split(file.type, '/'));
+            var video = { format, file };
+            return this.attachVideo(video);
         } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
             return BlobReader.loadText(file).then((text) => {
                 var link = LinkParser.parse(text);
@@ -702,7 +706,7 @@ module.exports = React.createClass({
         if (index < 1) {
             return 0;
         }
-        var path = 'details.resource';
+        var path = 'details.resources';
         var story = _.decouple(this.props.story, path, []);
         var resources = this.props.story.details.resources;
         var res = resources[index];
@@ -725,10 +729,9 @@ module.exports = React.createClass({
         if (index < 0) {
             return index;
         }
-        var path = 'details.resource';
+        var path = 'details.resources';
         var story = _.decouple(this.props.story, path, []);
-        var resources = this.props.story.details.resources;
-        var res = resources[index];
+        var resources = story.details.resources;
         resources.splice(index, 1);
         return this.triggerChangeEvent(story, path).then(() => {
             if (index >= resources.length) {
@@ -778,9 +781,9 @@ function getDefaultClippingRect(width, height, align) {
     var length = Math.min(width, height);
     if (align === 'center' || !align) {
         if (width > length) {
-            left = Math.floor((length - width) / 2);
+            left = Math.floor((width - length) / 2);
         } else if (height > length) {
-            top = Math.floor((length - height) / 2);
+            top = Math.floor((height - length) / 2);
         }
     }
     return { left, top, width: length, height: length };
