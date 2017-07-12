@@ -164,20 +164,34 @@ function handleWebsiteScreenshot(req, res) {
         var urlHash = md5(`${url} ${date}`);
         var tempPath = `${imageCacheFolder}/${urlHash}.jpeg`;
         return createWebsiteScreenshot(url, tempPath).then((title) => {
-            return FS.readFileAsync(tempPath).then((buffer) => {
-                var hash = md5(buffer);
-                var path = `${imageCacheFolder}/${hash}`;
-                return FS.statAsync(path).catch(() => {
-                    return FS.renameAsync(tempPath, path);
-                }).return({ hash, title });
+            // retrieve metadata (need width and height)
+            return B(Sharp(tempPath).metadata()).then((metadata) => {
+                // calculate MD5 hash then rename file to proper name
+                return md5File(tempPath).then((hash) => {
+                    var path = `${imageCacheFolder}/${hash}`;
+                    return FS.statAsync(path).catch(() => {
+                        return FS.renameAsync(tempPath, path);
+                    }).then(() => {
+                        return { hash, title, metadata };
+                    });
+                });
             });
         });
     }).then((props) => {
+        var width = props.metadata.width;
+        var height = props.metadata.height;
+        var clip = getDefaultClippingRect(width, height, 'top');
         var website = {
             poster_url: `/media/images/${props.hash}`,
-            page_title: props.title,
+            title: props.title,
+            width,
+            height,
+            clip,
         };
-        updateAssociatedObject(schema, taskId, website, true);
+        var preserve = {
+            clip: true,
+        };
+        updateAssociatedObject(schema, taskId, website, preserve);
         return website;
     }).catch((err) => {
         sendError(res, err);
@@ -195,10 +209,28 @@ function handleImageUpload(req, res) {
         } else {
             throw new HttpError(400);
         }
+
     }).then((hash) => {
+        var path = `${imageCacheFolder}/${hash}`;
+        return B(Sharp(path).metadata()).then((metadata) => {
+            return { hash, metadata };
+        });
+    }).then((props) => {
         // update the object associated with task (no need to wait for it)
-        var image = { url: `/media/images/${hash}` };
-        updateAssociatedObject(schema, taskId, image, true);
+        var width = props.metadata.width;
+        var height = props.metadata.height;
+        var clip = getDefaultClippingRect(width, height, 'center');
+        var image = {
+            url: `/media/images/${props.hash}`,
+            format: props.metadata.format,
+            width,
+            height,
+            clip,
+        };
+        var preserve = {
+            clip: true,
+        };
+        updateAssociatedObject(schema, taskId, image, preserve);
         return image;
     }).then((image) => {
         sendJson(res, image);
@@ -223,16 +255,35 @@ function handleMediaUpload(req, res, type) {
         var posterFile = _.get(req.files, 'poster_file.0');
         if (posterFile) {
             return saveFile(posterFile.path, imageCacheFolder);
-        } else if (req.poster_url) {
-            return copyFile(req.poster_url, imageCacheFolder);
+        } else if (req.poster_external_url) {
+            return copyFile(req.poster_external_url, imageCacheFolder);
         }
     }).then((hash) => {
-        var poster = {};
         if (hash) {
-            poster.poster_url = `/media/images/${hash}`;
-            updateAssociatedObject(schema, taskId, poster, false);
+            var path = `${imageCacheFolder}/${hash}`;
+            return B(Sharp(path).metadata()).then((metadata) => {
+                return { hash, metadata };
+            });
         }
-        return poster;
+    }).then((props) => {
+        if (props) {
+            var width = props.metadata.width;
+            var height = props.metadata.height;
+            var clip = getDefaultClippingRect(width, height, 'center');
+            var poster = {
+                poster_url: `/media/images/${props.hash}`,
+                width,
+                height,
+                clip,
+            };
+            var preserve = {
+                clip: true,
+                payload_id: true,
+            };
+            updateAssociatedObject(schema, taskId, poster, preserve);
+        } else {
+            return {};
+        }
     }).then((poster) => {
         sendJson(res, poster);
     }).then(() => {
@@ -264,7 +315,8 @@ function handleMediaUpload(req, res, type) {
             // remove the stream id
             media.stream = undefined;
         }
-        updateAssociatedObject(schema, taskId, media, true);
+        var preserve = {};
+        updateAssociatedObject(schema, taskId, media, preserve);
         return null;
     }).catch((err) => {
         sendError(res, err);
@@ -325,8 +377,22 @@ function handleStreamAppend(req, res) {
 function createWebsiteScreenshot(url, dstPath) {
     return B(Phantom.create(['--ignore-ssl-errors=yes'])).then((instance) => {
         return B(instance.createPage()).then((page) => {
-            var dimensions = { width: 1024, height: 768 };
-            return B(page.property('viewportSize', dimensions)).then(() => {
+            return B(page.setting('userAgent')).then((ua) => {
+                // indicate in the UA string that this is a bot
+                var settings = {
+                    userAgent: ua + ' (compatible; trambarbot/1.0; +http://www.trambar.io/bot.html)',
+                };
+                return Promise.each(_.keys(settings), (key) => {
+                    return page.setting(key, settings[key]);
+                });
+            }).then(() => {
+                var properties = {
+                    viewportSize: { width: 1024,  height: 768 },
+                };
+                return Promise.each(_.keys(properties), (key) => {
+                    return page.property(key, properties[key]);
+                })
+            }).then(() => {
                 return page.open(url);
             }).then(() => {
                 var start = new Date;
@@ -577,11 +643,11 @@ function checkTaskToken(schema, taskId, token) {
  * @param  {String} schema
  * @param  {Number} taskId
  * @param  {Object} params
- * @param  {Boolean} taskCompleted
+ * @param  {Object} preserve
  *
  * @return {Promise}
  */
-function updateAssociatedObject(schema, taskId, params, taskCompleted) {
+function updateAssociatedObject(schema, taskId, params, preserve) {
     return Database.open().then((db) => {
         return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
             var associate = _.get(task, 'details.associated_object');
@@ -599,9 +665,16 @@ function updateAssociatedObject(schema, taskId, params, taskCompleted) {
                 var resources = _.get(row, 'details.resources');
                 var res = _.find(resources, { payload_id: taskId });
                 if (res) {
-                    _.assign(res, params);
-                    // clear the payload id if the task is finished
-                    if (taskCompleted) {
+                    _.forIn(params, (value, name) => {
+                        // set properties, overwrite values received from
+                        // client-side unless it's flagged
+                        if (res[name] == null || !preserve[name]) {
+                            res[name] = value;
+                        }
+                    });
+                    // clear the payload id if it's no longer needed
+                    // (i.e. the task has been completed)
+                    if (!preserve.payload_id) {
                         res.payload_id = undefined;
 
                         if (row.published === true && row.ptime === null) {
@@ -903,6 +976,28 @@ function md5File(srcPath) {
         });
         stream.pipe(hash);
     });
+}
+
+/**
+ * Return a square clipping rect
+ *
+ * @param  {Number} width
+ * @param  {Number} height
+ * @param  {String} align
+ *
+ * @return {Object}
+ */
+function getDefaultClippingRect(width, height, align) {
+    var left = 0, top = 0;
+    var length = Math.min(width, height);
+    if (align === 'center' || !align) {
+        if (width > length) {
+            left = Math.floor((length - width) / 2);
+        } else if (height > length) {
+            top = Math.floor((length - height) / 2);
+        }
+    }
+    return { left, top, width: length, height: length };
 }
 
 function B(promise) {

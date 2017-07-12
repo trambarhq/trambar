@@ -302,8 +302,9 @@ module.exports = React.createClass({
         }
         var props = {
             url: url,
-            clippingRect: res.clip || getDefaultClippingRect(res),
+            clippingRect: res.clip,
             onChange: this.handleClipRectChange,
+            onClip: this.handleClipDefault,
         };
         return <ImageCropper {...props} />;
     },
@@ -391,7 +392,9 @@ module.exports = React.createClass({
     attachImage: function(image) {
         var res = _.clone(image);
         res.type = 'image';
-        res.clip = getDefaultClippingRect(image);
+        if (image.width && image.height) {
+            res.clip = getDefaultClippingRect(image.width, image.height);
+        }
         return this.attachResource(res);
     },
 
@@ -405,7 +408,9 @@ module.exports = React.createClass({
     attachVideo: function(video) {
         var res = _.clone(video);
         res.type = 'video';
-        res.clip = getDefaultClippingRect(video);
+        if (video.width && video.height) {
+            res.clip = getDefaultClippingRect(video.width, video.height);
+        }
         return this.attachResource(res);
     },
 
@@ -449,7 +454,6 @@ module.exports = React.createClass({
                 var width = img.naturalWidth;
                 var height = img.naturalHeight;
                 var image = { type, file, width, height };
-                image.clip = getDefaultClippingRect(image);
                 return this.attachImage(image);
             });
         } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
@@ -718,8 +722,8 @@ module.exports = React.createClass({
      */
     handleRemoveClick: function(evt) {
         var index = this.getSelectedResourceIndex();
-        if (index < 1) {
-            return 0;
+        if (index < 0) {
+            return index;
         }
         var path = 'details.resource';
         var story = _.decouple(this.props.story, path, []);
@@ -761,24 +765,25 @@ module.exports = React.createClass({
 });
 
 /**
- * Return a clipping rect that centers the image
+ * Return a square clipping rect
  *
- * @param  {Object} image
+ * @param  {Number} width
+ * @param  {Number} height
+ * @param  {String} align
  *
  * @return {Object}
  */
-function getDefaultClippingRect(image) {
-    var left, top, width, height;
-    if (image.width > image.height) {
-        width = height = image.height;
-        left = Math.floor((image.width - width) / 2);
-        top = 0;
-    } else {
-        width = height = image.width;
-        left = 0;
-        top = Math.floor((image.height - height) / 2);
+function getDefaultClippingRect(width, height, align) {
+    var left = 0, top = 0;
+    var length = Math.min(width, height);
+    if (align === 'center' || !align) {
+        if (width > length) {
+            left = Math.floor((length - width) / 2);
+        } else if (height > length) {
+            top = Math.floor((length - height) / 2);
+        }
     }
-    return { left, top, width, height };
+    return { left, top, width: length, height: length };
 }
 
 /**

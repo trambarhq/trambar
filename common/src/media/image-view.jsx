@@ -60,6 +60,15 @@ module.exports = React.createClass({
                 var orientation = JpegAnalyser.getOrientation(bytes) || 1;
                 var rect = this.props.clippingRect;
 
+                if (!rect) {
+                    rect = {
+                        left: 0,
+                        top: 0,
+                        width: image.naturalWidth,
+                        height: image.naturalHeight
+                    };
+                }
+
                 this.image = image;
                 this.width = rect.width;
                 this.height = rect.height;

@@ -11,9 +11,10 @@ module.exports = React.createClass({
     displayName: 'ImageDisplay',
     propTypes: {
         url: PropTypes.string.isRequired,
-        clippingRect: PropTypes.object.isRequired,
+        clippingRect: PropTypes.object,
         aspectRatio: PropTypes.number,
         onChange: PropTypes.func,
+        onLoad: PropTypes.func,
     },
     components: ComponentRefs({
         container: HTMLElement,
@@ -58,6 +59,7 @@ module.exports = React.createClass({
             ref: setters.image,
             url: this.props.url,
             clippingRect: this.state.clippingRect,
+            onLoad: this.props.onLoad,
         };
         return (
             <div {...containerProps}>
@@ -92,7 +94,7 @@ module.exports = React.createClass({
     handleMouseDown: function(evt) {
         var image = this.components.image;
         var container = this.components.container;
-        if (!image || !container) {
+        if (!image || !container || !this.state.clippingRect) {
             return;
         }
         var rect = container.getBoundingClientRect();
@@ -143,7 +145,7 @@ module.exports = React.createClass({
 
         var image = this.components.image;
         var container = this.components.container;
-        if (!image || !container) {
+        if (!image || !container || !this.state.clippingRect) {
             return;
         }
         var rect = container.getBoundingClientRect();
