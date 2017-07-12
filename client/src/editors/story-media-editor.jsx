@@ -1,14 +1,14 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var BlobReader = require('utils/blob-reader');
+var LinkParser = require('utils/link-parser');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-var BlobReader = require('utils/blob-reader');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -348,72 +348,186 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Select the resource at the given index
+     *
+     * @param  {Number} index
+     *
+     * @return {Promise<Number>}
+     */
+    selectResource: function(index) {
+        return new Promise((resolve, reject) => {
+            var count = this.getResourceCount();
+            if (index >= 0 && index < count) {
+                this.setState({ selectedResourceIndex: index }, () => {
+                    resolve(index);
+                });
+            } else {
+                resolve(this.getSelectedResourceIndex());
+            }
+        });
+    },
+
+    /**
+     * Attach a resource to the story
+     *
+     * @param  {Object} res
+     *
+     * @return {Promise<Story>}
+     */
     attachResource: function(res) {
         var path = 'details.resources'
         var story = _.decouplePush(this.props.story, path, res);
-        this.triggerChangeEvent(story, 'details.resources');
+        return this.triggerChangeEvent(story, 'details.resources');
     },
 
+    /**
+     * Attach an image to the story
+     *
+     * @param  {Object} image
+     *
+     * @return {Promise<Story>}
+     */
     attachImage: function(image) {
         var res = _.clone(image);
         res.type = 'image';
         res.clip = getDefaultClippingRect(image);
-        this.attachResource(res);
+        return this.attachResource(res);
     },
 
+    /**
+     * Attach a video to the story
+     *
+     * @param  {Object} video
+     *
+     * @return {Promise<Story>}
+     */
     attachVideo: function(video) {
         var res = _.clone(video);
         res.type = 'video';
         res.clip = getDefaultClippingRect(video);
-        this.attachResource(res);
+        return this.attachResource(res);
     },
 
+    /**
+     * Attach an audio to the story
+     *
+     * @param  {Object} audio
+     *
+     * @return {Promise<Story>}
+     */
     attachAudio: function(audio) {
         var res = _.clone(audio);
         res.type = 'audio';
-        this.attachResource(res);
+        return this.attachResource(res);
     },
 
+    /**
+     * Attach a link to a website to the story
+     *
+     * @param  {Object} website
+     *
+     * @return {Promise<Story>}
+     */
+    attachWebsite: function(website) {
+        var res = _.clone(website);
+        res.type = 'website';
+        return this.attachResource(res);
+    },
+
+    /**
+     * Attach the contents of a file to the story
+     *
+     * @param  {File} file
+     *
+     * @return {Promise<Story|null>}
+     */
     importFile: function(file) {
-        if (/^image/.test(file.type)) {
+        if (/^image\//.test(file.type)) {
             return BlobReader.loadImage(file).then((img) => {
                 var type = file.type;
                 var width = img.naturalWidth;
                 var height = img.naturalHeight;
                 var image = { type, file, width, height };
                 image.clip = getDefaultClippingRect(image);
-                this.attachImage(image);
+                return this.attachImage(image);
             });
-        } else if (/^video/.test(file.type)) {
+        } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
+            return BlobReader.loadText(file).then((text) => {
+                var link = LinkParser.parse(text);
+                if (link) {
+                    var website = {
+                        url: link.url,
+                        title: link.name || _.replace(file.name, /\.\w+$/, ''),
+                    };
+                    return this.attachWebsite(website);
+                }
+            });
+        } else {
+            console.log(file);
+            return Promise.resolve(null);
         }
     },
 
+    /**
+     * Attach files selected by user to story
+     *
+     * @param  {Array<File>} files
+     *
+     * @return {Promise}
+     */
     importFiles: function(files) {
-        var firstIndex = _.get(this.props.story, 'details.resources.length', 0);
-        return Promise.each(files, (file) => {
+        var firstIndex = this.getResourceCount();
+        return Promise.mapSeries(files, (file) => {
             return this.importFile(file);
-        }).delay(50).finally(() => {
-            // select the first import item
-            var count = _.get(this.props.story, 'details.resources.length', 0);
-            if (firstIndex < count) {
-                this.setState({ selectedResourceIndex: firstIndex });
-            }
+        }).then(() => {
+            return this.selectResource(firstIndex);
         });
     },
 
-    checkFile: function(file) {
-        if (/^image/.test(file.type)) {
-            return true;
-        } else if (/^video/.test(file.type)) {
-            return true;
-        } else {
-            return false;
-        }
-    },
-
-    checkFiles: function(files) {
-        return _.every(files, (file) => {
-            return this.checkFile(file);
+    /**
+     * Attach non-file drag-and-drop contents to story
+     *
+     * @param  {Array<DataTransferItem>} items
+     *
+     * @return {Promise}
+     */
+    importDataItems: function(items) {
+        var firstIndex = this.getResourceCount();
+        var stringItems = _.filter(items, (item) => {
+            if (item.kind === 'string') {
+                return /^text\/(html|uri-list)/.test(item.type);
+            }
+        });
+        // since items are ephemeral, we need to call getAsString() on each
+        // of them at this point (and not in a callback)
+        var stringPromises = {};
+        _.each(stringItems, (item) => {
+            stringPromises[item.type] = retrieveDataItemText(item);
+        });
+        return Promise.props(stringPromises).then((strings) => {
+            var html = strings['text/html'];
+            var url = strings['text/uri-list'];
+            if (url) {
+                // see if it's an image being dropped
+                var isImage = /<img\b/i.test(html);
+                if (isImage) {
+                    var image = { external_url: url };
+                    this.attachImage(image);
+                    console.log(image);
+                } else {
+                    var website = { url };
+                    if (html) {
+                        // get plain text from html
+                        var node = document.createElement('DIV');
+                        node.innerHTML = html.replace(/<.*?>/g, '');
+                        website.title = node.innerText;
+                    }
+                    this.attachWebsite(website);
+                }
+            }
+        }).then(() => {
+            return this.selectResource(firstIndex);
         });
     },
 
@@ -531,13 +645,7 @@ module.exports = React.createClass({
     },
 
     handleDragEnter: function(evt) {
-        var files = evt.dataTransfer.files;
-        if (this.checkFiles(files)) {
-            this.setState({ dropZoneStatus: 'valid' });
-        } else {
-            this.setState({ dropZoneStatus: 'invalid' });
-            evt.dataTransfer.dropEffect = 'none';
-        }
+        this.setState({ dropZoneStatus: 'valid' });
     },
 
     handleDragLeave: function(evt) {
@@ -550,9 +658,15 @@ module.exports = React.createClass({
 
     handleDrop: function(evt) {
         evt.preventDefault();
-        if (this.state.status !== 'valid') {
+        if (this.state.dropZoneStatus === 'valid') {
             var files = evt.dataTransfer.files;
-            this.importFiles(files);
+            var items = evt.dataTransfer.items;
+            if (files.length > 0) {
+                this.importFiles(files);
+            }
+            if (items.length > 0) {
+                this.importDataItems(items);
+            }
         }
         this.setState({ dropZoneStatus: 'idle' });
         return null;
@@ -562,18 +676,22 @@ module.exports = React.createClass({
      * Called after user has made adjustments to an image's clipping rect
      *
      * @param  {Object} evt
+     *
+     * @return {Promise<Story>}
      */
     handleClipRectChange: function(evt) {
         var index = this.getSelectedResourceIndex();
         var path = `details.resources.${index}.clip`;
         var story = _.decoupleSet(this.props.story, path, evt.rect);
-        this.triggerChangeEvent(story, path);
+        return this.triggerChangeEvent(story, path);
     },
 
     /**
      * Called when user clicks shift button
      *
      * @param  {Event} evt
+     *
+     * @return {Promise<Number>}
      */
     handleShiftClick: function(evt) {
         var index = this.getSelectedResourceIndex();
@@ -586,8 +704,8 @@ module.exports = React.createClass({
         var res = resources[index];
         resources.splice(index, 1);
         resources.splice(index - 1, 0, res);
-        this.triggerChangeEvent(story, path).then(() => {
-            this.setState({ selectedResourceIndex: index - 1 });
+        return this.triggerChangeEvent(story, path).then(() => {
+            return this.selectResource(index - 1);
         });
     },
 
@@ -595,10 +713,11 @@ module.exports = React.createClass({
      * Called when user clicks remove button
      *
      * @param  {Event} evt
+     *
+     * @return {Promise<Number>}
      */
     handleRemoveClick: function(evt) {
         var index = this.getSelectedResourceIndex();
-        var count = this.getResourceCount();
         if (index < 1) {
             return 0;
         }
@@ -607,10 +726,11 @@ module.exports = React.createClass({
         var resources = this.props.story.details.resources;
         var res = resources[index];
         resources.splice(index, 1);
-        count--;
-        this.triggerChangeEvent(story, path).then(() => {
-            if (!(index < count)) {
-                this.setState({ selectedResourceIndex: count - 1 });
+        return this.triggerChangeEvent(story, path).then(() => {
+            if (index >= resources.length) {
+                return this.selectResource(resource.length - 1);
+            } else {
+                return index;
             }
         });
     },
@@ -619,29 +739,24 @@ module.exports = React.createClass({
      * Called when user clicks backward button
      *
      * @param  {Event} evt
+     *
+     * @return {Promise<Number>}
      */
     handleBackwardClick: function(evt) {
         var index = this.getSelectedResourceIndex();
-        if (index < 1) {
-            return 0;
-        }
-        var selectedResourceIndex = index - 1;
-        this.setState({ selectedResourceIndex });
+        return this.selectResource(index - 1);
     },
 
     /**
      * Called when user clicks forward button
      *
      * @param  {Event} evt
+     *
+     * @return {Promise<Number>}
      */
     handleForwardClick: function(evt) {
         var index = this.getSelectedResourceIndex();
-        var count = this.getResourceCount();
-        if (index + 1 >= count) {
-            return 0;
-        }
-        var selectedResourceIndex = index + 1;
-        this.setState({ selectedResourceIndex });
+        return this.selectResource(index + 1);
     },
 });
 
@@ -664,4 +779,17 @@ function getDefaultClippingRect(image) {
         top = Math.floor((image.height - height) / 2);
     }
     return { left, top, width, height };
+}
+
+/**
+ * Retrieve the text in a DataTransferItem
+ *
+ * @param  {DataTransferItem} item
+ *
+ * @return {Promise<String>}
+ */
+function retrieveDataItemText(item) {
+    return new Promise((resolve, reject) => {
+        item.getAsString(resolve);
+    });
 }

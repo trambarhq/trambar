@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 exports.loadUint8Array = loadUint8Array;
 exports.loadArrayBuffer = loadArrayBuffer;
 exports.loadImage = loadImage;
+exports.loadText = loadText;
 
 function loadUint8Array(blob) {
     return loadArrayBuffer(blob).then((buffer) => {
@@ -34,5 +35,18 @@ function loadImage(blob) {
         image.onerror = function(evt) {
             reject(new Error(`Unable to load ${url}`));
         };
+    });
+}
+
+function loadText(blob) {
+    return new Promise((resolve, reject) => {
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+            resolve(reader.result);
+        };
+        reader.onerror = function(evt) {
+            reject(new Error(`Unable to load blob`));
+        };
+        reader.readAsText(blob);
     });
 }
