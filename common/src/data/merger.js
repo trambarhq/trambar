@@ -104,6 +104,15 @@ function mergeStrings(a, b, c) {
 }
 
 function mergeArrays(a, b, c) {
+    if (!(a instanceof Array)) {
+        a = [];
+    }
+    if (!(b instanceof Array)) {
+        b = [];
+    }
+    if (!(c instanceof Array)) {
+        c = [];
+    }
     var d = _.slice(b);
     if (a.length > c.length) {
         if (_.isEqual(a.slice(0, c.length), c)) {

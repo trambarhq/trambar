@@ -3,7 +3,6 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
-var Merger = require('data/merger');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');

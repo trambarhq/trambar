@@ -1,13 +1,14 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var Memoize = require('utils/memoize');
+var Merger = require('data/merger');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-var Merger = require('data/merger');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -20,6 +21,8 @@ var StoryEditorOptions = require('editors/story-editor-options');
 var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./story-editor.scss');
+
+const AUTOSAVE_DURATION = 2000;
 
 module.exports = React.createClass({
     displayName: 'StoryEditor',
@@ -74,12 +77,21 @@ module.exports = React.createClass({
      */
     updateDraft: function(nextState, nextProps) {
         if (nextProps.story) {
+            // check if the newly arriving story isn't the one we saved earlier
             if (nextState.draft !== nextProps.story) {
-                // TODO: merge
-                nextState.draft = nextProps.story;
+                var priorDraft = this.props.story || createBlankStory(this.props.currentUser);
+                var currentDraft = nextState.draft;
+                var nextDraft = nextProps.story;
+                if (currentDraft !== priorDraft) {
+                    // merge changes into the remote copy
+                    // (properties in nextDraft are favored in conflicts)
+                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
+                }
+                this.reattachBlobs(nextDraft);
+                nextState.draft = nextDraft;
             }
         } else {
-            nextState.draft = this.createBlankStory(nextProps.currentUser);
+            nextState.draft = createBlankStory(nextProps.currentUser);
         }
     },
 
@@ -150,21 +162,6 @@ module.exports = React.createClass({
             }
             options.languageCode = languageCode;
         }
-    },
-
-    /**
-     * Return a blank story
-     *
-     * @param  {User} currentUser
-     *
-     * @return {Story}
-     */
-    createBlankStory: function(currentUser) {
-        return {
-            user_ids: currentUser ? [ currentUser.id ] : [],
-            details: {},
-            public: true,
-        };
     },
 
     /**
@@ -398,6 +395,7 @@ module.exports = React.createClass({
         var payloadIds = [];
         return Promise.each(resources, (res) => {
             if (!res.payload_id) {
+                // acquire a task id for each attached resource
                 return payloads.queue(res).then((payloadId) => {
                     if (payloadId) {
                         res.payload_id = payloadId;
@@ -411,10 +409,14 @@ module.exports = React.createClass({
             var schema = route.parameters.schema;
             var db = this.props.database.use({ server, schema, by: this });
             return db.start().then(() => {
-                return db.saveOne({ table: 'story' }, story).then((copy) => {
+                return db.saveOne({ table: 'story' }, story).then((story) => {
                     return Promise.each(payloadIds, (payloadId) => {
+                        // start file upload
                         return payloads.send(payloadId);
-                    }).return(copy);
+                    }).then(() => {
+                        this.reattachBlobs(story);
+                        return this.changeDraft(story);
+                    });
                 });
             });
         });
@@ -505,6 +507,29 @@ module.exports = React.createClass({
     },
 
     /**
+     * Reattach blobs that were filtered out when objects are saved
+     *
+     * @param  {Story} story
+     */
+    reattachBlobs: function(story) {
+        var payloads = this.props.payloads;
+        var resources = _.get(story, 'details.resources');
+        _.each(resources, (res) => {
+            // these properties also exist in the corresponding payload objects
+            // find payload with one of them
+            var criteria = _.pick(res, 'payload_id', 'url', 'poster_url');
+            var payload = payloads.find(criteria);
+            if (payload) {
+                _.forIn(payload, (value, name) => {
+                    if (value instanceof Blob) {
+                        res[name] = value;
+                    }
+                });
+            }
+        });
+    },
+
+    /**
      * Called when user makes changes to the story
      *
      * @param  {Object} evt
@@ -515,16 +540,19 @@ module.exports = React.createClass({
         return this.changeDraft(evt.story).then((story) => {
             var delay;
             switch (evt.path) {
-                // save changes immediately when resources or
-                // co-authors are added
                 case 'details.resources':
+                    // upload resources immediately
+                    delay = 0;
+                    break;
                 case 'user_ids':
+                    // make story available to other users immediately
                     delay = 0;
                     break;
                 default:
-                    delay = 5000;
+                    delay = AUTOSAVE_DURATION;
             }
             this.autosaveStory(story, delay);
+            return null;
         });
     },
 
@@ -551,7 +579,7 @@ module.exports = React.createClass({
         return this.changeDraft(story).then(() => {
             return this.saveStory(story).then((story) => {
                 return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                    var draft = this.createBlankStory(this.props.currentUser);
+                    var draft = createBlankStory(this.props.currentUser);
                     return this.changeDraft(draft);
                 });
             });
@@ -567,7 +595,7 @@ module.exports = React.createClass({
      */
     handleCancel: function(evt) {
         var story = this.state.draft;
-        var draft = this.createBlankStory(this.props.currentUser);
+        var draft = createBlankStory(this.props.currentUser);
         return this.changeDraft(draft).then(() => {
             if (story.id) {
                 return this.removeStory(story);
@@ -596,3 +624,22 @@ var defaultOptions = {
     bookmarkRecipients: [],
     supplementalEditor: '',
 };
+
+/**
+ * Return a blank story
+ *
+ * @param  {User} currentUser
+ *
+ * @return {Story}
+ */
+var createBlankStory = Memoize(function(currentUser) {
+    return {
+        user_ids: [ currentUser.id ],
+        details: {},
+        public: true,
+    };
+}, {
+    user_ids: [],
+    details: {},
+    public: true,
+});
