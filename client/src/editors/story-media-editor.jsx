@@ -728,7 +728,7 @@ module.exports = React.createClass({
         resources.splice(index, 1);
         return this.triggerChangeEvent(story, path).then(() => {
             if (index >= resources.length) {
-                return this.selectResource(resource.length - 1);
+                return this.selectResource(resources.length - 1);
             } else {
                 return index;
             }

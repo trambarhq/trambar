@@ -45,7 +45,7 @@ module.exports = React.createClass({
         // create a task object on the server-side to track
         // backend processing of the payload
         return this.createTask(action).then((task) => {
-            var params = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url');
+            var params = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
             var payload = _.assign({
                 payload_id: task.id,
                 action: task.action,
@@ -188,7 +188,7 @@ module.exports = React.createClass({
 
     getFormData: function(payload) {
         var formData = new FormData;
-        var params = _.pick(payload, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url');
+        var params = _.pick(payload, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
         _.forIn(params, (value, name) => {
             formData.append(name, value);
         });

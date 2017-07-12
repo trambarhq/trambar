@@ -36,7 +36,7 @@ function start() {
         app.get('/media/images/:filename', handleImageOriginalRequest);
         app.get('/media/videos/:filename', handleVideoRequest);
         app.get('/media/audios/:filename', handleAudioRequest);
-        app.post('/media/html/screenshot/:schema/:taskId', handleWebsiteScreenshot);
+        app.post('/media/html/screenshot/:schema/:taskId', upload.array(), handleWebsiteScreenshot);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
         app.post('/media/videos/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster_file', maxCount: 1 }]), handleVideoUpload);
         app.post('/media/audios/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster_file', maxCount: 1 }]), handleAudioUpload);
@@ -152,11 +152,14 @@ function handleAudioRequest(req, res) {
 
 function handleWebsiteScreenshot(req, res) {
     // generate hash from URL + date
-    return Promise.try(() => {
+    var schema = req.params.schema;
+    var taskId = parseInt(req.params.taskId);
+    return checkTaskToken(schema, taskId, req.query.token).then(() => {
         var url = _.get(req.body, 'url');
         if (!url) {
             throw new HttpError(400);
         }
+        // save the image to a temporary location first
         var date = (new Date).toISOString();
         var urlHash = md5(`${url} ${date}`);
         var tempPath = `${imageCacheFolder}/${urlHash}.jpeg`;
@@ -166,12 +169,16 @@ function handleWebsiteScreenshot(req, res) {
                 var path = `${imageCacheFolder}/${hash}`;
                 return FS.statAsync(path).catch(() => {
                     return FS.renameAsync(tempPath, path);
-                }).then(() => {
-                    var url = `/media/images/${hash}`;
-                    res.json({ url, title });
-                });
+                }).return({ hash, title });
             });
         });
+    }).then((props) => {
+        var website = {
+            poster_url: `/media/images/${props.hash}`,
+            page_title: props.title,
+        };
+        updateAssociatedObject(schema, taskId, website, true);
+        return website;
     }).catch((err) => {
         sendError(res, err);
     });
