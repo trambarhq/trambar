@@ -37,6 +37,7 @@
     .body {
         .autosize-text-area {
             TEXTAREA {
+                font-size: 1em;
                 min-height: 5em;
                 max-height: 50vh;
             }

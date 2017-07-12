@@ -118,50 +118,61 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     updateOptions: function(nextState, nextProps) {
-        var story = nextProps.story;
-        var locale = nextProps.locale;
         var options = nextState.options;
-
-        if (!story) {
+        if (!nextProps.story) {
             // reset options to default when a new story starts
             options = defaultOptions;
         }
         options = nextState.options = _.clone(options);
-
-        if (story) {
-            options.hidePost = !story.public;
-            options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
-
-            if (!options.supplementalEditor) {
-                // show preview when text is formatted
-                if (story.type === 'vote' || story.type === 'task-list') {
-                    options.supplementalEditor = 'preview';
-                }
-                if (_.get(story, 'details.markdown', false)) {
-                    options.supplementalEditor = 'preview';
-                }
-            } else {
-                if (!story.id) {
-                    // clear selection when a new story starts
-                    options.supplementalEditor = '';
-                }
-            }
+        options.hidePost = !nextState.draft.public;
+        options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
+        if (!options.supplementalEditor) {
+            options.supplementalEditor = this.chooseSupplementalEditor(nextState.draft);
         }
         if (!options.languageCode) {
-            // set language code
-            var languageCode = locale.languageCode;
-            var text = _.get(story, 'details.text');
-            if (!_.isEmpty(text)) {
-                // use the first language of the text object, but only if it's
-                // different from the selected locale so that the country code
-                // is kept when it's the same
-                var firstLanguage = _.first(_.keys(text));
-                if (languageCode.substr(0, 2) !== firstLanguage) {
-                    languageCode = firstLanguage;
-                }
-            }
-            options.languageCode = languageCode;
+            options.languageCode = this.chooseLanguage(nextState.draft, nextProps.locale);
         }
+    },
+
+    /**
+     * Choose supplmental view based on story contents
+     *
+     * @param  {Story} story
+     *
+     * @return {String}
+     */
+    chooseSupplementalEditor: function(story) {
+        // show preview when text is formatted
+        if (story.type === 'vote' || story.type === 'task-list') {
+            return 'preview';
+        }
+        if (_.get(story, 'details.markdown', false)) {
+            return 'preview';
+        }
+        // default to media until we know more
+        return '';
+    },
+
+    /**
+     * Choose language based on selected locale and story contents
+     *
+     * @param  {Story} story
+     *
+     * @return {String}
+     */
+    chooseLanguage: function(story, locale) {
+        var languageCode = locale.languageCode;
+        var text = _.get(story, 'details.text');
+        if (!_.isEmpty(text)) {
+            // use the first language of the text object, but only if it's
+            // different from the selected locale so that the country code
+            // is kept when it's the same
+            var firstLanguage = _.first(_.keys(text));
+            if (languageCode.substr(0, 2) !== firstLanguage) {
+                languageCode = firstLanguage;
+            }
+        }
+        return languageCode;
     },
 
     /**
@@ -332,7 +343,14 @@ module.exports = React.createClass({
      */
     changeDraft: function(draft) {
         return new Promise((resolve, reject) => {
-            this.setState({ draft }, () => {
+            var options = this.state.options;
+            if (!options.supplementalEditor) {
+                var editor = this.chooseSupplementalEditor(draft);
+                if (editor) {
+                    options = _.decoupleSet(options, 'supplementalEditor', editor);
+                }
+            }
+            this.setState({ draft, options }, () => {
                 resolve(draft);
             });
         });
