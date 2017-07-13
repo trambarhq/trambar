@@ -1,10 +1,12 @@
 var _ = require('lodash');
 var Path = require('path');
 var Webpack = require('webpack');
-var DefinePlugin = Webpack.DefinePlugin;
 
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
+var DefinePlugin = Webpack.DefinePlugin;
+var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 
 var folders = _.mapValues({
     src: 'src',
@@ -27,7 +29,7 @@ module.exports = {
     entry: './main',
     output: {
         path: folders.www,
-        filename: 'app.js',
+        filename: '[name].js',
     },
     resolve: {
         extensions: [ '.js', '.jsx' ],
@@ -83,9 +85,18 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: `${folders.assets}/index.html`,
             filename: `${folders.www}/index.html`,
-        })
+        }),
+        new CommonsChunkPlugin({
+            name: 'vendor',
+            minChunks: (module) => {
+                return module.context && module.context.indexOf('node_modules') !== -1;
+            },
+        }),
+        new SourceMapDevToolPlugin({
+            filename: "[file].map",
+            exclude: ["vendor.js"]
+        }),
     ],
-    devtool: 'source-map',
     devServer: {
         inline: true,
         historyApiFallback: true
