@@ -96,7 +96,7 @@ module.exports = _.create(Data, {
             if (original) {
                 // the only operation permitted is the removal of the bookmark
                 if (object.deleted) {
-                    var object = { id: original.id };
+                    object = { id: original.id };
                     if (original.target_user_id === credentials.user.id) {
                         object.deleted = true;
                     } else if (_.includes(original.user_ids, credentials.user.id)) {

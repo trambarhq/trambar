@@ -1,18 +1,28 @@
-.bookmark-frame {
+.bookmark-view {
     border: 2px solid #111;
     background-color: #111;
     margin: 1em 1em 1em 1em;
 
     .title {
         color: #eeeeee;
-        padding: 0.25em 0.25em 0.25em 0.25em;
+
+        .name {
+            display: inline-block;
+            padding: 0.2em 0.1em 0.4em 0.4em;
+            font-size: 0.9em;
+        }
 
         .close-btn {
+            display: inline-block;
             float: right;
+            padding: 0.2em 0.3em 0.2em 0.3em;
+            cursor: pointer;
         }
     }
 
     .contents {
+        clear: both;
+
         .story-view {
             margin: 0;
             border: 0;

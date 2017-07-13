@@ -15,7 +15,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var OnDemand = require('widgets/on-demand');
-var BookmarkFrame = require('widgets/bookmark-frame');
+var BookmarkView = require('views/bookmark-view');
 var StoryView = require('views/story-view');
 var StoryList = require('lists/story-list');
 var StoryEditor = require('editors/story-editor');
@@ -42,9 +42,11 @@ module.exports = Relaks.createClass({
         var props = {
             stories: null,
             authors: null,
-            bookmarkers: null,
+            senders: null,
             reactions: null,
             respondents: null,
+            recommendations: null,
+            recipients: null,
 
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
@@ -52,9 +54,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            onStoryChange: this.handleStoryChange,
-            onStoryCommit: this.handleStoryCommit,
-            onStoryCancel: this.handleStoryCancel,
         };
         meanwhile.show(<BookmarkListSync {...props} />, 250);
         return db.start().then((userId) => {
@@ -77,7 +76,7 @@ module.exports = Relaks.createClass({
             criteria.id = _.flatten(_.map(props.bookmarks, 'user_ids'));
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
-            props.bookmarkers = users;
+            props.senders = users;
             meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // load reactions to stories
@@ -94,15 +93,31 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;
+        }).then(() => {
+            // look for bookmark sent by current user
+            if (props.currentUser) {
+                var criteria = {
+                    story_id: _.map(props.stories, 'id'),
+                    user_ids: [ props.currentUser.id ],
+                };
+                return db.find({ table: 'bookmark', criteria });
+            }
+        }).then((recommendations) => {
+            props.recommendations = recommendations;
+            return <BookmarkListSync {...props} />;
+        }).then(() => {
+            // look for recipient of these bookmarks
+            if (props.recommendations) {
+                var criteria = {
+                    id: _.map(props.recommendations, 'target_user_id')
+                };
+                return db.find({ schema: 'global', table: 'user', criteria });
+            }
+        }).then((recipients) => {
+            props.recipients = recipients;
             return <BookmarkListSync {...props} />;
         });
     },
-
-    handleStoryChange: StoryList.prototype.handleStoryChange,
-
-    handleStoryCommit: StoryList.prototype.handleStoryChange,
-
-    handleStoryCancel: StoryList.prototype.handleCancel,
 });
 
 var BookmarkListSync = module.exports.Sync = React.createClass({
@@ -110,11 +125,13 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         bookmarks: PropTypes.arrayOf(PropTypes.object),
-        bookmarkers: PropTypes.arrayOf(PropTypes.object),
+        senders: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -122,10 +139,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         loading: PropTypes.bool,
-
-        onStoryChange: PropTypes.func,
-        onStoryCommit: PropTypes.func,
-        onStoryCancel: PropTypes.func,
     },
 
     render: function() {
@@ -143,37 +156,51 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
 
     renderBookmark: function(bookmark, index) {
         var story = findStory(this.props.stories, bookmark);
+        var senders = findSenders(this.props.senders, bookmark);
+        var bookmarkProps = {
+            bookmark,
+            senders,
+            currentUser: this.props.currentUser,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return (
+            <OnDemand key={bookmark.id} type="bookmarks" initial={index < 10}>
+                <BookmarkView {...bookmarkProps}>
+                    {this.renderStory(story)}
+                </BookmarkView>
+            </OnDemand>
+        );
+    },
+
+    renderStory: function(story) {
+        if (!story) {
+            return;
+        }
         var reactions = findReactions(this.props.reactions, story);
         var authors = findAuthors(this.props.authors, story);
         var respondents = findRespondents(this.props.respondents, reactions);
+        var recommendations = findRecommendations(this.props.recommendations, story);
+        var recipients = findRecipients(this.props.recipients, recommendations);
         var storyProps = {
             story,
             reactions,
             authors,
             respondents,
+            recommendations,
+            recipients,
             currentUser: this.props.currentUser,
+
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: story.id,
         };
-        var bookmarkers = this.props.bookmarkers ? findUsers(this.props.bookmarkers, bookmark.user_ids) : null;
-        var frameProps = {
-            bookmark,
-            bookmarkers,
-            currentUser: this.props.currentUser,
-            locale: this.props.locale,
-            onClose: this.handleBookmarkClose,
-        }
-        return (
-            <OnDemand key={story.id} type="stories" initial={index < 10}>
-                <BookmarkFrame {...frameProps}>
-                    <StoryView {...storyProps} />
-                </BookmarkFrame>
-            </OnDemand>
-        );
-    },
+        return <StoryView {...storyProps} />;
+    }
 });
 
 var sortBookmark = Memoize(function(bookmarks) {
@@ -205,6 +232,7 @@ var findAuthors = Memoize(function(users, story) {
         return [];
     }
 });
+var findSenders = findAuthors;
 
 var findRespondents = Memoize(function(users, reactions) {
     var respondentIds = _.uniq(_.map(reactions, 'user_id'));
@@ -213,17 +241,17 @@ var findRespondents = Memoize(function(users, reactions) {
     }));
 })
 
-function getPendingResources(story) {
-    return _.filter(story.details.resources, (res) => {
-        if (res.file instanceof Blob || res.external_url) {
-            if (!res.url && !res.payload_id) {
-                return true;
-            }
-        }
-        if (res.poster_file instanceof Blob || res.poster_external_url) {
-            if (!res.poster_url && !res.payload_id) {
-                return true;
-            }
-        }
+var findRecommendations = Memoize(function(recommendations, story) {
+    if (story) {
+        var storyId = story.published_version_id || story.id;
+        return _.filter(recommendations, { story_id: storyId });
+    } else {
+        return [];
+    }
+});
+
+var findRecipients = Memoize(function(recipients, recommendations) {
+    return _.filter(recipients, (recipient) => {
+        return _.some(recommendations, { target_user_id: recipient.id });
     });
-}
+});

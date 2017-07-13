@@ -233,10 +233,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            onChange: this.props.onStoryChange,
-            onCommit: this.props.onStoryCommit,
-            onCancel: this.props.onStoryCancel,
-            onBookmark: this.props.onStoryBookmark,
             key,
         };
         return <StoryEditor {...editorProps}/>
@@ -324,9 +320,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            onChange: this.props.onStoryChange,
-            onEdit: this.props.onStoryEdit,
-            onBookmark: this.props.onStoryBookmark,
             key: story.id,
         };
         return (

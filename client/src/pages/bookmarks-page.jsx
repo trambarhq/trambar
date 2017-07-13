@@ -52,7 +52,6 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             bookmarks: null,
-            stories: null,
             currentUserId: null,
 
             database: this.props.database,

@@ -18,6 +18,45 @@ module.exports = function(languageCode) {
         'audio-capture-start': 'Start',
         'audio-capture-stop': 'Stop',
 
+        'bookmark-$count-other-users': (count) => {
+            return (count === 1) ? `1 other user` : `${count} other users`;
+        },
+        'bookmark-$count-users': (count) => {
+            return (count === 1) ? `1 user` : `${count} users`;
+        },
+        'bookmark-$users-recommend-it': (users) => {
+            if (users.length === 1) {
+                return `${users[0]} recommends it`
+            } else {
+                var tokens = [];
+                _.each(users, (user, index) => {
+                    if (index > 0) {
+                        tokens.push(' and ');
+                    }
+                    tokens.push(user);
+                });
+                tokens.push(' recommend it');
+                return tokens;
+            }
+        },
+        'bookmark-$users-recommend-this': (users) => {
+            if (users.length === 1) {
+                return `${users[0]} recommends this`
+            } else {
+                var tokens = [];
+                _.each(users, (user, index) => {
+                    if (index > 0) {
+                        tokens.push(' and ');
+                    }
+                    tokens.push(user);
+                });
+                tokens.push(' recommend this');
+                return tokens;
+            }
+        },
+        'bookmark-recommendations': 'Recommendations',
+        'bookmark-you-bookmarked-it': 'You bookmarked this',
+
         'bottom-nav-bookmarks': 'Bookmarks',
         'bottom-nav-news': 'News',
         'bottom-nav-notifications': 'Notifications',

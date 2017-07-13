@@ -147,6 +147,7 @@ module.exports = Relaks.createClass({
                 ready: false,
                 user_ids: [ props.currentUser.id ],
             };
+            return db.find({ table: 'story', criteria });
         }).then((stories) => {
             props.pendingStories = stories;
             return <NewsPageSync {...props} />;
