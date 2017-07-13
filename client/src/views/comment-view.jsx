@@ -47,13 +47,19 @@ module.exports = React.createClass({
     },
 
     renderText: function() {
-        var type = this.props.reaction.type;
-        if (type === 'like') {
-            return <span> likes this story</span>
-        } else if (type === 'comment') {
-            var p = this.props.locale.pick;
-            var text = _.get(this.props.reaction, 'details.text');
-            return <span>: {p(text)}</span>;
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var name = _.get(this.props.respondent, 'details.name', '');
+        switch (this.props.reaction.type) {
+            case 'like':
+                return <span> {t('comment-likes-this-story', name)}</span>;
+            case 'comment':
+                var text = _.get(this.props.reaction, 'details.text');
+                return <span>: {p(text)}</span>;
+            case 'vote':
+                return <span> {t('comment-cast-a-vote', name)}</span>;
+            case 'task-completion':
+                return <span> {t('comment-completed-a-task', name)}</span>;
         }
     },
 });

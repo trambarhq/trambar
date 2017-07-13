@@ -1,0 +1,52 @@
+.notification-view {
+    background-color: #362a2a;
+    border: 2px solid #211a1a;
+    margin: 0.5em 1em 0.5em 1em;
+    padding: 0.4em 0.4em 0.3em 0.4em;
+    color: #cccccc;
+    cursor: pointer;
+
+    .event {
+        float: left;
+
+        .profile-image {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 0.4em 0 0;
+            width: 1.5em;
+            height: 1.5em;
+
+            IMG {
+                display: block;
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
+
+        .text {
+            vertical-align: middle;
+        }
+    }
+
+    .date {
+        float: right;
+        margin: 0.1em 0 0 2em;
+        color: #666666;
+
+        .time {
+            vertical-align: middle;
+        }
+
+        .fa {
+            margin-left: 0.4em;
+        }
+    }
+
+    .clear {
+        clear: both;
+    }
+}
+
+.notification-view.columns-1 {
+    margin: 0.5em 0.5em 0.5em 0.5em;
+}

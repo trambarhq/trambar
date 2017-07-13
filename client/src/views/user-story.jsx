@@ -64,7 +64,7 @@ module.exports = React.createClass({
         var names = _.map(this.props.roles, 'details.name');
         return (
             <span className="roles">
-                {names.join(', ')}
+                {names.join(', ') || '\u00a0'}
             </span>
         );
     },

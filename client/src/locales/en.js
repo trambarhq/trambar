@@ -63,8 +63,49 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'People',
         'bottom-nav-settings': 'Settings',
 
+        'comment-cast-a-vote': 'cast a vote',
+        'comment-completed-a-task': 'completed a task',
+        'comment-likes-this-story': 'likes this story',
+
         'list-$count-more': (count) => {
             return `${count} more...`;
+        },
+
+        'notification-$user-likes-your-commit': (user) => {
+            return `${user} likes your commit`;
+        },
+        'notification-$user-likes-your-merge': (user) => {
+            return `${user} likes your merge`;
+        },
+        'notification-$user-likes-your-story': (user) => {
+            return `${user} likes your post`;
+        },
+        'notification-$user-likes-your-survey': (user) => {
+            return `${user} likes your survey`;
+        },
+        'notification-$user-likes-your-task-list': (user) => {
+            return `${user} likes your task list`;
+        },
+        'notification-$user-commented-on-your-commit': (user) => {
+            return `${user} commented on your commit`;
+        },
+        'notification-$user-commented-on-your-merge': (user) => {
+            return `${user} commented on your merge`;
+        },
+        'notification-$user-commented-on-your-story': (user) => {
+            return `${user} commented on your post`;
+        },
+        'notification-$user-commented-on-your-survey': (user) => {
+            return `${user} commented on your survey`;
+        },
+        'notification-$user-commented-on-your-task-list': (user) => {
+            return `${user} commented on your task list`;
+        },
+        'notification-$user-voted-in-your-survey': (user) => {
+            return `${user} answered your survey`;
+        },
+        'notification-$user-completed-task': (user) => {
+            return `${user} completed a task on your list`;
         },
 
         'option-add-bookmark': 'Add bookmark to this story',

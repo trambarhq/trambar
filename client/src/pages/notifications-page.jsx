@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var NotificationList = require('lists/notification-list');
+
 module.exports = Relaks.createClass({
     displayName: 'NotificationsPage',
     propTypes: {
@@ -21,7 +24,11 @@ module.exports = Relaks.createClass({
             var params = Route.match('/:server/:schema/notifications/', url);
             if (params) {
                 params.navigation = {
-                    top: {},
+                    top: {
+                        dateSelection: true,
+                        roleSelection: false,
+                        textSearch: false,                        
+                    },
                     bottom: {
                         section: 'notifications'
                     }
@@ -40,13 +47,11 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
         var props = {
-            project: null,
             currentUser: null,
-            stories: null,
             reactions: null,
-            users: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -55,6 +60,21 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<NotificationsPageSync {...props} />, 250);
         return db.start().then((userId) => {
+            // load current user
+            var criteria = {};
+            criteria.id = userId;
+            return db.findOne({ schema: 'global', table: 'user', criteria });
+        }).then((user) => {
+            props.currentUser = user;
+            meanwhile.show(<NotificationsPageSync {...props} />);
+        }).then(() => {
+            // load reactions
+            var criteria = {};
+            criteria.target_user_id = props.currentUser.id;
+            criteria.limit = 100;
+            return db.find({ table: 'reaction', criteria });
+        }).then((reactions) => {
+            props.reactions = reactions;
             return <NotificationsPageSync {...props} />;
         });
     }
@@ -63,6 +83,9 @@ module.exports = Relaks.createClass({
 var NotificationsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NotificationsPage.Sync',
     propTypes: {
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -71,7 +94,21 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Notifications page</div>
+            <div>
+                {this.renderList()}
+            </div>
         );
-    }
+    },
+
+    renderList: function() {
+        var listProps = {
+            reactions: this.props.reactions,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <NotificationList {...listProps} />;
+    },
 });

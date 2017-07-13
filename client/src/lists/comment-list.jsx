@@ -20,6 +20,7 @@ require('./comment-list.scss');
 
 module.exports = React.createClass({
     displayName: 'CommentList',
+    mixins: [ UpdateCheck ],
     propTypes: {
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
