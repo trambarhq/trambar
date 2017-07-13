@@ -5,6 +5,7 @@ var ChildProcess = require('child_process');
 var Express = require('express');
 var BodyParser = require('body-parser');
 var Multer  = require('multer');
+var Request = require('request');
 var Sharp = require('sharp');
 var Piexif = require("piexifjs");
 var Phantom = require('phantom');
@@ -213,7 +214,7 @@ function handleImageUpload(req, res) {
             });
         } else if (req.body.external_url) {
             var url = req.body.external_url;
-            return downloadRemoteFile(url).then((path) => {
+            return downloadRemoteFile(url, imageCacheFolder).then((path) => {
                 srcPath = path;
                 return md5File(srcPath).then((hash) => {
                     srcHash = hash;
@@ -303,7 +304,7 @@ function handleMediaUpload(req, res, type) {
             });
         } else if (req.poster_external_url) {
             var url = req.poster_external_url;
-            return downloadRemoteFile(url).then((path) => {
+            return downloadRemoteFile(url, imageCacheFolder).then((path) => {
                 posterSrcPath = path;
                 return md5File(posterSrcPath).then((hash) => {
                     srcHash = hash;
@@ -699,8 +700,26 @@ function saveFile(srcPath, dstFolder) {
     });
 }
 
+/**
+ * Download file file off the Internet
+ *
+ * @param  {String} url
+ * @param  {String} dstFolder
+ *
+ * @return {Promise<String>}
+ */
 function downloadRemoteFile(url, dstFolder) {
-
+    return new Promise((resolve, reject) => {
+        var tempPath = makeTempPath(dstFolder, url);
+        var writeStream = FS.createWriteStream(tempPath);
+        var readStream = Request.get(url);
+        writeStream.on('error', reject);
+        writeStream.on('finish', () => {
+            resolve(tempPath);
+        });
+        readStream.on('error', reject);
+        readStream.pipe(writeStream);
+    });
 }
 
 /**
@@ -724,9 +743,9 @@ function moveFile(srcPath, dstPath) {
                 var readStream = FS.createReadStream(srcPath);
                 var writeStream = FS.createWriteStream(dstPath);
                 writeStream.on('error', reject);
+                writeStream.on('finish', resolve);
                 readStream.on('error', reject);
                 readStream.on('close', () => {
-                    resolve();
                     FS.unlink(srcPath);
                 });
                 readStream.pipe(writeStream);

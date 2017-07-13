@@ -374,12 +374,15 @@ module.exports = React.createClass({
      *
      * @param  {Object} res
      *
-     * @return {Promise<Story>}
+     * @return {Promise<Number>}
      */
     attachResource: function(res) {
         var path = 'details.resources'
+        var index = this.getResourceCount();
         var story = _.decouplePush(this.props.story, path, res);
-        return this.triggerChangeEvent(story, 'details.resources');
+        return this.triggerChangeEvent(story, 'details.resources').then(() => {
+            return index;
+        });
     },
 
     /**
@@ -387,7 +390,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} image
      *
-     * @return {Promise<Story>}
+     * @return {Promise<Number>}
      */
     attachImage: function(image) {
         var res = _.clone(image);
@@ -403,7 +406,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} video
      *
-     * @return {Promise<Story>}
+     * @return {Promise<Number>}
      */
     attachVideo: function(video) {
         var res = _.clone(video);
@@ -419,7 +422,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} audio
      *
-     * @return {Promise<Story>}
+     * @return {Promise<Number>}
      */
     attachAudio: function(audio) {
         var res = _.clone(audio);
@@ -432,7 +435,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} website
      *
-     * @return {Promise<Story>}
+     * @return {Promise<Number>}
      */
     attachWebsite: function(website) {
         var res = _.clone(website);
@@ -445,7 +448,7 @@ module.exports = React.createClass({
      *
      * @param  {File} file
      *
-     * @return {Promise<Story|null>}
+     * @return {Promise<Number|null>}
      */
     importFile: function(file) {
         if (/^image\//.test(file.type)) {
@@ -482,13 +485,13 @@ module.exports = React.createClass({
      *
      * @param  {Array<File>} files
      *
-     * @return {Promise}
+     * @return {Promise<Number>}
      */
     importFiles: function(files) {
-        var firstIndex = this.getResourceCount();
         return Promise.mapSeries(files, (file) => {
             return this.importFile(file);
-        }).then(() => {
+        }).then((indices) => {
+            var firstIndex = _.find(indices, _.isNumber);
             return this.selectResource(firstIndex);
         });
     },
@@ -501,7 +504,6 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     importDataItems: function(items) {
-        var firstIndex = this.getResourceCount();
         var stringItems = _.filter(items, (item) => {
             if (item.kind === 'string') {
                 return /^text\/(html|uri-list)/.test(item.type);
@@ -521,8 +523,7 @@ module.exports = React.createClass({
                 var isImage = /<img\b/i.test(html);
                 if (isImage) {
                     var image = { external_url: url };
-                    this.attachImage(image);
-                    console.log(image);
+                    return this.attachImage(image);
                 } else {
                     var website = { url };
                     if (html) {
@@ -531,11 +532,11 @@ module.exports = React.createClass({
                         node.innerHTML = html.replace(/<.*?>/g, '');
                         website.title = node.innerText;
                     }
-                    this.attachWebsite(website);
+                    return this.attachWebsite(website);
                 }
             }
-        }).then(() => {
-            return this.selectResource(firstIndex);
+        }).then((index) => {
+            return this.selectResource(index);
         });
     },
 

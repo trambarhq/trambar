@@ -292,7 +292,7 @@ module.exports = React.createClass({
                     type: recorder.mimeType,
                     audio_bitrate: recorder.audioBitsPerSecond,
                     video_bitrate: recorder.videoBitsPerSecond,
-                    stream: recorder.outputStream.id,
+                    stream: recorder.outputStream,
                 };
             }
         });

@@ -190,6 +190,9 @@ module.exports = React.createClass({
         var formData = new FormData;
         var params = _.pick(payload, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
         _.forIn(params, (value, name) => {
+            if (value instanceof BlobStream) {
+                value = value.id;
+            }
             formData.append(name, value);
         });
         return formData;
