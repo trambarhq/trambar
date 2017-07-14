@@ -132,6 +132,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             onFinish: this.handleCommentFinish,
+            ref: 'list'
         };
         return <CommentList {...listProps} />
     },
@@ -171,7 +172,14 @@ module.exports = React.createClass({
     },
 
     handleCommentClick: function(evt) {
-        this.setState({ expanded: true, editing: true });
+        this.setState({ expanded: true, editing: true }, () => {
+            var list = this.refs.list;
+            if (list) {
+                setTimeout(() => {
+                    list.focus();
+                }, 50);
+            }
+        });
     },
 
     handleShowClick: function(evt) {

@@ -34,7 +34,6 @@ module.exports = React.createClass({
         reaction: PropTypes.object,
         story: PropTypes.object.isRequired,
         currentUser: PropTypes.object,
-        autoFocus: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -43,17 +42,6 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onFinish: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            autoFocus: false,
-        };
     },
 
     /**
@@ -276,20 +264,14 @@ module.exports = React.createClass({
     },
 
     /**
-     * Send keyboard focus to textarea on mount
+     * Set keyboard focus on text area
+     *
+     * @return {[type]}
      */
-    componentDidMount: function() {
-        if (this.props.autoFocus) {
-            this.focus();
-        }
-    },
-
     focus: function() {
         var component = this.refs.textarea;
         if (component) {
-            setTimeout(() => {
-                component.focus();
-            }, 50);
+            component.focus();
         }
     },
 

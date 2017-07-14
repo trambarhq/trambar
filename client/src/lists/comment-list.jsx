@@ -154,11 +154,23 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            autoFocus: last,
             key: (last) ? 0 : reaction.id,
+            ref: (last) ? 'last' : undefined,
             onFinish: this.props.onFinish,
         };
         return <CommentEditor {...props} />
+    },
+
+    /**
+     * Set keyboard focus on last editor
+     *
+     * @return {[type]}
+     */
+    focus: function() {
+        var component = this.refs.last;
+        if (component) {
+            component.focus();
+        }
     },
 });
 
