@@ -30,11 +30,18 @@ function FileButton(props) {
     if (props.hidden) {
         return null;
     }
+    var inputProps = {
+        type: 'file',
+        value: '',
+        disabled: props.disabled,
+        multiple: props.multiple,
+        onChange: props.onChange,
+    };
     return (
         <label className={buttonClasses(props)}>
             <i className={iconClasses(props)}/>
             <span className="label">{props.label}</span>
-            <input type="file" value="" disabled={props.disabled} onChange={props.onChange} />
+            <input {...inputProps} />
         </label>
     );
 }
@@ -45,6 +52,7 @@ FileButton.propTypes = {
     hidden: PropTypes.bool,
     highlighted: PropTypes.bool,
     disabled: PropTypes.bool,
+    multiple: PropTypes.bool,
     onChange: PropTypes.func,
 };
 

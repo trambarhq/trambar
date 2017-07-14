@@ -141,6 +141,7 @@ module.exports = React.createClass({
         var selectButtonProps = {
             label: t('story-file'),
             icon: 'file',
+            multiple: true,
             onChange: this.handleFileSelect,
         }
         return (
