@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -25,6 +26,7 @@ module.exports = React.createClass({
         respondents: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -32,7 +34,11 @@ module.exports = React.createClass({
 
     getInitialState: function() {
         return {
-            expanded: this.shouldExpandAutomatically(this.props)
+            expanded: this.shouldExpandAutomatically(this.props),
+            editing: _.some(this.props.reactions, {
+                user_id: this.props.currentUserId,
+                published: false
+            }),
         };
     },
 
@@ -87,7 +93,7 @@ module.exports = React.createClass({
         var commentButtonProps = {
             icon: 'comment',
             label: t('story-comment'),
-            highlighted: this.getCurrentUserComments().length > 0,
+            highlighted: this.getCurrentUserComments().length > 0 || this.state.editing,
             onClick: this.handleCommentClick,
         };
         var showButtonProps = {
@@ -115,10 +121,12 @@ module.exports = React.createClass({
             return null;
         }
         var listProps = {
+            showEditor: this.state.editing,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
             currentUser: this.props.currentUser,
             database: this.props.database,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -161,7 +169,7 @@ module.exports = React.createClass({
     },
 
     handleCommentClick: function(evt) {
-
+        this.setState({ expanded: true, editing: true });
     },
 
     handleShowClick: function(evt) {

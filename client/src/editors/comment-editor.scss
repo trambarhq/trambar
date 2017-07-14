@@ -1,0 +1,39 @@
+.comment-editor {
+    display: flex;
+    flex-direction: row;
+
+    .profile-image-column {
+        flex: 0 0 auto;
+    }
+
+    .editor-column {
+        flex: 1 1 auto;
+
+        .controls {
+            display: flow-root;
+            margin-top: 0.2em;
+
+            .media-buttons {
+                float: left;
+            }
+
+            .action-buttons {
+                float: right;
+            }
+        }
+    }
+
+    .profile-image {
+        display: inline-block;
+        vertical-align: middle;
+        margin: 0 0.4em 0 0.2em;
+        width: 1.5em;
+        height: 1.5em;
+
+        IMG {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    }
+}

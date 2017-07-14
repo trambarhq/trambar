@@ -86,7 +86,13 @@ module.exports = _.create(Data, {
                 target_user_ids: row.target_user_ids,
                 ptime: row.ptime,
                 public: row.public,
+                published: row.published,
             };
+            if (!object.published) {
+                if (object.user_id !== credentials.user.id) {
+                    object.details = _.omit(object.details, 'text', 'resources');
+                }
+            }
             return object;
         });
     },

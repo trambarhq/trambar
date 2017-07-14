@@ -41,7 +41,7 @@ module.exports = React.createClass({
     renderSenderNames: function() {
         var t = this.props.locale.translate;
         var userId = _.get(this.props.currentUser, 'id');
-        var isOwner = !!_.find(this.props.senders, { id: userId });
+        var isOwner = _.some(this.props.senders, { id: userId });
         var others = _.filter(this.props.senders, (s) => {
             return s.id !== userId;
         });

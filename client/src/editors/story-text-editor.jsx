@@ -174,18 +174,19 @@ module.exports = React.createClass({
 
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var noText = !_.get(this.props.story, 'details.text');
+        var noText = _.isEmpty(_.get(this.props.story, 'details.text'));
+        var noResources = _.isEmpty(_.get(this.props.story, 'details.resources'));
         var publishing = _.get(this.props.story, 'published', false);
         var cancelButtonProps = {
             label: t('story-cancel'),
             onClick: this.props.onCancel,
-            disabled: noText || publishing,
+            disabled: (noText && noResources) || publishing,
         };
         var postButtonProps = {
             label: t('story-post'),
             onClick: this.props.onPublish,
             emphasized: true,
-            disabled: noText || publishing,
+            disabled: (noText && noResources) || publishing,
         };
         return (
             <div className="buttons">

@@ -24,7 +24,6 @@ module.exports = React.createClass({
         return (
             <div className="comment-view">
                 {this.renderProfileImage()}
-                {this.renderName()}
                 {this.renderText()}
             </div>
         );
@@ -41,25 +40,45 @@ module.exports = React.createClass({
         );
     },
 
-    renderName: function() {
-        var name = _.get(this.props.respondent, 'details.name');
-        return <span className="name">{name}</span>;
-    },
-
     renderText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var name = _.get(this.props.respondent, 'details.name', '');
-        switch (this.props.reaction.type) {
-            case 'like':
-                return <span> {t('comment-likes-this-story', name)}</span>;
-            case 'comment':
-                var text = _.get(this.props.reaction, 'details.text');
-                return <span>: {p(text)}</span>;
-            case 'vote':
-                return <span> {t('comment-cast-a-vote', name)}</span>;
-            case 'task-completion':
-                return <span> {t('comment-completed-a-task', name)}</span>;
+        if (this.props.reaction.published) {
+            switch (this.props.reaction.type) {
+                case 'like':
+                    return (
+                        <span className="like">
+                            {t('comment-$user-likes-this', name)}
+                        </span>
+                    );
+                case 'comment':
+                    var text = _.get(this.props.reaction, 'details.text');
+                    return (
+                        <span className="comment">
+                            {name}: {p(text)}
+                        </span>
+                    );
+                case 'vote':
+                    return (
+                        <span className="vote">
+                            {t('comment-$user-cast-a-vote', name)}
+                        </span>
+                    );
+                    return ;
+                case 'task-completion':
+                    return (
+                        <span className="task-completion">
+                            {t('comment-$user-completed-a-task', name)}
+                        </span>
+                    );
+            }
+        } else {
+            return (
+                <span className="in-progress">
+                    {t('comment-$user-is-typing', name)}
+                </span>
+            );
         }
     },
 });

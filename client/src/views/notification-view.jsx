@@ -43,7 +43,6 @@ module.exports = React.createClass({
                     {this.renderTime()}
                     {this.renderIcon()}
                 </div>
-                <div className="clear" />
             </div>
         );
     },

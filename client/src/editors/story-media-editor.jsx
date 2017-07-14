@@ -709,7 +709,7 @@ module.exports = React.createClass({
         }
         var path = 'details.resources';
         var story = _.decouple(this.props.story, path, []);
-        var resources = this.props.story.details.resources;
+        var resources = story.details.resources;
         var res = resources[index];
         resources.splice(index, 1);
         resources.splice(index - 1, 0, res);
@@ -734,6 +734,9 @@ module.exports = React.createClass({
         var story = _.decouple(this.props.story, path, []);
         var resources = story.details.resources;
         resources.splice(index, 1);
+        if (resources.length === 0) {
+            story.details = _.omit(story.details, 'resources');
+        }
         return this.triggerChangeEvent(story, path).then(() => {
             if (index >= resources.length) {
                 return this.selectResource(resources.length - 1);

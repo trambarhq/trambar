@@ -500,7 +500,7 @@ module.exports = React.createClass({
         var newBookmarks = [];
         // add bookmarks that don't exist yet
         _.each(recipientIds, (recipientId) => {
-            if (!_.find(bookmarks, { target_user_id: recipientId })) {
+            if (!_.some(bookmarks, { target_user_id: recipientId })) {
                 var newBookmark = {
                     story_id: story.published_version_id || story.id,
                     user_ids: [ this.props.currentUser.id ],

@@ -63,9 +63,18 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'People',
         'bottom-nav-settings': 'Settings',
 
-        'comment-cast-a-vote': 'cast a vote',
-        'comment-completed-a-task': 'completed a task',
-        'comment-likes-this-story': 'likes this story',
+        'comment-$user-cast-a-vote': (user) => {
+            return `${user} cast a vote`;
+        },
+        'comment-$user-completed-a-task': (user) => {
+            return `${user} completed a task`;
+        },
+        'comment-$user-is-typing': (user) => {
+            return `${user} is writing a comment...`;
+        },
+        'comment-$user-likes-this': (user) => {
+            return `${user} likes this`;
+        },
 
         'list-$count-more': (count) => {
             return `${count} more...`;
