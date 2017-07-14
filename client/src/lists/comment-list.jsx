@@ -24,6 +24,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         showingEditor: PropTypes.bool,
+        story: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
@@ -33,6 +34,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onFinish: PropTypes.func,
     },
 
     /**
@@ -144,14 +147,16 @@ module.exports = React.createClass({
         var tempCopy = findTemporaryCopy(this.props.reactions, reaction);
         var props = {
             reaction,
-            respondent: this.props.currentUser,
+            story: this.props.story,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            autoFocus: last,
             key: (last) ? 0 : reaction.id,
+            onFinish: this.props.onFinish,
         };
         return <CommentEditor {...props} />
     },

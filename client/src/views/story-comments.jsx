@@ -122,6 +122,7 @@ module.exports = React.createClass({
         }
         var listProps = {
             showEditor: this.state.editing,
+            story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
             currentUser: this.props.currentUser,
@@ -130,6 +131,7 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            onFinish: this.handleCommentFinish,
         };
         return <CommentList {...listProps} />
     },
@@ -174,5 +176,18 @@ module.exports = React.createClass({
 
     handleShowClick: function(evt) {
         this.setState({ expanded: true });
+    },
+
+    handleCommentFinish: function(evt) {
+        var hasDraft = _.some(this.props.reactions, (r) => {
+            if (!r.published) {
+                if (r.user_id === this.props.currentUser.id) {
+                    return true;
+                }
+            }
+        });
+        if (!hasDraft) {
+            this.setState({ editing: false });
+        }
     },
 });

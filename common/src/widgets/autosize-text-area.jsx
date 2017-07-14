@@ -65,10 +65,17 @@ module.exports = React.createClass({
         window.removeEventListener('resize', this.handleDocumentResize);
     },
 
+    focus: function() {
+        var actual = this.refs.actual;
+        if (actual) {
+            actual.focus();
+        }
+    },
+
     updateSize: function() {
         var shadow = this.refs.shadow;
         var actual = this.refs.actual;
-        if (!shadow) {
+        if (!shadow || !actual) {
             return;
         }
         var oHeight = shadow.offsetHeight;

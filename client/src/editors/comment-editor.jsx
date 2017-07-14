@@ -1,5 +1,9 @@
+var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
+var BlobReader = require('utils/blob-reader');
+var LinkParser = require('utils/link-parser');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -21,18 +25,35 @@ var StoryText = require('widgets/story-text');
 
 require('./comment-editor.scss');
 
+const AUTOSAVE_DURATION = 5000;
+
 module.exports = React.createClass({
     displayName: 'CommentEditor',
     mixins: [ UpdateCheck ],
     propTypes: {
         reaction: PropTypes.object,
+        story: PropTypes.object.isRequired,
         currentUser: PropTypes.object,
+        autoFocus: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onFinish: PropTypes.func,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            autoFocus: false,
+        };
     },
 
     /**
@@ -63,7 +84,7 @@ module.exports = React.createClass({
         if (nextProps.reaction) {
             nextState.draft = nextProps.reaction;
         } else {
-            nextState.draft = createBlankComment(nextProps.currentUser);
+            nextState.draft = createBlankComment(nextProps.story, nextProps.currentUser);
         }
     },
 
@@ -115,6 +136,7 @@ module.exports = React.createClass({
         var lang = languageCode.substr(0, 2);
         var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
         var textareaProps = {
+            ref: 'textarea',
             value: langText,
             lang: lang,
             onChange: this.handleTextChange,
@@ -168,6 +190,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render post and cancel buttons
+     *
+     * @return {ReactElement}
+     */
     renderActionButtons: function() {
         var t = this.props.locale.translate;
         var noText = _.isEmpty(_.get(this.state.draft, 'details.text'));
@@ -249,6 +276,24 @@ module.exports = React.createClass({
     },
 
     /**
+     * Send keyboard focus to textarea on mount
+     */
+    componentDidMount: function() {
+        if (this.props.autoFocus) {
+            this.focus();
+        }
+    },
+
+    focus: function() {
+        var component = this.refs.textarea;
+        if (component) {
+            setTimeout(() => {
+                component.focus();
+            }, 50);
+        }
+    },
+
+    /**
      * Set current draft
      *
      * @param  {Reaction} draft
@@ -259,21 +304,6 @@ module.exports = React.createClass({
         return new Promise((resolve, reject) => {
             this.setState({ draft }, () => {
                 resolve(draft);
-            });
-        });
-    },
-
-    /**
-     * Set options
-     *
-     * @param  {Object} options
-     *
-     * @return {Promise<Object>}
-     */
-    changeOptions: function(options) {
-        return new Promise((resolve, reject) => {
-            this.setState({ options }, () => {
-                resolve(options);
             });
         });
     },
@@ -362,6 +392,160 @@ module.exports = React.createClass({
         return db.removeOne({ table: 'reaction' }, reaction);
     },
 
+
+    /**
+     * Attach a resource to the story
+     *
+     * @param  {Object} res
+     *
+     * @return {Promise<Number>}
+     */
+    attachResource: function(res) {
+        var reaction = _.decoupleSet(this.state.draft, 'details.resources', [ res ]);
+        return this.changeDraft(reaction).return(0);
+    },
+
+    /**
+     * Attach an image to the story
+     *
+     * @param  {Object} image
+     *
+     * @return {Promise<Number>}
+     */
+    attachImage: function(image) {
+        var res = _.clone(image);
+        res.type = 'image';
+        if (image.width && image.height) {
+            res.clip = getDefaultClippingRect(image.width, image.height);
+        }
+        return this.attachResource(res);
+    },
+
+    /**
+     * Attach a video to the story
+     *
+     * @param  {Object} video
+     *
+     * @return {Promise<Number>}
+     */
+    attachVideo: function(video) {
+        var res = _.clone(video);
+        res.type = 'video';
+        if (video.width && video.height) {
+            res.clip = getDefaultClippingRect(video.width, video.height);
+        }
+        return this.attachResource(res);
+    },
+
+    /**
+     * Attach an audio to the story
+     *
+     * @param  {Object} audio
+     *
+     * @return {Promise<Number>}
+     */
+    attachAudio: function(audio) {
+        var res = _.clone(audio);
+        res.type = 'audio';
+        return this.attachResource(res);
+    },
+
+    /**
+     * Attach a link to a website to the story
+     *
+     * @param  {Object} website
+     *
+     * @return {Promise<Number>}
+     */
+    attachWebsite: function(website) {
+        var res = _.clone(website);
+        res.type = 'website';
+        return this.attachResource(res);
+    },
+
+    /**
+     * Attach the contents of a file to the story
+     *
+     * @param  {File} file
+     *
+     * @return {Promise<Number|null>}
+     */
+    importFile: function(file) {
+        if (/^image\//.test(file.type)) {
+            return BlobReader.loadImage(file).then((img) => {
+                var format = _.last(_.split(file.type, '/'));
+                var width = img.naturalWidth;
+                var height = img.naturalHeight;
+                var image = { format, file, width, height };
+                return this.attachImage(image);
+            });
+        } else if (/^video\//.test(file.type)) {
+            var format = _.last(_.split(file.type, '/'));
+            var video = { format, file };
+            return this.attachVideo(video);
+        } else if (/^audio\//.test(file.type)) {
+            var format = _.last(_.split(file.type, '/'));
+            var audio = { format, file };
+            return this.attachVideo(audio);
+        } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
+            return BlobReader.loadText(file).then((text) => {
+                var link = LinkParser.parse(text);
+                if (link) {
+                    var website = {
+                        url: link.url,
+                        title: link.name || _.replace(file.name, /\.\w+$/, ''),
+                    };
+                    return this.attachWebsite(website);
+                }
+            });
+        } else {
+            console.log(file);
+            return Promise.resolve(null);
+        }
+    },
+
+    /**
+     * Attach non-file drag-and-drop contents to story
+     *
+     * @param  {Array<DataTransferItem>} items
+     *
+     * @return {Promise}
+     */
+    importDataItems: function(items) {
+        var stringItems = _.filter(items, (item) => {
+            if (item.kind === 'string') {
+                return /^text\/(html|uri-list)/.test(item.type);
+            }
+        });
+        // since items are ephemeral, we need to call getAsString() on each
+        // of them at this point (and not in a callback)
+        var stringPromises = {};
+        _.each(stringItems, (item) => {
+            stringPromises[item.type] = retrieveDataItemText(item);
+        });
+        return Promise.props(stringPromises).then((strings) => {
+            var html = strings['text/html'];
+            var url = strings['text/uri-list'];
+            if (url) {
+                // see if it's an image being dropped
+                var isImage = /<img\b/i.test(html);
+                if (isImage) {
+                    var image = { external_url: url };
+                    return this.attachImage(image);
+                } else {
+                    var website = { url };
+                    if (html) {
+                        // get plain text from html
+                        var node = document.createElement('DIV');
+                        node.innerHTML = html.replace(/<.*?>/g, '');
+                        website.title = node.innerText;
+                    }
+                    return this.attachWebsite(website);
+                }
+            }
+        });
+    },
+
     /**
      * Reattach blobs that were filtered out when objects are saved
      *
@@ -386,6 +570,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Inform parent component that editing is over
+     */
+    triggerFinishEvent: function() {
+        if (this.props.onFinish) {
+            this.props.onFinish({
+                type: 'finish',
+                target: this,
+            });
+        }
+    },
+
+    /**
      * Called when user changes contents in text area
      *
      * @param  {Event} evt
@@ -398,7 +594,10 @@ module.exports = React.createClass({
         var lang = languageCode.substr(0, 2);
         var path = `details.text.${lang}`;
         var draft = _.decoupleSet(this.state.draft, path, langText);
-        return this.changeDraft(draft);
+
+        return this.changeDraft(draft).then(() => {
+            this.autosaveReaction(draft, AUTOSAVE_DURATION);
+        });
     },
 
     /**
@@ -410,11 +609,12 @@ module.exports = React.createClass({
      */
     handlePublishClick: function(evt) {
         var reaction = _.clone(this.state.draft);
-        var options = this.state.options;
         reaction.published = true;
 
         return this.changeDraft(reaction).then(() => {
             return this.saveReaction(reaction);
+        }).then(() => {
+            this.triggerFinishEvent();
         });
     },
 
@@ -434,6 +634,8 @@ module.exports = React.createClass({
             } else {
                 return reaction;
             }
+        }).then(() => {
+            this.triggerFinishEvent();
         });
     },
 
@@ -546,7 +748,9 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
-        this.importFiles(files);
+        if (files.length >= 1) {
+            this.importFile(files[0]);
+        }
         return null;
     },
 });
@@ -554,17 +758,52 @@ module.exports = React.createClass({
 /**
  * Return a blank comment
  *
+ * @param  {Story} story
  * @param  {User} currentUser
  *
  * @return {Reaction}
  */
-var createBlankComment = Memoize(function(currentUser) {
+var createBlankComment = Memoize(function(story, currentUser) {
     return {
         type: 'comment',
-        user_id: currentUser.id,
+        story_id: story.id,
+        user_id: (currentUser) ? currentUser.id : null,
+        target_user_ids: story.user_ids,
         details: {},
     };
-}, {
-    user_ids: 0,
-    details: {},
 });
+
+/**
+ * Return a square clipping rect
+ *
+ * @param  {Number} width
+ * @param  {Number} height
+ * @param  {String} align
+ *
+ * @return {Object}
+ */
+function getDefaultClippingRect(width, height, align) {
+    var left = 0, top = 0;
+    var length = Math.min(width, height);
+    if (align === 'center' || !align) {
+        if (width > length) {
+            left = Math.floor((width - length) / 2);
+        } else if (height > length) {
+            top = Math.floor((height - length) / 2);
+        }
+    }
+    return { left, top, width: length, height: length };
+}
+
+/**
+ * Retrieve the text in a DataTransferItem
+ *
+ * @param  {DataTransferItem} item
+ *
+ * @return {Promise<String>}
+ */
+function retrieveDataItemText(item) {
+    return new Promise((resolve, reject) => {
+        item.getAsString(resolve);
+    });
+}

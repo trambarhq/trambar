@@ -463,6 +463,10 @@ module.exports = React.createClass({
             var format = _.last(_.split(file.type, '/'));
             var video = { format, file };
             return this.attachVideo(video);
+        } else if (/^audio\//.test(file.type)) {
+            var format = _.last(_.split(file.type, '/'));
+            var audio = { format, file };
+            return this.attachAudio(audio);
         } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
             return BlobReader.loadText(file).then((text) => {
                 var link = LinkParser.parse(text);
