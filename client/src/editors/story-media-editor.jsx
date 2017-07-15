@@ -104,6 +104,10 @@ module.exports = React.createClass({
         return url;
     },
 
+    componentWillMount: function() {
+        document.addEventListener('paste', this.handlePaste);
+    },
+
     render: function() {
         return (
             <StorySection className="media-editor">
@@ -329,6 +333,7 @@ module.exports = React.createClass({
         if (this.imageBlobUrl) {
             URL.revokeObjectURL(this.imageBlobUrl);
         }
+        document.removeEventListener('paste', this.handlePaste);
     },
 
     /**
@@ -480,6 +485,7 @@ module.exports = React.createClass({
                 }
             });
         } else {
+            throw new Error('Unrecognized file type: ' + file.type);
             console.log(file);
             return Promise.resolve(null);
         }
@@ -774,6 +780,22 @@ module.exports = React.createClass({
         var index = this.getSelectedResourceIndex();
         return this.selectResource(index + 1);
     },
+
+    /**
+     * Called when user hit ctrl-v
+     *
+     * @param  {ClipboardEvent} evt
+     */
+    handlePaste: function(evt) {
+        console.log(evt);
+        var file = _.get(evt.clipboardData, 'files.0');
+        if (file) {
+            evt.preventDefault();
+            return this.importFile(file).then((index) => {
+                this.selectResource(index);
+            });
+        }
+    }
 });
 
 /**
