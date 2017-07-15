@@ -7,6 +7,11 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var ProjectSettingsEditor = require('editors/project-settings-editor');
+var UserProfileEditor = require('editors/user-profile-editor');
+var NotificationPreferencesEditor = require('editors/notification-preferences-editor');
+var LanguageSettingsEditor = require('editors/language-settings-editor');
+
 module.exports = Relaks.createClass({
     displayName: 'SettingsPage',
     propTypes: {
@@ -71,7 +76,52 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Settings page</div>
+            <div>
+                {this.renderProjects()}
+                {this.renderUserProfile()}
+                {this.renderNotificationPreferences()}
+                {this.renderLanguages()}
+            </div>
         );
-    }
+    },
+
+    renderProjects: function() {
+        var props = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <ProjectSettingsEditor {...props} />;
+    },
+
+    renderUserProfile: function() {
+        var props = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <UserProfileEditor {...props} />;
+    },
+
+    renderNotificationPreferences: function() {
+        var props = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <NotificationPreferencesEditor {...props} />;
+    },
+
+    renderLanguages: function() {
+        var props = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <LanguageSettingsEditor {...props} />;
+    },    
 });

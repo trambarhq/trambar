@@ -104,7 +104,7 @@ module.exports = React.createClass({
     updateLeadAuthor: function(nextState, nextProps) {
         if (!nextState.story) {
             var currentUserId = _.get(nextProps.currentUser, 'id');
-            if (nextState.draft.user_ids[0] !== currentUserId) {
+            if (!nextState.draft.user_ids || nextState.draft.user_ids[0] !== currentUserId) {
                 nextState.draft = _.decouple(nextState.draft, 'user_ids', []);
                 nextState.draft.user_ids[0] = currentUserId;
             }
