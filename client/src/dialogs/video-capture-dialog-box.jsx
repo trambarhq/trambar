@@ -1,5 +1,6 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var DeviceManager = require('media/device-manager');
 
 var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
@@ -23,6 +24,11 @@ module.exports = React.createClass({
         onCapture: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             liveVideoStream: null,
@@ -32,15 +38,26 @@ module.exports = React.createClass({
             capturedVideo: null,
             capturedImage: null,
             previewUrl: null,
+            videoDevices: DeviceManager.getDevices('videoinput'),
+            selectedDeviceId: null,
         };
     },
 
+    /**
+     * Initialize camera if component is mounted as shown (probably not)
+     */
     componentWillMount: function() {
         if (this.props.show) {
             this.initializeCamera();
         }
+        DeviceManager.addEventListener('change', this.handleDeviceChange);
     },
 
+    /**
+     * Initialize camera when component becomes visible
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
@@ -55,6 +72,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Removed video that was captured earlier
+     */
     clearCapturedVideo: function() {
         if (this.state.capturedVideo) {
             URL.revokeObjectURL(this.state.previewUrl);
@@ -65,20 +85,41 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Create live video stream, asking user for permission if necessary
+     */
     initializeCamera: function() {
-        this.createLiveVideoStream().then((stream) => {
+        return this.createLiveVideoStream().then((stream) => {
             this.setLiveVideoState(null, stream);
         }).catch((err) => {
             this.setLiveVideoState(err, null);
         });
     },
 
+    /**
+     * Release live video stream
+     */
     shutdownCamera: function() {
         this.destroyLiveVideoStream().then(() => {
             this.setLiveVideoState(null, null);
         });
     },
 
+    /**
+     * Recreate live video stream after a different camera is selected
+     */
+    reinitializeCamera: function() {
+        this.destroyLiveVideoStream().then(() => {
+            this.initializeCamera();
+        });
+    },
+
+    /**
+     * Update state of component depending on whether we have a video stream
+     *
+     * @param  {Error} err
+     * @param  {MediaStream} stream
+     */
     setLiveVideoState: function(err, stream) {
         if (this.state.liveVideoUrl) {
             URL.revokeObjectURL(this.state.liveVideoUrl);
@@ -97,6 +138,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var overlayProps = {
             show: this.props.show,
@@ -106,12 +152,20 @@ module.exports = React.createClass({
             <Overlay {...overlayProps}>
                 <div className="video-capture-dialog-box">
                     {this.renderView()}
-                    {this.renderButtons()}
+                    <div className="controls">
+                        {this.renderDeviceSelector()}
+                        {this.renderButtons()}
+                    </div>
                 </div>
             </Overlay>
         );
     },
 
+    /**
+     * Render either live or captured video
+     *
+     * @return {ReactElement}
+     */
     renderView: function() {
         if (this.state.capturedVideo) {
             return this.renderCapturedVideo();
@@ -120,6 +174,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render view of live video stream
+     *
+     * @return {ReactElement}
+     */
     renderLiveVideo: function() {
         if (!this.state.liveVideoUrl) {
             // TODO: return placeholder
@@ -138,6 +197,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render video captured previously
+     *
+     * @return {ReactElement}
+     */
     renderCapturedVideo: function() {
         var props = {
             src: this.state.previewUrl,
@@ -150,6 +214,42 @@ module.exports = React.createClass({
         )
     },
 
+    /**
+     * Render a dropdown if there're multiple devices
+     *
+     * @return {ReactElement|null}
+     */
+    renderDeviceSelector: function() {
+        if (this.state.videoDevices.length < 2) {
+            return null;
+        }
+        var options = _.map(this.state.videoDevices, (device, index) => {
+            var label = device.label;
+            label = _.replace(device.label, /\(\w{4}:\w{4}\)/g, '');
+            var props = {
+                key: index,
+                value: device.deviceId,
+            };
+            return <option {...props}>{label}</option>;
+        });
+        var selectProps = {
+            value: this.state.selectedDeviceId || '',
+            onChange: this.handleDeviceSelect,
+        }
+        return (
+            <div className="device-selector">
+                <select {...selectProps}>
+                    {options}
+                </select>
+            </div>
+        );
+    },
+
+    /**
+     * Render buttons
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.state.mediaRecorder) {
@@ -205,20 +305,48 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Destroy live video stream when component unmounts
+     */
     componentWillUnmount: function() {
         this.destroyLiveVideoStream();
+        this.clearCapturedVideo();
+        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
 
+    /**
+     * Create a live video stream
+     *
+     * @return {Promise<MediaStream>}
+     */
     createLiveVideoStream: function() {
         var promise = this.videoStreamPromise;
         if (!promise) {
-            var constraints = { video: true, audio: true };
+            var constraints;
+            if (this.state.selectedDeviceId) {
+                constraints = {
+                    video: {
+                        mandatory: {
+                            sourceId: this.state.selectedDeviceId
+                        }
+                    }
+                };
+            } else {
+                constraints = {
+                    video: true,
+                };
+            }
             promise = navigator.mediaDevices.getUserMedia(constraints);
             this.videoStreamPromise = promise;
         }
         return Promise.resolve(promise);
     },
 
+    /**
+     * Destroy live video stream created previously
+     *
+     * @return {Promise}
+     */
     destroyLiveVideoStream: function() {
         var promise = this.videoStreamPromise;
         this.videoStreamPromise = null;
@@ -232,6 +360,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Capture a frame from camera
+     *
+     * @return {Promise<Object>}
+     */
     captureImage: function() {
         return new Promise((resolve, reject) => {
             var type = 'image/jpeg';
@@ -249,6 +382,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Start capturing video
+     *
+     * @return {Promise}
+     */
     beginRecording: function() {
         return Promise.try(() => {
             var segmentDuration = 3 * 1000;
@@ -270,6 +408,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Pause capturing
+     *
+     * @return {Promise}
+     */
     pauseRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
@@ -279,6 +422,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Stop capturing video, returning what was captured
+     *
+     * @return {Promise}
+     */
     endRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
@@ -298,6 +446,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Report back to parent component that a video has been captured
+     *
+     * @param  {Object} video
+     */
     triggerCaptureEvent: function(video) {
         if (this.props.onCapture) {
             this.props.onCapture({
@@ -308,6 +461,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when user clicks start button
+     *
+     * @param  {Event} evt
+     */
     handleStartClick: function(evt) {
         return Promise.join(this.captureImage(), this.beginRecording(), (image, recorder) => {
             // start uploading immediately upon receiving data from MediaRecorder
@@ -319,10 +477,20 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks pause button
+     *
+     * @param  {Event} evt
+     */
     handlePauseClick: function(evt) {
         return this.pauseRecording();
     },
 
+    /**
+     * Called when user clicks stop button
+     *
+     * @param  {Event} evt
+     */
     handleStopClick: function(evt) {
         return this.endRecording().then((video) => {
             var blob = video.stream.toBlob();
@@ -336,14 +504,29 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks retake button
+     *
+     * @param  {Event} evt
+     */
     handleRetakeClick: function(evt) {
         this.clearCapturedVideo();
     },
 
+    /**
+     * Called when user clicks accept button
+     *
+     * @param  {Event} evt
+     */
     handleAcceptClick: function(evt) {
         this.triggerCaptureEvent(this.state.capturedVideo);
     },
 
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
     handleCancelClick: function(evt) {
         if (this.props.onCancel) {
             this.props.onCancel({
@@ -351,5 +534,40 @@ module.exports = React.createClass({
                 target: this,
             });
         }
+    },
+
+    /**
+     * Called when user selects a different device
+     *
+     * @param  {Event} evt
+     */
+    handleDeviceSelect: function(evt) {
+        var selectedDeviceId = evt.currentTarget.value;
+        this.setState({ selectedDeviceId }, () => {
+            this.reinitializeCamera();
+        });
+    },
+
+    /**
+     * Called when the list of media devices changes
+     *
+     * @param  {Object} evt
+     */
+    handleDeviceChange: function(evt) {
+        var videoDevices = DeviceManager.getDevices('videoinput');
+        var selectedDeviceId = this.state.selectedDeviceId;
+        var reinitialize = false;
+        if (selectedDeviceId) {
+            if (!_.some(videoDevices, { deviceId: selectedDeviceId })) {
+                // reinitialize the camera when the one we were using disappears
+                selectedDeviceId = null;
+                reinitialize = true;
+            }
+        }
+        this.setState({ videoDevices, selectedDeviceId }, () => {
+            if (reinitialize) {
+                this.reinitializeCamera();
+            }
+        });
     },
 });

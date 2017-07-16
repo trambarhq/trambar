@@ -22,10 +22,30 @@
         }
     }
 
-    .buttons {
+    .controls {
+        display: flow-root;
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
-        text-align: right;
         border-top: 1px solid #666666;
+
+        .device-selector {
+            float: left;
+
+            SELECT {
+                color: #666666;
+                background-color: #4d3936;
+                border: 0;
+                padding: 0.3em;
+
+                &:hover, &:focus {
+                    color: #eeeeee;
+                    background-color: #806666;
+                }
+            }
+        }
+
+        .buttons {
+            float: right;
+        }
     }
 }

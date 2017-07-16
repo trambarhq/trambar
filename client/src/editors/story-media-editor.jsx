@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
+var DeviceManager = require('media/device-manager');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -45,6 +46,8 @@ module.exports = React.createClass({
             capturingPhoto: false,
             capturingAudio: false,
             capturingVideo: false,
+            hasCamera: DeviceManager.hasDevice('videoinput'),
+            hasMicrophone: DeviceManager.hasDevice('audioinput'),
             dropZoneStatus: 'idle',
             selectedResourceIndex: 0,
         };
@@ -106,6 +109,7 @@ module.exports = React.createClass({
 
     componentWillMount: function() {
         document.addEventListener('paste', this.handlePaste);
+        DeviceManager.addEventListener('change', this.handleDeviceChange);
     },
 
     render: function() {
@@ -130,16 +134,19 @@ module.exports = React.createClass({
         var photoButtonProps = {
             label: t('story-photo'),
             icon: 'camera',
+            hidden: !this.state.hasCamera,
             onClick: this.handlePhotoClick,
         };
         var videoButtonProps = {
             label: t('story-video'),
             icon: 'video-camera',
+            hidden: !this.state.hasCamera,
             onClick: this.handleVideoClick,
         };
         var audioButtonProps = {
             label: t('story-audio'),
             icon: 'microphone',
+            hidden: !this.state.hasMicrophone,
             onClick: this.handleAudioClick,
         };
         var selectButtonProps = {
@@ -334,6 +341,7 @@ module.exports = React.createClass({
             URL.revokeObjectURL(this.imageBlobUrl);
         }
         document.removeEventListener('paste', this.handlePaste);
+        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
 
     /**
@@ -795,7 +803,19 @@ module.exports = React.createClass({
                 this.selectResource(index);
             });
         }
-    }
+    },
+
+    /**
+     * Called when the list of media devices changes
+     *
+     * @param  {Object} evt
+     */
+    handleDeviceChange: function(evt) {
+        this.setState({
+            hasCamera: DeviceManager.hasDevice('videoinput'),
+            hasMicrophone: DeviceManager.hasDevice('audioinput'),
+        });
+    },
 });
 
 /**
