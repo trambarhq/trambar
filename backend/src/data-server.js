@@ -37,9 +37,9 @@ function start() {
             var app = Express();
             app.use(BodyParser.json());
             app.set('json spaces', 2);
-            app.route('/api/discovery/:schema/:table/').post(handleDiscovery).get(handleDiscovery);
-            app.route('/api/retrieval/:schema/:table/:id?').post(handleRetrieval).get(handleRetrieval);
-            app.route('/api/storage/:schema/:table/').post(handleStorage);
+            app.route('/data/discovery/:schema/:table/').post(handleDiscovery).get(handleDiscovery);
+            app.route('/data/retrieval/:schema/:table/:id?').post(handleRetrieval).get(handleRetrieval);
+            app.route('/data/storage/:schema/:table/').post(handleStorage);
             return new Promise((resolve, reject) => {
                 server = app.listen(80, () => {
                     resolve();

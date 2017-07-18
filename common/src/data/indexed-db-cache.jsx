@@ -11,7 +11,7 @@ module.exports = React.createClass({
 
     getDefaultProps: function() {
         return {
-            databaseName: 'cache'
+            databaseName: 'trambar'
         };
     },
 
@@ -125,7 +125,7 @@ module.exports = React.createClass({
                     reject(new Error(evt.message));
                 };
                 _.each(objects, (object) => {
-                    var key = (local) ? object.key : primaryKey(path, object.id);
+                    var key = (local) ? nonumericKey(path, object.key) : primaryKey(path, object.id);
                     var record = {
                         server: server,
                         location: path,
@@ -155,7 +155,7 @@ module.exports = React.createClass({
                     reject(new Error(evt.message));
                 };
                 _.each(objects, (object) => {
-                    var key = (local) ? object.key : primaryKey(path, object.id);
+                    var key = (local) ? nonumericKey(path, object.key) : primaryKey(path, object.id);
                     objectStore.delete(key);
                 });
             });
@@ -279,4 +279,8 @@ module.exports = React.createClass({
 function primaryKey(path, id) {
     var idStr = ('0000000000' + id).slice(-10);
     return path + '/' + idStr;
+}
+
+function nonumericKey(path, key) {
+    return path + '/' + key;
 }

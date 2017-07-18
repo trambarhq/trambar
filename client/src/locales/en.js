@@ -137,12 +137,19 @@ module.exports = function(languageCode) {
         'photo-capture-retake': 'Retake',
         'photo-capture-snap': 'Snap',
 
+        'selection-cancel': 'Cancel',
+        'selection-ok': 'OK',
+
+        'sign-in-cancel': 'Cancel',
+        'sign-in-with-dropbox': 'Sign in with Dropbox',
+        'sign-in-with-facebook': 'Sign in with Facebook',
+        'sign-in-with-github': 'Sign in with GitHub',
+        'sign-in-with-gitlab': 'Sign in with GitLab',
+        'sign-in-with-google': 'Sign in with Google',
+
         'statistics-bar': 'Bar',
         'statistics-line': 'Line',
         'statistics-pie': 'Pie',
-
-        'selection-cancel': 'Cancel',
-        'selection-ok': 'OK',
 
         'story-$count-user-reacted-to-story': (count) => {
             var users = (count === 1) ? `${count} user` : `${count} users`;

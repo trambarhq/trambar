@@ -124,6 +124,8 @@ module.exports = React.createClass({
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
+            onSuccess: this.handleSignInSuccess,
+            onCancel: this.handleSignInCancel,
         };
         return <SignInDialogBox {...dialogProps} />
     },
@@ -246,6 +248,46 @@ module.exports = React.createClass({
         })
         return this.authRequest.promise;
     },
+
+    /**
+     * Called when sign-in was successful
+     *
+     * @param  {Object} evt
+     */
+    handleSignInSuccess: function(evt) {
+        // return the info to code that were promised
+        var credentials = evt.credentials;
+        if (this.authRequest) {
+            this.authRequest.resolve(credentials);
+            this.authRequest = null;
+        }
+
+        // save the credentials
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var record = _.extend({ key: credentials.server }, credentials);
+        db.saveOne({ table: 'user_credential' }, record);
+
+        // hide the dialog box
+        this.setState({
+            showingSignInDialogBox: false,
+        });
+        setTimeout(() => {
+            this.setState({
+                renderingSignInDialogBox: false,
+                authenticationDetails: null
+            });
+        }, 1000);
+    },
+
+    /**
+     * Called when user cancels sign-in process
+     *
+     * @param  {Object} evt
+     */
+    handleSignCancel: function(evt) {
+        // TODO: redirect to appropriate page
+    },
+
 
     /**
      * Called when media payloads changes

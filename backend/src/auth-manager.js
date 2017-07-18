@@ -3,58 +3,34 @@ var Promise = require('bluebird');
 var Express = require('express');
 var Passport = require('passport')
 var Crypto = Promise.promisifyAll(require('crypto'));
+var Moment = require('moment');
 var HttpError = require('errors/http-error');
 
 var Database = require('database');
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
 var Configuration = require('accessors/configuration');
+var User = require('accessors/user');
 
-var Strategies = {
-    facebook: require('passport-facebook'),
-    github: require('passport-github'),
-    gitlab: require('passport-gitlab2'),
-    google: require('passport-google-oauth2'),
-    dropbox: require('passport-dropbox-oauth2'),
-};
-var providerSpecificOptions = {
-    facebook: {
-        profileFields: ['id', 'email', 'gender', 'link', 'locale', 'name', 'timezone', 'verified'],
-    },
+const plugins = {
+    dropbox: 'passport-dropbox-oauth2',
+    facebook: 'passport-facebook',
+    github: 'passport-github',
+    gitlab: 'passport-gitlab2',
+    google: 'passport-google-oauth2',
 };
 
 var server;
 
 function start() {
-    return Database.open(true).then((db) => {
-        return db.need('global').then(() => {
-            var app = Express();
-            app.set('json spaces', 2);
-            app.use(Passport.initialize());
-
-            app.get('/auth', handleAuthenticationStart);
-            app.get('/auth/:token', handleAuthenticationRetrieval);
-            app.get('/auth/:token/:provider', handleOAuthRequest);
-            app.get('/auth/:token/:provider/callback', handleOAuthRequestCallback);
-
-            var criteria = {
-                name: 'oauth.provider',
-                deleted: false,
-            };
-            return Configuration.find(db, 'global', criteria, 'details').each((provider) => {
-                var name = _.lowerCase(provider.details.name);
-                var Strategy = Strategies[name];
-                var params = _.extend(
-                    { passReqToCallback: true },
-                    provider.details.credentials,
-                    providerSpecificOptions[name]
-                );
-                Passport.use(new Strategy(params, processOAuthProfile));
-            }).then(() => {
-                server = app.listen(80);
-            });
-        });
-    });
+    var app = Express();
+    app.set('json spaces', 2);
+    app.use(Passport.initialize());
+    app.get('/auth', handleAuthenticationStart);
+    app.get('/auth/:token', handleAuthenticationRetrieval);
+    app.get('/auth/:token/:provider', handleOAuthRequest);
+    app.get('/auth/:token/:provider/callback', handleOAuthRequest, handleOAuthRequestCompletion);
+    server = app.listen(80);
 }
 
 function stop() {
@@ -111,14 +87,32 @@ function sendError(res, err) {
  */
 function handleAuthenticationStart(req, res) {
     Database.open().then((db) => {
+        // generate a random token for tracking the authentication
+        // process; if successful, this token will be upgraded to
+        // an authorization token
         return Crypto.randomBytesAsync(24).then((buffer) => {
             var authentication = {
                 token: buffer.toString('hex')
             };
             return Authentication.saveOne(db, 'global', authentication);
+        }).then((authentication) => {
+            // send list of available strategies to client, along with the
+            // authentication token
+            var criteria = {
+                prefix: 'auth.strategy.',
+                deleted: false,
+            };
+            return Configuration.find(db, 'global', criteria, 'name').then((configs) => {
+                return {
+                    token: authentication.token,
+                    providers: _.map(configs, (config) => {
+                        return config.name.substr(criteria.prefix.length);
+                    })
+                };
+            });
         });
-    }).then((authentication) => {
-        sendResponse(res, _.pick(authentication, 'token'));
+    }).then((results) => {
+        sendResponse(res, results);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -133,9 +127,14 @@ function handleAuthenticationStart(req, res) {
 function handleAuthenticationRetrieval(req, res) {
     var token = req.params.token;
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'token, user_id');
-    }).then((authentication) => {
-        sendResponse(res, _.pick(authentication, 'token', 'user_id'));
+        return Authentication.findOne(db, 'global', { token }, 'token, user_id').then((authentication) => {
+            return {
+                token: authentication.token,
+                user_id: authentication.user_id,
+            };
+        });
+    }).then((results) => {
+        sendResponse(res, results);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -153,43 +152,58 @@ function handleOAuthRequest(req, res, done) {
     var protocol = req.headers['x-connection-protocol'];
     var provider = req.params.provider;
     var token = req.params.token;
+    var callback = !req.params.callback;
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'id');
-    }).then((authentication) => {
-        if (!authentication) {
-            throw new HttpError(400);
-        }
-        var options = {
-            scope: [ 'email' ],
-            session: false,
-            callbackURL: `${protocol}://${host}/auth/${token}/${provider}/callback`,
-        };
-        var authenticate = Passport.authenticate(provider, options);
-        authenticate(req, res, done);
+        return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+            if (!authentication) {
+                throw new HttpError(400);
+            }
+        }).then(() => {
+            var criteria = {
+                name: `auth.strategy.${provider}`,
+                deleted: false,
+            };
+            return Configuration.findOne(db, 'global', criteria, 'details').then((config) => {
+                if (!config) {
+                    throw new HttpError(400);
+                }
+                var Strategy = require(plugins[provider]);
+                var providerSpecific;
+                switch (provider) {
+                    case 'facebook':
+                        providerSpecific = {
+                            profileFields: ['id', 'email', 'gender', 'link', 'locale', 'name', 'timezone', 'verified']
+                        };
+                        break;
+                }
+                var credentials = _.extend(config.details.credentials, providerSpecific, {
+                    callbackURL: `${protocol}://${host}/auth/${token}/${provider}/callback`,
+                    passReqToCallback: true,
+                });
+                var strategy = new Strategy(credentials, processOAuthProfile);
+                Passport.use(strategy);
+
+                var options = {
+                    scope: [ 'email' ],
+                    session: false,
+                };
+                var authenticate = Passport.authenticate(provider, options);
+                authenticate(req, res, done);
+            });
+        });
     }).catch((err) => {
         sendError(res, err);
     });
 }
 
-/**
- * Handle redirection from OAuth provider
- *
- * @param  {Request}   req
- * @param  {Response}  res
- */
-function handleOAuthRequestCallback(req, res) {
-    var provider = req.params.provider;
-    var options = {};
-    var authenticate = Passport.authenticate(provider, options);
-    authenticate(req, res, () => {
-        var html;
-        if (req.user) {
-            html = `<script> close() </script>`;
-        } else {
-            html = `<h1>Failure</h1>`
-        }
-        res.send(html);
-    });
+function handleOAuthRequestCompletion(req, res) {
+    var html;
+    if (req.user) {
+        html = `<script> close() </script>`;
+    } else {
+        html = `<h1>Failure</h1>`
+    }
+    res.send(html);
 }
 
 /**
@@ -202,37 +216,36 @@ function handleOAuthRequestCallback(req, res) {
  * @param  {Function} cb
  */
 function processOAuthProfile(req, accessToken, refreshToken, profile, cb) {
-    console.log('processOAuthProfile');
     var token = req.params.token;
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'id');
-    }).then((authentication) => {
-        if (!authentication) {
-            throw new HttpError(400);
-        }
-        var emails = _.map(profile.emails, 'value');
-        return User.findOne(db, 'global', { emails }, 'id').then((user) => {
-            // TODO: auto-creation of guest accounts
-            if (!user) {
-                throw new HttpError(403);
+        return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+            if (!authentication) {
+                throw new HttpError(400);
             }
-            return user;
-        }).then((user) => {
-            var authorization = {
-                token: token,
-                user_id: user.id,
-                expiration_date: Moment().startOf('day').add(30, 'days').toISOString(),
-            };
-            return Authorization.insertOne(db, 'global', authorization);
-        }).then((authorization) => {
-            authentication.type = profile.provider,
-            authentication.details = {
-                profile: profile._json,
-                access_token: accessToken,
-                refresh_token: refreshToken,
-            };
-            authentication.user_id = authorization.id;
-            return Authentication.updateOne(db, 'global', authentication);
+            var emails = _.map(profile.emails, 'value');
+            return User.findOne(db, 'global', { emails }, 'id, emails').then((user) => {
+                // TODO: auto-creation of guest accounts
+                if (!user) {
+                    throw new HttpError(403);
+                }
+                return user;
+            }).then((user) => {
+                var authorization = {
+                    token: token,
+                    user_id: user.id,
+                    expiration_date: Moment().startOf('day').add(30, 'days').toISOString(),
+                };
+                return Authorization.insertOne(db, 'global', authorization);
+            }).then((authorization) => {
+                authentication.type = profile.provider,
+                authentication.details = {
+                    profile: profile._json,
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                };
+                authentication.user_id = authorization.user_id;
+                return Authentication.updateOne(db, 'global', authentication);
+            });
         });
     }).then((authentication) => {
         cb(null, authentication);

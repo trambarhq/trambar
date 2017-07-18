@@ -72,6 +72,7 @@ module.exports = React.createClass({
                 return authCacheEntry.user_id;
             }
             return this.triggerAuthRequest(server).then((credentials) => {
+                authCache[server] = credentials;
                 var notifier = this.components.notifier;
                 if (notifier) {
                     var protocol = getProtocol(server);
@@ -108,61 +109,69 @@ module.exports = React.createClass({
         var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
-        return this.storeRemoteObjects(location, objects).then((objects) => {
-            var endTime = getCurrentTime();
-            _.each(objects, (object) => {
-                object.startTime = startTime;
-            });
-            this.updateCachedObjects(location, objects);
-            this.updateRecentSearchResults(location, objects);
-            this.triggerChangeEvent();
+        if (location.schema === 'local') {
+            return this.storeLocalObjects(location, objects);
+        } else {
+            return this.storeRemoteObjects(location, objects).then((objects) => {
+                var endTime = getCurrentTime();
+                _.each(objects, (object) => {
+                    object.startTime = startTime;
+                });
+                this.updateCachedObjects(location, objects);
+                this.updateRecentSearchResults(location, objects);
+                this.triggerChangeEvent();
 
-            var recentStorageResults = _.clone(this.state.recentStorageResults);
-            recentStorageResults.unshift({
-                start: startTime,
-                finish: endTime,
-                duration: getTimeElapsed(startTime, endTime),
-                results: objects,
-                by: byComponent,
+                var recentStorageResults = _.clone(this.state.recentStorageResults);
+                recentStorageResults.unshift({
+                    start: startTime,
+                    finish: endTime,
+                    duration: getTimeElapsed(startTime, endTime),
+                    results: objects,
+                    by: byComponent,
+                });
+                while (recentStorageResults.length > 32) {
+                    recentStorageResults.pop();
+                }
+                this.setState({ recentStorageResults });
+                return objects;
             });
-            while (recentStorageResults.length > 32) {
-                recentStorageResults.pop();
-            }
-            this.setState({ recentStorageResults });
-            return objects;
-        });
+        }
     },
 
     remove: function(location, objects) {
         var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
-        // set the deleted flag
-        objects = _.map(objects, (object) => {
-            object = _.clone(object);
-            object.deleted = true;
-            return object;
-        });
-        return this.storeRemoteObjects(location, objects).then((objects) => {
-            var endTime = getCurrentTime();
-            this.removeCachedObjects(location, objects);
-            this.removeFromRecentSearchResults(location, objects);
-            this.triggerChangeEvent();
-
-            var recentRemovalResults = _.clone(this.state.recentRemovalResults);
-            recentRemovalResults.unshift({
-                start: startTime,
-                finish: endTime,
-                duration: getTimeElapsed(startTime, endTime),
-                results: objects,
-                by: byComponent,
+        if (location.schema === 'local') {
+            this.removeLocalObjects(location, objects);
+        } else {
+            // set the deleted flag
+            objects = _.map(objects, (object) => {
+                object = _.clone(object);
+                object.deleted = true;
+                return object;
             });
-            while (recentRemovalResults.length > 32) {
-                recentRemovalResults.pop();
-            }
-            this.setState({ recentRemovalResults });
-            return objects;
-        });
+            return this.storeRemoteObjects(location, objects).then((objects) => {
+                var endTime = getCurrentTime();
+                this.removeCachedObjects(location, objects);
+                this.removeFromRecentSearchResults(location, objects);
+                this.triggerChangeEvent();
+
+                var recentRemovalResults = _.clone(this.state.recentRemovalResults);
+                recentRemovalResults.unshift({
+                    start: startTime,
+                    finish: endTime,
+                    duration: getTimeElapsed(startTime, endTime),
+                    results: objects,
+                    by: byComponent,
+                });
+                while (recentRemovalResults.length > 32) {
+                    recentRemovalResults.pop();
+                }
+                this.setState({ recentRemovalResults });
+                return objects;
+            });
+        }
     },
 
     triggerChangeEvent: function() {
@@ -444,6 +453,22 @@ module.exports = React.createClass({
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         });
+    },
+
+    storeLocalObjects: function(location, objects) {
+        var cache = this.components.cache;
+        if (!cache) {
+            throw new Error('No local cache');
+        }
+        return cache.save(location, objects);
+    },
+
+    removeLocalObjects: function(location, objects) {
+        var cache = this.components.cache;
+        if (!cache) {
+            throw new Error('No local cache');
+        }
+        return cache.remove(location, objects);
     },
 
     searchLocalCache: function(search) {

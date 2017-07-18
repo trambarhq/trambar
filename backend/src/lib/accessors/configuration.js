@@ -18,6 +18,7 @@ module.exports = _.create(Data, {
         id: Number,
         deleted: Boolean,
         name: String,
+        prefix: String,
     },
 
     /**
@@ -43,6 +44,19 @@ module.exports = _.create(Data, {
             );
         `;
         return db.execute(sql);
+    },
+
+    apply: function(criteria, query) {
+        var special = [ 'prefix' ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.prefix) {
+            var pattern = `${criteria.prefix}%`;
+            params.push(pattern);
+            conds.push(`name LIKE $${params.length}`);
+        }
     },
 
     /**

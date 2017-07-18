@@ -34,18 +34,43 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            method: null,
+            selectedProvider: null,
+            token: null,
+            providers: null,
         };
     },
 
+    componentWillMount: function() {
+        if (this.props.show) {
+            this.createAuthenticationObject(this.props.server).then((authentication) => {
+                this.setState({
+                    token: authentication.token,
+                    providers: authentication.providers
+                });
+            });
+        }
+    },
+
     /**
-     * Clear selected method
+     *
      *
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
         if (!this.props.show && nextProps.show) {
-            this.setState({ method: null });
+            // create authentication object as soon as dialog box opens
+            this.createAuthenticationObject(nextProps.server).then((authentication) => {
+                this.setState({
+                    token: authentication.token,
+                    providers: authentication.providers
+                });
+            });
+        } else if (this.props.show && !nextProps.show) {
+            this.setState({
+                selectedProvider: null,
+                token: null,
+                providers: null
+            })
         }
     },
 
@@ -61,7 +86,7 @@ module.exports = React.createClass({
         };
         return (
             <Overlay {...overlayProps}>
-                <div className="user-selection-dialog-box">
+                <div className="sign-in-dialog-box">
                     {this.renderOptions()}
                     {this.renderButtons()}
                 </div>
@@ -90,7 +115,7 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var cancelButtonProps = {
-            label: t('selection-cancel'),
+            label: t('sign-in-cancel'),
             onClick: this.handleCancelClick,
         };
         return (
@@ -102,35 +127,43 @@ module.exports = React.createClass({
 
     renderOptions: function() {
         var t = this.props.locale.translate;
+        var available = (provider) => {
+            return _.includes(this.state.providers, provider);
+        };
         var options = [
             {
                 label: t('sign-in-with-gitlab'),
                 icon: 'gitlab',
                 name: 'gitlab',
+                hidden: !available('gitlab'),
                 onClick: this.handleOptionClick,
             },
             {
                 label: t('sign-in-with-github'),
                 icon: 'github',
                 name: 'github',
+                hidden: !available('github'),
                 onClick: this.handleOptionClick,
             },
             {
                 label: t('sign-in-with-dropbox'),
                 icon: 'dropbox',
                 name: 'dropbox',
+                hidden: !available('dropbox'),
                 onClick: this.handleOptionClick,
             },
             {
                 label: t('sign-in-with-google'),
                 icon: 'google',
                 name: 'google',
+                hidden: !available('google'),
                 onClick: this.handleOptionClick,
             },
             {
                 label: t('sign-in-with-facebook'),
-                icon: 'facebook',
+                icon: 'facebook-square',
                 name: 'facebook',
+                hidden: !available('facebook'),
                 onClick: this.handleOptionClick,
             },
         ];
@@ -145,60 +178,80 @@ module.exports = React.createClass({
         return <Option key={index} {...props} />
     },
 
-    signIn: function(method) {
-        var win = this.openPopUpWindow();
-        return this.createAuthenticationObject().then((authentication) => {
-            var token = authentication.token;
-            var url = this.getUrl(`/auth/${token}/${method}`);
-            console.log(url);
-            return this.usePopUpWindow(win, url).then(() => {
-                return this.retrieveAuthenticationObject(token).then((authentication) => {
-                    console.log(authentication);
-                });
+    signIn: function(provider) {
+        var token = this.state.token;
+        var server = this.props.server;
+        var protocol = 'http';
+        var url = `${protocol}://${server}/auth/${token}/${provider}`;
+        return this.openPopUpWindow(url).then(() => {
+            // when the popup closes, check if the authentication object now
+            // has a user_id
+            return this.fetchAuthenticationObject(server, token).then((authentication) => {
+                if (authentication && authentication.token && authentication.user_id) {
+                    var credentials = {
+                        server,
+                        token: authentication.token,
+                        user_id: authentication.user_id,
+                    };
+                    this.triggerSuccessEvent(credentials);
+                }
             });
         });
     },
 
-    getUrl: function(uri) {
-        var server = this.props.server;
+    /**
+     * Ask server to create an authentication object, used to track the status
+     *
+     * @param  {String} server
+     *
+     * @return {Promise<Object>}
+     */
+    createAuthenticationObject: function(server) {
         var protocol = 'http';
-        var url = `${protocol}://${server}${uri}`;
-        return url;
-    },
-
-    createAuthenticationObject: function() {
-        var url = this.getUrl(`/auth`);
+        var url = `${protocol}://${server}/auth`;
         var options = { responseType: 'json' };
         return HttpRequest.fetch('GET', url, {}, options);
     },
 
-    retrieveAuthenticationObject: function(token) {
-        var url = this.getUrl(`/auth/${token}`);
+    /**
+     * Retrieve authentication object from server
+     *
+     * @param  {String} server
+     * @param  {String} token
+     *
+     * @return {Promise<Object>}
+     */
+    fetchAuthenticationObject: function(server, token) {
+        var protocol = 'http';
+        var url = `${protocol}://${server}/auth/${token}`;
         var options = { responseType: 'json' };
         return HttpRequest.fetch('GET', url, {}, options);
     },
 
-    openPopUpWindow: function() {
-        var width = 400;
-        var height = 500;
-        var options = {
-            width,
-            height,
-            left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
-            top: window.screenTop + Math.round((window.outerHeight - height) / 2),
-            toolbar: 'no',
-            menubar: 'no',
-            status: 'no',
-        };
-        var pairs = _.map(options, (value, name) => {
-            return `${name}=${value}`;
-        });
-        var win = window.open(null, 'login', pairs.join(','));
-        return win;
-    },
-
-    usePopUpWindow: function(win, url) {
+    /**
+     * Open a popup window to OAuth provider
+     *
+     * @param  {String} url
+     *
+     * @return {Promise}
+     */
+    openPopUpWindow: function(url) {
         return new Promise((resolve, reject) => {
+            var width = 400;
+            var height = 500;
+            var options = {
+                width,
+                height,
+                left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
+                top: window.screenTop + Math.round((window.outerHeight - height) / 2),
+                toolbar: 'no',
+                menubar: 'no',
+                status: 'no',
+            };
+            var pairs = _.map(options, (value, name) => {
+                return `${name}=${value}`;
+            });
+            var win = window.open(url, 'login', pairs.join(','));
             if (win) {
                 win.location = url;
                 var interval = setInterval(() => {
@@ -214,14 +267,41 @@ module.exports = React.createClass({
     },
 
     /**
+     * Inform parent component that sign-in was successful
+     *
+     * @param  {Object} credentials
+     */
+    triggerSuccessEvent: function(credentials) {
+        if (this.props.onSuccess) {
+            this.props.onSuccess({
+                type: 'success',
+                target: this,
+                credentials,
+            });
+        }
+    },
+
+    /**
+     * Inform parent component that user has canceled trying
+     */
+    triggerCancelEvent: function() {
+        if (this.props.onCancel) {
+            this.props.onCancel({
+                type: 'cancel',
+                target: this,
+            });
+        }
+    },
+
+    /**
      * Called when user clicks on one of the sign-in options
      *
      * @param  {Event} evt
      */
     handleOptionClick: function(evt) {
-        var method = evt.currentTarget.name;
-        this.setState({ method }, () => {
-            this.signIn(method);
+        var selectedProvider = evt.currentTarget.name;
+        this.setState({ selectedProvider }, () => {
+            this.signIn(selectedProvider);
         });
     },
 
@@ -231,12 +311,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
+        this.triggerCancelEvent();
     },
 });
 
@@ -253,7 +328,7 @@ function Option(props) {
     return (
         <button {...buttonProps}>
             <i className={`fa fa-${props.icon}`} />
-            <span>{props.label}</span>
+            <span className="label">{props.label}</span>
         </button>
     );
 }

@@ -9,6 +9,44 @@
     margin: auto;
     padding: 0.4em 0.4em 0.4em 0.4em;
 
+    .options {
+        padding-bottom: 0.4em;
+
+        .option {
+            display: block;
+            color: #666666;
+            background-color: #4d3936;
+            border: 2px solid #4d3936;
+            padding: 0.6em 0.8em 0.5em 0.5em;
+            min-width: 20em;
+
+            &:not(:disabled) {
+                &.emphasized, &:hover, &:active {
+                    color: #eeeeee;
+                    background-color: #806666;
+                    border: 2px solid #806666;
+                }
+
+                &:active {
+                    border: 2px inset #4d3936;
+                }
+            }
+
+            .fa {
+                width: 1.2em;
+                margin-right: 0.2em;
+                text-align: center;
+                font-size: 2em;
+                vertical-align: middle;
+            }
+
+            .label {
+                font-size: 1.4em;
+                vertical-align: middle;
+            }
+        }
+    }
+
     .buttons {
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
