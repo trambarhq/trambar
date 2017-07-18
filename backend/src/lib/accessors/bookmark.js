@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var HttpError = require('errors/http-error');
-
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {

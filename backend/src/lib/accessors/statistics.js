@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Crypto = require('crypto')
-
 var LiveData = require('accessors/live-data');
 
 module.exports = _.create(LiveData, {

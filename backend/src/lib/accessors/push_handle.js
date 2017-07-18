@@ -1,16 +1,23 @@
 var _ = require('lodash');
-var Promise = require('bluebird');
+var Data = require('accessors/data');
 
 module.exports = {
     schema: 'global',
-    table: 'authorization',
+    table: 'push_handle',
     columns: {
         id: Number,
+        gn: Number,
+        deleted: Boolean,
+        ctime: String,
+        mtime: String,
+        details: Object,
         user_id: Number,
         token: String,
         details: Object,
     },
     criteria: {
+        id: Number,
+        deleted: Boolean,
         user_id: Number,
         token: String,
     },
@@ -28,9 +35,13 @@ module.exports = {
         var sql = `
             CREATE TABLE ${table} (
                 id serial,
+                gn int NOT NULL DEFAULT 1,
+                deleted boolean NOT NULL DEFAULT false,
+                ctime timestamp NOT NULL DEFAULT NOW(),
+                mtime timestamp NOT NULL DEFAULT NOW(),
+                details jsonb NOT NULL DEFAULT '{}',
                 user_id int NOT NULL,
                 token varchar(64) NOT NULL,
-                details jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
         `;

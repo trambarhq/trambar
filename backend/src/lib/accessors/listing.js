@@ -2,7 +2,6 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Crypto = require('crypto')
 var Database = require('database');
-
 var HttpError = require('errors/http-error');
 var LiveData = require('accessors/live-data');
 

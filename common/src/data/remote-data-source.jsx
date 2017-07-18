@@ -72,24 +72,14 @@ module.exports = React.createClass({
                 return authCacheEntry.user_id;
             }
             return this.triggerAuthRequest(server).then((credentials) => {
-                // use the cached authorization token
-                if (credentials.user_id && credentials.token) {
-                    return credentials;
-                } else {
-                    return this.authorizeUser(location, credentials).then((authorization) => {
-                        authCache[server] = authorization;
-                        return authorization;
-                    });
-                }
-            }).then((authorization) => {
                 var notifier = this.components.notifier;
                 if (notifier) {
                     var protocol = getProtocol(server);
-                    notifier.connect(protocol, server, authorization.token).catch((err) => {
+                    notifier.connect(protocol, server, credentials.token).catch((err) => {
                         console.error(`Unable to establish WebSocket connection: ${server}`);
                     });
                 }
-                return authorization.user_id;
+                return credentials.user_id;
             });
         });
     },
@@ -402,26 +392,12 @@ module.exports = React.createClass({
         });
     },
 
-    authorizeUser: function(location, credentials) {
-        var server = getServerName(location);
-        var protocol = getProtocol(server);
-        var url = `${protocol}://${server}/api/authorization/`;
-        var payload = credentials;
-        var options = {
-            contentType: 'json',
-            responseType: 'json',
-        };
-        return HttpRequest.fetch('POST', url, credentials, options).then((result) => {
-            return result;
-        });
-    },
-
     discoverRemoteObjects: function(query) {
         var server = getServerName(query);
         var protocol = getProtocol(server);
         var schema = query.schema;
         var table = query.table;
-        var url = `${protocol}://${server}/api/discovery/${schema}/${table}/`;
+        var url = `${protocol}://${server}/data/discovery/${schema}/${table}/`;
         var payload = _.clone(query.criteria);
         payload.token = getAuthToken(server);
         var options = {
@@ -439,7 +415,7 @@ module.exports = React.createClass({
         var protocol = getProtocol(server);
         var schema = location.schema;
         var table = location.table;
-        var url = `${protocol}://${server}/api/retrieval/${schema}/${table}/`;
+        var url = `${protocol}://${server}/data/retrieval/${schema}/${table}/`;
         var payload = { ids };
         payload.token = getAuthToken(server);
         var options = {
@@ -457,7 +433,7 @@ module.exports = React.createClass({
         var protocol = getProtocol(server);
         var schema = location.schema;
         var table = location.table;
-        var url = `${protocol}://${server}/api/storage/${schema}/${table}/`;
+        var url = `${protocol}://${server}/data/storage/${schema}/${table}/`;
         var payload = { objects };
         payload.token = getAuthToken(server);
         var options = {

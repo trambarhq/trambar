@@ -2,7 +2,6 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var HttpError = require('errors/http-error');
-
 var Data = require('accessors/data');
 var Task = require('accessors/task');
 

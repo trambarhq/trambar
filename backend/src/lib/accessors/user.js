@@ -1,6 +1,5 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
@@ -13,14 +12,14 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
-        name: String,
+        emails: Array(String),
         project_ids: Array(Number),
         role_ids: Array(Number),
     },
     criteria: {
         id: Number,
         type: String,
-        name: String,
+        emails: Array(String),
         project_ids: Array(Number),
         role_ids: Array(Number),
     },
@@ -44,7 +43,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                name varchar(256),
+                emails varchar(128)[] NOT NULL DEFAULT '{}'::text[],
                 project_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 PRIMARY KEY (id)

@@ -29,6 +29,7 @@ var ErrorPage = require('pages/error-page');
 // widgets
 var TopNavigation = require('widgets/top-navigation');
 var BottomNavigation = require('widgets/bottom-navigation');
+var SignInDialogBox = require('dialogs/sign-in-dialog-box');
 
 var pageClasses = [
     StartPage,
@@ -65,6 +66,8 @@ module.exports = React.createClass({
             locale: null,
             theme: null,
 
+            showingSignInDialogBox: false,
+            renderingSignInDialogBox: false,
             authenticationDetails: null,
         };
     },
@@ -105,8 +108,24 @@ module.exports = React.createClass({
                     <CurrentPage {...props} />
                 </section>
                 <BottomNavigation {...props} />
+                {this.renderSignInDialogBox()}
             </div>
         );
+    },
+
+    renderSignInDialogBox: function() {
+        if (!this.state.renderingSignInDialogBox) {
+            return null;
+        }
+        var dialogProps = {
+            show: this.state.showingSignInDialogBox,
+            server: this.state.authenticationDetails.server,
+            database: this.state.database,
+            route: this.state.route,
+            locale: this.state.locale,
+            theme: this.state.theme,
+        };
+        return <SignInDialogBox {...dialogProps} />
     },
 
     renderConfiguration: function() {
@@ -210,22 +229,16 @@ module.exports = React.createClass({
         var db = this.state.database.use({ by: this, schema: 'local' });
         var criteria = { server };
         db.findOne({ table: 'user_credential', criteria }).then((credential) => {
-            if (credential && credential.token) {
+            if (credential && credential.token && credential.user_id) {
                 this.authRequest.resolve(credential)
             } else {
                 if (!credential) {
                     credential = { server };
                 }
-                this.setState({ authenticationDetails: credential }, () => {
-                    // TODO: retrieve info from dialog box
-                    setTimeout(() => {
-                        var credential = {
-                            server,
-                            username: 'tester',
-                            password: 'qwerty'
-                        };
-                        this.authRequest.resolve(credential);
-                    }, 10);
+                this.setState({
+                    showingSignInDialogBox: true,
+                    renderingSignInDialogBox: true,
+                    authenticationDetails: credential
                 });
             }
         }).catch((err) => {

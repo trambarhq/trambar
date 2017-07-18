@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
-
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {

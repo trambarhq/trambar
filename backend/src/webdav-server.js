@@ -9,6 +9,8 @@ var Collection = JsDAVPromise.Collection;
 var Database = require('database');
 
 var Account = require('accessors/account');
+var Authentication = require('accessors/authentication');
+var Authorization = require('accessors/authorization');
 var Configuration = require('accessors/configuration');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
@@ -29,7 +31,10 @@ var Task = require('accessors/task');
 
 var globalAccessors = [
     Account,
+    Authentication,
+    Authorization,
     Configuration,
+    Preferences,
     Project,
     Role,
     User,
@@ -40,7 +45,6 @@ var projectAccessors = [
     Folder,
     Issue,
     Listing,
-    Preferences,
     Reaction,
     Repo,
     Robot,
