@@ -28,10 +28,11 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var t = this.props.locale.translate;
         return (
             <SettingsSection>
                 <header>
-                    <i className="fa fa-exclamation-circle" /> Notification
+                    <i className="fa fa-exclamation-circle" /> {t('settings-notification')}
                 </header>
                 <footer>
                 </footer>

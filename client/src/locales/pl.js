@@ -1,5 +1,5 @@
 module.exports = function(languageCode) {
-    var phrases = {
+    return {
         'app-name': 'Trambar',
         'bottom-nav-bookmarks': 'Zakładki',
         'bottom-nav-news': 'Wiadomości',
@@ -14,6 +14,11 @@ module.exports = function(languageCode) {
 
         'selection-cancel': 'Anuluj',
         'selection-ok': 'OK',
+
+        'settings-language': 'Język',
+        'settings-notification': 'Powiadomienie',
+        'settings-projects': 'Projekty',
+        'settings-user-profile': 'Profil użytkownika',
 
         'story-$count-user-reacted-to-story': (count) => {
             if (singular(count)) {
@@ -33,21 +38,6 @@ module.exports = function(languageCode) {
         'story-photo': 'Zdjęcie',
         'story-post': 'Wysłaj',
         'story-video': 'Wideo',
-    };
-    var languageName = 'Polski';
-    var scriptDirection = 'ltr';
-    var countries = {
-        lt: 'Litwa',
-        pl: 'Polska',
-        ua: 'Ukraina',
-    };
-    var countryCode = 'pl';
-    return {
-        languageName,
-        scriptDirection,
-        countryCode,
-        countries,
-        phrases,
     };
 };
 

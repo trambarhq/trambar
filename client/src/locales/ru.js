@@ -1,5 +1,5 @@
 module.exports = function(languageCode) {
-    var phrases = {
+    return {
         'app-name': 'Трамбар',
         'bottom-nav-bookmarks': 'Закладки',
         'bottom-nav-news': 'Новости',
@@ -14,6 +14,11 @@ module.exports = function(languageCode) {
 
         'selection-cancel': 'Отмена',
         'selection-ok': 'ОК',
+
+        'settings-language': 'Язык',
+        'settings-notification': 'Уведомление',
+        'settings-projects': 'Проекты',
+        'settings-user-profile': 'Профиль пользователя',
 
         'story-$count-user-reacted-to-story': (count) => {
             if (singularN(count)) {
@@ -32,30 +37,6 @@ module.exports = function(languageCode) {
         'story-photo': 'Фото',
         'story-post': 'Слать',
         'story-video': 'Видео',
-    }
-    var languageName = 'Русский';
-    var scriptDirection = 'ltr';
-    var countries = {
-        am: 'Армения',
-        by: 'Беларусь',
-        ge: 'Грузия',
-        lv: 'Латвия',
-        kz: 'Казахстан',
-        kg: 'Киргизия',
-        lt: 'Литва',
-        ru: 'Россия',
-        tj: 'Таджикистан',
-        ua: 'Украина',
-        uz: 'Узбекистан',
-        es: 'Эстония',
-    };
-    var countryCode = 'ru';
-    return {
-        languageName,
-        scriptDirection,
-        countryCode,
-        countries,
-        phrases,
     };
 };
 

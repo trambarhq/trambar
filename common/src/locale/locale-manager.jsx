@@ -8,6 +8,7 @@ module.exports = React.createClass({
     propTypes: {
         defaultLanguageCode: PropTypes.string,
         database: PropTypes.instanceOf(Database),
+        directory: PropTypes.arrayOf(PropTypes.object),
         onChange: PropTypes.func,
         onModuleRequest: PropTypes.func,
     },
@@ -28,6 +29,10 @@ module.exports = React.createClass({
 
     getLanguageCode: function() {
         return this.state.languageCode;
+    },
+
+    getDirectory: function() {
+        return this.props.directory;
     },
 
     translate: function(phrase) {
@@ -80,7 +85,13 @@ module.exports = React.createClass({
             return Promise.resolve(true);
         }
         return this.load(languageCode).then((module) => {
-            var newState = this.unpack(module, languageCode);
+            var phraseTable;
+            if (typeof(module) === 'function') {
+                phraseTable = module(languageCode);
+            } else {
+                phraseTable = module;
+            }
+            var newState = { languageCode, phraseTable };
             this.setState(newState, () => {
                 this.triggerChangeEvent();
             });
@@ -97,16 +108,6 @@ module.exports = React.createClass({
             languageModules[languageCode] = module;
             return module;
         });
-    },
-
-    unpack: function(module, languageCode) {
-        if (typeof(module) === 'function') {
-            module = module(languageCode);
-        }
-        return {
-            languageCode: languageCode,
-            phraseTable: module.phrases,
-        };
     },
 
     triggerChangeEvent: function() {

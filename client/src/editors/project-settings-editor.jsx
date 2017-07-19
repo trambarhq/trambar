@@ -29,10 +29,11 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var t = this.props.locale.translate;
         return (
             <SettingsSection>
                 <header>
-                    <i className="fa fa-database" /> Projects
+                    <i className="fa fa-database" /> {t('settings-projects')}
                 </header>
                 <footer>
                     {this.renderButtons()}

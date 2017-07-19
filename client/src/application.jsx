@@ -45,6 +45,7 @@ require('utils/lodash-extra');
 require('application.scss');
 require('font-awesome-webpack');
 
+
 module.exports = React.createClass({
     displayName: 'Application',
     propTypes: {
@@ -156,6 +157,7 @@ module.exports = React.createClass({
         var localeManagerProps = {
             ref: setters.localeManager,
             database: this.state.database,
+            directory: require('locales'),
             onChange: this.handleLocaleChange,
             onModuleRequest: this.handleLanguageModuleRequest,
         };
@@ -328,6 +330,8 @@ module.exports = React.createClass({
             var Promise = window.Promise || require('bluebird');
             switch (languageCode) {
                 case 'en': require.ensure([ './locales/en' ], () => { try { resolve(require('./locales/en')) } catch(err) { reject(err) } }); break;
+                case 'fi': require.ensure([ './locales/fi' ], () => { try { resolve(require('./locales/fi')) } catch(err) { reject(err) } }); break;
+                case 'no': require.ensure([ './locales/no' ], () => { try { resolve(require('./locales/no')) } catch(err) { reject(err) } }); break;
                 case 'pl': require.ensure([ './locales/pl' ], () => { try { resolve(require('./locales/pl')) } catch(err) { reject(err) } }); break;
                 case 'ru': require.ensure([ './locales/ru' ], () => { try { resolve(require('./locales/ru')) } catch(err) { reject(err) } }); break;
                 default: reject(new Error('No module for language: ' + languageCode));

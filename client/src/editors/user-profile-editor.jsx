@@ -29,10 +29,11 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var t = this.props.locale.translate;
         return (
             <SettingsSection>
                 <header>
-                    <i className="fa fa-user-circle" /> User Profile
+                    <i className="fa fa-user-circle" /> {t('settings-user-profile')}
                 </header>
                 <footer>
                 </footer>

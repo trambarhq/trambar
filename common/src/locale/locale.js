@@ -2,6 +2,7 @@ module.exports = Locale;
 
 function Locale(localeManager) {
     this.languageCode = localeManager.getLanguageCode();
+    this.directory = localeManager.getDirectory();
 
     this.translate = function(phrase) {
         if (phrase instanceof Object) {
@@ -12,5 +13,9 @@ function Locale(localeManager) {
 
     this.pick = function(phraseVersions) {
         return localeManager.pick(phraseVersions);
+    };
+
+    this.change = function(languageCode) {
+        return localeManager.change(languageCode);
     };
 }

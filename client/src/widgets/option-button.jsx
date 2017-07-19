@@ -8,8 +8,9 @@ function OptionButton(props) {
     if (props.hidden) {
         return null;
     }
+    var onClick = !props.disabled ? props.onClick : null;
     return (
-        <a className={buttonClasses(props)} href={props.url} onClick={!props.disabled ? props.onClick : null}>
+        <a className={buttonClasses(props)} id={props.id} href={props.url} onClick={onClick}>
             <i className={iconClasses(props)} />
             <span className="label">{props.label}</span>
         </a>
@@ -17,7 +18,8 @@ function OptionButton(props) {
 }
 
 OptionButton.propTypes = {
-    label: PropTypes.string,
+    label: PropTypes.node,
+    id: PropTypes.string,
     icon: PropTypes.string,
     hidden: PropTypes.bool,
     selected: PropTypes.bool,

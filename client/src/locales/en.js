@@ -1,5 +1,5 @@
 module.exports = function(languageCode) {
-    var phrases = {
+    return {
         'app-name': 'Trambar',
 
         'action-contact-by-phone': 'Contact by phone',
@@ -140,6 +140,11 @@ module.exports = function(languageCode) {
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 
+        'settings-language': 'Language',
+        'settings-notification': 'Notification',
+        'settings-projects': 'Projects',
+        'settings-user-profile': 'User Profile',
+
         'sign-in-cancel': 'Cancel',
         'sign-in-with-dropbox': 'Sign in with Dropbox',
         'sign-in-with-facebook': 'Sign in with Facebook',
@@ -194,24 +199,5 @@ module.exports = function(languageCode) {
         'vote-item-$number': (number) => {
             return `choice ${number}`;
         },
-    };
-    var languageName = 'English';
-    var scriptDirection = 'ltr';
-    var countries = {
-        au: 'Australia',
-        ca: 'Canada',
-        hk: 'Hong Kong',
-        ie: 'Ireland',
-        sg: 'Singapore',
-        gb: 'United Kingdom',
-        us: 'United States',
-    };
-    var countryCode = 'us';
-    return {
-        languageName,
-        scriptDirection,
-        countryCode,
-        countries,
-        phrases,
     };
 };
