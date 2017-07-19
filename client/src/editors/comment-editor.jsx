@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
+var DeviceManager = require('media/device-manager');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -51,10 +52,16 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         var nextState = {
-            draft: null
+            draft: null,
+            hasCamera: DeviceManager.hasDevice('videoinput'),
+            hasMicrophone: DeviceManager.hasDevice('audioinput'),
         };
         this.updateDraft(nextState, this.props)
         return nextState;
+    },
+
+    componentWillMount: function() {
+        DeviceManager.addEventListener('change', this.handleDeviceChange);
     },
 
     componentWillReceiveProps: function(nextProps) {
@@ -142,16 +149,19 @@ module.exports = React.createClass({
         var photoButtonProps = {
             tooltip: t('story-photo'),
             icon: 'camera',
+            hidden: !this.state.hasCamera,
             onClick: this.handlePhotoClick,
         };
         var videoButtonProps = {
             tooltip: t('story-video'),
             icon: 'video-camera',
+            hidden: !this.state.hasCamera,
             onClick: this.handleVideoClick,
         };
         var audioButtonProps = {
             tooltip: t('story-audio'),
             icon: 'microphone',
+            hidden: !this.state.hasMicrophone,
             onClick: this.handleAudioClick,
         };
         var selectButtonProps = {
@@ -261,6 +271,10 @@ module.exports = React.createClass({
             onCancel: this.handleAudioCancel,
         };
         return <AudioCaptureDialogBox {...props} />
+    },
+
+    componentWillUnmount: function() {
+        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
 
     /**
@@ -734,6 +748,18 @@ module.exports = React.createClass({
             this.importFile(files[0]);
         }
         return null;
+    },
+
+    /**
+     * Called when the list of media devices changes
+     *
+     * @param  {Object} evt
+     */
+    handleDeviceChange: function(evt) {
+        this.setState({
+            hasCamera: DeviceManager.hasDevice('videoinput'),
+            hasMicrophone: DeviceManager.hasDevice('audioinput'),
+        });
     },
 });
 
