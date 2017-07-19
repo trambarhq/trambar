@@ -35,10 +35,6 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onChange: PropTypes.func,
-        onEdit: PropTypes.func,
-        onBookmark: PropTypes.func,
     },
 
     /**
@@ -213,81 +209,111 @@ module.exports = React.createClass({
             theme: this.props.theme,
 
             onChange: this.handleOptionsChange,
-            onEdit: this.props.onEdit,
         };
         return <StoryViewOptions {...props} />;
     },
 
     /**
-     * Ask parent component to change a story
+     * Save story to remote database
      *
      * @param  {Story} story
-     * @param  {String} path
      *
      * @return {Promise<Story>}
      */
-    triggerChangeEvent: function(story, path) {
-        if (this.props.onChange) {
-            return this.props.onChange({
-                type: 'change',
-                target: this,
-                story,
-                path,
-            });
-        }
+    saveStory: function(story) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'story' }, story);
+        });
     },
 
     /**
-     * Ask parent component to begin editing of a published story
+     * Save bookmarks to remote database
      *
-     * @return {Promise<Story>}
+     * @param  {Array<Bookmark>} bookmarks
+     *
+     * @return {Promise<Array<Bookmark>>}
      */
-    triggerEditEvent: function() {
-        if (this.props.onEdit) {
-            return this.props.onEdit({
-                type: 'edit',
-                target: this,
-                story: this.props.story
-            });
+    saveBookmarks: function(bookmarks) {
+        if (_.isEmpty(bookmarks)) {
+            return Promise.resolve([]);
         }
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.save({ table: 'bookmark' }, bookmarks);
+        });
     },
 
     /**
-     * Ask parent component to add/remove bookmarks
+     * Remove bookmarks from remote database
      *
-     * @param  {Story} story
-     * @param  {Number} senderId,
-     * @param  {Array<Number>} recipientIds
+     * @param  {Array<Bookmark>} bookmarks
      *
-     * @return {Promise<Array<Object>>}
+     * @return {Promise<Array<Bookmark>>}
      */
-    triggerBookmarkEvent: function(story, senderId, recipientIds) {
-        if (this.props.onBookmark) {
-            return this.props.onBookmark({
-                type: 'edit',
-                target: this,
-                story,
-                senderId,
-                recipientIds,
-            });
+    removeBookmarks: function(bookmarks) {
+        if (_.isEmpty(bookmarks)) {
+            return Promise.resolve([]);
         }
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.remove({ table: 'bookmark' }, bookmarks);
+        });
+    },
+
+    sendBookmarks: function(story, recipientIds) {
+        var bookmarks = this.props.recommendations;
+        var newBookmarks = [];
+        // add bookmarks that don't exist yet
+        _.each(recipientIds, (recipientId) => {
+            if (!_.some(bookmarks, { target_user_id: recipientId })) {
+                var newBookmark = {
+                    story_id: story.published_version_id || story.id,
+                    user_ids: [ this.props.currentUser.id ],
+                    target_user_id: recipientId,
+                };
+                newBookmarks.push(newBookmark);
+            }
+        });
+        // delete bookmarks that aren't needed anymore
+        // the backend will handle the fact a bookmark can belong to multiple users
+        var redundantBookmarks = [];
+        _.each(bookmarks, (bookmark) => {
+            if (!_.includes(recipientIds, bookmark.target_user_id)) {
+                redundantBookmarks.push(bookmark);
+            }
+        });
+        return this.saveBookmarks(newBookmarks).then((newBookmarks) => {
+            return this.removeBookmarks(redundantBookmarks).then((redundantBookmarks) => {
+                return _.concat(newBookmarks, redundantBookmarks);
+            });
+        });
     },
 
     setOptions: function(options) {
         var before = this.state.options;
         this.setState({ options }, () => {
             if (options.editPost && !before.editPost) {
-                this.triggerEditEvent();
+                var tempCopy = _.omit(this.props.story, 'id', 'published', 'ptime');
+                tempCopy.published_version_id = this.props.story.id;
+                this.saveStory(tempCopy);
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
-                var sender = this.props.currentUser;
-                var story = this.props.story;
-                this.triggerBookmarkEvent(story, sender.id, options.bookmarkRecipients);
+                this.sendBookmarks(this.props.story, options.bookmarkRecipients);
             }
             if (options.hidePost !== before.hidePost) {
                 var story = _.clone(this.props.story);
                 story.public = !options.hidePost;
-                this.triggerChangeEvent(story, 'public');
+                this.saveStory(story);
             }
         });
     },

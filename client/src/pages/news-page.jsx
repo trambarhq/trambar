@@ -130,26 +130,6 @@ module.exports = Relaks.createClass({
             }
         }).then((stories) => {
             props.stories = stories
-            meanwhile.show(<NewsPageSync {...props} />);
-        }).then(() => {
-            // look for story drafts
-            var criteria = {
-                published: false,
-                user_ids: [ props.currentUser.id ],
-            };
-            return db.find({ table: 'story', criteria });
-        }).then((stories) => {
-            props.draftStories = stories;
-        }).then(() => {
-            // look for pending stories
-            var criteria = {
-                published: true,
-                ready: false,
-                user_ids: [ props.currentUser.id ],
-            };
-            return db.find({ table: 'story', criteria });
-        }).then((stories) => {
-            props.pendingStories = stories;
             return <NewsPageSync {...props} />;
         });
     },
@@ -161,8 +141,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -184,8 +162,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             showEditors: this.props.showEditors,
             stories: this.props.stories,
-            draftStories: this.props.draftStories,
-            pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
 
             database: this.props.database,

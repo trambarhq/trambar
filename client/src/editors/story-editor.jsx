@@ -78,18 +78,16 @@ module.exports = React.createClass({
     updateDraft: function(nextState, nextProps) {
         if (nextProps.story) {
             // check if the newly arriving story isn't the one we saved earlier
-            if (nextState.draft !== nextProps.story) {
-                var priorDraft = this.props.story || createBlankStory(this.props.currentUser);
-                var currentDraft = nextState.draft;
-                var nextDraft = nextProps.story;
-                if (currentDraft !== priorDraft) {
-                    // merge changes into the remote copy
-                    // (properties in nextDraft are favored in conflicts)
-                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
-                }
-                this.reattachBlobs(nextDraft);
-                nextState.draft = nextDraft;
+            var priorDraft = this.props.story || createBlankStory(this.props.currentUser);
+            var currentDraft = nextState.draft;
+            var nextDraft = nextProps.story;
+            if (currentDraft !== priorDraft && currentDraft) {
+                // merge changes into the remote copy
+                // (properties in nextDraft are favored in conflicts)
+                nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
             }
+            this.reattachBlobs(nextDraft);
+            nextState.draft = nextDraft;
         } else {
             nextState.draft = createBlankStory(nextProps.currentUser);
         }

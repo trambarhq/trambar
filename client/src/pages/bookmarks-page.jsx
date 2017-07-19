@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 
 var Database = require('data/database');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -14,6 +15,7 @@ module.exports = Relaks.createClass({
     displayName: 'BookmarksPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -45,6 +47,13 @@ module.exports = Relaks.createClass({
         },
     },
 
+    /**
+     * Retrieve data needed by synchronous component
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
@@ -55,6 +64,7 @@ module.exports = Relaks.createClass({
             currentUserId: null,
 
             database: this.props.database,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -92,6 +102,11 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div>
@@ -100,12 +115,18 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render list of bookmarks
+     *
+     * @return {ReactElement}
+     */
     renderList: function() {
         var listProps = {
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,

@@ -25,8 +25,6 @@ module.exports = Relaks.createClass({
     propTypes: {
         showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -50,7 +48,9 @@ module.exports = Relaks.createClass({
         var defaultAuthors = array(this.props.currentUser);
         var props = {
             authors: defaultAuthors,
+            draftStories: null,
             draftAuthors: defaultAuthors,
+            pendingStories: null,
             pendingAuthors: defaultAuthors,
             reactions: null,
             respondents: null,
@@ -59,8 +59,6 @@ module.exports = Relaks.createClass({
 
             showEditors: this.props.showEditors,
             stories: this.props.stories,
-            draftStories: this.props.draftStories,
-            pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -92,6 +90,21 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;
+            meanwhile.show(<StoryListSync {...props} />);
+        }).then(() => {
+            if (props.currentUser) {
+                // look for story drafts
+                var criteria = {
+                    published: false,
+                    user_ids: [ props.currentUser.id ],
+                };
+                return db.find({ table: 'story', criteria });
+            }
+        }).then((stories) => {
+            if (stories) {
+                props.draftStories = stories;
+                meanwhile.show(<StoryListSync {...props} />);
+            }
         }).then(() => {
             // load other authors also working on drafts
             var authorIds = getAuthorIds(props.draftStories, props.currentUser);
@@ -104,6 +117,21 @@ module.exports = Relaks.createClass({
         }).then((users) => {
             if (users) {
                 props.draftAuthors = users;
+            }
+        }).then(() => {
+            if (props.currentUser) {
+                // look for pending stories
+                var criteria = {
+                    published: true,
+                    ready: false,
+                    user_ids: [ props.currentUser.id ],
+                };
+                return db.find({ table: 'story', criteria });
+            }
+        }).then((stories) => {
+            if (stories) {
+                props.pendingStories = stories;
+                meanwhile.show(<StoryListSync {...props} />);
             }
         }).then(() => {
             // load other authors of pending stories
@@ -168,6 +196,11 @@ var StoryListSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div className="story-list">
