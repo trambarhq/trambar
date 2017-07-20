@@ -102,7 +102,7 @@ module.exports = React.createClass({
                 <div className="media-dialog-box">
                     {this.renderView()}
                     <div className="controls">
-                        {this.renderLinks()}
+                        {this.renderThumbnails()}
                         {this.renderButtons()}
                     </div>
                 </div>
@@ -177,63 +177,27 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render audio player
-     *
-     * @param  {Object} res
-     *
-     * @return {ReactElement}
-     */
-    renderAudio: function(res) {
-
-    },
-
-    /**
-     * Render web-site screencap
-     *
-     * @param  {Object} res
-     *
-     * @return {ReactElement}
-     */
-    renderWebsite: function(res) {
-
-    },
-
-    /**
      * Render links
      *
      * @return {ReactElement|null}
      */
-    renderLinks: function() {
+    renderThumbnails: function() {
         var t = this.props.locale.translate;
-        var index = this.getSelectedResourceIndex();
-        var res = this.props.resources[index];
         var theme = this.props.theme;
-        var url;
-        switch (res.type) {
-            case 'image':
-                url = theme.getImageUrl(_.omit(res, 'clip'));
-                break;
-            case 'video':
-                url = theme.getVideoUrl(res);
-                break;
-            case 'audio':
-                url = theme.getAudioUrl(res);
-                break;
-            case 'website':
-                url = theme.getPosterUrl(_.omit(res, 'clip'));
-                break;
-        }
-        var label = t('media-download-original');
-        if (res.width && res.height) {
-            label += ` (${res.width} × ${res.height})`;
-        }
-        if (!url) {
-            return null;
-        }
-        var downloadProps = { url, label };
+        var selectedIndex = this.getSelectedResourceIndex();
+        var thumbnails = _.map(this.props.resources, (res, index) => {
+            var props = {
+                selected: (index === selectedIndex),
+                url: theme.getImageUrl(res, 28, 28),
+                onClick: this.handleThumbnailClick,
+                id: index,
+                key: index,
+            };
+            return <Thumbnail {...props} />;
+        });
         return (
             <div className="links">
-                <DownloadButton {...downloadProps}/>
+                {thumbnails}
             </div>
         )
     },
@@ -245,20 +209,6 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var count = this.getResourceCount();
-        var index = this.getSelectedResourceIndex();
-        var previousButtonProps = {
-            label: t('media-previous'),
-            hidden: (count <= 1),
-            disabled: (index <= 0),
-            onClick: this.handleBackwardClick,
-        };
-        var nextButtonProps = {
-            label: t('media-next'),
-            hidden: (count <= 1),
-            disabled: (index >= count - 1),
-            onClick: this.handleForwardClick,
-        };
         var closeButtonProps = {
             label: t('media-close'),
             emphasized: true,
@@ -266,46 +216,30 @@ module.exports = React.createClass({
         };
         return (
             <div className="buttons">
-                <PushButton {...previousButtonProps} />
-                <PushButton {...nextButtonProps} />
                 <PushButton {...closeButtonProps} />
             </div>
         );
     },
 
     /**
-     * Called when user clicks backward button
+     * Called when user clicks on a thumbnail
      *
      * @param  {Event} evt
-     *
-     * @return {Promise<Number>}
      */
-    handleBackwardClick: function(evt) {
-        var index = this.getSelectedResourceIndex();
-        return this.selectResource(index - 1);
-    },
-
-    /**
-     * Called when user clicks forward button
-     *
-     * @param  {Event} evt
-     *
-     * @return {Promise<Number>}
-     */
-    handleForwardClick: function(evt) {
-        var index = this.getSelectedResourceIndex();
-        return this.selectResource(index + 1);
-    },
+    handleThumbnailClick: function(evt) {
+        var index = parseInt(evt.currentTarget.id);
+        return this.selectResource(index);
+    }
 });
 
-function DownloadButton(props) {
-    if (props.hidden) {
-        return null;
+function Thumbnail(props) {
+    var classNames = [ 'thumbnail' ];
+    if (props.selected) {
+        classNames.push('selected');
     }
     return (
-        <a className="download-button" href={props.url} download>
-            <i className="fa fa-download"/>
-            <span className="label">{props.label}</span>
-        </a>
-    );
+        <div className={classNames.join(' ')} id={props.id} onClick={props.onClick}>
+            <img src={props.url} />
+        </div>
+    )
 }

@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
+var Memoize = require('utils/memoize');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -122,10 +123,13 @@ module.exports = React.createClass({
         if (!this.state.renderingDialogBox) {
             return null;
         }
+        var zoomableResources = getZoomableResources(this.props.resources);
+        var index = this.getSelectedResourceIndex();
+        var zoomableIndex = _.indexOf(zoomableResources, this.props.resources[index]);
         var dialogProps = {
             show: this.state.showingDialogBox,
-            resources: this.props.resources,
-            selectedIndex: this.getSelectedResourceIndex(),
+            resources: zoomableResources,
+            selectedIndex: zoomableIndex,
 
             locale: this.props.locale,
             theme: this.props.theme,
@@ -271,4 +275,14 @@ module.exports = React.createClass({
             }, 1000);
         });
     },
+});
+
+var getZoomableResources = Memoize(function(resources) {
+    return _.filter(resources, (res) => {
+        switch (res.type) {
+            case 'image':
+            case 'video':
+                return true;
+        }
+    })
 });

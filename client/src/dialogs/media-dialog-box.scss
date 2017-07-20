@@ -31,7 +31,7 @@
     .controls {
         display: flow-root;
         flex: 1 0 auto;
-        padding: 0.4em 0 0.2em 0.2em;
+        padding: 0.4em 0 0.2em 0;
         border-top: 1px solid #666666;
 
         .links {
@@ -42,25 +42,21 @@
             float: right;
         }
     }
-}
 
-.download-button {
-    display: inline-block;
-    color: #666666;
-    margin-top: 0.5em;
-    margin-right: 0.5em;
-    cursor: pointer;
+    .thumbnail {
+        float: left;
+        margin-right: 0.2em;
+        width: 2em;
+        cursor: pointer;
+        border: 2px solid #333333;
 
-    &:hover {
-        color: #eeeeee;
-    }
+        &:hover, &.selected {
+            border: 2px solid #e24329;
+        }
 
-    &:link, &:visited {
-        text-decoration: none;
-    }
-
-    .label {
-        font-size: 0.9em;
-        margin-left: 0.3em;
+        IMG {
+            display: block;
+            width: 100%;
+        }
     }
 }
