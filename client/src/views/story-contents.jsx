@@ -11,6 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var StoryText = require('widgets/story-text');
+var MediaView = require('views/media-view');
 var MultipleUserNames = require('widgets/multiple-user-names');
 var Time = require('widgets/time');
 
@@ -113,6 +114,11 @@ module.exports = React.createClass({
         return <span className="name">{contents}</span>;
     },
 
+    /**
+     * Render the publication time
+     *
+     * @return {ReactElement}
+     */
     renderTime: function() {
         if (this.props.pending) {
             var t = this.props.locale.translate;
@@ -125,6 +131,11 @@ module.exports = React.createClass({
         return <Time {...props} />
     },
 
+    /**
+     * Render the story's contents
+     *
+     * @return {ReactElement}
+     */
     renderContents: function() {
         return (
             <div>
@@ -134,6 +145,11 @@ module.exports = React.createClass({
         )
     },
 
+    /**
+     * Render text of the story
+     *
+     * @return {ReactElement}
+     */
     renderText: function() {
         var props = {
             story: this.props.story,
@@ -143,10 +159,21 @@ module.exports = React.createClass({
         return <StoryText {...props} />;
     },
 
+    /**
+     * Render attached media
+     *
+     * @return {ReactElement}
+     */
     renderResources: function() {
         var resources = _.get(this.props.story, 'details.resources');
         if (_.isEmpty(resources)) {
             return null;
         }
+        var props = {
+            locale: this.props.locale,
+            theme: this.props.theme,
+            resources,
+        };
+        return <MediaView {...props} />
     }
 });

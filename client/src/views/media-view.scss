@@ -1,0 +1,31 @@
+.media-view {
+    position: relative;
+
+    IMG {
+        display: block;
+        width: 100%;
+    }
+
+    .image {
+        cursor: pointer;
+    }
+
+    .video {
+        cursor: pointer;
+    }
+
+    .navigation {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+
+        .left {
+            float: left;
+        }
+
+        .right {
+            float: right;
+        }
+    }
+}

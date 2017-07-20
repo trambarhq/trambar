@@ -80,6 +80,11 @@ module.exports = function(languageCode) {
             return `${count} more...`;
         },
 
+        'media-close': 'Close',
+        'media-download-original': 'Download original',
+        'media-next': 'Next',
+        'media-previous': 'Previous',
+
         'notification-$user-likes-your-commit': (user) => {
             return `${user} likes your commit`;
         },
