@@ -61,6 +61,11 @@ module.exports = React.createClass({
         return nextState;
     },
 
+    /**
+     * Update draft when new data arrives from server
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations) {
@@ -137,6 +142,7 @@ module.exports = React.createClass({
         var props = {
             story: this.props.story,
             authors: this.props.authors,
+            currentUser: this.props.currentUser,
             pending: this.props.pending,
             cornerPopUp: this.renderPopUpMenu('main'),
 
@@ -144,6 +150,8 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onChange: this.handleStoryChange,
         };
         return <StoryContents {...props} />;
     },
@@ -213,6 +221,32 @@ module.exports = React.createClass({
         return <StoryViewOptions {...props} />;
     },
 
+    autosaveStory: function(story, delay) {
+        if (delay) {
+            this.cancelAutosave();
+            this.autosaveTimeout = setTimeout(() => {
+                this.saveStory(story);
+            }, delay);
+            this.autosaveUnloadHandler = () => {
+                this.saveStory(story);
+            };
+            window.addEventListener('beforeunload', this.autosaveUnloadHandler);
+        } else {
+            this.saveStory(story);
+        }
+    },
+
+    cancelAutosave: function() {
+        if (this.autosaveTimeout) {
+            clearTimeout(this.autosaveTimeout);
+            this.autosaveTimeout = 0;
+        }
+        if (this.autosaveUnloadHandler) {
+            window.removeEventListener('beforeunload', this.autosaveUnloadHandler);
+            this.autosaveUnloadHandler = null;
+        }
+    },
+
     /**
      * Save story to remote database
      *
@@ -221,6 +255,8 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     saveStory: function(story) {
+        this.cancelAutosave();
+
         var route = this.props.route;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
@@ -316,6 +352,15 @@ module.exports = React.createClass({
                 this.saveStory(story);
             }
         });
+    },
+
+    /**
+     * Called when user changes story (only task lists can change here)
+     *
+     * @param  {Object} evt
+     */
+    handleStoryChange: function(evt) {
+        this.autosaveStory(evt.story, 1000);
     },
 
     /**

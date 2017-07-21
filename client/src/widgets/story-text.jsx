@@ -42,13 +42,14 @@ function StoryText(props) {
             markdown: markdown,
             story: props.story,
             theme: props.theme,
+            readOnly: props.readOnly,
             onItemChange: props.onItemChange,
         });
     } else if (markdown) {
         contents = MarkGor.parse(contents);
     }
 
-    var containerProps = _.omit(props, 'locale', 'theme', 'options', 'story', 'onItemChange');
+    var containerProps = _.omit(props, _.keys(StoryText.propTypes));
     containerProps.className = classNames.join(' ');
     containerProps.lang = languageCode;
     if (markdown) {
@@ -64,13 +65,14 @@ StoryText.propTypes = {
     options: PropTypes.object,
     answers: PropTypes.objectOf(PropTypes.oneOfType([
         PropTypes.number,
-        PropTypes.arrayOf(PropTypes.number)
+        PropTypes.objectOf(PropTypes.bool)
     ])),
+    readOnly: PropTypes.bool,
 
     locale: PropTypes.instanceOf(Locale).isRequired,
     theme: PropTypes.instanceOf(Theme).isRequired,
 
-    onItemClick: PropTypes.func,
+    onItemChange: PropTypes.func,
 };
 
 StoryText.defaultProps = {
@@ -132,7 +134,8 @@ function renderLists(props) {
 
     // create text nodes and list items
     var type = (props.type === 'vote') ? 'radio' : 'checkbox';
-    var onChange = props.onItemChange;
+    var readOnly = props.readOnly;
+    var onChange = (!readOnly) ? props.onItemChange : null;
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
             var elements = [];
@@ -149,14 +152,21 @@ function renderLists(props) {
                     label = item.between + item.label;
                 }
                 if (props.answers) {
+                    // override checkbox/radio-button state indicated in text
+                    // with set-but-not-yet-saved value
                     var answer = props.answers[name];
-                    if (type === 'radio') {
-                        checked = (value === answer);
-                    } else {
-                        checked = _.includes(answer, item.key);
+                    if (answer !== undefined) {
+                        if (type === 'radio') {
+                            checked = (value === answer);
+                        } else {
+                            var selected = answer[item.key];
+                            if (selected !== undefined) {
+                                checked = selected;
+                            }
+                        }
                     }
                 }
-                var itemProps = { type, label, name, value, checked, key, onChange };
+                var itemProps = { type, label, name, value, checked, key, readOnly, onChange };
                 if (props.markdown) {
                     elements.push(<ListItem {...itemProps} />);
                 } else {
@@ -225,25 +235,20 @@ function addListTemplate(story, languageCode, locale) {
  * Check or uncheck list item
  *
  * @param  {Story} story
- * @param  {String} languageCode
  * @param  {HTMLInputElement} input
  */
-function updateList(story, languageCode, input) {
-    var lang = languageCode.substr(0, 2);
-    var text = _.get(story, 'details.text');
-    text = _.clone(text) || {};
-    var langText = _.get(text, lang, '');
-
-    // make "[ ]" => "[x]" or vice-versa
+function updateList(story, input) {
     var list = parseInt(input.name.substr(5));
     var key = parseInt(input.value);
-    var checked = input.checked;
     var clearOthers = (input.type === 'radio');
-    langText = ListParser.update(langText, list, key, checked, clearOthers);
-
-    text[lang] = langText;
+    var checked = input.checked;
+    var text = _.get(story, 'details.text');
+    var newText = _.mapValues(text, (langText) => {
+        // make "[ ]" => "[x]" or vice-versa
+        return ListParser.update(langText, list, key, checked, clearOthers);
+    });
     story.details = _.clone(story.details);
-    story.details.text = text;
+    story.details.text = newText;
 }
 
 /**

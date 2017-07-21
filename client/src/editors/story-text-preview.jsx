@@ -146,7 +146,7 @@ module.exports = React.createClass({
     handleItemChange: function(evt) {
         var input = evt.target;
         var story = _.clone(this.props.story);
-        StoryText.updateList(story, this.props.languageCode, input);
+        StoryText.updateList(story, input);
         this.triggerChangeEvent(story, 'story.details.text');
     },
 });

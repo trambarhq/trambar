@@ -23,6 +23,7 @@ module.exports = React.createClass({
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object.isRequired,
         pending: PropTypes.bool.isRequired,
         cornerPopUp: PropTypes.element,
 
@@ -30,6 +31,38 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            userAnswers: {},
+        };
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.story !== nextProps.story) {
+            if (this.props.story.type === 'task-list') {
+                this.setState({ userAnswer: {} });
+            }
+        }
+    },
+
+    /**
+     * Return true if the current user is one of the story's author
+     *
+     * @return {Boolean}
+     */
+    isCurrentUserAuthor: function() {
+        var userIds = this.props.story.user_ids;
+        var currentUserId = this.props.currentUser.id;
+        return _.includes(userIds, currentUserId);
     },
 
     /**
@@ -155,6 +188,9 @@ module.exports = React.createClass({
             story: this.props.story,
             locale: this.props.locale,
             theme: this.props.theme,
+            answers: this.state.userAnswers,
+            readOnly: !this.isCurrentUserAuthor(),
+            onItemChange: this.handleItemChange,
         };
         return <StoryText {...props} />;
     },
@@ -175,5 +211,43 @@ module.exports = React.createClass({
             resources,
         };
         return <MediaView {...props} />
+    },
+
+    triggerChangeEvent: function(story) {
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
+                target: this,
+                story,
+            });
+        }
+    },
+
+    /**
+     * Called when user clicks on a checkbox or radio button
+     *
+     * @param  {Object} evt
+     */
+    handleItemChange: function(evt) {
+        var target = evt.currentTarget;
+        if (this.props.story.type === 'task-list') {
+            if (!this.isCurrentUserAuthor()) {
+                return false;
+            }
+
+            // save the answer in state for immediately UI response
+            var list = target.name;
+            var item = target.value;
+            var selected = target.checked;
+            var userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
+            this.setState({ userAnswers });
+
+            // update the text of the story
+            var story = _.clone(this.props.story);
+            StoryText.updateList(story, target);
+            this.triggerChangeEvent(story);
+        } else if (this.props.story.type === 'vote') {
+
+        }
     }
 });
