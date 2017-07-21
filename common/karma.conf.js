@@ -40,7 +40,7 @@ module.exports = function(config) {
                         }
                     },
                     {
-                        test: /\.jpg/,
+                        test: /\.jpg|\.mp4/,
                         loader: 'bin-loader',
                     }
                 ]

@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 exports.loadUint8Array = loadUint8Array;
 exports.loadArrayBuffer = loadArrayBuffer;
 exports.loadImage = loadImage;
+exports.loadVideo = loadVideo;
 exports.loadText = loadText;
 
 function loadUint8Array(blob) {
@@ -33,6 +34,21 @@ function loadImage(blob) {
             resolve(image);
         };
         image.onerror = function(evt) {
+            reject(new Error(`Unable to load ${url}`));
+        };
+    });
+}
+
+function loadVideo(blob) {
+    return new Promise((resolve, reject) => {
+        var url = URL.createObjectURL(blob);
+        var video = document.createElement('VIDEO');
+        video.src = url;
+        video.preload = true;
+        video.onloadeddata = function(evt) {
+            resolve(video);
+        };
+        video.onerror = function(evt) {
             reject(new Error(`Unable to load ${url}`));
         };
     });
