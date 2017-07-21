@@ -298,7 +298,7 @@ function handleMediaUpload(req, res, type) {
         // calculate hash of video poster, downloading the image if necessary
         var posterFile = _.get(req.files, 'poster_file.0');
         if (posterFile) {
-            posterSrcPath = req.file.path;
+            posterSrcPath = posterFile.path;
             return md5File(posterSrcPath).then((hash) => {
                 posterSrcHash = hash;
             });
@@ -314,7 +314,7 @@ function handleMediaUpload(req, res, type) {
     }).then(() => {
         // for streaming upload, the URL won't be known until later
         var url = (srcHash) ? `/media/${type}s/${srcHash}` : undefined;
-        var posterUrl = (posterSrcHash) ? `/media/image/${posterSrcHash}` : undefined;
+        var posterUrl = (posterSrcHash) ? `/media/images/${posterSrcHash}` : undefined;
         sendJson(res, { url, poster_url: posterUrl });
 
         if (srcStreamId) {

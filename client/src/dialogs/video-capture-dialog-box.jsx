@@ -437,7 +437,7 @@ module.exports = React.createClass({
                     width: poster.width,
                     height: poster.height,
                     poster_file: poster.file,
-                    type: recorder.mimeType,
+                    format: _.last(_.split(recorder.mimeType, '/')),
                     audio_bitrate: recorder.audioBitsPerSecond,
                     video_bitrate: recorder.videoBitsPerSecond,
                     stream: recorder.outputStream,

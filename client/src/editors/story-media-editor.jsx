@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
 var DeviceManager = require('media/device-manager');
+var FrameGrabber = require('media/frame-grabber');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -474,9 +475,19 @@ module.exports = React.createClass({
                 return this.attachImage(image);
             });
         } else if (/^video\//.test(file.type)) {
-            var format = _.last(_.split(file.type, '/'));
-            var video = { format, file };
-            return this.attachVideo(video);
+            return BlobReader.loadVideo(file).then((vid) => {
+                var format = _.last(_.split(file.type, '/'));
+                var width = vid.videoWidth;
+                var height = vid.videoHeight;
+                var duration = vid.duration;
+                return FrameGrabber.capture(vid).then((poster) => {
+                    var video = {
+                        format, file, width, height, duration, 
+                        poster_file: poster
+                    };
+                    return this.attachVideo(video);
+                });
+            });
         } else if (/^audio\//.test(file.type)) {
             var format = _.last(_.split(file.type, '/'));
             var audio = { format, file };

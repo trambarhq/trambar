@@ -1,16 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var BlobReader = require('utils/blob-reader');
 
 exports.capture = capture;
 
-function capture(file, startTime) {
-    return BlobReader.loadVideo(file).then((video) => {
-        return findFrame(video, startTime || 0);
-    });
-}
-
-function findFrame(video, startTime) {
+function capture(video, startTime) {
+    if (!startTime) {
+        startTime = 0;
+    }
     return new Promise((resolve, reject) => {
         var width = video.videoWidth;
         var height = video.videoHeight;
