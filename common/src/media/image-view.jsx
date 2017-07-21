@@ -58,23 +58,28 @@ module.exports = React.createClass({
         if (url) {
             return Promise.join(loadImage(url), loadBytes(url), (image, bytes) => {
                 var orientation = JpegAnalyser.getOrientation(bytes) || 1;
-                var rect = this.props.clippingRect;
 
+                this.image = image;
+                this.orientation = orientation;
+                if (orientation < 5) {
+                    this.naturalWidth = image.naturalWidth;
+                    this.naturalHeight = image.naturalHeight;
+                } else {
+                    this.naturalWidth = image.naturalHeight;
+                    this.naturalHeight = image.naturalWidth;
+                }
+
+                var rect = this.props.clippingRect;
                 if (!rect) {
                     rect = {
                         left: 0,
                         top: 0,
-                        width: image.naturalWidth,
-                        height: image.naturalHeight
+                        width: this.naturalWidth,
+                        height: this.naturalHeight
                     };
                 }
-
-                this.image = image;
                 this.width = rect.width;
                 this.height = rect.height;
-                this.naturalWidth = image.naturalWidth;
-                this.naturalHeight = image.naturalHeight;
-                this.orientation = orientation;
 
                 this.drawImage(rect);
                 this.triggerLoadEvent();
@@ -163,8 +168,10 @@ module.exports = React.createClass({
      */
     clearCanvas: function() {
         var canvas = this.refs.canvas;
-        canvas.width = 0;
-    	canvas.height = 0;
+        if (canvas) {
+            canvas.width = 0;
+        	canvas.height = 0;
+        }
 
         this.width = 0;
         this.height = 0;

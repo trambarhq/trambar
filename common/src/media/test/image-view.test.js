@@ -13,7 +13,7 @@ describe('ImageView', function() {
         return new Promise((resolve, reject) => {
             var blob = new Blob([ imageWithOrientation ], { type: 'image/jpeg' });
             var props = {
-                file: blob,
+                url: URL.createObjectURL(blob),
                 onLoad: () => {
                     resolve(wrapper);
                 }
