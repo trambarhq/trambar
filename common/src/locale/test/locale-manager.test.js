@@ -82,11 +82,11 @@ describe('LocaleManager', function() {
         it('should produce test phrases with a numeric argument in Polish', function() {
             return managerReady.then((manager) => {
                 return manager.change('pl-pl').then(() => {
-                    expect(manager.translate('$1 beers', 1)).to.equal('1 piwo');
-                    expect(manager.translate('$1 beers', 21)).to.equal('21 piw');
-                    expect(manager.translate('$1 beers', 24)).to.equal('24 piwa');
-                    expect(manager.translate('$1 beers', 25)).to.equal('25 piw');
-                    expect(manager.translate('$1 beers', 124)).to.equal('124 piw');
+                    expect(manager.translate('$num beers', 1)).to.equal('1 piwo');
+                    expect(manager.translate('$num beers', 21)).to.equal('21 piw');
+                    expect(manager.translate('$num beers', 24)).to.equal('24 piwa');
+                    expect(manager.translate('$num beers', 25)).to.equal('25 piw');
+                    expect(manager.translate('$num beers', 124)).to.equal('124 piw');
                 });
             });
         })
@@ -100,9 +100,9 @@ describe('LocaleManager', function() {
         it('should produce test phrases with a numeric argument in Russian', function() {
             return managerReady.then((manager) => {
                 return manager.change('ru-ua').then(() => {
-                    expect(manager.translate('$1 beers', 1)).to.equal('1 пиво');
-                    expect(manager.translate('$1 beers', 4)).to.equal('4 пива');
-                    expect(manager.translate('$1 beers', 25)).to.equal('25 пив');
+                    expect(manager.translate('$num beers', 1)).to.equal('1 пиво');
+                    expect(manager.translate('$num beers', 4)).to.equal('4 пива');
+                    expect(manager.translate('$num beers', 25)).to.equal('25 пив');
                 });
             });
         })

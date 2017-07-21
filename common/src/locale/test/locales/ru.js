@@ -1,15 +1,13 @@
 module.exports = function(languageCode) {
     return {
-        phrases: {
-            'hello': 'привет',
-            '$1 beers': function($1) {
-                if ($1 === 1) {
-                    return `1 пиво`;
-                } else if ($1 === 2 || $1 === 3 || $1 === 4) {
-                    return `${$1} пива`;
-                } else {
-                    return `${$1} пив`;
-                }
+        'hello': 'привет',
+        '$num beers': function(num) {
+            if (num === 1) {
+                return `1 пиво`;
+            } else if (num === 2 || num === 3 || num === 4) {
+                return `${num} пива`;
+            } else {
+                return `${num} пив`;
             }
         }
     };
