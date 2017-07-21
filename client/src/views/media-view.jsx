@@ -164,12 +164,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function(res) {
-        var props = {
+        var imageProps = {
             src: this.props.theme.getImageUrl(res, 512)
         };
         return (
             <div className="image" onClick={this.handleImageClick}>
-                <img {...props} />
+                <img {...imageProps} />
             </div>
         );
     },
@@ -182,15 +182,15 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderVideo: function(res) {
-        var props = {
-            className: 'video',
+        var imageProps = {
             src: this.props.theme.getPosterUrl(res, 512)
         };
         return (
             <div className="video" onClick={this.handleVideoClick}>
-                <img {...props} />
+                <img {...imageProps} />
+                <i className="fa fa-play-circle-o icon" />
             </div>
-        )
+        );
     },
 
     /**
@@ -212,14 +212,15 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderWebsite: function(res) {
-        var props = {
+        var imageProps = {
             src: this.props.theme.getPosterUrl(res, 512)
         };
         var url = res.url;
         return (
             <div className="website">
                 <a href={url}>
-                    <img {...props} />
+                    <img {...imageProps} />
+                    <i className="fa fa-external-link icon" />
                 </a>
             </div>
         );

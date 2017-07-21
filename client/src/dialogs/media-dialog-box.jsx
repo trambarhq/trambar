@@ -164,13 +164,14 @@ module.exports = React.createClass({
      */
     renderVideo: function(res) {
         var video = res;
+        var theme = this.props.theme;
         var props = {
             src: theme.getVideoUrl(video),
             controls: true,
             autoPlay: true
         };
         return (
-            <div className="contaner">
+            <div className="container">
                 <video {...props} />
             </div>
         );
@@ -186,12 +187,18 @@ module.exports = React.createClass({
         var theme = this.props.theme;
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
+            var url;
+            if (res.type === 'image') {
+                url = theme.getImageUrl(res, 28, 28);
+            } else {
+                url = theme.getPosterUrl(res, 28, 28);
+            }
             var props = {
+                url,
                 selected: (index === selectedIndex),
-                url: theme.getImageUrl(res, 28, 28),
-                onClick: this.handleThumbnailClick,
                 id: index,
                 key: index,
+                onClick: this.handleThumbnailClick,
             };
             return <Thumbnail {...props} />;
         });

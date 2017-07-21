@@ -28,4 +28,24 @@
             float: right;
         }
     }
+
+    .icon {
+        font-size: 10em;
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+        width: 1em;
+        height: 1em;
+        text-align: center;
+        opacity: 0;
+    }
+
+    &:hover {
+        .icon {
+            opacity: 0.25;
+        }
+    }
 }
