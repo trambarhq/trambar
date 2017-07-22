@@ -29,6 +29,9 @@ module.exports = React.createClass({
         if (!element) {
             return null;
         }
+        if (_.isEmpty(element.props.children)) {
+            return null;
+        }
         return (
             <div className={tag} {...element.props}>
                 {element.props.children}

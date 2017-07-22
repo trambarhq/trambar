@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -14,6 +15,7 @@ var StoryText = require('widgets/story-text');
 var MediaView = require('views/media-view');
 var MultipleUserNames = require('widgets/multiple-user-names');
 var Time = require('widgets/time');
+var PushButton = require('widgets/push-button');
 
 require('./story-contents.scss');
 
@@ -24,6 +26,7 @@ module.exports = React.createClass({
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
+        reactions: PropTypes.arrayOf(PropTypes.object),
         pending: PropTypes.bool.isRequired,
         cornerPopUp: PropTypes.element,
 
@@ -33,6 +36,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onChange: PropTypes.func,
+        onReaction: PropTypes.func,
     },
 
     /**
@@ -43,6 +47,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             userAnswers: {},
+            voteSubmitted: false,
         };
     },
 
@@ -66,6 +71,19 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if the current user has already voted
+     *
+     * @return {Boolean|undefined}
+     */
+    hasUserVoted: function() {
+        if (this.props.reactions === null) {
+            return undefined;
+        }
+        var vote = getUserVote(this.props.reactions, this.props.currentUser);
+        return !!vote;
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -84,6 +102,9 @@ module.exports = React.createClass({
                 <body>
                     {this.renderContents()}
                 </body>
+                <footer>
+                    {this.renderButtons()}
+                </footer>
             </StorySection>
         );
     },
@@ -196,6 +217,32 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render button for filling survey
+     *
+     * @return {ReactElement|null}
+     */
+    renderButtons: function() {
+        if (this.props.story.type !== 'survey') {
+            return null;
+        }
+        if (this.hasUserVoted() !== false) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        var submitProps = {
+            label: t('story-vote-submit'),
+            emphasized: !_.isEmpty(this.state.userAnswers),
+            disabled: this.state.voteSubmitted || _.isEmpty(this.state.userAnswers),
+            onClick: this.handleVoteSubmitClick,
+        };
+        return (
+            <div className="buttons">
+                <PushButton {...submitProps} />
+            </div>
+        );
+    },
+
+    /**
      * Render attached media
      *
      * @return {ReactElement}
@@ -223,6 +270,16 @@ module.exports = React.createClass({
         }
     },
 
+    triggerReactionEvent: function(reaction) {
+        if (this.props.onReaction) {
+            this.props.onReaction({
+                type: 'reaction',
+                target: this,
+                reaction,
+            });
+        }
+    },
+
     /**
      * Called when user clicks on a checkbox or radio button
      *
@@ -246,8 +303,44 @@ module.exports = React.createClass({
             var story = _.clone(this.props.story);
             StoryText.updateList(story, target);
             this.triggerChangeEvent(story);
-        } else if (this.props.story.type === 'vote') {
-
+        } else if (this.props.story.type === 'survey') {
+            var list = target.name;
+            var value = parseInt(target.value);
+            var userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], value);
+            this.setState({ userAnswers });
         }
+    },
+
+    /**
+     * Called when user clicks on the submit button
+     *
+     * @param  {Event} evt
+     */
+    handleVoteSubmitClick: function(evt) {
+        var story = this.props.story;
+        var reaction = {
+            type: 'vote',
+            story_id: story.id,
+            user_id: this.props.currentUser.id,
+            target_user_ids: story.user_ids,
+            published: true,
+            details: {
+                answers: this.state.userAnswers
+            }
+        };
+        this.triggerReactionEvent(reaction);
+        this.setState({ voteSubmitted: true });
+    },
+});
+
+var getVotes = Memoize(function(reactions) {
+    return _.filter(reactions, { type: 'vote' });
+});
+
+var getUserVote = Memoize(function(reactions, user) {
+    if (user) {
+        return _.find(reactions, { type: 'vote', user_id: user.id })
+    } else {
+        return null;
     }
 });

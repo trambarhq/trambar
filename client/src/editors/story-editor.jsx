@@ -141,7 +141,7 @@ module.exports = React.createClass({
      */
     chooseSupplementalEditor: function(story) {
         // show preview when text is formatted
-        if (story.type === 'vote' || story.type === 'task-list') {
+        if (story.type === 'survey' || story.type === 'task-list') {
             return 'preview';
         }
         if (_.get(story, 'details.markdown', false)) {

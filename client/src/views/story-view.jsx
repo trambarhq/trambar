@@ -143,6 +143,7 @@ module.exports = React.createClass({
             story: this.props.story,
             authors: this.props.authors,
             currentUser: this.props.currentUser,
+            reactions: this.props.reactions,
             pending: this.props.pending,
             cornerPopUp: this.renderPopUpMenu('main'),
 
@@ -152,6 +153,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
 
             onChange: this.handleStoryChange,
+            onReaction: this.handleStoryReaction,
         };
         return <StoryContents {...props} />;
     },
@@ -267,6 +269,23 @@ module.exports = React.createClass({
     },
 
     /**
+     * Save reaction to remote database
+     *
+     * @param  {Reaction} reaction
+     *
+     * @return {Promise<Reaction>}
+     */
+    saveReaction: function(reaction) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'reaction' }, reaction);
+        });
+    },
+
+    /**
      * Save bookmarks to remote database
      *
      * @param  {Array<Bookmark>} bookmarks
@@ -361,6 +380,15 @@ module.exports = React.createClass({
      */
     handleStoryChange: function(evt) {
         this.autosaveStory(evt.story, 1000);
+    },
+
+    /**
+     * Called when user submits votes
+     *
+     * @param  {Object} evt
+     */
+    handleStoryReaction: function(evt) {
+        this.saveReaction(evt.reaction);
     },
 
     /**

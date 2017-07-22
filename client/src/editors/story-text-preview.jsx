@@ -66,17 +66,17 @@ module.exports = React.createClass({
             highlighted: (storyType === 'task-list'),
             onClick: this.handleTaskListClick,
         };
-        var voteProps = {
-            label: t('story-vote'),
+        var surveyProps = {
+            label: t('story-survey'),
             icon: 'list-ul',
-            highlighted: (storyType === 'vote'),
-            onClick: this.handleVoteClick,
+            highlighted: (storyType === 'survey'),
+            onClick: this.handleSurveyClick,
         };
         return (
             <div>
                 <HeaderButton {...markdownProps} />
                 <HeaderButton {...taskListProps} />
-                <HeaderButton {...voteProps} />
+                <HeaderButton {...surveyProps} />
                 {this.props.cornerPopUp}
             </div>
         );
@@ -116,7 +116,7 @@ module.exports = React.createClass({
      * @param  {Story} story
      */
     attachListTemplate: function(story) {
-        if (story.type === 'task-list' || story.type === 'vote') {
+        if (story.type === 'task-list' || story.type === 'survey') {
             if (!StoryText.hasLists(story)) {
                 StoryText.addListTemplate(story, this.props.languageCode, this.props.locale);
             }
@@ -136,9 +136,9 @@ module.exports = React.createClass({
         this.triggerChangeEvent(story, 'story.details.markdown');
     },
 
-    handleVoteClick: function(evt) {
+    handleSurveyClick: function(evt) {
         var story = _.clone(this.props.story);
-        story.type = (story.type !== 'vote') ? 'vote' : 'story';
+        story.type = (story.type !== 'survey') ? 'survey' : 'story';
         this.attachListTemplate(story);
         this.triggerChangeEvent(story, 'story.type');
     },

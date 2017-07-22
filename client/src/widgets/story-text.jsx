@@ -20,7 +20,7 @@ function StoryText(props) {
     var storyType = _.get(props.story, 'type');
     var markdown = _.get(props.story, 'details.markdown', false);
     var listType;
-    if (storyType === 'vote' || storyType === 'task-list') {
+    if (storyType === 'survey' || storyType === 'task-list') {
         listType = storyType;
     }
     var lang = languageCode.substr(0, 2);
@@ -133,7 +133,7 @@ function renderLists(props) {
     }
 
     // create text nodes and list items
-    var type = (props.type === 'vote') ? 'radio' : 'checkbox';
+    var type = (props.type === 'survey') ? 'radio' : 'checkbox';
     var readOnly = props.readOnly;
     var onChange = (!readOnly) ? props.onItemChange : null;
     return _.map(listTokens, (listToken, index) => {

@@ -177,5 +177,5 @@ module.exports = React.createClass({
 var editableStoryType = [
     'story',
     'task-list',
-    'vote',
+    'survey',
 ];

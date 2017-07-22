@@ -184,10 +184,14 @@ module.exports = function(languageCode) {
         'story-photo': 'Photo',
         'story-post': 'Post',
         'story-pending': 'Pending...',
+        'story-survey': 'Survey',
         'story-task-list': 'Task list',
         'story-video': 'Video',
-        'story-vote': 'Vote',
+        'story-vote-submit': 'Submit',
 
+        'survey-item-$number': (number) => {
+            return `choice ${number}`;
+        },
         'task-list-item-$number': (number) => {
             return `task ${number}`;
         },
@@ -200,9 +204,5 @@ module.exports = function(languageCode) {
         'video-capture-retake': 'Retake',
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stop',
-
-        'vote-item-$number': (number) => {
-            return `choice ${number}`;
-        },
     };
 };
