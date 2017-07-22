@@ -29,6 +29,10 @@ module.exports = _.create(Data, {
         target_user_ids: Array(Number),
         published: Boolean,
         public: Boolean,
+        time_range: String,
+        newer_than: String,
+        older_than: String,
+        ready: Boolean,
     },
 
     /**
@@ -60,6 +64,33 @@ module.exports = _.create(Data, {
             );
         `;
         return db.execute(sql);
+    },
+
+    apply: function(criteria, query) {
+        var special = [ 'time_range', 'newer_than', 'older_than', 'ready' ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.time_range !== undefined) {
+            params.push(criteria.time_range);
+            conds.push(`ptime <@ $${params.length}::tsrange`);
+        }
+        if (criteria.newer_than !== undefined) {
+            params.push(criteria.newer_than);
+            conds.push(`ptime > $${params.length}`);
+        }
+        if (criteria.older_than !== undefined) {
+            params.push(criteria.older_than);
+            conds.push(`ptime < $${params.length}`);
+        }
+        if (criteria.ready !== undefined) {
+            if (criteria.ready === true) {
+                conds.push(`ptime IS NOT NULL`);
+            } else {
+                conds.push(`ptime IS NULL`);
+            }
+        }
     },
 
     /**

@@ -7,6 +7,10 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 
+var NewsPage = require('pages/news-page');
+var NotificationsPage = require('pages/notifications-page');
+var UserActivityPage = require('pages/user-activity-page');
+
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
@@ -32,6 +36,7 @@ module.exports = Relaks.createClass({
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
+        var currentUserId;
         var props = {
             projectRange: null,
 
@@ -47,6 +52,7 @@ module.exports = Relaks.createClass({
                 type: 'project-date-range',
                 filters: {},
             };
+            currentUserId = userId;
             return db.findOne({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.projectRange = statistics;
@@ -66,14 +72,30 @@ module.exports = Relaks.createClass({
                     var range = `[${rangeStart},${rangeEnd}]`;
                     timeRanges.push(range);
                 }
-                var criteria = {
-                    type: 'daily-activities',
-                    filters: _.map(timeRanges, (timeRange) => {
+                var criteria = {};
+                if (route.component === NewsPage) {
+                    criteria.type = 'daily-activities';
+                    criteria.filters = _.map(timeRanges, (timeRange) => {
                         return {
                             // TODO: add role filters
                             time_range: timeRange
                         };
-                    })
+                    });
+                } else if (route.component === NotificationsPage) {
+                    criteria.type = 'daily-reactions';
+                    criteria.filters = _.map(timeRanges, (timeRange) => {
+                        return {
+                            target_user_ids: [ currentUserId ],
+                            time_range: timeRange
+                        };
+                    });
+                } else if (route.component === UserActivityPage) {
+                    criteria.type = 'daily-activities';
+                    criteria.filters =  _.map(timeRanges, (timeRange) => {
+                        return {
+                            time_range: timeRange
+                        };
+                    });
                 }
                 return db.find({ table: 'statistics', criteria });
             }

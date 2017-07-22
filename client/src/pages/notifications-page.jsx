@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Moment = require('moment');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -21,18 +22,19 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/notifications/', url);
+            var params = Route.match('/:server/:schema/notifications/:date/', url)
+                      || Route.match('/:server/:schema/notifications/', url);
             if (params) {
                 params.navigation = {
                     top: {
                         dateSelection: true,
                         roleSelection: false,
-                        textSearch: false,                        
+                        textSearch: false,
                     },
                     bottom: {
                         section: 'notifications'
                     }
-                }
+                };
                 return params;
             }
         },
@@ -40,12 +42,18 @@ module.exports = Relaks.createClass({
         getUrl: function(params) {
             var server = params.server || '~';
             var schema = params.schema;
-            return `/${server}/${schema}/notifications/`;
+            var date = params.date;
+            if (date) {
+                return `/${server}/${schema}/notifications/${date}/`;
+            } else {
+                return `/${server}/${schema}/notifications/`;
+            }
         },
     },
 
     renderAsync: function(meanwhile) {
         var route = this.props.route;
+        var date = route.parameters.date;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
@@ -70,8 +78,17 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load reactions
             var criteria = {};
-            criteria.target_user_id = props.currentUser.id;
-            criteria.limit = 100;
+            criteria.target_user_ids = [ props.currentUser.id ];
+            if (date) {
+                var s = Moment(date);
+                var e = s.clone().endOf('day');
+                var rangeStart = s.toISOString();
+                var rangeEnd = e.toISOString();
+                var range = `[${rangeStart},${rangeEnd}]`;
+                criteria.time_range = range;
+            } else {
+                criteria.limit = 100;
+            }
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
             props.reactions = reactions;

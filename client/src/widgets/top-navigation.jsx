@@ -120,12 +120,14 @@ module.exports = React.createClass({
 
     renderCalendarBar: function() {
         var route = this.props.route;
+        var params = _.get(route.parameters, 'navigation.top', {});
         var selection = route.parameters.date;
         var props = {
             selection,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
+            statisticsType: params.statisticsType,
             onSelect: this.handleCalendarSelect,
         };
         return (

@@ -1,18 +1,17 @@
 var _ = require('lodash');
 var Moment = require('moment-timezone');
 
-var Story = require('accessors/story');
+var Reaction = require('accessors/reaction');
 
 module.exports = {
-    type: 'daily-activities',
+    type: 'daily-reactions',
     // tables from which the stats are derived
-    sourceTables: [ 'story' ],
+    sourceTables: [ 'reaction' ],
     // filters and the columns they act on--determine which objects are
     // included in the statistics;
     filteredColumns: {
         story: {
-            user_ids: 'user_ids',
-            role_ids: 'role_ids',
+            target_user_ids: 'target_user_ids',
             time_range: 'ptime',
         },
     },
@@ -39,7 +38,9 @@ module.exports = {
         _.assign(criteria, _.omit(filters, 'timezone'));
 
         // load the stories
-        return Story.find(db, schema, criteria, 'type, ptime').then((rows) => {
+        console.log(criteria)
+        return Reaction.find(db, schema, criteria, 'type, ptime').then((rows) => {
+            console.log('Rows: ' + rows.length)
             var timezone = _.get(filters, 'timezone', 'GMT');
 
             var activities = {};
