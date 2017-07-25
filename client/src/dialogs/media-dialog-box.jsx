@@ -80,10 +80,17 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (!this.props.show !== nextProps.show) {
-            this.setState({
-                selectedIndex: nextProps.selectedIndex,
-            });
+        if (this.props.show !== nextProps.show) {
+            if (nextProps.show) {
+                this.setState({
+                    selectedIndex: nextProps.selectedIndex,
+                });
+            } else {
+                var video = this.refs.video;
+                if (video) {
+                    video.pause();
+                }
+            }
         }
     },
 
@@ -121,8 +128,6 @@ module.exports = React.createClass({
         switch (res.type) {
             case 'image': return this.renderImage(res);
             case 'video': return this.renderVideo(res);
-            case 'audio': return this.renderAudio(res);
-            case 'website': return this.renderWebsite(res);
         }
     },
 
@@ -166,6 +171,7 @@ module.exports = React.createClass({
         var video = res;
         var theme = this.props.theme;
         var props = {
+            ref: 'video',
             src: theme.getVideoUrl(video),
             controls: true,
             autoPlay: true
