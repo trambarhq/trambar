@@ -3,7 +3,7 @@ var _ = require('lodash');
 module.exports.extract = extract;
 module.exports.update = update;
 
-var regExp = /^([ \t]*)\[([ x]{0,3})\]([ \t]*?)(.*?)([ \t]*?)$/mig;
+var regExp = /^([ \t]*)\[([ x]{0,3})\]([ \t]*)(.*?)([ \t]*?)$/mig;
 
 /**
  * Extract "[ ] label..." item lists from text

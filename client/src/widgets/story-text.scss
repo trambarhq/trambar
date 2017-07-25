@@ -11,6 +11,88 @@
         IMG {
             vertical-align: top;
         }
+
+        &.vote-count {
+            .label {
+                display: block;
+                margin-bottom: 0.1em;
+            }
+
+            .bar {
+                display: block;
+                position: relative;
+                border: 1px solid #999999;
+                font-size: 0.8em;
+                height: 1.5em;
+                margin-bottom: 0.4em;
+
+                .percent {
+                    position: absolute;
+                    display: block;
+                    left: 0.2em;
+                    top: 0.1em;
+                    color: #333333;
+                }
+
+                .count {
+                    position: absolute;
+                    display: block;
+                    right: 0.2em;
+                    top: 0.1em;
+                    color: #999999;
+                }
+
+                .filled {
+                    display: block;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    $bg-saturation: 80%;
+                    $bg-lightness: 50%;
+
+                    &.item-0 {
+                        background-color: hsl(36 * 0, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-1 {
+                        background-color: hsl(36 * 1, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-2 {
+                        background-color: hsl(36 * 2, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-3 {
+                        background-color: hsl(36 * 3, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-4 {
+                        background-color: hsl(36 * 4, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-5 {
+                        background-color: hsl(36 * 5, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-6 {
+                        background-color: hsl(36 * 6, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-7 {
+                        background-color: hsl(36 * 7, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-8 {
+                        background-color: hsl(36 * 8, $bg-saturation, $bg-lightness)
+                    }
+
+                    &.item-9 {
+                        background-color: hsl(36 * 9, $bg-saturation, $bg-lightness)
+                    }
+                }
+            }
+        }
     }
 
     &.plain-text {
@@ -18,6 +100,10 @@
 
         .list-item {
             display: inline-block;
+
+            &.vote-count {
+                width: 100%;
+            }
         }
     }
 }

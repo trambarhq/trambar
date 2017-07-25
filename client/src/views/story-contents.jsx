@@ -205,7 +205,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderText: function() {
-        var props = {
+        var textProps = {
             story: this.props.story,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -213,7 +213,12 @@ module.exports = React.createClass({
             readOnly: !this.isCurrentUserAuthor(),
             onItemChange: this.handleItemChange,
         };
-        return <StoryText {...props} />;
+        if (this.props.story.type === 'survey') {
+            if (this.hasUserVoted()) {
+                textProps.voteCounts = countVotes(this.props.reactions);
+            }
+        }
+        return <StoryText {...textProps} />;
     },
 
     /**
@@ -333,8 +338,21 @@ module.exports = React.createClass({
     },
 });
 
-var getVotes = Memoize(function(reactions) {
-    return _.filter(reactions, { type: 'vote' });
+var countVotes = Memoize(function(reactions) {
+    var tallies = {};
+    _.each(reactions, (reaction) => {
+        if (reaction.type === 'vote' ) {
+            _.forIn(reaction.details.answers, (value, name) => {
+                var totalPath = [ name, 'total' ];
+                var newTotal = _.get(tallies, totalPath, 0) + 1;
+                _.set(tallies, totalPath, newTotal);
+                var countPath = [ name, 'answers', value ];
+                var newCount = _.get(tallies, countPath, 0) + 1;
+                _.set(tallies, countPath, newCount);
+            });
+        }
+    });
+    return tallies;
 });
 
 var getUserVote = Memoize(function(reactions, user) {

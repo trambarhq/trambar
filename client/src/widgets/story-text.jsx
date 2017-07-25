@@ -39,6 +39,7 @@ function StoryText(props) {
             text: contents,
             type: listType,
             answers: props.answers,
+            voteCounts: props.voteCounts,
             markdown: markdown,
             story: props.story,
             theme: props.theme,
@@ -64,9 +65,10 @@ StoryText.propTypes = {
     story: PropTypes.object.isRequired,
     options: PropTypes.object,
     answers: PropTypes.objectOf(PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.objectOf(PropTypes.bool)
+        PropTypes.number,                       // survey answer
+        PropTypes.objectOf(PropTypes.bool)      // task-list check states
     ])),
+    voteCounts: PropTypes.object,
     readOnly: PropTypes.bool,
 
     locale: PropTypes.instanceOf(Locale).isRequired,
@@ -144,36 +146,57 @@ function renderLists(props) {
                 var value = item.key;
                 var checked = item.checked;
                 var label;
-                if (props.markdown) {
-                    // get Markdown text rendered earlier
-                    label = markdownTexts[index][key];
-                } else {
-                    // add spaces between checkbox and label when it's plain text
-                    label = item.between + item.label;
-                }
-                if (props.answers) {
-                    // override checkbox/radio-button state indicated in text
-                    // with set-but-not-yet-saved value
-                    var answer = props.answers[name];
-                    if (answer !== undefined) {
-                        if (type === 'radio') {
-                            checked = (value === answer);
-                        } else {
-                            var selected = answer[item.key];
-                            if (selected !== undefined) {
-                                checked = selected;
+                if (!props.voteCounts) {
+                    var label;
+                    if (props.markdown) {
+                        // get Markdown text rendered earlier
+                        label = markdownTexts[index][key];
+                    } else {
+                        // add spaces between checkbox and label when it's plain text
+                        label = item.between + item.label;
+                    }
+                    if (props.answers) {
+                        // override checkbox/radio-button state indicated in text
+                        // with set-but-not-yet-saved value
+                        var answer = props.answers[name];
+                        if (answer !== undefined) {
+                            if (type === 'radio') {
+                                checked = (value === answer);
+                            } else {
+                                var selected = answer[item.key];
+                                if (selected !== undefined) {
+                                    checked = selected;
+                                }
                             }
                         }
                     }
-                }
-                var itemProps = { type, label, name, value, checked, key, readOnly, onChange };
-                if (props.markdown) {
-                    elements.push(<ListItem {...itemProps} />);
+                    var itemProps = { key, type, label, name, value, checked, readOnly, onChange };
+                    if (props.markdown) {
+                        elements.push(<ListItem {...itemProps} />);
+                    } else {
+                        // retain whitespaces when it's plain text
+                        elements.push(item.before);
+                        elements.push(<ListItem {...itemProps} />);
+                        elements.push(item.after);
+                    }
                 } else {
-                    // retain whitespaces when it's plain text
-                    elements.push(item.before);
-                    elements.push(<ListItem {...itemProps} />);
-                    elements.push(item.after);
+                    var label;
+                    if (props.markdown) {
+                        // get Markdown text rendered earlier
+                        label = markdownTexts[index][key];
+                    } else {
+                        label = item.label;
+                    }
+                    var tally = props.voteCounts[name];
+                    var itemProps = { key, label, value, tally };
+                    if (props.markdown) {
+                        elements.push(<ListItemCount {...itemProps} />);
+                    } else {
+                        // retain whitespaces when it's plain text
+                        elements.push(item.before);
+                        elements.push(<ListItemCount {...itemProps} />);
+                        elements.push(item.after);
+                    }
                 }
             });
             if (props.markdown) {
@@ -199,6 +222,23 @@ function ListItem(props) {
         <label className="list-item">
             <input {...inputProps} />
             {props.label}
+        </label>
+    );
+}
+
+function ListItemCount(props) {
+    var total = _.get(props.tally, 'total', 0);
+    var count = _.get(props.tally, [ 'answers', props.value ], 0);
+    var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+    var num = props.value % 10;
+    return (
+        <label className="list-item vote-count">
+            <span className="label">{props.label}</span>
+            <span className="bar">
+                <span className={`filled item-${num}`} style={{ width: percent }}></span>
+                <span className="percent">{percent}</span>
+                <span className="count">{count + '/' + total}</span>
+            </span>
         </label>
     );
 }
