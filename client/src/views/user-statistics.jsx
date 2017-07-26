@@ -1,4 +1,6 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var Chartist = require('widgets/chartist');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -8,6 +10,8 @@ var Theme = require('theme/theme');
 // widgets
 var UserSection = require('widgets/user-section');
 var HeaderButton = require('widgets/header-button');
+
+require('chartist/dist/scss/chartist.scss');
 
 module.exports = React.createClass({
     displayName: 'UserStatistics',
@@ -44,6 +48,7 @@ module.exports = React.createClass({
                     {this.renderButtons()}
                 </header>
                 <body>
+                    {this.renderChart()}
                 </body>
             </UserSection>
         );
@@ -81,6 +86,70 @@ module.exports = React.createClass({
                 <HeaderButton {...pieChartProps} />
             </div>
         );
+    },
+
+    renderChart: function() {
+        switch (this.state.chartType) {
+            case 'bar': return this.renderBarChart();
+            case 'line': return this.renderLineChart();
+            case 'pie': return this.renderPieChart();
+        }
+    },
+
+    renderBarChart: function() {
+        var data = {
+            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+            series: [
+                [800000, 1200000, 1400000, 1300000],
+                [200000, 400000, 500000, 300000],
+                [100000, 200000, 400000, 600000]
+            ]
+        };
+        var options = {
+            stackBars: true,
+            axisY: {
+                labelInterpolationFnc: function(value) {
+                    return (value / 1000) + 'k';
+                }
+            }
+        };
+        return <Chartist data={data} options={options} type="bar" />;
+    },
+
+    renderLineChart: function() {
+        var data = {
+            labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            series: [
+                [5, 5, 10, 8, 7, 5, 4, null, null, null, 10, 10, 7, 8, 6, 9],
+                [10, 15, null, 12, null, 10, 12, 15, null, null, 12, null, 14, null, null, null],
+                [null, null, null, null, 3, 4, 1, 3, 4,  6,  7,  9, 5, null, null, null],
+                [{x:3, y: 3},{x: 4, y: 3}, {x: 5, y: undefined}, {x: 6, y: 4}, {x: 7, y: null}, {x: 8, y: 4}, {x: 9, y: 4}]
+            ]
+        };
+        var options = {
+            fullWidth: true,
+            chartPadding: {
+                right: 10
+            },
+            lineSmooth: Chartist.Interpolation.cardinal({
+                fillHoles: true,
+            }),
+            low: 0
+        };
+        return <Chartist data={data} options={options} type="line" />;
+    },
+
+    renderPieChart: function() {
+        var data = {
+            series: [5, 3, 4]
+        };
+        var sum = function(a, b) { return a + b };
+        var options = {
+            labelInterpolationFnc: function(value) {
+                return Math.round(value / data.series.reduce(sum) * 100) + '%';
+            }
+        };
+        return <Chartist data={data} options={options} type="pie" />;
     },
 
     handleBarChartClick: function(evt) {
