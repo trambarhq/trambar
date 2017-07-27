@@ -230,7 +230,7 @@ function ListItemCount(props) {
     var total = _.get(props.tally, 'total', 0);
     var count = _.get(props.tally, [ 'answers', props.value ], 0);
     var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-    var num = props.value % 10;
+    var num = (props.value - 1) % 10;
     return (
         <label className="list-item vote-count">
             <span className="label">{props.label}</span>

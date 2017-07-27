@@ -49,16 +49,16 @@
                     top: 0;
                     bottom: 0;
                     $series-colors: (
-                      #d70206,
-                      #f05b4f,
-                      #f4c63d,
-                      #f05b4f,
-                      #dda458,
-                      #eacf7d,
-                      #86797d,
-                      #b2c326,
-                      #6188e2,
-                      #a748ca
+                        #d70206,
+                        #f05b4f,
+                        #f4c63d,
+                        #d17905,
+                        #59922b,
+                        #f05b4f,
+                        #dda458,
+                        #eacf7d,
+                        #b2c326,
+                        #6188e2,
                     );
 
                     @for $i from 0 to length($series-colors) {
