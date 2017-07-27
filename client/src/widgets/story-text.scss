@@ -48,47 +48,23 @@
                     left: 0;
                     top: 0;
                     bottom: 0;
-                    $bg-saturation: 80%;
-                    $bg-lightness: 50%;
+                    $series-colors: (
+                      #d70206,
+                      #f05b4f,
+                      #f4c63d,
+                      #f05b4f,
+                      #dda458,
+                      #eacf7d,
+                      #86797d,
+                      #b2c326,
+                      #6188e2,
+                      #a748ca
+                    );
 
-                    &.item-0 {
-                        background-color: hsl(36 * 0, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-1 {
-                        background-color: hsl(36 * 1, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-2 {
-                        background-color: hsl(36 * 2, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-3 {
-                        background-color: hsl(36 * 3, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-4 {
-                        background-color: hsl(36 * 4, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-5 {
-                        background-color: hsl(36 * 5, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-6 {
-                        background-color: hsl(36 * 6, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-7 {
-                        background-color: hsl(36 * 7, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-8 {
-                        background-color: hsl(36 * 8, $bg-saturation, $bg-lightness)
-                    }
-
-                    &.item-9 {
-                        background-color: hsl(36 * 9, $bg-saturation, $bg-lightness)
+                    @for $i from 0 to length($series-colors) {
+                      &.item-#{$i} {
+                        background-color: nth($series-colors, $i + 1);
+                      }
                     }
                 }
             }

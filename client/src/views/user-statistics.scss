@@ -1,3 +1,11 @@
 .ct-chart {
     height: 12em;
+
+    .ct-label {
+        color: #999999;
+    }
+
+    .ct-grids line {
+        stroke: #444444;
+    }
 }
