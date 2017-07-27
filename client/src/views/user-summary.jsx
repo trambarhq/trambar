@@ -12,15 +12,16 @@ var UpdateCheck = require('mixins/update-check');
 var UserSection = require('widgets/user-section');
 var Time = require('widgets/time');
 
-require('./user-story.scss');
+require('./user-summary.scss');
 
 module.exports = React.createClass({
-    displayName: 'UserStory',
+    displayName: 'UserSummary',
     mixins: [ UpdateCheck ],
     propTypes: {
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         story: PropTypes.object,
+        cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -30,20 +31,20 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <UserSection className="story">
+            <UserSection className="summary">
                 <header>
                     {this.renderProfileImage()}
                     {this.renderRoles()}
+                    {this.props.cornerPopUp}
                 </header>
                 <subheader>
                     {this.renderName()}
-                    {this.renderTime()}
                 </subheader>
                 <body>
-                    {this.renderStoryContents()}
+                    {this.renderRecentActivities()}
                 </body>
                 <footer>
-                    {this.renderLink()}
+                    {this.renderMoreLink()}
                 </footer>
             </UserSection>
         );
@@ -52,7 +53,7 @@ module.exports = React.createClass({
     renderProfileImage: function() {
         var resources = _.get(this.props.user, 'details.resources');
         var profileImage = _.find(resources, { type: 'image' });
-        var url = this.props.theme.getImageUrl(profileImage, 96, 96);
+        var url = this.props.theme.getImageUrl(profileImage, 80, 80);
         return (
             <div className="profile-image">
                 <img src={url} />
@@ -78,20 +79,28 @@ module.exports = React.createClass({
         )
     },
 
-    renderTime: function() {
-        var time = '2017-06-14';
-        return <Time time={time} locale={this.props.locale} />;
-    },
-
-    renderStoryContents: function() {
+    renderRecentActivities: function() {
         return (
             <div>
-                Story here
+                <div>
+                    <a href="#">Posted picture</a>
+                    <Time time="2017-07-27" locale={this.props.locale}/>
+                </div>
+                <div>
+                    <a href="#">Posted story</a>
+                    <Time time="2017-07-01" locale={this.props.locale}/>
+                </div>
+                <div>
+                    <a href="#">Commit changes</a>
+                    <Time time="2017-06-01" locale={this.props.locale}/>
+                </div>
             </div>
         )
     },
 
-    renderLink: function() {
-
+    renderMoreLink: function() {
+        return (
+            <a href="#">More...</a>
+        );
     },
 });

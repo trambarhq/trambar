@@ -9,9 +9,10 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var UserStory = require('views/user-story');
+var UserSummary = require('views/user-summary');
 var UserStatistics = require('views/user-statistics');
 var UserViewOptions = require('views/user-view-options');
+var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./user-view.scss');
 
@@ -76,13 +77,14 @@ module.exports = React.createClass({
             user: this.props.user,
             roles: this.props.roles,
             story: this.props.story,
+            cornerPopUp: this.renderPopUpMenu('main'),
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        return <UserStory {...props} />;
+        return <UserSummary {...props} />;
     },
 
     renderStatistics: function() {
@@ -99,8 +101,36 @@ module.exports = React.createClass({
         return <UserStatistics {...props} />;
     },
 
-    renderOptions: function() {
+    /**
+     * Render popup menu containing options for given section
+     *
+     * @param  {String} section
+     *
+     * @return {ReactElement}
+     */
+    renderPopUpMenu: function(section) {
+        if (this.props.theme.mode === 'columns-3') {
+            return null;
+        }
+        return (
+            <CornerPopUp>
+                {this.renderOptions(true, section)}
+            </CornerPopUp>
+        );
+    },
+
+    /**
+     * Render options pane or simply the list of options when it's in a menu
+     *
+     * @param  {Boolean} inMenu
+     * @param  {String} section
+     *
+     * @return {ReactElement}
+     */
+    renderOptions: function(inMenu, section) {
         var props = {
+            inMenu,
+            section,
             user: this.props.user,
 
             database: this.props.database,
