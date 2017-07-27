@@ -198,6 +198,11 @@ module.exports = function(languageCode) {
 
         'user-actions': 'Actions',
 
+        'user-statistics-legend-commit': 'Commits',
+        'user-statistics-legend-story': 'Posts',
+        'user-statistics-legend-survey': 'Surveys',
+        'user-statistics-legend-task-list': 'Task lists',
+
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',
         'video-capture-pause': 'Pause',

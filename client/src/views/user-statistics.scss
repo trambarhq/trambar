@@ -9,3 +9,27 @@
         stroke: #444444;
     }
 }
+
+.user-section.statistics {
+    .legend {
+        text-align: right;
+        font-size: 0.8em;
+
+        .item {
+            display: inline-block;
+            white-space: nowrap;
+            margin-left: 0.6em;
+
+            .ct-chart-bar {
+                width: 0.8em;
+                height: 0.8em;
+                vertical-align: middle;
+                margin-right: 0.3em;
+            }
+
+            .label {
+                vertical-align: middle;
+            }
+        }
+    }
+}

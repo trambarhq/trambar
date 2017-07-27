@@ -55,6 +55,7 @@ module.exports = React.createClass({
                     {this.renderButtons()}
                 </header>
                 <body>
+                    {this.renderLegend()}
                     {this.renderChart()}
                 </body>
             </UserSection>
@@ -95,6 +96,33 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render legend for data series
+     *
+     * @return {ReactElement}
+     */
+    renderLegend: function() {
+        var t = this.props.locale.translate;
+        var details = _.get(this.props.dailyActivities, 'details', {});
+        var indices = getActivityIndices(details);
+        var items = _.map(indices, (index, type) => {
+            var props = {
+                series: String.fromCharCode('a'.charCodeAt(0) + index),
+                label: t(`user-statistics-legend-${type}`),
+            };
+            return <LegendItem {...props} />;
+        });
+        if (_.isEmpty(items)) {
+            items = '\u00a0';
+        }
+        return <div className="legend">{items}</div>;
+    },
+
+    /**
+     * Render currently selected chart type
+     *
+     * @return {ReactElement}
+     */
     renderChart: function() {
         switch (this.state.chartType) {
             case 'bar': return this.renderBarChart();
@@ -103,10 +131,14 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render a stacked bar chart showing activities on each day
+     *
+     * @return {ReactElement}
+     */
     renderBarChart: function() {
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
-        var types = getActivityTypes(details);
         var series = getActivitySeries(details, dates);
         var labels = getDateLabel(dates, this.props.locale.languageCode);
         var chartProps = {
@@ -126,10 +158,14 @@ module.exports = React.createClass({
         return <Chartist {...chartProps} />;
     },
 
+    /**
+     * Render a line chart showing activities on each day
+     *
+     * @return {ReactElement}
+     */
     renderLineChart: function() {
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
-        var types = getActivityTypes(details);
         var series = getActivitySeries(details, dates);
         var labels = getDateLabel(dates, this.props.locale.languageCode);
         var chartProps = {
@@ -148,10 +184,14 @@ module.exports = React.createClass({
         return <Chartist {...chartProps} />;
     },
 
+    /**
+     * Render a pie chart showing relative frequencies of activity types
+     *
+     * @return {ReactElement}
+     */
     renderPieChart: function() {
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
-        var types = getActivityTypes(details);
         var series = getActivitySeries(details, dates);
         var seriesTotals = _.map(series, _.sum);
         var chartProps = {
@@ -168,33 +208,55 @@ module.exports = React.createClass({
         return <Chartist {...chartProps} />;
     },
 
+    /**
+     * Listen for date change over
+     */
     componentDidMount: function() {
         DateTracker.addEventListener('change', this.handleDateChange);
     },
 
+    /**
+     * Remove event listener and save state
+     */
     componentWillUnmount: function() {
         DateTracker.removeEventListener('change', this.handleDateChange);
         previousStates[this.props.user.id] = this.state;
     },
 
+    /**
+     * Called when user click bar chart button
+     *
+     * @param  {Event} evt
+     */
     handleBarChartClick: function(evt) {
         this.setState({ chartType: 'bar' });
     },
 
+    /**
+     * Called when user click line chart button
+     *
+     * @param  {Event} evt
+     */
     handleLineChartClick: function(evt) {
         this.setState({ chartType: 'line' });
     },
 
+    /**
+     * Called when user click pie chart button
+     *
+     * @param  {Event} evt
+     */
     handlePieChartClick: function(evt) {
         this.setState({ chartType: 'pie' });
     },
 
     /**
-     * Redraw the component when a date change-over occurs
+     * Called at midnight local time
      *
      * @param  {Object} evt
      */
     handleDateChange: function(evt) {
+        // TODO: this should happen at the list level, since we need new data
         this.forceUpdate();
     },
 });
@@ -218,13 +280,22 @@ var storyTypes = [
     'task-list',
 ];
 
-var getActivityTypes = function(activities) {
-    var types = [];
+var getActivityIndices = function(activities) {
+    var present = {};
     _.forIn(activities, (counts, date) => {
-        var typesOnDate = _.keys(counts);
-        types = _.union(types, typesOnDate);
+        _.forIn(counts, (count, type) => {
+            if (count) {
+                present[type] = true;
+            }
+        });
     });
-    return _.intersection(storyTypes, types);
+    var indices = {};
+    _.each(storyTypes, (type, index) => {
+        if (present[type]) {
+            indices[type] = index;
+        }
+    });
+    return indices;
 };
 
 var getActivitySeries = function(activities, dates) {
@@ -247,3 +318,18 @@ var getDateLabel = function(dates, languageCode) {
         return Moment(date).format('dd');
     });
 };
+
+function LegendItem(props) {
+    return (
+        <div className="item">
+            <svg className="ct-chart-bar" viewBox="0 0 10 10" mlns="http://www.w3.org/2000/svg">
+                <g className={`ct-series ct-series-${props.series}`}>
+                    <line className="ct-bar" x1={0} y1={5} x2={10} y2={5} />
+                </g>
+            </svg>
+            <span className="label">
+                {props.label}
+            </span>
+        </div>
+    )
+}
