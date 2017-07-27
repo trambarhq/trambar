@@ -188,6 +188,15 @@ module.exports = React.createClass({
     handlePieChartClick: function(evt) {
         this.setState({ chartType: 'pie' });
     },
+
+    /**
+     * Redraw the component when a date change-over occurs
+     *
+     * @param  {Object} evt
+     */
+    handleDateChange: function(evt) {
+        this.forceUpdate();
+    },
 });
 
 var previousStates = {};
