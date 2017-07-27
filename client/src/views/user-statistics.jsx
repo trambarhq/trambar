@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Chartist = require('widgets/chartist');
+var Moment = require('moment');
+var DateTracker = require('utils/date-tracker');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -11,13 +13,13 @@ var Theme = require('theme/theme');
 var UserSection = require('widgets/user-section');
 var HeaderButton = require('widgets/header-button');
 
-require('chartist/dist/scss/chartist.scss');
+require('./user-statistics.scss');
 
 module.exports = React.createClass({
     displayName: 'UserStatistics',
     propTypes: {
         user: PropTypes.object.isRequired,
-        statistics: PropTypes.object,
+        dailyActivities: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -31,6 +33,11 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        // use state from previous instance (unmounted due to on-demand rendering)
+        var previousState = previousStates[this.props.user.id];
+        if (previousState) {
+            return previousState;
+        }
         return {
             chartType: 'bar'
         };
@@ -97,59 +104,77 @@ module.exports = React.createClass({
     },
 
     renderBarChart: function() {
-        var data = {
-            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-            series: [
-                [800000, 1200000, 1400000, 1300000],
-                [200000, 400000, 500000, 300000],
-                [100000, 200000, 400000, 600000]
-            ]
-        };
-        var options = {
-            stackBars: true,
-            axisY: {
-                labelInterpolationFnc: function(value) {
-                    return (value / 1000) + 'k';
-                }
+        var details = _.get(this.props.dailyActivities, 'details', {});
+        var dates = getDates(DateTracker.today, 14);
+        var types = getActivityTypes(details);
+        var series = getActivitySeries(details, dates);
+        var labels = getDateLabel(dates, this.props.locale.languageCode);
+        var chartProps = {
+            type: 'bar',
+            data: { labels, series },
+            options: {
+                stackBars: true,
+                axisY: {
+                    labelInterpolationFnc: function(value) {
+                        return value;
+                    }
+                },
+                high: 20,
+                low: 0,
             }
         };
-        return <Chartist data={data} options={options} type="bar" />;
+        return <Chartist {...chartProps} />;
     },
 
     renderLineChart: function() {
-        var data = {
-            labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-            series: [
-                [5, 5, 10, 8, 7, 5, 4, null, null, null, 10, 10, 7, 8, 6, 9],
-                [10, 15, null, 12, null, 10, 12, 15, null, null, 12, null, 14, null, null, null],
-                [null, null, null, null, 3, 4, 1, 3, 4,  6,  7,  9, 5, null, null, null],
-                [{x:3, y: 3},{x: 4, y: 3}, {x: 5, y: undefined}, {x: 6, y: 4}, {x: 7, y: null}, {x: 8, y: 4}, {x: 9, y: 4}]
-            ]
+        var details = _.get(this.props.dailyActivities, 'details', {});
+        var dates = getDates(DateTracker.today, 14);
+        var types = getActivityTypes(details);
+        var series = getActivitySeries(details, dates);
+        var labels = getDateLabel(dates, this.props.locale.languageCode);
+        var chartProps = {
+            type: 'line',
+            data: { labels, series },
+            options: {
+                fullWidth: true,
+                chartPadding: {
+                    right: 10
+                },
+                showPoint: false,
+                high: 20,
+                low: 0,
+            }
         };
-        var options = {
-            fullWidth: true,
-            chartPadding: {
-                right: 10
-            },
-            lineSmooth: Chartist.Interpolation.cardinal({
-                fillHoles: true,
-            }),
-            low: 0
-        };
-        return <Chartist data={data} options={options} type="line" />;
+        return <Chartist {...chartProps} />;
     },
 
     renderPieChart: function() {
-        var data = {
-            series: [5, 3, 4]
-        };
-        var sum = function(a, b) { return a + b };
-        var options = {
-            labelInterpolationFnc: function(value) {
-                return Math.round(value / data.series.reduce(sum) * 100) + '%';
+        var details = _.get(this.props.dailyActivities, 'details', {});
+        var dates = getDates(DateTracker.today, 14);
+        var types = getActivityTypes(details);
+        var series = getActivitySeries(details, dates);
+        var seriesTotals = _.map(series, _.sum);
+        var chartProps = {
+            type: 'pie',
+            data: { series: seriesTotals },
+            options: {
+                labelInterpolationFnc: function(value) {
+                    if (value) {
+                        return value;
+                    }
+                }
             }
         };
-        return <Chartist data={data} options={options} type="pie" />;
+        return <Chartist {...chartProps} />;
+    },
+
+    componentDidMount: function() {
+        DateTracker.addEventListener('change', this.handleDateChange);
+    },
+
+    componentWillUnmount: function() {
+        DateTracker.removeEventListener('change', this.handleDateChange);
+        previousStates[this.props.user.id] = this.state;
     },
 
     handleBarChartClick: function(evt) {
@@ -164,3 +189,52 @@ module.exports = React.createClass({
         this.setState({ chartType: 'pie' });
     },
 });
+
+var previousStates = {};
+
+var getDates = function(today, count) {
+    var m = Moment(today);
+    var dates = _.times(count, () => {
+        var date = m.format('YYYY-MM-DD');
+        m.subtract(1, 'day');
+        return date;
+    });
+    return _.reverse(dates);
+}
+
+var storyTypes = [
+    'commit',
+    'story',
+    'survey',
+    'task-list',
+];
+
+var getActivityTypes = function(activities) {
+    var types = [];
+    _.forIn(activities, (counts, date) => {
+        var typesOnDate = _.keys(counts);
+        types = _.union(types, typesOnDate);
+    });
+    return _.intersection(storyTypes, types);
+};
+
+var getActivitySeries = function(activities, dates) {
+    return _.map(storyTypes, (type) => {
+        // don't include series that are completely empty
+        var empty = true;
+        var series = _.map(dates, (date) => {
+            var value = _.get(activities, [ date, type ], 0);
+            if (value) {
+                empty = false;
+            }
+            return value;
+        });
+        return (empty) ? [] : series;
+    });
+};
+
+var getDateLabel = function(dates, languageCode) {
+    return _.map(dates, (date) => {
+        return Moment(date).format('dd');
+    });
+};

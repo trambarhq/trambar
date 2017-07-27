@@ -22,6 +22,7 @@ module.exports = React.createClass({
         user: PropTypes.object.isRequired,
         story: PropTypes.object,
         currentUser: PropTypes.object.isRequired,
+        dailyActivities: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -88,7 +89,7 @@ module.exports = React.createClass({
         var props = {
             user: this.props.user,
             story: this.props.story,
-            statistics: this.props.statistics,
+            dailyActivities: this.props.dailyActivities,
 
             database: this.props.database,
             route: this.props.route,
