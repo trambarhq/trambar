@@ -37,6 +37,7 @@ function start() {
         app.get('/media/images/:filename', handleImageOriginalRequest);
         app.get('/media/videos/:filename', handleVideoRequest);
         app.get('/media/audios/:filename', handleAudioRequest);
+        //app.get('/media/html/screenshot/test', handleWebsiteScreenshotTest);
         app.post('/media/html/screenshot/:schema/:taskId', upload.array(), handleWebsiteScreenshot);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
         app.post('/media/videos/upload/:schema/:taskId', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'poster_file', maxCount: 1 }]), handleVideoUpload);
@@ -48,6 +49,7 @@ function start() {
 
         server = app.listen(80, () => {
             resolve();
+            startPhantom();
         });
         server.once('error', (evt) => {
             reject(new Error(evt.message));
@@ -167,6 +169,17 @@ function handleWebsiteScreenshot(req, res) {
 
         processWebsiteScreenshot(schema, taskId, websiteUrl);
         return null;
+    }).catch((err) => {
+        sendError(res, err);
+    });
+}
+
+function handleWebsiteScreenshotTest(req, res) {
+    // generate hash from URL + date
+    var url = req.query.url || 'https://www.google.com';
+    var tempPath = makeTempPath(imageCacheFolder, url, '.jpeg');
+    return createWebsiteScreenshot(url, tempPath).then((title) => {
+        res.type('jpeg').sendFile(tempPath);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -440,6 +453,24 @@ function handleStreamAppend(req, res) {
     });
 }
 
+var phantomPromise;
+
+function startPhantom() {
+    if (!phantomPromise) {
+        phantomPromise = B(Phantom.create(['--ignore-ssl-errors=yes']));
+    }
+    return phantomPromise;
+}
+
+function shutdownPhantom() {
+    if (phantomPromise) {
+        phantomPromise.then((instance) => {
+            instance.exit();
+        });
+        phantomPromise = null;
+    }
+}
+
 /**
  * Make screencap of website, returning the document title
  *
@@ -449,7 +480,7 @@ function handleStreamAppend(req, res) {
  * @return {Promise<String>}
  */
 function createWebsiteScreenshot(url, dstPath) {
-    return B(Phantom.create(['--ignore-ssl-errors=yes'])).then((instance) => {
+    return startPhantom().then((instance) => {
         return B(instance.createPage()).then((page) => {
             return B(page.setting('userAgent')).then((ua) => {
                 // indicate in the UA string that this is a bot
@@ -460,8 +491,10 @@ function createWebsiteScreenshot(url, dstPath) {
                     return page.setting(key, settings[key]);
                 });
             }).then(() => {
+                var width = 1024, height = 1024;
                 var properties = {
-                    viewportSize: { width: 1024,  height: 768 },
+                    viewportSize: { width,  height },
+                    clipRect: { left: 0, top: 0, width, height },
                 };
                 return Promise.each(_.keys(properties), (key) => {
                     return page.property(key, properties[key]);
@@ -497,9 +530,7 @@ function createWebsiteScreenshot(url, dstPath) {
             }).then((title) => {
                 return addJPEGDescription(title, dstPath).return(title);
             });
-        }).finally(() => {
-            instance.exit();
-        })
+        });
     });
 }
 
@@ -1148,3 +1179,7 @@ exports.stop = stop;
 if (process.argv[1] === __filename) {
     start();
 }
+
+process.on('beforeExit', () => {
+    shutdownPhantom();
+});
