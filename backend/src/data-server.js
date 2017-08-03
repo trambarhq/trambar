@@ -10,10 +10,11 @@ var HttpError = require('errors/http-error');
 // global accessors
 var Account = require('accessors/account');
 var Authorization = require('accessors/authorization');
-var Configuration = require('accessors/configuration');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
+var Repo = require('accessors/repo');
 var Role = require('accessors/role');
+var Server = require('accessors/server');
 var User = require('accessors/user');
 
 // project-specific accessors
@@ -23,7 +24,6 @@ var Folder = require('accessors/folder');
 var Issue = require('accessors/issue');
 var Listing = require('accessors/listing');
 var Reaction = require('accessors/reaction');
-var Repo = require('accessors/repo');
 var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
@@ -303,10 +303,11 @@ function fetchCredentials(db, userId) {
 
 var globalAccessors = [
     Account,
-    Configuration,
     Preferences,
     Project,
+    Repo,
     Role,
+    Server,
     User,
 ];
 var projectAccessors = [
@@ -316,7 +317,6 @@ var projectAccessors = [
     Issue,
     Listing,
     Reaction,
-    Repo,
     Robot,
     Statistics,
     Story,

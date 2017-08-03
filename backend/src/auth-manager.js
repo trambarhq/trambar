@@ -9,7 +9,7 @@ var HttpError = require('errors/http-error');
 var Database = require('database');
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
-var Configuration = require('accessors/configuration');
+var Server = require('accessors/server');
 var User = require('accessors/user');
 
 const plugins = {
@@ -99,10 +99,10 @@ function handleAuthenticationStart(req, res) {
             // send list of available strategies to client, along with the
             // authentication token
             var criteria = {
-                prefix: 'auth.strategy.',
+                prefix: 'oauth.',
                 deleted: false,
             };
-            return Configuration.find(db, 'global', criteria, 'name').then((configs) => {
+            return Server.find(db, 'global', criteria, 'name').then((configs) => {
                 return {
                     token: authentication.token,
                     providers: _.map(configs, (config) => {
@@ -160,10 +160,10 @@ function handleOAuthRequest(req, res, done) {
             }
         }).then(() => {
             var criteria = {
-                name: `auth.strategy.${provider}`,
+                name: `oauth-${provider}`,
                 deleted: false,
             };
-            return Configuration.findOne(db, 'global', criteria, 'details').then((config) => {
+            return Server.findOne(db, 'global', criteria, 'details').then((config) => {
                 if (!config) {
                     throw new HttpError(400);
                 }

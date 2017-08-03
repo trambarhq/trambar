@@ -4,7 +4,7 @@ var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
     schema: 'global',
-    table: 'configuration',
+    table: 'server',
     columns: {
         id: Number,
         gn: Number,

@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
-    schema: 'project',
+    schema: 'global',
     table: 'repo',
     columns: {
         id: Number,
@@ -12,12 +12,14 @@ module.exports = _.create(Data, {
         ctime: String,
         mtime: String,
         details: Object,
-        url: String,
+        type: String,
+        server_id: Number,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
-        url: String,
+        type: String,
+        server_id: Number,
     },
 
     /**
@@ -38,7 +40,8 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                url varchar(1024) NOT NULL DEFAULT '',
+                type varchar(64) NOT NULL,
+                server_id int NOT NULL,
                 PRIMARY KEY (id)
             );
         `;
