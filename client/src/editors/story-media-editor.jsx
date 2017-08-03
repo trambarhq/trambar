@@ -42,6 +42,11 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             capturingPhoto: false,
@@ -74,6 +79,13 @@ module.exports = React.createClass({
         return index;
     },
 
+    /**
+     * Return URL of resource preview
+     *
+     * @param  {Object} res
+     *
+     * @return {String}
+     */
     getResourceImageUrl: function(res) {
         var theme = this.props.theme;
         var url, file;
@@ -108,11 +120,19 @@ module.exports = React.createClass({
         return url;
     },
 
+    /**
+     * Add event listeners on mount
+     */
     componentWillMount: function() {
         document.addEventListener('paste', this.handlePaste);
         DeviceManager.addEventListener('change', this.handleDeviceChange);
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactELement}
+     */
     render: function() {
         return (
             <StorySection className="media-editor">
@@ -130,6 +150,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render buttons for ataching media
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         var photoButtonProps = {
@@ -226,16 +251,20 @@ module.exports = React.createClass({
     /**
      * Render resource navigation and editor
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderResources: function() {
         var index = this.getSelectedResourceIndex();
         var count = this.getResourceCount();
         if (index < 0) {
             var t = this.props.locale.translate;
-            return (
-                <div className="message">Drop and drop files here</div>
-            );
+            if (this.props.theme.mode === 'columns-1') {
+                return null;
+            } else {
+                return (
+                    <div className="message">Drop and drop files here</div>
+                );
+            }
         }
         var res = this.props.story.details.resources[index];
         return (
@@ -251,7 +280,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} res
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderResourceEditor: function(res) {
         switch (res.type) {
@@ -482,7 +511,7 @@ module.exports = React.createClass({
                 var duration = vid.duration;
                 return FrameGrabber.capture(vid).then((poster) => {
                     var video = {
-                        format, file, width, height, duration, 
+                        format, file, width, height, duration,
                         poster_file: poster
                     };
                     return this.attachVideo(video);

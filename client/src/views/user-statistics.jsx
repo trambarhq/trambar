@@ -39,8 +39,23 @@ module.exports = React.createClass({
             return previousState;
         }
         return {
-            chartType: 'bar'
+            chartType: 'bar',
+            showingContents: false,
         };
+    },
+
+    /**
+     * Return true if contents isn't collapsed
+     *
+     * @return {Boolean}
+     */
+    isShowingContents: function() {
+        if (!this.state.showingContents) {
+            if (this.props.theme.mode === 'columns-1') {
+                return false;
+            }
+        }
+        return true;
     },
 
     /**
@@ -69,22 +84,23 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var showingContents = this.isShowingContents();
         var barChartProps = {
             label: t('statistics-bar'),
             icon: 'bar-chart',
-            highlighted: (this.state.chartType === 'bar'),
+            highlighted: (showingContents && this.state.chartType === 'bar'),
             onClick: this.handleBarChartClick,
         };
         var lineChartProps = {
             label: t('statistics-line'),
             icon: 'line-chart',
-            highlighted: (this.state.chartType === 'line'),
+            highlighted: (showingContents && this.state.chartType === 'line'),
             onClick: this.handleLineChartClick,
         };
         var pieChartProps = {
             label: t('statistics-pie'),
             icon: 'pie-chart',
-            highlighted: (this.state.chartType === 'pie'),
+            highlighted: (showingContents && this.state.chartType === 'pie'),
             onClick: this.handlePieChartClick,
         };
         return (
@@ -102,6 +118,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderLegend: function() {
+        if (!this.isShowingContents()) {
+            return null;
+        }
         var t = this.props.locale.translate;
         var details = _.get(this.props.dailyActivities, 'details', {});
         var indices = getActivityIndices(details);
@@ -109,6 +128,7 @@ module.exports = React.createClass({
             var props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
                 label: t(`user-statistics-legend-${type}`),
+                key: index,
             };
             return <LegendItem {...props} />;
         });
@@ -124,6 +144,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderChart: function() {
+        if (!this.isShowingContents()) {
+            return null;
+        }
         switch (this.state.chartType) {
             case 'bar': return this.renderBarChart();
             case 'line': return this.renderLineChart();
@@ -229,7 +252,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleBarChartClick: function(evt) {
-        this.setState({ chartType: 'bar' });
+        this.setState({ chartType: 'bar', showingContents: true });
     },
 
     /**
@@ -238,7 +261,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleLineChartClick: function(evt) {
-        this.setState({ chartType: 'line' });
+        this.setState({ chartType: 'line', showingContents: true });
     },
 
     /**
@@ -247,7 +270,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePieChartClick: function(evt) {
-        this.setState({ chartType: 'pie' });
+        this.setState({ chartType: 'pie', showingContents: true });
     },
 
     /**
@@ -322,7 +345,7 @@ var getDateLabel = function(dates, languageCode) {
 function LegendItem(props) {
     return (
         <div className="item">
-            <svg className="ct-chart-bar" viewBox="0 0 10 10" mlns="http://www.w3.org/2000/svg">
+            <svg className="ct-chart-bar" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
                 <g className={`ct-series ct-series-${props.series}`}>
                     <line className="ct-bar" x1={0} y1={5} x2={10} y2={5} />
                 </g>

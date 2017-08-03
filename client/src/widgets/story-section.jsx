@@ -29,12 +29,13 @@ module.exports = React.createClass({
         if (!element) {
             return null;
         }
-        if (_.isEmpty(element.props.children)) {
+        var contents = React.Children.toArray(element.props.children);
+        if (_.isEmpty(contents)) {
             return null;
         }
         return (
             <div className={tag} {...element.props}>
-                {element.props.children}
+                {contents}
             </div>
         );
     },
