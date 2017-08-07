@@ -14,12 +14,14 @@ module.exports = _.create(Data, {
         details: Object,
         type: String,
         server_id: Number,
+        external_id: Number,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         type: String,
         server_id: Number,
+        external_id: Number,
     },
 
     /**
@@ -42,6 +44,7 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(64) NOT NULL,
                 server_id int NOT NULL,
+                external_id int NOT NULL,    
                 PRIMARY KEY (id)
             );
         `;

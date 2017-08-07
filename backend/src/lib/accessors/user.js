@@ -15,6 +15,8 @@ module.exports = _.create(Data, {
         emails: Array(String),
         project_ids: Array(Number),
         role_ids: Array(Number),
+        server_id: Number,
+        external_id: Number,
     },
     criteria: {
         id: Number,
@@ -22,6 +24,8 @@ module.exports = _.create(Data, {
         emails: Array(String),
         project_ids: Array(Number),
         role_ids: Array(Number),
+        server_id: Number,
+        external_id: Number,
     },
 
     /**
@@ -46,6 +50,8 @@ module.exports = _.create(Data, {
                 emails varchar(128)[] NOT NULL DEFAULT '{}'::text[],
                 project_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
+                server_id int,
+                external_id int,
                 PRIMARY KEY (id)
             );
         `;

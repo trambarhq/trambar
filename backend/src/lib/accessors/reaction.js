@@ -16,6 +16,8 @@ module.exports = _.create(Data, {
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
+        repo_id: Number,
+        external_id: Number,
         published: Boolean,
         ptime: String,
         public: Boolean,
@@ -27,6 +29,8 @@ module.exports = _.create(Data, {
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
+        repo_id: Number,
+        external_id: Number,
         published: Boolean,
         public: Boolean,
         time_range: String,
@@ -60,8 +64,11 @@ module.exports = _.create(Data, {
                 published boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
+                repo_id int,
+                external_id int,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
         `;
         return db.execute(sql);
     },

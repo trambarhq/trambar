@@ -16,10 +16,11 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,       // post, commit, merge, deployment, issue, task-start, task-end, survey
-        related_object_id: Number,
         published_version_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
+        repo_id: Number,
+        issue_id: Number,
         published: Boolean,
         ptime: String,
         public: Boolean,
@@ -28,10 +29,11 @@ module.exports = _.create(Data, {
         id: Number,
         deleted: Boolean,
         type: String,
-        related_object_id: Number,
         published_version_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
+        repo_id: Number,
+        issue_id: Number,
         published: Boolean,
         public: Boolean,
         time_range: String,
@@ -59,21 +61,29 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                related_object_id int,
                 published_version_id int,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
+                repo_id int,
+                issue_id int,
                 published boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (ptime) WHERE repo_id IS NOT NULL AND ptime IS NOT NULL;
+            CREATE INDEX ON ${table} (repo_id, issue_id) WHERE repo_id IS NOT NULL AND issue_id IS NOT NULL;
         `;
         return db.execute(sql);
     },
 
     apply: function(criteria, query) {
-        var special = [ 'time_range', 'newer_than', 'older_than', 'ready' ];
+        var special = [
+            'time_range',
+            'newer_than',
+            'older_than',
+            'ready',
+        ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
@@ -123,16 +133,6 @@ module.exports = _.create(Data, {
                 public: row.public,
                 published: row.published,
             };
-            if (row.related_object_id) {
-                switch (row.type) {
-                    case 'commit':
-                        object.commit_id = row.related_object_id;
-                        break;
-                    case 'issue':
-                        object.issue_id = row.related_object_id;
-                        break;
-                }
-            }
             if (row.published_version_id) {
                 object.published_version_id = row.published_version_id;
             }

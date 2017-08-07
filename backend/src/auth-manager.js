@@ -102,7 +102,7 @@ function handleAuthenticationStart(req, res) {
                 prefix: 'oauth.',
                 deleted: false,
             };
-            return Server.find(db, 'global', criteria, 'name').then((configs) => {
+            return Server.find(db, 'global', criteria, 'type').then((configs) => {
                 return {
                     token: authentication.token,
                     providers: _.map(configs, (config) => {
@@ -160,7 +160,7 @@ function handleOAuthRequest(req, res, done) {
             }
         }).then(() => {
             var criteria = {
-                name: `oauth-${provider}`,
+                type: `oauth-${provider}`,
                 deleted: false,
             };
             return Server.findOne(db, 'global', criteria, 'details').then((config) => {

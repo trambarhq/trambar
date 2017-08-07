@@ -16,24 +16,21 @@ var server;
 var sockets = [];
 
 function start() {
-    var tables = [
-        'user',
-        'preferences',
-        'project',
-
-        'bookmark',
-        'commit',
-        'folder',
-        'issue',
-        'listing',
-        'reaction',
-        'repo',
-        'robot',
-        'role',
-        'statistics',
-        'story',
-    ];
     return Database.open(true).then((db) => {
+        var tables = [
+            'user',
+            'preferences',
+            'project',
+
+            'bookmark',
+            'listing',
+            'reaction',
+            'repo',
+            'robot',
+            'role',
+            'statistics',
+            'story',
+        ];
         return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
             var sockJS = SockJS.createServer({
                 sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js'

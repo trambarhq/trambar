@@ -12,12 +12,12 @@ module.exports = _.create(Data, {
         ctime: String,
         mtime: String,
         details: Object,
-        name: String,
+        type: String,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
-        name: String,
+        type: String,
         prefix: String,
     },
 
@@ -39,7 +39,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                name varchar(64),
+                type varchar(64),
                 PRIMARY KEY (id)
             );
         `;
@@ -55,7 +55,7 @@ module.exports = _.create(Data, {
         if (criteria.prefix) {
             var pattern = `${criteria.prefix}%`;
             params.push(pattern);
-            conds.push(`name LIKE $${params.length}`);
+            conds.push(`type LIKE $${params.length}`);
         }
     },
 
@@ -76,7 +76,7 @@ module.exports = _.create(Data, {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
-                name: row.name,
+                type: row.type,
             };
             return object;
         });

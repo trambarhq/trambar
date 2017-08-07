@@ -8,7 +8,6 @@ var Database = require('database');
 var HttpError = require('errors/http-error');
 
 // global accessors
-var Account = require('accessors/account');
 var Authorization = require('accessors/authorization');
 var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
@@ -19,9 +18,6 @@ var User = require('accessors/user');
 
 // project-specific accessors
 var Bookmark = require('accessors/bookmark');
-var Commit = require('accessors/commit');
-var Folder = require('accessors/folder');
-var Issue = require('accessors/issue');
 var Listing = require('accessors/listing');
 var Reaction = require('accessors/reaction');
 var Robot = require('accessors/robot');
@@ -302,7 +298,6 @@ function fetchCredentials(db, userId) {
 }
 
 var globalAccessors = [
-    Account,
     Preferences,
     Project,
     Repo,
@@ -312,9 +307,6 @@ var globalAccessors = [
 ];
 var projectAccessors = [
     Bookmark,
-    Commit,
-    Folder,
-    Issue,
     Listing,
     Reaction,
     Robot,

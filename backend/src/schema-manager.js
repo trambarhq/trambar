@@ -3,7 +3,6 @@ var Promise = require('bluebird');
 var Database = require('database');
 
 // global accessors
-var Account = require('accessors/account');
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
 var Preferences = require('accessors/preferences');
@@ -15,9 +14,6 @@ var User = require('accessors/user');
 
 // project accessors
 var Bookmark = require('accessors/bookmark');
-var Commit = require('accessors/commit');
-var Folder = require('accessors/folder');
-var Issue = require('accessors/issue');
 var Listing = require('accessors/listing');
 var Reaction = require('accessors/reaction');
 var Robot = require('accessors/robot');
@@ -149,7 +145,6 @@ function upgradeDatabase(db) {
 }
 
 var globalAccessors = [
-    Account,
     Authentication,
     Authorization,
     Preferences,
@@ -161,9 +156,6 @@ var globalAccessors = [
 ];
 var projectAccessors = [
     Bookmark,
-    Commit,
-    Folder,
-    Issue,
     Listing,
     Reaction,
     Robot,
