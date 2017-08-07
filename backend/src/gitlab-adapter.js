@@ -186,23 +186,16 @@ function importRepositories(db, server) {
     var url = `/projects`;
     return fetch(server, url).then((projects) => {
         return Repo.find(db, 'global', { server_id: server.id }, '*').then((repos) => {
-            var fields = [
-                'name',
-                'ssh_url',
-                'http_url',
-                'web_url',
-                'issues_enabled',
-                'archived',
-            ];
             var changes = [];
             var imported = {};
             _.each(repos, (repo) => {
                 var project = _.find(projects, { id: repo.external_id });
                 if (project) {
-                    var detailsBefore = repo.details;
-                    repo.details = _.pick(project, fields);
-                    if (repo.deleted !== false || !_.isEqual(repo.details, detailsBefore)) {
-                        repo.deleted = false;
+                    var repoBefore = repo;
+                    repo = _.clone(repo);
+                    repo.deleted = false;
+                    copyRepoDetails(repo, project);
+                    if (!_.isEqual(repo, repoBefore)) {
                         changes.push(repo);
                     }
                     imported[project.id] = true;
@@ -219,14 +212,27 @@ function importRepositories(db, server) {
                         server_id: server.id,
                         external_id: project.id,
                         type: 'gitlab',
-                        details: _.pick(project, fields),
+                        details: {},
                     };
+                    copyRepoDetails(repo, project);
                     changes.push(repo);
                 }
             });
             return Repo.save(db, 'global', changes);
         });
     });
+}
+
+function copyRepoDetails(repo, project) {
+    var fields = [
+        'name',
+        'ssh_url',
+        'http_url',
+        'web_url',
+        'issues_enabled',
+        'archived',
+    ];
+    _.assign(repo.details, _.pick(project, fields));
 }
 
 /**
@@ -246,10 +252,11 @@ function importUsers(db, server) {
             _.each(users, (user) => {
                 var account = _.find(accounts, { id: user.external_id });
                 if (account) {
-                    var detailsBefore = user.details;
-                    user.details = _.assign(_.clone(user.details), _.pick(account, 'web_url'));
-                    if (user.deleted !== false || !_.isEqual(user.details, detailsBefore)) {
-                        user.deleted = false;
+                    var userBefore = user;
+                    user = _.cloneDeep(user);
+                    user.deleted = false;
+                    copyUserDetails(user, account);
+                    if (!_.isEqual(user, userBefore)) {
                         changes.push(user);
                     }
                     imported[account.id] = true;
@@ -262,37 +269,35 @@ function importUsers(db, server) {
             });
             _.each(accounts, (account) => {
                 if (!imported[account.id]) {
-                    var details = {
-                        name: account.name,
-                        web_url: account.web_url,
-                    };
-                    var nameParts = _.split(account.name, /\s+/);
-                    if (nameParts.length >= 2) {
-                        details.first_name = _.first(nameParts);
-                        details.last_name = _.last(nameParts);
-                    }
-                    if (account.skype) {
-                        details.skype_name = account.skype;
-                    }
-                    if (account.twitter) {
-                        details.twiter_name = account.twitter;
-                    }
-                    if (account.linkedin) {
-                        account.linkedin_name = account.linkedin_name;
-                    }
                     var user = {
                         server_id: server.id,
                         external_id: account.id,
                         type: 'member',
-                        emails: [ account.email ],
-                        details,
+                        emails: [],
+                        details: {},
                     };
+                    copyUserDetails(user, account);
                     changes.push(user);
                 }
             });
             return User.save(db, 'global', changes);
         });
     });
+}
+
+function copyUserDetails(user, account) {
+    user.details.name = account.name;
+    var nameParts = _.split(account.name, /\s+/);
+    user.details.first_name = (nameParts.length >= 2) ? _.first(nameParts) : undefined;
+    user.details.last_name = (nameParts.length >= 2) ? _.last(nameParts) : undefined;
+    user.details.web_url = account.web_url;
+    user.details.username = account.username;
+    user.details.skype_username = account.skype || undefined;
+    user.details.twiter_username = account.twitter || undefined;
+    user.details.linkedin_username = account.linkedin_name || undefined;
+    if (!_.includes(user.emails, account.email)) {
+        user.emails.push(account.email);
+    }
 }
 
 /**
