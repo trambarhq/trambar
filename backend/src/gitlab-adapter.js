@@ -185,7 +185,47 @@ function handleHookCallback(req, res) {
 function importRepositories(db, server) {
     var url = `/projects`;
     return fetch(server, url).then((projects) => {
-        console.log(projects);
+        return Repo.find(db, 'global', { server_id: server.id }, '*').then((repos) => {
+            var fields = [
+                'name',
+                'ssh_url',
+                'http_url',
+                'web_url',
+                'issues_enabled',
+                'archived',
+            ];
+            var changes = [];
+            var imported = {};
+            _.each(repos, (repo) => {
+                var project = _.find(projects, { id: repo.external_id });
+                if (project) {
+                    var detailsBefore = repo.details;
+                    repo.details = _.pick(project, fields);
+                    if (repo.deleted !== false || !_.isEqual(repo.details, detailsBefore)) {
+                        repo.deleted = false;
+                        changes.push(repo);
+                    }
+                    imported[project.id] = true;
+                } else {
+                    if (repo.deleted !== true) {
+                        repo.deleted = true;
+                        changes.push(repo);
+                    }
+                }
+            });
+            _.each(projects, (project) => {
+                if (!imported[project.id]) {
+                    var repo = {
+                        server_id: server.id,
+                        external_id: project.id,
+                        type: 'gitlab',
+                        details: _.pick(project, fields),
+                    };
+                    changes.push(repo);
+                }
+            });
+            return Repo.save(db, 'global', changes);
+        });
     });
 }
 
@@ -200,7 +240,58 @@ function importRepositories(db, server) {
 function importUsers(db, server) {
     var url = `/users`;
     return fetch(server, url).then((accounts) => {
-        console.log(accounts);
+        return User.find(db, 'global', { server_id: server.id }, '*').then((users) => {
+            var changes = [];
+            var imported = {};
+            _.each(users, (user) => {
+                var account = _.find(accounts, { id: user.external_id });
+                if (account) {
+                    var detailsBefore = user.details;
+                    user.details = _.assign(_.clone(user.details), _.pick(account, 'web_url'));
+                    if (user.deleted !== false || !_.isEqual(user.details, detailsBefore)) {
+                        user.deleted = false;
+                        changes.push(user);
+                    }
+                    imported[account.id] = true;
+                } else {
+                    if (user.deleted !== true) {
+                        user.deleted = true;
+                        changes.push(user);
+                    }
+                }
+            });
+            _.each(accounts, (account) => {
+                if (!imported[account.id]) {
+                    var details = {
+                        name: account.name,
+                        web_url: account.web_url,
+                    };
+                    var nameParts = _.split(account.name, /\s+/);
+                    if (nameParts.length >= 2) {
+                        details.first_name = _.first(nameParts);
+                        details.last_name = _.last(nameParts);
+                    }
+                    if (account.skype) {
+                        details.skype_name = account.skype;
+                    }
+                    if (account.twitter) {
+                        details.twiter_name = account.twitter;
+                    }
+                    if (account.linkedin) {
+                        account.linkedin_name = account.linkedin_name;
+                    }
+                    var user = {
+                        server_id: server.id,
+                        external_id: account.id,
+                        type: 'member',
+                        emails: [ account.email ],
+                        details,
+                    };
+                    changes.push(user);
+                }
+            });
+            return User.save(db, 'global', changes);
+        });
     });
 }
 
