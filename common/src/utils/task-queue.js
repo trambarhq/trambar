@@ -18,7 +18,11 @@ TaskQueue.prototype.schedule = function(f) {
 TaskQueue.prototype.next = function() {
     var f = this.tasks.shift();
     if (f) {
-        var promise = f();
+        try {
+            var promise = f();
+        } catch(err) {
+            console.error(err);
+        }
         if (promise) {
             this.busy = true;
             promise.catch((err) => {

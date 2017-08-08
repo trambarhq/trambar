@@ -4,6 +4,7 @@ var Express = require('express');
 var BodyParser = require('body-parser');
 var Request = require('request');
 var Moment = require('moment');
+var ParseDiff = require('parse-diff');
 var Database = require('database');
 var TaskQueue = require('utils/task-queue');
 var Async = require('utils/async-do-while');
@@ -57,6 +58,9 @@ var taskQueue = new TaskQueue;
 function handleDatabaseChanges(events) {
     var db = database;
     _.each(events, (event) => {
+        if (event.action === 'DELETE') {
+            return;
+        }
         if (event.table === 'server') {
             // import users, roles, and repos from server
             if (event.diff.details) {
@@ -80,16 +84,16 @@ function handleDatabaseChanges(events) {
                 var projectId = event.id;
                 var repoIdsBefore = event.diff.repo_ids[0];
                 var repoIdsAfter = event.diff.repo_ids[1];
-                var newRepoIds = _.difference(repoIdsBefore, repoIdsAfter);
+                var newRepoIds = _.difference(repoIdsAfter, repoIdsBefore);
                 _.each(newRepoIds, (repoId) => {
                     taskQueue.schedule(() => {
                         var db = database;
-                        return Repo.find(db, 'global', { id: repoId }, '*').then((repo) => {
-                            return Project.find(db, 'global', { id: projectId }, '*').then((project) => {
+                        return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
+                            return Project.findOne(db, 'global', { id: projectId }, '*').then((project) => {
                                 if (!repo || !project) {
                                     return;
                                 }
-                                return Server.find(db, 'global', { id: repo.server_id }, '*').then((server) => {
+                                return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
                                     return importEvents(db, server, repo, project);
                                 });
                             });
@@ -98,20 +102,23 @@ function handleDatabaseChanges(events) {
                 });
             }
         } else if (event.table === 'story') {
+            if (event.diff.repo_id) {
+                return;
+            }
             // copy contents from story to issue tracker
             var storyId = event.id;
-            Story.find(db, event.schema, { id: storyId }, '*').then((story) => {
+            Story.findOne(db, event.schema, { id: storyId }, '*').then((story) => {
                 var issueTracking = story.details.issue_tracking;
                 var repoId = story.repo_id;
                 var issueId = story.issue_id;
                 if (issueTracking && repoId) {
                     taskQueue.schedule(() => {
-                        return Repo.find(db, 'global', { id: repoId }, '*').then((repo) => {
-                            return Project.find(db, 'global', { name: schema }, '*').then((project) => {
+                        return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
+                            return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
                                 if (!repo || !project || !_.includes(project.repo_ids, repo.id)) {
                                     return;
                                 }
-                                return Server.find(db, 'global', { id: repo.server_id }, '*').then((server) => {
+                                return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
                                     exportStory(project, reaction, server, repo, issueId);
                                 });
                             });
@@ -120,24 +127,27 @@ function handleDatabaseChanges(events) {
                 }
             });
         } else if (event.table === 'reaction') {
+            if (event.diff.repo_id) {
+                return;
+            }
             // add comments to issue tracker
             var schema = event.schema;
             var reactionId = event.id;
-            Reaction.find(db, schema, { id: reactionId }, '*').then((reaction) => {
+            Reaction.findOne(db, schema, { id: reactionId }, '*').then((reaction) => {
                 if (!reaction || !reaction.ptime || reaction.type !== 'comment') {
                     return;
                 }
-                return Story.find(db, event.schema, { id: story_id }, '*').then((story) => {
+                return Story.findOne(db, event.schema, { id: story_id }, '*').then((story) => {
                     var repoId = story.repo_id;
                     var issueId = story.issue_id;
                     if (repoId && issueId) {
                         taskQueue.schedule(() => {
-                            return Repo.find(db, 'global', { id: repoId }, '*').then((repo) => {
-                                return Project.find(db, 'global', { name: schema }, '*').then((project) => {
+                            return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
+                                return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
                                     if (!repo || !project || !_.includes(project.repo_ids, repo.id)) {
                                         return;
                                     }
-                                    return Server.find(db, 'global', { id: repo.server_id }, '*').then((server) => {
+                                    return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
                                         exportComment(project, reaction, server, repo, issueId);
                                     });
                                 });
@@ -156,12 +166,12 @@ function handleHookCallback(req, res) {
     var message = req.body;
     taskQueue.schedule(() => {
         var db = database;
-        return Repo.find(db, 'global', { id: repoId }, '*').then((repo) => {
-            return Project.find(db, 'global', { id: projectId }, '*').then((project) => {
+        return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
+            return Project.findOne(db, 'global', { id: projectId }, '*').then((project) => {
                 if (!repo || !project || !_.includes(project.repo_ids, repo.id)) {
                     return;
                 }
-                return Server.find(db, 'global', { id: repo.server_id }, '*').then((server) => {
+                return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
                     if (msg.body.object_kind === 'note') {
                         return importComments(db, server, repo, message, project);
                     } else {
@@ -223,6 +233,12 @@ function importRepositories(db, server) {
     });
 }
 
+/**
+ * Copy details from Gitlab project object
+ *
+ * @param  {Repo} repo
+ * @param  {Object} project
+ */
 function copyRepoDetails(repo, project) {
     var fields = [
         'name',
@@ -285,6 +301,12 @@ function importUsers(db, server) {
     });
 }
 
+/**
+ * Copy details from Gitlab user object
+ *
+ * @param  {Repo} repo
+ * @param  {Object} project
+ */
 function copyUserDetails(user, account) {
     user.details.name = account.name;
     var nameParts = _.split(account.name, /\s+/);
@@ -301,22 +323,6 @@ function copyUserDetails(user, account) {
 }
 
 /**
- * Import a users from Gitlab
- *
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Number} gitlabUserId
- *
- * @return {Promise<User>}
- */
-function importUser(db, server, gitlabUserId) {
-    var url = `/users/${gitlabUserId}`;
-    return fetch(server, url).then((account) => {
-        console.log(account);
-    });
-}
-
-/**
  * Find user with user id, importing the user if it's not t
  *
  * @param  {Database} db
@@ -327,26 +333,37 @@ function importUser(db, server, gitlabUserId) {
  */
 function findUser(db, server, gitlabUserId) {
     var criteria = {
-        server_id: server_id,
+        server_id: server.id,
         external_id: gitlabUserId,
     };
     return User.findOne(db, 'global', criteria, '*').then((user) => {
         if (user) {
             return user;
         } else {
-            return importUser(db, server, gitlabUserId);
+            return importUsers(db, server).then((users) => {
+                return _.find(users, { external_id: gitlabUserId });
+            });
         }
     });
 }
 
+/**
+ * Return publication time of the most recent story from repository
+ *
+ * @param  {Database} db
+ * @param  {Project} project
+ * @param  {Repo} repo
+ *
+ * @return {Promise<Moment>}
+ */
 function findLastEventTime(db, project, repo) {
     var criteria = {
         repo_id: repo.id,
         ready: true,
     };
     return Story.findOne(db, project.name, criteria, 'MAX(ptime) AS time').then((row) => {
-        return (row) ? row.time : null;
-    })
+        return (row && row.time) ? Moment(row.time) : null;
+    });
 }
 
 /**
@@ -361,23 +378,32 @@ function findLastEventTime(db, project, repo) {
  */
 function importEvents(db, server, repo, project) {
     return findLastEventTime(db, project, repo).then((lastEventTime) => {
-        var url = `/projects/${repo.details.gitlab_id}/events`;
+        var url = `/projects/${repo.external_id}/events`;
         var query = {
             sort: 'asc',
             per_page: 50,
             page: 1,
         };
         if (lastEventTime) {
-            query.after = lastEventTime.format('YYYY-MM-DD');
+            //query.after = lastEventTime.format('YYYY-MM-DD');
+            query.after = lastEventTime.toISOString();
         }
         var done = false;
+        var stories = [];
         Async.do(() => {
             return fetch(server, url, query).then((events) => {
-                events = _.filter(events, (event) => {
-                    return Moment(event.created_at) > lastEventTime;
-                });
+                if (lastEventTime) {
+                    events = _.filter(events, (event) => {
+                        return Moment(event.created_at) > lastEventTime;
+                    });
+                }
+                console.log('Events: ' + _.size(events));
                 return Promise.each(events, (event) => {
-                    return importEvent(db, server, repo, event, project);
+                    return importEvent(db, server, repo, event, project).then((story) => {
+                        if (story) {
+                            stories.push(story);
+                        }
+                    });
                 }).then(() => {
                     if (events.length === query.per_page) {
                         query.page++;
@@ -389,6 +415,12 @@ function importEvents(db, server, repo, project) {
         });
         Async.while(() => {
             return !done;
+        });
+        Async.finally((err) => {
+            if (err) {
+                throw err;
+            }
+            return stories;
         });
         return Async.end();
     });
@@ -418,14 +450,17 @@ function importEvent(db, server, repo, event, project) {
             case 'MergeRequest':
                 return importMergeRequestEvent(db, server, repo, event, author, project);
         }
-        switch (event.action) {
+        switch (event.action_name) {
             case 'deleted':
             case 'created':
             case 'imported':
                 return importRepoEvent(db, server, repo, event, author, project);
             case 'joined':
                 return importMembershipEvent(db, server, repo, event, author, project);
+                case 'pushed new':
+            case 'pushed_new':
             case 'pushed new':
+            case 'pushed_to':
             case 'pushed to':
                 return importPushEvent(db, server, repo, event, author, project);
         }
@@ -497,7 +532,7 @@ function importRepoEvent(db, server, repo, event, author, project) {
 }
 
 /**
- * Import an activity log entry about an issue
+ * Import an activity log entry about a push
  *
  * @param  {Database} db
  * @param  {Server} server
@@ -509,11 +544,89 @@ function importRepoEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importPushEvent(db, server, repo, event, author, project) {
-
+    var previousCommitHash = event.data.before;
+    var finalCommitHash = event.data.after;
+    var totalCommitCount = event.data.total_commits_count;
+    return fetchCommits(server, repo, finalCommitHash, previousCommitHash, totalCommitCount).then((commits) => {
+        // look for component descriptions
+        return retrieveComponentDescriptions(server, repo, commits).then((componentChanges) => {
+            var commitIds = [];
+            var lineChanges = {
+                added: 0,
+                deleted: 0,
+            };
+            var added = {};
+            var renamed = {};
+            var deleted = {};
+            var modified = {};
+            _.each(commits, (commit) => {
+                if (commit.lines) {
+                    lineChanges.added += commit.lines.additions;
+                    lineChanges.deleted += commit.lines.deletions;
+                }
+                if (commit.files) {
+                    _.each(commit.files.added, (path) => {
+                        added[path] = true;
+                    });
+                    _.each(commit.files.deleted, (path) => {
+                        // if the file was deleted within this push, ignore it
+                        if (added[path]) {
+                            delete added[path];
+                        } else {
+                            deleted[path] = true;
+                        }
+                    });
+                    _.each(commit.files.renamed, (path) => {
+                        // if the file was renamed within this push, treat it
+                        // as an addition under the new name
+                        if (added[path.before]) {
+                            delete added[path.before];
+                            added[path.after] = true;
+                        } else {
+                            if (renamed[path.before]) {
+                                delete renamed[path.before];
+                            }
+                            renamed[path.after] = true;
+                        }
+                    });
+                    _.each(commit.files.modified, (path) => {
+                        // if the file was added by this push, don't treat it
+                        // as a modification
+                        if (!added[path]) {
+                            modified[path] = true;
+                        }
+                    });
+                }
+            });
+            var fileChanges = _.pickBy({
+                added: _.size(added),
+                renamed: _.size(renamed),
+                deleted: _.size(deleted),
+                modified: _.size(modified),
+            });
+            var details = {
+                commit_ids: commitIds,
+                lines: lineChanges,
+                files: fileChanges,
+                components: componentChanges,
+            };
+            var story = {
+                type: 'push',
+                user_ids: [ author.id ],
+                role_ids: author.role_ids,
+                repo_id: repo.id,
+                details,
+                published: true,
+                ptime: Moment(event.created_at).toISOString(),
+            };
+            console.log(story);
+            return Story.insertOne(db, project.name, story);
+        });
+    });
 }
 
 /**
- * Import an activity log entry about an issue
+ * Import an activity log entry about someone joining the project
  *
  * @param  {Database} db
  * @param  {Server} server
@@ -551,6 +664,95 @@ function importComments(db, server, repo, msg, project) {
 
 function installProjectHooks(db, project) {
 
+}
+
+/**
+ * Retrieve commits from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {String} finalCommitHash
+ * @param  {String} previousCommitHash
+ * @param  {Number} totalCommitCount
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function fetchCommits(server, repo, finalCommitHash, previousCommitHash, totalCommitCount) {
+    var commits = [];
+    return fetchCommitsRecursive(server, repo, finalCommitHash, previousCommitHash, totalCommitCount, commits).then(() => {
+        return _.orderBy(commits, [ 'committed_date' ], [ 'asc' ]);
+    });
+}
+
+/**
+ * Currently retrieve commits and their parents until the end is reach
+ *
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {String} hash
+ * @param  {String} endHash
+ * @param  {Number} limit
+ * @param  {Array} results
+ *
+ * @return {Promise}
+ */
+function fetchCommitsRecursive(server, repo, hash, endHash, limit, results) {
+    if (hash === endHash || results.length === limit) {
+        return Promise.resolve();
+    }
+    var url1 = `/projects/${repo.external_id}/repository/commits/${hash}`;
+    return fetch(server, url1).then((commit) => {
+        var url2 = `${url1}/diff`;
+        return fetch(server, url2).then((files) => {
+            var fileChanges = {
+                added: [],
+                deleted: [],
+                renamed: [],
+                modified: [],
+            };
+            _.each(files, (file) => {
+                if (file.new_file) {
+                    fileChanges.added.push(file.new_path);
+                } else if (file.deleted_file) {
+                    fileChanges.deleted.push(file.old_path);
+                } else if (file.renamed_file) {
+                    fileChanges.renamed.push({
+                        before: file.old_path,
+                        after: file.new_path,
+                    });
+                    if (file.diff) {
+                        // check if the file was renamed and modified
+                        var diff = _.first(ParseDiff(file.diff));
+                        if (diff) {
+                            if (diff.additions || diff.deletions) {
+                                fileChanges.modified.push(file.new_path);
+                            }
+                        }
+                    }
+                } else {
+                    fileChanges.modified.push(file.new_path);
+                }
+            });
+            results.push({
+                id: commit.id,
+                author_email: commit.author_email,
+                committed_date: commit.committed_date,
+                lines: commit.stats,
+                files: fileChanges,
+            });
+        }).then(() => {
+            if (commit.parent_ids instanceof Array) {
+                return Promise.each(commit.parent_ids, (hash) => {
+                    return fetchCommitsRecursive(server, repo, hash, endHash, limit, results)
+                });
+            }
+        });
+    });
+}
+
+function retrieveComponentDescriptions(server, repo, commits) {
+    var components = [];
+    return Promise.resolve(components);
 }
 
 function fetch(server, uri, query) {
