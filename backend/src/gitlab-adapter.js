@@ -24,18 +24,30 @@ var database;
 function start() {
     return Database.open(true).then((db) => {
         database = db;
-        var tables = [
-            'project',
-            'reaction',
-            'server',
-            'story',
-        ];
-        return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
-            var app = Express();
-            app.use(BodyParser.json());
-            app.set('json spaces', 2);
-            app.get('/gitlab/hook/:repoId/:projectId', handleHookCallback);
-            server = app.listen(80);
+
+        // import object from Gitlab server upon program start
+        var criteria = {
+            type: 'gitlab',
+            deleted: false,
+        };
+        return Server.find(db, 'global', criteria, '*').each((server) => {
+            return importServerObjects(db, server);
+        }).then(() => {
+            // listen for database change events
+            var tables = [
+                'project',
+                'reaction',
+                'server',
+                'story',
+            ];
+            return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
+                // listen for Webhook invocation
+                var app = Express();
+                app.use(BodyParser.json());
+                app.set('json spaces', 2);
+                app.get('/gitlab/hook/:repoId/:projectId', handleHookCallback);
+                server = app.listen(80);
+            });
         });
     });
 }
@@ -71,9 +83,7 @@ function handleDatabaseChanges(events) {
                             if (!server.details.url || !server.details.credentials) {
                                 return;
                             }
-                            return importRepositories(db, server).then(() => {
-                                return importUsers(db, server);
-                            });
+                            return importServerObjects(db, server);
                         }
                     });
                 });
@@ -182,6 +192,20 @@ function handleHookCallback(req, res) {
         });
     });
     res.end();
+}
+
+/**
+ * Import certain Gitlab objects
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ *
+ * @return {Promise}
+ */
+function importServerObjects(db, server) {
+    return importRepositories(db, server).then(() => {
+        return importUsers(db, server);
+    });
 }
 
 /**
@@ -392,6 +416,7 @@ function importEvents(db, server, repo, project) {
         var stories = [];
         Async.do(() => {
             return fetch(server, url, query).then((events) => {
+                console.log('Events: ' + _.size(events));
                 if (lastEventTime) {
                     events = _.filter(events, (event) => {
                         return Moment(event.created_at) > lastEventTime;
@@ -457,7 +482,7 @@ function importEvent(db, server, repo, event, project) {
                 return importRepoEvent(db, server, repo, event, author, project);
             case 'joined':
                 return importMembershipEvent(db, server, repo, event, author, project);
-                case 'pushed new':
+            case 'pushed new':
             case 'pushed_new':
             case 'pushed new':
             case 'pushed_to':
@@ -560,6 +585,8 @@ function importPushEvent(db, server, repo, event, author, project) {
             var deleted = {};
             var modified = {};
             _.each(commits, (commit) => {
+                commitIds.push(commit.id);
+
                 if (commit.lines) {
                     lineChanges.added += commit.lines.additions;
                     lineChanges.deleted += commit.lines.deletions;
@@ -617,6 +644,7 @@ function importPushEvent(db, server, repo, event, author, project) {
                 repo_id: repo.id,
                 details,
                 published: true,
+                public: true,
                 ptime: Moment(event.created_at).toISOString(),
             };
             console.log(story);
@@ -638,7 +666,16 @@ function importPushEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importMembershipEvent(db, server, repo, event, author, project) {
-
+    var story = {
+        type: 'join',
+        user_ids: [ author.id ],
+        role_ids: author.role_ids,
+        repo_id: repo.id,
+        published: true,
+        public: true,
+        ptime: getEventTime(event),
+    };
+    return Story.insertOne(db, project.name, story);
 }
 
 /**
@@ -660,6 +697,17 @@ function importComments(db, server, repo, msg, project) {
     } else if (msg.merge_request) {
         return importMergeRequestComments(db, server, repo, msg.merge_request, project);
     }
+}
+
+/**
+ * Return time at which event occurred
+ *
+ * @param  {Object} event
+ *
+ * @return {String}
+ */
+function getEventTime(event) {
+    return Moment(event.created_at).toISOString();
 }
 
 function installProjectHooks(db, project) {
