@@ -20,7 +20,7 @@ module.exports = _.create(Data, {
         user_ids: Array(Number),
         role_ids: Array(Number),
         repo_id: Number,
-        issue_id: Number,
+        external_id: Number,
         published: Boolean,
         ptime: String,
         public: Boolean,
@@ -33,7 +33,7 @@ module.exports = _.create(Data, {
         user_ids: Array(Number),
         role_ids: Array(Number),
         repo_id: Number,
-        issue_id: Number,
+        external_id: Number,
         published: Boolean,
         public: Boolean,
         time_range: String,
@@ -65,14 +65,14 @@ module.exports = _.create(Data, {
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 repo_id int,
-                issue_id int,
+                external_id int,
                 published boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} (ptime) WHERE repo_id IS NOT NULL AND ptime IS NOT NULL;
-            CREATE INDEX ON ${table} (repo_id, issue_id) WHERE repo_id IS NOT NULL AND issue_id IS NOT NULL;
+            CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
         `;
         return db.execute(sql);
     },

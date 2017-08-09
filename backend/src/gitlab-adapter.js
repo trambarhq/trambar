@@ -33,6 +33,22 @@ function start() {
         return Server.find(db, 'global', criteria, '*').each((server) => {
             return importServerObjects(db, server);
         }).then(() => {
+            // import events from repos
+            var criteria = {
+                deleted: false,
+            };
+            return Project.find(db, 'global', criteria, '*').each((project) => {
+                var criteria = {
+                    id: project.repo_ids,
+                    deleted: false,
+                };
+                return Repo.find(db, 'global', criteria, '*').each((repo) => {
+                    return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
+                        return importEvents(db, server, repo, project);
+                    });
+                });
+            });
+        }).then(() => {
             // listen for database change events
             var tables = [
                 'project',
@@ -120,7 +136,7 @@ function handleDatabaseChanges(events) {
             Story.findOne(db, event.schema, { id: storyId }, '*').then((story) => {
                 var issueTracking = story.details.issue_tracking;
                 var repoId = story.repo_id;
-                var issueId = story.issue_id;
+                var issueId = story.external_id;
                 if (issueTracking && repoId) {
                     taskQueue.schedule(() => {
                         return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
@@ -149,7 +165,7 @@ function handleDatabaseChanges(events) {
                 }
                 return Story.findOne(db, event.schema, { id: story_id }, '*').then((story) => {
                     var repoId = story.repo_id;
-                    var issueId = story.issue_id;
+                    var issueId = story.external_id;
                     if (repoId && issueId) {
                         taskQueue.schedule(() => {
                             return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
@@ -409,14 +425,13 @@ function importEvents(db, server, repo, project) {
             page: 1,
         };
         if (lastEventTime) {
-            //query.after = lastEventTime.format('YYYY-MM-DD');
-            query.after = lastEventTime.toISOString();
+            var dayBefore = lastEventTime.clone().subtract(1, 'day');
+            query.after = dayBefore.format('YYYY-MM-DD');
         }
         var done = false;
         var stories = [];
         Async.do(() => {
             return fetch(server, url, query).then((events) => {
-                console.log('Events: ' + _.size(events));
                 if (lastEventTime) {
                     events = _.filter(events, (event) => {
                         return Moment(event.created_at) > lastEventTime;
@@ -505,7 +520,73 @@ function importEvent(db, server, repo, event, project) {
  * @return {Promise}
  */
 function importIssueEvent(db, server, repo, event, author, project) {
+    var issueId = event.target_id;
+    var url = `/projects/${repo.external_id}/issues/${issueId}`;
+    return fetch(server, url).then((issue) => {
+        // look for existing story
+        var criteria = {
+            type: 'issue',
+            external_id: issueId,
+        };
+        return Story.findOne(db, project.name, criteria, '*').then((story) => {
+            if (!story) {
+                story = {
+                    type: criteria.type,
+                    user_ids: [ author.id ],
+                    role_ids: author.role_ids,
+                    repo_id: repo.id,
+                    external_id: issueId,
+                    details: {},
+                    published: true,
+                    ptime: getPublicationTime(event),
+                };
+            }
+            copyIssueDetails(story, issue);
+            return Story.saveOne(db, project.name, story).then((story) => {
+                return Promise.mapSeries(issue.assignees, (assignee) => {
+                    return findUser(db, server, assignee.id);
+                }).then((users) => {
+                    // add assignment reaction
+                    var criteria = {
+                        type: 'assignment',
+                        story_id: story.id,
+                    };
+                    return Reaction.find(db, project.name, criteria, '*').then((reactions) => {
+                        var changes = [];
+                        _.each(users, (user) => {
+                            var reaction = _.find(reactions, { user_id: user.id });
+                            if (!reaction) {
+                                reaction = {
+                                    type: criteria.type,
+                                    story_id: story.id,
+                                    repo_id: repo.id,
+                                    external_id: issue.id,
+                                    user_id: user.id,
+                                    target_user_ids: _.uniq([ author.id, user.id ]),
+                                    details: {
+                                        issue_number: issue.iid,
+                                    },
+                                    published: true,
+                                    ptime: Moment(issue.updated_at).toISOString(),
+                                };
+                                changes.push(reaction);
+                            }
+                        });
+                        return Reaction.save(db, project.name, changes);
+                    });
+                });
+            });
+        });
+    });
+}
 
+function copyIssueDetails(story, issue) {
+    story.details.state = issue.state;
+    story.details.labels = issue.labels;
+    story.details.milestone = _.get(issue.milestone, 'title');
+    story.details.title = { zz: issue.title };
+    story.details.number = issue.iid;
+    story.public = issue.confidential;
 }
 
 /**
@@ -521,7 +602,40 @@ function importIssueEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importMilestoneEvent(db, server, repo, event, author, project) {
+    var milestoneId = event.target_id;
+    var url = `/projects/${repo.external_id}/milestones/${milestoneId}`;
+    return fetch(server, url).then((milestone) => {
+        // look for existing story
+        var criteria = {
+            type: 'milestone',
+            external_id: milestoneId,
+        };
+        return Story.findOne(db, project.name, criteria, '*').then((story) => {
+            if (!story) {
+                story = {
+                    type: criteria.type,
+                    user_ids: [ author.id ],
+                    role_ids: author.role_ids,
+                    repo_id: repo.id,
+                    external_id: milestoneId,
+                    details: {},
+                    published: true,
+                    public: true,
+                    ptime: getPublicationTime(event),
+                };
+            }
+            copyMilestoneDetails(story, milestone);
+            return Story.saveOne(db, project.name, story);
+        });
+    });
+}
 
+function copyMilestoneDetails(story, milestone) {
+    story.details.state = milestone.state;
+    story.details.title = { zz: milestone.title };
+    story.details.due_date = milestone.due_date;
+    story.details.start_date = milestone.start_date;
+    story.details.number = milestone.iid;
 }
 
 /**
@@ -553,7 +667,21 @@ function importMergeRequestEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importRepoEvent(db, server, repo, event, author, project) {
-
+    var details = {
+        action: event.action_name,
+        name: repo.details.name,
+    };
+    var story = {
+        type: 'repo',
+        user_ids: [ author.id ],
+        role_ids: author.role_ids,
+        repo_id: repo.id,
+        details,
+        published: true,
+        public: true,
+        ptime: getPublicationTime(event),
+    };
+    return Story.insertOne(db, project.name, story);
 }
 
 /**
@@ -645,7 +773,7 @@ function importPushEvent(db, server, repo, event, author, project) {
                 details,
                 published: true,
                 public: true,
-                ptime: Moment(event.created_at).toISOString(),
+                ptime: getPublicationTime(event),
             };
             console.log(story);
             return Story.insertOne(db, project.name, story);
@@ -673,7 +801,7 @@ function importMembershipEvent(db, server, repo, event, author, project) {
         repo_id: repo.id,
         published: true,
         public: true,
-        ptime: getEventTime(event),
+        ptime: getPublicationTime(event),
     };
     return Story.insertOne(db, project.name, story);
 }
@@ -706,7 +834,7 @@ function importComments(db, server, repo, msg, project) {
  *
  * @return {String}
  */
-function getEventTime(event) {
+function getPublicationTime(event) {
     return Moment(event.created_at).toISOString();
 }
 
