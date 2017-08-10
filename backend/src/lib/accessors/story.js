@@ -40,6 +40,7 @@ module.exports = _.create(Data, {
         newer_than: String,
         older_than: String,
         ready: Boolean,
+        commit_id: String,
     },
 
     /**
@@ -73,6 +74,7 @@ module.exports = _.create(Data, {
             );
             CREATE INDEX ON ${table} (ptime) WHERE repo_id IS NOT NULL AND ptime IS NOT NULL;
             CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
+            CREATE INDEX ON test.story USING gin((details->'commit_ids')) WHERE details ? 'commit_ids';
         `;
         return db.execute(sql);
     },
@@ -83,6 +85,7 @@ module.exports = _.create(Data, {
             'newer_than',
             'older_than',
             'ready',
+            'commit_id',
         ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
@@ -99,6 +102,10 @@ module.exports = _.create(Data, {
         if (criteria.older_than !== undefined) {
             params.push(criteria.older_than);
             conds.push(`ptime < $${params.length}`);
+        }
+        if (criteria.commit_id !== undefined) {
+            params.push(criteria.commit_id);
+            conds.push(`details->'commit_ids' ? $${params.length}`);
         }
         if (criteria.ready !== undefined) {
             if (criteria.ready === true) {

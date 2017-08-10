@@ -246,8 +246,7 @@ function importRepositories(db, server) {
             _.each(repos, (repo) => {
                 var project = _.find(projects, { id: repo.external_id });
                 if (project) {
-                    var repoBefore = repo;
-                    repo = _.clone(repo);
+                    var repoBefore = _.cloneDeep(repo);
                     repo.deleted = false;
                     copyRepoDetails(repo, project);
                     if (!_.isEqual(repo, repoBefore)) {
@@ -313,8 +312,7 @@ function importUsers(db, server) {
             _.each(users, (user) => {
                 var account = _.find(accounts, { id: user.external_id });
                 if (account) {
-                    var userBefore = user;
-                    user = _.cloneDeep(user);
+                    var userBefore = _.cloneDeep(user);
                     user.deleted = false;
                     copyUserDetails(user, account);
                     if (!_.isEqual(user, userBefore)) {
@@ -453,25 +451,47 @@ function importProjectMemberships(db, server) {
 }
 
 /**
- * Find user with user id, importing the user if it's not t
+ * Find user with Gitlab user id
  *
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Number} gitlabUserId
  *
- * @return {Promise<User>}
+ * @return {Promise<Use|null>}
  */
 function findUser(db, server, gitlabUserId) {
+    return findUsers(db, server, [ gitlabUserId ]).then((users) => {
+        return (users.length > 0) ? users[0] : null;
+    });
+}
+
+/**
+ * Find users with Gitlab user ids, importing them records are missing
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Array<Number>} gitlabUserIds
+ *
+ * @return {Promise<Array<User>>}
+ */
+function findUsers(db, server, gitlabUserIds) {
     var criteria = {
         server_id: server.id,
-        external_id: gitlabUserId,
+        external_id: gitlabUserIds,
     };
-    return User.findOne(db, 'global', criteria, '*').then((user) => {
-        if (user) {
-            return user;
+    return User.find(db, 'global', criteria, '*').then((users) => {
+        var missing = _.some(gitlabUserIds, (id) => {
+            return !_.find(users, { external_id: id });
+        });
+        if (!missing) {
+            return users;
         } else {
-            return importUsers(db, server).then((users) => {
-                return _.find(users, { external_id: gitlabUserId });
+            return importUsers(db, server).then((imported) => {
+                var missingBefore = _.filter(imported, (user) => {
+                    return _.includes(gitlabUserIds, user.external_id);
+                });
+                users = _.concat(users, missingBefore);
+                return users;
             });
         }
     });
@@ -487,11 +507,12 @@ function findUser(db, server, gitlabUserId) {
  * @return {Promise<Moment>}
  */
 function findLastEventTime(db, project, repo) {
+    var schema = project.name;
     var criteria = {
         repo_id: repo.id,
         ready: true,
     };
-    return Story.findOne(db, project.name, criteria, 'MAX(ptime) AS time').then((row) => {
+    return Story.findOne(db, schema, criteria, 'MAX(ptime) AS time').then((row) => {
         return (row && row.time) ? Moment(row.time) : null;
     });
 }
@@ -635,6 +656,7 @@ function importEvent(db, server, repo, event, project) {
  * @return {Promise}
  */
 function importIssueEvent(db, server, repo, event, author, project) {
+    var schema = project.name;
     var issueId = event.target_id;
     var url = `/projects/${repo.external_id}/issues/${issueId}`;
     return fetch(server, url).then((issue) => {
@@ -643,7 +665,7 @@ function importIssueEvent(db, server, repo, event, author, project) {
             type: 'issue',
             external_id: issueId,
         };
-        return Story.findOne(db, project.name, criteria, '*').then((story) => {
+        return Story.findOne(db, schema, criteria, '*').then((story) => {
             if (!story) {
                 story = {
                     type: criteria.type,
@@ -657,7 +679,7 @@ function importIssueEvent(db, server, repo, event, author, project) {
                 };
             }
             copyIssueDetails(story, issue);
-            return Story.saveOne(db, project.name, story).then((story) => {
+            return Story.saveOne(db, schema, story).then((story) => {
                 return Promise.mapSeries(issue.assignees, (assignee) => {
                     return findUser(db, server, assignee.id);
                 }).then((users) => {
@@ -666,7 +688,7 @@ function importIssueEvent(db, server, repo, event, author, project) {
                         type: 'assignment',
                         story_id: story.id,
                     };
-                    return Reaction.find(db, project.name, criteria, '*').then((reactions) => {
+                    return Reaction.find(db, schema, criteria, '*').then((reactions) => {
                         var changes = [];
                         _.each(users, (user) => {
                             var reaction = _.find(reactions, { user_id: user.id });
@@ -687,7 +709,7 @@ function importIssueEvent(db, server, repo, event, author, project) {
                                 changes.push(reaction);
                             }
                         });
-                        return Reaction.save(db, project.name, changes);
+                        return Reaction.save(db, schema, changes);
                     });
                 });
             });
@@ -717,6 +739,7 @@ function copyIssueDetails(story, issue) {
  * @return {Promise}
  */
 function importMilestoneEvent(db, server, repo, event, author, project) {
+    var schema = project.name;
     var milestoneId = event.target_id;
     var url = `/projects/${repo.external_id}/milestones/${milestoneId}`;
     return fetch(server, url).then((milestone) => {
@@ -725,7 +748,7 @@ function importMilestoneEvent(db, server, repo, event, author, project) {
             type: 'milestone',
             external_id: milestoneId,
         };
-        return Story.findOne(db, project.name, criteria, '*').then((story) => {
+        return Story.findOne(db, schema, criteria, '*').then((story) => {
             if (!story) {
                 story = {
                     type: criteria.type,
@@ -740,7 +763,7 @@ function importMilestoneEvent(db, server, repo, event, author, project) {
                 };
             }
             copyMilestoneDetails(story, milestone);
-            return Story.saveOne(db, project.name, story);
+            return Story.saveOne(db, schema, story);
         });
     });
 }
@@ -782,6 +805,7 @@ function importMergeRequestEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importRepoEvent(db, server, repo, event, author, project) {
+    var schema = project.name;
     var details = {
         action: event.action_name,
         name: repo.details.name,
@@ -796,7 +820,7 @@ function importRepoEvent(db, server, repo, event, author, project) {
         public: true,
         ptime: getPublicationTime(event),
     };
-    return Story.insertOne(db, project.name, story);
+    return Story.insertOne(db, schema, story);
 }
 
 /**
@@ -812,6 +836,7 @@ function importRepoEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importPushEvent(db, server, repo, event, author, project) {
+    var schema = project.name;
     var previousCommitHash = event.data.before;
     var finalCommitHash = event.data.after;
     var totalCommitCount = event.data.total_commits_count;
@@ -890,7 +915,7 @@ function importPushEvent(db, server, repo, event, author, project) {
                 public: true,
                 ptime: getPublicationTime(event),
             };
-            return Story.insertOne(db, project.name, story);
+            return Story.insertOne(db, schema, story);
         });
     });
 }
@@ -908,6 +933,7 @@ function importPushEvent(db, server, repo, event, author, project) {
  * @return {Promise}
  */
 function importMembershipEvent(db, server, repo, event, author, project) {
+    var schema = project.name;
     var story = {
         type: 'member',
         user_ids: [ author.id ],
@@ -920,7 +946,7 @@ function importMembershipEvent(db, server, repo, event, author, project) {
         public: true,
         ptime: getPublicationTime(event),
     };
-    return Story.insertOne(db, project.name, story);
+    return Story.insertOne(db, schema, story);
 }
 
 /**
@@ -942,6 +968,111 @@ function importComments(db, server, repo, msg, project) {
     } else if (msg.merge_request) {
         return importMergeRequestComments(db, server, repo, msg.merge_request, project);
     }
+}
+
+function importCommitComments(db, server, repo, commit, project) {
+    var schema = project.name;
+    var criteria = {
+        commit_id: commit.id,
+    };
+    return Story.findOne(db, schema, criteria, '*').then((story) => {
+        if (!story) {
+            return;
+        }
+        var url = `/projects/${repo.external_id}/repository/commits/${commit.id}/comments`;
+        return importStoryComments(db, server, url, project, story);
+    });
+}
+
+function importIssueComments(db, server, repo, issue, project) {
+    var schema = project.name;
+    var criteria = {
+        external_id: issue.id,
+    };
+    return Story.findOne(db, schema, criteria, '*').then((story) => {
+        if (!story) {
+            return;
+        }
+        var url = `/projects/${repo.external_id}/issues/${issue.iid}/notes`;
+        return importStoryComments(db, server, url, project, story);
+    });
+}
+
+function importMergeRequestComments(db, server, repo, mergeRequest, project) {
+    var schema = project.name;
+    var criteria = {
+        external_id: mergeRequest.id,
+    };
+    return Story.findOne(db, schema, criteria, '*').then((story) => {
+        if (!story) {
+            return;
+        }
+        var url = `/projects/${repo.external_id}/merge_requests/${mergeRequest.iid}/notes`;
+        return importStoryComments(db, server, url, project, story);
+    });
+
+}
+
+function importStoryComments(db, server, url, project, story) {
+    var schema = project.name;
+    var changes = [];
+    var criteria = {
+        story_id: story.id,
+        repo_id: story.repo_id,
+    };
+    return Reaction.find(db, schema, criteria, '*').then((reactions) => {
+        var query = {
+            page: 1,
+            per_page: 100
+        };
+        var done = false;
+        Async.do(() => {
+            return fetch(server, url).then((notes) => {
+                var nonSystemNotes = _.filter(notes, (note) => {
+                    return !note.system;
+                });
+                var accountIds = _.map(nonSystemNotes, (note) => {
+                    return note.author.id;
+                });
+                return findUsers(db, server, accountIds).then((users) => {
+                    _.each(nonSystemNotes, (note, index) => {
+                        // commit comments don't have ids for some reason
+                        var noteId = note.id || index;
+                        var reaction = _.find(reactions, { external_id: noteId });
+                        var author = _.find(users, { external_id: note.author.id });
+                        if (reaction || !author) {
+                            return;
+                        }
+                        reaction = {
+                            type: 'note',
+                            story_id: story.id,
+                            repo_id: story.repo_id,
+                            external_id: noteId,
+                            user_id: author.id,
+                            target_user_ids: story.user_ids,
+                            details: {},
+                            published: true,
+                            ptime: getPublicationTime(note),
+                        };
+                        changes.push(reaction);
+                    });
+                });
+            }).then(() => {
+                if (notes.length === query.per_page && query.page < 100) {
+                    query.page++;
+                } else {
+                    done = true;
+                }
+            });
+        });
+        Async.while(() => {
+            return !done;
+        })
+        return Async.end();
+    }).then(() => {
+        changes = _.orderBy(changes, [ 'ptime' ], [ 'asc' ]);
+        return Reaction.save(db, schema, changes);
+    });
 }
 
 /**
