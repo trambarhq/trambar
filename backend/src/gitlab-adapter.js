@@ -25,29 +25,19 @@ function start() {
     return Database.open(true).then((db) => {
         database = db;
 
-        // import object from Gitlab server upon program start
-        var criteria = {
-            type: 'gitlab',
-            deleted: false,
-        };
-        return Server.find(db, 'global', criteria, '*').each((server) => {
-            return importServerObjects(db, server);
+        // listen for Webhook invocation
+        var app = Express();
+        app.use(BodyParser.json());
+        app.set('json spaces', 2);
+        app.post('/gitlab/hook/:repoId/:projectId', handleHookCallback);
+        server = app.listen(80);
+
+        return updateAllProjectHooks(db).then(() => {
+            // import object from Gitlab server upon program start
+            return updateFromAllServers(db);
         }).then(() => {
             // import events from repos
-            var criteria = {
-                deleted: false,
-            };
-            return Project.find(db, 'global', criteria, '*').each((project) => {
-                var criteria = {
-                    id: project.repo_ids,
-                    deleted: false,
-                };
-                return Repo.find(db, 'global', criteria, '*').each((repo) => {
-                    return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
-                        return importEvents(db, server, repo, project);
-                    });
-                });
-            });
+            return updateAllProjects(db);
         }).then(() => {
             // listen for database change events
             var tables = [
@@ -56,14 +46,7 @@ function start() {
                 'server',
                 'story',
             ];
-            return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
-                // listen for Webhook invocation
-                var app = Express();
-                app.use(BodyParser.json());
-                app.set('json spaces', 2);
-                app.get('/gitlab/hook/:repoId/:projectId', handleHookCallback);
-                server = app.listen(80);
-            });
+            return db.listen(tables, 'change', handleDatabaseChanges, 100);
         });
     });
 }
@@ -145,7 +128,7 @@ function handleDatabaseChanges(events) {
                                     return;
                                 }
                                 return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
-                                    exportStory(project, reaction, server, repo, issueId);
+                                    return exportStory(project, reaction, server, repo, issueId);
                                 });
                             });
                         });
@@ -190,6 +173,7 @@ function handleHookCallback(req, res) {
     var repoId = req.params.repoId;
     var projectId = req.params.projectId;
     var message = req.body;
+    console.log('Incoming: ', message);
     taskQueue.schedule(() => {
         var db = database;
         return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
@@ -198,7 +182,7 @@ function handleHookCallback(req, res) {
                     return;
                 }
                 return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
-                    if (msg.body.object_kind === 'note') {
+                    if (message.object_kind === 'note') {
                         return importComments(db, server, repo, message, project);
                     } else {
                         return importEvents(db, server, repo, project);
@@ -208,6 +192,23 @@ function handleHookCallback(req, res) {
         });
     });
     res.end();
+}
+
+/**
+ * Import objects from all Gitlab servers
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise}
+ */
+function updateFromAllServers(db) {
+    var criteria = {
+        type: 'gitlab',
+        deleted: false,
+    };
+    return Server.find(db, 'global', criteria, '*').each((server) => {
+        return importServerObjects(db, server);
+    });
 }
 
 /**
@@ -492,6 +493,30 @@ function findLastEventTime(db, project, repo) {
     };
     return Story.findOne(db, project.name, criteria, 'MAX(ptime) AS time').then((row) => {
         return (row && row.time) ? Moment(row.time) : null;
+    });
+}
+
+/**
+ * Retrieve events from all repositories attached to projects
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise}
+ */
+function updateAllProjects(db) {
+    var criteria = {
+        deleted: false,
+    };
+    return Project.find(db, 'global', criteria, '*').each((project) => {
+        var criteria = {
+            id: project.repo_ids,
+            deleted: false,
+        };
+        return Repo.find(db, 'global', criteria, '*').each((repo) => {
+            return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
+                return importEvents(db, server, repo, project);
+            });
+        });
     });
 }
 
@@ -865,7 +890,6 @@ function importPushEvent(db, server, repo, event, author, project) {
                 public: true,
                 ptime: getPublicationTime(event),
             };
-            console.log(story);
             return Story.insertOne(db, project.name, story);
         });
     });
@@ -931,8 +955,67 @@ function getPublicationTime(event) {
     return Moment(event.created_at).toISOString();
 }
 
-function installProjectHooks(db, project) {
+function updateAllProjectHooks(db) {
+    var criteria = {
+        deleted: false
+    };
+    return Project.find(db, 'global', criteria, '*').each((project) => {
+        var criteria = {
+            id: project.repo_ids,
+            deleted: false,
+        };
+        return Repo.find(db, 'global', criteria, '*').each((repo) => {
+            return installProjectHooks(db, project, repo);
+        });
+    });
+}
 
+function installProjectHooks(db, project, repo) {
+    var hook = createHook(project, repo);
+    return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
+        var url = `/projects/${repo.external_id}/hooks`;
+        var query = { per_page: 100 };
+        return fetch(server, url, query).then((hooks) => {
+            var installed = _.find(hooks, { url: hook.url });
+            if (installed) {
+                if (!_.isEqual(_.pick(installed, _.keys(hook)), hook)) {
+                    return removeHook(server, repo, hook).then(() => {
+                        return false;
+                    });
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }).then((installed) => {
+            if (!installed) {
+                return post(server, url, hook);
+            }
+        });
+    });
+}
+
+function createHook(project, repo) {
+    // TODO: use env vars
+    var protocol = 'http';
+    var domain = '172.19.0.1';
+    return {
+        url: `${protocol}://${domain}/gitlab/hook/${repo.id}/${project.id}`,
+        push_events: true,
+        issues_events: true,
+        merge_requests_events: true,
+        tag_push_events: true,
+        note_events: true,
+        job_events: true,
+        pipeline_events: true,
+        wiki_page_events: true,
+        enable_ssl_verification: false,
+    };
+}
+
+function removeHook(server, repo, hook) {
+    var url = `/projects/${repo.external_id}/hooks`;
+    return remove(server, url);
 }
 
 /**
@@ -1053,9 +1136,30 @@ function post(server, uri, payload) {
             headers: {
                 'PRIVATE-TOKEN': server.details.credentials.token,
             },
+            body: payload,
             uri,
         };
         Request.post(options, (err, resp, body) => {
+            if (!err) {
+                resolve(body);
+            } else {
+                reject(err);
+            }
+        });
+    });
+}
+
+function remove(server, uri) {
+    return new Promise((resolve, reject) => {
+        var options = {
+            json: true,
+            baseUrl: server.details.url,
+            headers: {
+                'PRIVATE-TOKEN': server.details.credentials.token,
+            },
+            uri,
+        };
+        Request.delete(options, (err, resp, body) => {
             if (!err) {
                 resolve(body);
             } else {
