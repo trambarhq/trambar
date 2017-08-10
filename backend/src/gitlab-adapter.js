@@ -307,39 +307,60 @@ function importUsers(db, server) {
     var url = `/users`;
     return fetch(server, url).then((accounts) => {
         return User.find(db, 'global', { server_id: server.id }, '*').then((users) => {
-            var changes = [];
-            var imported = {};
-            _.each(users, (user) => {
-                var account = _.find(accounts, { id: user.external_id });
-                if (account) {
-                    var userBefore = _.cloneDeep(user);
-                    user.deleted = false;
-                    copyUserDetails(user, account);
-                    if (!_.isEqual(user, userBefore)) {
-                        changes.push(user);
-                    }
-                    imported[account.id] = true;
-                } else {
-                    if (user.deleted !== true) {
-                        user.deleted = true;
-                        changes.push(user);
+            var imageUrls = _.transform(accounts, (list, account) => {
+                var url = account.avatar_url;
+                var user = _.find(users, { external_id: account.id });
+                if (user) {
+                    // see if there's an image imported from Gitlab
+                    var image = _.find(user.details.resources, (res) => {
+                        if (res.type === 'image') {
+                            return !!res.gitlab_profile_image_url;
+                        }
+                    });
+                    if (image && image.gitlab_profile_image_url === url) {
+                        // profile image hasn't changed
+                        return;
                     }
                 }
-            });
-            _.each(accounts, (account) => {
-                if (!imported[account.id]) {
-                    var user = {
-                        server_id: server.id,
-                        external_id: account.id,
-                        type: 'member',
-                        emails: [],
-                        details: {},
-                    };
-                    copyUserDetails(user, account);
-                    changes.push(user);
+                if (url) {
+                    list.push(url);
                 }
+            }, []);
+            return importProfileImages(imageUrls).then((images) => {
+                var changes = [];
+                var imported = {};
+                _.each(users, (user) => {
+                    var account = _.find(accounts, { id: user.external_id });
+                    if (account) {
+                        var userBefore = _.cloneDeep(user);
+                        user.deleted = false;
+                        copyUserDetails(user, account, images);
+                        if (!_.isEqual(user, userBefore)) {
+                            changes.push(user);
+                        }
+                        imported[account.id] = true;
+                    } else {
+                        if (user.deleted !== true) {
+                            user.deleted = true;
+                            changes.push(user);
+                        }
+                    }
+                });
+                _.each(accounts, (account) => {
+                    if (!imported[account.id]) {
+                        var user = {
+                            server_id: server.id,
+                            external_id: account.id,
+                            type: 'member',
+                            emails: [],
+                            details: {},
+                        };
+                        copyUserDetails(user, account, images);
+                        changes.push(user);
+                    }
+                });
+                return User.save(db, 'global', changes);
             });
-            return User.save(db, 'global', changes);
         });
     });
 }
@@ -349,8 +370,9 @@ function importUsers(db, server) {
  *
  * @param  {Repo} repo
  * @param  {Object} project
+ * @param  {Object} images
  */
-function copyUserDetails(user, account) {
+function copyUserDetails(user, account, images) {
     user.details.name = account.name;
     var nameParts = _.split(account.name, /\s+/);
     user.details.first_name = (nameParts.length >= 2) ? _.first(nameParts) : undefined;
@@ -362,6 +384,28 @@ function copyUserDetails(user, account) {
     user.details.linkedin_username = account.linkedin_name || undefined;
     if (!_.includes(user.emails, account.email)) {
         user.emails.push(account.email);
+    }
+    var image = images[account.avatar_url];
+    if (image) {
+        // save URL in image object so we know it was imported
+        image.type = 'image';
+        image.gitlab_profile_image_url = account.avatar_url;
+
+        // replace imported image or add it if there were none
+        var index = _.findIndex(user.details.resources, (res) => {
+            if (res.type === 'image') {
+                return !!image.gitlab_profile_image_url;
+            }
+        });
+        if (index >= 0) {
+            user.details.resources[index] = image;
+        } else {
+            if (user.details.resources instanceof Array) {
+                user.details.resources.push(image);
+            } else {
+                user.details.resources = [ image ];
+            }
+        }
     }
 }
 
@@ -1236,6 +1280,29 @@ function fetchCommitsRecursive(server, repo, hash, endHash, limit, results) {
 function retrieveComponentDescriptions(server, repo, commits) {
     var components = [];
     return Promise.resolve(components);
+}
+
+function importProfileImages(urls) {
+    return Promise.map(urls, (url) => {
+        return new Promise((resolve, reject) => {
+            var options = {
+                json: true,
+                url: 'http://media_server/internal/import',
+                body: {
+                    external_url: url
+                },
+            };
+            Request.post(options, (err, resp, body) => {
+                if (!err) {
+                    resolve(body);
+                } else {
+                    reject(err);
+                }
+            });
+        });
+    }, { concurrency: 8 }).then((images) => {
+        return _.zipObject(urls, images);
+    });
 }
 
 function fetch(server, uri, query) {

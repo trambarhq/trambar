@@ -45,6 +45,8 @@ function start() {
         app.post('/media/stream/:jobId', upload.single('file'), handleStreamAppend);
         app.post('/media/stream', upload.single('file'), handleStreamCreate);
 
+        app.post('/internal/import', handleImageImport);
+
         createCacheFolders();
 
         server = app.listen(80, () => {
@@ -242,6 +244,34 @@ function handleImageUpload(req, res) {
         var dstPath = `${imageCacheFolder}/${srcHash}`;
         processImageUpload(schema, taskId, srcPath, dstPath, url);
         return null;
+    }).catch((err) => {
+        sendError(res, err);
+    });
+}
+
+function handleImageImport(req, res) {
+    return Promise.try(() => {
+        var url = req.body.external_url;
+        if (!url) {
+            throw HttpError(400);
+        }
+        return downloadRemoteFile(url, imageCacheFolder).then((srcPath) => {
+            return md5File(srcPath).then((srcHash) => {
+                var dstPath = `${imageCacheFolder}/${srcHash}`;
+                return moveFile(srcPath, dstPath).then(() => {
+                    return getImageMetadata(dstPath).then((metadata) => {
+                        var url = `/media/images/${srcHash}`;
+                        var format = metadata.format;
+                        var width = metadata.width;
+                        var height = metadata.height;
+                        var clip = getDefaultClippingRect(width, height, 'center');
+                        return { url, format, width, height, clip };
+                    });
+                });
+            });
+        });
+    }).then((image) => {
+        sendJson(res, image);
     }).catch((err) => {
         sendError(res, err);
     });
