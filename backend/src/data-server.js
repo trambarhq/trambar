@@ -156,7 +156,7 @@ function handleRetrieval(req, res) {
     var table = req.params.table;
     return Database.open(schema).then((db) => {
         return checkAuthorization(db, params.token).then((auth) => {
-            return fetchCredentials(db, schema, auth.user_id);
+            return fetchCredentials(db, auth.user_id);
         }).then((credentials) => {
             var ids;
             if (req.params.id !== undefined) {
@@ -287,7 +287,7 @@ function checkAuthorization(db, token) {
  */
 function fetchCredentials(db, userId) {
     var credentials = {};
-    return User.findOne(db, 'global', { user_id: userId, deleted: false }, '*').then((user) => {
+    return User.findOne(db, 'global', { id: userId, deleted: false }, '*').then((user) => {
         if (!user) {
             throw new HttpError(403);
         }

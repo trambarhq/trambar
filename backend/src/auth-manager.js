@@ -99,14 +99,14 @@ function handleAuthenticationStart(req, res) {
             // send list of available strategies to client, along with the
             // authentication token
             var criteria = {
-                prefix: 'oauth.',
+                prefix: 'oauth-',
                 deleted: false,
             };
-            return Server.find(db, 'global', criteria, 'type').then((configs) => {
+            return Server.find(db, 'global', criteria, 'type').then((servers) => {
                 return {
                     token: authentication.token,
-                    providers: _.map(configs, (config) => {
-                        return config.name.substr(criteria.prefix.length);
+                    providers: _.map(servers, (server) => {
+                        return server.type.substr(criteria.prefix.length);
                     })
                 };
             });
@@ -163,8 +163,8 @@ function handleOAuthRequest(req, res, done) {
                 type: `oauth-${provider}`,
                 deleted: false,
             };
-            return Server.findOne(db, 'global', criteria, 'details').then((config) => {
-                if (!config) {
+            return Server.findOne(db, 'global', criteria, 'details').then((server) => {
+                if (!server) {
                     throw new HttpError(400);
                 }
                 var Strategy = require(plugins[provider]);
@@ -176,7 +176,7 @@ function handleOAuthRequest(req, res, done) {
                         };
                         break;
                 }
-                var credentials = _.extend(config.details.credentials, providerSpecific, {
+                var credentials = _.extend(server.details.credentials, providerSpecific, {
                     callbackURL: `${protocol}://${host}/auth/${token}/${provider}/callback`,
                     passReqToCallback: true,
                 });
