@@ -219,8 +219,12 @@ function handleHookCallback(req, res) {
  * @return {Promise}
  */
 function importServerObjects(db, server) {
-    return importRepositories(db, server).then(() => {
+    return Promise.resolve().then(() => {
+        return importRepositories(db, server);
+    }).then(() => {
         return importUsers(db, server);
+    }).then(() => {
+        return importProjectMemberships(db, server);
     });
 }
 
@@ -362,6 +366,91 @@ function copyUserDetails(user, account) {
     }
 }
 
+function importProjectMemberships(db, server) {
+    // find users originating from server
+    var criteria = {
+        server_id: server.id
+    };
+    return User.find(db, 'global', criteria, '*').then((users) => {
+        var changes = [];
+        // go through all projects
+        var criteria = {
+            deleted: false
+        };
+        return Project.find(db, 'global', criteria, '*').each((project) => {
+            // look at repo from this server
+            var criteria = {
+                id: project.repo_ids,
+                server_id: server.id,
+            };
+            return Repo.find(db, 'global', criteria, '*').then((repos) => {
+                if (_.isEmpty(repos) === 0) {
+                    return null;
+                }
+                // this project is linked with this server
+                // fetch member list from Gitlab
+                var memberLists = [];
+                return Promise.each(repos, (repo) => {
+                    if (repo.deleted) {
+                        return;
+                    }
+                    var url = `/projects/${repo.external_id}/members`;
+                    var query = {
+                        page: 1,
+                        per_page: 100,
+                    };
+                    var done = false;
+                    Async.do(() => {
+                        return fetch(server, url, query).then((members) => {
+                            memberLists.push(members);
+                            if (members.length === query.per_page && query.page < 100) {
+                                query.page++;
+                            } else {
+                                done = true;
+                            }
+                        });
+                    });
+                    Async.while(() => {
+                        return !done;
+                    });
+                    Async.finally((err) => {
+                        if (err) {
+                            throw err;
+                        }
+                    });
+                    return Async.end();
+                }).then(() => {
+                    return _.flatten(memberLists);
+                });
+            }).then((members) => {
+                if (members) {
+                    // add/remove project id to users' project list
+                    _.each(users, (user) => {
+                        var member = _.find(members, { id: user.external_id });
+                        var changed = false;
+                        if (member) {
+                            if (!_.includes(user.project_ids, project.id)) {
+                                user.project_ids.push(project.id);
+                                changed = true;
+                            }
+                        } else {
+                            if (_.includes(user.project_ids, project.id)) {
+                                _.pull(user.project_ids, project.id);
+                                changed = true;
+                            }
+                        }
+                        if (changed && !_.includes(changes, user)) {
+                            changes.push(user);
+                        }
+                    });
+                }
+            });
+        }).then(() => {
+            return User.save(db, 'global', changes);
+        });
+    });
+}
+
 /**
  * Find user with user id, importing the user if it's not t
  *
@@ -496,6 +585,7 @@ function importEvent(db, server, repo, event, project) {
             case 'imported':
                 return importRepoEvent(db, server, repo, event, author, project);
             case 'joined':
+            case 'left':
                 return importMembershipEvent(db, server, repo, event, author, project);
             case 'pushed new':
             case 'pushed_new':
@@ -795,10 +885,13 @@ function importPushEvent(db, server, repo, event, author, project) {
  */
 function importMembershipEvent(db, server, repo, event, author, project) {
     var story = {
-        type: 'join',
+        type: 'member',
         user_ids: [ author.id ],
         role_ids: author.role_ids,
         repo_id: repo.id,
+        details: {
+            action: event.action_name
+        },
         published: true,
         public: true,
         ptime: getPublicationTime(event),
