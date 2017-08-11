@@ -205,20 +205,49 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderText: function() {
-        var textProps = {
-            story: this.props.story,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            answers: this.state.userAnswers,
-            readOnly: !this.isCurrentUserAuthor(),
-            onItemChange: this.handleItemChange,
-        };
-        if (this.props.story.type === 'survey') {
-            if (this.hasUserVoted()) {
-                textProps.voteCounts = countVotes(this.props.reactions);
-            }
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        switch (this.props.story.type) {
+            case 'repo':
+                var action = _.get(this.props.story, 'details.action');
+                var name = _.get(this.props.story, 'details.name');
+                return t(`story-repo-${action}`, name);
+            case 'member':
+                var action = _.get(this.props.story, 'details.action');
+                return t(`story-member-${action}`);
+            case 'push':
+                var files = _.get(this.props.story, 'details.files');
+                var lines = _.get(this.props.story, 'details.lines');
+                var commits = _.get(this.props.story, 'details.commit_ids.length');
+                return t(`story-push`, commits, files, lines);
+            case 'issue':
+                var state = _.get(this.props.story, 'details.state');
+                var title = _.get(this.props.story, 'details.title');
+                var labels = _.get(this.props.story, 'details.labels');
+                var number = _.get(this.props.story, 'details.number');
+                return t(`story-issue`, number, p(title), state);
+            case 'milestone':
+                var state = _.get(this.props.story, 'details.state');
+                var title = _.get(this.props.story, 'details.title');
+                var dueDate= _.get(this.props.story, 'details.due_date');
+                var startDate= _.get(this.props.story, 'details.start_date');
+                return t(`story-milestone`, p(title), state);
+            default:
+                var textProps = {
+                    story: this.props.story,
+                    locale: this.props.locale,
+                    theme: this.props.theme,
+                    answers: this.state.userAnswers,
+                    readOnly: !this.isCurrentUserAuthor(),
+                    onItemChange: this.handleItemChange,
+                };
+                if (this.props.story.type === 'survey') {
+                    if (this.hasUserVoted()) {
+                        textProps.voteCounts = countVotes(this.props.reactions);
+                    }
+                }
+                return <StoryText {...textProps} />;
         }
-        return <StoryText {...textProps} />;
     },
 
     /**

@@ -226,6 +226,8 @@ function importServerObjects(db, server) {
         return importUsers(db, server);
     }).then(() => {
         return importProjectMemberships(db, server);
+    }).then(() => {
+        return importRepositoryLabels(db, server);
     });
 }
 
@@ -239,7 +241,7 @@ function importServerObjects(db, server) {
  */
 function importRepositories(db, server) {
     var url = `/projects`;
-    return fetch(server, url).then((projects) => {
+    return fetchAll(server, url).then((projects) => {
         return Repo.find(db, 'global', { server_id: server.id }, '*').then((repos) => {
             var changes = [];
             var imported = {};
@@ -305,7 +307,7 @@ function copyRepoDetails(repo, project) {
  */
 function importUsers(db, server) {
     var url = `/users`;
-    return fetch(server, url).then((accounts) => {
+    return fetchAll(server, url).then((accounts) => {
         return User.find(db, 'global', { server_id: server.id }, '*').then((users) => {
             var imageUrls = _.transform(accounts, (list, account) => {
                 var url = account.avatar_url;
@@ -362,6 +364,35 @@ function importUsers(db, server) {
                 return User.save(db, 'global', changes);
             });
         });
+    });
+}
+
+function importRepositoryLabels(db, server, repo) {
+    var criteria = {
+        deleted: false
+    };
+    return Project.find(db, 'global', criteria, 'repo_ids').then((projects) => {
+        var criteria = {
+            id: _.flatten(_.map(projects, 'repo_ids')),
+            deleted: false,
+        };
+        return Repo.find(db, 'global', criteria, '*').each((repo) => {
+            return importLabels(db, server, repo);
+        });
+    });
+}
+
+function importLabels(db, server, repo) {
+    var url = `projects/${repo.external_id}/labels`;
+    return fetchAll(server, url).then((labels) => {
+        var changes = [];
+        var repoBefore = _.cloneDeep(repo);
+        repo.details.labels = _.map(labels, 'name');
+        repo.details.labelColors = _.map(labels, 'color');
+        if (!_.isEqual(repo, repoBefore)) {
+            changes.push(repo);
+        }
+        return Repo.save(db, 'global', changes);
     });
 }
 
@@ -432,37 +463,13 @@ function importProjectMemberships(db, server) {
                 }
                 // this project is linked with this server
                 // fetch member list from Gitlab
-                var memberLists = [];
-                return Promise.each(repos, (repo) => {
+                return Promise.mapSeries(repos, (repo) => {
                     if (repo.deleted) {
                         return;
                     }
                     var url = `/projects/${repo.external_id}/members`;
-                    var query = {
-                        page: 1,
-                        per_page: 100,
-                    };
-                    var done = false;
-                    Async.do(() => {
-                        return fetch(server, url, query).then((members) => {
-                            memberLists.push(members);
-                            if (members.length === query.per_page && query.page < 100) {
-                                query.page++;
-                            } else {
-                                done = true;
-                            }
-                        });
-                    });
-                    Async.while(() => {
-                        return !done;
-                    });
-                    Async.finally((err) => {
-                        if (err) {
-                            throw err;
-                        }
-                    });
-                    return Async.end();
-                }).then(() => {
+                    return fetchAll(server, url);
+                }).then((memberLists) => {
                     return _.flatten(memberLists);
                 });
             }).then((members) => {
@@ -600,7 +607,7 @@ function importEvents(db, server, repo, project) {
         var url = `/projects/${repo.external_id}/events`;
         var query = {
             sort: 'asc',
-            per_page: 50,
+            per_page: 100,
             page: 1,
         };
         if (lastEventTime) {
@@ -1065,63 +1072,46 @@ function importMergeRequestComments(db, server, repo, mergeRequest, project) {
 
 function importStoryComments(db, server, url, project, story) {
     var schema = project.name;
-    var changes = [];
     var criteria = {
         story_id: story.id,
         repo_id: story.repo_id,
     };
     return Reaction.find(db, schema, criteria, '*').then((reactions) => {
-        var query = {
-            page: 1,
-            per_page: 100
-        };
-        var done = false;
-        Async.do(() => {
-            return fetch(server, url).then((notes) => {
-                var nonSystemNotes = _.filter(notes, (note) => {
-                    return !note.system;
-                });
-                var accountIds = _.map(nonSystemNotes, (note) => {
-                    return note.author.id;
-                });
-                return findUsers(db, server, accountIds).then((users) => {
-                    _.each(nonSystemNotes, (note, index) => {
-                        // commit comments don't have ids for some reason
-                        var noteId = note.id || index;
-                        var reaction = _.find(reactions, { external_id: noteId });
-                        var author = _.find(users, { external_id: note.author.id });
-                        if (reaction || !author) {
-                            return;
-                        }
-                        reaction = {
-                            type: 'note',
-                            story_id: story.id,
-                            repo_id: story.repo_id,
-                            external_id: noteId,
-                            user_id: author.id,
-                            target_user_ids: story.user_ids,
-                            details: {},
-                            published: true,
-                            ptime: getPublicationTime(note),
-                        };
-                        changes.push(reaction);
-                    });
+        return fetchAll(server, url).then((notes) => {
+            var changes = [];
+            var nonSystemNotes = _.filter(notes, (note) => {
+                return !note.system;
+            });
+            var accountIds = _.map(nonSystemNotes, (note) => {
+                return note.author.id;
+            });
+            return findUsers(db, server, accountIds).then((users) => {
+                _.each(nonSystemNotes, (note, index) => {
+                    // commit comments don't have ids for some reason
+                    var noteId = note.id || index;
+                    var reaction = _.find(reactions, { external_id: noteId });
+                    var author = _.find(users, { external_id: note.author.id });
+                    if (reaction || !author) {
+                        return;
+                    }
+                    reaction = {
+                        type: 'note',
+                        story_id: story.id,
+                        repo_id: story.repo_id,
+                        external_id: noteId,
+                        user_id: author.id,
+                        target_user_ids: story.user_ids,
+                        details: {},
+                        published: true,
+                        ptime: getPublicationTime(note),
+                    };
+                    changes.push(reaction);
                 });
             }).then(() => {
-                if (notes.length === query.per_page && query.page < 100) {
-                    query.page++;
-                } else {
-                    done = true;
-                }
+                changes = _.orderBy(changes, [ 'ptime' ], [ 'asc' ]);
+                return Reaction.save(db, schema, changes);
             });
         });
-        Async.while(() => {
-            return !done;
-        })
-        return Async.end();
-    }).then(() => {
-        changes = _.orderBy(changes, [ 'ptime' ], [ 'asc' ]);
-        return Reaction.save(db, schema, changes);
     });
 }
 
@@ -1330,6 +1320,35 @@ function fetch(server, uri, query) {
             }
         });
     });
+}
+
+function fetchAll(server, uri, params) {
+    var objectLists = [];
+    var query = _.extend({
+        page: 1,
+        per_page: 100
+    }, params);
+    var done = false;
+    Async.do(() => {
+        return fetch(server, uri, query).then((objects) => {
+            objectLists.push(objects);
+            if (objects.length === query.per_page && query.page < 100) {
+                query.page++;
+            } else {
+                done = true;
+            }
+        });
+    });
+    Async.while(() => {
+        return !done;
+    });
+    Async.finally((err) => {
+        if (err) {
+            throw err;
+        }
+        return _.flatten(objectLists);
+    });
+    return Async.result();
 }
 
 function post(server, uri, payload) {
