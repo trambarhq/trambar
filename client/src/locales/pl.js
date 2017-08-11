@@ -7,9 +7,9 @@ module.exports = function(languageCode) {
         'action-contact-by-skype': 'Skontaktuj się przez Skype',
         'action-contact-by-slack': 'Skontaktuj się przez Slack',
         'action-contact-by-ichat': 'Skontaktuj się przez iChat',
-        'action-view-gitlab-page': 'Wyświetl profil Gitlab',
-        'action-view-github-page': 'Wyświetl profil Github',
-        'action-view-stackoverflow-page': 'Wyświetl profil Stack Overflow',
+        'action-view-gitlab-page': 'Wyświetl profil na Gitlabie',
+        'action-view-github-page': 'Wyświetl profil na Githubie',
+        'action-view-stackoverflow-page': 'Wyświetl profil na StackOverflowie',
 
         'audio-capture-accept': 'Przyjmij',
         'audio-capture-cancel': 'Anuluj',
@@ -17,6 +17,43 @@ module.exports = function(languageCode) {
         'audio-capture-rerecord': 'Nagraj ponownie',
         'audio-capture-start': 'Rozpocznij',
         'audio-capture-stop': 'Zatrzymaj',
+
+        'bookmark-$count-other-users': (count) => {
+            if (singular(count)) {
+                return `inna osoba`;
+            } else if (plural(count)) {
+                return `${count} inne osoby`;
+            } else {
+                return `${count} innych osób`
+            }
+        },
+        'bookmark-$count-users': (count) => {
+            if (singular(count)) {
+                return `osoba`;
+            } else if (plural(count)) {
+                return `${count} osoby`;
+            } else {
+                return `${count} osób`
+            }
+        },
+        'bookmark-$name-recommends-this': (name) => {
+            return `${name} poleca to`;
+        },
+        'bookmark-$name1-and-$name2-recommend-this': (name) => {
+            return `${name1} i ${name2} polecają to`;
+        },
+        'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+            return [ `${name} i `, users, ` polecają to` ];
+        },
+        'bookmark-recommendations': 'Polecenia',
+        'bookmark-you-bookmarked-it': 'Założyłeś zakładkę do tego',
+        'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+            return `Założyłeś zakładkę do tego (i ${name} poleca go)`;
+        },
+        'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+            var verb = plural(count) ? 'polecają' : 'poleca';
+            return [ `Założyłeś zakładkę do tego (i `, users, ` ${verb} it)` ];
+        },
 
         'bottom-nav-bookmarks': 'Zakładki',
         'bottom-nav-news': 'Wiadomości',
@@ -58,6 +95,21 @@ module.exports = function(languageCode) {
         'story-add-coauthor': 'Dodaj współautora',
         'story-add-remove-coauthor': 'Dodaj/Usuń współautora',
         'story-audio': 'Audio',
+        'story-author-$name1-and-$name2': (name1, name2) => {
+            return `${name1} i ${name2}`;
+        },
+        'story-author-$name-and-$users': (name, users, count) => {
+            return [ name, ' i ', users ];
+        },
+        'story-author-$count-others': (count) =>{
+            if (singular(count)) {
+                return `inna osoba`;
+            } else if (plural(count)) {
+                return `${count} inne osoby`;
+            } else {
+                return `${count} innych osób`;
+            }
+        },
         'story-cancel': 'Anuluj',
         'story-comment': 'Komentuj',
         'story-file': 'Plik',
@@ -71,6 +123,13 @@ module.exports = function(languageCode) {
         'story-task-list': 'Lista zadań',
         'story-video': 'Wideo',
         'story-vote-submit': 'Zatwierdź',
+
+        'survey-item-$number': (number) => {
+            return `wybór #${number}`;
+        },
+        'task-list-item-$number': (number) => {
+            return `zadanie #${number}`;
+        },
 
         'user-actions': 'Działanie',
 

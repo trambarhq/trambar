@@ -101,10 +101,10 @@ module.exports = React.createClass({
             case 2:
                 var name1 = authors[0].details.name;
                 var name2 = authors[1].details.name;
-                contents = t('story-author-two-names', name1, name2);
+                contents = t('story-author-$name1-and-$name2', name1, name2);
                 break;
             default:
-                var name1 = authors[0].details.name;
+                var name = authors[0].details.name;
                 var coauthors = _.slice(authors, 1);
                 var props = {
                     users: coauthors,
@@ -112,10 +112,10 @@ module.exports = React.createClass({
                     title: t('story-coauthors'),
                     locale: this.props.locale,
                     theme: this.props.theme,
-                    key: 2,
+                    key: 1,
                 };
-                var others = <MultipleUserNames {...props} />
-                contents = t('story-author-two-names', name1, others);
+                var users = <MultipleUserNames {...props} />
+                contents = t('story-author-$name-and-$users', name1, users, coauthors.length);
         }
         return <span className="name">{contents}</span>;
     },

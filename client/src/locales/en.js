@@ -24,38 +24,23 @@ module.exports = function(languageCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;
         },
-        'bookmark-$users-recommend-it': (users) => {
-            if (users.length === 1) {
-                return `${users[0]} recommends it`
-            } else {
-                var tokens = [];
-                _.each(users, (user, index) => {
-                    if (index > 0) {
-                        tokens.push(' and ');
-                    }
-                    tokens.push(user);
-                });
-                tokens.push(' recommend it');
-                return tokens;
-            }
+        'bookmark-$name-recommends-this': (name) => {
+            return `${name} recommends this`;
         },
-        'bookmark-$users-recommend-this': (users) => {
-            if (users.length === 1) {
-                return `${users[0]} recommends this`
-            } else {
-                var tokens = [];
-                _.each(users, (user, index) => {
-                    if (index > 0) {
-                        tokens.push(' and ');
-                    }
-                    tokens.push(user);
-                });
-                tokens.push(' recommend this');
-                return tokens;
-            }
+        'bookmark-$name1-and-$name2-recommend-this': (name) => {
+            return `${name1} and ${name2} recommend this`;
+        },
+        'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+            return [ `${name} and `, users, ` recommend this` ];
         },
         'bookmark-recommendations': 'Recommendations',
         'bookmark-you-bookmarked-it': 'You bookmarked this',
+        'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+            return `You bookmarked this (and ${name} recommends it)`;
+        },
+        'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+            return [ `You bookmarked this (and `, users, ` recommend it)` ];
+        },
 
         'bottom-nav-bookmarks': 'Bookmarks',
         'bottom-nav-news': 'News',
@@ -163,13 +148,16 @@ module.exports = function(languageCode) {
 
         'story-$count-user-reacted-to-story': (count) => {
             var users = (count === 1) ? `${count} user` : `${count} users`;
-            return `${users} reacted to this story`;
+            return `${users} reacted to this`;
         },
         'story-add-coauthor': 'Add coauthor',
         'story-add-remove-coauthor': 'Add/Remove coauthor',
         'story-audio': 'Audio',
-        'story-author-two-names': (name1, name2) => {
-            return [ name1, ' and ', name2 ];
+        'story-author-$name1-and-$name2': (name1, name2) => {
+            return `${name1} and ${name2}`;
+        },
+        'story-author-$name-and-$users': (name, users, count) => {
+            return [ name, ' and ', users ];
         },
         'story-author-$count-others': (count) =>{
             return `${count} others`;

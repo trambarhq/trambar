@@ -47,52 +47,53 @@ module.exports = React.createClass({
         });
         var contents;
         if (isOwner) {
-            contents = [ t('bookmark-you-bookmarked-it') ];
-            var users;
-            if (others.length === 1) {
-                users = _.map(others, 'details.name');
-            } else if (others.length > 1) {
-                var props = {
-                    users: others,
-                    label: t('bookmark-$count-users', others.length),
-                    title: t('bookmark-recommendations'),
-                    locale: this.props.locale,
-                    theme: this.props.theme,
-                    key: 1,
-                };
-                users = <MultipleUserNames {...props} />;
-            }
-            if (users) {
-                contents.push(' (', t('bookmark-$users-recommend-it', users), ')');
+            switch(others.length) {
+                case 0:
+                    contents = t('bookmark-you-bookmarked-it');
+                    break;
+                case 1:
+                    var name = _.map(others, 'details.name');
+                    contents = t('bookmark-you-bookmarked-it-and-$name-recommends-it', name);
+                    break;
+                default:
+                    var props = {
+                        users: others,
+                        label: t('bookmark-$count-users', others.length),
+                        title: t('bookmark-recommendations'),
+                        locale: this.props.locale,
+                        theme: this.props.theme,
+                        key: 1,
+                    };
+                    var users = <MultipleUserNames {...props} />;
+                    contents = t('bookmark-you-bookmarked-it-and-$users-recommends-it', users, others.length);
             }
         } else {
-            var users;
-            if (others.length === 1 || others.length === 2) {
-                users = _.map(others, 'details.name');
-            } else if (others.length > 2) {
-                var first = others.shift(others);
-                var props = {
-                    users: others,
-                    label: t('bookmark-$count-other-users', others.length),
-                    title: t('bookmark-recommendations'),
-                    locale: this.props.locale,
-                    theme: this.props.theme,
-                    key: 1,
-                };
-                users = [
-                    _.get(first, 'details.name'),
-                    <MultipleUserNames {...props} />,
-                ];
-            }
-            if (users) {
-                contents = t('bookmark-$users-recommend-this', users);
+            switch (others.length) {
+                case 1:
+                    var name = _.get(others[0], 'details.name');
+                    contents = t('bookmark-$name-recommends-this', name);
+                    break;
+                case 2:
+                    var name1 = _.get(others[0], 'details.name');
+                    var name2 = _.get(others[1], 'details.name');
+                    contents = t('bookmark-$name1-and-$name2-recommend-this', name1);
+                    break;
+                default:
+                    var name = _.get(others[0], 'details.name');
+                    var additional = _.slice(others, 1);
+                    var props = {
+                        users: additional,
+                        label: t('bookmark-$count-other-users', additional.length),
+                        title: t('bookmark-recommendations'),
+                        locale: this.props.locale,
+                        theme: this.props.theme,
+                        key: 1,
+                    };
+                    var users = <MultipleUserNames {...props} />;
+                    contents = t('bookmark-$name-and-$users-recommend-this', name, user, additional.length);
             }
         }
-        return (
-            <span className="name">
-                {contents}
-            </span>
-        );
+        return <span className="name">{contents}</span>
     },
 
     renderCloseButton: function() {
