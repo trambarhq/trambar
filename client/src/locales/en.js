@@ -166,7 +166,7 @@ module.exports = function(languageCode) {
             return `${users} reacted to this story`;
         },
         'story-add-coauthor': 'Add coauthor',
-        'story-add-remove-coauthor': 'Remove coauthor',
+        'story-add-remove-coauthor': 'Add/Remove coauthor',
         'story-audio': 'Audio',
         'story-author-two-names': (name1, name2) => {
             return [ name1, ' and ', name2 ];
@@ -181,9 +181,9 @@ module.exports = function(languageCode) {
         'story-like': 'Like',
         'story-markdown': 'Markdown',
         'story-options': 'Options',
+        'story-pending': 'Pending...',
         'story-photo': 'Photo',
         'story-post': 'Post',
-        'story-pending': 'Pending...',
         'story-survey': 'Survey',
         'story-task-list': 'Task list',
         'story-video': 'Video',
