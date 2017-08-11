@@ -755,7 +755,9 @@ function importIssueEvent(db, server, repo, event, author, project) {
                         });
                         return Reaction.save(db, schema, changes);
                     });
-                });
+                }).then(() => {
+                    return importIssueComments(db, server, repo, issue, project);
+                }).return(story);
             });
         });
     });
@@ -833,7 +835,7 @@ function copyMilestoneDetails(story, milestone) {
  * @return {Promise}
  */
 function importMergeRequestEvent(db, server, repo, event, author, project) {
-
+//         return importMergeRequestComments(db, server, repo, msg.merge_request, project);
 }
 
 /**
@@ -959,7 +961,11 @@ function importPushEvent(db, server, repo, event, author, project) {
                 public: true,
                 ptime: getPublicationTime(event),
             };
-            return Story.insertOne(db, schema, story);
+            return Story.insertOne(db, schema, story).then((story) => {
+                return Promise.each(commits, (commit) => {
+                    return importCommitComments(db, server, repo, commit, project);
+                }).return(story);
+            });
         });
     });
 }
