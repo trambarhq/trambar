@@ -98,6 +98,7 @@ module.exports = React.createClass({
                 </header>
                 <subheader>
                     {this.renderTime()}
+                    {this.renderGraphic()}
                 </subheader>
                 <body>
                     {this.renderContents()}
@@ -183,6 +184,47 @@ module.exports = React.createClass({
             locale: this.props.locale,
         };
         return <Time {...props} />
+    },
+
+    renderGraphic: function() {
+        var icon, Icon;
+        switch (this.props.story.type) {
+            case 'push':
+                Icon = require('octicons/build/svg/repo-push.svg');
+                icon = <Icon className="push" />
+                break;
+            case 'issue':
+                switch (this.props.story.details.state) {
+                    case 'closed':
+                        Icon = require('octicons/build/svg/issue-closed.svg')
+                        break;
+                    case 'reopened':
+                        Icon = require('octicons/build/svg/issue-reopened.svg')
+                        break;
+                    case 'opened':
+                    default:
+                        Icon = require('octicons/build/svg/issue-opened.svg')
+                }
+                icon = <Icon className="issue" />
+                break;
+            case 'repo':
+                Icon = require('octicons/build/svg/repo.svg')
+                icon = <Icon className="repo" />
+                break;
+            case 'milestone':
+                Icon = require('octicons/build/svg/milestone.svg')
+                icon = <Icon className="milestone" />
+                break;
+            case 'member':
+                Icon = require('octicons/build/svg/person.svg')
+                icon = <Icon className="member" />
+                break;
+        }
+        if (icon) {
+            return <div className="graphic">{icon}</div>;
+        } else {
+            return null;
+        }
     },
 
     /**

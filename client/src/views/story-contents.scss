@@ -23,6 +23,16 @@
             color: #666666;
             font-size: 0.9em;
         }
+
+        .graphic {
+            float: right;
+
+            SVG {
+                fill: #211a1a;
+                margin-top: 0.5em;
+                height: 3em;
+            }
+        }
     }
 
     .body {

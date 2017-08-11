@@ -143,6 +143,12 @@ module.exports = _.create(Data, {
             if (row.published_version_id) {
                 object.published_version_id = row.published_version_id;
             }
+            if (row.repo_id) {
+                object.repo_id = row.repo_id;
+            }
+            if (row.external_id) {
+                object.external_id = row.external_id;
+            }
             return object;
         });
     },
@@ -220,11 +226,9 @@ module.exports = _.create(Data, {
                     publishedStory.id = tempCopy.published_version_id;
                     return publishedStory;
                 });
-                console.log(publishedStories);
                 // load the original objects
                 var publishedStoryIds = _.map(publishedStories, 'id');
                 return this.find(db, schema, { id: publishedStoryIds }, '*').then((publishedOriginals) => {
-                    console.log(publishedOriginals)
                     publishedOriginals = _.map(publishedStories, (object) => {
                         return _.find(publishedOriginals, { id: object.id }) || null;
                     });

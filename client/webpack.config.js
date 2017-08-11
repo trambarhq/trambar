@@ -38,7 +38,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /.jsx?$/,
+                test: /\.jsx?$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 query: {
@@ -75,8 +75,24 @@ module.exports = {
                 }
             },
             {
-                test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader',
+            },
+            {
+                test: /\.svg$/,
+                loader: 'svg-react-loader',
+                exclude: /fonts/,
+                query: {
+                    filters: [
+                        // strip out the dimension
+                        function (value) {
+                            if (value.tagname === 'svg') {
+                                delete value.props.width;
+                                delete value.props.height;
+                            }
+                        }
+                    ]
+                }
             },
         ]
     },
