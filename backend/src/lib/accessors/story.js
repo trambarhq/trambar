@@ -41,6 +41,7 @@ module.exports = _.create(Data, {
         older_than: String,
         ready: Boolean,
         commit_id: String,
+        url: String,
     },
 
     /**
@@ -86,6 +87,7 @@ module.exports = _.create(Data, {
             'older_than',
             'ready',
             'commit_id',
+            'url',
         ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
@@ -106,6 +108,10 @@ module.exports = _.create(Data, {
         if (criteria.commit_id !== undefined) {
             params.push(criteria.commit_id);
             conds.push(`details->'commit_ids' ? $${params.length}`);
+        }
+        if (criteria.url !== undefined) {
+            params.push(criteria.url);
+            conds.push(`details->>'url' = $${params.length}`);
         }
         if (criteria.ready !== undefined) {
             if (criteria.ready === true) {

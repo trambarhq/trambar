@@ -221,6 +221,10 @@ module.exports = React.createClass({
                 Icon = require('octicons/build/svg/person.svg')
                 icon = <Icon className="member" />
                 break;
+            case 'wiki':
+                Icon = require('octicons/build/svg/file-text.svg')
+                icon = <Icon className="file" />
+                break;
         }
         if (icon) {
             return <div className="graphic">{icon}</div>;
@@ -262,6 +266,8 @@ module.exports = React.createClass({
                 return this.renderIssueText();
             case 'milestone':
                 return this.renderMilestoneText();
+            case 'wiki':
+                return this.renderWikiText();
             default:
                 return this.renderStoryText();
         }
@@ -422,6 +428,32 @@ module.exports = React.createClass({
             </div>
         );
     },
+
+    /**
+     * Render text for wiki story
+     *
+     * @return {ReactElement}
+     */
+    renderWikiText: function() {
+        var t = this.props.locale.translate;
+        var story = this.props.story;
+        var url = story.details.url;
+        var title = _.capitalize(story.details.title);
+        var action = story.details.action + 'd';
+        if (action === 'deleted') {
+            url = undefined;
+        }
+        return (
+            <div className="wiki">
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-wiki-${action}-page-with-$title`, title)}
+                    </a>
+                </p>
+            </div>
+        );
+    },
+
 
     /**
      * Render text for push story

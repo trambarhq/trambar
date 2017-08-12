@@ -92,7 +92,7 @@
             }
         }
 
-        .push, .milestone, .repo, .member, .issue, .merge-request {
+        .push, .milestone, .repo, .member, .issue, .wiki, .merge-request {
             A {
                 &:link, &:visited {
                     text-decoration: none;

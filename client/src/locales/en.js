@@ -246,6 +246,15 @@ module.exports = function(languageCode) {
         'story-task-list': 'Task list',
         'story-video': 'Video',
         'story-vote-submit': 'Submit',
+        'story-wiki-created-page-with-$title': (title) => {
+            return `Updated wiki page “${title}”`;
+        },
+        'story-wiki-updated-page-with-$title': (title) => {
+            return `Updated wiki page “${title}”`;
+        },
+        'story-wiki-deleted-page-with-$title': (title) => {
+            return `Deleted wiki page “${title}”`;
+        },
 
         'survey-item-$number': (number) => {
             return `choice ${number}`;

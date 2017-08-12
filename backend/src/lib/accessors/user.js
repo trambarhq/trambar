@@ -26,6 +26,7 @@ module.exports = _.create(Data, {
         role_ids: Array(Number),
         server_id: Number,
         external_id: Number,
+        username: String,
     },
 
     /**
@@ -56,6 +57,18 @@ module.exports = _.create(Data, {
             );
         `;
         return db.execute(sql);
+    },
+
+    apply: function(criteria, query) {
+        var special = [ 'username' ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.username !== undefined) {
+            params.push(criteria.username);
+            conds.push(`details->>'username' = $${params.length}`);
+        }
     },
 
     /**

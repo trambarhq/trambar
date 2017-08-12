@@ -146,7 +146,7 @@ function handleDatabaseChanges(events) {
                 if (!reaction || !reaction.ptime || reaction.type !== 'comment') {
                     return;
                 }
-                return Story.findOne(db, event.schema, { id: story_id }, '*').then((story) => {
+                return Story.findOne(db, event.schema, { id: reaction.story_id }, '*').then((story) => {
                     var repoId = story.repo_id;
                     var issueId = story.external_id;
                     if (repoId && issueId) {
@@ -184,6 +184,8 @@ function handleHookCallback(req, res) {
                 return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
                     if (message.object_kind === 'note') {
                         return importComments(db, server, repo, message, project);
+                    } else if (message.object_kind === 'wiki_page') {
+                        return importWikiEvent(db, server, repo, message, project);
                     } else {
                         return importEvents(db, server, repo, project);
                     }
@@ -676,6 +678,7 @@ function importEvent(db, server, repo, event, project) {
                 return importMilestoneEvent(db, server, repo, event, author, project);
             case 'MergeRequest':
                 return importMergeRequestEvent(db, server, repo, event, author, project);
+
         }
         switch (event.action_name) {
             case 'deleted':
@@ -1307,6 +1310,68 @@ function importProfileImages(urls) {
         });
     }, { concurrency: 8 }).then((images) => {
         return _.zipObject(urls, images);
+    });
+}
+
+/**
+ * Import a wiki related event
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Object} message
+ * @param  {Project} project
+ *
+ * @return {Promise<Story|null>}
+ */
+function importWikiEvent(db, server, repo, message, project) {
+    var schema = project.name;
+    // the user id for some reason isn't included in the message, only the user name
+    var criteria = {
+        username: message.user.username,
+        server_id: server.id,
+    };
+    return User.findOne(db, 'global', criteria, 'id, role_ids').then((author) => {
+        if (!author) {
+            return null;
+        }
+        var object = message.object_attributes;
+        // see if there's story about this page recently
+        var criteria = {
+            type: 'wiki',
+            newer_than: Moment().subtract(1, 'day').toISOString(),
+            repo_id: repo.id,
+            url: object.url,
+        };
+        return Story.findOne(db, schema, criteria, 'id').then((story) => {
+            if (story) {
+                if (object.action === 'delete') {
+                    // remove the story if the page is no longer there
+                    story.deleted = true;
+                    return Story.saveOne(db, schema, story);
+                } else if (story.deleted) {
+                    // unerase the old story
+                    story.deleted = false;
+                    return Story.saveOne(db, schema, story);
+                } else {
+                    // ignore, as one story a day about a page is enough
+                    return null;
+                }
+            } else {
+                var fields = [ 'url', 'title', 'action', 'slug' ];
+                story = {
+                    type: criteria.type,
+                    user_ids: [ author.id ],
+                    role_ids: author.role_ids,
+                    repo_id: repo.id,
+                    details: _.pick(object, fields),
+                    published: true,
+                    ptime: Moment().toISOString(),
+                    public: true,
+                };
+                return Story.saveOne(db, schema, story);
+            }
+        });
     });
 }
 
