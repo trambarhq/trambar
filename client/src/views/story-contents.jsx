@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var Moment = require('moment');
 var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
@@ -27,6 +28,8 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
         pending: PropTypes.bool.isRequired,
         cornerPopUp: PropTypes.element,
 
@@ -251,45 +254,149 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         switch (this.props.story.type) {
             case 'repo':
-                var action = _.get(this.props.story, 'details.action');
-                var name = _.get(this.props.story, 'details.name');
-                return t(`story-repo-${action}`, name);
+                return this.renderRepoText();
             case 'member':
-                var action = _.get(this.props.story, 'details.action');
-                return t(`story-member-${action}`);
+                return this.renderMemberText();
             case 'push':
                 var files = _.get(this.props.story, 'details.files');
                 var lines = _.get(this.props.story, 'details.lines');
                 var commits = _.get(this.props.story, 'details.commit_ids.length');
                 return t(`story-push`, commits, files, lines);
             case 'issue':
-                var state = _.get(this.props.story, 'details.state');
-                var title = _.get(this.props.story, 'details.title');
-                var labels = _.get(this.props.story, 'details.labels');
-                var number = _.get(this.props.story, 'details.number');
-                return t(`story-issue`, number, p(title), state);
+                return this.renderIssueText();
             case 'milestone':
-                var state = _.get(this.props.story, 'details.state');
-                var title = _.get(this.props.story, 'details.title');
-                var dueDate= _.get(this.props.story, 'details.due_date');
-                var startDate= _.get(this.props.story, 'details.start_date');
-                return t(`story-milestone`, p(title), state);
+                return this.renderMilestoneText();
             default:
-                var textProps = {
-                    story: this.props.story,
-                    locale: this.props.locale,
-                    theme: this.props.theme,
-                    answers: this.state.userAnswers,
-                    readOnly: !this.isCurrentUserAuthor(),
-                    onItemChange: this.handleItemChange,
-                };
-                if (this.props.story.type === 'survey') {
-                    if (this.hasUserVoted()) {
-                        textProps.voteCounts = countVotes(this.props.reactions);
-                    }
-                }
-                return <StoryText {...textProps} />;
+                return this.renderStoryText();
         }
+    },
+
+    /**
+     * Render text for regular post, task list, and survey
+     *
+     * @return {ReactElement}
+     */
+    renderStoryText: function() {
+        var textProps = {
+            story: this.props.story,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            answers: this.state.userAnswers,
+            readOnly: !this.isCurrentUserAuthor(),
+            onItemChange: this.handleItemChange,
+        };
+        if (this.props.story.type === 'survey') {
+            if (this.hasUserVoted()) {
+                textProps.voteCounts = countVotes(this.props.reactions);
+            }
+        }
+        return <StoryText {...textProps} />;
+    },
+
+    /**
+     * Render text for repo story
+     *
+     * @return {ReactElement}
+     */
+    renderRepoText: function() {
+        var t = this.props.locale.translate;
+        var story = this.props.story;
+        var action = story.details.action;
+        var repo = _.find(this.props.repos, { id: story.repo_id });
+        var repoName = _.get(repo, 'details.name');
+        return (
+            <div className="repo">
+                <p>{t(`story-repo-${action}-$name`, repoName)}</p>
+            </div>
+        );
+    },
+
+    /**
+     * Render text for member story
+     *
+     * @return {ReactElement}
+     */
+    renderMemberText: function() {
+        var t = this.props.locale.translate;
+        var story = this.props.story;
+        var action = story.details.action;
+        var repo = _.find(this.props.repos, { id: story.repo_id });
+        var repoName = _.get(repo, 'details.name');
+        return (
+            <div className="member">
+                <p>{t(`story-member-${action}-$repo`, repoName)}</p>
+            </div>
+        );
+    },
+
+    /**
+     * Render text for issue story
+     *
+     * @return {ReactElement}
+     */
+    renderIssueText: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var number = story.details.number;
+        var title = story.details.title;
+        var state = story.details.state;
+        var repo = _.find(this.props.repos, { id: story.repo_id });
+        var tags = _.map(story.details.labels, (label, i) => {
+            var style;
+            if (repo) {
+                var index = _.indexOf(repo.details.labels, label);
+                var color = _.get(repo.details.label_colors, index);
+                if (color) {
+                    style = { backgroundColor: color };
+                }
+            }
+            return <span key={i} className="tag" style={style}>{label}</span>;
+        });
+        for (var i = 1; i < tags.length; i += 2) {
+            tags.splice(i, 0, ' ');
+        }
+        return (
+            <div className="issue">
+                <p>{t(`story-issue-opened-$number-$title`, number, p(title))}</p>
+                <p className={`status-${state}`}>
+                    <span>{t('story-issue-current-status')}</span>
+                    {' '}
+                    <span>{t(`story-issue-status-${state}`)}</span>
+                </p>
+                <p>{tags}</p>
+            </div>
+        );
+    },
+
+    /**
+     * Render text for milestone story
+     *
+     * @return {ReactElement}
+     */
+    renderMilestoneText: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var state = story.details.state;
+        var title = story.details.title;
+        var dueDate = formatDate(story.details.due_date);
+        var startDate = formatDate(story.details.start_date) || '-';
+        return (
+            <div className="milestone">
+                <p>{t(`story-milestone-created-$name`, p(title))}</p>
+                <p className="start-date">
+                    <span>{t('story-milestone-start-date')}</span>
+                    {' '}
+                    <span>{startDate}</span>
+                </p>
+                <p className="due-date">
+                    <span className="label">{t('story-milestone-due-date')}</span>
+                    {' '}
+                    <span>{dueDate}</span>
+                </p>
+            </div>
+        );
     },
 
     /**
@@ -433,3 +540,11 @@ var getUserVote = Memoize(function(reactions, user) {
         return null;
     }
 });
+
+function formatDate(date) {
+    date = _.trim(date);
+    if (date) {
+        var m = Moment(date);
+        return m.format('ll');
+    }
+}

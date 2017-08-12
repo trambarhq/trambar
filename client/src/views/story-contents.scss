@@ -29,13 +29,39 @@
 
             SVG {
                 fill: #211a1a;
-                margin-top: 0.5em;
+                margin-top: 0.2em;
                 height: 3em;
             }
         }
     }
 
     .body {
+        .issue {
+            .status-opened, .status-reopened {
+                color: #99ff66;
+            }
+
+            .status-closed {
+                color: #ff3333;
+            }
+
+            .tag {
+                font-size: 0.9em;
+                color: #ffffff;
+                background-color: #444444;
+                padding: 0.1em 0.4em 0.1em 0.4em;
+                border-radius: 0.25em;
+            }
+        }
+
+        .milestone {
+            .start-date {
+                color: #99ff66;
+            }
+            .due-date {
+                color: #ff3333;
+            }
+        }
     }
 
     .footer {

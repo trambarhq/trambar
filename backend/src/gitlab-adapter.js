@@ -388,7 +388,7 @@ function importLabels(db, server, repo) {
         var changes = [];
         var repoBefore = _.cloneDeep(repo);
         repo.details.labels = _.map(labels, 'name');
-        repo.details.labelColors = _.map(labels, 'color');
+        repo.details.label_colors = _.map(labels, 'color');
         if (!_.isEqual(repo, repoBefore)) {
             changes.push(repo);
         }
@@ -861,7 +861,6 @@ function importRepoEvent(db, server, repo, event, author, project) {
     var schema = project.name;
     var details = {
         action: event.action_name,
-        name: repo.details.name,
     };
     var story = {
         type: 'repo',

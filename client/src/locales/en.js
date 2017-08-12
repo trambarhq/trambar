@@ -159,19 +159,52 @@ module.exports = function(languageCode) {
         'story-author-$name-and-$users': (name, users, count) => {
             return [ name, ' and ', users ];
         },
-        'story-author-$count-others': (count) =>{
+        'story-author-$count-others': (count) => {
             return `${count} others`;
         },
         'story-cancel': 'Cancel',
         'story-coauthors': 'Coauthors',
         'story-comment': 'Comment',
         'story-file': 'File',
+        'story-issue-opened-$number-$title': (number, title) => {
+            return `Opened issue ${number}: ${title}`;
+        },
+        'story-issue-current-status': 'Current status:',
+        'story-issue-status-closed': 'Closed',
+        'story-issue-status-opened': 'Open',
+        'story-issue-status-reopened': 'Reopened',
         'story-like': 'Like',
         'story-markdown': 'Markdown',
         'story-options': 'Options',
         'story-pending': 'Pending...',
+        'story-member-joined-$repo': (repo) => {
+            var text = `Joined project`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-member-left-$repo': (repo) => {
+            var text = `Left project`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-milestone-created-$name': (name) => {
+            return `Created milestone “${name}”`;
+        },
+        'story-milestone-start-date': 'Start date:',
+        'story-milestone-due-date': 'Due date:',
         'story-photo': 'Photo',
         'story-post': 'Post',
+        'story-repo-created-$name': (name) => {
+            var text = `Created project`;
+            if (name) {
+                text += ` “${name}”`;
+            }
+            return text;
+        },
         'story-survey': 'Survey',
         'story-task-list': 'Task list',
         'story-video': 'Video',

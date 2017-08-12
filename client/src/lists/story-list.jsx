@@ -56,6 +56,8 @@ module.exports = Relaks.createClass({
             respondents: null,
             recommendations: null,
             recipients: null,
+            project: null,
+            repos: null,
 
             showEditors: this.props.showEditors,
             stories: this.props.stories,
@@ -168,6 +170,22 @@ module.exports = Relaks.createClass({
             }
         }).then((recipients) => {
             props.recipients = recipients;
+        }).then(() => {
+            // load project
+            var criteria = {
+                name: schema
+            };
+            return db.findOne({ schema: 'global', table: 'project', criteria });
+        }).then((project) => {
+            props.project = project;
+        }).then(() => {
+            // load repos
+            var criteria = {
+                id: props.project.repo_ids
+            };
+            return db.find({ schema: 'global', table: 'repo', criteria });
+        }).then((repos) => {
+            props.repos = repos;
             return <StoryListSync {...props} />;
         });
     },
@@ -188,6 +206,8 @@ var StoryListSync = module.exports.Sync = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        project: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -260,6 +280,8 @@ var StoryListSync = module.exports.Sync = React.createClass({
             authors,
             recommendations,
             recipients,
+            project: this.props.project,
+            repos: this.props.repos,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -300,6 +322,8 @@ var StoryListSync = module.exports.Sync = React.createClass({
         var storyProps = {
             story,
             authors,
+            project: this.props.project,
+            repos: this.props.repos,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -349,6 +373,8 @@ var StoryListSync = module.exports.Sync = React.createClass({
             respondents,
             recommendations,
             recipients,
+            project: this.props.project,
+            repos: this.props.repos,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
