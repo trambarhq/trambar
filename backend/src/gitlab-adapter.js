@@ -1292,6 +1292,9 @@ function importProfileImages(urls) {
                 },
             };
             Request.post(options, (err, resp, body) => {
+                if (resp.statusCode >= 400) {
+                    err = new HttpError(resp.statusCode);
+                }
                 if (!err) {
                     resolve(body);
                 } else {
@@ -1316,6 +1319,9 @@ function fetch(server, uri, query) {
             uri,
         };
         Request.get(options, (err, resp, body) => {
+            if (resp.statusCode >= 400) {
+                err = new HttpError(resp.statusCode);
+            }
             if (!err) {
                 resolve(body);
             } else {
@@ -1366,6 +1372,9 @@ function post(server, uri, payload) {
             uri,
         };
         Request.post(options, (err, resp, body) => {
+            if (resp.statusCode >= 400) {
+                err = new HttpError(resp.statusCode);
+            }
             if (!err) {
                 resolve(body);
             } else {
@@ -1386,6 +1395,9 @@ function remove(server, uri) {
             uri,
         };
         Request.delete(options, (err, resp, body) => {
+            if (resp.statusCode >= 400) {
+                err = new HttpError(resp.statusCode);
+            }
             if (!err) {
                 resolve(body);
             } else {
