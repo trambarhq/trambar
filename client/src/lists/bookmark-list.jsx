@@ -52,6 +52,7 @@ module.exports = Relaks.createClass({
             respondents: null,
             recommendations: null,
             recipients: null,
+            repos: null,
 
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
@@ -138,7 +139,7 @@ module.exports = Relaks.createClass({
             }
         }).then((recommendations) => {
             props.recommendations = recommendations;
-            return <BookmarkListSync {...props} />;
+            meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // look for recipient of these bookmarks
             if (props.recommendations) {
@@ -149,6 +150,18 @@ module.exports = Relaks.createClass({
             }
         }).then((recipients) => {
             props.recipients = recipients;
+            meanwhile.show(<BookmarkListSync {...props} />);
+        }).then(() => {
+            // load repos from which the stories came
+            var repoIds = _.uniq(_.filter(_.map(props.stories, 'repo_id')));
+            if (!_.isEmpty(repoIds)) {
+                var criteria = {
+                    id: repoIds
+                };
+                return db.find({ schema: 'global', table: 'repo', criteria });
+            }
+        }).then((repos) => {
+            props.repos = repos;
             return <BookmarkListSync {...props} />;
         });
     },
@@ -168,6 +181,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         respondents: PropTypes.arrayOf(PropTypes.object),
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
+        repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -251,6 +265,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         var respondents = findRespondents(this.props.respondents, reactions);
         var recommendations = findRecommendations(this.props.recommendations, story);
         var recipients = findRecipients(this.props.recipients, recommendations);
+        var repo = findRepo(this.props.repos, story);
         var storyProps = {
             story,
             reactions,
@@ -258,6 +273,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             respondents,
             recommendations,
             recipients,
+            repo,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
@@ -355,6 +371,14 @@ var findRecipients = Memoize(function(recipients, recommendations) {
     return _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
+});
+
+var findRepo = Memoize(function(repos, story) {
+    if (story && story.repo_id) {
+        return _.find(repos, { id: story.repo_id });
+    } else {
+        return null;
+    }
 });
 
 function getAuthorIds(stories, currentUser) {
