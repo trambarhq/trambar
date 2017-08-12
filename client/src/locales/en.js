@@ -265,10 +265,13 @@ module.exports = function(languageCode) {
 
         'user-actions': 'Actions',
 
-        'user-statistics-legend-commit': 'Commits',
+        'user-statistics-legend-issue': 'Issues',
+        'user-statistics-legend-milestone': 'Milestones',
+        'user-statistics-legend-push': 'Code pushes',
         'user-statistics-legend-story': 'Posts',
         'user-statistics-legend-survey': 'Surveys',
         'user-statistics-legend-task-list': 'Task lists',
+        'user-statistics-legend-wiki': 'Wiki edits',
 
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',

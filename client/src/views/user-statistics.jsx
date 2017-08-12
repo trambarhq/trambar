@@ -297,7 +297,10 @@ var getDates = function(today, count) {
 }
 
 var storyTypes = [
-    'commit',
+    'push',
+    'issue',
+    'wiki',
+    'milestone',
     'story',
     'survey',
     'task-list',
