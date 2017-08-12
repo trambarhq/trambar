@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
@@ -99,6 +100,57 @@ module.exports = _.create(Data, {
             }
         }
     },
+
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials) {
+        return Promise.map(objects, (object, index) => {
+            var original = originals[index];
+            if (original) {
+                if (original.user_id !== credentials.user.id) {
+                    // can't modify an object that doesn't belong to the user
+                    throw new HttpError(403);
+                }
+                if (object.hasOwnProperty('user_id')) {
+                    if (object.user_id !== original.user_id) {
+                        // cannot make someone else the author
+                        throw new HttpError(403);
+                    }
+                }
+            } else {
+                if (object.id) {
+                    throw new HttpError(400);
+                }
+                if (!object.hasOwnProperty('user_id')) {
+                    throw new HttpError(403);
+                }
+                if (object.user_id !== credentials.user.id) {
+                    // the author must be the current user
+                    throw new HttpError(403);
+                }
+            }
+
+            // set the ptime if published is set and there're no outstanding
+            // media tasks
+            if (object.published && !object.ptime) {
+                var payloadIds = getPayloadIds(object);
+                if (_.isEmpty(payloadIds)) {
+                    object.ptime = Moment().toISOString();
+                }
+            }
+            return object;
+        });
+    },
+
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -275,4 +327,23 @@ function applyClippingRectangle(url, clip, width, height, quality) {
     filters.push(`re${width}-${height}`);
     filters.push(`qu${quality}`)
     return `${url}/${filters.join('+')}`;
+}
+
+/**
+ * Return task ids in the object
+ *
+ * @param  {Object} object
+ *
+ * @return {Array<Number>}
+ */
+function getPayloadIds(object) {
+    var payloadIds = [];
+    if (object && object.details) {
+        _.each(object.details.resources, (res) => {
+            if (res.payload_id) {
+                payloadIds.push(res.payload_id);
+            }
+        });
+    }
+    return payloadIds;
 }

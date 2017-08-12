@@ -43,6 +43,8 @@ function start() {
                         var locale = object.authorization.locale;
                         return checkAuthorization(db, token).then((auth) => {
                             return fetchCredentials(db, auth.user_id).then((credentials) => {
+                                console.log(auth.user_id);
+                                console.log(credentials);
                                 socket.credentials = credentials;
                                 socket.locale = locale;
                                 sockets.push(socket);
@@ -101,7 +103,7 @@ function checkAuthorization(db, token) {
 
 function fetchCredentials(db, userId) {
     var credentials = {};
-    return User.findOne(db, 'global', { user_id: userId, deleted: false }, '*').then((user) => {
+    return User.findOne(db, 'global', { id: userId, deleted: false }, '*').then((user) => {
         if (!user) {
             throw new HttpError(403);
         }
@@ -137,6 +139,10 @@ function handleDatabaseChanges(events) {
         var published = _.get(event.diff, [ 'published', 1, ]);
         if (published) {
             return Reaction.findOne(db, schema, { id: event.id }, '*').then((reaction) => {
+                var elapsed = getTimeElapsed(reaction.ptime, new Date);
+                if (elapsed > 5 * 60 * 1000) {
+                    return;
+                }
                 return User.findOne(db, 'global', { id: reaction.user_id }, '*').then((sender) => {
                     return Story.findOne(db, schema, { id: reaction.story_id }, '*').then((story) => {
                         if (!sender || !story) {
@@ -145,6 +151,7 @@ function handleDatabaseChanges(events) {
                         return Promise.each(reaction.target_user_ids, (userId) => {
                             // TODO: employ user preference
                             var socket = _.find(sockets, (s) => {
+                                console.log(s.credentials.user.id + ' === ' + userId);
                                 return s.credentials.user.id === userId;
                             });
                             if (socket) {
@@ -173,6 +180,18 @@ function parseJSON(text) {
         return JSON.parse(text);
     } catch (err) {
     }
+}
+
+function getTimeElapsed(start, end) {
+    if (!start) {
+        return Infinity;
+    }
+    if (!end) {
+        return 0;
+    }
+    var s = (typeof(start) === 'string') ? new Date(start) : start;
+    var e = (typeof(end) === 'string') ? new Date(end) : end;
+    return (e - s);
 }
 
 exports.start = start;
