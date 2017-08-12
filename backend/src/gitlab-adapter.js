@@ -1040,7 +1040,8 @@ function importCommitComments(db, server, repo, commit, project) {
             return;
         }
         var url = `/projects/${repo.external_id}/repository/commits/${commit.id}/comments`;
-        return importStoryComments(db, server, url, project, story);
+        var extra = { commit_id: commit.id };
+        return importStoryComments(db, server, url, project, story, extra);
     });
 }
 
@@ -1073,7 +1074,7 @@ function importMergeRequestComments(db, server, repo, mergeRequest, project) {
 
 }
 
-function importStoryComments(db, server, url, project, story) {
+function importStoryComments(db, server, url, project, story, extra) {
     var schema = project.name;
     var criteria = {
         story_id: story.id,
@@ -1091,8 +1092,9 @@ function importStoryComments(db, server, url, project, story) {
             return findUsers(db, server, accountIds).then((users) => {
                 _.each(nonSystemNotes, (note, index) => {
                     // commit comments don't have ids for some reason
-                    var noteId = note.id || index;
-                    var reaction = _.find(reactions, { external_id: noteId });
+                    var reaction = (note.id)
+                        ? _.find(reactions, { external_id: noteId })
+                        : reactions[index];
                     var author = _.find(users, { external_id: note.author.id });
                     if (reaction || !author) {
                         return;
@@ -1101,10 +1103,10 @@ function importStoryComments(db, server, url, project, story) {
                         type: 'note',
                         story_id: story.id,
                         repo_id: story.repo_id,
-                        external_id: noteId,
+                        external_id: note.id,
                         user_id: author.id,
                         target_user_ids: story.user_ids,
-                        details: {},
+                        details: extra || {},
                         published: true,
                         ptime: getPublicationTime(note),
                     };

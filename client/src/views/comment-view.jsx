@@ -14,7 +14,9 @@ module.exports = React.createClass({
     propTypes: {
         reaction: PropTypes.object.isRequired,
         respondent: PropTypes.object,
+        story: PropTypes.object.isRequired,
         currentUser: PropTypes.object.isRequired,
+        repo: PropTypes.object,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -70,6 +72,38 @@ module.exports = React.createClass({
                     return (
                         <span className="task-completion">
                             {t('comment-$user-completed-a-task', name)}
+                        </span>
+                    );
+                case 'note':
+                    var storyType = this.props.story.type;
+                    var baseUrl = _.get(this.props.repo, 'details.web_url');
+                    var url;
+                    if (baseUrl) {
+                        var noteId = this.props.reaction.external_id;
+                        switch (storyType) {
+                            case 'push':
+                                var commitId = this.props.reaction.details.commit_id;
+                                url = `${baseUrl}/commits/${commitId}/`;
+                                break;
+                            case 'issue':
+                                var issueId = this.props.story.details.number;
+                                url = `${baseUrl}/issues/${issueId}#note_${noteId}`;
+                                break;
+                            case 'merge-request':
+                                var mergeRequestId = this.props.story.details.number;
+                                url = `${baseUrl}/merge_requests/${mergeRequestId}#note_${noteId}`;
+                                break;
+                        }
+                    }
+                    return (
+                        <a className="note" target="_blank" href={url}>
+                            {t(`comment-$user-commented-on-${storyType}`, name)}
+                        </a>
+                    );
+                case 'assignment':
+                    return (
+                        <span className="issue-assignment">
+                            {t('comment-$user-is-assigned-to-issue', name)}
                         </span>
                     );
             }

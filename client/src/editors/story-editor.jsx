@@ -33,8 +33,6 @@ module.exports = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        project: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,

@@ -28,8 +28,7 @@ module.exports = React.createClass({
         authors: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
+        repo: PropTypes.object,
         pending: PropTypes.bool.isRequired,
         cornerPopUp: PropTypes.element,
 
@@ -299,8 +298,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var story = this.props.story;
         var action = story.details.action;
-        var repo = _.find(this.props.repos, { id: story.repo_id });
-        var repoName = _.get(repo, 'details.name');
+        var repoName = _.get(this.props.repo, 'details.name');
         return (
             <div className="repo">
                 <p>{t(`story-repo-${action}-$name`, repoName)}</p>
@@ -317,8 +315,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var story = this.props.story;
         var action = story.details.action;
-        var repo = _.find(this.props.repos, { id: story.repo_id });
-        var repoName = _.get(repo, 'details.name');
+        var repoName = _.get(this.props.repo, 'details.name');
         return (
             <div className="member">
                 <p>{t(`story-member-${action}-$repo`, repoName)}</p>
@@ -338,7 +335,7 @@ module.exports = React.createClass({
         var number = story.details.number;
         var title = story.details.title;
         var state = story.details.state;
-        var repo = _.find(this.props.repos, { id: story.repo_id });
+        var repo = this.props.repo;
         var tags = _.map(story.details.labels, (label, i) => {
             var style;
             if (repo) {
@@ -408,8 +405,7 @@ module.exports = React.createClass({
         var files = _.get(this.props.story, 'details.files');
         var lines = _.get(this.props.story, 'details.lines');
         var commits = _.get(this.props.story, 'details.commit_ids.length');
-        var repo = _.find(this.props.repos, { id: story.repo_id });
-        var repoName = _.get(repo, 'details.name');
+        var repoName = _.get(this.props.repo, 'details.name');
         var branch = story.details.branch;
         var fileChangeTypes = [ 'added', 'removed', 'modified', 'renamed' ];
         var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {

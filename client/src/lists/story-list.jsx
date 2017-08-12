@@ -56,7 +56,6 @@ module.exports = Relaks.createClass({
             respondents: null,
             recommendations: null,
             recipients: null,
-            project: null,
             repos: null,
 
             showEditors: this.props.showEditors,
@@ -71,24 +70,27 @@ module.exports = Relaks.createClass({
         meanwhile.show(<StoryListSync {...props} />, 250);
         return db.start().then((userId) => {
             // load authors of stories
-            var criteria = {};
-            criteria.id = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+            var criteria = {
+                id: _.uniq(_.flatten(_.map(props.stories, 'user_ids')))
+            };
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.authors = users;
             meanwhile.show(<StoryListSync {...props} />);
         }).then(() => {
             // load reactions to stories
-            var criteria = {};
-            criteria.story_id = _.map(props.stories, 'id');
+            var criteria = {
+                story_id: _.map(props.stories, 'id')
+            };
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
             props.reactions = reactions;
             meanwhile.show(<StoryListSync {...props} />);
         }).then(() => {
             // load users of reactions
-            var criteria = {};
-            criteria.id =  _.uniq(_.map(props.reactions, 'user_id'));
+            var criteria = {
+                id: _.uniq(_.map(props.reactions, 'user_id'))
+            };
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;
@@ -136,7 +138,8 @@ module.exports = Relaks.createClass({
                 meanwhile.show(<StoryListSync {...props} />);
             }
         }).then(() => {
-            // load other authors of pending stories
+            // load other authors of pending stories (most of the time, this is
+            // going to be the current user)
             var authorIds = getAuthorIds(props.pendingStories, props.currentUser);
             if (authorIds.length > 1) {
                 var criteria = {
@@ -171,19 +174,14 @@ module.exports = Relaks.createClass({
         }).then((recipients) => {
             props.recipients = recipients;
         }).then(() => {
-            // load project
-            var criteria = {
-                name: schema
-            };
-            return db.findOne({ schema: 'global', table: 'project', criteria });
-        }).then((project) => {
-            props.project = project;
-        }).then(() => {
-            // load repos
-            var criteria = {
-                id: props.project.repo_ids
-            };
-            return db.find({ schema: 'global', table: 'repo', criteria });
+            // load repos from which the stories came
+            var repoIds = _.uniq(_.filter(_.map(props.stories, 'repo_id')));
+            if (!_.isEmpty(repoIds)) {
+                var criteria = {
+                    id: repoIds
+                };
+                return db.find({ schema: 'global', table: 'repo', criteria });
+            }
         }).then((repos) => {
             props.repos = repos;
             return <StoryListSync {...props} />;
@@ -206,7 +204,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        project: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -280,8 +277,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             authors,
             recommendations,
             recipients,
-            project: this.props.project,
-            repos: this.props.repos,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -322,8 +317,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
         var storyProps = {
             story,
             authors,
-            project: this.props.project,
-            repos: this.props.repos,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -366,6 +359,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         var respondents = findRespondents(this.props.respondents, reactions);
         var recommendations = findRecommendations(this.props.recommendations, story);
         var recipients = findRecipients(this.props.recipients, recommendations);
+        var repo = findRepo(this.props.repos, story);
         var storyProps = {
             story,
             reactions,
@@ -373,8 +367,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             respondents,
             recommendations,
             recipients,
-            project: this.props.project,
-            repos: this.props.repos,
+            repo,
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -445,6 +438,14 @@ var findRecipients = Memoize(function(recipients, recommendations) {
     return _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
+});
+
+var findRepo = Memoize(function(repos, story) {
+    if (story && story.repo_id) {
+        return _.find(repos, { id: story.repo_id });
+    } else {
+        return null;
+    }
 });
 
 function getAuthorIds(stories, currentUser) {

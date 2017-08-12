@@ -54,6 +54,18 @@ module.exports = function(languageCode) {
         'comment-$user-completed-a-task': (user) => {
             return `${user} completed a task`;
         },
+        'comment-$user-commented-on-issue': (user) => {
+            return `${user} commented on this issue`;
+        },
+        'comment-$user-commented-on-push': (user) => {
+            return `${user} commented on a commit`;
+        },
+        'comment-$user-commented-on-merge-request': (user) => {
+            return `${user} commented on this merge request`;
+        },
+        'comment-$user-is-assigned-to-issue': (user) => {
+            return `${user} was assigned to this issue`;
+        },
         'comment-$user-is-typing': (user) => {
             return `${user} is writing a comment...`;
         },

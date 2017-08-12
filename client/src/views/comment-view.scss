@@ -15,6 +15,18 @@
         }
     }
 
+    .note {
+        &:link, &:visited {
+            color: #cccccc;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        &:hover {
+            color: #ffffff;
+        }
+    }
+
     .in-progress {
         color: #666666;
     }

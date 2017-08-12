@@ -27,6 +27,7 @@ module.exports = React.createClass({
         story: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
+        repo: PropTypes.object,
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -126,6 +127,8 @@ module.exports = React.createClass({
         var props = {
             reaction,
             respondent,
+            story: this.props.story,
+            repo: this.props.repo,
             beingEdited: !!tempCopy,
             currentUser: this.props.currentUser,
             locale: this.props.locale,

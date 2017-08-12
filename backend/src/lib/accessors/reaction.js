@@ -130,6 +130,12 @@ module.exports = _.create(Data, {
                     object.details = _.omit(object.details, 'text', 'resources');
                 }
             }
+            if (row.repo_id) {
+                object.repo_id = row.repo_id;
+            }
+            if (row.external_id) {
+                object.external_id = row.external_id;
+            }
             return object;
         });
     },

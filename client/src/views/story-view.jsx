@@ -28,8 +28,7 @@ module.exports = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
-        project: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
+        repo: PropTypes.object,
         pending: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -146,8 +145,7 @@ module.exports = React.createClass({
             authors: this.props.authors,
             currentUser: this.props.currentUser,
             reactions: this.props.reactions,
-            project: this.props.project,
-            repos: this.props.repos,
+            repo: this.props.repo,
             pending: this.props.pending,
             cornerPopUp: this.renderPopUpMenu('main'),
 
@@ -172,6 +170,7 @@ module.exports = React.createClass({
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
+            repo: this.props.repo,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
