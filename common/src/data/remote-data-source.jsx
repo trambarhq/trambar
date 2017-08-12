@@ -319,15 +319,22 @@ module.exports = React.createClass({
         if (count === expected) {
             // we have the right number of objects, see if any of them is
             // retrieved so long enough ago that a server-side search is advisable
+            // (in the event that notification is malfunctioning)
             var interval = this.props.refreshInterval * 1000;
             var rtimes = _.map(search.results, 'rtime');
             var minRetrievalTime = _.min(rtimes);
-            var elapsed = getTimeElapsed(minRetrievalTime, new Date);
-            if (elapsed > interval) {
+            if (minRetrievalTime < sessionStartTime) {
+                // one of the objects was retrieved in an earlier session
                 searchRemotely = true;
             } else {
-                search.finish = minRetrievalTime;
-                searchRemotely = false;
+                // see how much time has elapsed
+                var elapsed = getTimeElapsed(minRetrievalTime, new Date);
+                if (elapsed > interval) {
+                    searchRemotely = true;
+                } else {
+                    search.finish = minRetrievalTime;
+                    searchRemotely = false;
+                }
             }
         } else {
             searchRemotely = true;
@@ -339,7 +346,6 @@ module.exports = React.createClass({
                 }
             });
         }
-        //console.log('checkSearchValidity: true');
         return true;
     },
 
@@ -799,3 +805,5 @@ function getExpectedObjectCount(criteria) {
         }
     }
 }
+
+var sessionStartTime = (new Date).toISOString();
