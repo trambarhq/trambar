@@ -956,6 +956,7 @@ function importPushEvent(db, server, repo, event, author, project) {
             var details = {
                 commit_ids: commitIds,
                 commit_id_before: previousCommitHash,
+                commit_id_after: finalCommitHash,
                 lines: lineChanges,
                 files: fileChanges,
                 components: componentChanges,
@@ -1093,7 +1094,7 @@ function importStoryComments(db, server, url, project, story, extra) {
                 _.each(nonSystemNotes, (note, index) => {
                     // commit comments don't have ids for some reason
                     var reaction = (note.id)
-                        ? _.find(reactions, { external_id: noteId })
+                        ? _.find(reactions, { external_id: note.id })
                         : reactions[index];
                     var author = _.find(users, { external_id: note.author.id });
                     if (reaction || !author) {
@@ -1109,7 +1110,7 @@ function importStoryComments(db, server, url, project, story, extra) {
                         details: extra || {},
                         published: true,
                         ptime: getPublicationTime(note),
-                    };
+                    };                    
                     changes.push(reaction);
                 });
             }).then(() => {

@@ -91,6 +91,19 @@
                 margin-right: 2em;
             }
         }
+
+        .push, .milestone, .repo, .member, .issue, .merge-request {
+            A {
+                &:link, &:visited {
+                    text-decoration: none;
+                    color: #cccccc;
+                }
+
+                &:hover {
+                    color: #ffffff;
+                }
+            }
+        }
     }
 
     .footer {

@@ -299,9 +299,14 @@ module.exports = React.createClass({
         var story = this.props.story;
         var action = story.details.action;
         var repoName = _.get(this.props.repo, 'details.name');
+        var url = _.get(this.props.repo, 'details.web_url');
         return (
             <div className="repo">
-                <p>{t(`story-repo-${action}-$name`, repoName)}</p>
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-repo-${action}-$name`, repoName)}
+                    </a>
+                </p>
             </div>
         );
     },
@@ -316,9 +321,14 @@ module.exports = React.createClass({
         var story = this.props.story;
         var action = story.details.action;
         var repoName = _.get(this.props.repo, 'details.name');
+        var url = _.get(this.props.repo, 'details.web_url');
         return (
             <div className="member">
-                <p>{t(`story-member-${action}-$repo`, repoName)}</p>
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-member-${action}-$repo`, repoName)}
+                    </a>
+                </p>
             </div>
         );
     },
@@ -350,9 +360,19 @@ module.exports = React.createClass({
         for (var i = 1; i < tags.length; i += 2) {
             tags.splice(i, 0, ' ');
         }
+        var url;
+        var baseUrl = _.get(this.props.repo, 'details.web_url');
+        if (baseUrl) {
+            var issueId = this.props.story.external_id;
+            url = `${baseUrl}/issues/${issueId}`;
+        }
         return (
             <div className="issue">
-                <p>{t(`story-issue-opened-$number-$title`, number, p(title))}</p>
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-issue-opened-$number-$title`, number, p(title))}
+                    </a>
+                </p>
                 <p className={`status-${state}`}>
                     <span>{t('story-issue-current-status')}</span>
                     {' '}
@@ -376,9 +396,19 @@ module.exports = React.createClass({
         var title = story.details.title;
         var dueDate = formatDate(story.details.due_date);
         var startDate = formatDate(story.details.start_date) || '-';
+        var url;
+        var baseUrl = _.get(this.props.repo, 'details.web_url');
+        if (baseUrl) {
+            var milestoneId = this.props.story.external_id;
+            url = `${baseUrl}/milestones/${milestoneId}`;
+        }
         return (
             <div className="milestone">
-                <p>{t(`story-milestone-created-$name`, p(title))}</p>
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-milestone-created-$name`, p(title))}
+                    </a>
+                </p>
                 <p className="start-date">
                     <span>{t('story-milestone-start-date')}</span>
                     {' '}
@@ -429,9 +459,24 @@ module.exports = React.createClass({
                 );
             }
         }, []);
+        var url;
+        var baseUrl = _.get(this.props.repo, 'details.web_url');
+        if (baseUrl) {
+            var commitIdBefore = story.details.commit_id_before;
+            var commitIdAfter = story.details.commit_id_after;
+            if (story.details.commit_ids.length === 1) {
+                url = `${baseUrl}/commit/${commitIdAfter}`;
+            } else {
+                url = `${baseUrl}/compare/${commitIdBefore}...${commitIdAfter}`;
+            }
+        }
         return (
             <div className="push">
-                <p>{t(`story-push-pushed-to-$branch-of-$repo`, branch, repoName)}</p>
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-push-pushed-to-$branch-of-$repo`, branch, repoName)}
+                    </a>
+                </p>
                 <div>
                     <ul className="files">{fileChanges}</ul>
                     <ul className="lines">{lineChanges}</ul>
