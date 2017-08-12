@@ -293,6 +293,7 @@ function copyRepoDetails(repo, project) {
         'web_url',
         'issues_enabled',
         'archived',
+        'default_branch',
     ];
     _.assign(repo.details, _.pick(project, fields));
 }
@@ -892,6 +893,7 @@ function importPushEvent(db, server, repo, event, author, project) {
     var previousCommitHash = event.data.before;
     var finalCommitHash = event.data.after;
     var totalCommitCount = event.data.total_commits_count;
+    var branch = _.last(_.split(event.data.ref, '/'));
     return fetchCommits(server, repo, finalCommitHash, previousCommitHash, totalCommitCount).then((commits) => {
         // look for component descriptions
         return retrieveComponentDescriptions(server, repo, commits).then((componentChanges) => {
@@ -953,9 +955,11 @@ function importPushEvent(db, server, repo, event, author, project) {
             });
             var details = {
                 commit_ids: commitIds,
+                commit_id_before: previousCommitHash,
                 lines: lineChanges,
                 files: fileChanges,
                 components: componentChanges,
+                branch: branch,
             };
             var story = {
                 type: 'push',

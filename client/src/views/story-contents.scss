@@ -62,6 +62,35 @@
                 color: #ff3333;
             }
         }
+
+        .push {
+            .files, .lines {
+                display: inline-block;
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+
+                .added {
+                    color: #99ff66;
+                }
+
+                .removed {
+                    color: #ff3333;
+                }
+
+                .modified {
+                    color: #6666ff;
+                }
+
+                .renamed {
+                    color: #ffff66;
+                }
+            }
+
+            .files {
+                margin-right: 2em;
+            }
+        }
     }
 
     .footer {

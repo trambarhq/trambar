@@ -258,10 +258,7 @@ module.exports = React.createClass({
             case 'member':
                 return this.renderMemberText();
             case 'push':
-                var files = _.get(this.props.story, 'details.files');
-                var lines = _.get(this.props.story, 'details.lines');
-                var commits = _.get(this.props.story, 'details.commit_ids.length');
-                return t(`story-push`, commits, files, lines);
+                return this.renderPushText();
             case 'issue':
                 return this.renderIssueText();
             case 'milestone':
@@ -395,6 +392,54 @@ module.exports = React.createClass({
                     {' '}
                     <span>{dueDate}</span>
                 </p>
+            </div>
+        );
+    },
+
+    /**
+     * Render text for push story
+     *
+     * @return {ReactElement}
+     */
+    renderPushText: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var files = _.get(this.props.story, 'details.files');
+        var lines = _.get(this.props.story, 'details.lines');
+        var commits = _.get(this.props.story, 'details.commit_ids.length');
+        var repo = _.find(this.props.repos, { id: story.repo_id });
+        var repoName = _.get(repo, 'details.name');
+        var branch = story.details.branch;
+        var fileChangeTypes = [ 'added', 'removed', 'modified', 'renamed' ];
+        var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
+            var count = files[type];
+            if (count > 0) {
+                elements.push(
+                    <li key={i} className={type}>
+                        {t(`story-push-${type}-$count-files`, count)}
+                    </li>
+                );
+            }
+        }, []);
+        var lineChangeTypes = [ 'added', 'removed' ];
+        var lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
+            var count = lines[type];
+            if (count > 0) {
+                elements.push(
+                    <li key={i} className={type}>
+                        {t(`story-push-${type}-$count-lines`, count)}
+                    </li>
+                );
+            }
+        }, []);
+        return (
+            <div className="push">
+                <p>{t(`story-push-pushed-to-$branch-of-$repo`, branch, repoName)}</p>
+                <div>
+                    <ul className="files">{fileChanges}</ul>
+                    <ul className="lines">{lineChanges}</ul>
+                </div>
             </div>
         );
     },

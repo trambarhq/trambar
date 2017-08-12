@@ -175,8 +175,6 @@ module.exports = function(languageCode) {
         'story-issue-status-reopened': 'Reopened',
         'story-like': 'Like',
         'story-markdown': 'Markdown',
-        'story-options': 'Options',
-        'story-pending': 'Pending...',
         'story-member-joined-$repo': (repo) => {
             var text = `Joined project`;
             if (repo) {
@@ -196,8 +194,35 @@ module.exports = function(languageCode) {
         },
         'story-milestone-start-date': 'Start date:',
         'story-milestone-due-date': 'Due date:',
+        'story-options': 'Options',
+        'story-pending': 'Pending...',
         'story-photo': 'Photo',
         'story-post': 'Post',
+        'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
+            var text = `Pushed changes to branch “${branch}”`;
+            if (repo) {
+                text += `of project “${repo}”`;
+            }
+            return text;
+        },
+        'story-push-added-$count-files': (count) => {
+            return `${count} files added`;
+        },
+        'story-push-modified-$count-files': (count) => {
+            return `${count} files modified`;
+        },
+        'story-push-removed-$count-files': (count) => {
+            return `${count} files removed`;
+        },
+        'story-push-renamed-$count-files': (count) => {
+            return `${count} files renamed`;
+        },
+        'story-push-added-$count-lines': (count) => {
+            return `${count} lines added`;
+        },
+        'story-push-removed-$count-lines': (count) => {
+            return `${count} lines removed`;
+        },
         'story-repo-created-$name': (name) => {
             var text = `Created project`;
             if (name) {
