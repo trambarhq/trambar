@@ -96,15 +96,21 @@ module.exports = React.createClass({
                         }
                     }
                     return (
-                        <a className="note" target="_blank" href={url}>
+                        <a className="note" href={url} target="_blank">
                             {t(`comment-$user-commented-on-${storyType}`, name)}
                         </a>
                     );
                 case 'assignment':
+                    var baseUrl = _.get(this.props.repo, 'details.web_url');
+                    var url;
+                    if (baseUrl) {
+                        var issueId = this.props.story.details.number;
+                        url = `${baseUrl}/issues/${issueId}`;
+                    }
                     return (
-                        <span className="issue-assignment">
+                        <a className="issue-assignment" href={url} target="_blank">
                             {t('comment-$user-is-assigned-to-issue', name)}
-                        </span>
+                        </a>
                     );
             }
         } else {
