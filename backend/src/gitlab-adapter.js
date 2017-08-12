@@ -777,7 +777,7 @@ function copyIssueDetails(story, issue) {
     story.details.milestone = _.get(issue.milestone, 'title');
     story.details.title = { zz: issue.title };
     story.details.number = issue.iid;
-    story.public = issue.confidential;
+    story.public = !issue.confidential;
 }
 
 /**
@@ -1110,7 +1110,7 @@ function importStoryComments(db, server, url, project, story, extra) {
                         details: extra || {},
                         published: true,
                         ptime: getPublicationTime(note),
-                    };                    
+                    };
                     changes.push(reaction);
                 });
             }).then(() => {

@@ -45,12 +45,22 @@ module.exports = React.createClass({
 
     isEditable: function() {
         var story = this.props.story;
-        if (_.includes(editableStoryType, story.type)) {
-            var userId = this.props.currentUser;
-            if (_.includes(story.userIds, userId)) {
+        if (_.includes(editableStoryTypes, story.type)) {
+            console.log(story.user_ids);
+            var userId = this.props.currentUser.id;
+            if (_.includes(story.user_ids, userId)) {
                 return true;
             }
         }
+        return false;
+    },
+
+    isTrackable: function() {
+        var story = this.props.story;
+        if (_.includes(trackableStoryTypes, story.type)) {
+            return true;
+        }
+        return false;
     },
 
     render: function() {
@@ -81,6 +91,7 @@ module.exports = React.createClass({
         if (section === 'main') {
             var addIssueProps = {
                 label: t('option-add-issue'),
+                hidden: !this.isTrackable(),
                 selected: options.addIssue,
                 onClick: this.handleAddIssueClick,
             };
@@ -98,7 +109,7 @@ module.exports = React.createClass({
             };
             var editPostProps = {
                 label: t('option-edit-post'),
-                hidden: this.isEditable(),
+                hidden: !this.isEditable(),
                 selected: options.editPost,
                 onClick: this.handleEditPostClick,
             };
@@ -174,8 +185,12 @@ module.exports = React.createClass({
     },
 });
 
-var editableStoryType = [
+var editableStoryTypes = [
     'story',
     'task-list',
     'survey',
+];
+
+var trackableStoryTypes = [
+    'story',
 ];
