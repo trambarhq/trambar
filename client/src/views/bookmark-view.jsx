@@ -90,7 +90,7 @@ module.exports = React.createClass({
                         key: 1,
                     };
                     var users = <MultipleUserNames {...props} />;
-                    contents = t('bookmark-$name-and-$users-recommend-this', name, user, additional.length);
+                    contents = t('bookmark-$name-and-$users-recommend-this', name, users, additional.length);
             }
         }
         return <span className="name">{contents}</span>
