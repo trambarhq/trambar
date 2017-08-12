@@ -88,7 +88,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load users of reactions
             var criteria = {};
-            criteria.id = _.map(props.reactions, 'user_id');
+            criteria.id =  _.uniq(_.map(props.reactions, 'user_id'));
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;
