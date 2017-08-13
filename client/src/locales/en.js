@@ -121,6 +121,7 @@ module.exports = function(languageCode) {
 
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
+        'option-bookmark-story': 'Bookmark story',
         'option-contact-by-phone': 'Contact by phone',
         'option-contact-by-email': 'Contact by e-mail',
         'option-edit-post': 'Edit post',

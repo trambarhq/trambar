@@ -56,11 +56,31 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if user can hide a story
+     *
+     * @return {Boolean}
+     */
+    canHideStory: function() {
+        var story = this.props.story;
+        var userType = this.props.currentUser.type;
+        if (userType !== 'guest') {
+            if (userType === 'admin') {
+                return true;
+            }
+            var userId = this.props.currentUser.id;
+            if (_.includes(story.user_ids, userId)) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
      * Return true if story can be edited
      *
      * @return {Boolean}
      */
-    isEditable: function() {
+    canEditStory: function() {
         var story = this.props.story;
         if (_.includes(editableStoryTypes, story.type)) {
             var userId = this.props.currentUser.id;
@@ -79,7 +99,7 @@ module.exports = React.createClass({
      *
      * @return {[type]}
      */
-    isTrackable: function() {
+    canAddIssue: function() {
         var story = this.props.story;
         if (_.includes(trackableStoryTypes, story.type)) {
             var userType = this.props.currentUser.type;
@@ -88,6 +108,16 @@ module.exports = React.createClass({
             }
         }
         return false;
+    },
+
+    /**
+     * Return true if current user can send bookmark to other users
+     *
+     * @return {Boolean}
+     */
+    canSendBookmarks: function() {
+        // TODO
+        return true;
     },
 
     /**
@@ -128,34 +158,45 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var options = this.props.options;
         if (section === 'main') {
+            var userId = this.props.currentUser.id;
+            var bookmarking = _.includes(options.bookmarkRecipients, userId);
+            var otherRecipients = _.without(options.bookmarkRecipients, userId);
+            var bookmarkProps = {
+                label: t('option-bookmark-story'),
+                selected: bookmarking,
+                onClick: this.handleBookmarkClick,
+            };
+            var sendBookmarkProps = {
+                label: _.isEmpty(otherRecipients)
+                    ? t('option-send-bookmarks')
+                    : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
+                hidden: !this.canSendBookmarks(),
+                selected: !_.isEmpty(otherRecipients),
+                onClick: this.handleSendBookmarkClick,
+            };
             var addIssueProps = {
                 label: t('option-add-issue'),
-                hidden: !this.isTrackable(),
+                hidden: !this.canAddIssue(),
                 selected: options.addIssue,
                 onClick: this.handleAddIssueClick,
             };
-            var sendBookmarkProps = {
-                label: _.isEmpty(options.bookmarkRecipients)
-                    ? t('option-send-bookmarks')
-                    : t('option-send-bookmarks-to-$count-users', _.size(options.bookmarkRecipients)),
-                selected: !_.isEmpty(options.bookmarkRecipients),
-                onClick: this.handleSendBookmarkClick,
-            };
             var hidePostProps = {
                 label: t('option-hide-post'),
+                hidden: !this.canHideStory(),
                 selected: options.hidePost,
                 onClick: this.handleHidePostClick,
             };
             var editPostProps = {
                 label: t('option-edit-post'),
-                hidden: !this.isEditable(),
+                hidden: !this.canEditStory(),
                 selected: options.editPost,
                 onClick: this.handleEditPostClick,
             };
             return (
                 <div className={section}>
-                    <OptionButton {...addIssueProps} />
+                    <OptionButton {...bookmarkProps} />
                     <OptionButton {...sendBookmarkProps} />
+                    <OptionButton {...addIssueProps} />
                     <OptionButton {...hidePostProps} />
                     <OptionButton {...editPostProps} />
                     {this.renderUserSelectionDialogBox()}
@@ -226,13 +267,18 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on add issue to tracker button
+     * Called when user clicks on bookmark post button
      *
      * @param  {Event} evt
      */
-    handleAddIssueClick: function(evt) {
+    handleBookmarkClick: function(evt) {
         var options = _.clone(this.props.options);
-        options.addIssue = !options.addIssue;
+        var userId = this.props.currentUser.id;
+        if (_.includes(options.bookmarkRecipients, userId)) {
+            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userId ]);
+        } else {
+            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userId ]);
+        }
         this.triggerChangeEvent(options);
     },
 
@@ -243,6 +289,17 @@ module.exports = React.createClass({
      */
     handleSendBookmarkClick: function(evt) {
         this.openSelectionDialogBox();
+    },
+
+    /**
+     * Called when user clicks on add issue to tracker button
+     *
+     * @param  {Event} evt
+     */
+    handleAddIssueClick: function(evt) {
+        var options = _.clone(this.props.options);
+        options.addIssue = !options.addIssue;
+        this.triggerChangeEvent(options);
     },
 
     /**
