@@ -15,7 +15,7 @@ module.exports = _.create(Data, {
         type: String,
         server_id: Number,
         external_id: Number,
-        hidden: Booolean,
+        hidden: Boolean,
     },
     criteria: {
         id: Number,
@@ -23,7 +23,7 @@ module.exports = _.create(Data, {
         type: String,
         server_id: Number,
         external_id: Number,
-        hidden: Booolean,
+        hidden: Boolean,
     },
 
     /**
