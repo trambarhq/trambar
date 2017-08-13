@@ -17,6 +17,7 @@ module.exports = _.create(Data, {
         role_ids: Array(Number),
         server_id: Number,
         external_id: Number,
+        hidden: Boolean,
     },
     criteria: {
         id: Number,
@@ -26,6 +27,7 @@ module.exports = _.create(Data, {
         role_ids: Array(Number),
         server_id: Number,
         external_id: Number,
+        hidden: Boolean,
         username: String,
     },
 
@@ -53,6 +55,7 @@ module.exports = _.create(Data, {
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 server_id int,
                 external_id int,
+                hidden boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
         `;

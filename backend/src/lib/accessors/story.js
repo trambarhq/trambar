@@ -23,6 +23,7 @@ module.exports = _.create(Data, {
         external_id: Number,
         published: Boolean,
         ptime: String,
+        btime: String,
         public: Boolean,
     },
     criteria: {
@@ -41,6 +42,7 @@ module.exports = _.create(Data, {
         older_than: String,
         ready: Boolean,
         commit_id: String,
+        bumped_after: String,
         url: String,
     },
 
@@ -70,6 +72,7 @@ module.exports = _.create(Data, {
                 external_id int,
                 published boolean NOT NULL DEFAULT false,
                 ptime timestamp,
+                btime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
@@ -87,6 +90,7 @@ module.exports = _.create(Data, {
             'older_than',
             'ready',
             'commit_id',
+            'bumped_after',
             'url',
         ];
         Data.apply.call(this, _.omit(criteria, special), query);
@@ -104,6 +108,10 @@ module.exports = _.create(Data, {
         if (criteria.older_than !== undefined) {
             params.push(criteria.older_than);
             conds.push(`ptime < $${params.length}`);
+        }
+        if (criteria.bumped_after !== undefined) {
+            params.push(criteria.bumped_after);
+            conds.push(`(ptime > $${params.length} || btime > $${params.length})`);
         }
         if (criteria.commit_id !== undefined) {
             params.push(criteria.commit_id);
@@ -210,6 +218,10 @@ module.exports = _.create(Data, {
                 if (_.isEmpty(payloadIds)) {
                     object.ptime = Moment().toISOString();
                 }
+            }
+            if (object.bump) {
+                object.btime = Moment().toISOString();
+                delete object.bump;
             }
             return object;
         }).then((objects) => {

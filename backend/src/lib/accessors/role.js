@@ -15,6 +15,7 @@ module.exports = _.create(Data, {
         type: String,
         server_id: Number,
         external_id: Number,
+        hidden: Booolean,
     },
     criteria: {
         id: Number,
@@ -22,6 +23,7 @@ module.exports = _.create(Data, {
         type: String,
         server_id: Number,
         external_id: Number,
+        hidden: Booolean,
     },
 
     /**
@@ -45,6 +47,7 @@ module.exports = _.create(Data, {
                 type varchar(64) NOT NULL DEFAULT '',
                 server_id int,
                 external_id int,
+                hidden boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
         `;
