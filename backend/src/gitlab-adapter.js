@@ -32,7 +32,10 @@ function start() {
         app.post('/gitlab/hook/:repoId/:projectId', handleHookCallback);
         server = app.listen(80);
 
-        return updateAllProjectHooks(db).then(() => {
+        return db.need('global').then(() => {
+            // install hooks
+            return updateAllProjectHooks(db);
+        }).then(() => {
             // import object from Gitlab server upon program start
             return updateFromAllServers(db);
         }).then(() => {
@@ -1298,7 +1301,7 @@ function importProfileImages(urls) {
                 },
             };
             Request.post(options, (err, resp, body) => {
-                if (resp.statusCode >= 400) {
+                if (!err && resp && resp.statusCode >= 400) {
                     err = new HttpError(resp.statusCode);
                 }
                 if (!err) {
@@ -1307,6 +1310,8 @@ function importProfileImages(urls) {
                     reject(err);
                 }
             });
+        }).catch((err) => {
+            console.error(`Unable to retrieve ${url}`);
         });
     }, { concurrency: 8 }).then((images) => {
         return _.zipObject(urls, images);
@@ -1387,7 +1392,7 @@ function fetch(server, uri, query) {
             uri,
         };
         Request.get(options, (err, resp, body) => {
-            if (resp.statusCode >= 400) {
+            if (!err && resp && resp.statusCode >= 400) {
                 err = new HttpError(resp.statusCode);
             }
             if (!err) {
@@ -1440,7 +1445,7 @@ function post(server, uri, payload) {
             uri,
         };
         Request.post(options, (err, resp, body) => {
-            if (resp.statusCode >= 400) {
+            if (!err && resp && resp.statusCode >= 400) {
                 err = new HttpError(resp.statusCode);
             }
             if (!err) {

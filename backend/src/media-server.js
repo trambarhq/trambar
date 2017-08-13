@@ -255,6 +255,7 @@ function handleImageImport(req, res) {
         if (!url) {
             throw HttpError(400);
         }
+        url = _.replace(url, 'localhost', '172.18.0.1');
         return downloadRemoteFile(url, imageCacheFolder).then((srcPath) => {
             return md5File(srcPath).then((srcHash) => {
                 var dstPath = `${imageCacheFolder}/${srcHash}`;

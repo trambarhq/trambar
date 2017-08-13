@@ -24,6 +24,24 @@ var Task = require('accessors/task');
 var database;
 var messageQueueInterval;
 
+var roles = [
+    {
+        name: 'auth_role',
+        password: process.env.DATABASE_AUTH_PASSWORD,
+        schemas: [ 'global' ],
+    },
+    {
+        name: 'admin_role',
+        password: process.env.DATABASE_ADMIN_PASSWORD,
+        schemas: [ 'global', 'project' ],
+    },
+    {
+        name: 'client_role',
+        password: process.env.DATABASE_CLIENT_PASSWORD,
+        schemas: [ 'global', 'project' ],
+    },
+];
+
 function start() {
     return Database.open(true).then((db) => {
         database = db;
@@ -110,14 +128,12 @@ function initializeDatabase(db) {
 }
 
 function addDatabaseRoles(db) {
-    var roles = [ 'internal_role', 'webfacing_role' ];
     return Promise.mapSeries(roles, (role) => {
-        return db.roleExists(role).then((exists) => {
+        return db.roleExists(role.name).then((exists) => {
             if (exists) {
                 return false;
             }
-            var password = process.env.POSTGRES_PASSWORD;
-            var sql = `CREATE USER ${role} WITH PASSWORD '${password}'`;
+            var sql = `CREATE USER ${role.name} WITH PASSWORD '${role.password}'`;
             return db.execute(sql).then(() => {
                 return true;
             });
@@ -201,6 +217,19 @@ function createSchema(db, schema) {
         var sql = `CREATE SCHEMA "${schema}"`;
         return db.execute(sql);
     }).then(() => {
+        // grant usage right and right to all sequences to each role
+        return Promise.each(roles, (role) => {
+            var schemaType = (schema === 'global') ? 'global' : 'project';
+            if (_.includes(role.schemas, schemaType)) {
+                var sql = `
+                    GRANT USAGE ON SCHEMA "${schema}" TO "${role.name}";
+                    ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema}" GRANT USAGE, SELECT ON SEQUENCES TO "${role.name}";
+                `;
+                return db.execute(sql);
+            }
+        });
+    }).then(() => {
+        // grant specific table access to roles
         return Promise.each(accessors, (accessor) => {
             return accessor.create(db, schema).then(() => {
                 return accessor.grant(db, schema);

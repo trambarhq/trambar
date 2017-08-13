@@ -43,8 +43,6 @@ function start() {
                         var locale = object.authorization.locale;
                         return checkAuthorization(db, token).then((auth) => {
                             return fetchCredentials(db, auth.user_id).then((credentials) => {
-                                console.log(auth.user_id);
-                                console.log(credentials);
                                 socket.credentials = credentials;
                                 socket.locale = locale;
                                 sockets.push(socket);
@@ -151,7 +149,6 @@ function handleDatabaseChanges(events) {
                         return Promise.each(reaction.target_user_ids, (userId) => {
                             // TODO: employ user preference
                             var socket = _.find(sockets, (s) => {
-                                console.log(s.credentials.user.id + ' === ' + userId);
                                 return s.credentials.user.id === userId;
                             });
                             if (socket) {
