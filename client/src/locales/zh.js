@@ -39,12 +39,12 @@ var traditional = {
         return `${name1}和${name2}推薦這個`;
     },
     'bookmark-recommendations': '推薦',
-    'bookmark-you-bookmarked-it': '你加入這個書籤',
+    'bookmark-you-bookmarked-it': '你加了這個書籤',
     'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
-        return `你加入這個書籤（${name}推薦）`;
+        return `你加了這個書籤（${name}推薦）`;
     },
     'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
-        return [ `你加入這個書籤（`, users, `推薦）` ];
+        return [ `你加了這個書籤（`, users, `推薦）` ];
     },
 
     'bottom-nav-bookmarks': '書籤',
@@ -87,6 +87,102 @@ var traditional = {
     'media-download-original': '下載原本文件',
     'media-next': '下一個',
     'media-previous': '上一個',
+
+    'option-add-bookmark': '加書籤',
+    'option-add-issue': '加問題入跟蹤管理系統',
+    'option-bookmark-story': '加書籤',
+    'option-edit-post': '編輯訊息',
+    'option-hide-post': '非會員看不到',
+    'option-send-bookmarks': '發送書籤給他人',
+    'option-send-bookmarks-to-$count-users': (count) => {
+        var num = cardinal(count);
+        return `發送書籤給${num}個人`;
+    },
+    'option-show-media': '顯示附件媒體',
+    'option-show-preview': '顯示課文預覽',
+
+    'photo-capture-accept': '接受',
+    'photo-capture-cancel': '取消',
+    'photo-capture-retake': '重拍',
+    'photo-capture-snap': '拍照',
+
+    'selection-cancel': '取消',
+    'selection-ok': '接受',
+
+    'settings-language': '語言',
+    'settings-notification': '通知',
+    'settings-projects': '項目',
+    'settings-user-profile': '用戶資料',
+
+    'sign-in-cancel': '取消',
+    'sign-in-with-dropbox': '用Dropbox登錄',
+    'sign-in-with-facebook': '用Facebook登錄',
+    'sign-in-with-github': '用GitHub登錄',
+    'sign-in-with-gitlab': '用GitLab登錄',
+    'sign-in-with-google': '用Google登錄',
+
+    'statistics-bar': '條圖',
+    'statistics-line': '線圖',
+    'statistics-pie': '餅圖',
+
+    'story-$count-user-reacted-to-story': (count) => {
+        var num = cardinal(count);
+        return `${num}個人有反應`;
+    },
+    'story-add-coauthor': '加合著者',
+    'story-add-remove-coauthor': '替代合著者',
+    'story-audio': '音頻',
+    'story-author-$count-others': (count) => {
+        var num = cardinal(count);
+        return `另外${num}個人`;
+    },
+    'story-author-$name-and-$users': (name, users, count) => {
+        return [ name, '和', users ];
+    },
+    'story-author-$name1-and-$name2': (name1, name2) => {
+        return `${name1}和${name2}`;
+    },
+    'story-cancel': '取消',
+    'story-coauthors': '合著者',
+    'story-comment': '評論',
+    'story-file': '文件',
+    'story-issue-current-status': '當前狀態:',
+    'story-issue-opened-$number-$title': (number, title) => {
+        var num = fullWidth(number)
+        return `報告了問題${num}：《${title}》`;
+    },
+    'story-issue-status-closed': '關閉',
+    'story-issue-status-opened': '開設',
+    'story-issue-status-reopened': '重開',
+    'story-like': '喜歡',
+    'story-markdown': 'Markdown',
+    'story-member-joined-$repo': (repo) => {
+        var text = `加入了項目`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        return text;
+    },
+    'story-member-left-$repo': (repo) => {
+        var text = `離開了項目`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        return text;
+    },
+    'story-milestone-created-$name': (name) => {
+        return `加入里程碑《${name}》`;
+    },
+    'story-milestone-due-date': '截止日期：',
+    'story-milestone-start-date': '開始日期：',
+    'story-options': '選項',
+    'story-pending': '听候⋯⋯',
+    'story-photo': '照片',
+    'story-post': '發送',
+    'story-survey': '調查',
+    'story-task-list': '任務列表',
+    'story-video': '視頻',
+    'story-vote-submit': '遞交',
 
     'user-actions': '行動',
 
@@ -133,12 +229,16 @@ function cardinal(num, traditional) {
         }
         return text;
     } else {
-        var text = String(num);
-        var fullWidth = '';
-        for (var i = 0; i < text.length; i++) {
-            var c = text.charCodeAt(i);
-            fullWidth += String.fromCharCode(c + 0xff10 - 0x0030);
-        }
-        return fullWidth;
+        return fullWidth(num)
     }
+}
+
+function fullWidth(num) {
+    var text = String(num);
+    var result = '';
+    for (var i = 0; i < text.length; i++) {
+        var c = text.charCodeAt(i);
+        result += String.fromCharCode(c + 0xff10 - 0x0030);
+    }
+    return result;
 }
