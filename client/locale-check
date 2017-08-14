@@ -46,12 +46,12 @@ try {
             console.log(name);
         });
     } else if (unknown.length > 0) {
-        console.log(`${missing.length} phrases are extraneous or misnamed:\n`)
-        _.each(missing, (name) => {
+        console.log(`${unknown.length} phrases are extraneous or misnamed:\n`)
+        _.each(unknown, (name) => {
             console.log(name);
         });
     } else if (misplaced.length> 0) {
-        console.log(`${missing.length} phrases are out of order:\n`)
+        console.log(`${misplaced.length} phrases are out of order:\n`)
         _.each(misplaced, (name) => {
             console.log(name);
         });
