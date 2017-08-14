@@ -1,15 +1,15 @@
 module.exports = function(languageCode) {
     return {
-        'app-name': 'Trambar',
-
-        'action-contact-by-phone': 'Skontaktuj się telefonicznie',
         'action-contact-by-email': 'Skontaktuj się przez e-mail',
+        'action-contact-by-ichat': 'Skontaktuj się przez iChat',
+        'action-contact-by-phone': 'Skontaktuj się telefonicznie',
         'action-contact-by-skype': 'Skontaktuj się przez Skype',
         'action-contact-by-slack': 'Skontaktuj się przez Slack',
-        'action-contact-by-ichat': 'Skontaktuj się przez iChat',
-        'action-view-gitlab-page': 'Wyświetl profil na Gitlabie',
         'action-view-github-page': 'Wyświetl profil na Githubie',
+        'action-view-gitlab-page': 'Wyświetl profil na GitLabie',
         'action-view-stackoverflow-page': 'Wyświetl profil na StackOverflowie',
+
+        'app-name': 'Trambar',
 
         'audio-capture-accept': 'Przyjmij',
         'audio-capture-cancel': 'Anuluj',
@@ -36,14 +36,14 @@ module.exports = function(languageCode) {
                 return `${count} osób`
             }
         },
+        'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+            return [ `${name} i `, users, ` polecają to` ];
+        },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} poleca to`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name) => {
             return `${name1} i ${name2} polecają to`;
-        },
-        'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
-            return [ `${name} i `, users, ` polecają to` ];
         },
         'bookmark-recommendations': 'Polecenia',
         'bookmark-you-bookmarked-it': 'Założyłeś zakładkę do tego',
@@ -61,10 +61,59 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'Ludzie',
         'bottom-nav-settings': 'Ustawienia',
 
+        'comment-$user-cast-a-vote': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} głosował${e}`;
+        },
+        'comment-$user-commented-on-issue': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} ten problem`;
+        },
+        'comment-$user-commented-on-merge-request': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} ten merge-reqiest`;
+        },
+        'comment-$user-commented-on-push': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} commit w tym push`;
+        },
+        'comment-$user-completed-a-task': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} wykonał${a} zadanie`;
+        },
+        'comment-$user-is-assigned-to-issue': (user) => {
+            var ve = verbPastTenseEnding(user);
+            var ae = (ve === 'a') ? 'a' : 'y';
+            return `${user} został${ve} przydzielon${ae} do tego problemu`;
+        },
+        'comment-$user-is-typing': (user) => {
+            return `${user} pisze komentarz...`;
+        },
+        'comment-$user-likes-this': (user) => {
+            return `${user} lubi to`;
+        },
+
+        'list-$count-more': (count) => {
+            return `${count} więcej...`;
+        },
+
         'media-close': 'Zamknij',
         'media-download-original': 'Pobierz plik oryginalny',
         'media-next': 'Następne',
         'media-previous': 'Poprzednie',
+
+        'option-add-bookmark': 'Dodaj zakładkę',
+        'option-add-issue': 'Dodaj problem do issue-trackera',
+        'option-bookmark-story': 'Dodaj zakładkę',
+        'option-edit-post': 'Edit post',
+        'option-hide-post': 'Hide from non-team members',
+        'option-send-bookmarks': 'Send bookmarks to other users',
+        'option-send-bookmarks-to-$count-users': (count) => {
+            var users = (count === 1) ? `${count} user` : `${count} users`;
+            return `Send bookmarks to ${users}`;
+        },
+        'option-show-media': 'Show attached media',
+        'option-show-preview': 'Show text preview',
 
         'photo-capture-accept': 'Przyjmij',
         'photo-capture-cancel': 'Anuluj',
@@ -95,12 +144,6 @@ module.exports = function(languageCode) {
         'story-add-coauthor': 'Dodaj współautora',
         'story-add-remove-coauthor': 'Dodaj/Usuń współautora',
         'story-audio': 'Audio',
-        'story-author-$name1-and-$name2': (name1, name2) => {
-            return `${name1} i ${name2}`;
-        },
-        'story-author-$name-and-$users': (name, users, count) => {
-            return [ name, ' i ', users ];
-        },
         'story-author-$count-others': (count) =>{
             if (singular(count)) {
                 return `inna osoba`;
@@ -109,6 +152,12 @@ module.exports = function(languageCode) {
             } else {
                 return `${count} innych osób`;
             }
+        },
+        'story-author-$name-and-$users': (name, users, count) => {
+            return [ name, ' i ', users ];
+        },
+        'story-author-$name1-and-$name2': (name1, name2) => {
+            return `${name1} i ${name2}`;
         },
         'story-cancel': 'Anuluj',
         'story-comment': 'Komentuj',
@@ -133,10 +182,13 @@ module.exports = function(languageCode) {
 
         'user-actions': 'Działanie',
 
-        'user-statistics-legend-commit': 'Commity',
+        'user-statistics-legend-issue': 'Raporty o błędach',
+        'user-statistics-legend-milestone': 'Kamienia milowe',
+        'user-statistics-legend-push': 'Pushy',
         'user-statistics-legend-story': 'Wpisy',
         'user-statistics-legend-survey': 'Ankiety',
         'user-statistics-legend-task-list': 'Listy zadań',
+        'user-statistics-legend-wiki': 'Wiki edits',
 
         'video-capture-accept': 'Przyjmij',
         'video-capture-cancel': 'Anuluj',
@@ -161,13 +213,21 @@ function plural(n) {
     return false;
 }
 
-function feminine(name) {
+function gender(name) {
     var parts = name.split(/\s+/);
     var fname = parts[0].toLocaleLowerCase();
     if (/a$/.test(fname)) {
-        return !isMasculine[fname];
+        if (isMasculine[fname]) {
+            return 'm';
+        } else {
+            return 'f';
+        }
     } else {
-        return isFeminine[fname];
+        if (isFeminine[fname]) {
+            return 'f';
+        } else {
+            return 'm';
+        }
     }
 }
 
@@ -208,3 +268,7 @@ var isMasculine = {};
 ].forEach((name) => {
     isMasculine[name.toLocaleLowerCase()] = true;
 });
+
+function verbPastTenseEnding(name) {
+    return gender(name) === 'f' ? 'a' : '';
+}
