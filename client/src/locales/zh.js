@@ -88,6 +88,43 @@ var traditional = {
     'media-next': '下一個',
     'media-previous': '上一個',
 
+    'notification-$user-commented-on-your-commit': (user) => {
+        return `${user}評論了你的commit`;
+    },
+    'notification-$user-commented-on-your-merge': (user) => {
+        return `${user}評論了你的merge`;
+    },
+    'notification-$user-commented-on-your-story': (user) => {
+        return `${user}評論了你的公報`;
+    },
+    'notification-$user-commented-on-your-survey': (user) => {
+        return `${user}評論了你的調查`;
+    },
+    'notification-$user-commented-on-your-task-list': (user) => {
+        return `${user}評論了你的任務列表`;
+    },
+    'notification-$user-completed-task': (user) => {
+        return `${user}完成了在你的列表上一個任務`;
+    },
+    'notification-$user-likes-your-commit': (user) => {
+        return `${user}喜歡你的commit`;
+    },
+    'notification-$user-likes-your-merge': (user) => {
+        return `${user}喜歡你的merge`;
+    },
+    'notification-$user-likes-your-story': (user) => {
+        return `${user}喜歡你的公報`;
+    },
+    'notification-$user-likes-your-survey': (user) => {
+        return `${user}喜歡你的調查`;
+    },
+    'notification-$user-likes-your-task-list': (user) => {
+        return `${user}喜歡你的任務列表`;
+    },
+    'notification-$user-voted-in-your-survey': (user) => {
+        return `${user}回答了你的調查`;
+    },
+
     'option-add-bookmark': '加書籤',
     'option-add-issue': '加問題入跟蹤管理系統',
     'option-bookmark-story': '加書籤',
@@ -171,7 +208,7 @@ var traditional = {
         return text;
     },
     'story-milestone-created-$name': (name) => {
-        return `加入里程碑《${name}》`;
+        return `加了里程碑《${name}》`;
     },
     'story-milestone-due-date': '截止日期：',
     'story-milestone-start-date': '開始日期：',
@@ -179,10 +216,64 @@ var traditional = {
     'story-pending': '听候⋯⋯',
     'story-photo': '照片',
     'story-post': '發送',
+    'story-push-added-$count-files': (count) => {
+        var num = cardinal(count);
+        return `加了${num}個文件`;
+    },
+    'story-push-added-$count-lines': (count) => {
+        var num = cardinal(count);
+        return `加了${num}行代碼`;
+    },
+    'story-push-modified-$count-files': (count) => {
+        var num = cardinal(count);
+        return `改了${num}行代碼`;
+    },
+    'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
+        var text = `推了一些代碼修改入到`
+        if (repo) {
+            text += `項目《${repo}》的`;
+        }
+        text += `分支《${branch}》`;
+        return text;
+    },
+    'story-push-removed-$count-files': (count) => {
+        return `除了${num}個文件`;
+    },
+    'story-push-removed-$count-lines': (count) => {
+        return `除了${num}行代碼`;
+    },
+    'story-push-renamed-$count-files': (count) => {
+        return `改了${num}個文件的名`;
+    },
+    'story-repo-created-$name': (name) => {
+        var text = `創建項目`;
+        if (name) {
+            text += `《${name}》`;
+        }
+        return text;
+    },
     'story-survey': '調查',
     'story-task-list': '任務列表',
     'story-video': '視頻',
     'story-vote-submit': '遞交',
+    'story-wiki-created-page-with-$title': (title) => {
+        return `創建了維基頁面《${title}》”`;
+    },
+    'story-wiki-deleted-page-with-$title': (title) => {
+        return `刪除了維基頁面《${title}》”`;
+    },
+    'story-wiki-updated-page-with-$title': (title) => {
+        return `修正了維基頁面《${title}》`;
+    },
+
+    'survey-item-$number': (number) => {
+        var num = fullWidth(number);
+        return `精選${num}`;
+    },
+    'task-list-item-$number': (number) => {
+        var num = fullWidth(number);
+        return `任務${num}`;
+    },
 
     'user-actions': '行動',
 
@@ -202,7 +293,7 @@ var traditional = {
     'video-capture-stop': '停止',
 };
 
-var cardinalNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
+var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
 
 function cardinalT(num) {
     return cardinal(num, true);
@@ -216,16 +307,16 @@ function cardinal(num, traditional) {
     if (num === 2) {
         return (traditional) ? '兩' : '两';
     } else if (num < 10) {
-        return cardinalNumbers[num];
+        return chineseNumbers[num];
     } else if (num < 100) {
         var text = '十';
         var tens = Math.floor(num / 10);
         var ones = Math.floor(num % 10);
         if (tens > 1) {
-            text = cardinalNumbers[tens] + text;
+            text = chineseNumbers[tens] + text;
         }
         if (ones) {
-            text = text + cardinalNumbers[tens];
+            text = text + chineseNumbers[tens];
         }
         return text;
     } else {
