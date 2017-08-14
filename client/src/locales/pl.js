@@ -160,3 +160,51 @@ function plural(n) {
     }
     return false;
 }
+
+function feminine(name) {
+    var parts = name.split(/\s+/);
+    var fname = parts[0].toLocaleLowerCase();
+    if (/a$/.test(fname)) {
+        return !isMasculine[fname];
+    } else {
+        return isFeminine[fname];
+    }
+}
+
+var isFeminine = {};
+[
+    'Abigail',
+    'Beatrycze',
+    'Bogudać',
+    'Bogudarz',
+    'Dobrowieść',
+    'Dobrożyźń',
+    'Miriam',
+    'Noemi',
+    'Przybycześć',
+    'Świętożyźń',
+].forEach((name) => {
+    isFeminine[name.toLocaleLowerCase()] = true;
+});
+var isMasculine = {};
+[
+    'Barnaba',
+    'Bodzęta',
+    'Bogdała',
+    'Bogwidza',
+    'Bonawentura',
+    'Brzezdoma',
+    'Dyzma',
+    'Jarema',
+    'Kuba',
+    'Lasota',
+    'Niegodoma',
+    'Niemsta',
+    'Niepełka',
+    'Niewsza',
+    'Strachota',
+    'Zawisza',
+    'Żegota',
+].forEach((name) => {
+    isMasculine[name.toLocaleLowerCase()] = true;
+});
