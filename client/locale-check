@@ -2,18 +2,19 @@
 
 var _ = require('lodash');
 
-var lang = process.argv[2];
+var locale = process.argv[2];
 
-if (!lang) {
+if (!locale) {
     console.log('locale-check <language code>');
     process.exit(0);
 }
 
 try {
+    var lang = _.first(_.split(locale, '-'));
     var targetModule = require(`./src/locales/${lang}`)
-    var target = targetModule(lang);
+    var target = targetModule(locale);
     var englishModule = require(`./src/locales/en`);
-    var english = englishModule('en');
+    var english = englishModule('en-us');
 
     var missing = [];
     var englishNames = _.keys(english);

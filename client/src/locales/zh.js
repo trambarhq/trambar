@@ -1,13 +1,33 @@
 module.exports = function(languageCode) {
-    return traditional;
+    var cantonese = false;
+    var traditional = false;
+    if (/\-(mo|hk)$/.test(languageCode)) {
+        cantonese = true;
+        traditional = true;
+    } else if (/\-(tw)$/.test(languageCode)) {
+        traditional = true;
+    }
+    if (traditional) {
+        if (cantonese) {
+            var merged = {};
+            for (var name in traditionalPhrases) {
+                merged[name] = cantonesePhrases[name] || traditionalPhrases[name];
+            }
+            return merged
+        } else {
+            return traditionalPhrases;
+        }
+    } else {
+        return simplifiedPhrases;
+    }
 };
 
-var traditional = {
-    'action-contact-by-email': '電子郵件聯繫',
-    'action-contact-by-ichat': 'iChat聯繫',
-    'action-contact-by-phone': '電話聯繫',
-    'action-contact-by-skype': 'Skype聯繫',
-    'action-contact-by-slack': 'Slack聯繫',
+var traditionalPhrases = {
+    'action-contact-by-email': '用電子郵件聯繫',
+    'action-contact-by-ichat': '用iChat聯繫',
+    'action-contact-by-phone': '用電話聯繫',
+    'action-contact-by-skype': '用Skype聯繫',
+    'action-contact-by-slack': '用Slack聯繫',
     'action-view-github-page': '查看Github個人頁面',
     'action-view-gitlab-page': '查看GitLab個人頁面',
     'action-view-stackoverflow-page': '查看StackOverflow個人頁面',
@@ -66,7 +86,7 @@ var traditional = {
         return `${user}評論了這個提交`;
     },
     'comment-$user-completed-a-task': (user) => {
-        return `${user}完成一個任務`;
+        return `${user}完成了一個任務`;
     },
     'comment-$user-is-assigned-to-issue': (user) => {
         return `${user}被分配到這個問題`;
@@ -185,7 +205,7 @@ var traditional = {
     'story-file': '文件',
     'story-issue-current-status': '當前狀態:',
     'story-issue-opened-$number-$title': (number, title) => {
-        var num = fullWidth(number)
+        var num = String(number);
         return `報告了問題${num}：《${title}》`;
     },
     'story-issue-status-closed': '關閉',
@@ -267,11 +287,11 @@ var traditional = {
     },
 
     'survey-item-$number': (number) => {
-        var num = fullWidth(number);
+        var num = String(number);
         return `精選${num}`;
     },
     'task-list-item-$number': (number) => {
-        var num = fullWidth(number);
+        var num = String(number);
         return `任務${num}`;
     },
 
@@ -291,6 +311,182 @@ var traditional = {
     'video-capture-retake': '重新錄製',
     'video-capture-start': '開始',
     'video-capture-stop': '停止',
+};
+
+// TODO
+var simplifiedPhrases = traditionalPhrases;
+
+var cantonesePhrases = {
+    'action-view-github-page': '睇吓佢嘅Github個人頁面',
+    'action-view-gitlab-page': '睇吓佢嘅GitLab個人頁面',
+    'action-view-stackoverflow-page': '睇吓佢嘅StackOverflow個人頁面',
+
+    'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+        return [ `${name}同`, users, `推薦呢個` ];
+    },
+    'bookmark-$name-recommends-this': (name) => {
+        return `${name}推薦呢個`;
+    },
+    'bookmark-$name1-and-$name2-recommend-this': (name) => {
+        return `${name1}同${name2}推薦呢個`;
+    },
+    'bookmark-recommendations': '推薦',
+    'bookmark-you-bookmarked-it': '你加咗呢個書籤',
+    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+        return `你加咗呢個書籤（${name}推薦）`;
+    },
+    'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+        return [ `你加咗呢個書籤（`, users, `推薦）` ];
+    },
+
+    'comment-$user-cast-a-vote': (user) => {
+        return `${user}投咗一票`;
+    },
+    'comment-$user-commented-on-issue': (user) => {
+        return `${user}評論咗呢個問題`;
+    },
+    'comment-$user-commented-on-merge-request': (user) => {
+        return `${user}評論咗呢個合併請求`;
+    },
+    'comment-$user-commented-on-push': (user) => {
+        return `${user}評論咗呢個push`;
+    },
+    'comment-$user-completed-a-task': (user) => {
+        return `${user}完成咗一個任務`;
+    },
+    'comment-$user-is-assigned-to-issue': (user) => {
+        return `${user}被分配到呢個問題`;
+    },
+    'comment-$user-is-typing': (user) => {
+        return `${user}現在寫緊評論⋯⋯`;
+    },
+    'comment-$user-likes-this': (user) => {
+        return `${user}鍾意呢個`;
+    },
+
+    'list-$count-more': (count) => {
+        var num = cardinal(count);
+        return `重有${num}個⋯⋯`;
+    },
+
+    'notification-$user-commented-on-your-commit': (user) => {
+        return `${user}評論咗你嘅commit`;
+    },
+    'notification-$user-commented-on-your-merge': (user) => {
+        return `${user}評論咗你嘅merge`;
+    },
+    'notification-$user-commented-on-your-story': (user) => {
+        return `${user}評論咗你嘅公報`;
+    },
+    'notification-$user-commented-on-your-survey': (user) => {
+        return `${user}評論咗你嘅調查`;
+    },
+    'notification-$user-commented-on-your-task-list': (user) => {
+        return `${user}評論咗你嘅任務列表`;
+    },
+    'notification-$user-completed-task': (user) => {
+        return `${user}完成咗喺你嘅列表嘅上一個任務`;
+    },
+    'notification-$user-likes-your-commit': (user) => {
+        return `${user}鍾意你嘅commit`;
+    },
+    'notification-$user-likes-your-merge': (user) => {
+        return `${user}鍾意你嘅merge`;
+    },
+    'notification-$user-likes-your-story': (user) => {
+        return `${user}鍾意你嘅公報`;
+    },
+    'notification-$user-likes-your-survey': (user) => {
+        return `${user}鍾意你嘅調查`;
+    },
+    'notification-$user-likes-your-task-list': (user) => {
+        return `${user}鍾意你嘅任務列表`;
+    },
+    'notification-$user-voted-in-your-survey': (user) => {
+        return `${user}回答咗你嘅調查`;
+    },
+
+    'option-hide-post': '非會員睇唔到',
+    'option-send-bookmarks': '發送書籤畀其他人',
+    'option-send-bookmarks-to-$count-users': (count) => {
+        var num = cardinal(count);
+        return `發送書籤畀${num}個人`;
+    },
+
+    'story-author-$name-and-$users': (name, users, count) => {
+        return [ name, '同', users ];
+    },
+    'story-author-$name1-and-$name2': (name1, name2) => {
+        return `${name1}同${name2}`;
+    },
+    'story-issue-opened-$number-$title': (number, title) => {
+        var num = String(number)
+        return `報告咗問題${num}：《${title}》`;
+    },
+    'story-like': '鍾意',
+    'story-member-joined-$repo': (repo) => {
+        var text = `加入咗project`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        return text;
+    },
+    'story-member-left-$repo': (repo) => {
+        var text = `離開咗project`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        return text;
+    },
+    'story-milestone-created-$name': (name) => {
+        return `加咗里程碑《${name}》`;
+    },
+    'story-pending': '等一陣⋯⋯',
+    'story-push-added-$count-files': (count) => {
+        var num = cardinal(count);
+        return `加咗${num}個文件`;
+    },
+    'story-push-added-$count-lines': (count) => {
+        var num = cardinal(count);
+        return `加咗${num}行代碼`;
+    },
+    'story-push-modified-$count-files': (count) => {
+        var num = cardinal(count);
+        return `改咗${num}行代碼`;
+    },
+    'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
+        var text = `推咗一啲代碼修改入到`
+        if (repo) {
+            text += `project《${repo}》嘅`;
+        }
+        text += `branch《${branch}》`;
+        return text;
+    },
+    'story-push-removed-$count-files': (count) => {
+        return `除咗${num}個文件`;
+    },
+    'story-push-removed-$count-lines': (count) => {
+        return `除咗${num}行代碼`;
+    },
+    'story-push-renamed-$count-files': (count) => {
+        return `改咗${num}個文件嘅名`;
+    },
+    'story-repo-created-$name': (name) => {
+        var text = `加咗project`;
+        if (name) {
+            text += `《${name}》`;
+        }
+        return text;
+    },
+    'story-wiki-created-page-with-$title': (title) => {
+        return `加咗Wiki頁面《${title}》”`;
+    },
+    'story-wiki-deleted-page-with-$title': (title) => {
+        return `刪除咗Wiki頁面《${title}》”`;
+    },
+    'story-wiki-updated-page-with-$title': (title) => {
+        return `改咗Wiki頁面《${title}》`;
+    },
 };
 
 var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
@@ -316,20 +512,10 @@ function cardinal(num, traditional) {
             text = chineseNumbers[tens] + text;
         }
         if (ones) {
-            text = text + chineseNumbers[tens];
+            text = text + chineseNumbers[ones];
         }
         return text;
     } else {
-        return fullWidth(num)
+        return String(num);
     }
-}
-
-function fullWidth(num) {
-    var text = String(num);
-    var result = '';
-    for (var i = 0; i < text.length; i++) {
-        var c = text.charCodeAt(i);
-        result += String.fromCharCode(c + 0xff10 - 0x0030);
-    }
-    return result;
 }
