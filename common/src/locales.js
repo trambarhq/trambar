@@ -8,7 +8,7 @@ module.exports = [
             hk: '香港',
             mo: '澳門'
             sg: '新加坡',
-            tw: '台灣',            
+            tw: '台灣',
         },
         defaultCountry: 'us',
     }
