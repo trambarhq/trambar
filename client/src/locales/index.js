@@ -1,5 +1,18 @@
 module.exports = [
     {
+        name: '中文',
+        code: 'zh',
+        direction: 'ltr',
+        countries: {
+            ch: '中国',
+            hk: '香港',
+            mo: '澳門'
+            sg: '新加坡',
+            tw: '台灣',            
+        },
+        defaultCountry: 'us',
+    }
+    {
         name: 'English',
         code: 'en',
         direction: 'ltr',
