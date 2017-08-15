@@ -13,13 +13,17 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         user_id: Number,
+        server_id: Number,
         token: String,
+        area: String,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         user_id: Number,
+        server_id: Number,
         token: String,
+        area: String,
     },
 
     /**
@@ -41,9 +45,12 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 token varchar(64) NOT NULL,
+                area varchar(64) NOT NULL,
                 user_id int,
+                server_id int,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (token);
         `;
         return db.execute(sql);
     },

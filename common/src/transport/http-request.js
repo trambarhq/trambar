@@ -48,7 +48,7 @@ exports.fetch = function(method, url, payload, options) {
 
         xhr.onload = function(evt) {
             if (xhr.status >= 400) {
-                var error = new HttpError(xhr.status)
+                var error = new HttpError(xhr.status, xhr.response);
                 reject(error);
             } else {
                 var result = xhr.response;

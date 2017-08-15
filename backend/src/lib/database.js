@@ -8,6 +8,7 @@ var Async = require('utils/async-do-while');
 
 module.exports = Database;
 
+var BIGINT_OID = 20;
 var TIMESTAMPTZ_OID = 1184
 var TIMESTAMP_OID = 1114
 
@@ -27,6 +28,23 @@ function parseDate(val) {
 }
 PgTypes.setTypeParser(TIMESTAMPTZ_OID, parseDate);
 PgTypes.setTypeParser(TIMESTAMP_OID, parseDate);
+
+/**
+ * Retrieve bigint as Number unless doing so triggers an overflow
+ *
+ * @param  {String} val
+ *
+ * @return {Number|String}
+ */
+function parseBigInt(val) {
+    var num = parseInt(val);
+    if (Number.MIN_SAFE_INTEGER <= num && num <= Number.MAX_SAFE_INTEGER) {
+        return num;
+    } else {
+        return val;
+    }
+}
+PgTypes.setTypeParser(BIGINT_OID, parseBigInt);
 
 var config = {
     host: process.env.POSTGRES_HOST,

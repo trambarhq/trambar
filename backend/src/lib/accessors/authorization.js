@@ -14,6 +14,7 @@ module.exports = _.create(Data, {
         details: Object,
         user_id: Number,
         token: String,
+        area: String,
         expiration_date: String,
     },
     criteria: {
@@ -21,6 +22,7 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         user_id: Number,
         token: String,
+        area: String,
     },
 
     /**
@@ -43,9 +45,11 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 user_id int NOT NULL,
                 token varchar(64) NOT NULL,
+                area varchar(64) NOT NULL,
                 expiration_date date NOT NULL,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (token);
         `;
         return db.execute(sql);
     },

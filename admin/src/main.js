@@ -14,4 +14,5 @@ function initialize(evt) {
     };
     var appElement = React.createElement(Application, appProps)
     ReactDOM.render(appElement, appContainer);
+    return null;
 }

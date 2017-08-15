@@ -80,7 +80,7 @@ module.exports = React.createClass({
                         console.error(`Unable to establish WebSocket connection: ${server}`);
                     });
                 }
-                return credentials.user_id;
+                return credentials.user_id || 0;
             });
         });
     },
@@ -197,6 +197,16 @@ module.exports = React.createClass({
                 type: 'auth_request',
                 target: this,
                 server: server
+            }).then((credentials) => {
+                if (process.env.NODE_ENV !== 'production') {
+                    if (!credentials.user_id) {
+                        console.warn('Missing user_id');
+                    }
+                    if (!credentials.token) {
+                        console.warn('Missing authorization token');
+                    }
+                }
+                return credentials;
             });
         } else {
             return Promise.reject(new Error('onAuthRequest is not set'));

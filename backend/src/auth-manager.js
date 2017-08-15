@@ -1,9 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
+var BodyParser = require('body-parser');
 var Passport = require('passport')
 var Crypto = Promise.promisifyAll(require('crypto'));
+var FS = Promise.promisifyAll(require('fs'));
 var Moment = require('moment');
+var HtpasswdAuth = require('htpasswd-auth');
 var HttpError = require('errors/http-error');
 
 var Database = require('database');
@@ -25,11 +28,13 @@ var server;
 function start() {
     var app = Express();
     app.set('json spaces', 2);
+    app.use(BodyParser.json());
     app.use(Passport.initialize());
-    app.get('/auth', handleAuthenticationStart);
-    app.get('/auth/:token', handleAuthenticationRetrieval);
-    app.get('/auth/:token/:provider', handleOAuthRequest);
-    app.get('/auth/:token/:provider/callback', handleOAuthRequest, handleOAuthRequestCompletion);
+    app.post('/auth/session', handleAuthenticationStart);
+    app.get('/auth/session/:token', handleAuthorizationRetrieval);
+    app.get('/auth/htpasswd', handleHttpasswdRequest);
+    app.get('/auth/:provider', handleOAuthRequest);
+    app.get('/auth/:provider/:callback', handleOAuthRequest, handleOAuthRequestCompletion);
     server = app.listen(80);
 }
 
@@ -86,28 +91,101 @@ function sendError(res, err) {
  * @param  {Response} res
  */
 function handleAuthenticationStart(req, res) {
+    var area = req.body.area;
     Database.open().then((db) => {
         // generate a random token for tracking the authentication
         // process; if successful, this token will be upgraded to
         // an authorization token
         return Crypto.randomBytesAsync(24).then((buffer) => {
+            if (!(area === 'client' || area === 'server')) {
+                throw new HttpError(400);
+            }
             var authentication = {
-                token: buffer.toString('hex')
+                area,
+                token: buffer.toString('hex'),
             };
             return Authentication.saveOne(db, 'global', authentication);
         }).then((authentication) => {
             // send list of available strategies to client, along with the
             // authentication token
             var criteria = {
-                prefix: 'oauth-',
                 deleted: false,
             };
-            return Server.find(db, 'global', criteria, 'type').then((servers) => {
+            return Server.find(db, 'global', criteria, '*').filter((server) => {
+                if (canProvideAccess(server, area)) {
+                    return true;
+                }
+            }).then((servers) => {
+                var token = authentication.token;
+                var providers = _.map(servers, (server) => {
+                    var name = server.details.name;
+                    return {
+                        name: getServerName(server),
+                        type: server.type,
+                        url: `/auth/${server.type}?sid=${server.id}&token=${token}`,
+                    };
+                });
+                return { token, providers };
+            });
+        });
+    }).then((results) => {
+        sendResponse(res, results);
+    }).catch((err) => {
+        console.error(err);
+        sendError(res, err);
+    });
+}
+
+function handleHttpasswdRequest(req, res) {
+    var token = req.body.token;
+    var username = req.body.username;
+    var password = req.body.password;
+    Database.open().then((db) => {
+        return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+            if (!authentication) {
+                throw new HttpError(400);
+            }
+        }).then(() => {
+            if (!username || !password) {
+                throw new HttpError(400);
+            }
+            var htpasswdPath = process.env.HTPASSWD_PATH;
+            return FS.readFileAsync(htpasswdPath, (data) => {
+                return HtpasswdAuth.authenticate(username, password);
+            }).catch((err) => {
+                console.error(err.message);
+                return false;
+            }).then((successful) => {
+                if (!successful) {
+                    return null;
+                }
+                console.log('Successful');
+                var criteria = {
+                    username,
+                    deleted: false,
+                };
+                return User.findOne(db, 'global', criteria, 'id, type').then((user) => {
+                    if (!user) {
+                        // create the admin user if it's not there
+                        var name = _.capitalize(username);
+                        if (name === 'Root') {
+                            name = 'Administrator';
+                        }
+                        var user = {
+                            type: 'admin',
+                            username,
+                            details: { name }
+                        };
+                        return User.insertOne(db, 'global', user);
+                    }
+                    return user;
+                });
+            });
+        }).then((user) => {
+            return authorizeUser(db, user, authentication, 'htpasswd').then((authorization) => {
                 return {
-                    token: authentication.token,
-                    providers: _.map(servers, (server) => {
-                        return server.type.substr(criteria.prefix.length);
-                    })
+                    token: authorization.token,
+                    user_id: authorization.user_id,
                 };
             });
         });
@@ -119,18 +197,22 @@ function handleAuthenticationStart(req, res) {
 }
 
 /**
- * Return an authentication object
+ * Return an authentication object, used by the client to determine if login
+ * was successful
  *
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleAuthenticationRetrieval(req, res) {
+function handleAuthorizationRetrieval(req, res) {
     var token = req.params.token;
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'token, user_id').then((authentication) => {
+        return Authorization.findOne(db, 'global', { token }, 'token, user_id').then((authorization) => {
+            if (!authorization) {
+                throw new HttpError(404);
+            }
             return {
-                token: authentication.token,
-                user_id: authentication.user_id,
+                token: authorization.token,
+                user_id: authorization.user_id,
             };
         });
     }).then((results) => {
@@ -151,8 +233,9 @@ function handleOAuthRequest(req, res, done) {
     var host = req.headers['host'];
     var protocol = req.headers['x-connection-protocol'];
     var provider = req.params.provider;
-    var token = req.params.token;
-    var callback = !req.params.callback;
+    var serverId = parseInt(req.query.sid);
+    var token = req.query.token;
+    console.log(serverId, token);
     Database.open().then((db) => {
         return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
             if (!authentication) {
@@ -160,49 +243,41 @@ function handleOAuthRequest(req, res, done) {
             }
         }).then(() => {
             var criteria = {
-                type: `oauth-${provider}`,
+                id: serverId,
                 deleted: false,
             };
-            return Server.findOne(db, 'global', criteria, 'details').then((server) => {
-                if (!server) {
+            return Server.findOne(db, 'global', criteria, '*').then((server) => {
+                if (!server || server.type !== provider) {
                     throw new HttpError(400);
                 }
-                var Strategy = require(plugins[provider]);
+                var Strategy = require(plugins[server.type]);
                 var providerSpecific;
-                switch (provider) {
-                    case 'facebook':
-                        providerSpecific = {
-                            profileFields: ['id', 'email', 'gender', 'link', 'locale', 'name', 'timezone', 'verified']
-                        };
-                        break;
-                }
-                var credentials = _.extend(server.details.credentials, providerSpecific, {
-                    callbackURL: `${protocol}://${host}/auth/${token}/${provider}/callback`,
-                    passReqToCallback: true,
-                });
-                var strategy = new Strategy(credentials, processOAuthProfile);
-                Passport.use(strategy);
-
                 var options = {
-                    scope: [ 'email' ],
                     session: false,
                 };
+                var credentials = _.extend(server.details.oauth, {
+                    callbackURL: `${protocol}://${host}/auth/${provider}/callback?sid=${serverId}&token=${token}`,
+                    passReqToCallback: true,
+                });
+                switch (provider) {
+                    case 'facebook':
+                        credentials.profileFields = ['id', 'email', 'gender', 'link', 'locale', 'name', 'timezone', 'verified'];
+                        break;
+                }
+                var strategy = new Strategy(credentials, processOAuthProfile);
+                Passport.use(strategy);
                 var authenticate = Passport.authenticate(provider, options);
                 authenticate(req, res, done);
             });
         });
     }).catch((err) => {
+        // display error
         sendError(res, err);
     });
 }
 
 function handleOAuthRequestCompletion(req, res) {
-    var html;
-    if (req.user) {
-        html = `<script> close() </script>`;
-    } else {
-        html = `<h1>Failure</h1>`
-    }
+    var html = `<script> close() </script>`;
     res.send(html);
 }
 
@@ -216,42 +291,137 @@ function handleOAuthRequestCompletion(req, res) {
  * @param  {Function} cb
  */
 function processOAuthProfile(req, accessToken, refreshToken, profile, cb) {
-    var token = req.params.token;
+    var provider = req.params.provider;
+    var serverId = parseInt(req.query.sid);
+    var token = req.query.token;
     Database.open().then((db) => {
         return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
             if (!authentication) {
                 throw new HttpError(400);
             }
-            var emails = _.map(profile.emails, 'value');
-            return User.findOne(db, 'global', { emails }, 'id, emails').then((user) => {
-                // TODO: auto-creation of guest accounts
+            // look for a user with the external id
+            var externalId = parseInt(profile.id);
+            var criteria = {
+                external_id: externalId,
+                server_id: serverId,
+                deleted: false,
+            };
+            return User.findOne(db, 'global', criteria, 'id').then((user) => {
+                console.log(user);
                 if (!user) {
-                    throw new HttpError(403);
+                    // look for a user that isn't bound to an external account yet
+                    var criteria = {
+                        external_id: null,
+                        deleted: false,
+                    };
+                    return User.find(db, 'global', criteria, '*').then((user) => {
+                        var emails = _.map(profile.emails, 'value');
+                        // TODO: match based on e-mail or account name
+                    });
                 }
                 return user;
             }).then((user) => {
-                var authorization = {
-                    token: token,
-                    user_id: user.id,
-                    expiration_date: Moment().startOf('day').add(30, 'days').toISOString(),
-                };
-                return Authorization.insertOne(db, 'global', authorization);
-            }).then((authorization) => {
-                authentication.type = profile.provider,
-                authentication.details = {
+                // save the info from provider for potential future use
+                var details = {
                     profile: profile._json,
                     access_token: accessToken,
                     refresh_token: refreshToken,
                 };
-                authentication.user_id = authorization.user_id;
-                return Authentication.updateOne(db, 'global', authentication);
+                return authorizeUser(db, user, authentication, provider, serverId, details);
             });
         });
-    }).then((authentication) => {
-        cb(null, authentication);
+    }).then((authorization) => {
+        cb(null, authorization);
     }).catch((err) => {
         cb(err);
     });
+}
+
+/**
+ * Create a new Authorization record for user, checking for existence and
+ * if he can access the area in question
+ *
+ * @param  {Database} db
+ * @param  {User} user
+ * @param  {Authenication} authentication
+ * @param  {String} authType
+ * @param  {Number} serverId
+ * @param  {Object} details
+ *
+ * @return {Authorization}
+ */
+function authorizeUser(db, user, authentication, authType, serverId, details) {
+    if (!user) {
+        throw new HttpError(401);
+    }
+    if (authentication.area === 'admin' && user.type !== 'admin') {
+        throw new HttpError(403);
+    }
+    // update Authentication record
+    authentication.type = authType;
+    authentication.user_id = user.id;
+    authentication.server_id = serverId;
+    _.assign(authentication.details, details);
+    return Authentication.updateOne(db, 'global', authentication).then((authentication) => {
+        // create Authorization record
+        var lifetime = (authentication.area === 'client') ? 30 : 1;
+        var expirationDate = Moment().startOf('day').add(lifetime, 'day').toISOString();
+        var authorization = {
+            token: authentication.token,
+            user_id: authentication.user_id,
+            expiration_date: expirationDate,
+            area: authentication.area,
+        };
+        return Authorization.insertOne(db, 'global', authorization);
+    });
+}
+
+/**
+ * Return name of server
+ *
+ * @param  {Server} server
+ *
+ * @return {String}
+ */
+function getServerName(server) {
+    var name = server.details.name;
+    if (!name) {
+        switch (server.type) {
+            case 'Dropbox': return 'dropbox';
+            case 'facebook': return 'Facebook';
+            case 'gitlab': return 'GitLab';
+            case 'github': return 'GitHub';
+            case 'google': return 'Google';
+        }
+    }
+    return name;
+}
+
+/**
+ * Return true if server can provide access to an area
+ *
+ * @param  {Server} server
+ * @param  {String} area
+ *
+ * @return {Boolean}
+ */
+function canProvideAccess(server, area) {
+    if (server.details.oauth) {
+        if (server.details.oauth.clientID && server.details.oauth.clientSecret) {
+            if (area === 'server') {
+                switch (server.type) {
+                    case 'gitlab':
+                        return true;
+                }
+            } else if (area === 'client') {
+                switch (server.type) {
+                    default:
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 exports.start = start;

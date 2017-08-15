@@ -15,10 +15,23 @@ require('./side-navigation.scss');
 module.exports = React.createClass({
     displayName: 'SideNavigation',
     propTypes: {
+        disabled: PropTypes.bool,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            disabled: false
+        };
     },
 
     /**

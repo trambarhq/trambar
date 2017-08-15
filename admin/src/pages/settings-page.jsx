@@ -7,6 +7,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+require('./settings-page.scss');
+
 module.exports = Relaks.createClass({
     displayName: 'SettingsPage',
     propTypes: {
@@ -33,9 +35,7 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var db = this.props.database.use({ server: '~', by: this });
         var props = {
             users: null,
             currentUser: null,

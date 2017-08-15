@@ -229,20 +229,20 @@ module.exports = React.createClass({
             this.authRequest.reject = reject;
         });
 
-        // retrieve credential from database
+        // retrieve credentials from database
         var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server };
-        db.findOne({ table: 'user_credential', criteria }).then((credential) => {
-            if (credential && credential.token && credential.user_id) {
-                this.authRequest.resolve(credential)
+        var criteria = { server, area: 'client' };
+        db.findOne({ table: 'user_credentials', criteria }).then((credentials) => {
+            if (credentials && credentials.token && credentials.user_id) {
+                this.authRequest.resolve(credentials)
             } else {
-                if (!credential) {
-                    credential = { server };
+                if (!credentials) {
+                    credentials = { server };
                 }
                 this.setState({
                     showingSignInDialogBox: true,
                     renderingSignInDialogBox: true,
-                    authenticationDetails: credential
+                    authenticationDetails: credentials
                 });
             }
         }).catch((err) => {
@@ -266,8 +266,11 @@ module.exports = React.createClass({
 
         // save the credentials
         var db = this.state.database.use({ by: this, schema: 'local' });
-        var record = _.extend({ key: credentials.server }, credentials);
-        db.saveOne({ table: 'user_credential' }, record);
+        var record = _.extend({
+            key: credentials.server,
+            area: 'client'
+        }, credentials);
+        db.saveOne({ table: 'user_credentials' }, record);
 
         // hide the dialog box
         this.setState({

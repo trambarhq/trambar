@@ -10,21 +10,29 @@ var RemoteDataSource = require('data/remote-data-source');
 var Database = require('data/database');
 var RouteManager = require('routing/route-manager');
 var Route = require('routing/route');
-var UploadManager = require('transport/upload-manager');
-var UploadQueue = require('transport/upload-queue');
+var PayloadManager = require('transport/payload-manager');
+var Payloads = require('transport/payloads');
 var LocaleManager = require('locale/locale-manager');
 var Locale = require('locale/locale');
 var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
 
 // pages
-var StartPage = require('pages/start-page');
+var ProjectsPage = require('pages/projects-page');
+var RolesPage = require('pages/roles-page');
+var SettingsPage = require('pages/settings-page');
+var UsersPage = require('pages/users-page');
+
+var LoginPage = require('pages/login-page');
 
 // widgets
 var SideNavigation = require('widgets/side-navigation');
 
 var pageClasses = [
-    StartPage,
+    ProjectsPage,
+    RolesPage,
+    SettingsPage,
+    UsersPage,
 ];
 
 require('application.scss');
@@ -40,24 +48,25 @@ module.exports = React.createClass({
         routeManager: RouteManager,
         localeManager: LocaleManager,
         themeManager: ThemeManager,
-        uploadManager: UploadManager,
+        payloadManager: PayloadManager,
     }),
 
     getInitialState: function() {
         return {
             database: null,
-            queue: null,
+            payloads: null,
             route: null,
             locale: null,
             theme: null,
 
+            showingLoginPage: false,
             authenticationDetails: null,
         };
     },
 
     isReady: function() {
         return !!this.state.database
-            && !!this.state.queue
+            && !!this.state.payloads
             && !!this.state.route
             && !!this.state.locale
             && !!this.state.theme;
@@ -77,18 +86,29 @@ module.exports = React.createClass({
             return null;
         }
         var CurrentPage = this.state.route.component;
-        var props = {
+        var pageProps = {
             database: this.state.database,
             route: this.state.route,
-            queue: this.state.queue,
+            payloads: this.state.payloads,
             locale: this.state.locale,
             theme: this.state.theme,
         };
+        var navProps = {
+            database: this.state.database,
+            route: this.state.route,
+            locale: this.state.locale,
+            theme: this.state.theme,
+        };
+        if (this.state.showingLoginPage) {
+            CurrentPage = LoginPage;
+            navProps.disabled = true;
+            pageProps.authenticationDetails = this.state.authenticationDetails;
+        }
         return (
             <div className="application">
-                <SideNavigation {...props} />
+                <SideNavigation {...navProps} />
                 <section className="page-view-port">
-                    <CurrentPage {...props} />
+                    <CurrentPage {...pageProps} />
                 </section>
             </div>
         );
@@ -102,11 +122,11 @@ module.exports = React.createClass({
             onChange: this.handleDatabaseChange,
             onAuthRequest: this.handleDatabaseAuthRequest,
         };
-        var uploadManagerProps = {
-            ref: setters.uploadManager,
+        var payloadManagerProps = {
+            ref: setters.payloadManager,
             database: this.state.database,
             route: this.state.route,
-            onChange: this.handleUploadQueueChange,
+            onChange: this.handlePayloadsChange,
         };
         var routeManagerProps = {
             ref: setters.routeManager,
@@ -119,6 +139,7 @@ module.exports = React.createClass({
         var localeManagerProps = {
             ref: setters.localeManager,
             database: this.state.database,
+            directory: require('locales'),
             onChange: this.handleLocaleChange,
             onModuleRequest: this.handleLanguageModuleRequest,
         };
@@ -131,7 +152,7 @@ module.exports = React.createClass({
         return (
             <div>
                 <RemoteDataSource {...remoteDataSourceProps} />
-                <UploadManager {...uploadManagerProps} />
+                <PayloadManager {...payloadManagerProps} />
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
@@ -185,26 +206,19 @@ module.exports = React.createClass({
             this.authRequest.reject = reject;
         });
 
-        // retrieve credential from database
+        // retrieve credentials from database
         var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server };
-        db.findOne({ table: 'user_credential', criteria }).then((credential) => {
-            if (credential && credential.token) {
-                this.authRequest.resolve(credential)
+        var criteria = { server, area: 'admin' };
+        db.findOne({ table: 'user_credentials', criteria }).then((credentials) => {
+            if (credentials && credentials.token && credentials.user_id) {
+                this.authRequest.resolve(credentials)
             } else {
-                if (!credential) {
-                    credential = { server };
+                if (!credentials) {
+                    credentials = { server };
                 }
-                this.setState({ authenticationDetails: credential }, () => {
-                    // TODO: retrieve info from dialog box
-                    setTimeout(() => {
-                        var credential = {
-                            server,
-                            username: 'tester',
-                            password: 'qwerty'
-                        };
-                        this.authRequest.resolve(credential);
-                    }, 10);
+                this.setState({
+                    showingLoginPage: true,
+                    authenticationDetails: credentials
                 });
             }
         }).catch((err) => {
@@ -214,13 +228,38 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when upload queue changes
+     * Called when sign-in was successful
      *
      * @param  {Object} evt
      */
-    handleUploadQueueChange: function(evt) {
-        var queue = new UploadQueue(evt.target);
-        this.setState({ queue });
+    handleSignInSuccess: function(evt) {
+        // return the info to code that were promised
+        var credentials = evt.credentials;
+        if (this.authRequest) {
+            this.authRequest.resolve(credentials);
+            this.authRequest = null;
+        }
+
+        // save the credentials
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var record = _.extend({
+            key: credentials.server,
+            area: 'client'
+        }, credentials);
+        db.saveOne({ table: 'user_credentials' }, record);
+
+        // starting rendering the proper page
+        this.setState({ showingLoginPage: false });
+    },
+
+    /**
+     * Called when upload payloads changes
+     *
+     * @param  {Object} evt
+     */
+    handlePayloadsChange: function(evt) {
+        var payloads = new Payloads(evt.target);
+        this.setState({ payloads });
     },
 
     /**
@@ -279,7 +318,7 @@ module.exports = React.createClass({
     handleRedirectionRequest: function(evt) {
         return Promise.try(() => {
             if (evt.url === '/') {
-                return StartPage.getUrl({});
+                return ProjectsPage.getUrl({});
             } else {
                 throw new HttpError(404);
             }

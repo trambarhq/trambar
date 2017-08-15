@@ -146,11 +146,9 @@ module.exports = function(languageCode) {
         'settings-user-profile': 'User Profile',
 
         'sign-in-cancel': 'Cancel',
-        'sign-in-with-dropbox': 'Sign in with Dropbox',
-        'sign-in-with-facebook': 'Sign in with Facebook',
-        'sign-in-with-github': 'Sign in with GitHub',
-        'sign-in-with-gitlab': 'Sign in with GitLab',
-        'sign-in-with-google': 'Sign in with Google',
+        'sign-in-with-$provider': (provider) => {
+            return `Sign in with ${provider}`;
+        },
 
         'statistics-bar': 'Bar',
         'statistics-line': 'Line',

@@ -12,7 +12,7 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
-        emails: Array(String),
+        username: String,
         project_ids: Array(Number),
         role_ids: Array(Number),
         server_id: Number,
@@ -22,13 +22,12 @@ module.exports = _.create(Data, {
     criteria: {
         id: Number,
         type: String,
-        emails: Array(String),
+        username: String,
         project_ids: Array(Number),
         role_ids: Array(Number),
         server_id: Number,
         external_id: Number,
         hidden: Boolean,
-        username: String,
     },
 
     /**
@@ -50,14 +49,15 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                emails varchar(128)[] NOT NULL DEFAULT '{}'::text[],
+                username varchar(128),
                 project_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 server_id int,
-                external_id int,
+                external_id bigint,
                 hidden boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} ((details->>'email')) WHERE details ? 'email';
         `;
         return db.execute(sql);
     },
@@ -73,7 +73,7 @@ module.exports = _.create(Data, {
     grant: function(db, schema) {
         var table = this.getTableName(schema);
         var sql = `
-            GRANT SELECT ON ${table} TO auth_role;
+            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO client_role;
         `;
@@ -81,14 +81,14 @@ module.exports = _.create(Data, {
     },
 
     apply: function(criteria, query) {
-        var special = [ 'username' ];
+        var special = [ 'email' ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
         var conds = query.conditions;
         if (criteria.username !== undefined) {
             params.push(criteria.username);
-            conds.push(`details->>'username' = $${params.length}`);
+            conds.push(`details->>'email' = $${params.length}`);
         }
     },
 

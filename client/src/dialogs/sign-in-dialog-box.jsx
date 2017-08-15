@@ -42,7 +42,7 @@ module.exports = React.createClass({
 
     componentWillMount: function() {
         if (this.props.show) {
-            this.createAuthenticationObject(this.props.server).then((authentication) => {
+            this.createAuthenticationObject(this.props.server, 'client').then((authentication) => {
                 this.setState({
                     token: authentication.token,
                     providers: authentication.providers
@@ -59,7 +59,7 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (!this.props.show && nextProps.show) {
             // create authentication object as soon as dialog box opens
-            this.createAuthenticationObject(nextProps.server).then((authentication) => {
+            this.createAuthenticationObject(nextProps.server, 'client').then((authentication) => {
                 this.setState({
                     token: authentication.token,
                     providers: authentication.providers
@@ -95,19 +95,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render list of options
-     *
-     * @return {ReactElement}
-     */
-    renderOptions: function() {
-        return (
-            <div className="options">
-                <UserSelectionList {...listProps} />
-            </div>
-        );
-    },
-
-    /**
      * Render cancel and OK buttons
      *
      * @return {ReactElement}
@@ -125,105 +112,96 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render list of options
+     *
+     * @return {ReactElement}
+     */
     renderOptions: function() {
         var t = this.props.locale.translate;
-        var available = (provider) => {
-            return _.includes(this.state.providers, provider);
-        };
-        var options = [
-            {
-                label: t('sign-in-with-gitlab'),
-                icon: 'gitlab',
-                name: 'gitlab',
-                hidden: !available('gitlab'),
-                onClick: this.handleOptionClick,
-            },
-            {
-                label: t('sign-in-with-github'),
-                icon: 'github',
-                name: 'github',
-                hidden: !available('github'),
-                onClick: this.handleOptionClick,
-            },
-            {
-                label: t('sign-in-with-dropbox'),
-                icon: 'dropbox',
-                name: 'dropbox',
-                hidden: !available('dropbox'),
-                onClick: this.handleOptionClick,
-            },
-            {
-                label: t('sign-in-with-google'),
-                icon: 'google',
-                name: 'google',
-                hidden: !available('google'),
-                onClick: this.handleOptionClick,
-            },
-            {
-                label: t('sign-in-with-facebook'),
-                icon: 'facebook-square',
-                name: 'facebook',
-                hidden: !available('facebook'),
-                onClick: this.handleOptionClick,
-            },
-        ];
+        var providers = _.sortBy(this.state.providers, [ 'type', 'name' ]);
         return (
             <div className="options">
-                {_.map(options, this.renderOption)}
+                {_.map(providers, this.renderOption)}
             </div>
         );
     },
 
-    renderOption: function(props, index) {
-        return <Option key={index} {...props} />
+    /**
+     * Render an OAuth option
+     *
+     * @param  {Object} provider
+     * @param  {Number} i
+     *
+     * @return {ReactElement}
+     */
+    renderOption: function(provider, i) {
+        var t = this.props.locale.translate;
+        var props = {
+            key: i,
+            label: t('sign-in-with-$provider', provider.name),
+            description: provider.description,
+            icon: provider.type,
+            name: provider.name,
+            onClick: this.handleOptionClick,
+        };
+        return <Option {...props} />
     },
 
-    signIn: function(provider) {
+    /**
+     * Sign in through Oauth
+     *
+     * @param  {String} provider
+     *
+     * @return {Promise<Object>}
+     */
+    signInWithOAuth: function(provider) {
         var token = this.state.token;
         var server = this.props.server;
         var protocol = 'http';
-        var url = `${protocol}://${server}/auth/${token}/${provider}`;
+        var url = `${protocol}://${server}` + provider.url;
         return this.openPopUpWindow(url).then(() => {
-            // when the popup closes, check if the authentication object now
-            // has a user_id
-            return this.fetchAuthenticationObject(server, token).then((authentication) => {
-                if (authentication && authentication.token && authentication.user_id) {
-                    var credentials = {
-                        server,
-                        token: authentication.token,
-                        user_id: authentication.user_id,
-                    };
-                    this.triggerSuccessEvent(credentials);
-                }
+            // when the popup closes, see if we can obtain an authorization object
+            // with the token
+            return this.fetchAuthorizationObject(server, token).then((authorization) => {
+                var credentials = {
+                    server,
+                    token: authorization.token,
+                    user_id: authorization.user_id,
+                };
+                this.triggerSuccessEvent(credentials);
+            }).catch((err) => {
             });
         });
     },
 
     /**
      * Ask server to create an authentication object, used to track the status
+     * of the sign-in process
      *
      * @param  {String} server
+     * @param  {String} area
      *
      * @return {Promise<Object>}
      */
-    createAuthenticationObject: function(server) {
+    createAuthenticationObject: function(server, area) {
         var protocol = 'http';
-        var url = `${protocol}://${server}/auth`;
-        var options = { responseType: 'json' };
-        return HttpRequest.fetch('GET', url, {}, options);
+        var url = `${protocol}://${server}/auth/session`;
+        var options = { responseType: 'json', contentType: 'json' };
+        return HttpRequest.fetch('POST', url, { area }, options);
     },
 
     /**
-     * Retrieve authentication object from server
+     * Retrieve authorization object from server
      *
      * @param  {String} server
      * @param  {String} token
      *
      * @return {Promise<Object>}
      */
-    fetchAuthenticationObject: function(server, token) {
+    fetchAuthorizationObject: function(server, token) {
         var protocol = 'http';
-        var url = `${protocol}://${server}/auth/${token}`;
+        var url = `${protocol}://${server}/auth/session/${token}`;
         var options = { responseType: 'json' };
         return HttpRequest.fetch('GET', url, {}, options);
     },
@@ -299,9 +277,11 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleOptionClick: function(evt) {
-        var selectedProvider = evt.currentTarget.name;
+        var selectedProvider = _.find(this.state.providers, { name: evt.currentTarget.name });
         this.setState({ selectedProvider }, () => {
-            this.signIn(selectedProvider);
+            this.signInWithOAuth(selectedProvider).then((err) => {
+                this.setState({ selectedProvider: null });
+            });
         });
     },
 

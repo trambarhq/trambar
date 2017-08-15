@@ -1,6 +1,6 @@
 module.exports = HttpError;
 
-function HttpError(statusCode) {
+function HttpError(statusCode, body) {
     var msg;
     if (!statusCode) {
         statusCode = 500;
@@ -21,6 +21,7 @@ function HttpError(statusCode) {
     }
     this.statusCode = statusCode;
     this.message = msg;
+    this.body = body;
 }
 
 HttpError.prototype = Object.create(Error.prototype)

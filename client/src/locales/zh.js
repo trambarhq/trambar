@@ -172,11 +172,9 @@ var traditionalPhrases = {
     'settings-user-profile': '用戶資料',
 
     'sign-in-cancel': '取消',
-    'sign-in-with-dropbox': '用Dropbox登錄',
-    'sign-in-with-facebook': '用Facebook登錄',
-    'sign-in-with-github': '用GitHub登錄',
-    'sign-in-with-gitlab': '用GitLab登錄',
-    'sign-in-with-google': '用Google登錄',
+    'sign-in-with-$provider': (provider) => {
+        return `用${provider}登錄`;
+    },
 
     'statistics-bar': '條圖',
     'statistics-line': '線圖',

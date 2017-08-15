@@ -18,7 +18,6 @@ module.exports = _.create(Data, {
         id: Number,
         deleted: Boolean,
         type: String,
-        prefix: String,
     },
 
     /**
@@ -63,19 +62,6 @@ module.exports = _.create(Data, {
         return db.execute(sql).return(true);
     },
 
-    apply: function(criteria, query) {
-        var special = [ 'prefix' ];
-        Data.apply.call(this, _.omit(criteria, special), query);
-
-        var params = query.parameters;
-        var conds = query.conditions;
-        if (criteria.prefix) {
-            var pattern = `${criteria.prefix}%`;
-            params.push(pattern);
-            conds.push(`type LIKE $${params.length}`);
-        }
-    },
-
     /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
@@ -88,6 +74,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials) {
+        // TODO: filter out sensitive information
         return Promise.map(rows, (row) => {
             var object = {
                 id: row.id,

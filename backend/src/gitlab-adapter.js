@@ -79,14 +79,16 @@ function handleDatabaseChanges(events) {
             // import users, roles, and repos from server
             if (event.diff.details) {
                 taskQueue.schedule(() => {
-                    var serverId = event.id;
-                    return Server.findOne(db, 'global', { id: serverId }, '*').then((server) => {
-                        if (server.type === 'gitlab') {
-                            if (!server.details.url || !server.details.credentials) {
-                                return;
-                            }
-                            return importServerObjects(db, server);
+                    var criteria = {
+                        id: event.id,
+                        type: 'gitlab',
+                        deleted: false,
+                    };
+                    return Server.findOne(db, 'global', criteria, '*').then((server) => {
+                        if (!server.details.api || !server.details.api.url || !server.details.api.token) {
+                            return;
                         }
+                        return importServerObjects(db, server);
                     });
                 });
             }
@@ -360,7 +362,6 @@ function importUsers(db, server) {
                             server_id: server.id,
                             external_id: account.id,
                             type: 'member',
-                            emails: [],
                             details: {},
                         };
                         copyUserDetails(user, account, images);
@@ -410,18 +411,17 @@ function importLabels(db, server, repo) {
  * @param  {Object} images
  */
 function copyUserDetails(user, account, images) {
+    user.username = account.username;
     user.details.name = account.name;
     var nameParts = _.split(account.name, /\s+/);
     user.details.first_name = (nameParts.length >= 2) ? _.first(nameParts) : undefined;
     user.details.last_name = (nameParts.length >= 2) ? _.last(nameParts) : undefined;
-    user.details.web_url = account.web_url;
-    user.details.username = account.username;
+    user.details.gitlab_url = account.web_url;
     user.details.skype_username = account.skype || undefined;
     user.details.twiter_username = account.twitter || undefined;
     user.details.linkedin_username = account.linkedin_name || undefined;
-    if (!_.includes(user.emails, account.email)) {
-        user.emails.push(account.email);
-    }
+    user.details.email = account.email;
+
     var image = images[account.avatar_url];
     if (image) {
         // save URL in image object so we know it was imported
@@ -1382,11 +1382,12 @@ function importWikiEvent(db, server, repo, message, project) {
 
 function fetch(server, uri, query) {
     return new Promise((resolve, reject) => {
+        var api = server.details.api;
         var options = {
             json: true,
-            baseUrl: server.details.url,
+            baseUrl: api.url,
             headers: {
-                'PRIVATE-TOKEN': server.details.credentials.token,
+                'PRIVATE-TOKEN': api.token,
             },
             qs: query,
             uri,
@@ -1435,11 +1436,12 @@ function fetchAll(server, uri, params) {
 
 function post(server, uri, payload) {
     return new Promise((resolve, reject) => {
+        var api = server.details.api;
         var options = {
             json: true,
-            baseUrl: server.details.url,
+            baseUrl: api.url,
             headers: {
-                'PRIVATE-TOKEN': server.details.credentials.token,
+                'PRIVATE-TOKEN': api.token,
             },
             body: payload,
             uri,
@@ -1459,11 +1461,12 @@ function post(server, uri, payload) {
 
 function remove(server, uri) {
     return new Promise((resolve, reject) => {
+        var api = server.details.api;
         var options = {
             json: true,
-            baseUrl: server.details.url,
+            baseUrl: api.url,
             headers: {
-                'PRIVATE-TOKEN': server.details.credentials.token,
+                'PRIVATE-TOKEN': api.token,
             },
             uri,
         };
