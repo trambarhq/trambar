@@ -74,15 +74,21 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials) {
-        // TODO: filter out sensitive information
         return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                type: row.type,
-            };
-            return object;
+            if (credentials.unrestricted) {
+                return row;
+            } else {
+                var object = {
+                    id: row.id,
+                    gn: row.gn,
+                    details: _.pick(row.details, [
+                        'name',
+                        'description',
+                    ]),
+                    type: row.type,
+                };
+                return object;
+            }
         });
     }
 });

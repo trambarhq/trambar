@@ -25,6 +25,7 @@ var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 var Task = require('accessors/task');
 
+var area = (process.env.POSTGRES_USER === 'admin_role') ? 'admin' : 'client';
 var server;
 
 function start() {
@@ -160,6 +161,7 @@ function handleRetrieval(req, res) {
         }).then((credentials) => {
             var ids;
             if (req.params.id !== undefined) {
+                // retrieval through GET (testing purpose)
                 ids = [ parseInt(req.params.id) ];
             } else {
                 ids = params.ids;
@@ -175,6 +177,13 @@ function handleRetrieval(req, res) {
             if (ids.length > 5000) {
                 throw new HttpError(400);
             }
+
+            // the admin site sometimes will need the full object
+            // objects thus retrieved shouldn't be cached
+            if (area === 'admin' && params.raw) {
+                credentials.unrestricted = true;
+            }
+
             // look up the rows by id
             var accessor = getAccessor(schema, table);
             return accessor.find(db, schema, { id: ids }, '*').then((rows) => {
@@ -269,6 +278,9 @@ function checkAuthorization(db, token) {
         if (!auth) {
             throw new HttpError(401);
         }
+        if (auth.area !== area) {
+            throw new HttpError(403);
+        }
         var now = Moment().toISOString();
         if (auth.expiration_date < now) {
             throw new HttpError(401)
@@ -292,6 +304,7 @@ function fetchCredentials(db, userId) {
             throw new HttpError(403);
         }
         credentials.user = user;
+        credentials.area = area;
     }).then(() => {
         return credentials;
     });
