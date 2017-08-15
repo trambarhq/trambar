@@ -105,7 +105,7 @@ function handleDiscovery(req, res) {
     var schema = req.params.schema;
     var table = req.params.table;
     return Database.open(schema).then((db) => {
-        return checkAuthorization(db, params.token).then((auth) => {
+        return checkAuthorization(db, params.token).then((userId) => {
             var criteria = _.omit(params, 'token');
             if (criteria.order) {
                 // check clause for potential SQL injection
@@ -156,8 +156,8 @@ function handleRetrieval(req, res) {
     var schema = req.params.schema;
     var table = req.params.table;
     return Database.open(schema).then((db) => {
-        return checkAuthorization(db, params.token).then((auth) => {
-            return fetchCredentials(db, auth.user_id);
+        return checkAuthorization(db, params.token).then((userId) => {
+            return fetchCredentials(db, userId);
         }).then((credentials) => {
             var ids;
             if (req.params.id !== undefined) {
@@ -212,8 +212,8 @@ function handleStorage(req, res) {
     var schema = req.params.schema;
     var table = req.params.table;
     return Database.open(schema).then((db) => {
-        return checkAuthorization(db, params.token).then((auth) => {
-            return fetchCredentials(db, auth.user_id);
+        return checkAuthorization(db, params.token).then((userId) => {
+            return fetchCredentials(db, userId);
         }).then((credentials) => {
             var objects = params.objects;
             // make sure objects are such
@@ -271,21 +271,15 @@ function handleStorage(req, res) {
  * @param  {Database} db
  * @param  {String} token
  *
- * @return {Authorization}
+ * @return {Promise<Number>}
  */
 function checkAuthorization(db, token) {
-    return Authorization.findOne(db, 'global', { token }, '*').then((auth) => {
-        if (!auth) {
+    return Authorization.check(db, token, area).then((userId) => {
+        if (!userId) {
             throw new HttpError(401);
         }
-        if (auth.area !== area) {
-            throw new HttpError(403);
-        }
-        var now = Moment().toISOString();
-        if (auth.expiration_date < now) {
-            throw new HttpError(401)
-        }
-        return auth;
+        var days = (area === 'client') ? 30 : 1;
+        return Authorization.extend(db, token, days).return(userId);
     });
 }
 

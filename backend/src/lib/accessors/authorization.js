@@ -51,7 +51,41 @@ module.exports = _.create(Data, {
             );
             CREATE INDEX ON ${table} (token);
         `;
-        return db.execute(sql);
+        return db.execute(sql).then(() => {
+            var storeProcs = {
+                checkAuthorization: {
+                    function: function(token, area) {
+                        var sql = `SELECT user_id, area FROM ${table} WHERE token = $1 AND (area = $2 OR $2 IS NULL) AND expiration_date >= current_date LIMIT 1`;
+                        var row = plv8.execute(sql, [ token, area ])[0];
+                        return (row) ? row.user_id : null;
+                    },
+                    arguments: 'token text, area text',
+                    return: 'int',
+                },
+
+                extendAuthorization: {
+                    function: function(token, expire) {
+                        var sql = `UPDATE ${table} SET expiration_date = $2 WHERE token = $1`;
+                        plv8.execute(sql, [ token, expire ]);
+                    },
+                    arguments: 'token text, expire date',
+                    return: 'void',
+                },
+            };
+            var sql = _.map(storeProcs, (proc, name) => {
+                var m = /{([\s\S]*)}/.exec(proc.function);
+                var code = m[1];
+                return `
+                    CREATE OR REPLACE FUNCTION "${name}"(${proc.arguments}) RETURNS ${proc.return}
+                    AS $$\n${code}\n$$
+                    LANGUAGE plv8 SECURITY DEFINER;
+                `
+            }).join('\n');
+            // replace "${table}" with actual value since the functions aren't
+            // actual closures
+            sql = _.replace(sql, /\${table}/g, table);
+            return db.execute(sql);
+        });
     },
 
     /**
@@ -70,6 +104,37 @@ module.exports = _.create(Data, {
             GRANT SELECT ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
+    },
+
+    /**
+     * Check if authorization token is valid
+     *
+     * @param  {Database} db
+     * @param  {String} token
+     * @param  {String} area
+     *
+     * @return {Promise<Number|null>}
+     */
+    check: function(db, token, area) {
+        var sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
+        return db.query(sql, [ token, area ]).then((rows) => {
+            return (rows[0]) ? rows[0].user_id : null;
+        });
+    },
+
+    /**
+     * Extend authorization til the given number of day from now
+     *
+     * @param  {Database} db
+     * @param  {String} token
+     * @param  {Number} days
+     *
+     * @return {Promise}
+     */
+    extend: function(db, token, days) {
+        var sql = `SELECT "extendAuthorization"($1, $2) AS result`;
+        var expire = Moment().add(days, 'day').format('YYYY-MM-DD');
+        return db.query(sql, [ token, expire ]).return();
     },
 
     import: null,

@@ -365,7 +365,7 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
     return Authentication.updateOne(db, 'global', authentication).then((authentication) => {
         // create Authorization record
         var lifetime = (authentication.area === 'client') ? 30 : 1;
-        var expirationDate = Moment().startOf('day').add(lifetime, 'day').toISOString();
+        var expirationDate = Moment().add(lifetime, 'day').format('YYYY-MM-DD');
         var authorization = {
             token: authentication.token,
             user_id: authentication.user_id,

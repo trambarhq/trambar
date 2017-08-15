@@ -41,8 +41,8 @@ function start() {
                     if (object && object.authorization) {
                         var token = object.authorization.token;
                         var locale = object.authorization.locale;
-                        return checkAuthorization(db, token).then((auth) => {
-                            return fetchCredentials(db, auth.user_id).then((credentials) => {
+                        return checkAuthorization(db, token).then((userId) => {
+                            return fetchCredentials(db, userId).then((credentials) => {
                                 socket.credentials = credentials;
                                 socket.locale = locale;
                                 sockets.push(socket);
@@ -87,15 +87,11 @@ function stop() {
 }
 
 function checkAuthorization(db, token) {
-    return Authorization.findOne(db, 'global', { token }, '*').then((auth) => {
-        if (!auth) {
+    return Authorization.check(db, token, null).then((userId) => {
+        if (!userId) {
             throw new HttpError(401);
         }
-        var now = Moment().toISOString();
-        if (auth.expiration_date < now) {
-            throw new HttpError(401)
-        }
-        return auth;
+        return userId;
     });
 }
 
