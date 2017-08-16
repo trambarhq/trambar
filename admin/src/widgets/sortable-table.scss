@@ -1,8 +1,13 @@
 .sortable-table {
+    width: 100%;
+
     TH {
+        text-align: left;
+        cursor: pointer;
+
         .arrow {
             display: none;
-            float: right;
+            margin-left: 0.5em;
         }
     }
 

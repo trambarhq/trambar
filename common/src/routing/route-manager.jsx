@@ -79,7 +79,7 @@ module.exports = React.createClass({
             query = parseQueryString(path.substr(queryIndex + 1));
             path = path.substr(0, queryIndex);
         }
-        var route = null;
+        var routes = [];
         _.each(this.props.pages, (page) => {
             if (typeof(page.parseUrl) !== 'function') {
                 var pageName = _.get(page, 'displayName', 'Page')
@@ -93,9 +93,14 @@ module.exports = React.createClass({
                     parameters: params,
                     query: query,
                 };
-                return false;
+                routes.push(route);
             }
         });
+        // pick the one with the most parameters
+        routes = _.sortBy(routes, (route) => {
+            return _.size(route.parameters);
+        });
+        var route = _.last(routes) || null;
         return route;
     },
 

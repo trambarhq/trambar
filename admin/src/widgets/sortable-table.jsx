@@ -12,8 +12,8 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        var thead = this.getChild('thead');
-        var tbody = this.getChild('tbody');
+        var thead = findChild(this.props.children, 'thead');
+        var tbody = findChild(this.props.children, 'tbody');
         if (thead) {
             thead = this.highlightHeading(thead);
         }
@@ -31,26 +31,24 @@ module.exports = React.createClass({
         );
     },
 
-    getChild: function(tagName) {
-        var children = React.Children.toArray(this.props.children);
-        return _.find(children, { type: tagName });
-    },
-
     highlightHeading: function(thead) {
         var sortColumn = _.get(this.props.sortColumns, 0);
         var sortDirection = _.get(this.props.sortDirections, 0, 'asc');
-        var children = React.Children.toArray(thead.props.children);
+        var tr = findChild(thead.props.children, 'tr');
+        var children = React.Children.toArray(tr.props.children);
         children = _.map(children, (child) => {
             if (child.props.id === sortColumn) {
-                var className = child.props.className;
+                var className = child.props.className || '';
                 if (className) {
                     className += ' ';
                 }
                 className += sortDirection;
                 child = React.cloneElement(child, { className });
             }
+            return child;
         });
-        thead = React.cloneElement(thead, {}, children);
+        tr = React.cloneElement(tr, {}, children);
+        thead = React.cloneElement(thead, {}, [ tr ]);
         return thead;
     },
 
@@ -64,12 +62,17 @@ module.exports = React.createClass({
                 }
                 var sortColumns = _.slice(this.props.sortColumns);
                 var sortDirections = _.slice(this.props.sortDirections);
-                var index = _.indexOf(sortColumns);
+                var index = _.indexOf(sortColumns, column);
                 if (index !== -1) {
                     sortColumns.splice(index, 1);
                     sortDirections.splice(index, 1);
                 }
-                var dir = (index === 0) ? 'desc' : 'asc';
+                var dir = 'asc';
+                if (index === 0) {
+                    if (this.props.sortDirections[0] === 'asc') {
+                        dir = 'desc';
+                    }
+                }
                 sortColumns.unshift(column);
                 sortDirections.unshift(dir);
                 if (this.props.onSort) {
@@ -85,12 +88,17 @@ module.exports = React.createClass({
     },
 });
 
+function findChild(children, tagName) {
+    children = React.Children.toArray(children);
+    return _.find(children, { type: tagName });
+}
+
 function TH(props) {
     return (
         <th {...props}>
             {props.children}
             <i className="fa fa-chevron-down arrow down"/>
-            <i className="fa fa-chevron-down arrow up"/>
+            <i className="fa fa-chevron-up arrow up"/>
         </th>
     );
 }

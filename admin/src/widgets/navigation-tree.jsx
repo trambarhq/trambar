@@ -12,6 +12,9 @@ var RoleListPage = require('pages/role-list-page');
 var SettingsPage = require('pages/settings-page');
 var UserListPage = require('pages/user-list-page');
 
+// widgets
+var CollapsibleContainer = require('widgets/collapsible-container');
+
 require('./navigation-tree.scss');
 
 module.exports = Relaks.createClass({
@@ -93,16 +96,26 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     renderProjectSection: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var url = this.props.route.url;
         var projectName = p(_.get(this.state.project, 'details.name')) || t('nav-project-name-pending');
         var projectId = _.get(this.state.project, 'id', 0);
         var listUrl = ProjectListPage.getUrl();
         var summaryUrl = ProjectPage.getUrl({ projectId });
+        var openLevel3 = false;
+        var openLevel2 = (openLevel3 || url === summaryUrl);
         return (
             <div className="level1">
                 {this.renderLink(listUrl, t('nav-projects'))}
-                <div className="level2">
-                    {this.renderLink(summaryUrl, projectName)}
-                </div>
+                <CollapsibleContainer open={openLevel2}>
+                    <div className="level2">
+                        {this.renderLink(summaryUrl, projectName)}
+                        <CollapsibleContainer open={openLevel3}>
+                            <div className="level3">
+                                {this.renderLink(summaryUrl, projectName)}
+                            </div>
+                        </CollapsibleContainer>
+                    </div>
+                </CollapsibleContainer>
             </div>
         );
     },

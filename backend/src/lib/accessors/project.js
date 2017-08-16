@@ -65,7 +65,8 @@ module.exports = _.create(Data, {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
-                name: row.type,
+                name: row.name,
+                repo_ids: row.repo_ids,
             };
             return object;
         });
