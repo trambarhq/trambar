@@ -110,6 +110,7 @@ module.exports = _.create(Data, {
                 gn: row.gn,
                 details: row.details,
                 type: row.type,
+                username: row.username,
                 name: row.name,
                 project_ids: row.project_ids,
                 role_ids: row.project_ids,

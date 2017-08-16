@@ -10,8 +10,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var SortableTable = require('widgets/sortable-table');
-var TH = SortableTable.TH;
+var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
 require('./project-list-page.scss');
 
@@ -109,7 +108,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
-            className: 'project',
+            className: 'projects',
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,

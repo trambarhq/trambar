@@ -19,8 +19,12 @@ module.exports = function(languageCode) {
         'sign-in-username': 'User name:',
 
         'table-heading-name': 'Name',
+        'table-heading-personal-name': 'Name',
         'table-heading-repositories': 'Repositories',
         'table-heading-title': 'Title',
         'table-heading-last-modified': 'Last modified',
+        'table-heading-username': 'User name',
+
+        'user-list-title': 'Users',
     };
 };
