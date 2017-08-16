@@ -92,18 +92,18 @@ module.exports = React.createClass({
             <form onSubmit={this.handleFormSubmit}>
                 <div className="input-group">
                     <div className="label-row">
-                        <label for="username">{t('sign-in-username')}</label>
+                        <label htmlFor="username">{t('sign-in-username')}</label>
                     </div>
                     <div className="input-row">
-                        <input type="text" value={this.state.username} onChange={this.handleUsernameChange} />
+                        <input id="username" type="text" value={this.state.username} onChange={this.handleUsernameChange} />
                     </div>
                 </div>
                 <div>
                     <div className="label-row">
-                        <label>{t('sign-in-password')}</label>
+                        <label htmlFor="password">{t('sign-in-password')}</label>
                     </div>
                     <div className="input-row">
-                        <input type="password" value={this.state.password} onChange={this.handlePasswordChange} />
+                        <input id="password" type="password" value={this.state.password} onChange={this.handlePasswordChange} />
                     </div>
                 </div>
                 <div className="button-row">

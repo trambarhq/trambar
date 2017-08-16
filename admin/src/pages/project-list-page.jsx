@@ -7,10 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('./roles-page.scss');
+require('./project-list-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'RolesPage',
+    displayName: 'ProjectListPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -20,24 +20,24 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/roles/', url);
+            var params = Route.match('/projects/', url);
             if (params) {
                 params.navigation = {
-                    section: 'roles'
+                    section: 'projects'
                 }
                 return params;
             }
         },
 
         getUrl: function(params) {
-            return `/roles/`;
+            return `/projects/`;
         },
     },
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
-            roles: null,
+            projects: null,
             currentUser: null,
 
             database: this.props.database,
@@ -45,15 +45,15 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RolesPageSync {...props} />);
-        return db.start().then((roleId) => {
-            return <RolesPageSync {...props} />;
+        meanwhile.show(<ProjectListPageSync {...props} />);
+        return db.start().then((userId) => {
+            return <ProjectListPageSync {...props} />;
         });
     }
 });
 
-var RolesPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RolesPage.Sync',
+var ProjectListPageSync = module.exports.Sync = React.createClass({
+    displayName: 'ProjectListPage.Sync',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -63,7 +63,9 @@ var RolesPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Roles page</div>
+            <div>
+                <h2>Projects page</h2>
+            </div>
         );
     }
 });

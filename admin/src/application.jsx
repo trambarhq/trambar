@@ -18,10 +18,10 @@ var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
 
 // pages
-var ProjectsPage = require('pages/projects-page');
-var RolesPage = require('pages/roles-page');
+var ProjectListPage = require('pages/project-list-page');
+var RoleListPage = require('pages/role-list-page');
 var SettingsPage = require('pages/settings-page');
-var UsersPage = require('pages/users-page');
+var UserListPage = require('pages/user-list-page');
 
 var SignInPage = require('pages/sign-in-page');
 
@@ -29,10 +29,10 @@ var SignInPage = require('pages/sign-in-page');
 var SideNavigation = require('widgets/side-navigation');
 
 var pageClasses = [
-    ProjectsPage,
-    RolesPage,
+    ProjectListPage,
+    RoleListPage,
     SettingsPage,
-    UsersPage,
+    UserListPage,
 ];
 
 require('application.scss');
@@ -320,7 +320,7 @@ module.exports = React.createClass({
     handleRedirectionRequest: function(evt) {
         return Promise.try(() => {
             if (evt.url === '/') {
-                return ProjectsPage.getUrl({});
+                return ProjectListPage.getUrl({});
             } else {
                 throw new HttpError(404);
             }
