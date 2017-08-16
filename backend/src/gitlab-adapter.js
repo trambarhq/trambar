@@ -85,6 +85,9 @@ function handleDatabaseChanges(events) {
                         deleted: false,
                     };
                     return Server.findOne(db, 'global', criteria, '*').then((server) => {
+                        if (!server) {
+                            return;
+                        }
                         if (!server.details.api || !server.details.api.url || !server.details.api.token) {
                             return;
                         }

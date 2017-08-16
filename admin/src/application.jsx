@@ -23,7 +23,7 @@ var RolesPage = require('pages/roles-page');
 var SettingsPage = require('pages/settings-page');
 var UsersPage = require('pages/users-page');
 
-var LoginPage = require('pages/login-page');
+var SignInPage = require('pages/sign-in-page');
 
 // widgets
 var SideNavigation = require('widgets/side-navigation');
@@ -59,7 +59,7 @@ module.exports = React.createClass({
             locale: null,
             theme: null,
 
-            showingLoginPage: false,
+            showingSignInPage: false,
             authenticationDetails: null,
         };
     },
@@ -99,10 +99,11 @@ module.exports = React.createClass({
             locale: this.state.locale,
             theme: this.state.theme,
         };
-        if (this.state.showingLoginPage) {
-            CurrentPage = LoginPage;
+        if (this.state.showingSignInPage) {
+            CurrentPage = SignInPage;
             navProps.disabled = true;
-            pageProps.authenticationDetails = this.state.authenticationDetails;
+            pageProps.server = this.state.authenticationDetails.server;
+            pageProps.onSuccess = this.handleSignInSuccess;
         }
         return (
             <div className="application">
@@ -119,6 +120,8 @@ module.exports = React.createClass({
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             locale: this.state.locale,
+            cacheName: 'trambar-admin',
+            urlPrefix: '/admin',
             onChange: this.handleDatabaseChange,
             onAuthRequest: this.handleDatabaseAuthRequest,
         };
@@ -208,7 +211,7 @@ module.exports = React.createClass({
 
         // retrieve credentials from database
         var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server, area: 'admin' };
+        var criteria = { server };
         db.findOne({ table: 'user_credentials', criteria }).then((credentials) => {
             if (credentials && credentials.token && credentials.user_id) {
                 this.authRequest.resolve(credentials)
@@ -217,7 +220,7 @@ module.exports = React.createClass({
                     credentials = { server };
                 }
                 this.setState({
-                    showingLoginPage: true,
+                    showingSignInPage: true,
                     authenticationDetails: credentials
                 });
             }
@@ -244,12 +247,11 @@ module.exports = React.createClass({
         var db = this.state.database.use({ by: this, schema: 'local' });
         var record = _.extend({
             key: credentials.server,
-            area: 'client'
         }, credentials);
-        db.saveOne({ table: 'user_credentials' }, record);
-
-        // starting rendering the proper page
-        this.setState({ showingLoginPage: false });
+        db.saveOne({ table: 'user_credentials' }, record).then(() => {
+            // starting rendering the proper page
+            this.setState({ showingSignInPage: false });
+        });
     },
 
     /**

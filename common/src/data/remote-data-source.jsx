@@ -20,6 +20,8 @@ module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     propTypes: {
         refreshInterval: PropTypes.number,
+        cacheName: PropTypes.string.isRequired,
+        urlPrefix: PropTypes.string,
         locale: PropTypes.instanceOf(Locale),
         onChange: PropTypes.func,
         onAuthRequest: PropTypes.func,
@@ -33,6 +35,7 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             refreshInterval: 15 * 60,
+            urlPrefix: '',
         };
     },
 
@@ -417,14 +420,20 @@ module.exports = React.createClass({
         });
     },
 
-    discoverRemoteObjects: function(query) {
-        var server = getServerName(query);
+    getBaseUrl: function(location) {
+        var server = getServerName(location);
         var protocol = getProtocol(server);
+        var prefix = this.props.urlPrefix;
+        return `${protocol}://${server}${prefix}`;
+    },
+
+    discoverRemoteObjects: function(query) {
+        var baseUrl = this.getBaseUrl(query);
         var schema = query.schema;
         var table = query.table;
-        var url = `${protocol}://${server}/data/discovery/${schema}/${table}/`;
+        var url = `${baseUrl}/data/discovery/${schema}/${table}/`;
         var payload = _.clone(query.criteria);
-        payload.token = getAuthToken(server);
+        payload.token = getAuthToken(query);
         var options = {
             contentType: 'json',
             responseType: 'json',
@@ -436,13 +445,12 @@ module.exports = React.createClass({
     },
 
     retrieveRemoteObjects: function(location, ids) {
-        var server = getServerName(location);
-        var protocol = getProtocol(server);
+        var baseUrl = this.getBaseUrl(location);
         var schema = location.schema;
         var table = location.table;
-        var url = `${protocol}://${server}/data/retrieval/${schema}/${table}/`;
+        var url = `${baseUrl}/data/retrieval/${schema}/${table}/`;
         var payload = { ids };
-        payload.token = getAuthToken(server);
+        payload.token = getAuthToken(location);
         var options = {
             contentType: 'json',
             responseType: 'json',
@@ -454,13 +462,12 @@ module.exports = React.createClass({
     },
 
     storeRemoteObjects: function(location, objects) {
-        var server = getServerName(location);
-        var protocol = getProtocol(server);
+        var baseUrl = this.getBaseUrl(location);
         var schema = location.schema;
         var table = location.table;
-        var url = `${protocol}://${server}/data/storage/${schema}/${table}/`;
+        var url = `${baseUrl}/data/storage/${schema}/${table}/`;
         var payload = { objects };
-        payload.token = getAuthToken(server);
+        payload.token = getAuthToken(location);
         var options = {
             contentType: 'json',
             responseType: 'json',
@@ -603,7 +610,8 @@ module.exports = React.createClass({
         var setters = this.components.setters;
         if (LocalCache.isAvailable()) {
             var cacheProps = {
-                ref: setters.cache
+                ref: setters.cache,
+                databaseName: this.props.cacheName,
             };
             return <LocalCache {...cacheProps} />;
         }
@@ -766,13 +774,14 @@ function getSearchQuery(search) {
 }
 
 /**
- * Return auth token for server, saved earlier
+ * Return auth token for the location, saved earlier
  *
- * @param  {String} server
+ * @param  {Object} location
  *
  * @return {String|undefined}
  */
-function getAuthToken(server) {
+function getAuthToken(location) {
+    var server = getServerName(location);
     var authCacheEntry = authCache[server];
     if (authCacheEntry) {
         return authCacheEntry.token;

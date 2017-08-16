@@ -63,7 +63,9 @@ var ProjectsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Projects page</div>
+            <div>
+                <h2>Projects page</h2>
+            </div>
         );
     }
 });

@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
@@ -100,8 +101,6 @@ module.exports = _.create(Data, {
         var table = this.getTableName(schema);
         var sql = `
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO auth_role;
-            GRANT SELECT ON ${table} TO admin_role;
-            GRANT SELECT ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
     },

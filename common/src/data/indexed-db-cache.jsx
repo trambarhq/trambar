@@ -6,13 +6,7 @@ var LocalSearch = require('data/local-search');
 module.exports = React.createClass({
     displayName: 'IndexedDBCache',
     propTypes: {
-        databaseName: PropTypes.string,
-    },
-
-    getDefaultProps: function() {
-        return {
-            databaseName: 'trambar'
-        };
+        databaseName: PropTypes.string.isRequired,
     },
 
     statics: {

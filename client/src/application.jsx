@@ -136,6 +136,7 @@ module.exports = React.createClass({
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             locale: this.state.locale,
+            cacheName: 'trambar',
             onChange: this.handleDatabaseChange,
             onAuthRequest: this.handleDatabaseAuthRequest,
             onAlertClick: this.handleAlertClick,
@@ -231,7 +232,7 @@ module.exports = React.createClass({
 
         // retrieve credentials from database
         var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server, area: 'client' };
+        var criteria = { server };
         db.findOne({ table: 'user_credentials', criteria }).then((credentials) => {
             if (credentials && credentials.token && credentials.user_id) {
                 this.authRequest.resolve(credentials)
@@ -268,7 +269,6 @@ module.exports = React.createClass({
         var db = this.state.database.use({ by: this, schema: 'local' });
         var record = _.extend({
             key: credentials.server,
-            area: 'client'
         }, credentials);
         db.saveOne({ table: 'user_credentials' }, record);
 

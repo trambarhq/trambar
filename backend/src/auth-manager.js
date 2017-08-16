@@ -32,7 +32,7 @@ function start() {
     app.use(Passport.initialize());
     app.post('/auth/session', handleAuthenticationStart);
     app.get('/auth/session/:token', handleAuthorizationRetrieval);
-    app.get('/auth/htpasswd', handleHttpasswdRequest);
+    app.post('/auth/htpasswd', handleHttpasswdRequest);
     app.get('/auth/:provider', handleOAuthRequest);
     app.get('/auth/:provider/:callback', handleOAuthRequest, handleOAuthRequestCompletion);
     server = app.listen(80);
@@ -97,7 +97,7 @@ function handleAuthenticationStart(req, res) {
         // process; if successful, this token will be upgraded to
         // an authorization token
         return Crypto.randomBytesAsync(24).then((buffer) => {
-            if (!(area === 'client' || area === 'server')) {
+            if (!(area === 'client' || area === 'admin')) {
                 throw new HttpError(400);
             }
             var authentication = {
@@ -138,28 +138,25 @@ function handleAuthenticationStart(req, res) {
 
 function handleHttpasswdRequest(req, res) {
     var token = req.body.token;
-    var username = req.body.username;
-    var password = req.body.password;
+    var username = _.trim(_.lowerCase(req.body.username));
+    var password = _.trim(req.body.password);
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+        return Authentication.findOne(db, 'global', { token }, '*').then((authentication) => {
             if (!authentication) {
                 throw new HttpError(400);
             }
-        }).then(() => {
             if (!username || !password) {
                 throw new HttpError(400);
             }
             var htpasswdPath = process.env.HTPASSWD_PATH;
-            return FS.readFileAsync(htpasswdPath, (data) => {
-                return HtpasswdAuth.authenticate(username, password);
+            return FS.readFileAsync(htpasswdPath, 'utf-8').then((data) => {
+                return HtpasswdAuth.authenticate(username, password, data);
             }).catch((err) => {
-                console.error(err.message);
                 return false;
             }).then((successful) => {
-                if (!successful) {
-                    return null;
+                if (successful !== true) {
+                    return Promise.delay(Math.random() * 1000).return(null);
                 }
-                console.log('Successful');
                 var criteria = {
                     username,
                     deleted: false,
@@ -180,13 +177,13 @@ function handleHttpasswdRequest(req, res) {
                     }
                     return user;
                 });
-            });
-        }).then((user) => {
-            return authorizeUser(db, user, authentication, 'htpasswd').then((authorization) => {
-                return {
-                    token: authorization.token,
-                    user_id: authorization.user_id,
-                };
+            }).then((user) => {
+                return authorizeUser(db, user, authentication, 'htpasswd').then((authorization) => {
+                    return {
+                        token: authorization.token,
+                        user_id: authorization.user_id,
+                    };
+                });
             });
         });
     }).then((results) => {
@@ -235,9 +232,8 @@ function handleOAuthRequest(req, res, done) {
     var provider = req.params.provider;
     var serverId = parseInt(req.query.sid);
     var token = req.query.token;
-    console.log(serverId, token);
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+        return Authentication.findOne(db, 'global', { token }, '*').then((authentication) => {
             if (!authentication) {
                 throw new HttpError(400);
             }
@@ -295,7 +291,7 @@ function processOAuthProfile(req, accessToken, refreshToken, profile, cb) {
     var serverId = parseInt(req.query.sid);
     var token = req.query.token;
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+        return Authentication.findOne(db, 'global', { token }, '*').then((authentication) => {
             if (!authentication) {
                 throw new HttpError(400);
             }
@@ -306,8 +302,7 @@ function processOAuthProfile(req, accessToken, refreshToken, profile, cb) {
                 server_id: serverId,
                 deleted: false,
             };
-            return User.findOne(db, 'global', criteria, 'id').then((user) => {
-                console.log(user);
+            return User.findOne(db, 'global', criteria, 'id, type').then((user) => {
                 if (!user) {
                     // look for a user that isn't bound to an external account yet
                     var criteria = {
@@ -408,7 +403,7 @@ function getServerName(server) {
 function canProvideAccess(server, area) {
     if (server.details.oauth) {
         if (server.details.oauth.clientID && server.details.oauth.clientSecret) {
-            if (area === 'server') {
+            if (area === 'admin') {
                 switch (server.type) {
                     case 'gitlab':
                         return true;

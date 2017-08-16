@@ -1,0 +1,64 @@
+.sign-in-page {
+    FORM {
+        max-width: 20em;
+
+        .label-row {
+            margin-top: 0.5em;
+        }
+
+        .input-row {
+            margin-top: 0.2em;
+        }
+
+        .button-row {
+            margin-top: 0.4em;
+            text-align: right;
+
+            BUTTON {
+                font-size: 1.2em;
+                font-weight: bold;
+            }
+        }
+
+        INPUT {
+            width: 100%;
+        }
+    }
+
+    .options {
+        max-width: 20em;
+
+        .option {
+            display: block;
+            padding: 1em 1em 1em 1em;
+            margin-bottom: 0.5em;
+            width: 100%;
+            background-color: transparent;
+            border: 1px solid #cccccc;
+            text-align: left;
+            cursor: pointer;
+
+            &:not(:disabled) {
+                &.emphasized, &:hover, &:active {
+                    background-color: #cccccc;
+                }
+
+                &:active {
+                }
+            }
+
+            .fa {
+                width: 1.2em;
+                margin-right: 1em;
+                text-align: center;
+                font-size: 2em;
+                vertical-align: middle;
+            }
+
+            .label {
+                font-size: 1.4em;
+                vertical-align: middle;
+            }
+        }
+    }
+}
