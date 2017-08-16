@@ -10,7 +10,7 @@ var Theme = require('theme/theme');
 require('./project-list-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'ProjectListPage',
+    displayName: 'ProjectPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -20,11 +20,11 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/projects/', url);
+            return Route.match('/projects/:projectId/', url);
         },
 
         getUrl: function(params) {
-            return `/projects/`;
+            return `/projects/${params.projectId}/`;
         },
     },
 
@@ -39,15 +39,15 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectListPageSync {...props} />);
+        meanwhile.show(<ProjectPageSync {...props} />);
         return db.start().then((userId) => {
-            return <ProjectListPageSync {...props} />;
+            return <ProjectPageSync {...props} />;
         });
     }
 });
 
-var ProjectListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectListPage.Sync',
+var ProjectPageSync = module.exports.Sync = React.createClass({
+    displayName: 'ProjectPage.Sync',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -58,7 +58,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         return (
             <div>
-                <h2>Projects page</h2>
+                <h2>Project page</h2>
             </div>
         );
     }

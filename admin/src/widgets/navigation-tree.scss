@@ -1,0 +1,66 @@
+.navigation-tree {
+    position: relative;
+
+    .level1 {
+        font-size: 1.4em;
+        padding-left: 2em;
+        margin-bottom: 0.5em;
+    }
+
+    .level2 {
+        font-size: 0.8em;
+        padding-left: 0.5em;
+    }
+
+    A {
+        &:link, &:visited {
+            color: #ffffff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        &:hover {
+            color: #eeeeff;
+        }
+    }
+
+    .arrow {
+        position: absolute;
+        font-size: 1.2em;
+        left: 16px;
+        transition: top 0.5s, opacity 0.8s;
+        opacity: 1;
+
+        .second, .third {
+            position: absolute;
+            transition: left 0.5s;
+        }
+
+        &.zero {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        &.one {
+            .second, .third {
+                left: 0px;
+            }
+        }
+
+        &.two {
+            .second, .third {
+                left: 0.5em;
+            }
+        }
+
+        &.three {
+            .second {
+                left: 0.5em;
+            }
+
+            .third {
+                left: 1em;
+            }
+        }
+    }
+}

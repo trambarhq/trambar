@@ -5,10 +5,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var ProjectsPage = require('pages/projects-page');
-var UsersPage = require('pages/users-page');
-var RolesPage = require('pages/roles-page');
-var SettingsPage = require('pages/settings-page');
+var NavigationTree = require('widgets/navigation-tree');
 
 require('./side-navigation.scss');
 
@@ -42,11 +39,28 @@ module.exports = React.createClass({
     render: function() {
         return (
             <nav className="side-navigation">
-                <header onClick={this.handleHeaderClick}>
-                    {this.renderLogo()}
-                    {this.renderAppName()}
-                </header>
+                {this.renderHeader()}
+                {this.renderNavTree()}
             </nav>
+        );
+    },
+
+    renderNavTree: function() {
+        var navProps = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <NavigationTree {...navProps} />;
+    },
+
+    renderHeader: function() {
+        return (
+            <header onClick={this.handleHeaderClick}>
+                {this.renderLogo()}
+                {this.renderAppName()}
+            </header>
         );
     },
 

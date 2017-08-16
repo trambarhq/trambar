@@ -20,13 +20,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/users/', url);
-            if (params) {
-                params.navigation = {
-                    section: 'users'
-                }
-                return params;
-            }
+            return Route.match('/users/', url);
         },
 
         getUrl: function(params) {
@@ -63,7 +57,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Users page</div>
+            <div>
+                <h2>Users page</h2>
+            </div>
         );
     }
 });

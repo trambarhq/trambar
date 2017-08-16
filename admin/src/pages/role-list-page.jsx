@@ -20,13 +20,7 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/roles/', url);
-            if (params) {
-                params.navigation = {
-                    section: 'roles'
-                }
-                return params;
-            }
+            return Route.match('/roles/', url);
         },
 
         getUrl: function(params) {
@@ -63,7 +57,9 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>Roles page</div>
+            <div>
+                <h2>Roles page</h2>
+            </div>
         );
     }
 });
