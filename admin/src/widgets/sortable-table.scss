@@ -1,0 +1,24 @@
+.sortable-table {
+    TH {
+        .arrow {
+            display: none;
+            float: right;
+        }
+    }
+
+    TH.asc {
+        .arrow {
+            &.down {
+                display: inline;
+            }
+        }
+    }
+
+    TH.desc {
+        .arrow {
+            &.up {
+                display: inline;
+            }
+        }
+    }
+}
