@@ -1,10 +1,10 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
-require('./popup.scss');
+require('./tooltip.scss');
 
 module.exports = React.createClass({
-    displayName: 'Popup',
+    displayName: 'Tooltip',
 
     getInitialState: function() {
         return {
@@ -14,7 +14,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <span ref="container" className="popup">
+            <span ref="container" className="tooltip">
                 {this.renderLabel()}
                 {this.renderWindow()}
             </span>

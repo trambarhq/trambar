@@ -14,6 +14,9 @@ var ProjectPage = require('pages/project-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var Tooltip = require('widgets/tooltip');
+var RepositoryTooltip = require('widgets/repository-tooltip');
+var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./project-list-page.scss');
 
@@ -123,9 +126,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="title">{t('table-heading-name')}</TH>
-                        <TH id="name">{t('table-heading-identifier')}</TH>
-                        <TH id="mtime">{t('table-heading-last-modified')}</TH>
+                        {this.renderTitleColumn()}
+                        {this.renderRepositoriesColumn()}
+                        {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
                 <tbody>
@@ -136,23 +139,57 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     renderRow: function(project, i) {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var name = project.name;
-        var title = p(project.details.title) || 'no title';
-        var mtime = Moment(project.mtime).fromNow();
-        var url = ProjectPage.getUrl({ projectId: project.id });
         return (
             <tr key={i}>
+                {this.renderTitleColumn(project)}
+                {this.renderRepositoriesColumn(project)}
+                {this.renderModifiedTimeColumn(project)}
+            </tr>
+        );
+    },
+
+    renderTitleColumn: function(project) {
+        var t = this.props.locale.translate;
+        var title = p(project.details.title);
+        if (title) {
+            title = t('project-list-$title-with-$name', title, project.name);
+        } else {
+            title = _.capitalize(project.name);
+        }
+        var url = ProjectPage.getUrl({ projectId: project.id });
+        if (project) {
+            return (
                 <td>
                     <a href={url} onClick={this.handleLinkClick}>
                         {title}
                     </a>
                 </td>
-                <td>{name}</td>
-                <td>{mtime}</td>
-            </tr>
-        );
+            );
+        } else {
+            return <TH id="title">{t('table-heading-name')}</TH>;
+        }
+    },
+
+    renderRepositoriesColumn: function(project) {
+        var t = this.props.locale.translate;
+        if (project) {
+            var props = {
+                repos: findRepos(this.props.repos, project),
+                project,
+                locale: this.props.locale,
+            };
+            return <td><RepositoryTooltip {...props} /></td>;
+        } else {
+            return <TH id="repo">{t('table-heading-repositories')}</TH>
+        }
+    },
+
+    renderModifiedTimeColumn: function(project) {
+        if (project) {
+            return <ModifiedTimeTooltip time={project.mtime} />
+        } else {
+            return <TH id="mtime">{t('table-heading-mtime')}</TH>
+        }
     },
 
     handleSort: function(evt) {
@@ -181,4 +218,8 @@ var sortProjects = Memoize(function(projects, users, locale, columns, directions
         }
     });
     return _.orderBy(projects, columns, directions);
+});
+
+var findRepos = Memoize(function(repos, project) {
+
 });
