@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var RolePage = require('pages/role-page');
 
 // widgets
+var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
 require('./role-list-page.scss');
@@ -102,6 +103,9 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="role-list-page">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('role-list-new')}
+                </PushButton>
                 <h2>{t('role-list-title')}</h2>
                 {this.renderTable()}
             </div>

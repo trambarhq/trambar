@@ -12,6 +12,7 @@ var Theme = require('theme/theme');
 var UserPage = require('pages/user-page');
 
 // widgets
+var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
 require('./user-list-page.scss');
@@ -90,6 +91,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="user-list-page">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('user-list-new')}
+                </PushButton>
                 <h2>{t('user-list-title')}</h2>
                 {this.renderTable()}
             </div>
@@ -157,7 +161,7 @@ var sortUsers = Memoize(function(users, projects, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
-                return 'details.last_name';
+                return 'details.name';
             default:
                 return column;
         }

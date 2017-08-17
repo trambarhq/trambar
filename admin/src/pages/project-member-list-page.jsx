@@ -12,6 +12,7 @@ var Theme = require('theme/theme');
 var UserPage = require('pages/user-page');
 
 // widgets
+var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
 require('./project-member-list-page.scss');
@@ -93,7 +94,13 @@ var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <div>
+            <div className="project-member-list-page">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('project-member-list-new')}
+                </PushButton>
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('project-member-list-edit')}
+                </PushButton>
                 <h2>{t('project-member-list-title')}</h2>
                 {this.renderTable()}
             </div>
@@ -127,10 +134,11 @@ var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
 
     renderRow: function(user, i) {
         var p = this.props.locale.pick;
+        var projectId = this.props.route.parameters.projectId;
         var name = user.details.name;
         var username = user.username;
         var mtime = Moment(user.mtime).fromNow();
-        var url = UserPage.getUrl({ userId: user.id });
+        var url = UserPage.getUrl({ projectId: projectId, userId: user.id });
         return (
             <tr key={i}>
                 <td>

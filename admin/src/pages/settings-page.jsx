@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var PushButton = require('widgets/push-button');
+
 require('./settings-page.scss');
 
 module.exports = Relaks.createClass({
@@ -56,9 +59,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        var t = this.props.locale.translate;
         return (
-            <div>
-                <h2>Settings page</h2>
+            <div className="settings-page">
+                <PushButton className="edit" onClick={this.handleEditClick}>
+                    {t('settings-edit')}
+                </PushButton>
+                <h2>{t('settings-title')}</h2>
             </div>
         );
     }

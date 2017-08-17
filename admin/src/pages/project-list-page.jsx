@@ -12,6 +12,7 @@ var Theme = require('theme/theme');
 var ProjectPage = require('pages/project-page');
 
 // widgets
+var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
 require('./project-list-page.scss');
@@ -101,6 +102,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="project-list-page">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('project-list-new')}
+                </PushButton>
                 <h2>{t('project-list-title')}</h2>
                 {this.renderTable()}
             </div>

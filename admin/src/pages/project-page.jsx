@@ -7,7 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('./project-list-page.scss');
+// widgets
+var PushButton = require('widgets/push-button');
+
+require('./project-page.scss');
 
 module.exports = Relaks.createClass({
     displayName: 'ProjectPage',
@@ -29,10 +32,9 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
-            projects: null,
-            currentUser: null,
+            project: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -41,6 +43,12 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<ProjectPageSync {...props} />);
         return db.start().then((userId) => {
+            var criteria = {
+                id: this.props.route.parameters.projectId
+            };
+            return db.findOne({ table: 'project', criteria });
+        }).then((project) => {
+            props.project = project;
             return <ProjectPageSync {...props} />;
         });
     }
@@ -56,10 +64,16 @@ var ProjectPageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var title = p(_.get(this.props.project, 'details.title'));
         return (
-            <div className="project-page">
-                <h2>Project page</h2>
+            <div className="project-summary-page">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('project-summary-edit')}
+                </PushButton>
+                <h2>{t('project-summary-$title', title)}</h2>
             </div>
         );
-    }
+    },
 });

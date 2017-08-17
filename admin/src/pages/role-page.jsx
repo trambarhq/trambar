@@ -7,6 +7,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var PushButton = require('widgets/push-button');
+
 require('./role-page.scss');
 
 module.exports = Relaks.createClass({
@@ -55,9 +58,15 @@ var RolePageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var title = p(_.get(this.props.role, 'details.title'));
         return (
-            <div>
-                <h2>Role page</h2>
+            <div className="role-summary-page">
+                <PushButton className="edit" onClick={this.handleEditClick}>
+                    {t('role-summary-edit')}
+                </PushButton>
+                <h2>{t('role-summary-$title', title)}</h2>
             </div>
         );
     }

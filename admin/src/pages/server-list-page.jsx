@@ -12,6 +12,7 @@ var Theme = require('theme/theme');
 var ServerPage = require('pages/server-page');
 
 // widgets
+var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
 require('./server-list-page.scss');
@@ -80,7 +81,10 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <div>
+            <div className="server-list-page">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('server-list-new')}
+                </PushButton>
                 <h2>{t('server-list-title')}</h2>
                 {this.renderTable()}
             </div>

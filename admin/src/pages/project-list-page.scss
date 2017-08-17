@@ -1,11 +1,15 @@
 .project-list-page {
+    .push-button {
+        float: right;
+    }
+
     .sortable-table {
         #mtime {
-            max-width: 12em;
+            width: 12em;
         }
 
         #name {
-            max-width: 12em;
+            width: 12em;
         }
     }
 }
