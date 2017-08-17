@@ -134,6 +134,10 @@ module.exports = React.createClass({
             locale: this.state.locale,
             cacheName: 'trambar-admin',
             urlPrefix: '/admin',
+            retrievalFlags: {
+                include_ctime: true,
+                include_mtime: true,
+            },
             onChange: this.handleDatabaseChange,
             onAuthRequest: this.handleDatabaseAuthRequest,
         };

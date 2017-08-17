@@ -22,6 +22,7 @@ module.exports = React.createClass({
         refreshInterval: PropTypes.number,
         cacheName: PropTypes.string.isRequired,
         urlPrefix: PropTypes.string,
+        retrievalFlags: PropTypes.object,
         locale: PropTypes.instanceOf(Locale),
         onChange: PropTypes.func,
         onAuthRequest: PropTypes.func,
@@ -451,6 +452,9 @@ module.exports = React.createClass({
         var url = `${baseUrl}/data/retrieval/${schema}/${table}/`;
         var payload = { ids };
         payload.token = getAuthToken(location);
+        if (this.props.retrievalFlags) {
+            _.assign(payload, this.props.retrievalFlags);
+        }
         var options = {
             contentType: 'json',
             responseType: 'json',

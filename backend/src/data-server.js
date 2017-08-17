@@ -178,9 +178,8 @@ function handleRetrieval(req, res) {
                 throw new HttpError(400);
             }
 
-            // the admin site sometimes will need the full object
-            // objects thus retrieved shouldn't be cached
-            if (area === 'admin' && params.raw) {
+            // indicate that the user has admin access
+            if (area === 'admin') {
                 credentials.unrestricted = true;
             }
 
@@ -189,7 +188,27 @@ function handleRetrieval(req, res) {
             return accessor.find(db, schema, { id: ids }, '*').then((rows) => {
                 // export the row, checking if user has access to objects and
                 // trimming out sensitive data
-                return accessor.export(db, schema, rows, credentials);
+                return accessor.export(db, schema, rows, credentials).then((objects) => {
+                    // add ctime and/or mtime if the client wants them
+                    if (params.include_ctime || params.include_mtime) {
+                        _.each(objects, (object, index) => {
+                            var row = rows[index];
+                            if (!row || row.id !== object.id) {
+                                // look for the row if the two arrays don't line up
+                                row = _.find(rows, { id: object.id });
+                            }
+                            if (row) {
+                                if (params.include_ctime) {
+                                    object.ctime = row.ctime;
+                                }
+                                if (params.include_mtime) {
+                                    object.mtime = row.mtime;
+                                }
+                            }
+                        });
+                    }
+                    return objects;
+                });
             });
         }).finally(() => {
             return db.close();

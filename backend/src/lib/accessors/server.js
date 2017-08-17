@@ -75,20 +75,16 @@ module.exports = _.create(Data, {
      */
     export: function(db, schema, rows, credentials) {
         return Promise.map(rows, (row) => {
-            if (credentials.unrestricted) {
-                return row;
-            } else {
-                var object = {
-                    id: row.id,
-                    gn: row.gn,
-                    details: _.pick(row.details, [
-                        'name',
-                        'description',
-                    ]),
-                    type: row.type,
-                };
-                return object;
-            }
+            var object = {
+                id: row.id,
+                gn: row.gn,
+                details: _.pick(row.details, [
+                    'name',
+                    'description',
+                ]),
+                type: row.type,
+            };
+            return object;
         });
     }
 });
