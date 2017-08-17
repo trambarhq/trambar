@@ -24,7 +24,7 @@ module.exports = React.createClass({
     renderLabel: function() {
         var inline = this.findElement('inline');
         return (
-            <span onClick={this.handleLabelClick}>
+            <span className="label" onClick={this.handleLabelClick}>
                 {inline.props.children}
             </span>
         );
