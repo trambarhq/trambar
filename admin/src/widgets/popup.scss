@@ -1,0 +1,10 @@
+.popup {
+    position: relative;
+
+    .window {
+        position: absolute;
+        top: 1em;
+        left: 1em;
+        max-width: 50vw;
+    }
+}
