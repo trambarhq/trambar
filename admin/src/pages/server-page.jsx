@@ -7,10 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('./project-list-page.scss');
+require('./server-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'ProjectPage',
+    displayName: 'ServerPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -20,35 +20,36 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/projects/:projectId/', url);
+            return Route.match('/servers/:serverId/', url);
         },
 
         getUrl: function(params) {
-            return `/projects/${params.projectId}/`;
+            return `/servers/${params.serverId}/`;
         },
     },
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
-            projects: null,
-            currentUser: null,
+            server: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectPageSync {...props} />);
-        return db.start().then((userId) => {
-            return <ProjectPageSync {...props} />;
+        meanwhile.show(<ServerPageSync {...props} />);
+        return db.start().then((serverId) => {
+            return <ServerPageSync {...props} />;
         });
     }
 });
 
-var ProjectPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectPage.Sync',
+var ServerPageSync = module.exports.Sync = React.createClass({
+    displayName: 'ServerPage.Sync',
     propTypes: {
+        server: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -57,8 +58,8 @@ var ProjectPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div className="project-page">
-                <h2>Project page</h2>
+            <div>
+                <h2>Server page</h2>
             </div>
         );
     }

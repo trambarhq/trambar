@@ -7,10 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('./project-list-page.scss');
+require('./role-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'ProjectPage',
+    displayName: 'RolePage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -20,11 +20,11 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/projects/:projectId/', url);
+            return Route.match('/roles/:roleId/', url);
         },
 
         getUrl: function(params) {
-            return `/projects/${params.projectId}/`;
+            return `/roles/${params.roleId}/`;
         },
     },
 
@@ -32,22 +32,21 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
             projects: null,
-            currentUser: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectPageSync {...props} />);
-        return db.start().then((userId) => {
-            return <ProjectPageSync {...props} />;
+        meanwhile.show(<RolePageSync {...props} />);
+        return db.start().then((roleId) => {
+            return <RolePageSync {...props} />;
         });
     }
 });
 
-var ProjectPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectPage.Sync',
+var RolePageSync = module.exports.Sync = React.createClass({
+    displayName: 'RolePage.Sync',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -57,8 +56,8 @@ var ProjectPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div className="project-page">
-                <h2>Project page</h2>
+            <div>
+                <h2>Role page</h2>
             </div>
         );
     }

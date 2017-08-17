@@ -9,6 +9,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var UserPage = require('pages/user-page');
+
 // widgets
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
@@ -87,7 +89,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <div>
+            <div className="user-list-page">
                 <h2>{t('user-list-title')}</h2>
                 {this.renderTable()}
             </div>
@@ -97,7 +99,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
-            className: 'users',
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
@@ -124,9 +125,14 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         var name = user.details.name;
         var username = user.username;
         var mtime = Moment(user.mtime).fromNow();
+        var url = UserPage.getUrl({ userId: user.id });
         return (
             <tr key={i}>
-                <td>{name}</td>
+                <td>
+                    <a href={url} onClick={this.handleLinkClick}>
+                        {name}
+                    </a>
+                </td>
                 <td>{username}</td>
                 <td>{mtime}</td>
             </tr>
@@ -138,21 +144,20 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    }
+    },
+
+    handleLinkClick: function(evt) {
+        var url = evt.target.getAttribute('href');
+        this.props.route.change(url);
+        evt.preventDefault();
+    },
 });
 
 var sortUsers = Memoize(function(users, projects, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
-                return (user) => {
-                    if (user.details.last_name) {
-                        return user.details.last_name;
-                    } else {
-                        var names = _.split(user.details.name);
-                        return _.last(names);
-                    }
-                };
+                return 'details.last_name';
             default:
                 return column;
         }

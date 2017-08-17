@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
@@ -8,15 +9,15 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var RolePage = require('pages/role-page');
+var ServerPage = require('pages/server-page');
 
 // widgets
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
-require('./role-list-page.scss');
+require('./server-list-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'RolesPage',
+    displayName: 'ServerListPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -26,64 +27,42 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/roles/', url);
+            return Route.match('/servers/', url);
         },
 
         getUrl: function(params) {
-            return `/roles/`;
+            return `/servers/`;
         },
     },
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
-            roles: null,
-            currentUser: null,
+            servers: null,
+            projects: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RoleListPageSync {...props} />);
-        return db.start().then((roleId) => {
-            return <RoleListPageSync {...props} />;
-        });
-
-        var db = this.props.database.use({ server: '~', by: this });
-        var props = {
-            roles: null,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        meanwhile.show(<RoleListPageSync {...props} />);
+        meanwhile.show(<ServerListPageSync {...props} />);
         return db.start().then((userId) => {
-            // load all roles
+            // load all servers
             var criteria = {};
-            return db.find({ schema: 'global', table: 'role', criteria });
-        }).then((roles) => {
-            props.roles = roles;
-            meanwhile.show(<RoleListPageSync {...props} />);
-        }).then(() => {
-            var criteria = {
-                role_ids: _.flatten(_.map(props.roles, 'id')),
-            };
-        }).then((users) => {
-            props.users = users;
-            return <RoleListPageSync {...props} />;
+            return db.find({ schema: 'global', table: 'server', criteria });
+        }).then((servers) => {
+            props.servers = servers;
+            return <ServerListPageSync {...props} />;
         });
-
     }
 });
 
-var RoleListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RoleListPage.Sync',
+var ServerListPageSync = module.exports.Sync = React.createClass({
+    displayName: 'ServerListPage.Sync',
     propTypes: {
-        roles: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
+        servers: PropTypes.arrayOf(PropTypes.object),
+        projects: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -101,8 +80,8 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <div className="role-list-page">
-                <h2>{t('role-list-title')}</h2>
+            <div>
+                <h2>{t('server-list-title')}</h2>
                 {this.renderTable()}
             </div>
         );
@@ -111,39 +90,42 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
+            className: 'servers',
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var roles = sortRoles(this.props.roles, this.props.users, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        var servers = sortServers(this.props.servers, this.props.projects, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="title">{t('table-heading-name')}</TH>
+                        <TH id="name">{t('table-heading-name')}</TH>
+                        <TH id="type">{t('table-heading-type')}</TH>
                         <TH id="mtime">{t('table-heading-last-modified')}</TH>
                     </tr>
                 </thead>
                 <tbody>
-                    {_.map(roles, this.renderRow)}
+                    {_.map(servers, this.renderRow)}
                 </tbody>
             </SortableTable>
         );
     },
 
-    renderRow: function(role, i) {
-        var t = this.props.locale.translate;
+    renderRow: function(server, i) {
         var p = this.props.locale.pick;
-        var title = p(role.details.title) || 'no title';
-        var mtime = Moment(role.mtime).fromNow();
-        var url = RolePage.getUrl({ roleId: role.id });
+        var name = server.details.name;
+        var type = server.type;
+        var mtime = Moment(server.mtime).fromNow();
+        var url = ServerPage.getUrl({ serverId: server.id });
         return (
             <tr key={i}>
                 <td>
                     <a href={url} onClick={this.handleLinkClick}>
-                        {title}
+                        {name}
                     </a>
                 </td>
+                <td>{type}</td>
                 <td>{mtime}</td>
             </tr>
         );
@@ -163,16 +145,14 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
     },
 });
 
-var sortRoles = Memoize(function(roles, users, locale, columns, directions) {
+var sortServers = Memoize(function(servers, projects, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
-            case 'title':
-                return (role) => {
-                    return locale.pick(role.details.title)
-                };
+            case 'name':
+                return 'details.last_name';
             default:
                 return column;
         }
     });
-    return _.orderBy(roles, columns, directions);
+    return _.orderBy(servers, columns, directions);
 });

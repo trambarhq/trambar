@@ -1,9 +1,14 @@
 .sortable-table {
     width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 
     TH {
         text-align: left;
         cursor: pointer;
+        border-bottom: 1px solid #000000;
+        border-top: 1px solid #000000;
+        padding: 0.2em 0.4em 0.1em 0.4em;
 
         .arrow {
             display: none;
@@ -24,6 +29,17 @@
             &.up {
                 display: inline;
             }
+        }
+    }
+
+    TD {
+        padding: 0.3em 0.4em 0.2em 0.4em;
+        word-wrap: break-word;
+    }
+
+    TBODY {
+        TR:nth-child(even) {
+            background-color: #eeeeee;
         }
     }
 }

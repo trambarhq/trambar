@@ -21,8 +21,12 @@ var Theme = require('theme/theme');
 var ProjectListPage = require('pages/project-list-page');
 var ProjectPage = require('pages/project-page');
 var RoleListPage = require('pages/role-list-page');
+var RolePage = require('pages/role-page');
+var ServerListPage = require('pages/server-list-page');
+var ServerPage = require('pages/server-page');
 var SettingsPage = require('pages/settings-page');
 var UserListPage = require('pages/user-list-page');
+var UserPage = require('pages/user-page');
 
 var SignInPage = require('pages/sign-in-page');
 
@@ -33,8 +37,12 @@ var pageClasses = [
     ProjectListPage,
     ProjectPage,
     RoleListPage,
+    RolePage,
+    ServerListPage,
+    ServerPage,
     SettingsPage,
     UserListPage,
+    UserPage,
 ];
 
 require('application.scss');

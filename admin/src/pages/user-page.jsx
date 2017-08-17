@@ -7,10 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('./project-list-page.scss');
+require('./user-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'ProjectPage',
+    displayName: 'UserPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -20,35 +20,36 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/projects/:projectId/', url);
+            return Route.match('/users/:userId/', url);
         },
 
         getUrl: function(params) {
-            return `/projects/${params.projectId}/`;
+            return `/users/${params.userId}/`;
         },
     },
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
-            projects: null,
-            currentUser: null,
+            user: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectPageSync {...props} />);
+        meanwhile.show(<UserPageSync {...props} />);
         return db.start().then((userId) => {
-            return <ProjectPageSync {...props} />;
+            return <UserPageSync {...props} />;
         });
     }
 });
 
-var ProjectPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectPage.Sync',
+var UserPageSync = module.exports.Sync = React.createClass({
+    displayName: 'UserPage.Sync',
     propTypes: {
+        user: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -57,8 +58,8 @@ var ProjectPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div className="project-page">
-                <h2>Project page</h2>
+            <div>
+                <h2>User page</h2>
             </div>
         );
     }

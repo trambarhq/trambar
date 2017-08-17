@@ -10,6 +10,14 @@
     .level2 {
         font-size: 0.8em;
         padding-left: 0.5em;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    .level3 {
+        padding-left: 0.5em;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
 
     A {
@@ -24,17 +32,35 @@
         }
     }
 
+    .collapsible-container {
+        transition: height .25s;
+    }
+
     .arrow {
         position: absolute;
         font-size: 1.2em;
         left: 16px;
-        transition: top 0.5s, opacity 0.8s;
         opacity: 1;
+        transition: top 0.5s, opacity 0.8s;
 
         .second, .third {
             position: absolute;
-            transition: left 0.5s;
+            transition: left 0.3s;
         }
+
+        &.extending {
+            // delay extension animation until movement is nearly complete
+            .second, .third {
+                position: absolute;
+                transition: left 0.3s linear 0.3s;
+            }
+        }
+
+        &.retracting {
+            // delay movement of arrow until retraction is nearly complete
+            transition: top 0.5s linear 0.2s, opacity 0.8s linear 0.2s;
+        }
+
 
         &.zero {
             visibility: hidden;

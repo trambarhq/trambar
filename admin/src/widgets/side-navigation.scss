@@ -1,10 +1,11 @@
 .side-navigation {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     position: relative;
     color: #fff;
     background-color: #006699;
     overflow: auto;
     min-width: 15em;
+    max-width: 20em;
 
     HEADER {
         cursor: pointer;

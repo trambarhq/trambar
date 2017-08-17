@@ -9,6 +9,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var ProjectPage = require('pages/project-page');
+
 // widgets
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
@@ -98,7 +100,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <div>
+            <div className="project-list-page">
                 <h2>{t('project-list-title')}</h2>
                 {this.renderTable()}
             </div>
@@ -108,7 +110,6 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
-            className: 'projects',
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
@@ -118,8 +119,8 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="title">{t('table-heading-title')}</TH>
-                        <TH id="name">{t('table-heading-name')}</TH>
+                        <TH id="title">{t('table-heading-name')}</TH>
+                        <TH id="name">{t('table-heading-identifier')}</TH>
                         <TH id="mtime">{t('table-heading-last-modified')}</TH>
                     </tr>
                 </thead>
@@ -131,13 +132,19 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     renderRow: function(project, i) {
+        var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var name = project.name;
-        var title = p(project.details.title);
+        var title = p(project.details.title) || 'no title';
         var mtime = Moment(project.mtime).fromNow();
+        var url = ProjectPage.getUrl({ projectId: project.id });
         return (
             <tr key={i}>
-                <td>{title}</td>
+                <td>
+                    <a href={url} onClick={this.handleLinkClick}>
+                        {title}
+                    </a>
+                </td>
                 <td>{name}</td>
                 <td>{mtime}</td>
             </tr>
@@ -149,7 +156,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    }
+    },
+
+    handleLinkClick: function(evt) {
+        var url = evt.target.getAttribute('href');
+        this.props.route.change(url);
+        evt.preventDefault();
+    },
 });
 
 var sortProjects = Memoize(function(projects, users, locale, columns, directions) {
