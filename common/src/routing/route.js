@@ -80,13 +80,14 @@ Route.match = function(route, url) {
         names.push(name);
         return '([^\\/]*)';
     });
-    var regExp = new RegExp(pattern);
+    var regExp = new RegExp('^' + pattern);
     var m = regExp.exec(url);
     if (m) {
         var params = {};
         _.each(names, (name, index) => {
             params[name.substr(1)] = m[index + 1];
         });
+        params.url = m[0];
         return params;
     }
 };

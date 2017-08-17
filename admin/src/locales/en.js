@@ -14,6 +14,7 @@ module.exports = function(languageCode) {
         'nav-users': 'Users',
 
         'project-list-title': 'Projects',
+        'project-member-list-title': 'Members',
 
         'role-list-title': 'Roles',
 

@@ -20,6 +20,7 @@ var Theme = require('theme/theme');
 // pages
 var ProjectListPage = require('pages/project-list-page');
 var ProjectPage = require('pages/project-page');
+var ProjectMemberListPage = require('pages/project-member-list-page');
 var RoleListPage = require('pages/role-list-page');
 var RolePage = require('pages/role-page');
 var ServerListPage = require('pages/server-list-page');
@@ -36,6 +37,7 @@ var SideNavigation = require('widgets/side-navigation');
 var pageClasses = [
     ProjectListPage,
     ProjectPage,
+    ProjectMemberListPage,
     RoleListPage,
     RolePage,
     ServerListPage,

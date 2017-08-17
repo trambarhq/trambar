@@ -75,7 +75,7 @@ var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
     displayName: 'ProjectMemberListPage.Sync',
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -94,7 +94,7 @@ var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div>
-                <h2>{t('user-list-title')}</h2>
+                <h2>{t('project-member-list-title')}</h2>
                 {this.renderTable()}
             </div>
         );

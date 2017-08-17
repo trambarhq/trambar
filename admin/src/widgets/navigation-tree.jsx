@@ -24,7 +24,7 @@ var CollapsibleContainer = require('widgets/collapsible-container');
 require('./navigation-tree.scss');
 
 module.exports = Relaks.createClass({
-    moduleName: 'NavigationTree',
+    displayName: 'NavigationTree',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -76,7 +76,7 @@ module.exports = Relaks.createClass({
 });
 
 var NavigationTreeSync = module.exports.Sync = React.createClass({
-    moduleName: 'NavigationTree.Sync',
+    displayName: 'NavigationTree.Sync',
     propTypes: {
         project: PropTypes.object,
         user: PropTypes.object,
@@ -152,7 +152,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var url = this.props.route.url;
-        var projectName = p(_.get(this.state.project, 'details.name')) || t('nav-project-name-pending');
+        var projectName = p(_.get(this.state.project, 'details.title')) || t('nav-project-name-pending');
         var projectId = _.get(this.state.project, 'id', 0);
         var listUrl = ProjectListPage.getUrl();
         var summaryUrl = ProjectPage.getUrl({ projectId });

@@ -97,9 +97,7 @@ module.exports = React.createClass({
             }
         });
         // pick the one with the most parameters
-        routes = _.sortBy(routes, (route) => {
-            return _.size(route.parameters);
-        });
+        routes = _.sortBy(routes, 'route.parameters.url.length');
         var route = _.last(routes) || null;
         return route;
     },
