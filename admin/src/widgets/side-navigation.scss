@@ -11,16 +11,29 @@
         cursor: pointer;
         overflow: hidden;
         margin-bottom: 1em;
+    }
 
-        .logo {
-            float: left;
-            margin: 10px 16px 8px 16px;
-            width: 32px;
-            height: 40px;
-        }
+    .logo {
+        float: left;
+        margin: 10px 16px 8px 16px;
+        width: 32px;
+        height: 40px;
+    }
 
-        H2 {
-            text-transform: uppercase;
+    .app-name {
+        text-transform: uppercase;
+        opacity: 1;
+        transition: opacity 1s ease-out 0.6s;
+    }
+
+    .navigation-tree {
+        opacity: 1;
+        transition: opacity 1s ease-out 1s;
+    }
+
+    &.hidden {
+        .app-name, .navigation-tree {
+            opacity: 0;
         }
     }
 }

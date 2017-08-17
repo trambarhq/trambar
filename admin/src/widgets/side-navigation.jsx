@@ -32,13 +32,28 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            ready: false
+        };
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render: function() {
+        var className = 'side-navigation';
+        if (!this.state.ready) {
+            className += ' hidden';
+        }
         return (
-            <nav className="side-navigation">
+            <nav className={className}>
                 {this.renderHeader()}
                 {this.renderNavTree()}
             </nav>
@@ -67,7 +82,7 @@ module.exports = React.createClass({
     renderAppName: function() {
         var t = this.props.locale.translate;
         return (
-            <h2>{t('app-name')}</h2>
+            <h2 className="app-name">{t('app-name')}</h2>
         );
     },
 
@@ -104,6 +119,12 @@ module.exports = React.createClass({
               </g>
             </svg>
         );
+    },
+
+    componentDidMount: function() {
+        setTimeout(() => {
+            this.setState({ ready: true });
+        }, 100);
     },
 
     handleHeaderClick: function() {
