@@ -9,16 +9,16 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var UserPage = require('pages/user-page');
+var UserSummaryPage = require('pages/user-summary-page');
 
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 
-require('./project-member-list-page.scss');
+require('./member-list-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'ProjectMemberListPage',
+    displayName: 'MemberListPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -47,7 +47,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectMemberListPageSync {...props} />);
+        meanwhile.show(<MemberListPageSync {...props} />);
         return db.start().then((userId) => {
             // load project
             var criteria = {
@@ -64,16 +64,16 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.users = users;
-            meanwhile.show(<ProjectMemberListPageSync {...props} />);
+            meanwhile.show(<MemberListPageSync {...props} />);
         }).then((projects) => {
             props.projects = projects;
-            return <ProjectMemberListPageSync {...props} />;
+            return <MemberListPageSync {...props} />;
         });
     }
 });
 
-var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectMemberListPage.Sync',
+var MemberListPageSync = module.exports.Sync = React.createClass({
+    displayName: 'MemberListPage.Sync',
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
@@ -94,14 +94,14 @@ var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <div className="project-member-list-page">
+            <div className="member-list-page">
                 <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('project-member-list-new')}
+                    {t('member-list-new')}
                 </PushButton>
                 <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('project-member-list-edit')}
+                    {t('member-list-edit')}
                 </PushButton>
-                <h2>{t('project-member-list-title')}</h2>
+                <h2>{t('member-list-title')}</h2>
                 {this.renderTable()}
             </div>
         );
@@ -138,7 +138,7 @@ var ProjectMemberListPageSync = module.exports.Sync = React.createClass({
         var name = user.details.name;
         var username = user.username;
         var mtime = Moment(user.mtime).fromNow();
-        var url = UserPage.getUrl({ projectId: projectId, userId: user.id });
+        var url = UserSummaryPage.getUrl({ projectId: projectId, userId: user.id });
         return (
             <tr key={i}>
                 <td>
@@ -170,7 +170,7 @@ var sortUsers = Memoize(function(users, projects, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
-                return 'details.last_name';
+                return 'details.name';
             default:
                 return column;
         }

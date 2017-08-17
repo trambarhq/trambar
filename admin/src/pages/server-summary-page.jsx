@@ -7,10 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-require('./server-page.scss');
+require('./server-summary-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'ServerPage',
+    displayName: 'ServerSummaryPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -38,15 +38,15 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ServerPageSync {...props} />);
+        meanwhile.show(<ServerSummaryPageSync {...props} />);
         return db.start().then((serverId) => {
-            return <ServerPageSync {...props} />;
+            return <ServerSummaryPageSync {...props} />;
         });
     }
 });
 
-var ServerPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ServerPage.Sync',
+var ServerSummaryPageSync = module.exports.Sync = React.createClass({
+    displayName: 'ServerSummaryPage.Sync',
     propTypes: {
         server: PropTypes.object,
 

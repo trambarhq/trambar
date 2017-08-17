@@ -14,10 +14,10 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <span ref="container" className="tooltip">
+            <div ref="container" className="tooltip">
                 {this.renderLabel()}
                 {this.renderWindow()}
-            </span>
+            </div>
         );
     },
 

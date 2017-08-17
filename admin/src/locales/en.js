@@ -25,9 +25,12 @@ module.exports = function(languageCode) {
         'project-list-new': 'New Project',
         'project-list-title': 'Projects',
 
-        'project-member-list-edit': 'Edit Member List',
-        'project-member-list-new': 'New Member',
-        'project-member-list-title': 'Members',
+        'member-list-edit': 'Edit Member List',
+        'member-list-new': 'New Member',
+        'member-list-title': 'Members',
+
+        'repo-list-edit': 'Edit Repository List',
+        'repo-list-title': 'Repositories',
 
         'role-list-new': 'New Role',
         'role-list-title': 'Roles',

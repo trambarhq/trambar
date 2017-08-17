@@ -10,10 +10,10 @@ var Theme = require('theme/theme');
 // widgets
 var PushButton = require('widgets/push-button');
 
-require('./role-page.scss');
+require('./role-summary-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'RolePage',
+    displayName: 'RoleSummaryPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -41,15 +41,15 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RolePageSync {...props} />);
+        meanwhile.show(<RoleSummaryPageSync {...props} />);
         return db.start().then((roleId) => {
-            return <RolePageSync {...props} />;
+            return <RoleSummaryPageSync {...props} />;
         });
     }
 });
 
-var RolePageSync = module.exports.Sync = React.createClass({
-    displayName: 'RolePage.Sync',
+var RoleSummaryPageSync = module.exports.Sync = React.createClass({
+    displayName: 'RoleSummaryPage.Sync',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,

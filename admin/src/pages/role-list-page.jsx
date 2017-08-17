@@ -8,7 +8,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var RolePage = require('pages/role-page');
+var RoleSummaryPage = require('pages/role-summary-page');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -140,7 +140,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         var p = this.props.locale.pick;
         var title = p(role.details.title) || 'no title';
         var mtime = Moment(role.mtime).fromNow();
-        var url = RolePage.getUrl({ roleId: role.id });
+        var url = RoleSummaryPage.getUrl({ roleId: role.id });
         return (
             <tr key={i}>
                 <td>

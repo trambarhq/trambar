@@ -10,10 +10,10 @@ var Theme = require('theme/theme');
 // widgets
 var PushButton = require('widgets/push-button');
 
-require('./user-page.scss');
+require('./project-summary-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'UserPage',
+    displayName: 'ProjectSummaryPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -23,47 +23,40 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/users/:userId/', url)
-                || Route.match('/projects/:projectId/members/:userId/', url);
+            return Route.match('/projects/:projectId/', url);
         },
 
         getUrl: function(params) {
-            if (params.projectId) {
-                return `/projects/${params.projectId}/members/${params.userId}/`;
-            } else {
-                return `/users/${params.userId}/`;
-            }
+            return `/projects/${params.projectId}/`;
         },
     },
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
-            user: null,
+            project: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<UserPageSync {...props} />);
+        meanwhile.show(<ProjectSummaryPageSync {...props} />);
         return db.start().then((userId) => {
             var criteria = {
-                id: this.props.route.parameters.userId
+                id: this.props.route.parameters.projectId
             };
-            return db.findOne({ table: 'user', criteria });
-        }).then((user) => {
-            props.user = user;
-            return <UserPageSync {...props} />;
+            return db.findOne({ table: 'project', criteria });
+        }).then((project) => {
+            props.project = project;
+            return <ProjectSummaryPageSync {...props} />;
         });
     }
 });
 
-var UserPageSync = module.exports.Sync = React.createClass({
-    displayName: 'UserPage.Sync',
+var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
+    displayName: 'ProjectSummaryPage.Sync',
     propTypes: {
-        user: PropTypes.object,
-
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -72,15 +65,15 @@ var UserPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         var t = this.props.locale.translate;
-        var member = !!this.props.route.parameters.projectId;
-        var name = _.get(this.props.user, 'details.name');
+        var p = this.props.locale.pick;
+        var title = p(_.get(this.props.project, 'details.title'));
         return (
-            <div className="user-summary-page">
+            <div className="project-summary-page">
                 <PushButton className="add" onClick={this.handleAddClick}>
-                    {t(member ? 'user-summary-member-edit' : 'user-summary-edit')}
+                    {t('project-summary-edit')}
                 </PushButton>
-                <h2>{t(member ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
+                <h2>{t('project-summary-$title', title)}</h2>
             </div>
         );
-    }
+    },
 });

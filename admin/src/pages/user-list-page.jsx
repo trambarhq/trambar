@@ -9,7 +9,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var UserPage = require('pages/user-page');
+var UserSummaryPage = require('pages/user-summary-page');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -129,7 +129,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         var name = user.details.name;
         var username = user.username;
         var mtime = Moment(user.mtime).fromNow();
-        var url = UserPage.getUrl({ userId: user.id });
+        var url = UserSummaryPage.getUrl({ userId: user.id });
         return (
             <tr key={i}>
                 <td>

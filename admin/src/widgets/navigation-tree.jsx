@@ -8,15 +8,17 @@ var Theme = require('theme/theme');
 
 // pages
 var ProjectListPage = require('pages/project-list-page');
-var ProjectPage = require('pages/project-page');
-var ProjectMemberListPage = require('pages/project-member-list-page');
+var ProjectSummaryPage = require('pages/project-summary-page');
+var MemberListPage = require('pages/member-list-page');
 var RoleListPage = require('pages/role-list-page');
-var RolePage = require('pages/role-page');
+var RolePage = require('pages/role-summary-page');
+var RepoListPage = require('pages/repo-list-page');
+var RepoSummaryPage = require('pages/repo-summary-page');
 var ServerListPage = require('pages/server-list-page');
-var ServerPage = require('pages/server-page');
+var ServerSummaryPage = require('pages/server-summary-page');
 var SettingsPage = require('pages/settings-page');
 var UserListPage = require('pages/user-list-page');
-var UserPage = require('pages/user-page');
+var UserSummaryPage = require('pages/user-summary-page');
 
 // widgets
 var CollapsibleContainer = require('widgets/collapsible-container');
@@ -155,9 +157,9 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var projectName = p(_.get(this.state.project, 'details.title')) || t('nav-project-name-pending');
         var projectId = _.get(this.state.project, 'id', 0);
         var listUrl = ProjectListPage.getUrl();
-        var summaryUrl = ProjectPage.getUrl({ projectId });
-        var memberListUrl = ProjectMemberListPage.getUrl({ projectId });
-        var repoListUrl = '/todo/';
+        var summaryUrl = ProjectSummaryPage.getUrl({ projectId });
+        var memberListUrl = MemberListPage.getUrl({ projectId });
+        var repoListUrl = RepoListPage.getUrl({ projectId });
         var robotListUrl = '/todo/';
         var openLevel3 = (url === memberListUrl || url === repoListUrl || url === robotListUrl);
         var openLevel2 = (openLevel3 || url === summaryUrl);
@@ -188,7 +190,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var userName = _.get(this.state.user, 'details.name') || t('nav-user-name-pending');
         var userId = _.get(this.state.user, 'id', 0);
         var listUrl = UserListPage.getUrl();
-        var summaryUrl = UserPage.getUrl({ userId });
+        var summaryUrl = UserSummaryPage.getUrl({ userId });
         var openLevel3 = false;
         var openLevel2 = (openLevel3 || url === summaryUrl);
         return (

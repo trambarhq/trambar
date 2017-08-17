@@ -9,7 +9,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var ProjectPage = require('pages/project-page');
+var ProjectSummaryPage = require('pages/project-summary-page');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -150,14 +150,15 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
 
     renderTitleColumn: function(project) {
         var t = this.props.locale.translate;
-        var title = p(project.details.title);
-        if (title) {
-            title = t('project-list-$title-with-$name', title, project.name);
-        } else {
-            title = _.capitalize(project.name);
-        }
-        var url = ProjectPage.getUrl({ projectId: project.id });
         if (project) {
+            var p = this.props.locale.pick;
+            var title = p(project.details.title);
+            if (title) {
+                title = t('project-list-$title-with-$name', title, project.name);
+            } else {
+                title = _.capitalize(project.name);
+            }
+            var url = ProjectSummaryPage.getUrl({ projectId: project.id });
             return (
                 <td>
                     <a href={url} onClick={this.handleLinkClick}>
@@ -185,10 +186,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     renderModifiedTimeColumn: function(project) {
+        var t = this.props.locale.translate;
         if (project) {
-            return <ModifiedTimeTooltip time={project.mtime} />
+            return <td><ModifiedTimeTooltip time={project.mtime} /></td>;
         } else {
-            return <TH id="mtime">{t('table-heading-mtime')}</TH>
+            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         }
     },
 

@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
-var RepoSummaryPage = require('pages/repo-page');
+var RepoSummaryPage = require('pages/repo-summary-page');
 
 var Locale = require('locale/locale');
 var Tooltip = require('widgets/tooltip');
@@ -9,8 +9,8 @@ var Tooltip = require('widgets/tooltip');
 module.exports = RepositoryTooltip;
 
 function RepositoryTooltip(props) {
-    if (_.isEmpty(props.repos)) {
-        return '-';
+    if (props.repos == null) {
+        return null;
     }
     var t = props.locale.translate;
     var label = t('repository-$count', props.repos.length);
