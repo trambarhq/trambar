@@ -7,47 +7,60 @@ var Theme = require('theme/theme');
 // widgets
 var Tooltip = require('widgets/tooltip');
 
+require('./activity-tooltip.scss');
+
 module.exports = ActivityTooltip;
 
 var storyTypes = [
     'push',
     'issue',
-    'wiki',
     'milestone',
+    'wiki',
+    'member',
+    'repo',
     'story',
     'survey',
     'task-list',
 ];
 
+var icons = {
+    'push': require('octicons/build/svg/repo-push.svg'),
+    'issue': require('octicons/build/svg/issue-opened.svg'),
+    'milestone': require('octicons/build/svg/milestone.svg'),
+    'wiki': require('octicons/build/svg/file-text.svg'),
+    'member': require('octicons/build/svg/person.svg'),
+    'repo': require('octicons/build/svg/repo.svg'),
+    'story': require('octicons/build/svg/note.svg'),
+    'survey': require('octicons/build/svg/list-unordered.svg'),
+    'task-list': require('octicons/build/svg/list-ordered.svg'),
+};
+
 function ActivityTooltip(props) {
-    if (props.dailyActivities == null) {
+    if (props.statistics == null) {
         return null;
     }
     var t = props.locale.translate;
-    var dailyActivities = _.orderBy(props.dailyActivities, 'details.filters.time_range', 'desc');
-    var selectedActivities = _.filter(props.dailyActivities, (stats, i) => {
-        switch (props.month) {
-            case 'all': return true;
-            case 'this': return i === 0;
-            case 'last': return i === 1;
-        }
-    });
-    var total = countStory(activities)
-    var label = t('activity-tooltip-$count', 0);
+    var label = t('activity-tooltip-$count', props.statistics.total);
+    if (props.statistics.total === undefined) {
+        label = '-';
+    }
     var list = [];
     _.each(storyTypes, (type, i) => {
-        var count = countStoryType(activities, type);
+        var count = props.statistics[type];
         if (!count) {
             return;
         }
-        var icon;
+        var Icon = icons[type];
         list.push(
-            <div key={i}>
+            <div className="item" key={i}>
+                <Icon className="icon" />
+                {' '}
+                {t(`activity-tooltip-$count-${type}`, count)}
             </div>
         )
     });
     return (
-        <Tooltip className="repository">
+        <Tooltip className="activity">
             <inline>{label}</inline>
             <window>
                 {list}
@@ -57,29 +70,7 @@ function ActivityTooltip(props) {
 }
 
 ActivityTooltip.propTypes = {
-    repos: PropTypes.arrayOf(PropTypes.object),
-    project: PropTypes.object.isRequired,
+    statistics: PropTypes.object,
     locale: PropTypes.instanceOf(Locale),
     theme: PropTypes.instanceOf(Theme),
 };
-
-function countStory(dailyActivities) {
-    var count = 0;
-    _.each(dailyActivities, (stats) => {
-        _.each(stats.details, (value) => {
-            count += value;
-        });
-    });
-    return count;
-}
-
-function countStoryType(dailyActivities, type) {
-    var count = 0;
-    _.each(dailyActivities, (stats) => {
-        var value = stats.details[type];
-        if (value) {
-            count += value;
-        }
-    });
-    return count;
-}

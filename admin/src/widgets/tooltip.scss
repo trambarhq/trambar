@@ -1,8 +1,10 @@
 .tooltip {
     position: relative;
 
-    .label {
-        cursor: pointer;
+    &.live {
+        .label {
+            cursor: pointer;
+        }
     }
 
     .window-container {

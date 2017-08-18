@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
@@ -86,7 +87,7 @@ module.exports = Relaks.createClass({
                     props.statistics = _.decoupleSet(props.statistics, project.name, projectStats);
                 });
             });
-        }).then(())
+        }).then(() => {
             return <ProjectListPageSync {...props} />;
         });
     }
@@ -141,6 +142,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                         {this.renderTitleColumn()}
                         {this.renderUserColumn()}
                         {this.renderRepositoriesColumn()}
+                        {this.renderDateRangeColumn()}
+                        {this.renderLastMonthColumn()}
+                        {this.renderThisMonthColumn()}
+                        {this.renderToDateColumn()}
                         {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
@@ -157,6 +162,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 {this.renderTitleColumn(project)}
                 {this.renderUserColumn(project)}
                 {this.renderRepositoriesColumn(project)}
+                {this.renderDateRangeColumn(project)}
+                {this.renderLastMonthColumn(project)}
+                {this.renderThisMonthColumn(project)}
+                {this.renderToDateColumn(project)}
                 {this.renderModifiedTimeColumn(project)}
             </tr>
         );
@@ -180,6 +189,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     renderUserColumn: function(project) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
         var t = this.props.locale.translate;
         if (!project) {
             return <TH id="users">{t('table-heading-users')}</TH>;
@@ -195,6 +207,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     renderRepositoriesColumn: function(project) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
         var t = this.props.locale.translate;
         if (!project) {
             return <TH id="repos">{t('table-heading-repositories')}</TH>
@@ -209,22 +224,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
-    renderThisMonthColumn: function(project) {
-        var t = this.props.locale.translate;
-        if (!project) {
-            return <TH id="month">{t('table-heading-this-month')}</TH>
-        } else {
-            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
-            var props = {
-                dailyActivities,
-                locale: this.props.locale,
-                theme: this.props.theme,
-            };
-            return <td><ActivityTooltip {...props} /></td>;
-        }
-    },
-
     renderDateRangeColumn: function(project) {
+        if (this.props.theme.isBelowMode('wide')) {
+            return null;
+        }
         var t = this.props.locale.translate;
         if (!project) {
             return <TH id="range">{t('table-heading-date-range')}</TH>
@@ -235,17 +238,90 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 start = Moment(dateRange.details.start_time).format('ll');
                 end = Moment(dateRange.details.end_time).format('ll');
             }
-            return <td>{t('date-range-$start-$end', startDate, endDate)}</td>;
+            return <td>{t('date-range-$start-$end', start, end)}</td>;
+        }
+    },
+
+    renderLastMonthColumn: function(project) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="last_month">{t('table-heading-last-month')}</TH>
+        } else {
+            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
+            var month = Moment().subtract(1, 'month').format('YYYY-MM');
+            var statistics = summarizeStatistics(dailyActivities, month);
+            if (statistics.total === 0) {
+                // see if the project was created this month
+                var created = Moment(project.ctime).format('YYYY-MM');
+                if (created > month) {
+                    statistics.total = undefined;
+                }
+            }
+            var props = {
+                statistics,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    renderThisMonthColumn: function(project) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="this_month">{t('table-heading-this-month')}</TH>
+        } else {
+            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
+            var month = Moment().format('YYYY-MM');
+            var statistics = summarizeStatistics(dailyActivities, month);
+            var props = {
+                statistics,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    renderToDateColumn: function(project) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="to_date">{t('table-heading-to-date')}</TH>
+        } else {
+            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
+            var statistics = summarizeStatistics(dailyActivities);
+            var props = {
+                statistics,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
         }
     },
 
     renderModifiedTimeColumn: function(project) {
+        if (this.props.theme.isBelowMode('standard')) {
+            return null;
+        }
         var t = this.props.locale.translate;
         if (!project) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
             return <td><ModifiedTimeTooltip time={project.mtime} /></td>;
         }
+    },
+
+    inMode: function(...modes) {
+        return _.includes(modes, this.props.theme.mode);
     },
 
     handleSort: function(evt) {
@@ -279,12 +355,13 @@ var sortProjects = Memoize(function(projects, users, repos, locale, columns, dir
 });
 
 function loadStatistics(db, project) {
+    var schema = project.name;
     // load project-date-range statistics
     var criteria = {
         type: 'project-date-range',
         filters: {},
     };
-    return db.findOne({ schema: project.name, table: 'statistics', criteria }).then((dateRange) => {
+    return db.findOne({ schema, table: 'statistics', criteria }).then((dateRange) => {
         var statistics = { dateRange };
 
         // load daily-activities statistics
@@ -294,6 +371,7 @@ function loadStatistics(db, project) {
             // get time range of each month (local time)
             var s = Moment(startTime).startOf('month');
             var e = Moment(endTime).endOf('month');
+            var tzOffset = s.utcOffset();
             var timeRanges = [];
             for (var m = s.clone(); m.month() <= e.month(); m.add(1, 'month')) {
                 var rangeStart = m.toISOString();
@@ -305,11 +383,12 @@ function loadStatistics(db, project) {
                 type: 'daily-activities',
                 filters: _.map(timeRanges, (timeRange) => {
                     return {
-                        time_range: timeRange
+                        time_range: timeRange,
+                        tz_offset: tzOffset,
                     };
                 })
             };
-            return db.find({ table: 'statistics', criteria }).then((dailyActivities) => {
+            return db.find({ schema, table: 'statistics', criteria }).then((dailyActivities) => {
                 statistics.dailyActivities = dailyActivities;
                 return statistics;
             });
@@ -318,6 +397,27 @@ function loadStatistics(db, project) {
         }
     });
 }
+
+var summarizeStatistics = Memoize(function(dailyActivities, month) {
+    var total = 0;
+    var stats = { total: 0 };
+    _.each(dailyActivities, (monthlyStats) => {
+        _.each(monthlyStats.details, (dailyCounts, date) => {
+            if (month && date.substr(0, 7) !== month) {
+                return;
+            }
+            _.each(dailyCounts, (value, type) => {
+                stats.total += value;
+                if (stats[type]) {
+                    stats[type] += value;
+                } else {
+                    stats[type] = value;
+                }
+            });
+        });
+    });
+    return stats;
+});
 
 var findRepos = Memoize(function(repos, project) {
     return _.filter(repos, (repo) => {

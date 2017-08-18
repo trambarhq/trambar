@@ -9,11 +9,23 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             open: false,
+            live: hasContents(this.props),
         };
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        var live = hasContents(nextProps);
+        if (this.state.live !== live) {
+            var open = this.state.open && live;
+            this.setState({ live, open });
+        }
     },
 
     render: function() {
         var className = 'tooltip';
+        if (this.state.live) {
+            className += ' live';
+        }
         if (this.props.className) {
             className = className + ' ' + this.props.className;
         }
@@ -70,7 +82,9 @@ module.exports = React.createClass({
     },
 
     handleLabelClick: function(evt) {
-        this.setState({ open: !this.state.open });
+        if (this.state.live) {
+            this.setState({ open: !this.state.open });
+        }
     },
 
     handleMouseDown: function(evt) {
@@ -87,3 +101,14 @@ module.exports = React.createClass({
         }
     },
 });
+
+function hasContents(props) {
+    var children = React.Children.toArray(props.children);
+    var window = _.find(children, { type: 'window' });
+    if (window) {
+        if (React.Children.count(window.props.children) > 0) {
+            return true;
+        }
+    }
+    return false;
+}

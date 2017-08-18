@@ -1,5 +1,36 @@
 module.exports = function(languageCode) {
     return {
+        'activity-tooltip-$count': (count) => {
+            return (count === 1) ? `1 story` : `${count} stories`;
+        },
+        'activity-tooltip-$count-push': (count) => {
+            return (count === 1) ? `1 push` : `${count} pushes`;
+        },
+        'activity-tooltip-$count-issue': (count) => {
+            return (count === 1) ? `1 issue` : `${count} issues`;
+        },
+        'activity-tooltip-$count-member': (count) => {
+            return (count === 1) ? `1 membership change` : `${count} membership changes`;
+        },
+        'activity-tooltip-$count-milestone': (count) => {
+            return (count === 1) ? `1 milestone` : `${count} milestones`;
+        },
+        'activity-tooltip-$count-repo': (count) => {
+            return (count === 1) ? `1 repository change` : `${count} repository changes`;
+        },
+        'activity-tooltip-$count-story': (count) => {
+            return (count === 1) ? `1 story` : `${count} stories`;
+        },
+        'activity-tooltip-$count-survey': (count) => {
+            return (count === 1) ? `1 survey` : `${count} surveys`;
+        },
+        'activity-tooltip-$count-survey': (count) => {
+            return (count === 1) ? `1 task list` : `${count} task lists`;
+        },
+        'activity-tooltip-$count-wiki': (count) => {
+            return (count === 1) ? `1 wiki edit` : `${count} wiki edits`;
+        },
+
         'app-name': 'Trambar',
         'app-title': 'Trambar - Administrative Console',
 
@@ -60,11 +91,7 @@ module.exports = function(languageCode) {
         'repo-summary-edit': 'Edit Repository',
 
         'repository-tooltip-$count': (count) => {
-            if (count === 1) {
-                return `1 repository`;
-            } else {
-                return `${count} repositories`;
-            }
+            return (count === 1) ? `1 repository` : `${count} repositories`;
         },
 
         'role-list-new': 'New Role',
@@ -82,13 +109,17 @@ module.exports = function(languageCode) {
         'sign-in-title-oauth': 'Sign in through OAuth',
         'sign-in-username': 'User name:',
 
+        'table-heading-date-range': 'Active period',
         'table-heading-email': 'E-mail',
         'table-heading-identifier': 'Identifier',
         'table-heading-last-modified': 'Last modified',
+        'table-heading-last-month': 'Last month',
         'table-heading-name': 'Name',
         'table-heading-personal-name': 'Name',
         'table-heading-repositories': 'Repositories',
+        'table-heading-this-month': 'This month',
         'table-heading-title': 'Title',
+        'table-heading-to-date': 'To date',
         'table-heading-type': 'Type',
         'table-heading-users': 'Users',
         'table-heading-username': 'User name',
@@ -116,11 +147,7 @@ module.exports = function(languageCode) {
         'user-summary-member-edit': 'Edit Member',
 
         'user-tooltip-$count': (count) => {
-            if (count === 1) {
-                return `1 user`;
-            } else {
-                return `${count} users`;
-            }
+            return (count === 1) ? `1 user` : `${count} users`;
         },
     };
 };

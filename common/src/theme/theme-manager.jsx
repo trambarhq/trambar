@@ -28,6 +28,13 @@ module.exports = React.createClass({
         return this.state.mode;
     },
 
+    getModes: function() {
+        // make sure the list is ordered by widths
+        var pairs = _.sortBy(_.toPairs(this.props.modes), 1);
+        var list = _.map(pairs, 0);
+        return _.keys(this.props.modes);
+    },
+
     getDetails: function() {
         return this.state.details;
     },

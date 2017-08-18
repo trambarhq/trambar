@@ -40,12 +40,12 @@ module.exports = {
 
         // load the stories
         return Story.find(db, schema, criteria, 'type, ptime').then((rows) => {
-            var timezone = _.get(filters, 'timezone', 'GMT');
+            var tzOffset = _.get(filters, 'tz_offset', 0);
 
             var activities = {};
             _.each(rows, (row) => {
                 // get the date, taking into consideration the timezone requested
-                var date = Moment(row.ptime).tz(timezone).format('YYYY-MM-DD');
+                var date = Moment(row.ptime).utcOffset(tzOffset).format('YYYY-MM-DD');
                 var counts = activities[date];
                 if (!counts) {
                     counts = activities[date] = {};

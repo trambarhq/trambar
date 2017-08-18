@@ -170,6 +170,13 @@ module.exports = React.createClass({
         var themeManagerProps = {
             ref: setters.themeManager,
             database: this.state.database,
+            modes: {
+                'ultra-narrow': 0,
+                'narrow': 700,
+                'standard': 1000,
+                'wide': 1300,
+                'ultra-wide': 1700,
+            },
             route: this.state.route,
             onChange: this.handleThemeChange,
         };
