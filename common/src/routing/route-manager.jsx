@@ -24,7 +24,7 @@ module.exports = React.createClass({
     },
 
     getBaseUrl: function() {
-        var path = location.pathname;
+        var path = window.location.pathname;
         var baseUrl = _.find(this.props.baseUrls, (url) => {
             if (/\/$/.test(url)) {
                 throw new Error('Base URL should not end a slash');
@@ -58,7 +58,7 @@ module.exports = React.createClass({
     goTo: function(location, replacing) {
         var baseUrl = this.state.baseUrl;
         if (baseUrl !== undefined) {
-            var url = location.pathname;
+            var url = window.location.pathname;
             if (url.substr(0, baseUrl.length) === baseUrl && url.charAt(baseUrl.length) === '/') {
                 url = url.substr(baseUrl.length);
                 return this.change(url, replacing);
@@ -196,7 +196,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePopState: function(evt) {
-        var url = location.pathname;
+        var url = window.location.pathname;
         var route = this.find(url);
         if (route) {
             this.setState(route, () => {

@@ -8,7 +8,7 @@ module.exports = ModifiedTimeTooltip;
 function ModifiedTimeTooltip(props) {
     var m = Moment(props.time);
     var label = m.fromNow();
-    var contents = m.format('ll');
+    var contents = m.format('lll');
     return (
         <Tooltip>
             <inline>{label}</inline>

@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Locale = require('locale/locale');
+var Theme = require('theme/theme');
 
 // pages
 var RepoListPage = require('pages/repo-list-page');
@@ -19,7 +20,7 @@ function RepositoryTooltip(props) {
         return null;
     }
     var t = props.locale.translate;
-    var label = t('repository-toolip-$count', props.repos.length);
+    var label = t('repository-tooltip-$count', props.repos.length);
     var list = _.map(props.repos, (repo, i) => {
         var url = RepoSummaryPage.getUrl({
             projectId: props.project.id,
@@ -31,9 +32,8 @@ function RepositoryTooltip(props) {
                 iconName = repo.type;
                 break;
         }
-        console.log(repo)
         return (
-            <div key={i}>
+            <div className="item" key={i}>
                 <a href={url}>
                     <i className={`fa fa-${iconName}`}/>
                     {' '}
@@ -61,5 +61,6 @@ function RepositoryTooltip(props) {
 RepositoryTooltip.propTypes = {
     repos: PropTypes.arrayOf(PropTypes.object),
     project: PropTypes.object.isRequired,
-    locale: PropTypes.instanceOf(Locale),
+    locale: PropTypes.instanceOf(Locale).isRequired,
+    theme: PropTypes.instanceOf(Theme).isRequired,
 };

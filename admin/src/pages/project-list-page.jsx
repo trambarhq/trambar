@@ -14,7 +14,7 @@ var ProjectSummaryPage = require('pages/project-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var Tooltip = require('widgets/tooltip');
+var UserTooltip = require('widgets/user-tooltip');
 var RepositoryTooltip = require('widgets/repository-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
@@ -127,6 +127,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 <thead>
                     <tr>
                         {this.renderTitleColumn()}
+                        {this.renderUserColumn()}
                         {this.renderRepositoriesColumn()}
                         {this.renderModifiedTimeColumn()}
                     </tr>
@@ -142,6 +143,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         return (
             <tr key={i}>
                 {this.renderTitleColumn(project)}
+                {this.renderUserColumn(project)}
                 {this.renderRepositoriesColumn(project)}
                 {this.renderModifiedTimeColumn(project)}
             </tr>
@@ -150,7 +152,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
 
     renderTitleColumn: function(project) {
         var t = this.props.locale.translate;
-        if (project) {
+        if (!project) {
+            return <TH id="title">{t('table-heading-name')}</TH>;
+        } else {
             var p = this.props.locale.pick;
             var title = p(project.details.title);
             if (title) {
@@ -159,38 +163,46 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 title = _.capitalize(project.name);
             }
             var url = ProjectSummaryPage.getUrl({ projectId: project.id });
-            return (
-                <td>
-                    <a href={url}>
-                        {title}
-                    </a>
-                </td>
-            );
+            return <td><a href={url}>{title}</a></td>;
+        }
+    },
+
+    renderUserColumn: function(project) {
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="users">{t('table-heading-users')}</TH>;
         } else {
-            return <TH id="title">{t('table-heading-name')}</TH>;
+            var props = {
+                users: findUsers(this.props.users, project),
+                project,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><UserTooltip {...props} /></td>;
         }
     },
 
     renderRepositoriesColumn: function(project) {
         var t = this.props.locale.translate;
-        if (project) {
+        if (!project) {
+            return <TH id="repos">{t('table-heading-repositories')}</TH>
+        } else {
             var props = {
                 repos: findRepos(this.props.repos, project),
                 project,
                 locale: this.props.locale,
+                theme: this.props.theme,
             };
             return <td><RepositoryTooltip {...props} /></td>;
-        } else {
-            return <TH id="repo">{t('table-heading-repositories')}</TH>
         }
     },
 
     renderModifiedTimeColumn: function(project) {
         var t = this.props.locale.translate;
-        if (project) {
-            return <td><ModifiedTimeTooltip time={project.mtime} /></td>;
-        } else {
+        if (!project) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+        } else {
+            return <td><ModifiedTimeTooltip time={project.mtime} /></td>;
         }
     },
 

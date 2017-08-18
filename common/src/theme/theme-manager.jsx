@@ -20,7 +20,7 @@ module.exports = React.createClass({
             mode: this.selectMode(),
             devicePixelRatio: window.devicePixelRatio,
             details: null,
-            server: null,
+            server: window.location.hostname,
         };
     },
 

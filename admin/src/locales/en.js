@@ -48,7 +48,7 @@ module.exports = function(languageCode) {
         },
         'repo-summary-edit': 'Edit Repository',
 
-        'repository-toolip-$count': (count) => {
+        'repository-tooltip-$count': (count) => {
             if (count === 1) {
                 return `1 repository`;
             } else {
@@ -71,16 +71,18 @@ module.exports = function(languageCode) {
         'sign-in-title-oauth': 'Sign in through OAuth',
         'sign-in-username': 'User name:',
 
-        'table-heading-name': 'Name',
+        'table-heading-email': 'E-mail',
         'table-heading-identifier': 'Identifier',
         'table-heading-last-modified': 'Last modified',
+        'table-heading-name': 'Name',
         'table-heading-personal-name': 'Name',
         'table-heading-repositories': 'Repositories',
         'table-heading-title': 'Title',
         'table-heading-type': 'Type',
+        'table-heading-users': 'Users',
         'table-heading-username': 'User name',
 
-        'tooltip-more': 'More…',
+        'tooltip-more': 'More',
 
         'user-list-new': 'New User',
         'user-list-title': 'Users',
@@ -101,5 +103,13 @@ module.exports = function(languageCode) {
             return text;
         },
         'user-summary-member-edit': 'Edit Member',
+
+        'user-tooltip-$count': (count) => {
+            if (count === 1) {
+                return `1 user`;
+            } else {
+                return `${count} users`;
+            }
+        },
     };
 };

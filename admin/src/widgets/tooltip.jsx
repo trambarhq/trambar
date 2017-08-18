@@ -40,8 +40,10 @@ module.exports = React.createClass({
         }
         var window = this.findElement('window');
         return (
-            <div className="window">
-                {window.props.children}
+            <div className="window-container">
+                <div className="window">
+                    {window.props.children}
+                </div>
             </div>
         );
     },

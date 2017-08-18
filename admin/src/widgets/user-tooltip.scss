@@ -1,0 +1,29 @@
+.tooltip.user {
+    .item {
+        margin-bottom: 2px;
+        vertical-align: middle;
+    }
+
+    .ellipsis {
+        text-align: center;
+        color: #999999;
+        padding-bottom: 0.2em;
+    }
+
+    .profile-image {
+        width: 1.5em;
+        height: 1.5em;
+        vertical-align: middle;
+    }
+
+    .bottom {
+        font-size: 0.9em;
+        text-align: center;
+        border-top: 1px solid #999999;
+        padding-top: 0.2em;
+
+        A {
+            display: block;
+        }
+    }
+}
