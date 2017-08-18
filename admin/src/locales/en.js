@@ -3,6 +3,17 @@ module.exports = function(languageCode) {
         'app-name': 'Trambar',
         'app-title': 'Trambar - Administrative Console',
 
+        'date-range-$start-$end': (start, end) => {
+            if (start) {
+                if (end) {
+                    return `${start}–${end}`;
+                } else {
+                    return `${start}–`;
+                }
+            }
+            return '';
+        },
+
         'nav-members': 'Members',
         'nav-projects': 'Projects',
         'nav-project-name-pending': '<project name>',

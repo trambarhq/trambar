@@ -14,7 +14,7 @@ var ProjectSummaryPage = require('pages/project-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var Tooltip = require('widgets/tooltip');
+var ActivityTooltip = require('widgets/activity-tooltip');
 var RepositoryTooltip = require('widgets/repository-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
@@ -40,11 +40,12 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             projects: null,
             repos: null,
             users: null,
+            statisticsc: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -55,7 +56,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load all projects
             var criteria = {};
-            return db.find({ schema: 'global', table: 'project', criteria });
+            return db.find({ table: 'project', criteria });
         }).then((projects) => {
             props.projects = projects;
             meanwhile.show(<ProjectListPageSync {...props} />);
@@ -64,7 +65,7 @@ module.exports = Relaks.createClass({
             var criteria = {
                 id: _.flatten(_.map(props.projects, 'repo_ids'))
             };
-            return db.find({ schema: 'global', table: 'repo', criteria });
+            return db.find({ table: 'repo', criteria });
         }).then((repos) => {
             props.repos = repos;
             meanwhile.show(<ProjectListPageSync {...props} />);
@@ -73,9 +74,18 @@ module.exports = Relaks.createClass({
             var criteria = {
                 project_ids: _.map(props.projects, 'id')
             };
-            return db.find({ schema: 'global', table: 'user', criteria });
+            return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
+            meanwhile.show(<ProjectListPageSync {...props} />);
+        }).then(() => {
+            // load statistics of each project
+            return Promise.each(props.projects, (project) => {
+                return loadStatistics(db, project).then((projectStats) => {
+                    props.statistics = _.decoupleSet(props.statistics, project.name, projectStats);
+                });
+            });
+        }).then(())
             return <ProjectListPageSync {...props} />;
         });
     }
@@ -87,6 +97,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         projects: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         users: PropTypes.arrayOf(PropTypes.object),
+        statistics: PropTypes.objectOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -185,6 +196,36 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    renderThisMonthColumn: function(project) {
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="month">{t('table-heading-this-month')}</TH>
+        } else {
+            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
+            var props = {
+                dailyActivities,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    renderDateRangeColumn: function(project) {
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="range">{t('table-heading-date-range')}</TH>
+        } else {
+            var start, end;
+            var dateRange = _.get(this.props.statistics, [ project.name, 'dateRange' ]);
+            if (dateRange) {
+                start = Moment(dateRange.details.start_time).format('ll');
+                end = Moment(dateRange.details.end_time).format('ll');
+            }
+            return <td>{t('date-range-$start-$end', startDate, endDate)}</td>;
+        }
+    },
+
     renderModifiedTimeColumn: function(project) {
         var t = this.props.locale.translate;
         if (project) {
@@ -223,6 +264,47 @@ var sortProjects = Memoize(function(projects, users, repos, locale, columns, dir
     });
     return _.orderBy(projects, columns, directions);
 });
+
+function loadStatistics(db, project) {
+    // load project-date-range statistics
+    var criteria = {
+        type: 'project-date-range',
+        filters: {},
+    };
+    return db.findOne({ schema: project.name, table: 'statistics', criteria }).then((dateRange) => {
+        var statistics = { dateRange };
+
+        // load daily-activities statistics
+        var startTime = _.get(dateRange, 'details.start_time');
+        var endTime = _.get(dateRange, 'details.end_time');
+        if (startTime && endTime) {
+            // get time range of each month (local time)
+            var s = Moment(startTime).startOf('month');
+            var e = Moment(endTime).endOf('month');
+            var timeRanges = [];
+            for (var m = s.clone(); m.month() <= e.month(); m.add(1, 'month')) {
+                var rangeStart = m.toISOString();
+                var rangeEnd = m.clone().endOf('month').toISOString();
+                var range = `[${rangeStart},${rangeEnd}]`;
+                timeRanges.push(range);
+            }
+            var criteria = {
+                type: 'daily-activities',
+                filters: _.map(timeRanges, (timeRange) => {
+                    return {
+                        time_range: timeRange
+                    };
+                })
+            };
+            return db.find({ table: 'statistics', criteria }).then((dailyActivities) => {
+                statistics.dailyActivities = dailyActivities;
+                return statistics;
+            });
+        } else {
+            return statistics;
+        }
+    });
+}
 
 var findRepos = Memoize(function(repos, project) {
     return _.filter(repos, (repo) => {
