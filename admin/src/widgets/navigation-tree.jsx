@@ -238,7 +238,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     renderLink: function(url, label) {
         var id = (url === this.props.route.url) ? 'active-nav-link' : undefined;
         return (
-            <a href={url} id={id} onClick={this.handleLinkClick}>{label}</a>
+            <a href={url} id={id}>{label}</a>
         );
     },
 
@@ -295,10 +295,4 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             }
         }, 50);
     },
-
-    handleLinkClick: function(evt) {
-        var url = evt.target.getAttribute('href');
-        this.props.route.change(url);
-        evt.preventDefault();
-    }
 });

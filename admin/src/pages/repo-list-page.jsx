@@ -136,7 +136,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         return (
             <tr key={i}>
                 <td>
-                    <a href={url} onClick={this.handleLinkClick}>
+                    <a href={url}>
                         {name}
                     </a>
                 </td>
@@ -150,12 +150,6 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    },
-
-    handleLinkClick: function(evt) {
-        var url = evt.target.getAttribute('href');
-        this.props.route.change(url);
-        evt.preventDefault();
     },
 });
 

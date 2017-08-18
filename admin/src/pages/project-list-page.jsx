@@ -121,7 +121,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var projects = sortProjects(this.props.projects, this.props.users, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        var projects = sortProjects(this.props.projects, this.props.users, this.props.repos, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
@@ -161,7 +161,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             var url = ProjectSummaryPage.getUrl({ projectId: project.id });
             return (
                 <td>
-                    <a href={url} onClick={this.handleLinkClick}>
+                    <a href={url}>
                         {title}
                     </a>
                 </td>
@@ -200,20 +200,22 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortDirections: evt.directions
         });
     },
-
-    handleLinkClick: function(evt) {
-        var url = evt.target.getAttribute('href');
-        this.props.route.change(url);
-        evt.preventDefault();
-    },
 });
 
-var sortProjects = Memoize(function(projects, users, locale, columns, directions) {
+var sortProjects = Memoize(function(projects, users, repos, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'title':
                 return (project) => {
                     return locale.pick(project.details.title)
+                };
+            case 'users':
+                return (project) => {
+                    return _.size(findUsers(users, project));
+                };
+            case 'repos':
+                return (project) => {
+                    return _.size(findUsers(repos, project));
                 };
             default:
                 return column;
@@ -223,5 +225,13 @@ var sortProjects = Memoize(function(projects, users, locale, columns, directions
 });
 
 var findRepos = Memoize(function(repos, project) {
+    return _.filter(repos, (repo) => {
+        return _.includes(project.repo_ids, repo.id);
+    });
+});
 
+var findUsers = Memoize(function(users, project) {
+    return _.filter(users, (user) => {
+        return _.includes(user.project_ids, project.id);
+    });
 });

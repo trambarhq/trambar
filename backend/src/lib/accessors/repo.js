@@ -44,7 +44,7 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(64) NOT NULL,
                 server_id int NOT NULL,
-                external_id int NOT NULL,    
+                external_id int NOT NULL,
                 PRIMARY KEY (id)
             );
         `;
@@ -68,7 +68,9 @@ module.exports = _.create(Data, {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
-                url: row.url,
+                type: row.type,
+                server_id: row.server_id,
+                external_id: row.external_id,
             };
             return object;
         });

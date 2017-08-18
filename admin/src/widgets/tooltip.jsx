@@ -13,8 +13,12 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var className = 'tooltip';
+        if (this.props.className) {
+            className = className + ' ' + this.props.className;
+        }
         return (
-            <div ref="container" className="tooltip">
+            <div ref="container" className={className}>
                 {this.renderLabel()}
                 {this.renderWindow()}
             </div>

@@ -22,6 +22,13 @@ module.exports = function(languageCode) {
         },
         'project-summary-edit': 'Edit Project',
 
+        'project-list-$title-with-$name': (title, name) => {
+            if (title) {
+                return `${title} (${name})`;
+            } else {
+                return name;
+            }
+        },
         'project-list-new': 'New Project',
         'project-list-title': 'Projects',
 
@@ -31,6 +38,23 @@ module.exports = function(languageCode) {
 
         'repo-list-edit': 'Edit Repository List',
         'repo-list-title': 'Repositories',
+
+        'repo-summary-$title': (title) => {
+            var text = `Repository`;
+            if (title) {
+                text += `: ${title}`;
+            }
+            return text;
+        },
+        'repo-summary-edit': 'Edit Repository',
+
+        'repository-toolip-$count': (count) => {
+            if (count === 1) {
+                return `1 repository`;
+            } else {
+                return `${count} repositories`;
+            }
+        },
 
         'role-list-new': 'New Role',
         'role-list-title': 'Roles',
@@ -55,6 +79,8 @@ module.exports = function(languageCode) {
         'table-heading-title': 'Title',
         'table-heading-type': 'Type',
         'table-heading-username': 'User name',
+
+        'tooltip-more': 'More…',
 
         'user-list-new': 'New User',
         'user-list-title': 'Users',

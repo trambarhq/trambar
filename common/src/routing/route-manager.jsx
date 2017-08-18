@@ -164,6 +164,8 @@ module.exports = React.createClass({
                 console.error(err);
             });
         }
+        window.addEventListener('popstate', this.handlePopState);
+        document.addEventListener('click', this.handleClick);
     },
 
     /**
@@ -177,6 +179,45 @@ module.exports = React.createClass({
             this.goTo(window.location, true).catch((err) => {
                 console.error(err);
             });
+        }
+    },
+
+    /**
+     * Remove handlers on unmount
+     */
+    componentWillUnmount: function() {
+        window.removeEventListener('popstate', this.handlePopState);
+        document.removeEventListener('click', this.handleClick);
+    },
+
+    /**
+     * Called when the browser history changes
+     *
+     * @param  {Event} evt
+     */
+    handlePopState: function(evt) {
+        var url = location.pathname;
+        var route = this.find(url);
+        if (route) {
+            this.setState(route, () => {
+                this.triggerChangeEvent();
+            });
+        }
+    },
+
+    /**
+     * Called when users clicks on an element
+     *
+     * @param  {Event} evt
+     */
+    handleClick: function(evt) {
+        var target = evt.target;
+        if (target.tagName === 'A') {
+            var url = target.getAttribute('href');
+            if (url && url.indexOf(':') === -1) {
+                this.change(url);
+                evt.preventDefault();
+            }
         }
     },
 });
