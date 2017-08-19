@@ -14,6 +14,7 @@ var UserSummaryPage = require('pages/user-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./user-list-page.scss');
 
@@ -27,15 +28,36 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} url
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(url) {
             return Route.match('/users/', url);
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
         getUrl: function(params) {
             return `/users/`;
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
@@ -80,6 +102,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             sortColumns: [ 'name' ],
@@ -87,6 +114,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (
@@ -100,6 +132,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table
+     *
+     * @return {ReactElement}
+     */
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
@@ -112,9 +149,8 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="name">{t('table-heading-personal-name')}</TH>
-                        <TH id="username">{t('table-heading-username')}</TH>
-                        <TH id="mtime">{t('table-heading-last-modified')}</TH>
+                        {this.renderNameColumn()}
+                        {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
                 <tbody>
@@ -124,25 +160,72 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table row
+     *
+     * @param  {Object} user
+     * @param  {Number} i
+     *
+     * @return {ReactElement}
+     */
     renderRow: function(user, i) {
         var p = this.props.locale.pick;
-        var name = user.details.name;
-        var username = user.username;
-        var mtime = Moment(user.mtime).fromNow();
-        var url = UserSummaryPage.getUrl({ userId: user.id });
         return (
             <tr key={i}>
-                <td>
-                    <a href={url}>
-                        {name}
-                    </a>
-                </td>
-                <td>{username}</td>
-                <td>{mtime}</td>
+                {this.renderNameColumn(user)}
+                {this.renderModifiedTimeColumn(user)}
             </tr>
         );
     },
 
+    /**
+     * Render name column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderNameColumn: function(user) {
+        if (!user) {
+            return <TH id="name">{t('table-heading-personal-name')}</TH>;
+        } else {
+            var name = user.details.name;
+            var username = user.username;
+            var url = UserSummaryPage.getUrl({ userId: user.id });
+            return (
+                <td>
+                    <a href={url}>
+                        {t('user-list-$name-with-$username', name, username)}
+                    </a>
+                </td>
+            );
+        }
+    },
+
+    /**
+     * Render column showing the last modified time
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement|null}
+     */
+    renderModifiedTimeColumn: function(user) {
+        if (this.props.theme.isBelowMode('standard')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+        } else {
+            return <td><ModifiedTimeTooltip time={user.mtime} /></td>;
+        }
+    },
+
+    /**
+     * Called when user clicks a table heading
+     *
+     * @param  {Object} evt
+     */
     handleSort: function(evt) {
         this.setState({
             sortColumns: evt.columns,

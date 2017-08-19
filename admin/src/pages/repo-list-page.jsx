@@ -14,6 +14,7 @@ var UserSummaryPage = require('pages/user-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./repo-list-page.scss');
 
@@ -27,15 +28,36 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} url
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(url) {
             return Route.match('/projects/:projectId/repos/', url);
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
         getUrl: function(params) {
             return `/projects/${params.projectId}/repos/`;
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
@@ -84,6 +106,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             sortColumns: [ 'name' ],
@@ -91,6 +118,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (
@@ -104,6 +136,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table
+     *
+     * @return {ReactElement}
+     */
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
@@ -116,8 +153,8 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="name">{t('table-heading-name')}</TH>
-                        <TH id="mtime">{t('table-heading-last-modified')}</TH>
+                        {this.renderTitleRow()}
+                        {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
                 <tbody>
@@ -127,24 +164,75 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
-    renderRow: function(user, i) {
-        var p = this.props.locale.pick;
-        var projectId = this.props.route.parameters.projectId;
-        var name = user.details.name;
-        var mtime = Moment(user.mtime).fromNow();
-        var url = UserSummaryPage.getUrl({ projectId: projectId, userId: user.id });
+    /**
+     * Render a table row
+     *
+     * @param  {Object} repo
+     * @param  {Number} i
+     *
+     * @return {ReactElement}
+     */
+    renderRow: function(repo, i) {
         return (
             <tr key={i}>
-                <td>
-                    <a href={url}>
-                        {name}
-                    </a>
-                </td>
-                <td>{mtime}</td>
+                {this.renderTitleRow(repo)}
+                {this.renderModifiedTimeColumn(repo)}
             </tr>
         );
     },
 
+    /**
+     * Render name column, either the heading or a data cell
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement}
+     */
+    renderTitleRow: function(repo) {
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="name">{t('table-heading-name')}</TH>;
+        } else {
+            var p = this.props.locale.pick;
+            var title = p(repo.details.title) || repo.details.name;
+            var url = UserSummaryPage.getUrl({
+                projectId: this.props.route.parameters.projectId,
+                userId: user.id
+            });
+            return (
+                <td>
+                    <a href={url}>
+                        {title}
+                    </a>
+                </td>
+            );
+        }
+    },
+
+    /**
+     * Render column showing the last modified time
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderModifiedTimeColumn: function(repo) {
+        if (this.props.theme.isBelowMode('standard')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+        } else {
+            return <td><ModifiedTimeTooltip time={repo.mtime} /></td>;
+        }
+    },
+
+    /**
+     * Called when user clicks a table heading
+     *
+     * @param  {Object} evt
+     */
     handleSort: function(evt) {
         this.setState({
             sortColumns: evt.columns,

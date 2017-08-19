@@ -1,3 +1,8 @@
+/**
+ * BottomNavigation - React component
+ *
+ * Buttons at the bottom of the screen for going from section to section.
+ */
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
@@ -35,6 +40,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render buttons
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         var location = _.pick(this.props.route.parameters, 'server', 'schema');
@@ -83,12 +93,6 @@ module.exports = React.createClass({
                 <Button {...settingsButtonProps} />
             </div>
         );
-    },
-
-    handleButtonClick: function(evt) {
-        var url = evt.currentTarget.getAttribute('href');
-        evt.preventDefault();
-        this.props.route.change(url);
     },
 });
 

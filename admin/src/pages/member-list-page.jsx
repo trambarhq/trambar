@@ -27,15 +27,36 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} url
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(url) {
             return Route.match('/projects/:projectId/members/', url);
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
         getUrl: function(params) {
             return `/projects/${params.projectId}/members/`;
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
@@ -84,6 +105,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             sortColumns: [ 'name' ],
@@ -91,6 +117,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (
@@ -107,6 +138,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table
+     *
+     * @return {ReactElement}
+     */
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
@@ -132,6 +168,14 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table row
+     *
+     * @param  {Object} project
+     * @param  {Number} i
+     *
+     * @return {ReactElement}
+     */
     renderRow: function(user, i) {
         var p = this.props.locale.pick;
         var projectId = this.props.route.parameters.projectId;
@@ -152,6 +196,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Called when user clicks a table heading
+     *
+     * @param  {Object} evt
+     */
     handleSort: function(evt) {
         this.setState({
             sortColumns: evt.columns,

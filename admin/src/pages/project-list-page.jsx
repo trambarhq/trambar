@@ -1,3 +1,9 @@
+/**
+ * ProjectListPage - React component
+ *
+ * Displays a table listing all active projects in the system.
+ *
+ */
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
@@ -32,15 +38,36 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} url
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(url) {
             return Route.match('/projects/', url);
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
         getUrl: function(params) {
             return `/projects/`;
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
@@ -107,6 +134,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             sortColumns: [ 'name' ],
@@ -114,6 +146,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (
@@ -127,6 +164,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table
+     *
+     * @return {ReactElement}
+     */
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
@@ -134,13 +176,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var projects = sortProjects(this.props.projects, this.props.users, this.props.repos, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        var projects = sortProjects(this.props.projects, this.props.users, this.props.repos, this.props.statistics, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
                         {this.renderTitleColumn()}
-                        {this.renderUserColumn()}
+                        {this.renderUsersColumn()}
                         {this.renderRepositoriesColumn()}
                         {this.renderDateRangeColumn()}
                         {this.renderLastMonthColumn()}
@@ -156,11 +198,19 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table row
+     *
+     * @param  {Object} project
+     * @param  {Number} i
+     *
+     * @return {ReactElement}
+     */
     renderRow: function(project, i) {
         return (
             <tr key={i}>
                 {this.renderTitleColumn(project)}
-                {this.renderUserColumn(project)}
+                {this.renderUsersColumn(project)}
                 {this.renderRepositoriesColumn(project)}
                 {this.renderDateRangeColumn(project)}
                 {this.renderLastMonthColumn(project)}
@@ -171,6 +221,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render title column, either the heading or a data cell
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement}
+     */
     renderTitleColumn: function(project) {
         var t = this.props.locale.translate;
         if (!project) {
@@ -178,17 +235,25 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(project.details.title);
-            if (title) {
-                title = t('project-list-$title-with-$name', title, project.name);
-            } else {
-                title = _.capitalize(project.name);
-            }
             var url = ProjectSummaryPage.getUrl({ projectId: project.id });
-            return <td><a href={url}>{title}</a></td>;
+            return (
+                <td>
+                    <a href={url}>
+                        {t('project-list-$title-with-$name', title, project.name)}
+                    </a>
+                </td>
+            );
         }
     },
 
-    renderUserColumn: function(project) {
+    /**
+     * Render users column, either the heading or a data cell
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
+    renderUsersColumn: function(project) {
         if (this.props.theme.isBelowMode('narrow')) {
             return null;
         }
@@ -206,6 +271,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render repositories column, either the heading or a data cell
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
     renderRepositoriesColumn: function(project) {
         if (this.props.theme.isBelowMode('narrow')) {
             return null;
@@ -224,6 +296,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render active period column, either the heading or a data cell
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
     renderDateRangeColumn: function(project) {
         if (this.props.theme.isBelowMode('wide')) {
             return null;
@@ -242,6 +321,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render column showing the number of stories last month
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
     renderLastMonthColumn: function(project) {
         if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
@@ -257,6 +343,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 // see if the project was created this month
                 var created = Moment(project.ctime).format('YYYY-MM');
                 if (created > month) {
+                    // field is not applicable
                     statistics.total = undefined;
                 }
             }
@@ -269,6 +356,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render column showing the number of stories this month
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
     renderThisMonthColumn: function(project) {
         if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
@@ -289,6 +383,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render column showing the number of stories to date
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
     renderToDateColumn: function(project) {
         if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
@@ -308,6 +409,13 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render column showing the last modified time
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
     renderModifiedTimeColumn: function(project) {
         if (this.props.theme.isBelowMode('standard')) {
             return null;
@@ -320,10 +428,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
-    inMode: function(...modes) {
-        return _.includes(modes, this.props.theme.mode);
-    },
-
+    /**
+     * Called when user clicks a table heading
+     *
+     * @param  {Object} evt
+     */
     handleSort: function(evt) {
         this.setState({
             sortColumns: evt.columns,
@@ -332,7 +441,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 });
 
-var sortProjects = Memoize(function(projects, users, repos, locale, columns, directions) {
+var sortProjects = Memoize(function(projects, users, repos, statistics, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'title':
@@ -346,6 +455,24 @@ var sortProjects = Memoize(function(projects, users, repos, locale, columns, dir
             case 'repos':
                 return (project) => {
                     return _.size(findUsers(repos, project));
+                };
+            case 'range':
+                return (project) => {
+                    return _.get(this.props.statistics, `${project.name}.dateRange.details.start_time`, '');
+                };
+            case 'last_month':
+                return (project) => {
+                    var dailyActivities = _.get(statistics, [ project.name, 'dailyActivities' ]);
+                    var month = Moment().subtract(1, 'month').format('YYYY-MM');
+                    var statistics = summarizeStatistics(dailyActivities, month);
+                    return statistics.total;
+                };
+            case 'this_month':
+                return (project) => {
+                    var dailyActivities = _.get(statistics, [ project.name, 'dailyActivities' ]);
+                    var month = Moment().format('YYYY-MM');
+                    var statistics = summarizeStatistics(dailyActivities, month);
+                    return statistics.total;
                 };
             default:
                 return column;

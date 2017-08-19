@@ -13,6 +13,7 @@ var RoleSummaryPage = require('pages/role-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./role-list-page.scss');
 
@@ -26,15 +27,36 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} url
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(url) {
             return Route.match('/roles/', url);
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
         getUrl: function(params) {
             return `/roles/`;
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', by: this });
         var props = {
@@ -92,6 +114,11 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             sortColumns: [ 'name' ],
@@ -99,6 +126,11 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (
@@ -112,6 +144,11 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table
+     *
+     * @return {ReactElement}
+     */
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
@@ -135,6 +172,14 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a table row
+     *
+     * @param  {Object} role
+     * @param  {Number} i
+     *
+     * @return {ReactElement}
+     */
     renderRow: function(role, i) {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
@@ -143,16 +188,64 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         var url = RoleSummaryPage.getUrl({ roleId: role.id });
         return (
             <tr key={i}>
+                {this.renderTitleRow(role)}
+                {this.renderModifiedTimeColumn(role)}
+            </tr>
+        );
+    },
+
+    /**
+     * Render title column, either the heading or a data cell
+     *
+     * @param  {Object|null} role
+     *
+     * @return {ReactElement}
+     */
+    renderTitleRow: function(role) {
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="name">{t('table-heading-name')}</TH>;
+        } else {
+            var p = this.props.locale.pick;
+            var title = p(role.details.title) || '-';
+            var url = RoleSummaryPage.getUrl({
+                projectId: this.props.route.parameters.projectId,
+                roleId: role.id
+            });
+            return (
                 <td>
                     <a href={url}>
                         {title}
                     </a>
                 </td>
-                <td>{mtime}</td>
-            </tr>
-        );
+            );
+        }
     },
 
+    /**
+     * Render column showing the last modified time
+     *
+     * @param  {Object|null} role
+     *
+     * @return {ReactElement|null}
+     */
+    renderModifiedTimeColumn: function(role) {
+        if (this.props.theme.isBelowMode('standard')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+        } else {
+            return <td><ModifiedTimeTooltip time={role.mtime} /></td>;
+        }
+    },
+
+    /**
+     * Called when user clicks a table heading
+     *
+     * @param  {Object} evt
+     */
     handleSort: function(evt) {
         this.setState({
             sortColumns: evt.columns,

@@ -74,6 +74,17 @@ module.exports = function(languageCode) {
         'project-list-new': 'New Project',
         'project-list-title': 'Projects',
 
+        'member-list-$name-with-$username': (name, username) => {
+            if (name) {
+                if (username) {
+                    return `${name} (${username})`;
+                } else {
+                    return name;
+                }
+            } else {
+                return username;
+            }
+        },
         'member-list-edit': 'Edit Member List',
         'member-list-new': 'New Member',
         'member-list-title': 'Members',
@@ -126,6 +137,17 @@ module.exports = function(languageCode) {
 
         'tooltip-more': 'More',
 
+        'user-list-$name-with-$username': (name, username) => {
+            if (name) {
+                if (username) {
+                    return `${name} (${username})`;
+                } else {
+                    return name;
+                }
+            } else {
+                return username;
+            }
+        },
         'user-list-new': 'New User',
         'user-list-title': 'Users',
 
