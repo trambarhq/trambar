@@ -72,14 +72,14 @@ _.mixin({
      *
      * @param  {Object} srcObj
      * @param  {String|Array<String>} path
-     * @param  {*} value
+     * @param  {*} ...value
      *
      * @return {Object}
      */
-    decouplePush: function(srcObj, path, value) {
+    decouplePush: function(srcObj, path, ...values) {
         var dstObj = _.decouple(srcObj, path, []);
         var array = _.get(dstObj, path);
-        array.push(value);
+        Array.prototype.push.apply(array, values);
         return dstObj;
     },
 
@@ -95,5 +95,37 @@ _.mixin({
         return _.pickBy(objA, (value, name) => {
             return objB[name] !== value;
         });
-    }
+    },
+
+    obscure: function(object, exceptions) {
+        return obscureRecursive(object, exceptions);
+    },
 });
+
+function obscureRecursive(value, exceptions, path) {
+    if (_.includes(exceptions, path)) {
+        return value;
+    }
+    switch (typeof(value)) {
+        case 'number':
+            return 0;
+        case 'string':
+            return _.repeat('x', value.length);
+        case 'boolean':
+            return false;
+        case 'object':
+            if (value instanceof Array) {
+                return _.map(value, (v, key) => {
+                    var cPath = (path) ? path + '.' + key : key;
+                    return obscureRecursive(v, exceptions, cPath)
+                });
+            } else if (value instanceof Object) {
+                return _.mapValues(value, (v, key) => {
+                    var cPath = (path) ? path + '.' + key : key;
+                    return obscureRecursive(v, exceptions, cPath)
+                });
+            } else {
+                return null;
+            }
+    }
+}
