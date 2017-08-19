@@ -12,7 +12,7 @@ module.exports = _.create(Data, {
         ctime: String,
         mtime: String,
         details: Object,
-        type: String,
+        name: String,
         server_id: Number,
         external_id: Number,
         hidden: Boolean,
@@ -20,7 +20,7 @@ module.exports = _.create(Data, {
     criteria: {
         id: Number,
         deleted: Boolean,
-        type: String,
+        name: String,
         server_id: Number,
         external_id: Number,
         hidden: Boolean,
@@ -44,7 +44,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                type varchar(64) NOT NULL DEFAULT '',
+                name varchar(64) NOT NULL DEFAULT '',
                 server_id int,
                 external_id int,
                 hidden boolean NOT NULL DEFAULT false,
@@ -71,6 +71,10 @@ module.exports = _.create(Data, {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
+                name: row.name,
+                server_id: row.server_id,
+                external_id: row.external_id,
+                hidden: row.hidden,
             };
             return object;
         });

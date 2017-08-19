@@ -114,6 +114,7 @@ module.exports = _.create(Data, {
                 name: row.name,
                 project_ids: row.project_ids,
                 role_ids: row.project_ids,
+                hidden: row.hidden,
             };
             return object;
         });

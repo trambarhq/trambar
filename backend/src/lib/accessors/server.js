@@ -13,11 +13,13 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
+        name: String,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         type: String,
+        name: String,
     },
 
     /**
@@ -79,7 +81,7 @@ module.exports = _.create(Data, {
                 id: row.id,
                 gn: row.gn,
                 details: _.pick(row.details, [
-                    'name',
+                    'title',
                     'description',
                 ]),
                 type: row.type,

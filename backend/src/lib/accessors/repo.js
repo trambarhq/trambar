@@ -13,6 +13,7 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
+        name: String,
         server_id: Number,
         external_id: Number,
     },
@@ -20,6 +21,7 @@ module.exports = _.create(Data, {
         id: Number,
         deleted: Boolean,
         type: String,
+        name: String,
         server_id: Number,
         external_id: Number,
     },
@@ -43,6 +45,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(64) NOT NULL,
+                name varchar(64) NOT NULL,
                 server_id int NOT NULL,
                 external_id int NOT NULL,
                 PRIMARY KEY (id)
@@ -69,6 +72,7 @@ module.exports = _.create(Data, {
                 gn: row.gn,
                 details: row.details,
                 type: row.type,
+                name: row.name,
                 server_id: row.server_id,
                 external_id: row.external_id,
             };

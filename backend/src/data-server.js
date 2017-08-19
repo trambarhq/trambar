@@ -4,6 +4,7 @@ var Express = require('express');
 var BodyParser = require('body-parser');
 var Moment = require('moment');
 
+var LodashExtra = require('utils/lodash-extra');
 var Database = require('database');
 var HttpError = require('errors/http-error');
 
