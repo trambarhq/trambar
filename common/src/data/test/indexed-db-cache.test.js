@@ -6,7 +6,7 @@ var Enzyme = require('enzyme');
 var IndexedDBCache = require('data/indexed-db-cache.jsx');
 
 describe('IndexedDBCache', function() {
-    var wrapper = Enzyme.mount(<IndexedDBCache />);
+    var wrapper = Enzyme.mount(<IndexedDBCache databaseName="test"/>);
     var cache = wrapper.instance();
 
     describe('#save', function() {
