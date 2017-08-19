@@ -21,43 +21,57 @@ function ProjectTooltip(props) {
     }
     var t = props.locale.translate;
     var p = props.locale.pick;
-    var label = t('project-tooltip-$count', props.projects.length);
-    var projects = _.sortBy(props.projects, (project) => {
-        return p(project.details.title) || project.name;
-    });
-    var ellipsis;
-    if (projects.length > 10) {
-        projects = _.slice(projects, 0, 10);
-        ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
-    }
-    var list = _.map(props.projects, (project, i) => {
-        var url = ProjectSummaryPage.getUrl({
-            projectId: project.id,
+    var projects = props.projects;
+    var first = '-';
+    if (projects.length > 0) {
+        // list the first project
+        var project0 = projects[0]
+        var url0 = ProjectSummaryPage.getUrl({
+            projectId: project0.id,
         });
-        var title = p(project.details.title) || project.name || '-';
-        return (
-            <div className="item" key={i}>
-                <a href={url}>
-                    {title}
-                </a>
-            </div>
-        );
-    });
-    var listUrl = ProjectListPage.getUrl({
-        projectId: props.project.id,
-    });
-    return (
-        <Tooltip className="project">
-            <inline>{label}</inline>
-            <window>
-                {list}
-                {ellipsis}
-                <div className="bottom">
-                    <a href={listUrl}>{t('tooltip-more')}</a>
+        var title0 = p(project0.details.title) || project0.name;
+        var first = <a href={url0} key={0}>{title0}</a>;
+        projects = _.slice(projects, 1);
+    }
+    var contents;
+    if (projects.length > 0) {
+        var ellipsis;
+        var label = t('project-tooltip-$count-others', projects.length);
+        if (projects.length > 10) {
+            projects = _.slice(projects, 0, 10);
+            ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
+        }
+        var list = _.map(projects, (project, i) => {
+            var url = ProjectSummaryPage.getUrl({
+                projectId: project.id,
+            });
+            var title = p(project.details.title) || project.name;
+            return (
+                <div className="item" key={i}>
+                    <a href={url}>
+                        {title}
+                    </a>
                 </div>
-            </window>
-        </Tooltip>
-    );
+            );
+        });
+        var listUrl = ProjectListPage.getUrl();
+        var tooltip = (
+            <Tooltip className="project" key={1}>
+                <inline>{label}</inline>
+                <window>
+                    {list}
+                    {ellipsis}
+                    <div className="bottom">
+                        <a href={listUrl}>{t('tooltip-more')}</a>
+                    </div>
+                </window>
+            </Tooltip>
+        );
+        contents = t('tooltip-$first-and-$tooltip', first, tooltip);
+    } else {
+        contents = first;
+    }
+    return <span>{contents}</span>;
 }
 
 ProjectTooltip.propTypes = {

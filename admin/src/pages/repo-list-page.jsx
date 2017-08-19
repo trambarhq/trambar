@@ -153,7 +153,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        {this.renderTitleRow()}
+                        {this.renderTitleColumn()}
                         {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
@@ -175,7 +175,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     renderRow: function(repo, i) {
         return (
             <tr key={i}>
-                {this.renderTitleRow(repo)}
+                {this.renderTitleColumn(repo)}
                 {this.renderModifiedTimeColumn(repo)}
             </tr>
         );
@@ -188,7 +188,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTitleRow: function(repo) {
+    renderTitleColumn: function(repo) {
         var t = this.props.locale.translate;
         if (!repo) {
             return <TH id="name">{t('table-heading-name')}</TH>;

@@ -141,7 +141,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        {this.renderNameColumn()}
+                        {this.renderTitleColumn()}
                         {this.renderTypeColumn()}
                         {this.renderModifiedTimeColumn()}
                     </tr>
@@ -168,7 +168,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
         var url = ServerSummaryPage.getUrl({ serverId: server.id });
         return (
             <tr key={i}>
-                {this.renderNameColumn(server)}
+                {this.renderTitleColumn(server)}
                 {this.renderTypeColumn(server)}
                 {this.renderModifiedTimeColumn(server)}
             </tr>
@@ -185,15 +185,16 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
     renderTitleColumn: function(server) {
         var t = this.props.locale.translate;
         if (!server) {
-            return <TH id="name">{t('table-heading-name')}</TH>;
+            return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
             var p = this.props.locale.pick;
             var title = p(server.details.title) || getTypeName(server.type);
             var iconName = getIconName(server.type);
+            var url = ServerSummaryPage.getUrl({ serverId: server.id });
             return (
                 <td>
                     <a href={url}>
-                        <i className={`fa fa-${iconName}`} />
+                        <i className={`fa fa-${iconName} fa-fw`} />
                         {' '}
                         {title}
                     </a>
@@ -211,7 +212,6 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      */
     renderTypeColumn: function(server) {
         var t = this.props.locale.translate;
-        var title = p(server.details.title) || getTypeName(server.type);
         if (!server) {
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
@@ -227,12 +227,12 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderModifiedTimeColumn: function(project) {
+    renderModifiedTimeColumn: function(server) {
         if (this.props.theme.isBelowMode('standard')) {
             return null;
         }
         var t = this.props.locale.translate;
-        if (!project) {
+        if (!server) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
             return <td><ModifiedTimeTooltip time={server.mtime} /></td>;

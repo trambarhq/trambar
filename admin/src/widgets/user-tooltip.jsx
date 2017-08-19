@@ -21,7 +21,7 @@ function UserTooltip(props) {
     }
     var t = props.locale.translate;
     var label = t('user-tooltip-$count', props.users.length);
-    var users = _.sortBy(props.users, 'details.name');
+    var users = props.users;
     var ellipsis;
     if (users.length > 10) {
         users = _.slice(users, 0, 10);

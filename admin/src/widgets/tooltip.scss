@@ -1,5 +1,6 @@
 .tooltip {
     position: relative;
+    display: inline-block;
 
     &.live {
         .label {
@@ -12,6 +13,7 @@
         top: 1.2em;
         left: 1em;
         width: 50vw;
+        z-index: 100;
     }
 
     .window {

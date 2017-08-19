@@ -4,12 +4,29 @@
     }
 
     .sortable-table {
+        .profile-image {
+            width: 1.5em;
+            height: 1.5em;
+            vertical-align: middle;
+        }
+
         #mtime {
             width: 12em;
         }
 
-        #username {
+        #roles {
             width: 12em;
+        }
+
+        #projects {
+            width: 12em;
+        }
+
+        #email {
+            width: 16em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
 }

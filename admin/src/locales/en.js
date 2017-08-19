@@ -74,6 +74,10 @@ module.exports = function(languageCode) {
         'project-list-new': 'New Project',
         'project-list-title': 'Projects',
 
+        'project-tooltip-$count-others': (count) => {
+            return (count === 1) ? `1 other` : `${count} others`;
+        },
+
         'member-list-$name-with-$username': (name, username) => {
             if (name) {
                 if (username) {
@@ -108,6 +112,10 @@ module.exports = function(languageCode) {
         'role-list-new': 'New Role',
         'role-list-title': 'Roles',
 
+        'role-tooltip-$count-others': (count) => {
+            return (count === 1) ? `1 other` : `${count} others`;
+        },
+
         'server-list-new': 'New Service',
         'server-list-title': 'Services',
 
@@ -126,16 +134,21 @@ module.exports = function(languageCode) {
         'table-heading-last-modified': 'Last modified',
         'table-heading-last-month': 'Last month',
         'table-heading-name': 'Name',
-        'table-heading-personal-name': 'Name',
+        'table-heading-projects': 'Projects',
         'table-heading-repositories': 'Repositories',
+        'table-heading-roles': 'Roles',
         'table-heading-this-month': 'This month',
-        'table-heading-title': 'Title',
+        'table-heading-title': 'Name',
         'table-heading-to-date': 'To date',
         'table-heading-type': 'Type',
         'table-heading-users': 'Users',
         'table-heading-username': 'User name',
 
+        'tooltip-$first-and-$tooltip': (first, tooltip) => {
+            return [ first, ' and ', tooltip ];
+        },
         'tooltip-more': 'More',
+
 
         'user-list-$name-with-$username': (name, username) => {
             if (name) {

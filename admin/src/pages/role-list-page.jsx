@@ -188,7 +188,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         var url = RoleSummaryPage.getUrl({ roleId: role.id });
         return (
             <tr key={i}>
-                {this.renderTitleRow(role)}
+                {this.renderTitleColumn(role)}
                 {this.renderModifiedTimeColumn(role)}
             </tr>
         );
@@ -201,10 +201,10 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTitleRow: function(role) {
+    renderTitleColumn: function(role) {
         var t = this.props.locale.translate;
         if (!repo) {
-            return <TH id="name">{t('table-heading-name')}</TH>;
+            return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
             var p = this.props.locale.pick;
             var title = p(role.details.title) || '-';
@@ -234,7 +234,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        if (!project) {
+        if (!role) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
             return <td><ModifiedTimeTooltip time={role.mtime} /></td>;
