@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var Moment = require('moment-timezone');
+var Moment = require('moment');
 
 var Story = require('accessors/story');
 

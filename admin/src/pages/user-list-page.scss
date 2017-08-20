@@ -10,10 +10,6 @@
             vertical-align: middle;
         }
 
-        #mtime {
-            width: 12em;
-        }
-
         #roles {
             width: 12em;
         }
@@ -27,6 +23,10 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #mtime {
+            width: 12em;
         }
     }
 }

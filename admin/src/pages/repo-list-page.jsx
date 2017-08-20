@@ -9,8 +9,6 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var UserSummaryPage = require('pages/user-summary-page');
-
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
@@ -195,7 +193,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(repo.details.title) || repo.details.name;
-            var url = UserSummaryPage.getUrl({
+            var url = require('pages/user-summary-page').getUrl({
                 projectId: this.props.route.parameters.projectId,
                 userId: user.id
             });

@@ -19,17 +19,17 @@ var schema = 'test:LiveDataInvalidator';
 describe('LiveDataInvalidator', function() {
     var testStatistics = {
         rangeOverall: {
-            type: 'project-date-range',
+            type: 'story-date-range',
             filters: {},
         },
         rangeRoles: {
-            type: 'project-date-range',
+            type: 'story-date-range',
             filters: {
                 role_ids: [ 800, 1000 ]
             }
         },
         rangeUser: {
-            type: 'project-date-range',
+            type: 'story-date-range',
             filters: {
                 user_ids: [ 600 ]
             }

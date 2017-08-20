@@ -11,7 +11,7 @@ var Story = require('accessors/story');
 // analysers
 var DailyActivities = require('analysers/daily-activities');
 var DailyReactions = require('analysers/daily-reactions');
-var ProjectDateRange = require('analysers/project-date-range');
+var ProjectDateRange = require('analysers/story-date-range');
 var StoryPopularity = require('analysers/story-popularity');
 
 var analysers = [
@@ -76,7 +76,8 @@ function fetchDirtyStatistics(db) {
     return getProjectSchemas(db).each((schema) => {
         var criteria = { dirty: true, order: 'sample_count' };
         return Statistics.find(db, schema, criteria, 'id, atime').each((row) => {
-            return addToStatisticsQueue(schema, row.id, row.atime);
+            addToStatisticsQueue(schema, row.id, row.atime);
+            return null;
         });
     });
 }

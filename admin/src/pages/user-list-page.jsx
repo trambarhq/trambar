@@ -273,6 +273,13 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render email column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
     renderEmailColumn: function(user) {
         if (this.props.theme.isBelowMode('wide')) {
             return null;

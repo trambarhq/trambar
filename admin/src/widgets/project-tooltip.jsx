@@ -4,10 +4,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-// pages
-var ProjectListPage = require('pages/project-list-page');
-var ProjectSummaryPage = require('pages/project-summary-page');
-
 // widgets
 var Tooltip = require('widgets/tooltip');
 
@@ -26,7 +22,7 @@ function ProjectTooltip(props) {
     if (projects.length > 0) {
         // list the first project
         var project0 = projects[0]
-        var url0 = ProjectSummaryPage.getUrl({
+        var url0 = require('pages/project-summary-page').getUrl({
             projectId: project0.id,
         });
         var title0 = p(project0.details.title) || project0.name;
@@ -42,7 +38,7 @@ function ProjectTooltip(props) {
             ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
         }
         var list = _.map(projects, (project, i) => {
-            var url = ProjectSummaryPage.getUrl({
+            var url = require('pages/project-summary-page').getUrl({
                 projectId: project.id,
             });
             var title = p(project.details.title) || project.name;
@@ -54,7 +50,7 @@ function ProjectTooltip(props) {
                 </div>
             );
         });
-        var listUrl = ProjectListPage.getUrl();
+        var listUrl = require('pages/project-list-page').getUrl();
         var tooltip = (
             <Tooltip className="project" key={1}>
                 <inline>{label}</inline>

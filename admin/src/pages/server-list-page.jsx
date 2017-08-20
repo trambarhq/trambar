@@ -9,8 +9,6 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var ServerSummaryPage = require('pages/server-summary-page');
-
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
@@ -162,10 +160,6 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(server, i) {
-        var p = this.props.locale.pick;
-        var name = server.details.name;
-        var type = server.type;
-        var url = ServerSummaryPage.getUrl({ serverId: server.id });
         return (
             <tr key={i}>
                 {this.renderTitleColumn(server)}
@@ -190,7 +184,9 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             var p = this.props.locale.pick;
             var title = p(server.details.title) || getTypeName(server.type);
             var iconName = getIconName(server.type);
-            var url = ServerSummaryPage.getUrl({ serverId: server.id });
+            var url = require('pages/server-summary-page').getUrl({
+                serverId: server.id
+            });
             return (
                 <td>
                     <a href={url}>

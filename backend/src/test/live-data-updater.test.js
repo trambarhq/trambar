@@ -90,7 +90,7 @@ describe('LiveDataUpdater', function() {
     })
     it('should correctly generate a project-range statistics object', function() {
         var stats = {
-            type: 'project-date-range',
+            type: 'story-date-range',
             filters: {},
         };
         return Database.open().then((db) => {
@@ -110,7 +110,7 @@ describe('LiveDataUpdater', function() {
     }).timeout(5000);
     it('should correctly generate a user-specific project-range statistics object', function() {
         var stats = {
-            type: 'project-date-range',
+            type: 'story-date-range',
             filters: {
                 user_ids: [ 1 ]
             },
@@ -134,7 +134,7 @@ describe('LiveDataUpdater', function() {
     }).timeout(5000);
     it('should correctly generate a role-specific project-range statistics object', function() {
         var stats = {
-            type: 'project-date-range',
+            type: 'story-date-range',
             filters: {
                 role_ids: [ 1 ]
             },

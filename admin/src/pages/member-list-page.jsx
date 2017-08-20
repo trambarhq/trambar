@@ -9,11 +9,14 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var UserSummaryPage = require('pages/user-summary-page');
+var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ActivityTooltip = require('widgets/activity-tooltip');
+var RoleTooltip = require('widgets/role-tooltip');
+var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./member-list-page.scss');
 
@@ -58,10 +61,11 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             project: null,
             users: null,
+            roles: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -74,7 +78,7 @@ module.exports = Relaks.createClass({
             var criteria = {
                 id: this.props.route.parameters.projectId
             };
-            return db.findOne({ schema: 'global', table: 'project', criteria });
+            return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
         }).then(() => {
@@ -82,12 +86,23 @@ module.exports = Relaks.createClass({
             var criteria = {
                 project_ids: [ props.project.id ]
             };
-            return db.find({ schema: 'global', table: 'user', criteria });
+            return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
             meanwhile.show(<MemberListPageSync {...props} />);
-        }).then((projects) => {
-            props.projects = projects;
+        }).then(() => {
+            // load roles
+            var criteria = {
+                id: _.flatten(_.map(props.users, 'role_ids'))
+            };
+            return db.find({ table: 'role', criteria });
+        }).then((roles) => {
+            props.roles = roles;
+        }).then(() => {
+            // load user statistics
+            return DailyActivities.loadUserStatistics(db, props.project, props.users)
+        }).then((statistics) => {
+            props.statistics = statistics;
             return <MemberListPageSync {...props} />;
         });
     }
@@ -96,8 +111,10 @@ module.exports = Relaks.createClass({
 var MemberListPageSync = module.exports.Sync = React.createClass({
     displayName: 'MemberListPage.Sync',
     propTypes: {
-        users: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
+        users: PropTypes.arrayOf(PropTypes.object),
+        roles: PropTypes.arrayOf(PropTypes.object),
+        statistics: PropTypes.objectOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -156,9 +173,13 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="name">{t('table-heading-personal-name')}</TH>
-                        <TH id="username">{t('table-heading-username')}</TH>
-                        <TH id="mtime">{t('table-heading-last-modified')}</TH>
+                        {this.renderNameColumn()}
+                        {this.renderRolesColumn()}
+                        {this.renderDateRangeColumn()}
+                        {this.renderLastMonthColumn()}
+                        {this.renderThisMonthColumn()}
+                        {this.renderToDateColumn()}
+                        {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
                 <tbody>
@@ -171,29 +192,219 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     /**
      * Render a table row
      *
-     * @param  {Object} project
+     * @param  {Object} user
      * @param  {Number} i
      *
      * @return {ReactElement}
      */
     renderRow: function(user, i) {
-        var p = this.props.locale.pick;
-        var projectId = this.props.route.parameters.projectId;
-        var name = user.details.name;
-        var username = user.username;
-        var mtime = Moment(user.mtime).fromNow();
-        var url = UserSummaryPage.getUrl({ projectId: projectId, userId: user.id });
         return (
             <tr key={i}>
-                <td>
-                    <a href={url}>
-                        {name}
-                    </a>
-                </td>
-                <td>{username}</td>
-                <td>{mtime}</td>
+                {this.renderNameColumn(user)}
+                {this.renderRolesColumn(user)}
+                {this.renderDateRangeColumn(user)}
+                {this.renderLastMonthColumn(user)}
+                {this.renderThisMonthColumn(user)}
+                {this.renderToDateColumn(user)}
+                {this.renderModifiedTimeColumn(user)}
             </tr>
         );
+    },
+
+    /**
+     * Render name column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderNameColumn: function(user) {
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="name">{t('table-heading-name')}</TH>;
+        } else {
+            var name = user.details.name;
+            var username = user.username;
+            var url = require('pages/user-summary-page').getUrl({ userId: user.id });
+            var resources = _.get(user, 'details.resources');
+            var profileImage = _.find(resources, { type: 'image' });
+            var imageUrl = this.props.theme.getImageUrl(profileImage, 24, 24);
+            return (
+                <td>
+                    <a href={url}>
+                        <img className="profile-image" src={imageUrl} />
+                        {' '}
+                        {t('user-list-$name-with-$username', name, username)}
+                    </a>
+                </td>
+            );
+        }
+    },
+
+    /**
+     * Render roles column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderRolesColumn: function(user) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="roles">{t('table-heading-roles')}</TH>;
+        } else {
+            var props = {
+                roles: findRoles(this.props.roles, user),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><RoleTooltip {...props} /></td>;
+        }
+    },
+
+    /**
+     * Render email column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderEmailColumn: function(user) {
+        if (this.props.theme.isBelowMode('wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="email">{t('table-heading-email')}</TH>;
+        } else {
+            var contents;
+            var email = user.details.email;
+            if (email) {
+                contents = <a href={`mailto:${email}`}>{email}</a>;
+            } else {
+                contents = '-';
+            }
+            return <td>{contents}</td>;
+        }
+    },
+
+    /**
+     * Render active period column, either the heading or a data cell
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
+    renderDateRangeColumn: function(project) {
+        if (this.props.theme.isBelowMode('wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="range">{t('table-heading-date-range')}</TH>
+        } else {
+            var start, end;
+            var range = _.get(this.props.statistics, [ project.id, 'range' ]);
+            if (range) {
+                start = Moment(range.start).format('ll');
+                end = Moment(range.end).format('ll');
+            }
+            return <td>{t('date-range-$start-$end', start, end)}</td>;
+        }
+    },
+
+    /**
+     * Render column showing the number of stories last month
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
+    renderLastMonthColumn: function(project) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="last_month">{t('table-heading-last-month')}</TH>
+        } else {
+            var props = {
+                statistics: _.get(this.props.statistics, [ project.id, 'last_month' ]),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    /**
+     * Render column showing the number of stories this month
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
+    renderThisMonthColumn: function(project) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="this_month">{t('table-heading-this-month')}</TH>
+        } else {
+            var props = {
+                statistics: _.get(this.props.statistics, [ project.id, 'this_month' ]),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    /**
+     * Render column showing the number of stories to date
+     *
+     * @param  {Object|null} project
+     *
+     * @return {ReactElement|null}
+     */
+    renderToDateColumn: function(project) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!project) {
+            return <TH id="to_date">{t('table-heading-to-date')}</TH>
+        } else {
+            var props = {
+                statistics: _.get(this.props.statistics, [ project.id, 'to_date' ]),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    /**
+     * Render column showing the last modified time
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement|null}
+     */
+    renderModifiedTimeColumn: function(user) {
+        if (this.props.theme.isBelowMode('standard')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="mtime">{t('table-heading-last-modified')}</TH>
+        } else {
+            return <td><ModifiedTimeTooltip time={user.mtime} /></td>;
+        }
     },
 
     /**
@@ -214,9 +425,31 @@ var sortUsers = Memoize(function(users, projects, locale, columns, directions) {
         switch (column) {
             case 'name':
                 return 'details.name';
+            case 'range':
+                return (user) => {
+                    return _.get(this.props.statistics, [ user.id, 'range', 'start' ], '');
+                };
+            case 'last_month':
+                return (user) => {
+                    return _.get(this.props.statistics, [ user.id, 'last_month', 'total' ], 0);
+                };
+            case 'this_month':
+                return (user) => {
+                    return _.get(this.props.statistics, [ user.id, 'this_month', 'total' ], 0);
+                };
+            case 'to_date':
+                return (user) => {
+                    return _.get(this.props.statistics, [ user.id, 'to_date', 'total' ], 0);
+                };
             default:
                 return column;
         }
     });
     return _.orderBy(users, columns, directions);
+});
+
+var findRoles = Memoize(function(roles, user) {
+    return _.filter(roles, (role) => {
+        return _.includes(user.role_ids, role.id);
+    })
 });

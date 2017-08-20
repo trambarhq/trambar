@@ -3,4 +3,22 @@
         float: right;
         margin-left: 0.4em;
     }
+
+    .sortable-table {
+        #roles {
+            width: 12em;
+        }
+
+        #range {
+            width: 16em;
+        }
+
+        #to_date, #last_month, #this_month {
+            width: 8em;
+        }
+
+        #mtime {
+            width: 12em;
+        }
+    }
 }

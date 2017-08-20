@@ -4,10 +4,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-// pages
-var RoleListPage = require('pages/role-list-page');
-var RoleSummaryPage = require('pages/role-summary-page');
-
 // widgets
 var Tooltip = require('widgets/tooltip');
 
@@ -26,7 +22,7 @@ function RoleTooltip(props) {
     if (roles.length > 0) {
         // list the first role
         var role0 = roles[0]
-        var url0 = RoleSummaryPage.getUrl({
+        var url0 = require('pages/role-summary-page').getUrl({
             roleId: role0.id,
         });
         var title0 = p(role0.details.title) || role0.name;
@@ -42,7 +38,7 @@ function RoleTooltip(props) {
             ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
         }
         var list = _.map(roles, (role, i) => {
-            var url = RoleSummaryPage.getUrl({
+            var url = require('pages/role-summary-page').getUrl({
                 roleId: role.id,
             });
             var title = p(role.details.title) || role.name;
@@ -54,7 +50,7 @@ function RoleTooltip(props) {
                 </div>
             );
         });
-        var listUrl = RoleListPage.getUrl();
+        var listUrl = require('pages/role-list-page').getUrl();
         var tooltip = (
             <Tooltip className="role" key={1}>
                 <inline>{label}</inline>

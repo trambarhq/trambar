@@ -4,10 +4,6 @@
     }
 
     .sortable-table {
-        #mtime {
-            width: 12em;
-        }
-
         #users {
             width: 10em;
         }
@@ -22,6 +18,10 @@
 
         #to_date, #last_month, #this_month {
             width: 8em;
+        }
+
+        #mtime {
+            width: 12em;
         }
     }
 }

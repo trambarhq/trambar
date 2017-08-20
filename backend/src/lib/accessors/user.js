@@ -113,7 +113,7 @@ module.exports = _.create(Data, {
                 username: row.username,
                 name: row.name,
                 project_ids: row.project_ids,
-                role_ids: row.project_ids,
+                role_ids: row.role_ids,
                 hidden: row.hidden,
             };
             return object;

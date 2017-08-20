@@ -4,10 +4,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-// pages
-var RepoListPage = require('pages/repo-list-page');
-var RepoSummaryPage = require('pages/repo-summary-page');
-
 // widgets
 var Tooltip = require('widgets/tooltip');
 
@@ -22,7 +18,7 @@ function RepositoryTooltip(props) {
     var t = props.locale.translate;
     var label = t('repository-tooltip-$count', props.repos.length);
     var list = _.map(props.repos, (repo, i) => {
-        var url = RepoSummaryPage.getUrl({
+        var url = require('pages/repo-summary-page').getUrl({
             projectId: props.project.id,
             repoId: repo.id,
         });
@@ -42,7 +38,7 @@ function RepositoryTooltip(props) {
             </div>
         );
     });
-    var listUrl = RepoListPage.getUrl({
+    var listUrl = require('pages/repo-list-page').getUrl({
         projectId: props.project.id,
     });
     return (

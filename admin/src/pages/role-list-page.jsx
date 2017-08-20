@@ -8,11 +8,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var RoleSummaryPage = require('pages/role-summary-page');
-
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var UserTooltip = require('widgets/user-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./role-list-page.scss');
@@ -58,24 +57,10 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             roles: null,
-            currentUser: null,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        meanwhile.show(<RoleListPageSync {...props} />);
-        return db.start().then((roleId) => {
-            return <RoleListPageSync {...props} />;
-        });
-
-        var db = this.props.database.use({ server: '~', by: this });
-        var props = {
-            roles: null,
+            users: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -86,7 +71,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load all roles
             var criteria = {};
-            return db.find({ schema: 'global', table: 'role', criteria });
+            return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
             meanwhile.show(<RoleListPageSync {...props} />);
@@ -94,6 +79,7 @@ module.exports = Relaks.createClass({
             var criteria = {
                 role_ids: _.flatten(_.map(props.roles, 'id')),
             };
+            return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
             return <RoleListPageSync {...props} />;
@@ -161,8 +147,9 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
-                        <TH id="title">{t('table-heading-name')}</TH>
-                        <TH id="mtime">{t('table-heading-last-modified')}</TH>
+                        {this.renderTitleColumn()}
+                        {this.renderUsersColumn()}
+                        {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
                 <tbody>
@@ -181,14 +168,10 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(role, i) {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var title = p(role.details.title) || 'no title';
-        var mtime = Moment(role.mtime).fromNow();
-        var url = RoleSummaryPage.getUrl({ roleId: role.id });
         return (
             <tr key={i}>
                 {this.renderTitleColumn(role)}
+                {this.renderUsersColumn(role)}
                 {this.renderModifiedTimeColumn(role)}
             </tr>
         );
@@ -203,12 +186,12 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      */
     renderTitleColumn: function(role) {
         var t = this.props.locale.translate;
-        if (!repo) {
+        if (!role) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
             var p = this.props.locale.pick;
             var title = p(role.details.title) || '-';
-            var url = RoleSummaryPage.getUrl({
+            var url = require('pages/role-summary-page').getUrl({
                 projectId: this.props.route.parameters.projectId,
                 roleId: role.id
             });
@@ -219,6 +202,30 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                     </a>
                 </td>
             );
+        }
+    },
+
+    /**
+     * Render users column, either the heading or a data cell
+     *
+     * @param  {Object|null} role
+     *
+     * @return {ReactElement|null}
+     */
+    renderUsersColumn: function(role) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!role) {
+            return <TH id="users">{t('table-heading-users')}</TH>;
+        } else {
+            var props = {
+                users: findUsers(this.props.users, role),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><UserTooltip {...props} /></td>;
         }
     },
 
@@ -266,4 +273,10 @@ var sortRoles = Memoize(function(roles, users, locale, columns, directions) {
         }
     });
     return _.orderBy(roles, columns, directions);
+});
+
+var findUsers = Memoize(function(users, role) {
+    return _.filter(users, (user) => {
+        return _.includes(user.role_ids, role.id);
+    })
 });

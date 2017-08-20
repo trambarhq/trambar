@@ -16,7 +16,7 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var ProjectSummaryPage = require('pages/project-summary-page');
+var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -74,7 +74,7 @@ module.exports = Relaks.createClass({
             projects: null,
             repos: null,
             users: null,
-            statisticsc: null,
+            statistics: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -109,12 +109,9 @@ module.exports = Relaks.createClass({
             meanwhile.show(<ProjectListPageSync {...props} />);
         }).then(() => {
             // load statistics of each project
-            return Promise.each(props.projects, (project) => {
-                return loadStatistics(db, project).then((projectStats) => {
-                    props.statistics = _.decoupleSet(props.statistics, project.name, projectStats);
-                });
-            });
-        }).then(() => {
+            return DailyActivities.loadProjectStatistics(db, props.projects);
+        }).then((statistics) => {
+            props.statistics = statistics;
             return <ProjectListPageSync {...props} />;
         });
     }
@@ -235,7 +232,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(project.details.title);
-            var url = ProjectSummaryPage.getUrl({ projectId: project.id });
+            var url = require('pages/project-summary-page').getUrl({ projectId: project.id });
             return (
                 <td>
                     <a href={url}>
@@ -312,10 +309,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             return <TH id="range">{t('table-heading-date-range')}</TH>
         } else {
             var start, end;
-            var dateRange = _.get(this.props.statistics, [ project.name, 'dateRange' ]);
-            if (dateRange) {
-                start = Moment(dateRange.details.start_time).format('ll');
-                end = Moment(dateRange.details.end_time).format('ll');
+            var range = _.get(this.props.statistics, [ project.id, 'range' ]);
+            if (range) {
+                start = Moment(range.start).format('ll');
+                end = Moment(range.end).format('ll');
             }
             return <td>{t('date-range-$start-$end', start, end)}</td>;
         }
@@ -336,19 +333,8 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         if (!project) {
             return <TH id="last_month">{t('table-heading-last-month')}</TH>
         } else {
-            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
-            var month = Moment().subtract(1, 'month').format('YYYY-MM');
-            var statistics = summarizeStatistics(dailyActivities, month);
-            if (statistics.total === 0) {
-                // see if the project was created this month
-                var created = Moment(project.ctime).format('YYYY-MM');
-                if (created > month) {
-                    // field is not applicable
-                    statistics.total = undefined;
-                }
-            }
             var props = {
-                statistics,
+                statistics: _.get(this.props.statistics, [ project.id, 'last_month' ]),
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
@@ -371,11 +357,8 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         if (!project) {
             return <TH id="this_month">{t('table-heading-this-month')}</TH>
         } else {
-            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
-            var month = Moment().format('YYYY-MM');
-            var statistics = summarizeStatistics(dailyActivities, month);
             var props = {
-                statistics,
+                statistics: _.get(this.props.statistics, [ project.id, 'this_month' ]),
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
@@ -398,10 +381,8 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         if (!project) {
             return <TH id="to_date">{t('table-heading-to-date')}</TH>
         } else {
-            var dailyActivities = _.get(this.props.statistics, [ project.name, 'dailyActivities' ]);
-            var statistics = summarizeStatistics(dailyActivities);
             var props = {
-                statistics,
+                statistics: _.get(this.props.statistics, [ project.id, 'to_date' ]),
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
@@ -458,92 +439,25 @@ var sortProjects = Memoize(function(projects, users, repos, statistics, locale, 
                 };
             case 'range':
                 return (project) => {
-                    return _.get(this.props.statistics, `${project.name}.dateRange.details.start_time`, '');
+                    return _.get(this.props.statistics, [ project.id, 'range', 'start' ], '');
                 };
             case 'last_month':
                 return (project) => {
-                    var dailyActivities = _.get(statistics, [ project.name, 'dailyActivities' ]);
-                    var month = Moment().subtract(1, 'month').format('YYYY-MM');
-                    var statistics = summarizeStatistics(dailyActivities, month);
-                    return statistics.total;
+                    return _.get(this.props.statistics, [ project.id, 'last_month', 'total' ], 0);
                 };
             case 'this_month':
                 return (project) => {
-                    var dailyActivities = _.get(statistics, [ project.name, 'dailyActivities' ]);
-                    var month = Moment().format('YYYY-MM');
-                    var statistics = summarizeStatistics(dailyActivities, month);
-                    return statistics.total;
+                    return _.get(this.props.statistics, [ project.id, 'this_month', 'total' ], 0);
+                };
+            case 'to_date':
+                return (project) => {
+                    return _.get(this.props.statistics, [ project.id, 'to_date', 'total' ], 0);
                 };
             default:
                 return column;
         }
     });
     return _.orderBy(projects, columns, directions);
-});
-
-function loadStatistics(db, project) {
-    var schema = project.name;
-    // load project-date-range statistics
-    var criteria = {
-        type: 'project-date-range',
-        filters: {},
-    };
-    return db.findOne({ schema, table: 'statistics', criteria }).then((dateRange) => {
-        var statistics = { dateRange };
-
-        // load daily-activities statistics
-        var startTime = _.get(dateRange, 'details.start_time');
-        var endTime = _.get(dateRange, 'details.end_time');
-        if (startTime && endTime) {
-            // get time range of each month (local time)
-            var s = Moment(startTime).startOf('month');
-            var e = Moment(endTime).endOf('month');
-            var tzOffset = s.utcOffset();
-            var timeRanges = [];
-            for (var m = s.clone(); m.month() <= e.month(); m.add(1, 'month')) {
-                var rangeStart = m.toISOString();
-                var rangeEnd = m.clone().endOf('month').toISOString();
-                var range = `[${rangeStart},${rangeEnd}]`;
-                timeRanges.push(range);
-            }
-            var criteria = {
-                type: 'daily-activities',
-                filters: _.map(timeRanges, (timeRange) => {
-                    return {
-                        time_range: timeRange,
-                        tz_offset: tzOffset,
-                    };
-                })
-            };
-            return db.find({ schema, table: 'statistics', criteria }).then((dailyActivities) => {
-                statistics.dailyActivities = dailyActivities;
-                return statistics;
-            });
-        } else {
-            return statistics;
-        }
-    });
-}
-
-var summarizeStatistics = Memoize(function(dailyActivities, month) {
-    var total = 0;
-    var stats = { total: 0 };
-    _.each(dailyActivities, (monthlyStats) => {
-        _.each(monthlyStats.details, (dailyCounts, date) => {
-            if (month && date.substr(0, 7) !== month) {
-                return;
-            }
-            _.each(dailyCounts, (value, type) => {
-                stats.total += value;
-                if (stats[type]) {
-                    stats[type] += value;
-                } else {
-                    stats[type] = value;
-                }
-            });
-        });
-    });
-    return stats;
 });
 
 var findRepos = Memoize(function(repos, project) {
