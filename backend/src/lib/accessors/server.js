@@ -80,9 +80,12 @@ module.exports = _.create(Data, {
             var object = {
                 id: row.id,
                 gn: row.gn,
-                details: _.pick(row.details, [
+                details: _.obscure(row.details, [
                     'title',
                     'description',
+                    'api.url',
+                    'oauth.baseURL',
+                    'oauth.clientID',
                 ]),
                 type: row.type,
             };

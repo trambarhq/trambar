@@ -9,9 +9,12 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var DailyActivities = require('data/daily-activities');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ActivityTooltip = require('widgets/activity-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
 
 require('./repo-list-page.scss');
@@ -57,10 +60,12 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             project: null,
             repos: null,
+            servers: null,
+            statistics: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -73,7 +78,7 @@ module.exports = Relaks.createClass({
             var criteria = {
                 id: this.props.route.parameters.projectId
             };
-            return db.findOne({ schema: 'global', table: 'project', criteria });
+            return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
         }).then(() => {
@@ -81,12 +86,24 @@ module.exports = Relaks.createClass({
             var criteria = {
                 id: [ props.project.repo_ids ]
             };
-            return db.find({ schema: 'global', table: 'repo', criteria });
+            return db.find({ table: 'repo', criteria });
         }).then((repos) => {
             props.repos = repos;
             meanwhile.show(<RepoListPageSync {...props} />);
-        }).then((projects) => {
-            props.projects = projects;
+        }).then(() => {
+            // load servers
+            var criteria = {
+                id: _.map(props.repos, 'server_id')
+            };
+            return db.find({ table: 'server', criteria });
+        }).then((servers) => {
+            props.servers = servers;
+            meanwhile.show(<RepoListPageSync {...props} />);
+        }).then(() => {
+            // load user statistics
+            return DailyActivities.loadRepoStatistics(db, props.project, props.repos);
+        }).then((statistics) => {
+            props.statistics = statistics;
             return <RepoListPageSync {...props} />;
         });
     }
@@ -97,6 +114,8 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         repos: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
+        servers: PropTypes.arrayOf(PropTypes.object),
+        statistics: PropTypes.objectOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -152,6 +171,12 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 <thead>
                     <tr>
                         {this.renderTitleColumn()}
+                        {this.renderServerColumn()}
+                        {this.renderIssueTrackerColumn()}
+                        {this.renderDateRangeColumn()}
+                        {this.renderLastMonthColumn()}
+                        {this.renderThisMonthColumn()}
+                        {this.renderToDateColumn()}
                         {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
@@ -174,6 +199,12 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         return (
             <tr key={i}>
                 {this.renderTitleColumn(repo)}
+                {this.renderServerColumn(repo)}
+                {this.renderIssueTrackerColumn(repo)}
+                {this.renderDateRangeColumn(repo)}
+                {this.renderLastMonthColumn(repo)}
+                {this.renderThisMonthColumn(repo)}
+                {this.renderToDateColumn(repo)}
                 {this.renderModifiedTimeColumn(repo)}
             </tr>
         );
@@ -193,9 +224,9 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(repo.details.title) || repo.details.name;
-            var url = require('pages/user-summary-page').getUrl({
+            var url = require('pages/repo-summary-page').getUrl({
                 projectId: this.props.route.parameters.projectId,
-                userId: user.id
+                repoId: repo.id
             });
             return (
                 <td>
@@ -204,6 +235,146 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                     </a>
                 </td>
             );
+        }
+    },
+
+    /**
+     * Render server column, either the heading or a data cell
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderServerColumn: function(repo) {
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="range">{t('table-heading-server')}</TH>
+        } else {
+            var p = this.props.locale.pick;
+            var server = findServer(this.props.servers, repo);
+            var label;
+            if (server) {
+                label = p(server.details.title) || server.name || '-';
+            }
+            return <td>{label}</td>;
+        }
+    },
+
+    /**
+     * Render issue tracker column, either the heading or a data cell
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderIssueTrackerColumn: function(repo) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="range">{t('table-heading-issue-tracker')}</TH>
+        } else {
+            var p = this.props.locale.pick;
+            var enabled = !!repo.details.issues_enabled;
+            return <td>{t(`repo-list-issue-tracker-enabled-${enabled}`)}</td>;
+        }
+    },
+
+    /**
+     * Render active period column, either the heading or a data cell
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderDateRangeColumn: function(repo) {
+        if (this.props.theme.isBelowMode('wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="range">{t('table-heading-date-range')}</TH>
+        } else {
+            var start, end;
+            var range = _.get(this.props.statistics, [ repo.id, 'range' ]);
+            if (range) {
+                start = Moment(range.start).format('ll');
+                end = Moment(range.end).format('ll');
+            }
+            return <td>{t('date-range-$start-$end', start, end)}</td>;
+        }
+    },
+
+    /**
+     * Render column showing the number of stories last month
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderLastMonthColumn: function(repo) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="last_month">{t('table-heading-last-month')}</TH>
+        } else {
+            var props = {
+                statistics: _.get(this.props.statistics, [ repo.id, 'last_month' ]),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    /**
+     * Render column showing the number of stories this month
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderThisMonthColumn: function(repo) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="this_month">{t('table-heading-this-month')}</TH>
+        } else {
+            var props = {
+                statistics: _.get(this.props.statistics, [ repo.id, 'this_month' ]),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
+        }
+    },
+
+    /**
+     * Render column showing the number of stories to date
+     *
+     * @param  {Object|null} repo
+     *
+     * @return {ReactElement|null}
+     */
+    renderToDateColumn: function(repo) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!repo) {
+            return <TH id="to_date">{t('table-heading-to-date')}</TH>
+        } else {
+            var props = {
+                statistics: _.get(this.props.statistics, [ repo.id, 'to_date' ]),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><ActivityTooltip {...props} /></td>;
         }
     },
 
@@ -249,4 +420,8 @@ var sortRepos = Memoize(function(repos, locale, columns, directions) {
         }
     });
     return _.orderBy(repos, columns, directions);
+});
+
+var findServer = Memoize(function(servers, repo) {
+    return _.find(servers, { id: repo.server_id });
 });

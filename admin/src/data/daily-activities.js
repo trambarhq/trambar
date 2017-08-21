@@ -5,6 +5,7 @@ var Memoize = require('utils/memoize');
 
 exports.loadProjectStatistics = loadProjectStatistics;
 exports.loadUserStatistics = loadUserStatistics;
+exports.loadRepoStatistics = loadRepoStatistics;
 
 function loadProjectStatistics(db, projects) {
     return Promise.map(projects, (project) => {
@@ -63,6 +64,44 @@ function loadUserStatistics(db, project, users) {
                     return (d.filters.user_ids[0] === userId);
                 });
                 results[userId] = summarizeStatistics(dailyActivities, dateRange, project);
+            }, {});
+        });
+    });
+}
+
+function loadRepoStatistics(db, project, repos) {
+    var schema = project.name;
+    // load story-date-range statistics
+    var criteria = {
+        type: 'story-date-range',
+        filters: _.map(repos, (repo) => {
+            return {
+                repo_id: repo.id
+            };
+        }),
+    };
+    return db.find({ schema, table: 'statistics', criteria }).then((dateRanges) => {
+        dateRanges = _.filter(dateRanges, isValidRange);
+        // load daily-activities statistics
+        var filterLists = _.map(dateRanges, (dateRange) => {
+            // attach repo id
+            return _.map(getRangeFilters(dateRange), (f) => {
+                f.repo_id = dateRange.filters.repo_id;
+                return f;
+            });
+        });
+        var filters = _.flatten(filterLists);
+        if (_.isEmpty(filters)) {
+            return {};
+        }
+        var criteria = { type: 'daily-activities', filters };
+        return db.find({ schema, table: 'statistics', criteria }).then((dailyActivitiesAllRepos) => {
+            return _.transform(dateRanges, (results, dateRange) => {
+                var repoId = dateRange.filters.repo_id;
+                var dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
+                    return (d.filters.repo_id === repoId);
+                });
+                results[repoId] = summarizeStatistics(dailyActivities, dateRange, project);
             }, {});
         });
     });

@@ -113,7 +113,7 @@ describe('LodashExtra', function() {
                 b: { c: 0 },
                 d: [0, 0, 0],
             };
-            var after = _.obscure(before)
+            var after = _.obscure(before);
             expect(after).to.deep.equal(expected);
         })
         it('should change booleans to false', function() {
@@ -127,7 +127,7 @@ describe('LodashExtra', function() {
                 b: { c: false },
                 d: [ false, false, false ],
             };
-            var after = _.obscure(before)
+            var after = _.obscure(before);
             expect(after).to.deep.equal(expected);
         })
         it('should replace all characters in text with x', function() {
@@ -141,7 +141,21 @@ describe('LodashExtra', function() {
                 b: { c: 'xxxxx' },
                 d: [ 'xxxxx', 'xxxxxx', 'xxxxx' ],
             };
-            var after = _.obscure(before)
+            var after = _.obscure(before);
+            expect(after).to.deep.equal(expected);
+        })
+        it('should leave exceptions alone', function() {
+            var before = {
+                a: 'Hello',
+                b: { c: 'World', number: 123 },
+                d: [ 'apple', 'orange', 'lemon' ],
+            };
+            var expected = {
+                a: 'xxxxx',
+                b: { c: 'World', number: 0 },
+                d: [ 'apple', 'orange', 'lemon' ],
+            };
+            var after = _.obscure(before, [ 'b.c', 'd' ]);
             expect(after).to.deep.equal(expected);
         })
     })

@@ -95,6 +95,8 @@ module.exports = function(languageCode) {
 
         'repo-list-edit': 'Edit Repository List',
         'repo-list-title': 'Repositories',
+        'repo-list-issue-tracker-enabled-false': '',
+        'repo-list-issue-tracker-enabled-true': 'Enabled',
 
         'repo-summary-$title': (title) => {
             var text = `Repository`;
@@ -131,12 +133,14 @@ module.exports = function(languageCode) {
         'table-heading-date-range': 'Active period',
         'table-heading-email': 'E-mail',
         'table-heading-identifier': 'Identifier',
+        'table-heading-issue-tracker': 'Issue tracker',
         'table-heading-last-modified': 'Last modified',
         'table-heading-last-month': 'Last month',
         'table-heading-name': 'Name',
         'table-heading-projects': 'Projects',
         'table-heading-repositories': 'Repositories',
         'table-heading-roles': 'Roles',
+        'table-heading-server': 'Server',
         'table-heading-this-month': 'This month',
         'table-heading-title': 'Name',
         'table-heading-to-date': 'To date',

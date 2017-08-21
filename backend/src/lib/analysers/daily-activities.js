@@ -14,6 +14,7 @@ module.exports = {
             user_ids: 'user_ids',
             role_ids: 'role_ids',
             time_range: 'ptime',
+            repo_id: 'repo_id',
         },
     },
     // additional criteria that objects must also meet to be included

@@ -98,9 +98,10 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
+            meanwhile.show(<MemberListPageSync {...props} />);
         }).then(() => {
             // load user statistics
-            return DailyActivities.loadUserStatistics(db, props.project, props.users)
+            return DailyActivities.loadUserStatistics(db, props.project, props.users);
         }).then((statistics) => {
             props.statistics = statistics;
             return <MemberListPageSync {...props} />;
