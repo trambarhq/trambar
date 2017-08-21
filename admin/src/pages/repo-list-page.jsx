@@ -223,7 +223,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
             var p = this.props.locale.pick;
-            var title = p(repo.details.title) || repo.details.name;
+            var title = p(repo.details.title) || repo.name;
             var url = require('pages/repo-summary-page').getUrl({
                 projectId: this.props.route.parameters.projectId,
                 repoId: repo.id
@@ -252,11 +252,24 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var server = findServer(this.props.servers, repo);
-            var label;
+            var contents;
             if (server) {
-                label = p(server.details.title) || server.name || '-';
+                var title = p(server.details.title) || getTypeName(server.type);
+                var iconName = getIconName(server.type);
+                var url = require('pages/server-summary-page').getUrl({
+                    serverId: server.id
+                });
+                contents =(
+                    <td>
+                        <a href={url}>
+                            <i className={`fa fa-${iconName} fa-fw`} />
+                            {' '}
+                            {title}
+                        </a>
+                    </td>
+                );
             }
-            return <td>{label}</td>;
+            return <td>{contents}</td>;
         }
     },
 
@@ -425,3 +438,23 @@ var sortRepos = Memoize(function(repos, locale, columns, directions) {
 var findServer = Memoize(function(servers, repo) {
     return _.find(servers, { id: repo.server_id });
 });
+
+function getTypeName(type) {
+    switch (type) {
+        case 'dropbox': return 'Dropbox';
+        case 'gitlab': return 'GitLab';
+        case 'github': return 'GitHub';
+        case 'google': return 'Google';
+        case 'facebook': return 'Facebook';
+    }
+}
+
+function getIconName(type) {
+    switch (type) {
+        case 'dropbox': return 'dropbox';
+        case 'gitlab': return 'gitlab';
+        case 'github': return 'github';
+        case 'google': return 'google';
+        case 'facebook': return 'facebook';
+    }
+}

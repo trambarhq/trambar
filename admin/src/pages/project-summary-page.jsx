@@ -62,7 +62,6 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectSummaryPageSync {...props} />);
         return db.start().then((userId) => {
             var criteria = {
                 id: this.props.route.parameters.projectId
@@ -78,23 +77,49 @@ module.exports = Relaks.createClass({
 var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'ProjectSummaryPage.Sync',
     propTypes: {
+        project: PropTypes.object.isRequired,
+        users: PropTypes.object,
+        repos: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    getInitialState: function() {
+        return {
+            editing: this.props.route.parameters.editing,
+            newProject: null
+        };
+    },
+
+    getProject: function() {
+        return this.state.newProject || this.props.project;
+    },
+
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var title = p(_.get(this.props.project, 'details.title'));
+        var project = this.getProject();
+        var title = p(project.details.title) || project.name;
         return (
             <div className="project-summary-page">
                 <PushButton className="add" onClick={this.handleAddClick}>
                     {t('project-summary-edit')}
                 </PushButton>
                 <h2>{t('project-summary-$title', title)}</h2>
+                {this.renderDetailsSection()}
+                {this.renderRepoSection()}
             </div>
         );
+    },
+
+    renderDetailsSection: function() {
+
+    },
+
+    renderRepoSection: function() {
+
     },
 });

@@ -111,7 +111,12 @@ function handleDatabaseChanges(events) {
                                     return;
                                 }
                                 return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
-                                    return importEvents(db, server, repo, project);
+                                    return importProjectMemberships(db, server, project).then(() => {
+                                        // make sure the project-specific schema exists
+                                        return db.need(project.name, 5000).then(() => {
+                                            return importEvents(db, server, repo, project);
+                                        });
+                                    });
                                 });
                             });
                         });
@@ -235,7 +240,7 @@ function importServerObjects(db, server) {
     }).then(() => {
         return importUsers(db, server);
     }).then(() => {
-        return importProjectMemberships(db, server);
+        return importMemberships(db, server);
     }).then(() => {
         return importRepositoryLabels(db, server);
     });
@@ -296,16 +301,13 @@ function importRepositories(db, server) {
  * @param  {Object} project
  */
 function copyRepoDetails(repo, project) {
-    var fields = [
-        'name',
-        'ssh_url',
-        'http_url',
-        'web_url',
-        'issues_enabled',
-        'archived',
-        'default_branch',
-    ];
-    _.assign(repo.details, _.pick(project, fields));
+    repo.name = project.name;
+    repo.details.ssh_url = project.ssh_url;
+    repo.details.http_url = project.http_url;
+    repo.details.web_url = project.web_url;
+    repo.details.issues_enabled = project.issues_enabled;
+    repo.details.archived = project.archived;
+    repo.details.default_branch = project.default_branch;
 }
 
 /**
@@ -449,63 +451,70 @@ function copyUserDetails(user, account, images) {
     }
 }
 
-function importProjectMemberships(db, server) {
-    // find users originating from server
+function importMemberships(db, server) {
+    // go through all projects
     var criteria = {
-        server_id: server.id
+        deleted: false
     };
-    return User.find(db, 'global', criteria, '*').then((users) => {
-        var changes = [];
-        // go through all projects
+    return Project.find(db, 'global', criteria, '*').each((project) => {
+        return importProjectMemberships(db, server, project);
+    });
+}
+
+function importProjectMemberships(db, server, project) {
+    // look at repo from this server
+    var criteria = {
+        id: project.repo_ids,
+        server_id: server.id,
+    };
+    return Repo.find(db, 'global', criteria, '*').then((repos) => {
+        if (_.isEmpty(repos) === 0) {
+            return [];
+        }
+        // this project is linked with this server
+        // fetch member list from Gitlab
+        return Promise.mapSeries(repos, (repo) => {
+            if (repo.deleted) {
+                return;
+            }
+            var url = `/projects/${repo.external_id}/members`;
+            return fetchAll(server, url);
+        }).then((memberLists) => {
+            return _.flatten(memberLists);
+        });
+    }).then((members) => {
+        // load users import from server
         var criteria = {
-            deleted: false
+            server_id: server.id
         };
-        return Project.find(db, 'global', criteria, '*').each((project) => {
-            // look at repo from this server
-            var criteria = {
-                id: project.repo_ids,
-                server_id: server.id,
-            };
-            return Repo.find(db, 'global', criteria, '*').then((repos) => {
-                if (_.isEmpty(repos) === 0) {
-                    return null;
-                }
-                // this project is linked with this server
-                // fetch member list from Gitlab
-                return Promise.mapSeries(repos, (repo) => {
-                    if (repo.deleted) {
-                        return;
+        return User.find(db, 'global', criteria, '*').then((users) => {
+            var userIdsBefore = _.slice(project.user_ids);
+            // remove ids of users that are no longer members
+            var oldMemberUsers = _.filter(users, (user) => {
+                if (_.includes(project.user_ids, user.id)) {
+                    if (!_.find(members, { id: user.external_id })) {
+                        return true;
                     }
-                    var url = `/projects/${repo.external_id}/members`;
-                    return fetchAll(server, url);
-                }).then((memberLists) => {
-                    return _.flatten(memberLists);
-                });
-            }).then((members) => {
-                if (members) {
-                    // add/remove project id to users' project list
-                    _.each(users, (user) => {
-                        var member = _.find(members, { id: user.external_id });
-                        var changed = false;
-                        if (member) {
-                            if (!_.includes(user.project_ids, project.id)) {
-                                user.project_ids.push(project.id);
-                                changed = true;
-                            }
-                        } else {
-                            if (_.includes(user.project_ids, project.id)) {
-                                _.pull(user.project_ids, project.id);
-                                changed = true;
-                            }
-                        }
-                        if (changed && !_.includes(changes, user)) {
-                            changes.push(user);
-                        }
-                    });
                 }
             });
-        }).then(() => {
-            return User.save(db, 'global', changes);
+            if (oldMemberUsers.length > 0) {
+                project.user_ids = _.intersect(project.user_ids, _.map(oldMemberUsers, 'id'));
+            }
+            // add user ids of new members
+            var newMemberUsers = _.filter(users, (user) => {
+                if (!_.includes(project.user_ids, user.id)) {
+                    if (_.find(members, { id: user.external_id })) {
+                        return true;
+                    }
+                }
+            });
+            console.log(members);
+            if (newMemberUsers.length > 0) {
+                project.user_ids = _.union(project.user_ids, _.map(newMemberUsers, 'id'));
+            }
+            if (userIdsBefore !== project.user_ids) {
+                return Project.updateOne(db, 'global', project);
+            }
         });
     });
 }

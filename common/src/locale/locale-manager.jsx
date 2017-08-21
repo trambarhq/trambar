@@ -51,6 +51,10 @@ module.exports = React.createClass({
     },
 
     pick: function(languageVersions) {
+        if (typeof(languageVersions) === 'string') {
+            console.log(languageVersions)
+            return languageVersions;
+        }
         // no support for country-specific versions
         var currentLanguageCode = this.state.languageCode.substr(0, 2);
         var matchingPhrase = '';

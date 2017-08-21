@@ -154,8 +154,9 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var url = this.props.route.url;
-        var projectName = p(_.get(this.state.project, 'details.title')) || t('nav-project-name-pending');
-        var projectId = _.get(this.state.project, 'id', 0);
+        var project = this.state.project || { details: {} };
+        var projectName = p(project.details.title) || project.name || t('nav-project-name-pending');
+        var projectId = project.id;
         var listUrl = ProjectListPage.getUrl();
         var summaryUrl = ProjectSummaryPage.getUrl({ projectId });
         var memberListUrl = MemberListPage.getUrl({ projectId });

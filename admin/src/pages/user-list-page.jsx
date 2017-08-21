@@ -82,7 +82,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load projects
             var criteria = {
-                id: _.flatten(_.map(props.users, 'project_ids'))
+                user_ids: _.map(props.users, 'id')
             };
             return db.find({ table: 'project', criteria });
         }).then((projects) => {
@@ -365,12 +365,13 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
 
 var findProjects = Memoize(function(projects, user) {
     return _.filter(projects, (project) => {
-        return _.includes(user.project_ids, project.id);
+        return _.includes(project.user_ids, user.id);
     })
 });
 
 var findRoles = Memoize(function(roles, user) {
-    return _.filter(roles, (role) => {
-        return _.includes(user.role_ids, role.id);
-    })
+    var hash = _.keyBy(roles, 'id');
+    return _.filter(_.map(user.role_ids, (id) => {
+        return hash[id];
+    }));
 });

@@ -101,7 +101,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load members of projects
             var criteria = {
-                project_ids: _.map(props.projects, 'id')
+                id: _.flatten(_.map(props.projects, 'user_ids'))
             };
             return db.find({ table: 'user', criteria });
         }).then((users) => {
@@ -264,6 +264,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
+            console.log(props.users);
             return <td><UserTooltip {...props} /></td>;
         }
     },
@@ -461,13 +462,15 @@ var sortProjects = Memoize(function(projects, users, repos, statistics, locale, 
 });
 
 var findRepos = Memoize(function(repos, project) {
-    return _.filter(repos, (repo) => {
-        return _.includes(project.repo_ids, repo.id);
-    });
+    var hash = _.keyBy(repos, 'id');
+    return _.filter(_.map(project.repo_ids, (id) => {
+        return hash[id];
+    }));
 });
 
 var findUsers = Memoize(function(users, project) {
-    return _.filter(users, (user) => {
-        return _.includes(user.project_ids, project.id);
-    });
+    var hash = _.keyBy(users, 'id');
+    return _.filter(_.map(project.user_ids, (id) => {
+        return hash[id];
+    }));
 });

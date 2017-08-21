@@ -14,12 +14,14 @@ module.exports = _.create(Data, {
         details: Object,
         name: String,
         repo_ids: Array(Number),
+        user_ids: Array(Number),
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         name: String,
         repo_ids: Array(Number),
+        user_ids: Array(Number),
     },
 
     /**
@@ -42,6 +44,7 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 name varchar(64) NOT NULL DEFAULT '',
                 repo_ids int[] NOT NULL DEFAULT '{}'::int[],
+                user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 PRIMARY KEY (id)
             );
         `;
@@ -67,6 +70,7 @@ module.exports = _.create(Data, {
                 details: row.details,
                 name: row.name,
                 repo_ids: row.repo_ids,
+                user_ids: row.user_ids,
             };
             return object;
         });
