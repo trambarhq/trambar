@@ -62,7 +62,13 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'project-summary-cancel': 'Cancel',
+        'project-summary-delete': 'Delete Project',
+        'project-summary-description': 'Description',
         'project-summary-edit': 'Edit Project',
+        'project-summary-name': 'URL Slug',
+        'project-summary-save': 'Save Project',
+        'project-summary-title': 'Name',
 
         'project-list-$title-with-$name': (title, name) => {
             if (title) {

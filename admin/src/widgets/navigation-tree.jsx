@@ -153,7 +153,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     renderProjectSection: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var url = this.props.route.url;
+        var url = this.props.route.path;
         var project = this.state.project || { details: {} };
         var projectName = p(project.details.title) || project.name || t('nav-project-name-pending');
         var projectId = project.id;
@@ -237,7 +237,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     },
 
     renderLink: function(url, label) {
-        var id = (url === this.props.route.url) ? 'active-nav-link' : undefined;
+        var id = (url === this.props.route.path) ? 'active-nav-link' : undefined;
         return (
             <a href={url} id={id}>{label}</a>
         );

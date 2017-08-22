@@ -58,7 +58,7 @@ module.exports = React.createClass({
     goTo: function(location, replacing) {
         var baseUrl = this.state.baseUrl;
         if (baseUrl !== undefined) {
-            var url = window.location.pathname;
+            var url = getLocationUrl(window.location);
             if (url.substr(0, baseUrl.length) === baseUrl && url.charAt(baseUrl.length) === '/') {
                 url = url.substr(baseUrl.length);
                 return this.change(url, replacing);
@@ -85,7 +85,7 @@ module.exports = React.createClass({
                 var pageName = _.get(page, 'displayName', 'Page')
                 throw new Error(`${pageName} does not implement the static function parseUrl()`);
             }
-            var params = page.parseUrl(url);
+            var params = page.parseUrl(url, query);
             if (params) {
                 route = {
                     url: url,
@@ -196,7 +196,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePopState: function(evt) {
-        var url = window.location.pathname;
+        var url = getLocationUrl(window.location);
         var route = this.find(url);
         if (route) {
             this.setState(route, () => {
@@ -222,7 +222,7 @@ module.exports = React.createClass({
     },
 });
 
-function parseQueryString(q) {
+function parseQueryString(queryString) {
     var values = {};
     var pairs = _.split(queryString, '&');
     _.each(pairs, (pair) => {
@@ -232,4 +232,8 @@ function parseQueryString(q) {
         values[name] = value;
     });
     return values;
+}
+
+function getLocationUrl(location) {
+    return location.pathname + location.search + location.hash;
 }

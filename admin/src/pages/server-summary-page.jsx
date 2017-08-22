@@ -23,10 +23,11 @@ module.exports = Relaks.createClass({
          * Match current URL against the page's
          *
          * @param  {String} url
+         * @param  {Object} query
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
+        parseUrl: function(url, query) {
             return Route.match('/servers/:serverId/', url);
         },
 

@@ -2,22 +2,31 @@
     font-size: 1.2em;
     padding: 0.14em 0.5em 0.14em 0.5em;
 
-    &.add, &.edit {
+    &.add, &.edit, &.save {
         color: #ffffff;
         background-color: #006699;
         border: 2px outset #0088cc;
 
         &:active {
-            border: 2px inset #0088cc;
+            border-style: inset;
+        }
+
+        &:disabled {
+            color: #5c8599;
         }
     }
 
-    &.removal {
-        color: #ffffff;
-        background-color: #ff3333;
+    &.cancel {
+        background-color: #cccccc;
+        border: 2px outset #eeeeee;
+
+        &:active {
+            border-style: inset;
+        }
     }
 
-    &.save {
-
+    &.remove {
+        color: #ffffff;
+        background-color: #ff3333;
     }
 }

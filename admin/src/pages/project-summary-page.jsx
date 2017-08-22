@@ -9,6 +9,8 @@ var Theme = require('theme/theme');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var InstructionBlock = require('widgets/instruction-block');
+var TextField = require('widgets/text-field');
 
 require('./project-summary-page.scss');
 
@@ -26,11 +28,16 @@ module.exports = Relaks.createClass({
          * Match current URL against the page's
          *
          * @param  {String} url
+         * @param  {Object} query
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/projects/:projectId/', url);
+        parseUrl: function(url, query) {
+            var params = Route.match('/projects/:projectId/', url);
+            if (params) {
+                params.edit = !!parseInt(query.edit);
+                return params;
+            }
         },
 
         /**
@@ -41,7 +48,11 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params) {
-            return `/projects/${params.projectId}/`;
+            var url = `/projects/${params.projectId}/`;
+            if (params.edit) {
+                url += '?edit=1';
+            }
+            return url;
         },
     },
 
@@ -89,13 +100,32 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
 
     getInitialState: function() {
         return {
-            editing: this.props.route.parameters.editing,
-            newProject: null
+            newProject: null,
         };
     },
 
     getProject: function() {
-        return this.state.newProject || this.props.project;
+        if (this.isEditing()) {
+            return this.state.newProject || this.props.project || {};
+        } else {
+            return this.props.project || {};
+        }
+    },
+
+    setProjectProperty: function(path, value) {
+        var projectBefore = this.getProject();
+        var projectAfter = _.decoupleSet(projectBefore, path, value);
+        if (_.isEqual(projectAfter, this.props.project)) {
+            projectAfter = null;
+        }
+        this.setState({ newProject: projectAfter });
+    },
+
+    isEditing: function() {
+        return this.props.route.parameters.edit;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
     },
 
     /**
@@ -112,8 +142,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="project-summary-page">
                 {this.renderButtons()}
                 <h2>{t('project-summary-$title', title)}</h2>
-                {this.renderDetailsSection()}
-                {this.renderRepoSection()}
+                {this.renderForm()}
+                {this.renderInstructions()}
+                {this.renderChart()}
             </div>
         );
     },
@@ -125,20 +156,167 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        if (this.isEditing()) {
+            // using keys here to force clearing of focus
+            var noChanges = !this.state.newProject;
+            return (
+                <div key="edit" className="buttons">
+                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                        {t('project-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="save" disabled={noChanges} onClick={this.handleSaveClick}>
+                        {t('project-summary-save')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            return (
+                <div key="view" className="buttons">
+                    <PushButton className="edit" onClick={this.handleEditClick}>
+                        {t('project-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        }
+    },
+
+    renderForm: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var readOnly = !this.isEditing();
+        var project = this.getProject();
+        var titleProps = {
+            id: 'title',
+            label: t('project-summary-title'),
+            value: p(project.details.title),
+            onChange: this.handleTitleChange,
+            readOnly,
+        };
+        var nameProps = {
+            id: 'name',
+            label: t('project-summary-name'),
+            value: project.name,
+            onChange: this.handleNameChange,
+            readOnly,
+        };
+        var descriptionProps = {
+            id: 'description',
+            label: t('project-summary-description'),
+            value: p(project.details.description),
+            multiline: true,
+            onChange: this.handleDescriptionChange,
+            readOnly,
+        };
         return (
-            <div className="buttons">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('project-summary-edit')}
-                </PushButton>
+            <div className="form">
+                <TextField {...titleProps}/>
+                <TextField {...nameProps}/>
+                <TextField {...descriptionProps}/>
             </div>
         );
     },
 
-    renderDetailsSection: function() {
-
+    renderInstructions: function() {
+        var instructionProps = {
+            topic: 'project',
+            hidden: !this.isEditing(),
+            locale: this.props.locale,
+        };
+        return (
+            <div className="instructions">
+                <InstructionBlock {...instructionProps} />
+            </div>
+        );
     },
 
-    renderRepoSection: function() {
+    renderChart: function() {
+        return (
+            <div className="statistics">
+                <h2>Statistics</h2>
+            </div>
+        );
+    },
 
+    componentDidUpdate: function(prevProps, prevState) {
+        if (prevProps.route !== this.props.route) {
+            this.setState({ newProject: null });
+        }
+    },
+
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
+    handleEditClick: function(evt) {
+        var url = require('pages/project-summary-page').getUrl({
+            projectId: this.props.project.id,
+            edit: true
+        });
+        return this.props.route.change(url);
+    },
+
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelClick: function(evt) {
+        // TODO: add confirmation
+        var url = require('pages/project-summary-page').getUrl({
+            projectId: this.props.project.id,
+        });
+        return this.props.route.change(url);
+    },
+
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var project = this.getProject();
+        return db.start().then((userId) => {
+            return db.saveOne({ table: 'project' }, project).then((project) => {
+                var url = require('pages/project-summary-page').getUrl({
+                    projectId: project.id,
+                });
+                return this.props.route.change(url);
+            });
+        });
+    },
+
+    /**
+     * Called when user changes the title
+     *
+     * @param  {Event} evt
+     */
+    handleTitleChange: function(evt) {
+        var text = evt.target.value;
+        var lang = this.props.locale.lang;
+        this.setProjectProperty(`details.title.${lang}`, text);
+    },
+
+    /**
+     * Called when user changes the title
+     *
+     * @param  {Event} evt
+     */
+    handleNameChange: function(evt) {
+        var text = evt.target.value;
+        this.setProjectProperty(`name`, text);
+    },
+
+    /**
+     * Called when user changes the title
+     *
+     * @param  {Event} evt
+     */
+    handleDescriptionChange: function(evt) {
+        var text = evt.target.value;
+        var lang = this.props.locale.lang;
+        this.setProjectProperty(`details.description.${lang}`, text);
     },
 });

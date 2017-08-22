@@ -5,6 +5,7 @@ module.exports = Route;
 
 function Route(routeManager) {
     this.url = routeManager.getUrl();
+    this.path = _.replace(this.url, /[?#].*/, '');
     this.component = routeManager.getComponent();
     this.parameters = routeManager.getParameters();
     this.query = routeManager.getQuery();

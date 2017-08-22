@@ -52,7 +52,6 @@ module.exports = React.createClass({
 
     pick: function(languageVersions) {
         if (typeof(languageVersions) === 'string') {
-            console.log(languageVersions)
             return languageVersions;
         }
         // no support for country-specific versions
@@ -62,7 +61,7 @@ module.exports = React.createClass({
         var defaultLanguageCode = this.props.defaultLanguageCode.substr(0, 2);
         var defaultLanguagePhrase = '';
         for (var key in languageVersions) {
-            var phrase = _.trim(languageVersions[key]);
+            var phrase = languageVersions[key];
             var languageCode = _.toLower(key);
             if (languageCode === currentLanguageCode) {
                 matchingPhrase = phrase;

@@ -1,0 +1,28 @@
+.text-field {
+    margin-bottom: 1em;
+
+    label {
+        display: block;
+        font-weight: 600;
+    }
+
+    input[type=text], textarea {
+        display: block;
+        width: 100%;
+        transition: border-color 1s ease-out;
+        border: 1px solid rgba(0,0,0,1);
+        font-size: 1em;
+        margin-top: 2px;
+        padding: 2px 2px 1px 4px;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    &.readonly {
+        input[type=text], textarea {
+            border-color: rgba(0,0,0,0);
+        }
+    }
+}

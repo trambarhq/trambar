@@ -2,6 +2,7 @@ module.exports = Locale;
 
 function Locale(localeManager) {
     this.languageCode = localeManager.getLanguageCode();
+    this.lang = this.languageCode.substr(0, 2);
     this.directory = localeManager.getDirectory();
 
     this.translate = function(phrase) {
