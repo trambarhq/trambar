@@ -39,7 +39,11 @@ module.exports = Relaks.createClass({
          * @return {Object|null}
          */
         parseUrl: function(url, query) {
-            return Route.match('/projects/:projectId/members/', url);
+            var params = Route.match('/projects/:projectId/members/', url);
+            if (params) {
+                params.edit = !!parseInt(query.edit);
+                return params;
+            }
         },
 
         /**
@@ -50,7 +54,11 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params) {
-            return `/projects/${params.projectId}/members/`;
+            var url = `/projects/${params.projectId}/members/`;
+            if (params.edit) {
+                url += '?edit=1';
+            }
+            return url;
         },
     },
 
@@ -73,7 +81,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<MemberListPageSync {...props} />);
+        meanwhile.show(<MemberListPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load project
             var criteria = {
@@ -83,10 +91,8 @@ module.exports = Relaks.createClass({
         }).then((project) => {
             props.project = project;
         }).then(() => {
-            // load members
-            var criteria = {
-                id: props.project.user_ids
-            };
+            // load all users
+            var criteria = {};
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
@@ -94,15 +100,16 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load roles
             var criteria = {
-                id: _.flatten(_.map(props.users, 'role_ids'))
+                id: _.uniq(_.flatten(_.map(props.users, 'role_ids')))
             };
             return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
             meanwhile.show(<MemberListPageSync {...props} />);
         }).then(() => {
-            // load user statistics
-            return DailyActivities.loadUserStatistics(db, props.project, props.users);
+            // load statistics of members
+            var users = findUsers(props.users, props.project)
+            return DailyActivities.loadUserStatistics(db, props.project, users);
         }).then((statistics) => {
             props.statistics = statistics;
             return <MemberListPageSync {...props} />;
@@ -133,7 +140,50 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
+            newProject: null,
+            renderingFullList: this.props.route.parameters.edit,
         };
+    },
+
+    getProject: function() {
+        if (this.isEditing()) {
+            return this.state.newProject || this.props.project || {};
+        } else {
+            return this.props.project || {};
+        }
+    },
+
+    setProjectProperty: function(path, value) {
+        var projectBefore = this.getProject();
+        var projectAfter = _.decoupleSet(projectBefore, path, value);
+        if (_.isEqual(projectAfter, this.props.project)) {
+            projectAfter = null;
+        }
+        this.setState({ newProject: projectAfter });
+    },
+
+    /**
+     * Return true when the URL indicate edit mode
+     *
+     * @return {Boolean}
+     */
+    isEditing: function() {
+        return this.props.route.parameters.edit;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.route !== nextProps.route) {
+            if (nextProps.route.parameters.edit) {
+                this.setState({ renderingFullList: true });
+            } else {
+                setTimeout(() => {
+                    if (!this.props.route.parameters.edit && this.state.renderingFullList) {
+                        this.setState({ renderingFullList: false });
+                    }
+                }, 500);
+            }
+        }
+        // TODO: merge incoming project
     },
 
     /**
@@ -159,17 +209,32 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        return (
-            <div className="buttons">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('member-list-edit')}
-                </PushButton>
-                {' '}
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('member-list-new')}
-                </PushButton>
-            </div>
-        );
+        if (this.isEditing()) {
+            var noChange = !this.state.newProject;
+            return (
+                <div className="buttons">
+                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                        {t('member-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="save" disabled={noChange} onClick={this.handleSaveClick}>
+                        {t('member-list-save')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            return (
+                <div className="buttons">
+                    <PushButton className="add" onClick={this.handleAddClick}>
+                        {t('member-list-new')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="edit" onClick={this.handleEditClick}>
+                        {t('member-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        }
     },
 
     /**
@@ -180,12 +245,20 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderTable: function() {
         var t = this.props.locale.translate;
         var tableProps = {
-            className: 'users',
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var users = sortUsers(this.props.users, this.props.projects, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        var users;
+        if (this.state.renderingFullList) {
+            // list all users when we're editing the list
+            users = this.props.users;
+            tableProps.expanded = this.isEditing();
+        } else {
+            // list only those we're in the project
+            users = findUsers(this.props.users, this.props.project);
+        }
+        var users = sortUsers(users, this.props.roles, this.props.statistics, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
@@ -199,7 +272,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                         {this.renderModifiedTimeColumn()}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody ref="tbody">
                     {_.map(users, this.renderRow)}
                 </tbody>
             </SortableTable>
@@ -210,13 +283,23 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * Render a table row
      *
      * @param  {Object} user
-     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderRow: function(user, i) {
+    renderRow: function(user) {
+        var props = {
+            key: user.id,
+        };
+        if (this.state.renderingFullList) {
+            var project = this.getProject();
+            if (_.includes(project.user_ids, user.id)) {
+                props.className = 'selected';
+            }
+            props.onClick = this.handleRowClick;
+            props['data-user-id'] = user.id;
+        }
         return (
-            <tr key={i}>
+            <tr {...props}>
                 {this.renderNameColumn(user)}
                 {this.renderRolesColumn(user)}
                 {this.renderDateRangeColumn(user)}
@@ -242,16 +325,34 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         } else {
             var name = user.details.name;
             var username = user.username;
-            var url = require('pages/user-summary-page').getUrl({ userId: user.id });
             var resources = _.get(user, 'details.resources');
             var profileImage = _.find(resources, { type: 'image' });
             var imageUrl = this.props.theme.getImageUrl(profileImage, 24, 24);
+            var url;
+            var badge;
+            if (this.state.renderingFullList) {
+                // compare against original project object to see if the user
+                // will be added or removed
+                var projectOriginal = this.props.project;
+                var projectCurrent = this.getProject();
+                var includedBefore = _.includes(projectOriginal.user_ids, user.id);
+                var includedAfter = _.includes(projectCurrent.user_ids, user.id);
+                if (includedBefore && !includedAfter) {
+                    badge = <i className="fa fa-user-times badge remove" />;
+                } else if (!includedBefore && includedAfter) {
+                    badge = <i className="fa fa-user-plus badge add" />;
+                }
+            } else {
+                // don't create the link when we're editing the list
+                url = require('pages/user-summary-page').getUrl({ userId: user.id });
+            }
             return (
                 <td>
                     <a href={url}>
                         <img className="profile-image" src={imageUrl} />
                         {' '}
                         {t('user-list-$name-with-$username', name, username)}
+                        {badge}
                     </a>
                 </td>
             );
@@ -277,6 +378,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 roles: findRoles(this.props.roles, user),
                 locale: this.props.locale,
                 theme: this.props.theme,
+                disabled: this.state.renderingFullList,
             };
             return <td><RoleTooltip {...props} /></td>;
         }
@@ -297,34 +399,33 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         if (!user) {
             return <TH id="email">{t('table-heading-email')}</TH>;
         } else {
-            var contents;
+            var contents = '-';
             var email = user.details.email;
-            if (email) {
-                contents = <a href={`mailto:${email}`}>{email}</a>;
-            } else {
-                contents = '-';
+            var url;
+            if (!this.state.renderingFullList && email) {
+                url = `mailto:${email}`;
             }
-            return <td>{contents}</td>;
+            return <td><a href={url}>{email}</a></td>;
         }
     },
 
     /**
      * Render active period column, either the heading or a data cell
      *
-     * @param  {Object|null} project
+     * @param  {Object|null} user
      *
      * @return {ReactElement|null}
      */
-    renderDateRangeColumn: function(project) {
+    renderDateRangeColumn: function(user, editing) {
         if (this.props.theme.isBelowMode('wide')) {
             return null;
         }
         var t = this.props.locale.translate;
-        if (!project) {
+        if (!user) {
             return <TH id="range">{t('table-heading-date-range')}</TH>
         } else {
             var start, end;
-            var range = _.get(this.props.statistics, [ project.id, 'range' ]);
+            var range = _.get(this.props.statistics, [ user.id, 'range' ]);
             if (range) {
                 start = Moment(range.start).format('ll');
                 end = Moment(range.end).format('ll');
@@ -336,22 +437,23 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     /**
      * Render column showing the number of stories last month
      *
-     * @param  {Object|null} project
+     * @param  {Object|null} user
      *
      * @return {ReactElement|null}
      */
-    renderLastMonthColumn: function(project) {
+    renderLastMonthColumn: function(user) {
         if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
-        if (!project) {
+        if (!user) {
             return <TH id="last_month">{t('table-heading-last-month')}</TH>
         } else {
             var props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'last_month' ]),
+                statistics: _.get(this.props.statistics, [ user.id, 'last_month' ]),
                 locale: this.props.locale,
                 theme: this.props.theme,
+                disabled: this.state.renderingFullList,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
@@ -360,22 +462,23 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     /**
      * Render column showing the number of stories this month
      *
-     * @param  {Object|null} project
+     * @param  {Object|null} user
      *
      * @return {ReactElement|null}
      */
-    renderThisMonthColumn: function(project) {
+    renderThisMonthColumn: function(user) {
         if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
-        if (!project) {
+        if (!user) {
             return <TH id="this_month">{t('table-heading-this-month')}</TH>
         } else {
             var props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'this_month' ]),
+                statistics: _.get(this.props.statistics, [ user.id, 'this_month' ]),
                 locale: this.props.locale,
                 theme: this.props.theme,
+                disabled: this.state.renderingFullList,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
@@ -384,22 +487,23 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     /**
      * Render column showing the number of stories to date
      *
-     * @param  {Object|null} project
+     * @param  {Object|null} user
      *
      * @return {ReactElement|null}
      */
-    renderToDateColumn: function(project) {
+    renderToDateColumn: function(user) {
         if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
-        if (!project) {
+        if (!user) {
             return <TH id="to_date">{t('table-heading-to-date')}</TH>
         } else {
             var props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'to_date' ]),
+                statistics: _.get(this.props.statistics, [ user.id, 'to_date' ]),
                 locale: this.props.locale,
                 theme: this.props.theme,
+                disabled: this.state.renderingFullList,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
@@ -435,34 +539,81 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             sortDirections: evt.directions
         });
     },
+
+    handleEditClick: function(evt) {
+        var url = require('pages/member-list-page').getUrl({
+            projectId: this.props.route.parameters.projectId,
+            edit: 1
+        });
+        this.props.route.change(url, true);
+    },
+
+    handleCancelClick: function(evt) {
+        var url = require('pages/member-list-page').getUrl({
+            projectId: this.props.route.parameters.projectId,
+        });
+        this.props.route.change(url, true);
+    },
+
+    handleAddClick: function(evt) {
+
+    },
+
+    handleRowClick: function(evt) {
+        var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
+        var projectOriginal = this.props.project;
+        var userIdsOriginal = projectOriginal.user_ids;
+        var projectCurrent = this.getProject();
+        var userIds = _.slice(projectCurrent.user_ids);
+        if (_.includes(userIds, userId)) {
+            _.pull(userIds, userId);
+        } else {
+            userIds.push(userId);
+        }
+        if (userIds.length === userIdsOriginal.length) {
+            // if the new list has the same element as the old, use the latter so
+            // to avoid a mere change in order of the ids
+            if (_.difference(userIds, userIdsOriginal).length === 0) {
+                userIds = userIdsOriginal;
+            }
+        }
+        this.setProjectProperty('user_ids', userIds);
+    }
 });
 
-var sortUsers = Memoize(function(users, projects, locale, columns, directions) {
+var sortUsers = Memoize(function(users, roles, statistics, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
                 return 'details.name';
             case 'range':
                 return (user) => {
-                    return _.get(this.props.statistics, [ user.id, 'range', 'start' ], '');
+                    return _.get(statistics, [ user.id, 'range', 'start' ], '');
                 };
             case 'last_month':
                 return (user) => {
-                    return _.get(this.props.statistics, [ user.id, 'last_month', 'total' ], 0);
+                    return _.get(statistics, [ user.id, 'last_month', 'total' ], 0);
                 };
             case 'this_month':
                 return (user) => {
-                    return _.get(this.props.statistics, [ user.id, 'this_month', 'total' ], 0);
+                    return _.get(statistics, [ user.id, 'this_month', 'total' ], 0);
                 };
             case 'to_date':
                 return (user) => {
-                    return _.get(this.props.statistics, [ user.id, 'to_date', 'total' ], 0);
+                    return _.get(statistics, [ user.id, 'to_date', 'total' ], 0);
                 };
             default:
                 return column;
         }
     });
     return _.orderBy(users, columns, directions);
+});
+
+var findUsers = Memoize(function(users, project) {
+    var hash = _.keyBy(users, 'id');
+    return _.filter(_.map(project.user_ids, (id) => {
+        return hash[id];
+    }));
 });
 
 var findRoles = Memoize(function(roles, user) {

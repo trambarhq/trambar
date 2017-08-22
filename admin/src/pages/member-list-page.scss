@@ -5,6 +5,25 @@
     }
 
     .sortable-table {
+        .profile-image {
+            width: 1.5em;
+            height: 1.5em;
+            vertical-align: middle;
+        }
+
+        .badge {
+            float: right;
+            margin-top: 0.2em;
+
+            &.add {
+                color: #009900;
+            }
+
+            &.remove {
+                color: #cc0000;
+            }
+        }
+
         #roles {
             width: 12em;
         }

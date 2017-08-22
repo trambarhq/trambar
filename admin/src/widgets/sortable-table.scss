@@ -2,6 +2,7 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    $expansion-time: 0.5s;
 
     TH {
         text-align: left;
@@ -32,12 +33,18 @@
         }
     }
 
-    TD {
-        padding: 0.3em 0.4em 0.2em 0.4em;
-        word-wrap: break-word;
-    }
-
     TBODY {
+        TD {
+            padding: 0.3em 0.4em 0.2em 0.4em;
+            word-wrap: break-word;
+            transition: padding-top $expansion-time, padding-bottom $expansion-time;
+        }
+
+        TR {
+            background-color: #ffffff;
+            transition: background-color $expansion-time, opacity $expansion-time;
+        }
+
         TR:nth-child(even) {
             background-color: #eeeeee;
         }
@@ -47,10 +54,58 @@
         &:link, &:visited {
             color: #000000;
             text-decoration: none;
+
+            &:hover {
+                color: #004466;
+            }
+        }
+    }
+
+    &.expandable {
+        TBODY {
+            TR {
+                background-color: #ffffff;
+                cursor: pointer;
+
+                TD {
+                    .expanding-container {
+                        overflow: hidden;
+                        transition: height $expansion-time;
+                    }
+                }
+
+                &.collapsed {
+                    opacity: 0;
+
+                    TD {
+                        padding-top: 0;
+                        padding-bottom: 0;
+
+                        .expanding-container {
+                            height: 0px;
+                        }
+                    }
+                }
+
+                &.expanded {
+                    opacity: 1;
+
+                    TD {
+                        padding-top: 0.3em;
+                        padding-bottom: 0.2em;
+                    }
+                }
+            }
         }
 
-        &:hover {
-            color: #004466;
+        &.expanded {
+            TBODY {
+                TR {
+                    &.selected {
+                        background-color: #99ddff;
+                    }
+                }
+            }
         }
     }
 }

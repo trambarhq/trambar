@@ -5,6 +5,9 @@ require('./tooltip.scss');
 
 module.exports = React.createClass({
     displayName: 'Tooltip',
+    propTypes: {
+        disabled: PropTypes.bool,
+    },
 
     getInitialState: function() {
         return {
@@ -15,8 +18,8 @@ module.exports = React.createClass({
 
     componentWillReceiveProps: function(nextProps) {
         var live = hasContents(nextProps);
-        if (this.state.live !== live) {
-            var open = this.state.open && live;
+        if (this.state.live !== live || this.props.disabled !== nextProps.disabled) {
+            var open = this.state.open && live && !nextProps.disabled;
             this.setState({ live, open });
         }
     },
@@ -82,7 +85,7 @@ module.exports = React.createClass({
     },
 
     handleLabelClick: function(evt) {
-        if (this.state.live) {
+        if (this.state.live && !this.props.disabled) {
             this.setState({ open: !this.state.open });
         }
     },

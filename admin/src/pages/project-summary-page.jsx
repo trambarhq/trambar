@@ -125,9 +125,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return this.props.route.parameters.edit;
     },
 
-    componentWillReceiveProps: function(nextProps) {
-    },
-
     /**
      * Render component
      *

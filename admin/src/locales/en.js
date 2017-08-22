@@ -95,8 +95,10 @@ module.exports = function(languageCode) {
                 return username;
             }
         },
+        'member-list-cancel': 'Cancel',
         'member-list-edit': 'Edit Member List',
         'member-list-new': 'New Member',
+        'member-list-save': 'Save Member List',
         'member-list-title': 'Members',
 
         'repo-list-edit': 'Edit Repository List',
