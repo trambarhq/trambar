@@ -97,11 +97,25 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var name = _.get(this.props.user, 'details.name');
         return (
             <div className="user-summary-page">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t(member ? 'user-summary-member-edit' : 'user-summary-edit')}
-                </PushButton>
+                {this.renderButtons()}
                 <h2>{t(member ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
             </div>
         );
-    }
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="buttons">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t(member ? 'user-summary-member-edit' : 'user-summary-edit')}
+                </PushButton>
+            </div>
+        );
+    },
 });

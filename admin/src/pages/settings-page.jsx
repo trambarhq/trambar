@@ -79,6 +79,11 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (

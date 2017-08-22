@@ -121,11 +121,25 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="role-list-page">
+                {this.renderButtons()}
+                <h2>{t('role-list-title')}</h2>
+                {this.renderTable()}
+            </div>
+        );
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="buttons">
                 <PushButton className="add" onClick={this.handleAddClick}>
                     {t('role-list-new')}
                 </PushButton>
-                <h2>{t('role-list-title')}</h2>
-                {this.renderTable()}
             </div>
         );
     },

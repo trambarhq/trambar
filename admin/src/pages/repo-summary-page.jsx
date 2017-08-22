@@ -96,16 +96,35 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var title = p(_.get(this.props.repo, 'details.title'));
         return (
             <div className="repo-summary-page">
+                {this.renderButtons()}
+                <h2>{t('repo-summary-$title', title)}</h2>
+            </div>
+        );
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div class="buttons">
                 <PushButton className="add" onClick={this.handleAddClick}>
                     {t('repo-summary-edit')}
                 </PushButton>
-                <h2>{t('repo-summary-$title', title)}</h2>
             </div>
         );
     },

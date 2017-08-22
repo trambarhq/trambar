@@ -144,11 +144,25 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="repo-list-page">
+                {this.renderButtons()}
+                <h2>{t('repo-list-title')}</h2>
+                {this.renderTable()}
+            </div>
+        );
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="buttons">
                 <PushButton className="add" onClick={this.handleAddClick}>
                     {t('repo-list-edit')}
                 </PushButton>
-                <h2>{t('repo-list-title')}</h2>
-                {this.renderTable()}
             </div>
         );
     },
@@ -260,13 +274,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                     serverId: server.id
                 });
                 contents =(
-                    <td>
-                        <a href={url}>
-                            <i className={`fa fa-${iconName} fa-fw`} />
-                            {' '}
-                            {title}
-                        </a>
-                    </td>
+                    <a href={url}>
+                        <i className={`fa fa-${iconName} fa-fw`} />
+                        {' '}
+                        {title}
+                    </a>
                 );
             }
             return <td>{contents}</td>;

@@ -78,17 +78,36 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var title = p(_.get(this.props.role, 'details.title'));
         return (
             <div className="role-summary-page">
-                <PushButton className="edit" onClick={this.handleEditClick}>
-                    {t('role-summary-edit')}
-                </PushButton>
+                {this.renderButtons()}
                 <h2>{t('role-summary-$title', title)}</h2>
             </div>
         );
-    }
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="buttons">
+                <PushButton className="edit" onClick={this.handleEditClick}>
+                    {t('role-summary-edit')}
+                </PushButton>
+            </div>
+        );
+    },
 });

@@ -77,6 +77,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div>

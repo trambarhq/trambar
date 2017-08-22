@@ -144,14 +144,29 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         return (
             <div className="member-list-page">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('member-list-new')}
-                </PushButton>
+                {this.renderButtons()}
+                <h2>{t('member-list-title')}</h2>
+                {this.renderTable()}
+            </div>
+        );
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="buttons">
                 <PushButton className="add" onClick={this.handleAddClick}>
                     {t('member-list-edit')}
                 </PushButton>
-                <h2>{t('member-list-title')}</h2>
-                {this.renderTable()}
+                {' '}
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('member-list-new')}
+                </PushButton>
             </div>
         );
     },

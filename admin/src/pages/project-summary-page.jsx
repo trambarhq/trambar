@@ -98,6 +98,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return this.state.newProject || this.props.project;
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
@@ -105,12 +110,26 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var title = p(project.details.title) || project.name;
         return (
             <div className="project-summary-page">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('project-summary-edit')}
-                </PushButton>
+                {this.renderButtons()}
                 <h2>{t('project-summary-$title', title)}</h2>
                 {this.renderDetailsSection()}
                 {this.renderRepoSection()}
+            </div>
+        );
+    },
+
+    /**
+     * Render buttons in top right corner
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="buttons">
+                <PushButton className="add" onClick={this.handleAddClick}>
+                    {t('project-summary-edit')}
+                </PushButton>
             </div>
         );
     },
