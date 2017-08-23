@@ -173,8 +173,29 @@ module.exports = function(languageCode) {
                 return username;
             }
         },
+        'user-list-approve': 'Approve new users',
+        'user-list-cancel': 'Cancel',
         'user-list-new': 'New User',
+        'user-list-save': 'Approve selected',
         'user-list-title': 'Users',
+        'user-list-user-$type-$approved': (type, approved) => {
+            var text;
+            switch(type) {
+                case 'guest':
+                    text = 'Guest';
+                    break;
+                case 'member':
+                    text = 'Team member';
+                    break;
+                case 'admin':
+                    text = 'Administrator';
+                    break;
+            }
+            if (!approved) {
+                text += ' (pending)';
+            }
+            return text;
+        },
 
         'user-summary-$name': (name) => {
             var text = 'User';

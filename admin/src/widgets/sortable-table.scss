@@ -50,6 +50,10 @@
         }
     }
 
+    .collapsible-container {
+        transition: height $expansion-time;
+    }
+
     A {
         &:link, &:visited {
             color: #000000;
@@ -67,23 +71,12 @@
                 background-color: #ffffff;
                 cursor: pointer;
 
-                TD {
-                    .expanding-container {
-                        overflow: hidden;
-                        transition: height $expansion-time;
-                    }
-                }
-
                 &.collapsed {
                     opacity: 0;
 
                     TD {
                         padding-top: 0;
                         padding-bottom: 0;
-
-                        .expanding-container {
-                            height: 0px;
-                        }
                     }
                 }
 
@@ -97,13 +90,13 @@
                 }
             }
         }
+    }
 
-        &.expanded {
-            TBODY {
-                TR {
-                    &.selected {
-                        background-color: #99ddff;
-                    }
+    &.selectable {
+        TBODY {
+            TR {
+                &.selected {
+                    background-color: #99ddff;
                 }
             }
         }

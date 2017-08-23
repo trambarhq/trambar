@@ -39,7 +39,11 @@ module.exports = Relaks.createClass({
          * @return {Object|null}
          */
         parseUrl: function(url, query) {
-            return Route.match('/users/', url);
+            var params = Route.match('/users/', url);
+            if (params) {
+                params.approve = !!parseInt(query.approve);
+                return params;
+            }
         },
 
         /**
@@ -50,7 +54,11 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params) {
-            return `/users/`;
+            var url = `/users/`;
+            if (params && params.approve) {
+                url += '?approve=1';
+            }
+            return url;
         },
     },
 
@@ -72,7 +80,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<UserListPageSync {...props} />);
+        meanwhile.show(<UserListPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load all users
             var criteria = {};
@@ -123,7 +131,40 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
+            renderingPartialList: this.props.route.parameters.approve,
+            selectedUserIds: [],
         };
+    },
+
+    /**
+     * Return true if URL indicates user approval mode
+     *
+     * @return {Boolean}
+     */
+    isApproving: function() {
+        return this.props.route.parameters.approve;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.route !== nextProps.route) {
+            if (nextProps.route.parameters.approve) {
+                this.setState({ renderingPartialList: true });
+            } else {
+                // wait for animation to finish
+                setTimeout(() => {
+                    if (!this.props.route.parameters.edit && this.state.renderingPartialList) {
+                        this.setState({ renderingPartialList: false });
+                    }
+                }, 500);
+            }
+        }
+        if (this.props.users !== nextProps.users) {
+            if (_.isEmpty(this.state.selectedUserIds)) {
+                // preselect all unapproved users
+                var unapprovedUsers = _.filter(nextProps.users, { approved: false });
+                this.setState({ selectedUserIds: _.map(unapprovedUsers, 'id') })
+            }
+        }
     },
 
     /**
@@ -149,13 +190,33 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        return (
-            <div className="buttons">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('user-list-new')}
-                </PushButton>
-            </div>
-        );
+        if (this.isApproving()) {
+            var hasSelected = !_.isEmpty(this.state.selectedUserIds);
+            return (
+                <div className="buttons">
+                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                        {t('user-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="save" disabled={!hasSelected} onClick={this.handleSaveClick}>
+                        {t('user-list-save')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            var hasUnapproved = _.some(this.props.users, { approved: false });
+            return (
+                <div className="buttons">
+                    <PushButton className="add" onClick={this.handleAddClick}>
+                        {t('user-list-new')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="edit" disabled={!hasUnapproved} onClick={this.handleApproveClick}>
+                        {t('user-list-approve')}
+                    </PushButton>
+                </div>
+            );
+        }
     },
 
     /**
@@ -170,12 +231,18 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
+        if (this.state.renderingPartialList) {
+            tableProps.expanded = !this.isApproving();
+            tableProps.expandable = true;
+            tableProps.selectable = true;
+        }
         var users = sortUsers(this.props.users, this.props.roles, this.props.projects, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
                     <tr>
                         {this.renderNameColumn()}
+                        {this.renderTypeColumn()}
                         {this.renderRolesColumn()}
                         {this.renderProjectsColumn()}
                         {this.renderEmailColumn()}
@@ -198,9 +265,23 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(user, i) {
+        var props = {
+            key: user.id,
+        };
+        if (this.state.renderingPartialList) {
+            if (!user.approved) {
+                props.className = 'fixed';
+                if (_.includes(this.state.selectedUserIds, user.id)) {
+                    props.className += ' selected';
+                }
+            }
+            props.onClick = this.handleRowClick;
+            props['data-user-id'] = user.id;
+        }
         return (
-            <tr key={i}>
+            <tr {...props}>
                 {this.renderNameColumn(user)}
+                {this.renderTypeColumn(user)}
                 {this.renderRolesColumn(user)}
                 {this.renderProjectsColumn(user)}
                 {this.renderEmailColumn(user)}
@@ -223,19 +304,51 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else {
             var name = user.details.name;
             var username = user.username;
-            var url = UserSummaryPage.getUrl({ userId: user.id });
             var resources = _.get(user, 'details.resources');
             var profileImage = _.find(resources, { type: 'image' });
             var imageUrl = this.props.theme.getImageUrl(profileImage, 24, 24);
+            var url;
+            var badge;
+            if (this.state.renderingPartialList) {
+                // compare against original project object to see if the user
+                // will be added or removed
+                if (_.includes(this.state.selectedUserIds, user.id)) {
+                    badge = <i className="fa fa-check-square badge add" />;
+                }
+            } else {
+                // don't create the link when we're editing the list
+                url = UserSummaryPage.getUrl({ userId: user.id });
+            }
+
             return (
                 <td>
                     <a href={url}>
                         <img className="profile-image" src={imageUrl} />
                         {' '}
                         {t('user-list-$name-with-$username', name, username)}
+                        {badge}
                     </a>
                 </td>
             );
+        }
+    },
+
+    /**
+     * Render Type column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderTypeColumn: function(user) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="type">{t('table-heading-type')}</TH>;
+        } else {
+            return <td>{t('user-list-user-$type-$approved', user.type, user.approved)}</td>;
         }
     },
 
@@ -259,6 +372,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 omit: 1,
                 locale: this.props.locale,
                 theme: this.props.theme,
+                disabled: this.state.renderingPartialList,
             };
             return <td><ProjectTooltip {...props} /></td>;
         }
@@ -269,10 +383,10 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object|null} user
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderRolesColumn: function(user) {
-        if (this.props.theme.isBelowMode('narrow')) {
+        if (this.props.theme.isBelowMode('standard')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -283,6 +397,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 roles: findRoles(this.props.roles, user),
                 locale: this.props.locale,
                 theme: this.props.theme,
+                disabled: this.state.renderingPartialList,
             };
             return <td><RoleTooltip {...props} /></td>;
         }
@@ -303,14 +418,16 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         if (!user) {
             return <TH id="email">{t('table-heading-email')}</TH>;
         } else {
-            var contents;
+            var contents = '-';
             var email = user.details.email;
             if (email) {
-                contents = <a href={`mailto:${email}`}>{email}</a>;
-            } else {
-                contents = '-';
+                var url;
+                if (!this.state.renderingPartialList) {
+                    url = `mailto:${email}`;
+                }
+                contents = <a href={url}>{email}</a>;
             }
-            return <td>{contents}</td>;
+            return <td className="email">{contents}</td>;
         }
     },
 
@@ -330,7 +447,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         if (!user) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={user.mtime} /></td>;
+            var props = {
+                time: user.mtime,
+                disabled: this.state.renderingPartialList,
+            };
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 
@@ -345,6 +466,46 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             sortDirections: evt.directions
         });
     },
+
+    /**
+     * Called when user clicks approve button
+     *
+     * @param  {Event} evt
+     */
+    handleApproveClick: function(evt) {
+        var url = require('pages/user-list-page').getUrl({ approve: true });
+        this.props.route.change(url, true);
+    },
+
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelClick: function(evt) {
+        var url = require('pages/user-list-page').getUrl();
+        this.props.route.change(url, true);
+    },
+
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+
+    },
+
+    handleRowClick: function(evt) {
+        var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
+        var selectedUserIds = _.slice(this.state.selectedUserIds);
+        if (_.includes(selectedUserIds, userId)) {
+            _.pull(selectedUserIds, userId);
+        } else {
+            selectedUserIds.push(userId);
+        }
+        this.setState({ selectedUserIds })
+    }
 });
 
 var sortUsers = Memoize(function(users, roles, projects, locale, columns, directions) {
@@ -353,6 +514,11 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
         switch (column) {
             case 'name':
                 return 'details.name';
+            case 'type':
+                var types = [ 'guest', 'member', 'admin' ];
+                return (user) => {
+                    return _.indexOf(types, user.type);
+                };
             case 'roles':
                 return (user) => {
                     var role0 = _.first(findRoles(roles, user));

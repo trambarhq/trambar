@@ -174,7 +174,7 @@ module.exports = React.createClass({
                 'ultra-narrow': 0,
                 'narrow': 700,
                 'standard': 1000,
-                'wide': 1300,
+                'wide': 1400,
                 'ultra-wide': 1700,
             },
             route: this.state.route,

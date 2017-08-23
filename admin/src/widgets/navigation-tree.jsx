@@ -237,14 +237,16 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     },
 
     renderLink: function(url, label) {
-        var id = (url === this.props.route.path) ? 'active-nav-link' : undefined;
+        var ref = (url === this.props.route.path) ? 'activeLink' : undefined;
         return (
-            <a href={url} id={id}>{label}</a>
+            <a ref={ref} href={url}>{label}</a>
         );
     },
 
     componentDidMount: function() {
-        this.repositionArrow();
+        setTimeout(() => {
+            this.repositionArrow();
+        }, 100);
     },
 
     componentDidUpdate: function(prevProps, prevState) {
@@ -257,7 +259,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         setTimeout(() => {
             // find the link level
             var level = 0;
-            var active = document.getElementById('active-nav-link');
+            var active = this.refs.activeLink;
             if (active) {
                 for (var n = active; n; n = n.parentNode) {
                     var m;
@@ -282,7 +284,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var interval = setInterval(() => {
             // calculate the position of the arrow
             var pos = 0;
-            var active = document.getElementById('active-nav-link');
+            var active = this.refs.activeLink;
             if (active) {
                 var arrowRect = arrow.getBoundingClientRect();
                 var linkRect = active.getBoundingClientRect();

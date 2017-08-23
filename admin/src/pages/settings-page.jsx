@@ -9,6 +9,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var CollapsibleContainer = require('widgets/collapsible-container');
 
 require('./settings-page.scss');
 
@@ -80,6 +81,12 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    getInitialState: function() {
+        return {
+            open: true
+        };
+    },
+
     /**
      * Render component
      *
@@ -93,7 +100,20 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     {t('settings-edit')}
                 </PushButton>
                 <h2>{t('settings-title')}</h2>
+
+                <CollapsibleContainer open={this.state.open}>
+                    <p style={{ backgroundColor: 'red' }}>
+                        This is a test<br />
+                        This is a test<br />
+                        This is a test<br />
+                        This is a test<br />
+                    </p>
+                </CollapsibleContainer>
             </div>
         );
-    }
+    },
+
+    handleEditClick: function(evt) {
+        this.setState({ open: !this.state.open });
+    },
 });

@@ -16,6 +16,7 @@ module.exports = _.create(Data, {
         role_ids: Array(Number),
         server_id: Number,
         external_id: Number,
+        approved: Boolean,
         hidden: Boolean,
     },
     criteria: {
@@ -25,6 +26,7 @@ module.exports = _.create(Data, {
         role_ids: Array(Number),
         server_id: Number,
         external_id: Number,
+        approved: Boolean,
         hidden: Boolean,
     },
 
@@ -52,6 +54,7 @@ module.exports = _.create(Data, {
                 server_id int,
                 external_id bigint,
                 hidden boolean NOT NULL DEFAULT false,
+                approved boolean NOT NULL DEFAULT true,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} ((details->>'email')) WHERE details ? 'email';
@@ -111,6 +114,7 @@ module.exports = _.create(Data, {
                 name: row.name,
                 role_ids: row.role_ids,
                 hidden: row.hidden,
+                approved: row.approved,
             };
             return object;
         });

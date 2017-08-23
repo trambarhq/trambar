@@ -1,9 +1,8 @@
 .collapsible-container {
     transition: height .25s;
     overflow: hidden;
-    clear: both;
 
-    >* {
+    .collapsible-contents {
         overflow: hidden;
     }
 }

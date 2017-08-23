@@ -1,5 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
+var CollapsibleContainer = require('widgets/collapsible-container');
+
 require('./sortable-table.scss');
 
 module.exports = React.createClass({
@@ -8,13 +10,14 @@ module.exports = React.createClass({
         sortColumns: PropTypes.arrayOf(PropTypes.string).isRequired,
         sortDirections: PropTypes.arrayOf(PropTypes.oneOf([ 'asc', 'desc' ])),
         expanded: PropTypes.bool,
+        expandable: PropTypes.bool,
+        selectable: PropTypes.bool,
         onSort: PropTypes.func,
     },
 
     getInitialState: function() {
         return {
             action: null,
-            cellHeights: null
         };
     },
 
@@ -26,8 +29,6 @@ module.exports = React.createClass({
                 this.setState({ action: 'collapsing' });
             }
         }
-        // clear the heights
-        this.setState({ cellHeights: null });
     },
 
     render: function() {
@@ -39,14 +40,19 @@ module.exports = React.createClass({
         if (tbody && this.props.expanded != null) {
             tbody = this.wrapUnselectedRows(tbody);
         }
-        var tableProps = _.omit(this.props, 'sortColumns', 'sortDirections', 'expanded', 'onSort');
+        var tableProps = _.omit(this.props, [ 'sortColumns', 'sortDirections', 'expandable', 'selectable', 'expanded', 'onSort' ]);
         tableProps.onClick = this.handleClick;
         tableProps.className = 'sortable-table'
-        if (this.props.expanded != null) {
+        if (this.props.expandable) {
             tableProps.className += ' expandable';
             if (this.props.expanded) {
                 tableProps.className += ' expanded';
+            } else {
+                tableProps.className += ' collapsed';
             }
+        }
+        if (this.props.selectable) {
+            tableProps.className += ' selectable';
         }
         if (this.props.className) {
             tableProps.className += ' ' + this.props.className;
@@ -86,32 +92,34 @@ module.exports = React.createClass({
         // leads to new keys and messes up CSS transition
         var trs = tbody.props.children;
         trs = _.map(trs, (tr, i) => {
-            if (/selected/.test(tr.props.className)) {
+            if (/\bfixed\b/.test(tr.props.className)) {
                 return tr;
             }
-            var className;
-            if (this.state.action === 'expanding') {
-                // render row in collapsed state until the cell heights are known
-                className = (cellHeights) ? 'expanded' : 'collapsed';
-            } else if (this.state.action === 'collapsing') {
-                //
-                className = 'collapsed';
-            } else {
-                // render as expanded when component is mounted with expanded = true
-                className = 'expanded';
-            }
             var tds = React.Children.toArray(tr.props.children);
+            var open;
+            var className = tr.props.className;
+            if (this.state.action === 'expanding') {
+                // render in the closed state at start of transition
+                open = false;
+            } else if (this.state.action === 'collapsing') {
+                // render in the open state at start of transition
+                open = true;
+            } else {
+                open = this.props.expanded;
+            }
+            if (className) {
+                className += ' ';
+            } else {
+                className = '';
+            }
+            className += (open) ? 'expanded' : 'collapsed';
             tds = _.map(tds, (td, j) => {
-                var id = `cell-${i}-${j}`;
-                var height = (cellHeights) ? cellHeights[id] : undefined;
-                var div = (
-                    <div className="expanding-container" style={{ height }}>
-                        <div className="expanding-contents" id={id}>
-                            {td.props.children}
-                        </div>
-                    </div>
+                var container = (
+                    <CollapsibleContainer open={open}>
+                        {td.props.children}
+                    </CollapsibleContainer>
                 );
-                return React.cloneElement(td, {}, div);
+                return React.cloneElement(td, {}, container);
             });
             return React.cloneElement(tr, { className }, tds);
         });
@@ -120,28 +128,8 @@ module.exports = React.createClass({
     },
 
     componentDidUpdate: function(prevProps, prevState) {
-        if (this.props.expanded) {
-            // obtain the heights of the cells
-            if (!this.state.cellHeights) {
-                var table = this.refs.table;
-                var cellHeights = {};
-                var divs = table.getElementsByClassName('expanding-contents');
-                _.each(divs, (div) => {
-                    cellHeights[div.id] = div.offsetHeight;
-                });
-                if (!_.isEqual(cellHeights, this.state.cellHeights)) {
-                    this.setState({ cellHeights });
-                }
-            }
-        }
-        if (!prevState.action && this.state.action) {
-            // clear it after a second or so
-            var action = this.state.action;
-            setTimeout(() => {
-                if (this.state.action == action) {
-                    this.setState({ action: null });
-                }
-            }, 800);
+        if (this.state.action) {
+            this.setState({ action: null });
         }
     },
 

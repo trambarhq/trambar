@@ -6,7 +6,6 @@ module.exports = React.createClass({
     displayName: 'CollapsibleContainer',
     propTypes: {
         open: React.PropTypes.bool,
-        children: React.PropTypes.element,
     },
 
     /**
@@ -16,7 +15,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            hidden: !this.props.open,
+            contentHeight: undefined,
         };
     },
 
@@ -26,37 +25,6 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.open != nextProps.open) {
-            if (nextProps.open) {
-                if (this.domNode.style.height === '') {
-                    this.domNode.style.height = '0px';
-                }
-                this.setState({ hidden: false });
-                setTimeout(() => {
-                    var height = this.getContentHeight();
-                    this.domNode.style.height = height + 'px';
-                }, 0);
-                setTimeout(() => {
-                    if (this.props.open) {
-                        this.domNode.style.height = '';
-                    }
-                }, 300);
-            } else {
-                if (this.domNode.style.height === '') {
-                    var height = this.getContentHeight();
-                    this.domNode.style.height = height + 'px';
-                }
-                setTimeout(() => {
-                    this.domNode.style.height = '0px';
-                }, 0);
-                setTimeout(() => {
-                    // stop rendering the component after it has fully transitioned out
-                    if (!this.props.open) {
-                        this.setState({ hidden: true });
-                    }
-                }, 300);
-            }
-        }
     },
 
     /**
@@ -65,41 +33,37 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var style = {};
+        if (this.props.open) {
+            style.height = this.state.contentHeight;
+        } else {
+            style.height = 0;
+        }
         return (
-            <div ref={this.setDOMNode} className="collapsible-container">
-                {!this.state.hidden ? this.props.children : null}
+            <div ref="container" className="collapsible-container" style={style}>
+                <div ref="contents" className="collapsible-contents">
+                    {this.props.children}
+                </div>
             </div>
         );
     },
 
-    /**
-     * Remove reference to DOM node when component unmounts
-     */
-    componentWillUnmount: function() {
-        this.domNode = null;
-    },
-
-    /**
-     * Set DOM node
-     *
-     * @param  {DOMElement} node
-     */
-    setDOMNode: function(node) {
-        this.domNode = node;
-    },
-
-    /**
-     * Return the offset height of the first element node
-     *
-     * @return {Number}
-     */
-    getContentHeight: function() {
-        if (this.domNode) {
-            var childNode = this.domNode.firstChild;
-            if (childNode) {
-                return childNode.offsetHeight;
-            }
+    componentDidMount: function() {
+        if (this.props.open) {
+            // set the container height manually
+            var contents = this.refs.contents;
+            var container = this.refs.container;
+            var contentHeight = contents.offsetHeight;
+            container.style.height = contentHeight + 'px';
+            this.state.contentHeight = contentHeight;
         }
-        return 0;
+    },
+
+    componentDidUpdate: function(prevProps, prevState) {
+        var contents = this.refs.contents;
+        var contentHeight = contents.offsetHeight;
+        if (this.state.contentHeight !== contentHeight) {
+            this.setState({ contentHeight });
+        }
     },
 });

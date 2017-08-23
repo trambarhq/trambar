@@ -140,26 +140,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            newProject: null,
+            selectedUserIds: [],
             renderingFullList: this.props.route.parameters.edit,
         };
-    },
-
-    getProject: function() {
-        if (this.isEditing()) {
-            return this.state.newProject || this.props.project || {};
-        } else {
-            return this.props.project || {};
-        }
-    },
-
-    setProjectProperty: function(path, value) {
-        var projectBefore = this.getProject();
-        var projectAfter = _.decoupleSet(projectBefore, path, value);
-        if (_.isEqual(projectAfter, this.props.project)) {
-            projectAfter = null;
-        }
-        this.setState({ newProject: projectAfter });
     },
 
     /**
@@ -183,7 +166,19 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 }, 500);
             }
         }
-        // TODO: merge incoming project
+        if (this.props.project !== nextProps.project) {
+            var selectedUserIds = this.state.selectedUserIds;
+            if (!this.props.project || selectedUserIds === this.props.project.user_ids) {
+                // use the list from the incoming object if no change has been made yet
+                selectedUserIds = nextProps.project.user_ids;
+            } else {
+                if (!_.isEqual(this.props.project.user_ids, nextProps.project.user_ids)) {
+                    // merge the list when a change has been made (by someone else presumably)
+                    selectedUserIds = _.union(selectedUserIds, nextProps.project.user_ids);
+                }
+            }
+            this.setState({ selectedUserIds });
+        }
     },
 
     /**
@@ -210,14 +205,14 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isEditing()) {
-            var noChange = !this.state.newProject;
+            var hasChanges = this.props.project && !_.isEqual(this.state.selectedUserIds, this.props.project.user_ids);
             return (
                 <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('member-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={noChange} onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('member-list-save')}
                     </PushButton>
                 </div>
@@ -253,6 +248,8 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         if (this.state.renderingFullList) {
             // list all users when we're editing the list
             users = this.props.users;
+            tableProps.expandable = true;
+            tableProps.selectable = true;
             tableProps.expanded = this.isEditing();
         } else {
             // list only those we're in the project
@@ -291,9 +288,15 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             key: user.id,
         };
         if (this.state.renderingFullList) {
-            var project = this.getProject();
-            if (_.includes(project.user_ids, user.id)) {
-                props.className = 'selected';
+            if (_.includes(this.props.project.user_ids, user.id)) {
+                props.className = 'fixed';
+            }
+            if (_.includes(this.state.selectedUserIds, user.id)) {
+                if (props.className) {
+                    props.className += ' selected';
+                } else {
+                    props.className = 'selected';
+                }
             }
             props.onClick = this.handleRowClick;
             props['data-user-id'] = user.id;
@@ -333,10 +336,8 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             if (this.state.renderingFullList) {
                 // compare against original project object to see if the user
                 // will be added or removed
-                var projectOriginal = this.props.project;
-                var projectCurrent = this.getProject();
-                var includedBefore = _.includes(projectOriginal.user_ids, user.id);
-                var includedAfter = _.includes(projectCurrent.user_ids, user.id);
+                var includedBefore = _.includes(this.props.project.user_ids, user.id);
+                var includedAfter = _.includes(this.state.selectedUserIds, user.id);
                 if (includedBefore && !includedAfter) {
                     badge = <i className="fa fa-user-times badge remove" />;
                 } else if (!includedBefore && includedAfter) {
@@ -564,23 +565,21 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
 
     handleRowClick: function(evt) {
         var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        var projectOriginal = this.props.project;
-        var userIdsOriginal = projectOriginal.user_ids;
-        var projectCurrent = this.getProject();
-        var userIds = _.slice(projectCurrent.user_ids);
-        if (_.includes(userIds, userId)) {
-            _.pull(userIds, userId);
+        var userIds = this.props.project.user_ids;
+        var selectedUserIds = _.slice(this.state.selectedUserIds);
+        if (_.includes(selectedUserIds, userId)) {
+            _.pull(selectedUserIds, userId);
         } else {
-            userIds.push(userId);
+            selectedUserIds.push(userId);
         }
-        if (userIds.length === userIdsOriginal.length) {
+        if (selectedUserIds.length === userIds.length) {
             // if the new list has the same element as the old, use the latter so
             // to avoid a mere change in order of the ids
-            if (_.difference(userIds, userIdsOriginal).length === 0) {
-                userIds = userIdsOriginal;
+            if (_.difference(selectedUserIds, userIds).length === 0) {
+                selectedUserIds = userIds;
             }
         }
-        this.setProjectProperty('user_ids', userIds);
+        this.setState({ selectedUserIds });
     }
 });
 
