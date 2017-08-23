@@ -212,7 +212,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         if (this.isEditing()) {
             var noChange = !this.state.newProject;
             return (
-                <div className="buttons">
+                <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('member-list-cancel')}
                     </PushButton>
@@ -224,7 +224,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             return (
-                <div className="buttons">
+                <div key="view" className="buttons">
                     <PushButton className="add" onClick={this.handleAddClick}>
                         {t('member-list-new')}
                     </PushButton>
@@ -344,7 +344,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 }
             } else {
                 // don't create the link when we're editing the list
-                url = require('pages/user-summary-page').getUrl({ userId: user.id });
+                url = require('pages/user-summary-page').getUrl({
+                    userId: user.id,
+                    projectId: this.props.project.id,
+                });
             }
             return (
                 <td>

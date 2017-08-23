@@ -111,6 +111,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var member = !!this.props.route.parameters.projectId;
         return (
             <div className="buttons">
                 <PushButton className="add" onClick={this.handleAddClick}>

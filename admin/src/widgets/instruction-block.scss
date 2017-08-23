@@ -2,35 +2,20 @@
     overflow: hidden;
     transition: opacity 0.5s linear 0.5s;
     opacity: 1;
+    padding: 0 1em 0 1em;
+
+    $corner-width: 0.6em;
+    $background-color: #99ddff;
+    background: $background-color;
+    background:
+        linear-gradient(135deg, transparent $corner-width, $background-color 0) top left,
+        linear-gradient(225deg, transparent $corner-width, $background-color 0) top right,
+        linear-gradient(315deg, transparent $corner-width, $background-color 0) bottom right,
+        linear-gradient(45deg,  transparent $corner-width, $background-color 0) bottom left;
+    background-size: 51% 51%;
+    background-repeat: no-repeat;
 
     &.hidden {
         opacity: 0;
-    }
-
-    $corner-width: 0.6em;
-    $background-color: #e0e0e0;
-
-    .border-bottom, .border-top {
-        border-left: $corner-width solid rgba(0,0,0,0);
-        border-right: $corner-width solid rgba(0,0,0,0);
-    }
-
-    .border-top {
-        border-bottom: $corner-width solid $background-color;
-    }
-
-    .border-bottom {
-        border-top: $corner-width solid $background-color;
-    }
-
-    .body {
-        padding: 0 1em 0 1em;
-        background-color: $background-color;
-        overflow: hidden;
-
-        .text {
-            margin-top: -0.7em;
-            margin-bottom: -1em;
-        }
     }
 }

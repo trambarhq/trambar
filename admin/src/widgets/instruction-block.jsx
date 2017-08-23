@@ -40,11 +40,7 @@ module.exports = React.createClass({
         }
         return (
             <div className={classNames.join(' ')}>
-                <div className="border-top" />
-                <div className="body">
-                    <div className="text">{contents}</div>
-                </div>
-                <div className="border-bottom" />
+                {contents}
             </div>
         );
     },
