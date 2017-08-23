@@ -1,22 +1,75 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
+// widgets
 var Tooltip = require('widgets/tooltip');
 
-module.exports = ModifiedTimeTooltip;
+module.exports = React.createClass({
+    displayName: 'ModifiedTimeTooltip',
+    propTypes: {
+        time: PropTypes.string.isRequired,
+        disabled: PropTypes.bool,
+    },
 
-function ModifiedTimeTooltip(props) {
-    var m = Moment(props.time);
-    var label = m.fromNow();
-    var contents = m.format('lll');
-    return (
-        <Tooltip>
-            <inline>{label}</inline>
-            <window>{contents}</window>
-        </Tooltip>
-    );
-}
+    /**
+     * Set the text labels on mount
+     */
+    componentWillMount: function() {
+        this.updateLabels();
+    },
 
-ModifiedTimeTooltip.propTypes = {
-    time: PropTypes.string.isRequired,
-};
+    /**
+     * Update text labels on receiving new props
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        this.updateLabels(nextProps);
+    },
+
+    /**
+     * Parse time string and format relative and absolute dates
+     *
+     * @param  {Object} props
+     */
+    updateLabels: function(props) {
+        props = props || this.props;
+        var m = Moment(props.time);
+        var state = {
+            relativeTime: m.fromNow(),
+            absoluteTime: m.format('lll'),
+        };
+        if (!_.isEqual(state, this.state)) {
+            this.setState(state);
+        }
+    },
+
+    render: function() {
+        return (
+            <Tooltip disabled={this.props.disabled}>
+                <inline>{this.state.relativeTime}</inline>
+                <window>{this.state.absoluteTime}</window>
+            </Tooltip>
+        );
+    },
+
+    componentDidMount: function() {
+        instances.push(this);
+    },
+
+    componentWillUnmount: function() {
+        _.pull(instances, this);
+    }
+});
+
+var instances = [];
+
+// refresh the labels every minute
+setInterval(() => {
+    _.each(instances, (instance) => {
+        instance.updateLabels();
+    });
+}, 30 * 1000);

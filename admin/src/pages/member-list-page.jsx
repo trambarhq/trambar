@@ -261,6 +261,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 <thead>
                     <tr>
                         {this.renderNameColumn()}
+                        {this.renderTypeColumn()}
                         {this.renderRolesColumn()}
                         {this.renderDateRangeColumn()}
                         {this.renderLastMonthColumn()}
@@ -304,6 +305,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         return (
             <tr {...props}>
                 {this.renderNameColumn(user)}
+                {this.renderTypeColumn(user)}
                 {this.renderRolesColumn(user)}
                 {this.renderDateRangeColumn(user)}
                 {this.renderLastMonthColumn(user)}
@@ -364,6 +366,25 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Render Type column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderTypeColumn: function(user) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="type">{t('table-heading-type')}</TH>;
+        } else {
+            return <td>{t('user-list-user-$type-$approved', user.type, user.approved)}</td>;
+        }
+    },
+
+    /**
      * Render roles column, either the heading or a data cell
      *
      * @param  {Object|null} user
@@ -371,7 +392,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRolesColumn: function(user) {
-        if (this.props.theme.isBelowMode('narrow')) {
+        if (this.props.theme.isBelowMode('standard')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -528,7 +549,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         if (!user) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={user.mtime} /></td>;
+            var props = {
+                time: user.mtime,
+                disabled: this.state.renderingFullList
+            }
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 
