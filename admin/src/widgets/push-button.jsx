@@ -14,3 +14,7 @@ function PushButton(props) {
     }
     return <button {...props}>{props.children}</button>;
 }
+
+PushButton.defaultProps = {
+    className: 'submit'
+};

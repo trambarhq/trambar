@@ -7,6 +7,10 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var PushButton = require('widgets/push-button');
+var TextField = require('widgets/text-field');
+
 require('./sign-in-page.scss');
 
 module.exports = React.createClass({
@@ -88,26 +92,24 @@ module.exports = React.createClass({
     renderForm: function() {
         var t = this.props.locale.translate;
         var valid = this.canSubmitForm();
+        var usernameProps = {
+            id: 'username',
+            type: 'text',
+            value: this.state.username,
+            onChange: this.handleUsernameChange,
+        };
+        var passwordProps = {
+            id: 'password',
+            type: 'password',
+            value: this.state.password,
+            onChange: this.handlePasswordChange,
+        };
         return (
             <form onSubmit={this.handleFormSubmit}>
-                <div className="input-group">
-                    <div className="label-row">
-                        <label htmlFor="username">{t('sign-in-username')}</label>
-                    </div>
-                    <div className="input-row">
-                        <input id="username" type="text" value={this.state.username} onChange={this.handleUsernameChange} />
-                    </div>
-                </div>
-                <div>
-                    <div className="label-row">
-                        <label htmlFor="password">{t('sign-in-password')}</label>
-                    </div>
-                    <div className="input-row">
-                        <input id="password" type="password" value={this.state.password} onChange={this.handlePasswordChange} />
-                    </div>
-                </div>
+                <TextField {...usernameProps}>{t('sign-in-username')}</TextField>
+                <TextField {...passwordProps}>{t('sign-in-password')}</TextField>
                 <div className="button-row">
-                    <button disabled={!valid}>{t('sign-in-submit')}</button>
+                    <PushButton disabled={!valid}>{t('sign-in-submit')}</PushButton>
                 </div>
             </form>
         );

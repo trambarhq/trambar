@@ -11,18 +11,20 @@ function TextField(props) {
     if (props.readOnly) {
         classNames.push('readonly');
     }
-    var inputProps = _.omit(props, 'label', 'multiline');
-    var Input;
-    if (props.multiline) {
+    var Input = 'input';
+    var inputProps = _.omit(props, 'children');
+    if (props.type === 'textarea') {
         Input = AutosizeTextArea;
-    } else {
-        inputProps.type = 'text';
-        Input = 'input';
+        inputProps = _.omit(inputProps, 'type');
     }
     return (
         <div className={classNames.join(' ')}>
-            <label htmlFor={props.id}>{props.label}</label>
+            <label htmlFor={props.id}>{props.children}</label>
             <Input {...inputProps} />
         </div>
     );
 }
+
+TextField.defaultProps = {
+    type: 'text'
+};

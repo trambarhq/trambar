@@ -6,7 +6,10 @@
         font-weight: 600;
     }
 
-    input[type=text], textarea {
+    input[type=text],
+    input[type=password],
+    input[type=email],
+    textarea {
         display: block;
         width: 100%;
         transition: border-color 1s ease-out;
@@ -21,7 +24,10 @@
     }
 
     &.readonly {
-        input[type=text], textarea {
+        input[type=text],
+        input[type=password],
+        input[type=email],
+        textarea {
             border-color: rgba(0,0,0,0);
         }
     }

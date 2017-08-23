@@ -185,31 +185,28 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var project = this.getProject();
         var titleProps = {
             id: 'title',
-            label: t('project-summary-title'),
             value: p(project.details.title),
             onChange: this.handleTitleChange,
             readOnly,
         };
         var nameProps = {
             id: 'name',
-            label: t('project-summary-name'),
             value: project.name,
             onChange: this.handleNameChange,
             readOnly,
         };
         var descriptionProps = {
             id: 'description',
-            label: t('project-summary-description'),
             value: p(project.details.description),
-            multiline: true,
+            type: 'textarea',
             onChange: this.handleDescriptionChange,
             readOnly,
         };
         return (
             <div className="form">
-                <TextField {...titleProps}/>
-                <TextField {...nameProps}/>
-                <TextField {...descriptionProps}/>
+                <TextField {...titleProps}>{t('project-summary-title')}</TextField>
+                <TextField {...nameProps}>{t('project-summary-name')}</TextField>
+                <TextField {...descriptionProps}>{t('project-summary-description')}</TextField>
             </div>
         );
     },

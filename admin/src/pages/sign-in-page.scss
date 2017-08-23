@@ -2,26 +2,8 @@
     FORM {
         max-width: 20em;
 
-        .label-row {
-            margin-top: 0.5em;
-        }
-
-        .input-row {
-            margin-top: 0.2em;
-        }
-
         .button-row {
-            margin-top: 0.4em;
             text-align: right;
-
-            BUTTON {
-                font-size: 1.2em;
-                font-weight: bold;
-            }
-        }
-
-        INPUT {
-            width: 100%;
         }
     }
 
@@ -34,13 +16,13 @@
             margin-bottom: 0.5em;
             width: 100%;
             background-color: transparent;
-            border: 1px solid #cccccc;
+            border: 1px solid #000000;
             text-align: left;
             cursor: pointer;
 
             &:not(:disabled) {
                 &.emphasized, &:hover, &:active {
-                    background-color: #cccccc;
+                    background-color: #99ddff;
                 }
 
                 &:active {
