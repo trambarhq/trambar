@@ -149,21 +149,47 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var servers = sortServers(this.props.servers, this.props.projects, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
-                    <tr>
-                        {this.renderTitleColumn()}
-                        {this.renderTypeColumn()}
-                        {this.renderModifiedTimeColumn()}
-                    </tr>
+                    {this.renderHeadings()}
                 </thead>
                 <tbody>
-                    {_.map(servers, this.renderRow)}
+                    {this.renderRows()}
                 </tbody>
             </SortableTable>
         );
+    },
+
+    /**
+     * Render table headings
+     *
+     * @return {ReactElement}
+     */
+    renderHeadings: function() {
+        return (
+            <tr>
+                {this.renderTitleColumn()}
+                {this.renderTypeColumn()}
+                {this.renderModifiedTimeColumn()}
+            </tr>
+        );
+    },
+
+    /**
+     * Render table rows
+     *
+     * @return {Array<ReactElement>}
+     */
+    renderRows: function() {
+        var servers = sortServers(
+            this.props.servers,
+            this.props.projects,
+            this.props.locale,
+            this.state.sortColumns,
+            this.state.sortDirections
+        );
+        return _.map(servers, this.renderRow);
     },
 
     /**
@@ -197,15 +223,14 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
             var p = this.props.locale.pick;
-            var title = p(server.details.title) || getTypeName(server.type);
-            var iconName = getIconName(server.type);
+            var title = p(server.details.title) || t(`server-type-${server.type}`);
             var url = require('pages/server-summary-page').getUrl({
                 serverId: server.id
             });
             return (
                 <td>
                     <a href={url}>
-                        <i className={`fa fa-${iconName} fa-fw`} />
+                        <i className={`fa fa-${server.type} fa-fw`} />
                         {' '}
                         {title}
                     </a>
@@ -226,8 +251,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
         if (!server) {
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
-            var type = getTypeName(server.type);
-            return <td>{type}</td>
+            return <td>{t(`server-type-${server.type}`)}</td>
         }
     },
 
@@ -264,33 +288,21 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
 });
 
 var sortServers = Memoize(function(servers, projects, locale, columns, directions) {
+    var t = locale.translate;
+    var p = locale.pick;
     columns = _.map(columns, (column) => {
         switch (column) {
-            case 'name':
-                return 'details.last_name';
+            case 'title':
+                return (server) => {
+                    return p(server.details.title) || t(`server-type-${server.type}`);
+                };
+            case 'type':
+                return (server) => {
+                    return t(`server-type-${server.type}`);
+                };
             default:
                 return column;
         }
     });
     return _.orderBy(servers, columns, directions);
 });
-
-function getTypeName(type) {
-    switch (type) {
-        case 'dropbox': return 'Dropbox';
-        case 'gitlab': return 'GitLab';
-        case 'github': return 'GitHub';
-        case 'google': return 'Google';
-        case 'facebook': return 'Facebook';
-    }
-}
-
-function getIconName(type) {
-    switch (type) {
-        case 'dropbox': return 'dropbox';
-        case 'gitlab': return 'gitlab';
-        case 'github': return 'github';
-        case 'google': return 'google';
-        case 'facebook': return 'facebook';
-    }
-}

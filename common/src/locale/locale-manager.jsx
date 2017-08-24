@@ -37,7 +37,7 @@ module.exports = React.createClass({
 
     translate: function(phrase) {
         var entry = this.state.phraseTable[phrase];
-        if (entry) {
+        if (entry != null) {
             if (typeof(entry) === 'function') {
                 var args = _.slice(arguments, 1);
                 var results = entry.apply(this, args);

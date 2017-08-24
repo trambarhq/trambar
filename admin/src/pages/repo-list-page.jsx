@@ -248,21 +248,32 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         return (
             <SortableTable {...tableProps}>
                 <thead>
-                    <tr>
-                        {this.renderTitleColumn()}
-                        {this.renderServerColumn()}
-                        {this.renderIssueTrackerColumn()}
-                        {this.renderDateRangeColumn()}
-                        {this.renderLastMonthColumn()}
-                        {this.renderThisMonthColumn()}
-                        {this.renderToDateColumn()}
-                        {this.renderModifiedTimeColumn()}
-                    </tr>
+                    {this.renderHeadings()}
                 </thead>
                 <tbody>
                     {this.renderRows()}
                 </tbody>
             </SortableTable>
+        );
+    },
+
+    /**
+     * Render table headings
+     *
+     * @return {ReactElement}
+     */
+    renderHeadings: function() {
+        return (
+            <tr>
+                {this.renderTitleColumn()}
+                {this.renderServerColumn()}
+                {this.renderIssueTrackerColumn()}
+                {this.renderDateRangeColumn()}
+                {this.renderLastMonthColumn()}
+                {this.renderThisMonthColumn()}
+                {this.renderToDateColumn()}
+                {this.renderModifiedTimeColumn()}
+            </tr>
         );
     },
 
@@ -273,10 +284,17 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      */
     renderRows: function() {
         var repos = this.props.repos;
-        if (!this.isEditing()) {
+        if (!this.state.renderingFullList) {
             repos = findRepos(repos, this.props.project);
         }
-        repos = sortRepos(repos, this.props.statistcs, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        repos = sortRepos(
+            repos,
+            this.props.servers,
+            this.props.statistics,
+            this.props.locale,
+            this.state.sortColumns,
+            this.state.sortDirections
+        );
         return _.map(repos, this.renderRow);
     },
 
@@ -330,7 +348,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     renderTitleColumn: function(repo) {
         var t = this.props.locale.translate;
         if (!repo) {
-            return <TH id="name">{t('table-heading-name')}</TH>;
+            return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
             var p = this.props.locale.pick;
             var title = p(repo.details.title) || repo.name;
@@ -383,20 +401,19 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     renderServerColumn: function(repo) {
         var t = this.props.locale.translate;
         if (!repo) {
-            return <TH id="range">{t('table-heading-server')}</TH>
+            return <TH id="server">{t('table-heading-server')}</TH>
         } else {
             var p = this.props.locale.pick;
             var server = findServer(this.props.servers, repo);
             var contents;
             if (server) {
-                var title = p(server.details.title) || getTypeName(server.type);
-                var iconName = getIconName(server.type);
+                var title = p(server.details.title) || t(`server-type-${server.type}`);
                 var url = require('pages/server-summary-page').getUrl({
                     serverId: server.id
                 });
                 contents =(
                     <a href={url}>
-                        <i className={`fa fa-${iconName} fa-fw`} />
+                        <i className={`fa fa-${server.type} fa-fw`} />
                         {' '}
                         {title}
                     </a>
@@ -419,7 +436,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         }
         var t = this.props.locale.translate;
         if (!repo) {
-            return <TH id="range">{t('table-heading-issue-tracker')}</TH>
+            return <TH id="issue_tracker">{t('table-heading-issue-tracker')}</TH>
         } else {
             var p = this.props.locale.pick;
             var enabled = !!repo.details.issues_enabled;
@@ -590,11 +607,41 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     }
 });
 
-var sortRepos = Memoize(function(repos, statistics, locale, columns, directions) {
+var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, directions) {
+    var t = locale.translate;
+    var p = locale.pick;
     columns = _.map(columns, (column) => {
         switch (column) {
-            case 'name':
-                return 'details.last_name';
+            case 'title':
+                return (repo) => {
+                    return p(repo.details.title) || repo.name;
+                };
+            case 'server':
+                return (repo) => {
+                    var server = findServer(servers, repo);
+                    if (server)  {
+                        return p(server.details.title) || t(`server-type-${server.type}`);
+                    }
+                    return '';
+                };
+            case 'issue_tracker':
+                return 'details.issues_enabled';
+            case 'range':
+                return (repo) => {
+                    return _.get(statistics, [ repo.id, 'range', 'start' ], '');
+                };
+            case 'last_month':
+                return (repo) => {
+                    return _.get(statistics, [ repo.id, 'last_month', 'total' ], 0);
+                };
+            case 'this_month':
+                return (repo) => {
+                    return _.get(statistics, [ repo.id, 'this_month', 'total' ], 0);
+                };
+            case 'to_date':
+                return (repo) => {
+                    return _.get(statistics, [ repo.id, 'to_date', 'total' ], 0);
+                };
             default:
                 return column;
         }
@@ -612,23 +659,3 @@ var findRepos = Memoize(function(repos, project) {
         return hash[id];
     }));
 });
-
-function getTypeName(type) {
-    switch (type) {
-        case 'dropbox': return 'Dropbox';
-        case 'gitlab': return 'GitLab';
-        case 'github': return 'GitHub';
-        case 'google': return 'Google';
-        case 'facebook': return 'Facebook';
-    }
-}
-
-function getIconName(type) {
-    switch (type) {
-        case 'dropbox': return 'dropbox';
-        case 'gitlab': return 'gitlab';
-        case 'github': return 'github';
-        case 'google': return 'google';
-        case 'facebook': return 'facebook';
-    }
-}

@@ -236,24 +236,51 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             tableProps.expandable = true;
             tableProps.selectable = true;
         }
-        var users = sortUsers(this.props.users, this.props.roles, this.props.projects, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
-                    <tr>
-                        {this.renderNameColumn()}
-                        {this.renderTypeColumn()}
-                        {this.renderRolesColumn()}
-                        {this.renderProjectsColumn()}
-                        {this.renderEmailColumn()}
-                        {this.renderModifiedTimeColumn()}
-                    </tr>
+                    {this.renderHeadings()}
                 </thead>
                 <tbody>
-                    {_.map(users, this.renderRow)}
+                    {this.renderRows()}
                 </tbody>
             </SortableTable>
         );
+    },
+
+    /**
+     * Render table headings
+     *
+     * @return {ReactElement}
+     */
+    renderHeadings: function() {
+        return (
+            <tr>
+                {this.renderNameColumn()}
+                {this.renderTypeColumn()}
+                {this.renderRolesColumn()}
+                {this.renderProjectsColumn()}
+                {this.renderEmailColumn()}
+                {this.renderModifiedTimeColumn()}
+            </tr>
+        );
+    },
+
+    /**
+     * Render table rows
+     *
+     * @return {Array<ReactElement>}
+     */
+    renderRows: function() {
+        var users = sortUsers(
+            this.props.users,
+            this.props.roles,
+            this.props.projects,
+            this.props.locale,
+            this.state.sortColumns,
+            this.state.sortDirections
+        );
+        return _.map(users, this.renderRow);
     },
 
     /**

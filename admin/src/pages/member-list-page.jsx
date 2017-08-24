@@ -252,21 +252,32 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         return (
             <SortableTable {...tableProps}>
                 <thead>
-                    <tr>
-                        {this.renderNameColumn()}
-                        {this.renderTypeColumn()}
-                        {this.renderRolesColumn()}
-                        {this.renderDateRangeColumn()}
-                        {this.renderLastMonthColumn()}
-                        {this.renderThisMonthColumn()}
-                        {this.renderToDateColumn()}
-                        {this.renderModifiedTimeColumn()}
-                    </tr>
+                    {this.renderHeadings()}
                 </thead>
                 <tbody ref="tbody">
                     {this.renderRows()}
                 </tbody>
             </SortableTable>
+        );
+    },
+
+    /**
+     * Render table headings
+     *
+     * @return {ReactElement}
+     */
+    renderHeadings: function() {
+        return (
+            <tr>
+                {this.renderNameColumn()}
+                {this.renderTypeColumn()}
+                {this.renderRolesColumn()}
+                {this.renderDateRangeColumn()}
+                {this.renderLastMonthColumn()}
+                {this.renderThisMonthColumn()}
+                {this.renderToDateColumn()}
+                {this.renderModifiedTimeColumn()}
+            </tr>
         );
     },
 
@@ -284,7 +295,14 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             // list only those we're in the project
             users = findUsers(this.props.users, this.props.project);
         }
-        var users = sortUsers(users, this.props.roles, this.props.statistics, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        var users = sortUsers(
+            users,
+            this.props.roles,
+            this.props.statistics,
+            this.props.locale,
+            this.state.sortColumns,
+            this.state.sortDirections
+        );
         return _.map(users, this.renderRow);
     },
 

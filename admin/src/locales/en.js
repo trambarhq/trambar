@@ -131,6 +131,12 @@ module.exports = function(languageCode) {
         'server-list-new': 'New Service',
         'server-list-title': 'Services',
 
+        'server-type-dropbox': 'Dropbox',
+        'server-type-gitlab': 'GitLab',
+        'server-type-github': 'GitHub',
+        'server-type-google': 'Google',
+        'server-type-facebook': 'Facebook',
+
         'settings-edit': 'Edit Settings',
         'settings-title': 'Settings',
 

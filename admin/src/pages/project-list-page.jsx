@@ -188,26 +188,54 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var projects = sortProjects(this.props.projects, this.props.users, this.props.repos, this.props.statistics, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
-                    <tr>
-                        {this.renderTitleColumn()}
-                        {this.renderUsersColumn()}
-                        {this.renderRepositoriesColumn()}
-                        {this.renderDateRangeColumn()}
-                        {this.renderLastMonthColumn()}
-                        {this.renderThisMonthColumn()}
-                        {this.renderToDateColumn()}
-                        {this.renderModifiedTimeColumn()}
-                    </tr>
+                    {this.renderHeadings()}
                 </thead>
                 <tbody>
-                    {_.map(projects, this.renderRow)}
+                    {this.renderRows()}
                 </tbody>
             </SortableTable>
         );
+    },
+
+    /**
+     * Render table headings
+     *
+     * @return {ReactElement}
+     */
+    renderHeadings: function() {
+        return (
+            <tr>
+                {this.renderTitleColumn()}
+                {this.renderUsersColumn()}
+                {this.renderRepositoriesColumn()}
+                {this.renderDateRangeColumn()}
+                {this.renderLastMonthColumn()}
+                {this.renderThisMonthColumn()}
+                {this.renderToDateColumn()}
+                {this.renderModifiedTimeColumn()}
+            </tr>
+        );
+    },
+
+    /**
+     * Render table rows
+     *
+     * @return {Array<ReactElement>}
+     */
+    renderRows: function() {
+        var projects = sortProjects(
+            this.props.projects,
+            this.props.users,
+            this.props.repos,
+            this.props.statistics,
+            this.props.locale,
+            this.state.sortColumns,
+            this.state.sortDirections
+        );
+        return _.map(projects, this.renderRow);
     },
 
     /**

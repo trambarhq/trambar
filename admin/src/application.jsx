@@ -51,6 +51,7 @@ var pageClasses = [
     UserSummaryPage,
 ];
 
+require('setimmediate');
 require('utils/lodash-extra');
 require('application.scss');
 require('font-awesome-webpack');

@@ -129,7 +129,12 @@ module.exports = React.createClass({
 
     componentDidUpdate: function(prevProps, prevState) {
         if (this.state.action) {
-            this.setState({ action: null });
+            // clear the action and redraw, giving componentDidUpdate() of
+            // CollapsibleContainer a chance to capture the height of its
+            // contents first
+            setImmediate(() => {
+                this.setState({ action: null });
+            });
         }
     },
 
