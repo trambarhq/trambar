@@ -38,7 +38,11 @@ module.exports = Relaks.createClass({
          * @return {Object|null}
          */
         parseUrl: function(url, query) {
-            return Route.match('/projects/:projectId/repos/', url);
+            var params = Route.match('/projects/:projectId/repos/', url);
+            if (params) {
+                params.edit = !!parseInt(query.edit);
+                return params;
+            }
         },
 
         /**
@@ -49,7 +53,11 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params) {
-            return `/projects/${params.projectId}/repos/`;
+            var url = `/projects/${params.projectId}/repos/`;
+            if (params.edit) {
+                url += '?edit=1';
+            }
+            return url;
         },
     },
 
@@ -73,7 +81,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RepoListPageSync {...props} />);
+        meanwhile.show(<RepoListPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load project
             var criteria = {
@@ -83,10 +91,8 @@ module.exports = Relaks.createClass({
         }).then((project) => {
             props.project = project;
         }).then(() => {
-            // load repos
-            var criteria = {
-                id: [ props.project.repo_ids ]
-            };
+            // load all repos
+            var criteria = {};
             return db.find({ table: 'repo', criteria });
         }).then((repos) => {
             props.repos = repos;
@@ -101,8 +107,9 @@ module.exports = Relaks.createClass({
             props.servers = servers;
             meanwhile.show(<RepoListPageSync {...props} />);
         }).then(() => {
-            // load user statistics
-            return DailyActivities.loadRepoStatistics(db, props.project, props.repos);
+            // load user statistics of the project's repo
+            var repos = findRepos(props.repos, props.project);
+            return DailyActivities.loadRepoStatistics(db, props.project, repos);
         }).then((statistics) => {
             props.statistics = statistics;
             return <RepoListPageSync {...props} />;
@@ -133,7 +140,45 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
+            selectedRepoIds: [],
+            renderingFullList: this.props.route.parameters.edit,
         };
+    },
+
+    /**
+     * Return true when the URL indicate edit mode
+     *
+     * @return {Boolean}
+     */
+    isEditing: function() {
+        return this.props.route.parameters.edit;
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.route !== nextProps.route) {
+            if (nextProps.route.parameters.edit) {
+                this.setState({ renderingFullList: true });
+            } else {
+                setTimeout(() => {
+                    if (!this.props.route.parameters.edit && this.state.renderingFullList) {
+                        this.setState({ renderingFullList: false });
+                    }
+                }, 500);
+            }
+        }
+        if (this.props.project !== nextProps.project && nextProps.project) {
+            var selectedRepoIds = this.state.selectedRepoIds;
+            if (!this.props.project || selectedRepoIds === this.props.project.repo_ids) {
+                // use the list from the incoming object if no change has been made yet
+                selectedRepoIds = nextProps.project.repo_ids;
+            } else {
+                if (!_.isEqual(this.props.project.repo_ids, nextProps.project.repo_ids)) {
+                    // merge the list when a change has been made (by someone else presumably)
+                    selectedRepoIds = _.union(selectedRepoIds, nextProps.project.repo_ids);
+                }
+            }
+            this.setState({ selectedRepoIds });
+        }
     },
 
     /**
@@ -159,13 +204,28 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        return (
-            <div className="buttons">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('repo-list-edit')}
-                </PushButton>
-            </div>
-        );
+        if (this.isEditing()) {
+            var hasChanges = this.props.project && !_.isEqual(this.state.selectedRepoIds, this.props.project.repo_ids);
+            return (
+                <div className="buttons">
+                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                        {t('repo-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="add" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                        {t('repo-list-save')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            return (
+                <div className="buttons">
+                    <PushButton className="edit" onClick={this.handleEditClick}>
+                        {t('repo-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        }
     },
 
     /**
@@ -180,7 +240,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var repos = sortRepos(this.props.repos, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        if (this.state.renderingFullList) {
+            tableProps.expandable = true;
+            tableProps.selectable = true;
+            tableProps.expanded = this.isEditing();
+        }
         return (
             <SortableTable {...tableProps}>
                 <thead>
@@ -196,10 +260,24 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                     </tr>
                 </thead>
                 <tbody>
-                    {_.map(repos, this.renderRow)}
+                    {this.renderRows()}
                 </tbody>
             </SortableTable>
         );
+    },
+
+    /**
+     * Render rows
+     *
+     * @return {Array<ReactElement>}
+     */
+    renderRows: function() {
+        var repos = this.props.repos;
+        if (!this.isEditing()) {
+            repos = findRepos(repos, this.props.project);
+        }
+        repos = sortRepos(repos, this.props.statistcs, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        return _.map(repos, this.renderRow);
     },
 
     /**
@@ -211,8 +289,25 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(repo, i) {
+        var props = {
+            key: repo.id,
+        };
+        if (this.state.renderingFullList) {
+            if (_.includes(this.props.project.repo_ids, repo.id)) {
+                props.className = 'fixed';
+            }
+            if (_.includes(this.state.selectedRepoIds, repo.id)) {
+                if (props.className) {
+                    props.className += ' selected';
+                } else {
+                    props.className = 'selected';
+                }
+            }
+            props.onClick = this.handleRowClick;
+            props['data-repo-id'] = repo.id;
+        }
         return (
-            <tr key={i}>
+            <tr {...props}>
                 {this.renderTitleColumn(repo)}
                 {this.renderServerColumn(repo)}
                 {this.renderIssueTrackerColumn(repo)}
@@ -239,15 +334,40 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(repo.details.title) || repo.name;
-            var url = require('pages/repo-summary-page').getUrl({
-                projectId: this.props.route.parameters.projectId,
-                repoId: repo.id
-            });
+            var url;
+            var badge;
+            if (this.state.renderingFullList) {
+                // compare against original project object to see if the user
+                // will be added or removed
+                var includedBefore = _.includes(this.props.project.repo_ids, repo.id);
+                var includedAfter = _.includes(this.state.selectedRepoIds, repo.id);
+                var RepoSVG = require('octicons/build/svg/repo.svg');
+                if (includedBefore && !includedAfter) {
+                    badge = (
+                        <div className="badge remove">
+                            <RepoSVG /><i className="fa fa-times sign" />
+                        </div>
+                    );
+                } else if (!includedBefore && includedAfter) {
+                    badge = (
+                        <div className="badge add">
+                            <RepoSVG /><i className="fa fa-plus sign" />
+                        </div>
+                    );
+                }
+            } else {
+                // don't create the link when we're editing the list
+                url = require('pages/repo-summary-page').getUrl({
+                    projectId: this.props.route.parameters.projectId,
+                    repoId: repo.id
+                });
+            }
             return (
                 <td>
                     <a href={url}>
                         {title}
                     </a>
+                    {badge}
                 </td>
             );
         }
@@ -434,9 +554,43 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             sortDirections: evt.directions
         });
     },
+
+    handleEditClick: function(evt) {
+        var url = require('pages/repo-list-page').getUrl({
+            projectId: this.props.route.parameters.projectId,
+            edit: 1
+        });
+        this.props.route.change(url, true);
+    },
+
+    handleCancelClick: function(evt) {
+        var url = require('pages/repo-list-page').getUrl({
+            projectId: this.props.route.parameters.projectId,
+        });
+        this.props.route.change(url, true);
+    },
+
+    handleRowClick: function(evt) {
+        var repoId = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
+        var repoIds = this.props.project.repo_ids;
+        var selectedRepoIds = _.slice(this.state.selectedRepoIds);
+        if (_.includes(selectedRepoIds, repoId)) {
+            _.pull(selectedRepoIds, repoId);
+        } else {
+            selectedRepoIds.push(repoId);
+        }
+        if (selectedRepoIds.length === repoIds.length) {
+            // if the new list has the same element as the old, use the latter so
+            // to avoid a mere change in order of the ids
+            if (_.difference(selectedRepoIds, repoIds).length === 0) {
+                selectedRepoIds = repoIds;
+            }
+        }
+        this.setState({ selectedRepoIds });
+    }
 });
 
-var sortRepos = Memoize(function(repos, locale, columns, directions) {
+var sortRepos = Memoize(function(repos, statistics, locale, columns, directions) {
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
@@ -450,6 +604,13 @@ var sortRepos = Memoize(function(repos, locale, columns, directions) {
 
 var findServer = Memoize(function(servers, repo) {
     return _.find(servers, { id: repo.server_id });
+});
+
+var findRepos = Memoize(function(repos, project) {
+    var hash = _.keyBy(repos, 'id');
+    return _.filter(_.map(project.repo_ids, (id) => {
+        return hash[id];
+    }));
 });
 
 function getTypeName(type) {

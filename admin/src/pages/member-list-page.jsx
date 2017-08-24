@@ -244,18 +244,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        var users;
         if (this.state.renderingFullList) {
-            // list all users when we're editing the list
-            users = this.props.users;
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = this.isEditing();
-        } else {
-            // list only those we're in the project
-            users = findUsers(this.props.users, this.props.project);
         }
-        var users = sortUsers(users, this.props.roles, this.props.statistics, this.props.locale, this.state.sortColumns, this.state.sortDirections);
         return (
             <SortableTable {...tableProps}>
                 <thead>
@@ -271,10 +264,28 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                     </tr>
                 </thead>
                 <tbody ref="tbody">
-                    {_.map(users, this.renderRow)}
+                    {this.renderRows()}
                 </tbody>
             </SortableTable>
         );
+    },
+
+    /**
+     * Render table rows
+     *
+     * @type {Array<ReactElement>}
+     */
+    renderRows: function() {
+        var users;
+        if (this.state.renderingFullList) {
+            // list all users when we're editing the list
+            users = this.props.users;
+        } else {
+            // list only those we're in the project
+            users = findUsers(this.props.users, this.props.project);
+        }
+        var users = sortUsers(users, this.props.roles, this.props.statistics, this.props.locale, this.state.sortColumns, this.state.sortDirections);
+        return _.map(users, this.renderRow);
     },
 
     /**

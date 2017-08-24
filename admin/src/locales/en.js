@@ -101,10 +101,12 @@ module.exports = function(languageCode) {
         'member-list-save': 'Save Member List',
         'member-list-title': 'Members',
 
+        'repo-list-cancel': 'Cancel',
         'repo-list-edit': 'Edit Repository List',
-        'repo-list-title': 'Repositories',
         'repo-list-issue-tracker-enabled-false': '',
         'repo-list-issue-tracker-enabled-true': 'Enabled',
+        'repo-list-save': 'Save Repository List',
+        'repo-list-title': 'Repositories',
 
         'repo-summary-$title': (title) => {
             var text = `Repository`;
