@@ -32,6 +32,9 @@ function loadProjectStatistics(db, projects) {
 }
 
 function loadUserStatistics(db, project, users) {
+    if (!project) {
+        return Promise.resolve(null);
+    }
     var schema = project.name;
     // load story-date-range statistics
     var criteria = {
@@ -70,6 +73,9 @@ function loadUserStatistics(db, project, users) {
 }
 
 function loadRepoStatistics(db, project, repos) {
+    if (!project) {
+        return Promise.resolve(null);
+    }
     var schema = project.name;
     // load story-date-range statistics
     var criteria = {

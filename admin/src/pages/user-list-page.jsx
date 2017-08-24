@@ -34,28 +34,24 @@ module.exports = Relaks.createClass({
          * Match current URL against the page's
          *
          * @param  {String} url
-         * @param  {Object} query
          *
          * @return {Object|null}
          */
-        parseUrl: function(url, query) {
-            var params = Route.match('/users/', url);
-            if (params) {
-                params.approve = !!parseInt(query.approve);
-                return params;
-            }
+        parseUrl: function(url) {
+            return Route.match('/users/', url);
         },
 
         /**
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
+         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params) {
+        getUrl: function(params, query) {
             var url = `/users/`;
-            if (params && params.approve) {
+            if (query && query.approve) {
                 url += '?approve=1';
             }
             return url;
@@ -131,9 +127,21 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            renderingPartialList: this.props.route.parameters.approve,
+            renderingPartialList: this.isApproving(),
             selectedUserIds: [],
         };
+    },
+
+    /**
+     * Change editability of page
+     *
+     * @param  {Boolean} approve
+     *
+     * @return {Promise}
+     */
+    setEditability: function(approve) {
+        var url = require('pages/user-list-page').getUrl({}, { approve });
+        return this.props.route.change(url, true);
     },
 
     /**
@@ -142,17 +150,22 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {Boolean}
      */
     isApproving: function() {
-        return this.props.route.parameters.approve;
+        return !!parseInt(this.props.route.query.approve);
     },
 
     componentWillReceiveProps: function(nextProps) {
         if (this.props.route !== nextProps.route) {
-            if (nextProps.route.parameters.approve) {
-                this.setState({ renderingPartialList: true });
+            if (parseInt(nextProps.route.query.approve)) {
+                // preselect all unapproved users
+                var unapprovedUsers = _.filter(nextProps.users, { approved: false });
+                this.setState({
+                    renderingPartialList: true,
+                    selectedUserIds: _.map(unapprovedUsers, 'id')
+                });
             } else {
                 // wait for animation to finish
                 setTimeout(() => {
-                    if (!this.props.route.parameters.edit && this.state.renderingPartialList) {
+                    if (!this.isApproving()) {
                         this.setState({ renderingPartialList: false });
                     }
                 }, 500);
@@ -346,7 +359,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 // don't create the link when we're editing the list
                 url = UserSummaryPage.getUrl({ userId: user.id });
             }
-
             return (
                 <td>
                     <a href={url}>
@@ -500,8 +512,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleApproveClick: function(evt) {
-        var url = require('pages/user-list-page').getUrl({ approve: true });
-        this.props.route.change(url, true);
+        this.setEditability(true);
     },
 
     /**
@@ -510,8 +521,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        var url = require('pages/user-list-page').getUrl();
-        this.props.route.change(url, true);
+        this.setEditability(false);
     },
 
     /**
@@ -520,7 +530,18 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var users = _.map(this.state.selectedUserIds, (userId) => {
+                return {
+                    id: userId,
+                    approve: true
+                };
+            });
+            return db.save({ table: 'project' }, users).then((users) => {
+                return this.setEditability(false);
+            });
+        });
     },
 
     handleRowClick: function(evt) {

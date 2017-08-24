@@ -33,28 +33,24 @@ module.exports = Relaks.createClass({
          * Match current URL against the page's
          *
          * @param  {String} url
-         * @param  {Object} query
          *
          * @return {Object|null}
          */
-        parseUrl: function(url, query) {
-            var params = Route.match('/projects/:projectId/repos/', url);
-            if (params) {
-                params.edit = !!parseInt(query.edit);
-                return params;
-            }
+        parseUrl: function(url) {
+            return Route.match('/projects/:projectId/repos/', url);
         },
 
         /**
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
+         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params) {
+        getUrl: function(params, query) {
             var url = `/projects/${params.projectId}/repos/`;
-            if (params.edit) {
+            if (query && query.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -85,7 +81,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load project
             var criteria = {
-                id: this.props.route.parameters.projectId
+                id: parseInt(this.props.route.parameters.projectId)
             };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
@@ -141,8 +137,17 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
             selectedRepoIds: [],
-            renderingFullList: this.props.route.parameters.edit,
+            renderingFullList: this.isEditing(),
         };
+    },
+
+    /**
+     * Return project id specified in URL
+     *
+     * @return {Number}
+     */
+    getProjectId: function() {
+        return parseInt(this.props.route.parameters.projectId);
     },
 
     /**
@@ -151,16 +156,33 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {Boolean}
      */
     isEditing: function() {
-        return this.props.route.parameters.edit;
+        return !!parseInt(this.props.route.query.edit);
+    },
+
+    /**
+     * Change editability of page
+     *
+     * @param  {Boolean} edit
+     *
+     * @return {Promise}
+     */
+    setEditability: function(edit) {
+        var projectId = this.getProjectId();
+        var url = require('pages/repo-list-page').getUrl({ projectId }, { edit });
+        return this.props.route.change(url, true);
     },
 
     componentWillReceiveProps: function(nextProps) {
         if (this.props.route !== nextProps.route) {
-            if (nextProps.route.parameters.edit) {
-                this.setState({ renderingFullList: true });
+            if (parseInt(nextProps.route.query.edit)) {
+                // initial list of ids to the current list
+                this.setState({
+                    renderingFullList: true,
+                    selectedRepoIds: _.get(nextProps.project, 'repo_ids', [])
+                });
             } else {
                 setTimeout(() => {
-                    if (!this.props.route.parameters.edit && this.state.renderingFullList) {
+                    if (!this.isEditing() && this.state.renderingFullList) {
                         this.setState({ renderingFullList: false });
                     }
                 }, 500);
@@ -168,13 +190,15 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         }
         if (this.props.project !== nextProps.project && nextProps.project) {
             var selectedRepoIds = this.state.selectedRepoIds;
-            if (!this.props.project || selectedRepoIds === this.props.project.repo_ids) {
+            var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
+            var incomingRepoIds = _.get(nextProps.project, 'repo_ids', []);
+            if (selectedRepoIds === originalRepoIds) {
                 // use the list from the incoming object if no change has been made yet
-                selectedRepoIds = nextProps.project.repo_ids;
+                selectedRepoIds = incomingRepoIds;
             } else {
-                if (!_.isEqual(this.props.project.repo_ids, nextProps.project.repo_ids)) {
+                if (!_.isEqual(originalRepoIds, incomingRepoIds)) {
                     // merge the list when a change has been made (by someone else presumably)
-                    selectedRepoIds = _.union(selectedRepoIds, nextProps.project.repo_ids);
+                    selectedRepoIds = _.union(selectedRepoIds, incomingRepoIds);
                 }
             }
             this.setState({ selectedRepoIds });
@@ -311,7 +335,8 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             key: repo.id,
         };
         if (this.state.renderingFullList) {
-            if (_.includes(this.props.project.repo_ids, repo.id)) {
+            var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
+            if (_.includes(originalRepoIds, repo.id)) {
                 props.className = 'fixed';
             }
             if (_.includes(this.state.selectedRepoIds, repo.id)) {
@@ -357,7 +382,8 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             if (this.state.renderingFullList) {
                 // compare against original project object to see if the user
                 // will be added or removed
-                var includedBefore = _.includes(this.props.project.repo_ids, repo.id);
+                var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
+                var includedBefore = _.includes(originalRepoIds, repo.id);
                 var includedAfter = _.includes(this.state.selectedRepoIds, repo.id);
                 var RepoSVG = require('octicons/build/svg/repo.svg');
                 if (includedBefore && !includedAfter) {
@@ -376,7 +402,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             } else {
                 // don't create the link when we're editing the list
                 url = require('pages/repo-summary-page').getUrl({
-                    projectId: this.props.route.parameters.projectId,
+                    projectId: this.getProjectId(),
                     repoId: repo.id
                 });
             }
@@ -572,21 +598,48 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
     handleEditClick: function(evt) {
-        var url = require('pages/repo-list-page').getUrl({
-            projectId: this.props.route.parameters.projectId,
-            edit: 1
-        });
-        this.props.route.change(url, true);
+        this.setEditability(true);
     },
 
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
     handleCancelClick: function(evt) {
-        var url = require('pages/repo-list-page').getUrl({
-            projectId: this.props.route.parameters.projectId,
-        });
-        this.props.route.change(url, true);
+        // TODO: confirmation
+        this.setEditability(false);
     },
 
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var project = {
+                id: this.props.project.id,
+                repo_ids: this.state.selectedRepoIds
+            };
+            return db.saveOne({ table: 'project' }, project).then((project) => {
+                return this.setEditability(false);
+            });
+        });
+    },
+
+    /**
+     * Called when user clicks a row in edit mode
+     *
+     * @param  {Event} evt
+     */
     handleRowClick: function(evt) {
         var repoId = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
         var repoIds = this.props.project.repo_ids;
@@ -650,12 +703,20 @@ var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, di
 });
 
 var findServer = Memoize(function(servers, repo) {
-    return _.find(servers, { id: repo.server_id });
+    if (repo) {
+        return _.find(servers, { id: repo.server_id });
+    } else {
+        return null;
+    }
 });
 
 var findRepos = Memoize(function(repos, project) {
-    var hash = _.keyBy(repos, 'id');
-    return _.filter(_.map(project.repo_ids, (id) => {
-        return hash[id];
-    }));
+    if (project) {
+        var hash = _.keyBy(repos, 'id');
+        return _.filter(_.map(project.repo_ids, (id) => {
+            return hash[id];
+        }));
+    } else {
+        return [];
+    }
 });

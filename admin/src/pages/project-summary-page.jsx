@@ -28,28 +28,24 @@ module.exports = Relaks.createClass({
          * Match current URL against the page's
          *
          * @param  {String} url
-         * @param  {Object} query
          *
          * @return {Object|null}
          */
-        parseUrl: function(url, query) {
-            var params = Route.match('/projects/:projectId/', url);
-            if (params) {
-                params.edit = !!parseInt(query.edit);
-                return params;
-            }
+        parseUrl: function(url) {
+            return Route.match('/projects/:projectId/', url);
         },
 
         /**
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
+         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params) {
+        getUrl: function(params, query) {
             var url = `/projects/${params.projectId}/`;
-            if (params.edit) {
+            if (query && query.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -75,7 +71,7 @@ module.exports = Relaks.createClass({
         };
         return db.start().then((userId) => {
             var criteria = {
-                id: this.props.route.parameters.projectId
+                id: parseInt(this.props.route.parameters.projectId)
             };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
@@ -121,8 +117,36 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         this.setState({ newProject: projectAfter });
     },
 
+
+    /**
+     * Return project id specified in URL
+     *
+     * @return {Number}
+     */
+    getProjectId: function() {
+        return parseInt(this.props.route.parameters.projectId);
+    },
+
+    /**
+     * Return true when the URL indicate edit mode
+     *
+     * @return {Boolean}
+     */
     isEditing: function() {
-        return this.props.route.parameters.edit;
+        return !!parseInt(this.props.route.query.edit);
+    },
+
+    /**
+     * Change editability of page
+     *
+     * @param  {Boolean} edit
+     *
+     * @return {Promise}
+     */
+    setEditability: function(edit) {
+        var projectId = this.getProjectId();
+        var url = require('pages/project-summary-page').getUrl({ projectId }, { edit });
+        return this.props.route.change(url, true);
     },
 
     /**
@@ -244,11 +268,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleEditClick: function(evt) {
-        var url = require('pages/project-summary-page').getUrl({
-            projectId: this.props.project.id,
-            edit: true
-        });
-        return this.props.route.change(url);
+        return this.setEditability(true);
     },
 
     /**
@@ -258,10 +278,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleCancelClick: function(evt) {
         // TODO: add confirmation
-        var url = require('pages/project-summary-page').getUrl({
-            projectId: this.props.project.id,
-        });
-        return this.props.route.change(url);
+        return this.setEditability(false);
     },
 
     /**
@@ -271,13 +288,10 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
-        var project = this.getProject();
+        var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
         return db.start().then((userId) => {
             return db.saveOne({ table: 'project' }, project).then((project) => {
-                var url = require('pages/project-summary-page').getUrl({
-                    projectId: project.id,
-                });
-                return this.props.route.change(url);
+                return this.setEditability(false);
             });
         });
     },

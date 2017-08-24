@@ -172,7 +172,6 @@ module.exports = React.createClass({
                     token: authorization.token,
                     user_id: authorization.user_id,
                 };
-                console.log(authorization);
                 this.triggerSuccessEvent(credentials);
             }).catch((err) => {
             });

@@ -85,7 +85,7 @@ module.exports = React.createClass({
                 var pageName = _.get(page, 'displayName', 'Page')
                 throw new Error(`${pageName} does not implement the static function parseUrl()`);
             }
-            var params = page.parseUrl(url, query);
+            var params = page.parseUrl(url);
             if (params) {
                 route = {
                     url: url,

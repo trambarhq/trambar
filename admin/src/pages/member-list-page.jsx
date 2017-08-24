@@ -34,28 +34,24 @@ module.exports = Relaks.createClass({
          * Match current URL against the page's
          *
          * @param  {String} url
-         * @param  {Object} query
          *
          * @return {Object|null}
          */
-        parseUrl: function(url, query) {
-            var params = Route.match('/projects/:projectId/members/', url);
-            if (params) {
-                params.edit = !!parseInt(query.edit);
-                return params;
-            }
+        parseUrl: function(url) {
+            return Route.match('/projects/:projectId/members/', url);
         },
 
         /**
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
+         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params) {
+        getUrl: function(params, query) {
             var url = `/projects/${params.projectId}/members/`;
-            if (params.edit) {
+            if (query && query.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -85,7 +81,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load project
             var criteria = {
-                id: this.props.route.parameters.projectId
+                id: parseInt(this.props.route.parameters.projectId)
             };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
@@ -141,8 +137,17 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
             selectedUserIds: [],
-            renderingFullList: this.props.route.parameters.edit,
+            renderingFullList: this.isEditing(),
         };
+    },
+
+    /**
+     * Return project id specified in URL
+     *
+     * @return {Number}
+     */
+    getProjectId: function() {
+        return parseInt(this.props.route.parameters.projectId);
     },
 
     /**
@@ -151,30 +156,48 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {Boolean}
      */
     isEditing: function() {
-        return this.props.route.parameters.edit;
+        return !!parseInt(this.props.route.query.edit);
+    },
+
+    /**
+     * Change editability of page
+     *
+     * @param  {Boolean} edit
+     *
+     * @return {Promise}
+     */
+    setEditability: function(edit) {
+        var projectId = this.getProjectId();
+        var url = require('pages/member-list-page').getUrl({ projectId }, { edit });
+        return this.props.route.change(url, true);
     },
 
     componentWillReceiveProps: function(nextProps) {
         if (this.props.route !== nextProps.route) {
-            if (nextProps.route.parameters.edit) {
-                this.setState({ renderingFullList: true });
+            if (parseInt(nextProps.route.query.edit)) {
+                this.setState({
+                    renderingFullList: true,
+                    selectedUserIds: _.get(nextProps.project, 'user_ids')
+                });
             } else {
                 setTimeout(() => {
-                    if (!this.props.route.parameters.edit && this.state.renderingFullList) {
+                    if (!this.isEditing()) {
                         this.setState({ renderingFullList: false });
                     }
                 }, 500);
             }
         }
-        if (this.props.project !== nextProps.project) {
+        if (this.props.project !== nextProps.project && nextProps.project) {
             var selectedUserIds = this.state.selectedUserIds;
-            if (!this.props.project || selectedUserIds === this.props.project.user_ids) {
+            var originalUserIds = _.get(this.props.project, 'user_ids', []);
+            var incomingUserIds = _.get(nextProps.project, 'user_ids', []);
+            if (selectedUserIds === originalUserIds) {
                 // use the list from the incoming object if no change has been made yet
                 selectedUserIds = nextProps.project.user_ids;
             } else {
-                if (!_.isEqual(this.props.project.user_ids, nextProps.project.user_ids)) {
+                if (!_.isEqual(originalUserIds, incomingUserIds)) {
                     // merge the list when a change has been made (by someone else presumably)
-                    selectedUserIds = _.union(selectedUserIds, nextProps.project.user_ids);
+                    selectedUserIds = _.union(selectedUserIds, incomingUserIds);
                 }
             }
             this.setState({ selectedUserIds });
@@ -599,18 +622,25 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     handleEditClick: function(evt) {
-        var url = require('pages/member-list-page').getUrl({
-            projectId: this.props.route.parameters.projectId,
-            edit: 1
-        });
-        this.props.route.change(url, true);
+        this.setEditability(true);
     },
 
     handleCancelClick: function(evt) {
-        var url = require('pages/member-list-page').getUrl({
-            projectId: this.props.route.parameters.projectId,
+        // TODO: confirmation
+        this.setEditability(false);
+    },
+
+    handleSaveClick: function() {
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var columns = {
+                id: this.props.project.id,
+                user_ids: this.state.selectedUserIds
+            };
+            return db.saveOne({ table: 'project' }, columns).then((project) => {
+                return this.setEditability(false);
+            });
         });
-        this.props.route.change(url, true);
     },
 
     handleAddClick: function(evt) {
