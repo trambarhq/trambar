@@ -41,6 +41,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(64),
+                settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
         `;
@@ -80,15 +81,19 @@ module.exports = _.create(Data, {
             var object = {
                 id: row.id,
                 gn: row.gn,
-                details: _.obscure(row.details, [
+                details: {},
+                type: row.type,
+            };
+            if (credentials.unrestricted) {
+                object.details = _.obscure(row.details, [
                     'title',
                     'description',
                     'api.url',
                     'oauth.baseURL',
                     'oauth.clientID',
-                ]),
-                type: row.type,
-            };
+                ]);
+                object.settings = row.settings;
+            }
             return object;
         });
     }

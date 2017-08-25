@@ -379,6 +379,17 @@ module.exports = {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials) {
+        return Promise.map(objects, (object) => {
+            if (object.hasOwnProperty('gn')) {
+                throw new HttpError(400);
+            }
+            if (object.hasOwnProperty('ctime')) {
+                throw new HttpError(400);
+            }
+            if (object.hasOwnProperty('mtime')) {
+                throw new HttpError(400);
+            }
+        });
         return Promise.resolve(objects);
     },
 
