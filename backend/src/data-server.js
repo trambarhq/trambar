@@ -179,11 +179,6 @@ function handleRetrieval(req, res) {
                 throw new HttpError(400);
             }
 
-            // indicate that the user has admin access
-            if (area === 'admin') {
-                credentials.unrestricted = true;
-            }
-
             // look up the rows by id
             var accessor = getAccessor(schema, table);
             return accessor.find(db, schema, { id: ids }, '*').then((rows) => {
@@ -319,6 +314,11 @@ function fetchCredentials(db, userId) {
         }
         credentials.user = user;
         credentials.area = area;
+
+        // indicate that the user has admin access
+        if (area === 'admin' && user.type === 'admin') {
+            credentials.unrestricted = true;
+        }
     }).then(() => {
         return credentials;
     });
