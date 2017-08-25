@@ -15,6 +15,7 @@ module.exports = _.create(Data, {
         name: String,
         repo_ids: Array(Number),
         user_ids: Array(Number),
+        settings: Object,
     },
     criteria: {
         id: Number,
@@ -45,6 +46,7 @@ module.exports = _.create(Data, {
                 name varchar(64) NOT NULL DEFAULT '',
                 repo_ids int[] NOT NULL DEFAULT '{}'::int[],
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
+                settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
         `;
@@ -72,6 +74,9 @@ module.exports = _.create(Data, {
                 repo_ids: row.repo_ids,
                 user_ids: row.user_ids,
             };
+            if (credentials.unrestricted) {
+                object.settings = row.settings;
+            }
             return object;
         });
     }

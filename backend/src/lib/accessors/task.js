@@ -88,7 +88,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials) {
-        return Promise.map(objects, (object, index) => {
+        return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
             var original = originals[index];
             if (original) {
                 // task cannot be modified
