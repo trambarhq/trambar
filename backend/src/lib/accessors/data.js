@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var HttpError = require('errors/http-error');
 
 module.exports = {
     schema: 'global',
@@ -380,15 +381,11 @@ module.exports = {
      */
     import: function(db, schema, objects, originals, credentials) {
         return Promise.map(objects, (object) => {
-            if (object.hasOwnProperty('gn')) {
-                throw new HttpError(400);
+            // these properties cannot be modified from the client side
+            if (object.hasOwnProperty('gn') || object.hasOwnProperty('ctime') || object.hasOwnProperty('mtime')) {
+                return _.omit(object, 'gn', 'ctime', 'mtime');
             }
-            if (object.hasOwnProperty('ctime')) {
-                throw new HttpError(400);
-            }
-            if (object.hasOwnProperty('mtime')) {
-                throw new HttpError(400);
-            }
+            return object;
         });
         return Promise.resolve(objects);
     },

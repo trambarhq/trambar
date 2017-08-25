@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Crypto = Promise.promisifyAll(require('crypto'));
 var Data = require('accessors/data');
+var HttpError = require('errors/http-error');
 
 module.exports = _.create(Data, {
     schema: 'project',
