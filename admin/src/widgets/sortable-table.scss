@@ -69,7 +69,6 @@
         TBODY {
             TR {
                 background-color: #ffffff;
-                cursor: pointer;
 
                 &.collapsed {
                     opacity: 0;
@@ -95,6 +94,8 @@
     &.selectable {
         TBODY {
             TR {
+                cursor: pointer;
+
                 &.selected {
                     background-color: #99ddff;
                 }

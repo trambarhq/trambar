@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var OptionList = require('widgets/option-list');
 
 require('./project-summary-page.scss');
 
@@ -206,6 +207,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
+        var projectOriginal = this.props.project;
         var project = this.getProject();
         var titleProps = {
             id: 'title',
@@ -226,11 +228,89 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleDescriptionChange,
             readOnly,
         };
+        var optionListProps = {
+            onOptionClick: this.handleOptionClick,
+            readOnly,
+        };
+        var sc = findSettings(project);
+        var sp = findSettings(this.props.project);
+        var membershipProps = [
+            {
+                name: 'manual',
+                selected: !sc.membership.accept_team_member_automatically
+                       && !sc.membership.accept_approved_users_automaticlly,
+                previous: !sp.membership.accept_team_member_automatically
+                       && !sp.membership.accept_approved_users_automaticlly,
+                children: 'Members are added manually',
+            },
+            {
+                name: 'accept_team_member_automatically',
+                selected: sc.membership.accept_team_member_automatically,
+                previous: sp.membership.accept_team_member_automatically,
+                children: 'Team members become project members automatically',
+            },
+            {
+                name: 'accept_approved_users_automaticlly',
+                selected: sc.membership.accept_approved_users_automaticlly,
+                previous: sp.membership.accept_approved_users_automaticlly,
+                children: 'Approved users become members automatically',
+            },
+            {
+                name: 'allow_request',
+                selected: sc.membership.allow_request,
+                previous: sp.membership.allow_request,
+                children: 'People can request to join project',
+            },
+        ];
+        var accessControlProps = [
+            {
+                name: 'members_only',
+                selected: !sc.access_control.grant_team_members_read_only
+                       && !sc.access_control.grant_approved_users_read_only
+                       && !sc.access_control.grant_unapproved_users_read_only,
+                previous: !sp.access_control.grant_team_members_read_only
+                       && !sp.access_control.grant_approved_users_read_only
+                       && !sp.access_control.grant_unapproved_users_read_only,
+               children: 'Only project members can view contents',
+            },
+            {
+                name: 'grant_team_members_read_only',
+                selected: sc.access_control.grant_team_members_read_only,
+                previous: sp.access_control.grant_team_members_read_only,
+                children: 'Team members can view contents but cannot post',
+            },
+            {
+                name: 'grant_approved_users_read_only',
+                selected: sc.access_control.grant_approved_users_read_only,
+                previous: sp.access_control.grant_approved_users_read_only,
+                children: 'Approved users can view contents but cannot post',
+            },
+            {
+                name: 'grant_unapproved_users_read_only',
+                selected: sc.access_control.grant_unapproved_users_read_only,
+                previous: sp.access_control.grant_unapproved_users_read_only,
+                children: 'Pending users can view contents but cannot post',
+            },
+        ];
         return (
             <div className="form">
                 <TextField {...titleProps}>{t('project-summary-title')}</TextField>
                 <TextField {...nameProps}>{t('project-summary-name')}</TextField>
                 <TextField {...descriptionProps}>{t('project-summary-description')}</TextField>
+                <OptionList {...optionListProps}>
+                    <label>New members</label>
+                    <option {...membershipProps[0]} />
+                    <option {...membershipProps[1]} />
+                    <option {...membershipProps[2]} />
+                    <option {...membershipProps[3]} />
+                </OptionList>
+                <OptionList {...optionListProps}>
+                    <label>Access control</label>
+                    <option {...accessControlProps[0]} />
+                    <option {...accessControlProps[1]} />
+                    <option {...accessControlProps[2]} />
+                    <option {...accessControlProps[3]} />
+                </OptionList>
             </div>
         );
     },
@@ -291,6 +371,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
         return db.start().then((userId) => {
             return db.saveOne({ table: 'project' }, project).then((project) => {
+                console.log(project);
                 return this.setEditability(false);
             });
         });
@@ -327,4 +408,70 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var lang = this.props.locale.lang;
         this.setProjectProperty(`details.description.${lang}`, text);
     },
+
+    /**
+     * Called when user clicks an option under membership or access control
+     *
+     * @param  {Object} evt
+     */
+    handleOptionClick: function(evt) {
+        var project = this.getProject();
+        var s = _.cloneDeep(findSettings(project));
+        switch (evt.name) {
+            case 'manual':
+                s.membership.accept_team_member_automatically = false;
+                s.membership.accept_approved_users_automaticlly = false;
+                break;
+            case 'accept_team_member_automatically':
+                s.membership.accept_team_member_automatically = !s.membership.accept_team_member_automatically;
+                break;
+            case 'accept_approved_users_automaticlly':
+                s.membership.accept_approved_users_automaticlly = !s.membership.accept_approved_users_automaticlly;
+                break;
+            case 'allow_request':
+                s.membership.allow_request = !s.membership.allow_request;
+                break;
+            case 'members_only':
+                s.access_control.grant_team_members_read_only = false;
+                s.access_control.grant_approved_users_read_only = false;
+                s.access_control.grant_unapproved_users_read_only = false;
+                break;
+            case 'grant_team_members_read_only':
+                s.access_control.grant_team_members_read_only = !s.access_control.grant_team_members_read_only;
+                break;
+            case 'grant_approved_users_read_only':
+                s.access_control.grant_approved_users_read_only = !s.access_control.grant_approved_users_read_only;
+                break;
+            case 'grant_unapproved_users_read_only':
+                s.access_control.grant_unapproved_users_read_only = !s.access_control.grant_unapproved_users_read_only;
+                break;
+        }
+        this.setProjectProperty(`settings`, s);
+    },
 });
+
+var defaultSettings = {
+    membership: {
+        accept_team_member_automatically: true,
+        accept_approved_users_automaticlly: false,
+        allow_request: true,
+    },
+    access_control: {
+        grant_team_members_read_only: true,
+        grant_approved_users_read_only: true,
+        grant_unapproved_users_read_only: false,
+    },
+};
+
+var emptySettings = {
+    membership: {},
+    access_control: {},
+};
+
+function findSettings(project) {
+    if (project) {
+        return _.merge({}, defaultSettings, project.settings);
+    } else {
+        return emptySettings;
+    }
+}

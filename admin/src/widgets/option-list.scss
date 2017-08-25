@@ -1,0 +1,38 @@
+.option-list {
+    margin-bottom: 1em;
+
+    label {
+        display: block;
+        font-weight: 600;
+    }
+
+    .container {
+        border: 1px solid #000000;
+        transition: border-color 1s ease-out;
+    }
+
+    .sortable-table {
+        TD {
+            padding-left: 4px;
+        }
+    }
+
+    .badge {
+        float: right;
+        margin-top: 0.1em;
+
+        &.add {
+            color: #009900;
+        }
+
+        &.remove {
+            color: #cc0000;
+        }
+    }
+
+    &.readonly {
+        .container {
+            border-color: rgba(0, 0, 0, 0);
+        }
+    }
+}
