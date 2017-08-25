@@ -535,10 +535,10 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             var users = _.map(this.state.selectedUserIds, (userId) => {
                 return {
                     id: userId,
-                    approve: true
+                    approved: true
                 };
             });
-            return db.save({ table: 'project' }, users).then((users) => {
+            return db.save({ table: 'user' }, users).then((users) => {
                 return this.setEditability(false);
             });
         });
