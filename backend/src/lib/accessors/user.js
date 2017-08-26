@@ -117,16 +117,20 @@ module.exports = _.create(Data, {
                 username: row.username,
                 role_ids: row.role_ids,
             };
-            if (!row.approved) {
-                object.approved = row.approved;
-            }
-            if (row.hidden) {
-                object.hidden = row.hidden;
-            }
             if (credentials.unrestricted) {
                 object.server_id = row.server_id;
                 object.external_id = row.external_id;
+                object.approved = row.approved;
+                object.hidden = row.hidden;
                 object.requested_project_id = row.requested_project_ids;
+            } else {
+                // don't export these unless they're not their usual values 
+                if (!row.approved) {
+                    object.approved = row.approved;
+                }
+                if (row.hidden) {
+                    object.hidden = row.hidden;
+                }
             }
             return object;
         });

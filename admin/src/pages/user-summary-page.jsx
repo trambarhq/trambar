@@ -141,9 +141,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     setUserProperty: function(path, value) {
         var userBefore = this.getUser();
-        var userAfter = (value === undefined)
-                      ? _.decoupleUnset(userBefore, path)
-                      : _.decoupleSet(userBefore, path, value);
+        var userAfter = _.decoupleSet(userBefore, path, value);
         if (_.isEqual(userAfter, this.props.user)) {
             userAfter = null;
         }
@@ -323,10 +321,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var visibilityOptionProps = [
             {
-                // NOTE: .hidden is not sent by the server when it's true
                 name: 'show',
-                selected: (user.id) ? !_.get(user, 'hidden') : false,
-                previous: (userOriginal.id) ? !_.get(userOriginal, 'hidden') : false,
+                selected: _.get(user, 'hidden') === false,
+                previous: _.get(userOriginal, 'hidden') === false,
                 children: t('user-summary-visibility-shown'),
             },
             {
@@ -491,10 +488,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleVisibilityOptionClick: function(evt) {
-        var hidden;
-        if (evt.name === 'hidden') {
-            hidden = true;
-        }
+        var hidden = (evt.name === 'hidden');
         this.setUserProperty('hidden', hidden);
     },
 });
