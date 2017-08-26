@@ -6,20 +6,6 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-// pages
-var ProjectListPage = require('pages/project-list-page');
-var ProjectSummaryPage = require('pages/project-summary-page');
-var MemberListPage = require('pages/member-list-page');
-var RoleListPage = require('pages/role-list-page');
-var RolePage = require('pages/role-summary-page');
-var RepoListPage = require('pages/repo-list-page');
-var RepoSummaryPage = require('pages/repo-summary-page');
-var ServerListPage = require('pages/server-list-page');
-var ServerSummaryPage = require('pages/server-summary-page');
-var SettingsPage = require('pages/settings-page');
-var UserListPage = require('pages/user-list-page');
-var UserSummaryPage = require('pages/user-summary-page');
-
 // widgets
 var CollapsibleContainer = require('widgets/collapsible-container');
 
@@ -48,28 +34,48 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<NavigationTreeSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             var params = this.props.route.parameters;
             if (params.projectId) {
-                var criteria = { id: params.projectId };
-                return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
-                    props.project = project;
-                });
+                var projectId = parseInt(params.projectId);
+                if (projectId) {
+                    var criteria = {
+                        id: projectId
+                    };
+                    return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
+                        props.project = project;
+                    });
+                }
             } else if (params.userId) {
-                var criteria = { id: params.userId };
-                return db.findOne({ schema: 'global', table: 'user', criteria }).then((user) => {
-                    props.user = user;
-                });
+                var userId = parseInt(params.userId);
+                if (userId) {
+                    var criteria = {
+                        id: parseInt(params.userId)
+                    };
+                    return db.findOne({ schema: 'global', table: 'user', criteria }).then((user) => {
+                        props.user = user;
+                    });
+                }
             } else if (params.roleId) {
-                var criteria = { id: params.roleId };
-                return db.findOne({ schema: 'global', table: 'role', criteria }).then((role) => {
-                    props.role = role;
-                });
+                var roleId = parseInt(params.roleId);
+                if (roleId) {
+                    var criteria = {
+                        id: roleId
+                    };
+                    return db.findOne({ schema: 'global', table: 'role', criteria }).then((role) => {
+                        props.role = role;
+                    });
+                }
             } else if (params.serverId) {
-                var criteria = { id: params.serverId };
-                return db.findOne({ schema: 'global', table: 'server', criteria }).then((server) => {
-                    props.server = server;
-                });
+                var serverId = parseInt(params.serverId);
+                if (serverId) {
+                    var criteria = {
+                        id: serverId
+                    };
+                    return db.findOne({ schema: 'global', table: 'server', criteria }).then((server) => {
+                        props.server = server;
+                    });
+                }
             }
         }).then(() => {
             return <NavigationTreeSync {...props} />;
@@ -96,10 +102,10 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             arrowCount: 0,
             arrowAction: '',
 
-            project: this.props.project,
-            user: this.props.user,
-            role: this.props.role,
-            server: this.props.server,
+            project: this.props.project || emptyObject,
+            user: this.props.user || emptyObject,
+            role: this.props.role || emptyObject,
+            server: this.props.server || emptyObject,
         };
     },
 
@@ -127,7 +133,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
                 {this.renderProjectSection()}
                 {this.renderUserSection()}
                 {this.renderRoleSection()}
-                {this.renderServiceSection()}
+                {this.renderServerSection()}
                 {this.renderSettingsSection()}
                 {this.renderArrow()}
             </div>
@@ -153,14 +159,14 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     renderProjectSection: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var url = this.props.route.path;
-        var project = this.state.project || { details: {} };
+        var project = this.state.project;
         var projectName = p(project.details.title) || project.name || t('nav-project-name-pending');
-        var projectId = project.id;
-        var listUrl = ProjectListPage.getUrl();
-        var summaryUrl = ProjectSummaryPage.getUrl({ projectId });
-        var memberListUrl = MemberListPage.getUrl({ projectId });
-        var repoListUrl = RepoListPage.getUrl({ projectId });
+        var projectId = this.props.route.parameters.projectId;
+        var url = this.props.route.path;
+        var listUrl = require('pages/project-list-page').getUrl();
+        var summaryUrl = require('pages/project-summary-page').getUrl({ projectId });
+        var memberListUrl = require('pages/member-list-page').getUrl({ projectId });
+        var repoListUrl = require('pages/repo-list-page').getUrl({ projectId });
         var robotListUrl = '/todo/';
         var openLevel3 = (url === memberListUrl || url === repoListUrl || url === robotListUrl);
         var openLevel2 = (openLevel3 || url === summaryUrl);
@@ -187,11 +193,11 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
 
     renderUserSection: function() {
         var t = this.props.locale.translate;
-        var url = this.props.route.url;
         var userName = _.get(this.state.user, 'details.name') || t('nav-user-name-pending');
-        var userId = _.get(this.state.user, 'id', 0);
-        var listUrl = UserListPage.getUrl();
-        var summaryUrl = UserSummaryPage.getUrl({ userId });
+        var userId = this.props.route.parameters.userId;
+        var url = this.props.route.path;
+        var listUrl = require('pages/user-list-page').getUrl();
+        var summaryUrl = require('pages/user-summary-page').getUrl({ userId });
         var openLevel3 = false;
         var openLevel2 = (openLevel3 || url === summaryUrl);
         return (
@@ -208,7 +214,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
 
     renderRoleSection: function() {
         var t = this.props.locale.translate;
-        var listUrl = RoleListPage.getUrl();
+        var listUrl = require('pages/role-list-page').getUrl();
         return (
             <div className="level1">
                 {this.renderLink(listUrl, t('nav-roles'))}
@@ -216,19 +222,31 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         );
     },
 
-    renderServiceSection: function() {
+    renderServerSection: function() {
         var t = this.props.locale.translate;
-        var listUrl = ServerListPage.getUrl();
+        var p = this.props.locale.pick;
+        var serverName = p(_.get(this.state.server, 'details.title')) || t('nav-server-name-pending');
+        var serverId = this.props.route.parameters.serverId;
+        var url = this.props.route.path;
+        var listUrl = require('pages/server-list-page').getUrl();
+        var summaryUrl = require('pages/server-summary-page').getUrl({ serverId });
+        var openLevel3 = false;
+        var openLevel2 = (openLevel3 || url === summaryUrl);
         return (
             <div className="level1">
                 {this.renderLink(listUrl, t('nav-servers'))}
+                <CollapsibleContainer open={openLevel2}>
+                    <div className="level2">
+                        {this.renderLink(summaryUrl, serverName)}
+                    </div>
+                </CollapsibleContainer>
             </div>
         );
     },
 
     renderSettingsSection: function() {
         var t = this.props.locale.translate;
-        var listUrl = SettingsPage.getUrl();
+        var listUrl = require('pages/settings-page').getUrl();
         return (
             <div className="level1">
                 {this.renderLink(listUrl, t('nav-settings'))}
@@ -299,3 +317,5 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         }, 50);
     },
 });
+
+var emptyObject = { details: {} };

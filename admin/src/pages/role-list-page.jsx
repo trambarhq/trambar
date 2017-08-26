@@ -69,7 +69,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RoleListPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             // load all roles
             var criteria = {};
             return db.find({ table: 'role', criteria });

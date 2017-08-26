@@ -72,7 +72,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             var criteria = {
                 id: parseInt(this.props.route.parameters.serverId)
             };
@@ -146,25 +146,38 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return true when the URL indicate we're creating a new user
+     *
+     * @return {Boolean}
+     */
+    isCreating: function() {
+        return (this.props.route.parameters.serverId === 'new');
+    },
+
+    /**
      * Return true when the URL indicate edit mode
      *
      * @return {Boolean}
      */
     isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+        return this.isCreating() || !!parseInt(this.props.route.query.edit);
     },
 
     /**
      * Change editability of page
      *
      * @param  {Boolean} edit
+     * @param  {Object}  newServer
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var serverId = this.getServerId();
-        var url = require('pages/server-summary-page').getUrl({ serverId }, { edit });
-        return this.props.route.change(url, true);
+    setEditability: function(edit, newServer) {
+        var serverId = (newServer) ? newServer.id : this.getServerId();
+        var url = (serverId)
+                ? require('pages/server-summary-page').getUrl({ serverId }, { edit })
+                : require('pages/server-list-page').getUrl();
+        var replace = (serverId) ? true : false;
+        return this.props.route.change(url, replace);
     },
 
     /**
@@ -176,7 +189,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var server = this.getServer();
-        var title = p(_.get(server, 'details.title')) || t(`server-type-${server.type}`);
+        var title = p(_.get(server, 'details.title'));
+        if (!title && server.type) {
+            title = t(`server-type-${server.type}`);
+        }
         return (
             <div className="server-summary-page">
                 {this.renderButtons()}
@@ -357,7 +373,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var server = this.getServer();
         return db.start().then((serverId) => {
             return db.saveOne({ table: 'server' }, server).then((server) => {
-                return this.setEditability(false);
+                return this.setEditability(false, server);
             });
         });
     },

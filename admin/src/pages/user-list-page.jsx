@@ -77,7 +77,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<UserListPageSync {...props} />, 250);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             // load all users
             var criteria = {};
             return db.find({ table: 'user', criteria });
@@ -507,6 +507,18 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user clicks new button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        var url = require('pages/user-summary-page').getUrl({
+            userId: 'new'
+        });
+        return this.props.route.change(url);
+    },
+
+    /**
      * Called when user clicks approve button
      *
      * @param  {Event} evt
@@ -531,7 +543,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      */
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             var users = _.map(this.state.selectedUserIds, (userId) => {
                 return {
                     id: userId,

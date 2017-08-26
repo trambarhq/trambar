@@ -83,7 +83,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<ProjectListPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             // load all projects
             var criteria = {};
             return db.find({ table: 'project', criteria });
@@ -462,6 +462,18 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
+    },
+
+    /**
+     * Called when user clicks new button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        var url = require('pages/project-summary-page').getUrl({
+            projectId: 'new'
+        });
+        return this.props.route.change(url);
     },
 });
 

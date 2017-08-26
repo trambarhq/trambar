@@ -66,7 +66,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<SettingsPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             return <SettingsPageSync {...props} />;
         });
     }

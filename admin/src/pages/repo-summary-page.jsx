@@ -72,7 +72,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             var criteria = {
                 id: parseInt(this.props.route.parameters.roleId)
             };
@@ -354,7 +354,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var repo = this.getRepo();
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'repo' }, repo).then((repo) => {
                 return this.setEditability(false);
             });

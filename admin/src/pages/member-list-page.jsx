@@ -78,7 +78,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<MemberListPageSync {...props} />, 250);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             // load project
             var criteria = {
                 id: parseInt(this.props.route.parameters.projectId)
@@ -632,7 +632,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
 
     handleSaveClick: function() {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             var columns = {
                 id: this.props.project.id,
                 user_ids: this.state.selectedUserIds

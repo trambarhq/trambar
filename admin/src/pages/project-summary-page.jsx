@@ -70,11 +70,14 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        return db.start().then((userId) => {
-            var criteria = {
-                id: parseInt(this.props.route.parameters.projectId)
-            };
-            return db.findOne({ table: 'project', criteria });
+        return db.start().then((currentUserId) => {
+            var projectId = parseInt(this.props.route.parameters.projectId);
+            if (projectId) {
+                var criteria = {
+                    id: projectId
+                };
+                return db.findOne({ table: 'project', criteria });
+            }
         }).then((project) => {
             props.project = project;
             return <ProjectSummaryPageSync {...props} />;
@@ -86,8 +89,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'ProjectSummaryPage.Sync',
     propTypes: {
         project: PropTypes.object.isRequired,
-        users: PropTypes.object,
-        repos: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -113,9 +114,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     getProject: function() {
         if (this.isEditing()) {
-            return this.state.newProject || this.props.project || {};
+            return this.state.newProject || this.props.project || emptyProject;
         } else {
-            return this.props.project || {};
+            return this.props.project || emptyProject;
         }
     },
 
@@ -144,25 +145,38 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return true when the URL indicate we're creating a new user
+     *
+     * @return {Boolean}
+     */
+    isCreating: function() {
+        return (this.props.route.parameters.projectId === 'new');
+    },
+
+    /**
      * Return true when the URL indicate edit mode
      *
      * @return {Boolean}
      */
     isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+        return this.isCreating() || !!parseInt(this.props.route.query.edit);
     },
 
     /**
      * Change editability of page
      *
      * @param  {Boolean} edit
+     * @param  {Object|null}  newProject
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var projectId = this.getProjectId();
-        var url = require('pages/project-summary-page').getUrl({ projectId }, { edit });
-        return this.props.route.change(url, true);
+    setEditability: function(edit, newProject) {
+        var projectId = (newProject) ? newProject.id : this.getProjectId();
+        var url = (projectId)
+                ? require('pages/project-summary-page').getUrl({ projectId }, { edit })
+                : require('pages/project-list-page').getUrl();
+        var replace = (projectId) ? true : false;
+        return this.props.route.change(url, replace);
     },
 
     /**
@@ -393,9 +407,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'project' }, project).then((project) => {
-                return this.setEditability(false);
+                return this.setEditability(false, project);
             });
         });
     },
@@ -473,17 +487,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 });
 
-var defaultSettings = {
-    membership: {
-        accept_team_member_automatically: true,
-        accept_approved_users_automaticlly: false,
-        allow_request: true,
-    },
-    access_control: {
-        grant_team_members_read_only: true,
-        grant_approved_users_read_only: true,
-        grant_unapproved_users_read_only: false,
-    },
+var emptyProject = {
+    details: {},
+    settings: {},
 };
 
 var emptySettings = {
@@ -493,7 +499,7 @@ var emptySettings = {
 
 function findSettings(project) {
     if (project) {
-        return _.merge({}, defaultSettings, project.settings);
+        return _.merge({}, emptySettings, project.settings);
     } else {
         return emptySettings;
     }

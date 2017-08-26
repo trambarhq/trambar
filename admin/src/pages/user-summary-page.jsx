@@ -79,11 +79,14 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            var criteria = {
-                id: parseInt(this.props.route.parameters.userId)
-            };
-            return db.findOne({ table: 'user', criteria });
+        return db.start().then((currentUserId) => {
+            var userId = parseInt(this.props.route.parameters.userId);
+            if (userId) {
+                var criteria = {
+                    id: userId
+                };
+                return db.findOne({ table: 'user', criteria });
+            }
         }).then((user) => {
             props.user = user;
             meanwhile.show(<UserSummaryPageSync {...props} />);
@@ -169,26 +172,39 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return true when the URL indicate we're creating a new user
+     *
+     * @return {Boolean}
+     */
+    isCreating: function() {
+        return (this.props.route.parameters.userId === 'new');
+    },
+
+    /**
      * Return true when the URL indicate edit mode
      *
      * @return {Boolean}
      */
     isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+        return this.isCreating() || !!parseInt(this.props.route.query.edit);
     },
 
     /**
      * Change editability of page
      *
      * @param  {Boolean} edit
+     * @param  {Object|null} newUser
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
+    setEditability: function(edit, newUser) {
         var projectId = this.getProjectId();
-        var userId = this.getUserId();
-        var url = require('pages/user-summary-page').getUrl({ projectId, userId }, { edit });
-        return this.props.route.change(url, true);
+        var userId = (newUser) ? newUser.id : this.getUserId();
+        var url = (userId)
+                ? require('pages/user-summary-page').getUrl({ projectId, userId }, { edit })
+                : require('pages/user-list-page').getUrl({ projectId });
+        var replace = (projectId) ? true : false;
+        return this.props.route.change(url, replace);
     },
 
     /**
@@ -415,9 +431,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var user = this.getUser();
-        return db.start().then((userId) => {
+        return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'user' }, user).then((user) => {
-                return this.setEditability(false);
+                return this.setEditability(false, user);
             });
         });
     },
