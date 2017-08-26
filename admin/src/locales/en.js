@@ -62,11 +62,22 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'project-summary-access-control': 'Access control',
+        'project-summary-access-control-approved-user-read-only': 'Approved users can view contents but cannot post',
+        'project-summary-access-control-member-only': 'Only project members can view contents',
+        'project-summary-access-control-team-member-read-only': 'Team members can view contents but cannot post',
+        'project-summary-access-control-pending-user-read-only': 'Pending users can view contents but cannot post',
         'project-summary-cancel': 'Cancel',
         'project-summary-delete': 'Delete Project',
         'project-summary-description': 'Description',
         'project-summary-edit': 'Edit Project',
         'project-summary-name': 'URL Slug',
+        'project-summary-new-members': 'New members',
+        'project-summary-new-members-allow-request': 'People can request to join project',
+        'project-summary-new-members-approved-user-auto-join': 'Approved users become members automatically',
+        'project-summary-new-members-manual': 'Members are added manually',
+        'project-summary-new-members-team-member-auto-join': 'Team members become project members automatically',
+
         'project-summary-save': 'Save Project',
         'project-summary-title': 'Name',
 
@@ -115,7 +126,15 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'repo-summary-cancel': 'Cancel',
         'repo-summary-edit': 'Edit Repository',
+        'repo-summary-gitlab-name': 'GitLab project name',
+        'repo-summary-issue-tracker': 'Issue tracker',
+        'repo-summary-issue-tracker-import-allowed': 'Allow team members to copy post into issue tracker',
+        'repo-summary-issue-tracker-import-disallowed': 'Do not provide issue tracking option',
+        'repo-summary-issue-tracker-not-available': 'Not available',
+        'repo-summary-save': 'Save Repository',
+        'repo-summary-title': 'Name',
 
         'repository-tooltip-$count': (count) => {
             return (count === 1) ? `1 repository` : `${count} repositories`;
@@ -212,7 +231,8 @@ module.exports = function(languageCode) {
             }
             return text;
         },
-        'user-summary-edit': 'Edit User',
+        'user-summary-cancel': 'Cancel',
+        'user-summary-edit': 'Edit user',
         'user-summary-member-$name': (name) => {
             var text = 'User';
             if (name) {
@@ -220,7 +240,20 @@ module.exports = function(languageCode) {
             }
             return text;
         },
-        'user-summary-member-edit': 'Edit Member',
+        'user-summary-member-edit': 'Edit member',
+        'user-summary-member-save': 'Save member',
+        'user-summary-name': 'Name',
+        'user-summary-roles': 'Roles',
+        'user-summary-role-none': 'None',
+        'user-summary-save': 'Save user',
+        'user-summary-type': 'User type',
+        'user-summary-type-admin': 'Administrator',
+        'user-summary-type-guest': 'Guest',
+        'user-summary-type-member': 'Team member',
+        'user-summary-username': 'User name',
+        'user-summary-visibility': 'Visibility',
+        'user-summary-visibility-hidden': 'User is not shown in People section',
+        'user-summary-visibility-shown': 'User is listed in People section',
 
         'user-tooltip-$count': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;

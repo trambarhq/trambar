@@ -68,6 +68,29 @@ _.mixin({
     },
 
     /**
+     * Clone objects along path to parent, then unset property
+     *
+     * @param  {Object} srcObj
+     * @param  {String|Array<String>} path
+     *
+     * @return {Object}
+     */
+    decoupleUnset: function(srcObj, path) {
+        if (typeof(path) === 'string') {
+            path = _.split(path, '.');
+        } else if (!(path instanceof Array)) {
+            path = [ path ];
+        }
+        if (path.length < 0) {
+            throw new Error('Empty path');
+        }
+        var parentPath = _.slice(path, 0, -1);
+        var dstObj = _.decouple(srcObj, parentPath, {});
+        _.unset(dstObj, path);
+        return dstObj;
+    },
+
+    /**
      * Clone objects along path, then push value into targetted array
      *
      * @param  {Object} srcObj

@@ -95,12 +95,22 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             newProject: null,
         };
     },
 
+    /**
+     * Return edited copy of project object or the original object
+     *
+     * @return {Object}
+     */
     getProject: function() {
         if (this.isEditing()) {
             return this.state.newProject || this.props.project || {};
@@ -109,6 +119,12 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Modify a property of the project object
+     *
+     * @param  {String} path
+     * @param  {*} value
+     */
     setProjectProperty: function(path, value) {
         var projectBefore = this.getProject();
         var projectAfter = _.decoupleSet(projectBefore, path, value);
@@ -117,7 +133,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         }
         this.setState({ newProject: projectAfter });
     },
-
 
     /**
      * Return project id specified in URL
@@ -203,6 +218,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Render form for entering project details
+     *
+     * @return {ReactElement}
+     */
     renderForm: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
@@ -228,41 +248,41 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleDescriptionChange,
             readOnly,
         };
-        var optionListProps = {
+        var listProps = {
             onOptionClick: this.handleOptionClick,
             readOnly,
         };
         var sc = findSettings(project);
         var sp = findSettings(this.props.project);
-        var membershipProps = [
+        var membershipOptionProps = [
             {
                 name: 'manual',
                 selected: !sc.membership.accept_team_member_automatically
                        && !sc.membership.accept_approved_users_automaticlly,
                 previous: !sp.membership.accept_team_member_automatically
                        && !sp.membership.accept_approved_users_automaticlly,
-                children: 'Members are added manually',
+                children: t('project-summary-new-members-manual'),
             },
             {
                 name: 'accept_team_member_automatically',
                 selected: sc.membership.accept_team_member_automatically,
                 previous: sp.membership.accept_team_member_automatically,
-                children: 'Team members become project members automatically',
+                children: t('project-summary-new-members-team-member-auto-join'),
             },
             {
                 name: 'accept_approved_users_automaticlly',
                 selected: sc.membership.accept_approved_users_automaticlly,
                 previous: sp.membership.accept_approved_users_automaticlly,
-                children: 'Approved users become members automatically',
+                children: t('project-summary-new-members-approved-user-auto-join'),
             },
             {
                 name: 'allow_request',
                 selected: sc.membership.allow_request,
                 previous: sp.membership.allow_request,
-                children: 'People can request to join project',
+                children: t('project-summary-new-members-allow-request'),
             },
         ];
-        var accessControlProps = [
+        var accessControlOptionProps = [
             {
                 name: 'members_only',
                 selected: !sc.access_control.grant_team_members_read_only
@@ -271,25 +291,25 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 previous: !sp.access_control.grant_team_members_read_only
                        && !sp.access_control.grant_approved_users_read_only
                        && !sp.access_control.grant_unapproved_users_read_only,
-               children: 'Only project members can view contents',
+                children: t('project-summary-access-control-member-only')
             },
             {
                 name: 'grant_team_members_read_only',
                 selected: sc.access_control.grant_team_members_read_only,
                 previous: sp.access_control.grant_team_members_read_only,
-                children: 'Team members can view contents but cannot post',
+                children: t('project-summary-access-control-team-member-read-only')
             },
             {
                 name: 'grant_approved_users_read_only',
                 selected: sc.access_control.grant_approved_users_read_only,
                 previous: sp.access_control.grant_approved_users_read_only,
-                children: 'Approved users can view contents but cannot post',
+                children: t('project-summary-access-control-approved-user-read-only')
             },
             {
                 name: 'grant_unapproved_users_read_only',
                 selected: sc.access_control.grant_unapproved_users_read_only,
                 previous: sp.access_control.grant_unapproved_users_read_only,
-                children: 'Pending users can view contents but cannot post',
+                children: t('project-summary-access-control-pending-user-read-only')
             },
         ];
         return (
@@ -297,24 +317,23 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 <TextField {...titleProps}>{t('project-summary-title')}</TextField>
                 <TextField {...nameProps}>{t('project-summary-name')}</TextField>
                 <TextField {...descriptionProps}>{t('project-summary-description')}</TextField>
-                <OptionList {...optionListProps}>
-                    <label>New members</label>
-                    <option {...membershipProps[0]} />
-                    <option {...membershipProps[1]} />
-                    <option {...membershipProps[2]} />
-                    <option {...membershipProps[3]} />
+                <OptionList {...listProps}>
+                    <label>{t('project-summary-new-members')}</label>
+                    {_.map(membershipOptionProps, renderOption)}
                 </OptionList>
-                <OptionList {...optionListProps}>
-                    <label>Access control</label>
-                    <option {...accessControlProps[0]} />
-                    <option {...accessControlProps[1]} />
-                    <option {...accessControlProps[2]} />
-                    <option {...accessControlProps[3]} />
+                <OptionList {...listProps}>
+                    <label>{t('project-summary-access-control')}</label>
+                    {_.map(accessControlOptionProps, renderOption)}
                 </OptionList>
             </div>
         );
     },
 
+    /**
+     * Render instruction box
+     *
+     * @return {ReactElement}
+     */
     renderInstructions: function() {
         var instructionProps = {
             topic: 'project',
@@ -328,6 +347,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render statistics bar chart
+     *
+     * @return {ReactElement}
+     */
     renderChart: function() {
         return (
             <div className="statistics">
@@ -371,7 +395,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
         return db.start().then((userId) => {
             return db.saveOne({ table: 'project' }, project).then((project) => {
-                console.log(project);
                 return this.setEditability(false);
             });
         });
@@ -474,4 +497,8 @@ function findSettings(project) {
     } else {
         return emptySettings;
     }
+}
+
+function renderOption(props, i) {
+    return <option key={i} {...props} />;
 }

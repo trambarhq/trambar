@@ -47,6 +47,9 @@ module.exports = React.createClass({
     },
 
     renderRow: function(option, i) {
+        if (option.props.hidden) {
+            return null;
+        }
         var classNames = [ 'option' ];
         if (option.props.selected) {
             classNames.push('fixed');
