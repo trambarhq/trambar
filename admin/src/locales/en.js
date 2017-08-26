@@ -233,6 +233,7 @@ module.exports = function(languageCode) {
         },
         'user-summary-cancel': 'Cancel',
         'user-summary-edit': 'Edit user',
+        'user-summary-email': 'E-mail',
         'user-summary-member-$name': (name) => {
             var text = 'User';
             if (name) {

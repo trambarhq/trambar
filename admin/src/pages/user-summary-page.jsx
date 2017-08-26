@@ -270,6 +270,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleUsernameChange,
             readOnly: readOnly || !!user.external_id,
         };
+        var emailProps = {
+            id: 'email',
+            value: _.get(user, 'details.email', ''),
+            onChange: this.handleEmailChange,
+            readOnly: readOnly,
+        };
         var typeListProps = {
             onOptionClick: this.handleTypeOptionClick,
             readOnly,
@@ -334,6 +340,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="form">
                 <TextField {...nameProps}>{t('user-summary-name')}</TextField>
                 <TextField {...usernameProps}>{t('user-summary-username')}</TextField>
+                <TextField {...emailProps}>{t('user-summary-email')}</TextField>
                 <OptionList {...typeListProps}>
                     <label>{t('user-summary-type')}</label>
                     {_.map(typeOptionProps, renderOption)}
@@ -428,15 +435,40 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         this.setUserProperty(`details.name`, text);
     },
 
+    /**
+     * Called when user changes username
+     *
+     * @param  {Event} evt
+     */
     handleUsernameChange: function(evt) {
         var text = evt.target.value;
         this.setUserProperty(`username`, text);
     },
 
+    /**
+     * Called when user changes username
+     *
+     * @param  {Event} evt
+     */
+    handleEmailChange: function(evt) {
+        var text = evt.target.value;
+        this.setUserProperty(`details.email`, text);
+    },
+
+    /**
+     * Called when user changes user type
+     *
+     * @param  {Object} evt
+     */
     handleTypeOptionClick: function(evt) {
         this.setUserProperty('type', evt.name);
     },
 
+    /**
+     * Called when user clicks on a role
+     *
+     * @param  {Object} evt
+     */
     handleRoleOptionClick: function(evt) {
         var user = this.getUser();
         var roleIds = _.slice(user.role_ids);
@@ -453,6 +485,11 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         this.setUserProperty('role_ids', roleIds);
     },
 
+    /**
+     * Called when user clicks on a role
+     *
+     * @param  {Object} evt
+     */
     handleVisibilityOptionClick: function(evt) {
         var hidden;
         if (evt.name === 'hidden') {
