@@ -51,7 +51,7 @@ module.exports = function(languageCode) {
         'nav-repositories': 'Repositories',
         'nav-robots': 'Robots',
         'nav-roles': 'Roles',
-        'nav-servers': 'Services',
+        'nav-servers': 'Servers',
         'nav-settings': 'Settings',
         'nav-users': 'Users',
 
@@ -147,14 +147,28 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 other` : `${count} others`;
         },
 
-        'server-list-new': 'New Service',
-        'server-list-title': 'Services',
+        'server-list-new': 'New Server',
+        'server-list-title': 'Servers',
+
+        'server-summary-api-token': 'API token',
+        'server-summary-api-url': 'API URL',
+        'server-summary-cancel': 'Cancel',
+        'server-summary-edit': 'Edit server',
+        'server-summary-member-$name': (name) => {
+            return `Server: ${name}`;
+        },
+        'server-summary-oauth-id': 'OAuth client ID',
+        'server-summary-oauth-secret': 'OAuth client secret',
+        'server-summary-oauth-url': 'OAuth URL',
+        'server-summary-save': 'Save server',
+        'server-summary-title': 'Name',
+        'server-summary-type': 'Server type',
 
         'server-type-dropbox': 'Dropbox',
+        'server-type-facebook': 'Facebook',
         'server-type-gitlab': 'GitLab',
         'server-type-github': 'GitHub',
         'server-type-google': 'Google',
-        'server-type-facebook': 'Facebook',
 
         'settings-edit': 'Edit Settings',
         'settings-title': 'Settings',

@@ -227,10 +227,11 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             var url = require('pages/server-summary-page').getUrl({
                 serverId: server.id
             });
+            var icon = getServerIcon(server.type);
             return (
                 <td>
                     <a href={url}>
-                        <i className={`fa fa-${server.type} fa-fw`} />
+                        <i className={`fa fa-${icon} fa-fw`} />
                         {' '}
                         {title}
                     </a>
@@ -306,3 +307,12 @@ var sortServers = Memoize(function(servers, projects, locale, columns, direction
     });
     return _.orderBy(servers, columns, directions);
 });
+
+function getServerIcon(type) {
+    switch (type) {
+        case 'facebook':
+            return 'facebook-official';
+        default:
+            return type;
+    }
+}

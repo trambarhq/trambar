@@ -259,13 +259,13 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var userRoles = findRoles(roles, user);
         var userRolesOriginal = findRoles(roles, userOriginal);
         var nameProps = {
-            id: 'title',
+            id: 'name',
             value: _.get(user, 'details.name', ''),
             onChange: this.handleNameChange,
             readOnly,
         };
         var usernameProps = {
-            id: 'name',
+            id: 'username',
             value: _.get(user, 'username', ''),
             onChange: this.handleUsernameChange,
             readOnly: readOnly || !!user.external_id,
