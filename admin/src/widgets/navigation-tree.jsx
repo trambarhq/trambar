@@ -21,7 +21,7 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             project: null,
             user: null,
@@ -42,7 +42,7 @@ module.exports = Relaks.createClass({
                     var criteria = {
                         id: projectId
                     };
-                    return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
+                    return db.findOne({ table: 'project', criteria }).then((project) => {
                         props.project = project;
                     });
                 }
@@ -52,7 +52,7 @@ module.exports = Relaks.createClass({
                     var criteria = {
                         id: parseInt(params.userId)
                     };
-                    return db.findOne({ schema: 'global', table: 'user', criteria }).then((user) => {
+                    return db.findOne({ table: 'user', criteria }).then((user) => {
                         props.user = user;
                     });
                 }
@@ -62,7 +62,7 @@ module.exports = Relaks.createClass({
                     var criteria = {
                         id: roleId
                     };
-                    return db.findOne({ schema: 'global', table: 'role', criteria }).then((role) => {
+                    return db.findOne({ table: 'role', criteria }).then((role) => {
                         props.role = role;
                     });
                 }
@@ -72,7 +72,7 @@ module.exports = Relaks.createClass({
                     var criteria = {
                         id: serverId
                     };
-                    return db.findOne({ schema: 'global', table: 'server', criteria }).then((server) => {
+                    return db.findOne({ table: 'server', criteria }).then((server) => {
                         props.server = server;
                     });
                 }
@@ -167,7 +167,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var summaryUrl = require('pages/project-summary-page').getUrl({ projectId });
         var memberListUrl = require('pages/member-list-page').getUrl({ projectId });
         var repoListUrl = require('pages/repo-list-page').getUrl({ projectId });
-        var robotListUrl = '/todo/';
+        var robotListUrl = require('pages/robot-list-page').getUrl({ projectId });
         var openLevel3 = (url === memberListUrl || url === repoListUrl || url === robotListUrl);
         var openLevel2 = (openLevel3 || url === summaryUrl);
         return (
@@ -214,10 +214,23 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
 
     renderRoleSection: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var role = this.state.role;
+        var roleName = p(role.details.title) || role.name || t('nav-role-name-pending');
+        var roleId = this.props.route.parameters.roleId;
+        var url = this.props.route.path;
         var listUrl = require('pages/role-list-page').getUrl();
+        var summaryUrl = require('pages/role-summary-page').getUrl({ roleId });
+        var openLevel3 = false;
+        var openLevel2 = (openLevel3 || url === summaryUrl);
         return (
             <div className="level1">
                 {this.renderLink(listUrl, t('nav-roles'))}
+                <CollapsibleContainer open={openLevel2}>
+                    <div className="level2">
+                        {this.renderLink(summaryUrl, roleName)}
+                    </div>
+                </CollapsibleContainer>
             </div>
         );
     },

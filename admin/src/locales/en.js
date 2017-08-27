@@ -140,6 +140,22 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 repository` : `${count} repositories`;
         },
 
+        'robot-list-add': 'Add robot',
+        'robot-list-title': 'Robots',
+
+        'robot-summary-$title': (title) => {
+            var text = `Robot`;
+            if (title) {
+                text += `: ${title}`;
+            }
+            return text;
+        },
+        'robot-summary-cancel': 'Cancel',
+        'robot-summary-edit': 'Edit robot',
+        'robot-summary-name': 'URL Slug',
+        'robot-summary-save': 'Save robot',
+        'robot-summary-title': 'Name',
+
         'role-list-new': 'New Role',
         'role-list-title': 'Roles',
 

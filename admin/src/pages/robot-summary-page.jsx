@@ -13,10 +13,10 @@ var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
 
-require('./repo-summary-page.scss');
+require('./robot-summary-page.scss');
 
 module.exports = Relaks.createClass({
-    displayName: 'RepoSummaryPage',
+    displayName: 'RobotSummaryPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -33,7 +33,7 @@ module.exports = Relaks.createClass({
          * @return {Object|null}
          */
         parseUrl: function(url) {
-            return Route.match('/projects/:projectId/repos/:repoId/', url);
+            return Route.match('/projects/:projectId/robots/:robotId/', url);
         },
 
         /**
@@ -45,7 +45,7 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params, query) {
-            var url = `/projects/${params.projectId}/repos/${params.repoId}/`;
+            var url = `/projects/${params.projectId}/robots/${params.robotId}/`;
             if (query && query.edit) {
                 url += `?edit=1`;
             }
@@ -64,22 +64,22 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             project: null,
-            repo: null,
+            robot: null,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
+        meanwhile.show(<RobotSummaryPageSync {...props} />);
         return db.start().then((currentUserId) => {
             var criteria = {
                 id: parseInt(this.props.route.parameters.roleId)
             };
             return db.findOne({ table: 'role', criteria });
-        }).then((repo) => {
-            props.project = repo;
-            meanwhile.show(<RepoSummaryPageSync {...props} />);
+        }).then((robot) => {
+            props.project = robot;
+            meanwhile.show(<RobotSummaryPageSync {...props} />);
         }).then(() => {
             var criteria = {
                 id: parseInt(this.props.route.parameters.projectId)
@@ -87,15 +87,15 @@ module.exports = Relaks.createClass({
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
-            return <RepoSummaryPageSync {...props} />;
+            return <RobotSummaryPageSync {...props} />;
         });
     }
 });
 
-var RepoSummaryPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RepoSummaryPage.Sync',
+var RobotSummaryPageSync = module.exports.Sync = React.createClass({
+    displayName: 'RobotSummaryPage.Sync',
     propTypes: {
-        repo: PropTypes.object,
+        robot: PropTypes.object,
         project: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -111,36 +111,36 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      */
     getInitialState: function() {
         return {
-            newRepo: null,
+            newRobot: null,
         };
     },
 
     /**
-     * Return edited copy of repo object or the original object
+     * Return edited copy of robot object or the original object
      *
      * @return {Object}
      */
-    getRepo: function() {
+    getRobot: function() {
         if (this.isEditing()) {
-            return this.state.newRepo || this.props.repo || {};
+            return this.state.newRobot || this.props.robot || emptyRobot;
         } else {
-            return this.props.repo || {};
+            return this.props.robot || emptyRobot;
         }
     },
 
     /**
-     * Modify a property of the repo object
+     * Modify a property of the robot object
      *
      * @param  {String} path
      * @param  {*} value
      */
-    setRepoProperty: function(path, value) {
-        var repoBefore = this.getRepo();
-        var repoAfter = _.decoupleSet(repoBefore, path, value);
-        if (_.isEqual(repoAfter, this.props.repo)) {
-            repoAfter = null;
+    setRobotProperty: function(path, value) {
+        var robotBefore = this.getRobot();
+        var robotAfter = _.decoupleSet(robotBefore, path, value);
+        if (_.isEqual(robotAfter, this.props.robot)) {
+            robotAfter = null;
         }
-        this.setState({ newRepo: repoAfter });
+        this.setState({ newRobot: robotAfter });
     },
 
     /**
@@ -153,12 +153,21 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Return repo id specified in URL
+     * Return robot id specified in URL
      *
      * @return {Number}
      */
-    getRepoId: function() {
-        return parseInt(this.props.route.parameters.repoId);
+    getRobotId: function() {
+        return parseInt(this.props.route.parameters.robotId);
+    },
+
+    /**
+     * Return true when the URL indicate we're creating a new robot
+     *
+     * @return {Boolean}
+     */
+    isCreating: function() {
+        return (this.props.route.parameters.robotId === 'new');
     },
 
     /**
@@ -167,21 +176,25 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Boolean}
      */
     isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+        return this.isCreating() || !!parseInt(this.props.route.query.edit);
     },
 
     /**
      * Change editability of page
      *
      * @param  {Boolean} edit
+     * @param  {Object|null} newRobot
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
+    setEditability: function(edit, newRobot) {
         var projectId = this.getProjectId();
-        var repoId = this.getRepoId();
-        var url = require('pages/repo-summary-page').getUrl({ projectId, repoId }, { edit });
-        return this.props.route.change(url, true);
+        var robotId = (newRobot) ? newRobot.id : this.getRobotId();
+        var url = (robotId)
+                ? require('pages/robot-summary-page').getUrl({ projectId, robotId }, { edit })
+                : require('pages/robot-list-page').getUrl({ projectId })
+        var replace = (robotId) ? true : false;
+        return this.props.route.change(url, replace);
     },
 
     /**
@@ -192,14 +205,13 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var title = p(_.get(this.props.repo, 'details.title'));
+        var title = p(_.get(this.props.robot, 'details.title'));
         return (
-            <div className="repo-summary-page">
+            <div className="robot-summary-page">
                 {this.renderButtons()}
-                <h2>{t('repo-summary-$title', title)}</h2>
+                <h2>{t('robot-summary-$title', title)}</h2>
                 {this.renderForm()}
                 {this.renderInstructions()}
-                {this.renderChart()}
             </div>
         );
     },
@@ -215,11 +227,11 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             return (
                 <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
-                        {t('repo-summary-cancel')}
+                        {t('robot-summary-cancel')}
                     </PushButton>
                     {' '}
                     <PushButton className="save" onClick={this.handleSaveClick}>
-                        {t('repo-summary-save')}
+                        {t('robot-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -227,7 +239,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             return (
                 <div key="view" className="buttons">
                     <PushButton className="add" onClick={this.handleEditClick}>
-                        {t('repo-summary-edit')}
+                        {t('robot-summary-edit')}
                     </PushButton>
                 </div>
             );
@@ -235,7 +247,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render form for entering repo details
+     * Render form for entering robot details
      *
      * @return {ReactElement}
      */
@@ -243,55 +255,23 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
-        var repoOriginal = this.props.repo || { details: {} };
-        var repo = this.getRepo();
-        var hasIssueTracker = !!repo.details.issue_tracking;
+        var robotOriginal = this.props.robot || emptyRobot;
+        var robot = this.getRobot();
         var titleProps = {
             id: 'title',
-            value: p(repo.details.title),
+            value: p(robot.details.title),
             onChange: this.handleTitleChange,
             readOnly,
         };
         var nameProps = {
             id: 'name',
-            value: repo.name,
-            readOnly: true,
+            value: robot.name,
+            readOnly,
         };
-        var listProps = {
-            onOptionClick: this.handleOptionClick,
-            readOnly: readOnly || !hasIssueTracker,
-        };
-        var optionProps = [
-            {
-                name: 'not_available',
-                selected: true,
-                previous: true,
-                children: t('repo-summary-issue-tracker-not-available'),
-                hidden: hasIssueTracker,
-            },
-            {
-                name: 'enabled',
-                selected: repo.details.issue_copying,
-                previous: repoOriginal.details.issue_copying,
-                children: t('repo-summary-issue-tracker-import-allowed'),
-                hidden: !hasIssueTracker,
-            },
-            {
-                name: 'disabled',
-                selected: !repo.details.issue_copying,
-                previous: !repoOriginal.details.issue_copying,
-                children: t('repo-summary-issue-tracker-import-disallowed'),
-                hidden: !hasIssueTracker,
-            },
-        ];
         return (
             <div className="form">
-                <TextField {...titleProps}>{t('repo-summary-title')}</TextField>
-                <TextField {...nameProps}>{t('repo-summary-gitlab-name')}</TextField>
-                <OptionList {...listProps}>
-                    <label>{t('repo-summary-issue-tracker')}</label>
-                    {_.map(optionProps, renderOption)}
-                </OptionList>
+                <TextField {...titleProps}>{t('robot-summary-title')}</TextField>
+                <TextField {...nameProps}>{t('robot-summary-name')}</TextField>
             </div>
         );
     },
@@ -303,26 +283,13 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'repo',
+            topic: 'robot',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
-            </div>
-        );
-    },
-
-    /**
-     * Render statistics bar chart
-     *
-     * @return {ReactElement}
-     */
-    renderChart: function() {
-        return (
-            <div className="statistics">
-                <h2>Statistics</h2>
             </div>
         );
     },
@@ -352,11 +319,12 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
-        var repo = this.getRepo();
+        var schema = this.props.project.name;
+        var db = this.props.database.use({ server: '~', schema, by: this });
+        var robot = this.getRobot();
         return db.start().then((currentUserId) => {
-            return db.saveOne({ table: 'repo' }, repo).then((repo) => {
-                return this.setEditability(false);
+            return db.saveOne({ table: 'robot' }, robot).then((robot) => {
+                return this.setEditability(false, robot);
             });
         });
     },
@@ -369,10 +337,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     handleTitleChange: function(evt) {
         var text = evt.target.value;
         var lang = this.props.locale.lang;
-        this.setRepoProperty(`details.title.${lang}`, text);
+        this.setRobotProperty(`details.title.${lang}`, text);
     },
 });
 
-function renderOption(props, i) {
-    return <option key={i} {...props} />;
-}
+var emptyRobot = { details: {} };
