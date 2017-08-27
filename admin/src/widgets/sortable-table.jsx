@@ -92,6 +92,9 @@ module.exports = React.createClass({
         // leads to new keys and messes up CSS transition
         var trs = tbody.props.children;
         trs = _.map(trs, (tr, i) => {
+            if (!tr) {
+                return null;
+            }
             if (/\bfixed\b/.test(tr.props.className)) {
                 return tr;
             }

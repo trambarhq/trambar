@@ -73,16 +73,20 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />);
         return db.start().then((currentUserId) => {
-            var criteria = {
-                id: parseInt(this.props.route.parameters.roleId)
-            };
-            return db.findOne({ table: 'role', criteria });
+            var repoId = parseInt(this.props.route.parameters.repoId);
+            if (repoId) {
+                var criteria = {
+                    id: repoId
+                };
+                return db.findOne({ table: 'repo', criteria });
+            }
         }).then((repo) => {
-            props.project = repo;
+            props.repo = repo;
             meanwhile.show(<RepoSummaryPageSync {...props} />);
         }).then(() => {
+            var projectId = parseInt(this.props.route.parameters.projectId);
             var criteria = {
-                id: parseInt(this.props.route.parameters.projectId)
+                id: projectId
             };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
@@ -122,9 +126,9 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      */
     getRepo: function() {
         if (this.isEditing()) {
-            return this.state.newRepo || this.props.repo || {};
+            return this.state.newRepo || this.props.repo || emptyRepo;
         } else {
-            return this.props.repo || {};
+            return this.props.repo || emptyRepo;
         }
     },
 
@@ -192,7 +196,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var title = p(_.get(this.props.repo, 'details.title'));
+        var repo = this.getRepo();
+        var title = p(_.get(repo, 'details.title')) || repo.name;
         return (
             <div className="repo-summary-page">
                 {this.renderButtons()}
@@ -243,7 +248,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
-        var repoOriginal = this.props.repo || { details: {} };
+        var repoOriginal = this.props.repo || emptyRepo;
         var repo = this.getRepo();
         var hasIssueTracker = !!repo.details.issue_tracking;
         var titleProps = {
@@ -372,6 +377,10 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         this.setRepoProperty(`details.title.${lang}`, text);
     },
 });
+
+var emptyRepo = {
+    details: {}
+};
 
 function renderOption(props, i) {
     return <option key={i} {...props} />;
