@@ -22,6 +22,13 @@
         margin-top: 0.2em;
     }
 
+    .level4 {
+        padding-left: 0.7em;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        margin-top: 0.2em;
+    }
+
     A {
         &:link, &:visited {
             color: #ffffff;
@@ -45,15 +52,14 @@
         opacity: 1;
         transition: top 0.5s, opacity 0.8s;
 
-        .second, .third {
+        .second, .third, .fourth {
             position: absolute;
             transition: left 0.3s;
         }
 
         &.extending {
             // delay extension animation until movement is nearly complete
-            .second, .third {
-                position: absolute;
+            .second, .third, .fourth {
                 transition: left 0.3s linear 0.3s;
             }
         }
@@ -70,13 +76,13 @@
         }
 
         &.one {
-            .second, .third {
+            .second, .third, .fourth {
                 left: 0px;
             }
         }
 
         &.two {
-            .second, .third {
+            .second, .third, .fourth {
                 left: 0.5em;
             }
         }
@@ -86,8 +92,22 @@
                 left: 0.5em;
             }
 
+            .third, .fourth {
+                left: 1em;
+            }
+        }
+
+        &.four {
+            .second {
+                left: 0.5em;
+            }
+
             .third {
                 left: 1em;
+            }
+
+            .fourth {
+                left: 1.5em;
             }
         }
     }
