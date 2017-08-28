@@ -13,11 +13,13 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
+        name: String,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         type: String,
+        name: String,
     },
 
     /**
@@ -39,6 +41,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
+                name varchar(64) NOT NULL DEFAULT '',
                 PRIMARY KEY (id)
             );
         `;
@@ -63,6 +66,7 @@ module.exports = _.create(Data, {
                 gn: row.gn,
                 details: row.details,
                 type: row.type,
+                name: row.name,
             };
             return object;
         });

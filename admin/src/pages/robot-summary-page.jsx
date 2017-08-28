@@ -297,10 +297,18 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleNameChange,
             readOnly,
         };
+        var descriptionProps = {
+            id: 'description',
+            value: p(robot.details.description),
+            type: 'textarea',
+            onChange: this.handleDescriptionChange,
+            readOnly,
+        };
         return (
             <div className="form">
                 <TextField {...titleProps}>{t('robot-summary-title')}</TextField>
                 <TextField {...nameProps}>{t('robot-summary-name')}</TextField>
+                <TextField {...descriptionProps}>{t('robot-summary-description')}</TextField>
             </div>
         );
     },
@@ -378,6 +386,17 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
     handleNameChange: function(evt) {
         var text = evt.target.value;
         this.setRobotProperty(`name`, text);
+    },
+
+    /**
+     * Called when user changes the description
+     *
+     * @param  {Event} evt
+     */
+    handleDescriptionChange: function(evt) {
+        var text = evt.target.value;
+        var lang = this.props.locale.lang;
+        this.setRobotProperty(`details.description.${lang}`, text);
     },
 });
 
