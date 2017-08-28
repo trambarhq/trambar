@@ -45,15 +45,20 @@ module.exports = function(languageCode) {
             return '';
         },
 
+        'nav-member-new': 'New member',
         'nav-members': 'Members',
         'nav-projects': 'Projects',
-        'nav-project-name-pending': '<project name>',
+        'nav-project-new': 'New project',
         'nav-repositories': 'Repositories',
         'nav-robots': 'Robots',
+        'nav-robot-new': 'New robot',
         'nav-roles': 'Roles',
+        'nav-role-new': 'New role',
         'nav-servers': 'Servers',
+        'nav-server-new': 'New server',
         'nav-settings': 'Settings',
         'nav-users': 'Users',
+        'nav-user-new': 'New user',
 
         'project-summary-$title': (title) => {
             var text = 'Project';

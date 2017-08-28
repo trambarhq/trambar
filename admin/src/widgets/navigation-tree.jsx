@@ -39,14 +39,22 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<NavigationTreeSync {...props} />);
         return db.start().then((currentUserId) => {
+            // load objects needed for labels
             var params = this.props.route.parameters;
             var objectTypes = _.keys(_.pickBy(props, _.isNull));
-            return Promise.map(objectTypes, (type) => {
-                var id = parseInt(params[type + 'Id']);
+            return Promise.each(objectTypes, (table) => {
+                var id = parseInt(params[table + 'Id']);
+                var schema = 'global';
+                if (table === 'robot') {
+                    if (!props.project) {
+                        return;
+                    }
+                    schema = props.project.name;
+                }
                 if (id) {
                     var criteria = { id };
-                    return db.findOne({ table: type, criteria }).then((object) => {
-                        props[type] = object;
+                    return db.findOne({ schema, table, criteria }).then((object) => {
+                        props[table] = object;
                     });
                 }
             });
@@ -115,13 +123,16 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     },
 
     renderNode: function(node, level, key) {
+        if (!node) {
+            return;
+        }
         var ref;
         if (this.isActive(node)) {
             ref = 'activeLink';
         }
         var subtree;
         return (
-            <div className={`level${level}`}>
+            <div key={key} className={`level${level}`}>
                 <a ref={ref} href={node.url}>{node.label}</a>
                 {this.renderChildNodes(node, level + 1)}
             </div>
@@ -180,6 +191,11 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         });
     },
 
+    /**
+     * Return root-level nav nodes
+     *
+     * @return {Object}
+     */
     getRootNodes: function() {
         return [
             this.getProjectListNode(),
@@ -190,6 +206,11 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         ]
     },
 
+    /**
+     * Return nav node pointing to project list
+     *
+     * @return {Object}
+     */
     getProjectListNode: function() {
         var t = this.props.locale.translate;
         var label = t('nav-projects');
@@ -200,68 +221,112 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a project
+     *
+     * @return {Object}
+     */
     getProjectNode: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var project = this.state.project;
         var projectId = this.props.route.parameters.projectId;
-        var label = p(project.details.title) || project.name || t('nav-project-name-pending');
-        var url = require('pages/project-summary-page').getUrl({ projectId });
+        var label = (projectId === 'new')
+                  ? <i>{t('nav-project-new')}</i>
+                  : p(project.details.title) || project.name || '-';
+        var url = (projectId)
+                ? require('pages/project-summary-page').getUrl({ projectId })
+                : null;
         var children = [
             this.getMemberListNode(),
             this.getRepoListNode(),
             this.getRobotListNode(),
         ];
-        return { label, url, children, showChildren: true };
+        return { label, url, children, showChildren: (projectId !== 'new') };
     },
 
+    /**
+     * Return nav node pointing to project member list
+     *
+     * @return {Object}
+     */
     getMemberListNode: function() {
         var t = this.props.locale.translate;
-        var label = t('nav-members');
         var projectId = this.props.route.parameters.projectId;
-        var url = require('pages/member-list-page').getUrl({ projectId });
+        var label = t('nav-members');
+        var url = (projectId)
+                ? require('pages/member-list-page').getUrl({ projectId })
+                : null;
         var children = [
             this.getMemberNode(),
         ];
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a project member
+     *
+     * @return {Object}
+     */
     getMemberNode: function() {
         var t = this.props.locale.translate;
         var user = this.state.user;
         var userId = this.props.route.parameters.userId;
         var projectId = this.props.route.parameters.projectId;
-        var label = user.details.name || user.username || t('nav-user-name-pending');
-        var url = require('pages/user-summary-page').getUrl({ projectId, userId });
+        var label = (userId === 'new')
+                  ? <i>{t('nav-member-new')}</i>
+                  : user.details.name || user.username || '-';
+        var url = (projectId && userId)
+                ? require('pages/user-summary-page').getUrl({ projectId, userId })
+                : null;
         return { label, url };
     },
 
+    /**
+     * Return nav node pointing to project repo list
+     *
+     * @return {Object}
+     */
     getRepoListNode: function() {
         var t = this.props.locale.translate;
-        var label = t('nav-repositories');
         var projectId = this.props.route.parameters.projectId;
-        var url = require('pages/repo-list-page').getUrl({ projectId });
+        var label = t('nav-repositories');
+        var url = (projectId)
+                ? require('pages/repo-list-page').getUrl({ projectId })
+                : null;
         var children = [
             this.getRepoNode(),
         ];
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a repo
+     *
+     * @return {Object}
+     */
     getRepoNode: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var repo = this.state.repo;
         var repoId = this.props.route.parameters.repoId;
         var projectId = this.props.route.parameters.projectId;
-        var label = p(repo.details.title) || repo.name || t('nav-repo-name-pending');
-        var url = require('pages/repo-summary-page').getUrl({ projectId, repoId });
+        var label = p(repo.details.title) || repo.name || '-';
+        var url = (projectId && repoId)
+                ? require('pages/repo-summary-page').getUrl({ projectId, repoId })
+                : null;
         return { label, url };
     },
 
+    /**
+     * Return nav node pointing to project robot list
+     *
+     * @return {Object}
+     */
     getRobotListNode: function() {
         var t = this.props.locale.translate;
-        var label = t('nav-robots');
         var projectId = this.props.route.parameters.projectId;
+        var label = t('nav-robots');
         var url = require('pages/robot-list-page').getUrl({ projectId });
         var children = [
             this.getRobotNode(),
@@ -269,83 +334,144 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a robot
+     *
+     * @return {Object}
+     */
     getRobotNode: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var robot = this.state.robot;
         var robotId = this.props.route.parameters.robotId;
         var projectId = this.props.route.parameters.projectId;
-        var label = p(robot.details.title) || robot.name || t('nav-robot-name-pending');
-        var url = require('pages/robot-summary-page').getUrl({ projectId, robotId });
+        var label = (robotId === 'new')
+                  ? <i>{t('nav-robot-new')}</i>
+                  : p(robot.details.title) || robot.name || '-';
+        var url = (projectId && robotId)
+                ? require('pages/robot-summary-page').getUrl({ projectId, robotId })
+                : null;
         return { label, url };
     },
 
+    /**
+     * Return nav node pointing to user list
+     *
+     * @return {Object}
+     */
     getUserListNode: function() {
         var t = this.props.locale.translate;
-        var url = require('pages/user-list-page').getUrl();
         var label = t('nav-users');
+        var url = require('pages/user-list-page').getUrl();
         var children = [
             this.getUserNode(),
         ];
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a user
+     *
+     * @return {Object}
+     */
     getUserNode: function() {
         var t = this.props.locale.translate;
         var user = this.state.user;
-        var label = user.details.name || user.username || t('nav-user-name-pending');
         var userId = this.props.route.parameters.userId;
-        var url = require('pages/user-summary-page').getUrl({ userId });
+        var label = (userId === 'new')
+                  ? <i>{t('nav-user-new')}</i>
+                  : user.details.name || user.username || '-';
+        var url = (userId)
+                ? require('pages/user-summary-page').getUrl({ userId })
+                : null;
         return { label, url };
     },
 
+    /**
+     * Return nav node pointing to role list
+     *
+     * @return {Object}
+     */
     getRoleListNode: function() {
         var t = this.props.locale.translate;
-        var url = require('pages/role-list-page').getUrl();
         var label = t('nav-roles');
+        var url = require('pages/role-list-page').getUrl();
         var children = [
             this.getRoleNode(),
         ];
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a role
+     *
+     * @return {Object}
+     */
     getRoleNode: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var role = this.state.role;
-        var label = p(role.details.tile) || role.name || t('nav-role-name-pending');
         var roleId = this.props.route.parameters.roleId;
-        var url = require('pages/role-summary-page').getUrl({ roleId });
+        var label = (roleId === 'new')
+                  ? <i>{t('nav-role-new')}</i>
+                  : p(role.details.tile) || role.name || '-';
+        var url = (roleId)
+                ? require('pages/role-summary-page').getUrl({ roleId })
+                : null;
         return { label, url };
     },
 
+    /**
+     * Return nav node pointing to server list
+     *
+     * @return {Object}
+     */
     getServerListNode: function() {
         var t = this.props.locale.translate;
-        var url = require('pages/server-list-page').getUrl();
         var label = t('nav-servers');
+        var url = require('pages/server-list-page').getUrl();
         var children = [
             this.getServerNode(),
         ];
         return { label, url, children };
     },
 
+    /**
+     * Return nav node pointing to a server
+     *
+     * @return {Object}
+     */
     getServerNode: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var server = this.state.server;
-        var label = p(server.details.tile) || server.name || t('nav-server-name-pending');
         var serverId = this.props.route.parameters.serverId;
-        var url = require('pages/server-summary-page').getUrl({ serverId });
+        var label = (serverId === 'new')
+                  ? <i>{t('nav-server-new')}</i>
+                  : p(server.details.tile) || server.name || '-';
+        var url = (serverId)
+                ? require('pages/server-summary-page').getUrl({ serverId })
+                : null;
         return { label, url };
     },
 
+    /**
+     * Return nav node pointing to settings page
+     *
+     * @return {Object}
+     */
     getSettingsNode: function() {
         var t = this.props.locale.translate;
+        var label = t('nav-settings');
         var url = require('pages/settings-page').getUrl();
-        var label = t('nav-servers');
         return { label, url };
     },
 
+    /**
+     * Move the arrow to the active link
+     *
+     * @return {Object}
+     */
     repositionArrow: function() {
         setTimeout(() => {
             // find the link level
@@ -374,6 +500,8 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var container = this.refs.container;
         var interval = setInterval(() => {
             // calculate the position of the arrow
+            // happens in an interval function since the link will
+            // move during transition
             var pos = 0;
             var active = this.refs.activeLink;
             if (active) {
