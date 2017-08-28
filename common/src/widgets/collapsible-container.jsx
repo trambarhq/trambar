@@ -50,20 +50,31 @@ module.exports = React.createClass({
 
     componentDidMount: function() {
         if (this.props.open) {
-            // set the container height manually
-            var contents = this.refs.contents;
-            var container = this.refs.container;
-            var contentHeight = contents.offsetHeight;
-            container.style.height = contentHeight + 'px';
-            this.state.contentHeight = contentHeight;
+            this.componentDidUpdate();
         }
     },
 
     componentDidUpdate: function(prevProps, prevState) {
-        var contents = this.refs.contents;
-        var contentHeight = contents.offsetHeight;
+        var contentHeight = getContentHeight(this.refs.contents);
         if (this.state.contentHeight !== contentHeight) {
             this.setState({ contentHeight });
         }
     },
 });
+
+function getContentHeight(div) {
+    var height = div.offsetHeight;
+    // find nexted collapsible containers
+    var others = div.getElementsByClassName('collapsible-container');
+    _.each(others, (other) => {
+        // remove the container's current height
+        height -= other.offsetHeight;
+        // then add its eventual height when transition completes
+        // (zero or height of its contents)
+        if (parseInt(other.style.height) > 0) {
+            var contents = other.children[0];
+            height += contents.offsetHeight;
+        }
+    });
+    return height;
+}
