@@ -34,6 +34,10 @@ module.exports = function(languageCode) {
         'app-name': 'Trambar',
         'app-title': 'Trambar - Administrative Console',
 
+        'confirmation-cancel': 'Cancel',
+        'confirmation-confirm': 'Confirm',
+        'confirmation-data-loss': 'Are you sure you want to abandon changes you have made?',
+
         'date-range-$start-$end': (start, end) => {
             if (start) {
                 if (end) {

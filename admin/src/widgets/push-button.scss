@@ -2,7 +2,7 @@
     font-size: 1.2em;
     padding: 0.14em 0.5em 0.14em 0.5em;
 
-    &.add, &.edit, &.save, &.submit {
+    &.add, &.edit, &.save, &.submit, &.confirm {
         color: #ffffff;
         background-color: #006699;
         border: 2px outset #0088cc;
@@ -25,8 +25,9 @@
         }
     }
 
-    &.remove {
+    &.remove, &.confirm-danger {
         color: #ffffff;
-        background-color: #ff3333;
+        background-color: #cc2929;
+        border: 2px outset #ff3333;
     }
 }

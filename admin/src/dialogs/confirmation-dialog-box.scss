@@ -1,0 +1,18 @@
+.confirmation-dialog-box {
+    background-color: #006699;
+    color: #ffffff;
+    max-width: 50vw;
+    padding: 1em 1em 1em 1em;
+    box-shadow: 5px 5px 4px #000000;
+
+    .message {
+        font-size: 1.6em;
+        margin-bottom: 0.5em;
+    }
+
+    .buttons {
+        border-top: 1px solid #ffffff;
+        text-align: right;
+        padding-top: 1em;
+    }
+}
