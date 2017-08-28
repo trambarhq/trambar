@@ -14,8 +14,8 @@ var DailyActivities = require('data/daily-activities');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var ActivityTooltip = require('widgets/activity-tooltip');
-var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var ActivityTooltip = require('tooltips/activity-tooltip');
+var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./repo-list-page.scss');

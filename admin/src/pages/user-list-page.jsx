@@ -14,9 +14,9 @@ var UserSummaryPage = require('pages/user-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var ProjectTooltip = require('widgets/project-tooltip');
-var RoleTooltip = require('widgets/role-tooltip');
-var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var ProjectTooltip = require('tooltips/project-tooltip');
+var RoleTooltip = require('tooltips/role-tooltip');
+var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-list-page.scss');

@@ -21,10 +21,10 @@ var DailyActivities = require('data/daily-activities');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var UserTooltip = require('widgets/user-tooltip');
-var RepositoryTooltip = require('widgets/repository-tooltip');
-var ActivityTooltip = require('widgets/activity-tooltip');
-var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var UserTooltip = require('tooltips/user-tooltip');
+var RepositoryTooltip = require('tooltips/repository-tooltip');
+var ActivityTooltip = require('tooltips/activity-tooltip');
+var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 
 require('./project-list-page.scss');
 

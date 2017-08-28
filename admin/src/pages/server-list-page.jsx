@@ -12,7 +12,7 @@ var Theme = require('theme/theme');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 
 require('./server-list-page.scss');
 

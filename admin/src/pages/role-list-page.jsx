@@ -11,8 +11,8 @@ var Theme = require('theme/theme');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var UserTooltip = require('widgets/user-tooltip');
-var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var UserTooltip = require('tooltips/user-tooltip');
+var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 
 require('./role-list-page.scss');
 
