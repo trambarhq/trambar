@@ -166,7 +166,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 this.setState({
                     renderingPartialList: true,
                     selectedUserIds: _.map(unapprovedUsers, 'id'),
-                    hasChanges: false,
+                    hasChanges: !_.isEmpty(unapprovedUsers),
                 });
             } else {
                 // wait for animation to finish
@@ -210,13 +210,14 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isApproving()) {
+            var hasSelection = !_.isEmpty(this.state.selectedUserIds);
             return (
                 <div className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('user-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!hasSelection} onClick={this.handleSaveClick}>
                         {t('user-list-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -557,7 +558,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 };
             });
             return db.save({ table: 'user' }, users).then((users) => {
-                return this.setEditability(false);
+                this.setState({ hasChanges: false, selectedUserIds: [] }, () => {
+                    this.setEditability(false);
+                });
             });
         });
     },
@@ -570,7 +573,8 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else {
             selectedUserIds.push(userId);
         }
-        this.setState({ selectedUserIds })
+        var hasChanges = !_.isEmpty(selectedUserIds);
+        this.setState({ selectedUserIds, hasChanges });
     }
 });
 

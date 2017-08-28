@@ -1,7 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Data = require('accessors/data');
 var HttpError = require('errors/http-error');
+var Data = require('accessors/data');
+var Project = require('accessors/project');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -168,7 +169,7 @@ module.exports = _.create(Data, {
                     throw new HttpError(403);
                 }
             }
-            if (object.hasOwnProperty('approve')) {
+            if (object.approved) {
                 // clear the list of requested projects
                 object = _.clone(object);
                 object.requested_project_ids = null;
@@ -183,13 +184,49 @@ module.exports = _.create(Data, {
      *
      * @param  {Database} db
      * @param  {Schema} schema
-     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
+     * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
      * @return {Promise<Array>}
      */
-    associate: function(db, schema, rows, originals, credentials) {
-        return Promise.resolve(rows);
+    associate: function(db, schema, objects, originals, rows, credentials) {
+        // look for newly approved users and add them to requested projects
+        var newProjectMemberIds = {};
+        _.each(objects, (object, index) => {
+            var original = originals[index];
+            var row = rows[index];
+            if (object.approved) {
+                var projectIds = object.requested_project_ids;
+                if (!projectIds) {
+                    // get the list of ids from the original row
+                    if (original) {
+                        projectIds = original.requested_project_ids;
+                    }
+                }
+                _.each(projectIds, (projectId) => {
+                    var ids = newProjectMemberIds[projectId];
+                    if (ids) {
+                        ids.push(row.id);
+                    } else {
+                        newProjectMemberIds[projectId] = [ row.id ];
+                    }
+                });
+            }
+        });
+        if (_.isEmpty(newProjectMemberIds)) {
+            return Promise.resolve();
+        }
+        // update user_ids column in project table
+        var criteria = {
+            id: _.map(_.keys(newProjectMemberIds), parseInt)
+        };
+        return Project.find(db, schema, criteria, 'id, user_ids').then((projects) => {
+            _.each(projects, (project) => {
+                project.user_ids = _.union(project.user_ids, newProjectMemberIds[project.id]);
+            });
+            return Project.update(db, schema, projects);
+        }).return();
     },
 });

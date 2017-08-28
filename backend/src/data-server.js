@@ -256,7 +256,7 @@ function handleStorage(req, res) {
                     return db.begin().then(() => {
                         return accessor.save(db, schema, rows);
                     }).then((rows) => {
-                        return accessor.associate(db, schema, rows, originals, credentials);
+                        return accessor.associate(db, schema, objects, originals, rows, credentials).return(rows);
                     }).then((rows) => {
                         return db.commit().then(() => {
                             return rows;

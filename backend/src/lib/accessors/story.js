@@ -273,14 +273,15 @@ module.exports = _.create(Data, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} objects,
      * @param  {Array<Object>} originals
+     * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
      * @return {Promise<Array<Object>>}
      */
-    associate: function(db, schema, rows, originals, credentials) {
-        return Promise.map(rows, (row, index) => {
+    associate: function(db, schema, objects, originals, rows, credentials) {
+        return Promise.each(rows, (row, index) => {
             var original = originals[index];
             var payloadIdsBefore = getPayloadIds(original);
             var payloadIdsAfter = getPayloadIds(row);
@@ -295,9 +296,8 @@ module.exports = _.create(Data, {
                         };
                     });
                     return Task.save(db, schema, tasks);
-                }).return(row);
+                });
             }
-            return row;
         });
     },
 });

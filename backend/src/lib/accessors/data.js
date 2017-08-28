@@ -395,13 +395,14 @@ module.exports = {
      *
      * @param  {Database} db
      * @param  {Schema} schema
-     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
+     * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
-     * @return {Promise<Array>}
+     * @return {Promise}
      */
-    associate: function(db, schema, rows, originals, credentials) {
-        return Promise.resolve(rows);
+    associate: function(db, schema, objects, originals, rows, credentials) {
+        return Promise.resolve();
     },
 };
