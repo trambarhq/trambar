@@ -79,5 +79,59 @@ module.exports = _.create(Data, {
             }
             return object;
         });
-    }
+    },
+
+    /**
+     * Create associations between newly created or modified rows with
+     * rows in other tables
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+    associate: function(db, schema, objects, originals, rows, credentials) {
+        // remove ids from requested_project_ids of users who've just joined
+        // first, obtain ids of projects that new members are added to
+        var newUserMemberships = {};
+        _.each(objects, (object, index) => {
+            var original = originals[index];
+            var row = rows[index];
+            if (object.user_ids) {
+                var newUserIds = (original)
+                               ? _.difference(row.user_ids, original.user_ids)
+                               : row.user_ids;
+                _.each(newUserIds, (userId) => {
+                    var ids = newUserMemberships[userId];
+                    if (ids) {
+                        ids.push(row.id);
+                    } else {
+                        newUserMemberships[userId] = [ row.id ];
+                    }
+                });
+            }
+        });
+        if (_.isEmpty(newUserMemberships)) {
+            return Promise.resolve();
+        }
+        // load the users and update requested_project_ids column
+        var User = require('accessors/user');
+        var criteria = {
+            id: _.map(_.keys(newUserMemberships), parseInt)
+        };
+        return User.find(db, schema, criteria, 'id, requested_project_ids').then((users) => {
+            _.each(users, (user) => {
+                user.requested_project_ids = _.difference(user.requested_project_ids, newUserMemberships[user.id]);
+                if (_.isEmpty(user.requested_project_ids)) {
+                    user.requested_project_ids = null;
+                }
+            });
+            return User.update(db, schema, users);
+        }).return();
+
+    },
 });

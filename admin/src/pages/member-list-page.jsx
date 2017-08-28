@@ -88,8 +88,10 @@ module.exports = Relaks.createClass({
         }).then((project) => {
             props.project = project;
         }).then(() => {
-            // load all users
-            var criteria = {};
+            // load all approved users
+            var criteria = {
+                approved: true
+            };
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
@@ -180,9 +182,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
+                var users = findUsers(nextProps.users, nextProps.project);
+                var userIds = _.map(users, 'id');
                 this.setState({
                     renderingFullList: true,
-                    selectedUserIds: _.get(nextProps.project, 'user_ids'),
+                    selectedUserIds: userIds,
                     changes: false,
                 });
             } else {
@@ -193,19 +197,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 }, 500);
             }
         }
-        if (this.props.project !== nextProps.project && nextProps.project) {
-            var selectedUserIds = this.state.selectedUserIds;
-            var originalUserIds = _.get(this.props.project, 'user_ids', []);
-            var incomingUserIds = _.get(nextProps.project, 'user_ids', []);
-            if (selectedUserIds === originalUserIds) {
-                // use the list from the incoming object if no change has been made yet
-                selectedUserIds = nextProps.project.user_ids;
-            } else {
-                if (!_.isEqual(originalUserIds, incomingUserIds)) {
-                    // merge the list when a change has been made (by someone else presumably)
-                    selectedUserIds = _.union(selectedUserIds, incomingUserIds);
-                }
-            }
+        if (this.props.project !== nextProps.project || this.props.users !== nextProps.users) {
+            var users = findUsers(nextProps.users, nextProps.project);
+            var userIds = _.map(users, 'id');
+            var selectedUserIds = _.union(this.state.selectedUserIds, userIds);
             this.setState({ selectedUserIds });
         }
     },
@@ -234,13 +229,18 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isEditing()) {
+            // this.state.hasChanges can be false even when there're users that
+            // could be added due to pre-selection
+            var hasChanges = (this.props.project)
+                           ? !_.isEqual(this.state.selectedUserIds, this.props.project.user_ids)
+                           : false;
             return (
                 <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('member-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('member-list-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -318,10 +318,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderRows: function() {
         var users;
         if (this.state.renderingFullList) {
-            // list all users when we're editing the list
+            // list all approved users when we're editing the list
             users = this.props.users;
         } else {
-            // list only those we're in the project
+            // list only those we're in the project--or are trying to join
             users = findUsers(this.props.users, this.props.project);
         }
         var users = sortUsers(
@@ -347,7 +347,8 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             key: user.id,
         };
         if (this.state.renderingFullList) {
-            if (_.includes(this.props.project.user_ids, user.id)) {
+            if (_.includes(this.props.project.user_ids, user.id)
+             || _.includes(user.requested_project_ids, this.props.project.id)) {
                 props.className = 'fixed';
             }
             if (_.includes(this.state.selectedUserIds, user.id)) {
@@ -359,6 +360,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             }
             props.onClick = this.handleRowClick;
             props['data-user-id'] = user.id;
+        } else {
+            if (_.includes(user.requested_project_ids, this.props.project.id)) {
+                props.className = 'pending';
+            }
         }
         return (
             <tr {...props}>
@@ -404,6 +409,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                     badge = <i className="fa fa-user-plus badge add" />;
                 }
             } else {
+                if (_.includes(user.requested_project_ids, this.props.project.id)) {
+                    badge = <i className="fa fa-user-plus badge add" />;
+                }
                 // don't create the link when we're editing the list
                 url = require('pages/user-summary-page').getUrl({
                     userId: user.id,
@@ -705,10 +713,18 @@ var sortUsers = Memoize(function(users, roles, statistics, locale, columns, dire
 });
 
 var findUsers = Memoize(function(users, project) {
-    var hash = _.keyBy(users, 'id');
-    return _.filter(_.map(project.user_ids, (id) => {
-        return hash[id];
-    }));
+    if (project) {
+        var hash = _.keyBy(users, 'id');
+        var existingUsers = _.filter(_.map(project.user_ids, (id) => {
+            return hash[id];
+        }));
+        var pendingUsers = _.filter(users, (user) => {
+            return _.includes(user.requested_project_ids, project.id);
+        });
+        return _.concat(existingUsers, pendingUsers);
+    } else {
+        return [];
+    }
 });
 
 var findRoles = Memoize(function(roles, user) {

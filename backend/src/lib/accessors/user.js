@@ -2,7 +2,6 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var HttpError = require('errors/http-error');
 var Data = require('accessors/data');
-var Project = require('accessors/project');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -123,7 +122,7 @@ module.exports = _.create(Data, {
                 object.external_id = row.external_id;
                 object.approved = row.approved;
                 object.hidden = row.hidden;
-                object.requested_project_id = row.requested_project_ids;
+                object.requested_project_ids = row.requested_project_ids;
             } else {
                 // don't export these unless they're not their usual values
                 if (!row.approved) {
@@ -219,6 +218,7 @@ module.exports = _.create(Data, {
             return Promise.resolve();
         }
         // update user_ids column in project table
+        var Project = require('accessors/project');
         var criteria = {
             id: _.map(_.keys(newProjectMemberIds), parseInt)
         };

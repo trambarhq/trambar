@@ -11,6 +11,12 @@
             vertical-align: middle;
         }
 
+        TR {
+            &.pending {
+                opacity: 0.25;
+            }
+        }
+
         .badge {
             float: right;
             margin-top: 0.2em;
