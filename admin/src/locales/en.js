@@ -160,6 +160,7 @@ module.exports = function(languageCode) {
             return text;
         },
         'robot-summary-cancel': 'Cancel',
+        'robot-summary-description': 'Description',
         'robot-summary-edit': 'Edit robot',
         'robot-summary-name': 'URL Slug',
         'robot-summary-save': 'Save robot',
@@ -167,6 +168,20 @@ module.exports = function(languageCode) {
 
         'role-list-new': 'New Role',
         'role-list-title': 'Roles',
+
+        'role-summary-$title': (title) => {
+            var text = 'Role';
+            if (title) {
+                text += `: ${title}`;
+            }
+            return text;
+        },
+        'role-summary-cancel': 'Cancel',
+        'role-summary-description': 'Description',
+        'role-summary-edit': 'Edit role',
+        'role-summary-name': 'URL Slug',
+        'role-summary-save': 'Save role',
+        'role-summary-title': 'Name',
 
         'role-tooltip-$count-others': (count) => {
             return (count === 1) ? `1 other` : `${count} others`;

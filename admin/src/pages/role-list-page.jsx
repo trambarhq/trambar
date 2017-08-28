@@ -300,6 +300,19 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             sortDirections: evt.directions
         });
     },
+
+    /**
+     * Called when user click add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        var url = require('pages/role-summary-page').getUrl({
+            roleId: 'new'
+        });
+        return this.props.route.change(url);
+    },
+
 });
 
 var sortRoles = Memoize(function(roles, users, locale, columns, directions) {

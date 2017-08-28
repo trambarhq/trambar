@@ -9,6 +9,9 @@ var Theme = require('theme/theme');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var InstructionBlock = require('widgets/instruction-block');
+var TextField = require('widgets/text-field');
+var OptionList = require('widgets/option-list');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./role-summary-page.scss');
@@ -43,7 +46,11 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params, query) {
-            return `/roles/${params.roleId}/`;
+            var url = `/roles/${params.roleId}/`;
+            if (query && query.edit) {
+                url += '?edit=1';
+            }
+            return url;
         },
     },
 
@@ -55,9 +62,9 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', by: this });
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
-            projects: null,
+            role: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -65,7 +72,16 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />);
-        return db.start().then((roleId) => {
+        return db.start().then((currentUserId) => {
+            var roleId = parseInt(this.props.route.parameters.roleId);
+            if (roleId) {
+                var criteria = {
+                    id: roleId
+                };
+                return db.findOne({ table: 'role', criteria });
+            }
+        }).then((role) => {
+            props.role = role;
             return <RoleSummaryPageSync {...props} />;
         });
     }
@@ -74,6 +90,8 @@ module.exports = Relaks.createClass({
 var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'RoleSummaryPage.Sync',
     propTypes: {
+        role: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -194,11 +212,14 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var title = p(_.get(this.props.role, 'details.title'));
+        var role = this.getRole();
+        var title = p(_.get(role, 'details.title')) || role.name;
         return (
             <div className="role-summary-page">
                 {this.renderButtons()}
                 <h2>{t('role-summary-$title', title)}</h2>
+                {this.renderForm()}
+                {this.renderInstructions()}
             </div>
         );
     },
@@ -231,8 +252,131 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                     </PushButton>
                 </div>
             );
-
         }
+    },
+
+    /**
+     * Render form for entering role details
+     *
+     * @return {ReactElement}
+     */
+    renderForm: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var readOnly = !this.isEditing();
+        var roleOriginal = this.props.role || emptyRole;
+        var role = this.getRole();
+        var titleProps = {
+            id: 'title',
+            value: p(role.details.title),
+            onChange: this.handleTitleChange,
+            readOnly,
+        };
+        var nameProps = {
+            id: 'name',
+            value: role.name,
+            onChange: this.handleNameChange,
+            readOnly,
+        };
+        var descriptionProps = {
+            id: 'description',
+            value: p(role.details.description),
+            type: 'textarea',
+            onChange: this.handleDescriptionChange,
+            readOnly,
+        };
+        return (
+            <div className="form">
+                <TextField {...titleProps}>{t('role-summary-title')}</TextField>
+                <TextField {...nameProps}>{t('role-summary-name')}</TextField>
+                <TextField {...descriptionProps}>{t('role-summary-description')}</TextField>
+            </div>
+        );
+    },
+
+    /**
+     * Render instruction box
+     *
+     * @return {ReactElement}
+     */
+    renderInstructions: function() {
+        var instructionProps = {
+            topic: 'role',
+            hidden: !this.isEditing(),
+            locale: this.props.locale,
+        };
+        return (
+            <div className="instructions">
+                <InstructionBlock {...instructionProps} />
+            </div>
+        );
+    },
+
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
+    handleEditClick: function(evt) {
+        return this.setEditability(true);
+    },
+
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelClick: function(evt) {
+        return this.setEditability(false);
+    },
+
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var role = this.getRole();
+        return db.start().then((currentUserId) => {
+            return db.saveOne({ table: 'role' }, role).then((role) => {
+                this.setState({ hasChanges: false }, () => {
+                    return this.setEditability(false, role);
+                });
+            });
+        });
+    },
+
+    /**
+     * Called when user changes the title
+     *
+     * @param  {Event} evt
+     */
+    handleTitleChange: function(evt) {
+        var text = evt.target.value;
+        var lang = this.props.locale.lang;
+        this.setRoleProperty(`details.title.${lang}`, text);
+    },
+
+    /**
+     * Called when user changes the name
+     *
+     * @param  {Event} evt
+     */
+    handleNameChange: function(evt) {
+        var text = evt.target.value;
+        this.setRoleProperty(`name`, text);
+    },
+
+    /**
+     * Called when user changes the description
+     *
+     * @param  {Event} evt
+     */
+    handleDescriptionChange: function(evt) {
+        var text = evt.target.value;
+        var lang = this.props.locale.lang;
+        this.setRoleProperty(`details.description.${lang}`, text);
     },
 });
 

@@ -414,7 +414,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var roleId = this.props.route.parameters.roleId;
         var label = (roleId === 'new')
                   ? <i>{t('nav-role-new')}</i>
-                  : p(role.details.tile) || role.name || '-';
+                  : p(role.details.title) || role.name || '-';
         var url = (roleId)
                 ? require('pages/role-summary-page').getUrl({ roleId })
                 : null;

@@ -17,6 +17,7 @@ function TextField(props) {
         Input = AutosizeTextArea;
         inputProps = _.omit(inputProps, 'type');
     }
+    inputProps.value = inputProps.value || '';
     return (
         <div className={classNames.join(' ')}>
             <label htmlFor={props.id}>{props.children}</label>
