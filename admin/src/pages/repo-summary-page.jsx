@@ -171,10 +171,13 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -189,6 +192,22 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var repoId = this.getRepoId();
         var url = require('pages/repo-summary-page').getUrl({ projectId, repoId }, { edit });
         return this.props.route.change(url, true);
+    },
+
+    /**
+     * Reset edit state when edit starts
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
+                this.setState({
+                    newRepo: null,
+                    hasChanges: false,
+                });
+            }
+        }
     },
 
     /**
