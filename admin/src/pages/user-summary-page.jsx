@@ -202,7 +202,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var userId = (newUser) ? newUser.id : this.getUserId();
         var url = (userId)
                 ? require('pages/user-summary-page').getUrl({ projectId, userId }, { edit })
-                : require('pages/user-list-page').getUrl({ projectId });
+                : (projectId)
+                ? require('pages/member-list-page').getUrl({ projectId })
+                : require('pages/user-list-page').getUrl();
         var replace = (projectId) ? true : false;
         return this.props.route.change(url, replace);
     },
@@ -215,7 +217,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         var member = !!this.props.route.parameters.projectId;
-        var name = _.get(this.props.user, 'details.name');
+        var user = this.getUser();
+        var name = _.get(user, 'details.name');
         return (
             <div className="user-summary-page">
                 {this.renderButtons()}
@@ -432,6 +435,15 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var user = this.getUser();
         return db.start().then((currentUserId) => {
+            if (!user.id) {
+                // creating a new user
+                var projectId = this.getProjectId();
+                if (projectId) {
+                    // add user to project
+                    user.requested_project_ids = [ projectId ];
+                }
+                user.approved = true;
+            }
             return db.saveOne({ table: 'user' }, user).then((user) => {
                 return this.setEditability(false, user);
             });

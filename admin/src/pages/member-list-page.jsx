@@ -644,7 +644,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     handleAddClick: function(evt) {
-
+        var projectId = this.getProjectId();
+        var url = require('pages/user-summary-page').getUrl({ projectId, userId: 'new' });
+        this.props.route.change(url);
     },
 
     handleRowClick: function(evt) {

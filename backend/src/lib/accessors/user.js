@@ -56,7 +56,7 @@ module.exports = _.create(Data, {
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 server_id int,
                 external_id bigint,
-                request_project_ids int[] NOT NULL DEFAULT '{}'::int[],
+                request_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
                 approved boolean NOT NULL DEFAULT true,
                 PRIMARY KEY (id)
@@ -124,7 +124,7 @@ module.exports = _.create(Data, {
                 object.hidden = row.hidden;
                 object.requested_project_id = row.requested_project_ids;
             } else {
-                // don't export these unless they're not their usual values 
+                // don't export these unless they're not their usual values
                 if (!row.approved) {
                     object.approved = row.approved;
                 }
@@ -171,7 +171,7 @@ module.exports = _.create(Data, {
             if (object.hasOwnProperty('approve')) {
                 // clear the list of requested projects
                 object = _.clone(object);
-                object.requested_project_ids = [];
+                object.requested_project_ids = null;
             }
             return object;
         });
