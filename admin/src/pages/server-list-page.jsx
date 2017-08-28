@@ -68,7 +68,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ServerListPageSync {...props} />);
+        meanwhile.show(<ServerListPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
             // load all servers
             var criteria = {};

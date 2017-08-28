@@ -82,7 +82,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectListPageSync {...props} />);
+        meanwhile.show(<ProjectListPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
             // load all projects
             var criteria = {};

@@ -72,7 +72,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
+        meanwhile.show(<RepoSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
             var repoId = parseInt(this.props.route.parameters.repoId);
             if (repoId) {

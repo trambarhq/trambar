@@ -72,7 +72,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RobotSummaryPageSync {...props} />);
+        meanwhile.show(<RobotSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
             var criteria = {
                 id: parseInt(this.props.route.parameters.projectId)

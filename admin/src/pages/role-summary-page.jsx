@@ -71,7 +71,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RoleSummaryPageSync {...props} />);
+        meanwhile.show(<RoleSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
             var roleId = parseInt(this.props.route.parameters.roleId);
             if (roleId) {
