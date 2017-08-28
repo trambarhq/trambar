@@ -12,6 +12,7 @@ var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./repo-summary-page.scss');
 
@@ -139,12 +140,14 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setRepoProperty: function(path, value) {
-        var repoBefore = this.getRepo();
-        var repoAfter = _.decoupleSet(repoBefore, path, value);
-        if (_.isEqual(repoAfter, this.props.repo)) {
-            repoAfter = null;
+        var repo = this.getRepo();
+        var newRepo = _.decoupleSet(repo, path, value);
+        var hasChanges = true;
+        if (_.isEqual(newRepo, this.props.repo)) {
+            newRepo = null;
+            hasChanges = false;
         }
-        this.setState({ newRepo: repoAfter });
+        this.setState({ newRepo, hasChanges });
     },
 
     /**
@@ -223,9 +226,10 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('repo-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-summary-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -347,7 +351,6 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        // TODO: add confirmation
         return this.setEditability(false);
     },
 
@@ -361,7 +364,9 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var repo = this.getRepo();
         return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'repo' }, repo).then((repo) => {
-                return this.setEditability(false);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false);
+                });
             });
         });
     },

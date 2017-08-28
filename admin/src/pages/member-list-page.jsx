@@ -17,6 +17,7 @@ var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ActivityTooltip = require('widgets/activity-tooltip');
 var RoleTooltip = require('widgets/role-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./member-list-page.scss');
 
@@ -137,6 +138,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
             selectedUserIds: [],
+            hasChanges: false,
             renderingFullList: this.isEditing(),
         };
     },
@@ -153,10 +155,13 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -173,11 +178,12 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route) {
-            if (parseInt(nextProps.route.query.edit)) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
                 this.setState({
                     renderingFullList: true,
-                    selectedUserIds: _.get(nextProps.project, 'user_ids')
+                    selectedUserIds: _.get(nextProps.project, 'user_ids'),
+                    changes: false,
                 });
             } else {
                 setTimeout(() => {
@@ -228,16 +234,16 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isEditing()) {
-            var hasChanges = this.props.project && !_.isEqual(this.state.selectedUserIds, this.props.project.user_ids);
             return (
                 <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('member-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('member-list-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -626,7 +632,6 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     handleCancelClick: function(evt) {
-        // TODO: confirmation
         this.setEditability(false);
     },
 
@@ -653,6 +658,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
         var userIds = this.props.project.user_ids;
         var selectedUserIds = _.slice(this.state.selectedUserIds);
+        var hasChanges = true;
         if (_.includes(selectedUserIds, userId)) {
             _.pull(selectedUserIds, userId);
         } else {
@@ -663,9 +669,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             // to avoid a mere change in order of the ids
             if (_.difference(selectedUserIds, userIds).length === 0) {
                 selectedUserIds = userIds;
+                hasChanges = false;
             }
         }
-        this.setState({ selectedUserIds });
+        this.setState({ selectedUserIds, hasChanges });
     }
 });
 

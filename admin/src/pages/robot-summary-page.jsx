@@ -12,6 +12,7 @@ var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./robot-summary-page.scss');
 
@@ -74,19 +75,26 @@ module.exports = Relaks.createClass({
         meanwhile.show(<RobotSummaryPageSync {...props} />);
         return db.start().then((currentUserId) => {
             var criteria = {
-                id: parseInt(this.props.route.parameters.roleId)
-            };
-            return db.findOne({ table: 'role', criteria });
-        }).then((robot) => {
-            props.project = robot;
-            meanwhile.show(<RobotSummaryPageSync {...props} />);
-        }).then(() => {
-            var criteria = {
                 id: parseInt(this.props.route.parameters.projectId)
             };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
+            meanwhile.show(<RobotSummaryPageSync {...props} />);
+        }).then(() => {
+            var robotId = parseInt(this.props.route.parameters.robotId);
+            if (robotId) {
+                if (!props.project) {
+                    return;
+                }
+                var schema = props.project.name;
+                var criteria = {
+                    id: robotId
+                };
+                return db.findOne({ schema, table: 'robot', criteria });
+            }
+        }).then((robot) => {
+            props.robot = robot;
             return <RobotSummaryPageSync {...props} />;
         });
     }
@@ -135,12 +143,14 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setRobotProperty: function(path, value) {
-        var robotBefore = this.getRobot();
-        var robotAfter = _.decoupleSet(robotBefore, path, value);
-        if (_.isEqual(robotAfter, this.props.robot)) {
-            robotAfter = null;
+        var robot = this.getRobot();
+        var newRobot = _.decoupleSet(robot, path, value);
+        var hasChanges = true;
+        if (_.isEqual(newRobot, this.props.robot)) {
+            newRobot = null;
+            hasChanges = false;
         }
-        this.setState({ newRobot: robotAfter });
+        this.setState({ newRobot, hasChanges });
     },
 
     /**
@@ -164,19 +174,25 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate we're creating a new robot
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isCreating: function() {
-        return (this.props.route.parameters.robotId === 'new');
+    isCreating: function(props) {
+        props = props || this.props;
+        return (props.route.parameters.robotId === 'new');
     },
 
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return this.isCreating() || !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return this.isCreating(props) || !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -195,6 +211,17 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
                 : require('pages/robot-list-page').getUrl({ projectId })
         var replace = (robotId) ? true : false;
         return this.props.route.change(url, replace);
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
+                this.setState({
+                    newRobot: null,
+                    hasChanges: false,
+                });
+            }
+        }
     },
 
     /**
@@ -230,9 +257,10 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('robot-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('robot-summary-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -266,6 +294,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         var nameProps = {
             id: 'name',
             value: robot.name,
+            onChange: this.handleNameChange,
             readOnly,
         };
         return (
@@ -309,7 +338,6 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        // TODO: add confirmation
         return this.setEditability(false);
     },
 
@@ -324,7 +352,9 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         var robot = this.getRobot();
         return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'robot' }, robot).then((robot) => {
-                return this.setEditability(false, robot);
+                this.setState({ hasChanges: false }, () => {
+                    return this.setEditability(false, robot);
+                });
             });
         });
     },
@@ -338,6 +368,16 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         var text = evt.target.value;
         var lang = this.props.locale.lang;
         this.setRobotProperty(`details.title.${lang}`, text);
+    },
+
+    /**
+     * Called when user changes the name
+     *
+     * @param  {Event} evt
+     */
+    handleNameChange: function(evt) {
+        var text = evt.target.value;
+        this.setRobotProperty(`name`, text);
     },
 });
 

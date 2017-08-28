@@ -448,7 +448,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var serverId = this.props.route.parameters.serverId;
         var label = (serverId === 'new')
                   ? <i>{t('nav-server-new')}</i>
-                  : p(server.details.tile) || server.name || '-';
+                  : p(server.details.title) || t(`server-type-${server.type}`);
         var url = (serverId)
                 ? require('pages/server-summary-page').getUrl({ serverId })
                 : null;

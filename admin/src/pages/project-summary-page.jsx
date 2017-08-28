@@ -12,6 +12,7 @@ var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./project-summary-page.scss');
 
@@ -127,12 +128,14 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setProjectProperty: function(path, value) {
-        var projectBefore = this.getProject();
-        var projectAfter = _.decoupleSet(projectBefore, path, value);
-        if (_.isEqual(projectAfter, this.props.project)) {
-            projectAfter = null;
+        var project = this.getProject();
+        var newProject = _.decoupleSet(project, path, value);
+        var hasChanges = true;
+        if (_.isEqual(newProject, this.props.project)) {
+            newProject = null;
+            hasChanges = false;
         }
-        this.setState({ newProject: projectAfter });
+        this.setState({ newProject, hasChanges });
     },
 
     /**
@@ -147,19 +150,25 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate we're creating a new user
      *
+     * @param  {Object} props
+     *
      * @return {Boolean}
      */
-    isCreating: function() {
-        return (this.props.route.parameters.projectId === 'new');
+    isCreating: function(props) {
+        props = props || this.props;
+        return (props.route.parameters.projectId === 'new');
     },
 
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return this.isCreating() || !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return this.isCreating(props) || !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -177,6 +186,22 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 : require('pages/project-list-page').getUrl();
         var replace = (projectId) ? true : false;
         return this.props.route.change(url, replace);
+    },
+
+    /**
+     * Reset edit state when edit starts
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() === this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
+                this.setState({
+                    newProject: null,
+                    hasChanges: false,
+                });
+            }
+        }
     },
 
     /**
@@ -209,16 +234,16 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         if (this.isEditing()) {
             // using keys here to force clearing of focus
-            var noChanges = !this.state.newProject;
             return (
                 <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('project-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={noChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('project-summary-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -395,7 +420,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        // TODO: add confirmation
         return this.setEditability(false);
     },
 
@@ -409,7 +433,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
         return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'project' }, project).then((project) => {
-                return this.setEditability(false, project);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false, project);
+                });
             });
         });
     },

@@ -13,6 +13,7 @@ var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
 var CollapsibleContainer = require('widgets/collapsible-container');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./server-summary-page.scss');
 
@@ -103,6 +104,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             newServer: null,
+            hasChanges: false,
         };
     },
 
@@ -126,14 +128,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setServerProperty: function(path, value) {
-        var serverBefore = this.getServer();
-        var serverAfter = (value === undefined)
-                      ? _.decoupleUnset(serverBefore, path)
-                      : _.decoupleSet(serverBefore, path, value);
-        if (_.isEqual(serverAfter, this.props.server)) {
-            serverAfter = null;
+        var server = this.getServer();
+        var newServer = _.decoupleSet(server, path, value);
+        var hasChanges = true;
+        if (_.isEqual(newServer, this.props.server)) {
+            newServer = null;
+            hasChanges = false;
         }
-        this.setState({ newServer: serverAfter });
+        this.setState({ newServer, hasChanges });
     },
 
     /**
@@ -148,19 +150,25 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate we're creating a new user
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isCreating: function() {
-        return (this.props.route.parameters.serverId === 'new');
+    isCreating: function(props) {
+        props = props || this.props;
+        return (props.route.parameters.serverId === 'new');
     },
 
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return this.isCreating() || !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return this.isCreating(props) || !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -178,6 +186,20 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 : require('pages/server-list-page').getUrl();
         var replace = (serverId) ? true : false;
         return this.props.route.change(url, replace);
+    },
+
+    /**
+     * Reset edit state when edit starts
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            this.setState({
+                newServer: null,
+                hasChanges: false,
+            });
+        }
     },
 
     /**
@@ -217,9 +239,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('server-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('server-summary-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -359,7 +382,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        // TODO: add confirmation
         return this.setEditability(false);
     },
 
@@ -373,7 +395,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var server = this.getServer();
         return db.start().then((serverId) => {
             return db.saveOne({ table: 'server' }, server).then((server) => {
-                return this.setEditability(false, server);
+                this.setState({ hasChanges: false }, () => {
+                    return this.setEditability(false, server);
+                });
             });
         });
     },

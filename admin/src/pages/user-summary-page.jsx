@@ -13,6 +13,7 @@ var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-summary-page.scss');
 
@@ -120,6 +121,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             newUser: null,
+            hasChanges: false,
         };
     },
 
@@ -143,12 +145,14 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setUserProperty: function(path, value) {
-        var userBefore = this.getUser();
-        var userAfter = _.decoupleSet(userBefore, path, value);
-        if (_.isEqual(userAfter, this.props.user)) {
-            userAfter = null;
+        var user = this.getUser();
+        var newUser = _.decoupleSet(user, path, value);
+        var hasChanges = true;
+        if (_.isEqual(newUser, this.props.user)) {
+            newUser = null;
+            hasChanges = false;
         }
-        this.setState({ newUser: userAfter });
+        this.setState({ newUser, hasChanges });
     },
 
     /**
@@ -174,19 +178,24 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate we're creating a new user
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isCreating: function() {
+    isCreating: function(props) {
         return (this.props.route.parameters.userId === 'new');
     },
 
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return this.isCreating() || !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return this.isCreating() || !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -207,6 +216,22 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 : require('pages/user-list-page').getUrl();
         var replace = (projectId) ? true : false;
         return this.props.route.change(url, replace);
+    },
+
+    /**
+     * Reset the edit state when edit starts
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
+                this.setState({
+                    newUser: null,
+                    hasChanges: false,
+                });
+            }
+        }
     },
 
     /**
@@ -245,9 +270,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('user-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t(member ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -422,7 +448,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        // TODO: add confirmation
         return this.setEditability(false);
     },
 
@@ -445,7 +470,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 user.approved = true;
             }
             return db.saveOne({ table: 'user' }, user).then((user) => {
-                return this.setEditability(false, user);
+                this.setState({ hasChanges: false }, () => {
+                    return this.setEditability(false, user);
+                });
             });
         });
     },

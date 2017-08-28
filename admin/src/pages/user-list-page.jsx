@@ -17,6 +17,7 @@ var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ProjectTooltip = require('widgets/project-tooltip');
 var RoleTooltip = require('widgets/role-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-list-page.scss');
 
@@ -129,6 +130,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             sortDirections: [ 'asc' ],
             renderingPartialList: this.isApproving(),
             selectedUserIds: [],
+            hasChanges: false,
         };
     },
 
@@ -147,20 +149,24 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true if URL indicates user approval mode
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isApproving: function() {
-        return !!parseInt(this.props.route.query.approve);
+    isApproving: function(props) {
+        props = props || this.props;
+        return !!parseInt(props.route.query.approve);
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route) {
-            if (parseInt(nextProps.route.query.approve)) {
+        if (this.isApproving() !== this.isApproving(nextProps)) {
+            if (this.isApproving(nextProps)) {
                 // preselect all unapproved users
                 var unapprovedUsers = _.filter(nextProps.users, { approved: false });
                 this.setState({
                     renderingPartialList: true,
-                    selectedUserIds: _.map(unapprovedUsers, 'id')
+                    selectedUserIds: _.map(unapprovedUsers, 'id'),
+                    hasChanges: false,
                 });
             } else {
                 // wait for animation to finish
@@ -204,16 +210,16 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isApproving()) {
-            var hasSelected = !_.isEmpty(this.state.selectedUserIds);
             return (
                 <div className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('user-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!hasSelected} onClick={this.handleSaveClick}>
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('user-list-save')}
                     </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {

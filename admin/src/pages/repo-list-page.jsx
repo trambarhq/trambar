@@ -16,6 +16,7 @@ var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ActivityTooltip = require('widgets/activity-tooltip');
 var ModifiedTimeTooltip = require('widgets/modified-time-tooltip')
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./repo-list-page.scss');
 
@@ -137,6 +138,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
             selectedRepoIds: [],
+            hasChanges: false,
             renderingFullList: this.isEditing(),
         };
     },
@@ -153,10 +155,13 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     /**
      * Return true when the URL indicate edit mode
      *
+     * @param  {Object|null} props
+     *
      * @return {Boolean}
      */
-    isEditing: function() {
-        return !!parseInt(this.props.route.query.edit);
+    isEditing: function(props) {
+        props = props || this.props;
+        return !!parseInt(props.route.query.edit);
     },
 
     /**
@@ -173,16 +178,17 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route) {
-            if (parseInt(nextProps.route.query.edit)) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
-                    selectedRepoIds: _.get(nextProps.project, 'repo_ids', [])
+                    selectedRepoIds: _.get(nextProps.project, 'repo_ids', []),
+                    hasChanges: false,
                 });
             } else {
                 setTimeout(() => {
-                    if (!this.isEditing() && this.state.renderingFullList) {
+                    if (!this.isEditing()) {
                         this.setState({ renderingFullList: false });
                     }
                 }, 500);
@@ -229,14 +235,14 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isEditing()) {
-            var hasChanges = this.props.project && !_.isEqual(this.state.selectedRepoIds, this.props.project.repo_ids);
             return (
                 <div className="buttons">
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('repo-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="add" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="add" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-list-save')}
                     </PushButton>
                 </div>
@@ -613,7 +619,6 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        // TODO: confirmation
         this.setEditability(false);
     },
 
@@ -630,7 +635,9 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 repo_ids: this.state.selectedRepoIds
             };
             return db.saveOne({ table: 'project' }, project).then((project) => {
-                return this.setEditability(false);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false);
+                });
             });
         });
     },
@@ -644,6 +651,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         var repoId = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
         var repoIds = this.props.project.repo_ids;
         var selectedRepoIds = _.slice(this.state.selectedRepoIds);
+        var hasChanges = true;
         if (_.includes(selectedRepoIds, repoId)) {
             _.pull(selectedRepoIds, repoId);
         } else {
@@ -654,9 +662,10 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             // to avoid a mere change in order of the ids
             if (_.difference(selectedRepoIds, repoIds).length === 0) {
                 selectedRepoIds = repoIds;
+                hasChanges = false;
             }
         }
-        this.setState({ selectedRepoIds });
+        this.setState({ selectedRepoIds, hasChanges });
     }
 });
 

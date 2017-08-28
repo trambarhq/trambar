@@ -9,6 +9,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./role-summary-page.scss');
 
@@ -80,6 +81,112 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            newRole: null,
+            hasChanges: false,
+        };
+    },
+
+    /**
+     * Return edited copy of role object or the original object
+     *
+     * @return {Object}
+     */
+    getRole: function() {
+        if (this.isEditing()) {
+            return this.state.newRole || this.props.role || emptyRole;
+        } else {
+            return this.props.role || emptyRole;
+        }
+    },
+
+    /**
+     * Modify a property of the role object
+     *
+     * @param  {String} path
+     * @param  {*} value
+     */
+    setRoleProperty: function(path, value) {
+        var role = this.getRole();
+        var newRole = _.decoupleSet(role, path, value);
+        var hasChanges = true;
+        if (_.isEqual(newRole, this.props.role)) {
+            newRole = null;
+            hasChanges = false;
+        }
+        this.setState({ newRole, hasChanges });
+    },
+
+    /**
+     * Return role id specified in URL
+     *
+     * @return {Number}
+     */
+    getRoleId: function() {
+        return parseInt(this.props.route.parameters.roleId);
+    },
+
+    /**
+     * Return true when the URL indicate we're creating a new user
+     *
+     * @param  {Object|null} props
+     *
+     * @return {Boolean}
+     */
+    isCreating: function(props) {
+        props = props || this.props;
+        return (props.route.parameters.roleId === 'new');
+    },
+
+    /**
+     * Return true when the URL indicate edit mode
+     *
+     * @param  {Object|null} props
+     *
+     * @return {Boolean}
+     */
+    isEditing: function(props) {
+        props = props || this.props;
+        return this.isCreating(props) || !!parseInt(props.route.query.edit);
+    },
+
+    /**
+     * Change editability of page
+     *
+     * @param  {Boolean} edit
+     * @param  {Object}  newRole
+     *
+     * @return {Promise}
+     */
+    setEditability: function(edit, newRole) {
+        var roleId = (newRole) ? newRole.id : this.getRoleId();
+        var url = (roleId)
+                ? require('pages/role-summary-page').getUrl({ roleId }, { edit })
+                : require('pages/role-list-page').getUrl();
+        var replace = (roleId) ? true : false;
+        return this.props.route.change(url, replace);
+    },
+
+    /**
+     * Reset edit state when edit starts
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            this.setState({
+                newRole: null,
+                hasChanges: false,
+            });
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -103,12 +210,32 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        return (
-            <div className="buttons">
-                <PushButton className="edit" onClick={this.handleEditClick}>
-                    {t('role-summary-edit')}
-                </PushButton>
-            </div>
-        );
+        if (this.isEditing()) {
+            return (
+                <div className="buttons">
+                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                        {t('role-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                        {t('role-summary-save')}
+                    </PushButton>
+                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                </div>
+            );
+        } else {
+            return (
+                <div className="buttons">
+                    <PushButton className="edit" onClick={this.handleEditClick}>
+                        {t('role-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+
+        }
     },
 });
+
+var emptyRole = {
+    details: {}
+};

@@ -22,12 +22,32 @@ module.exports = React.createClass({
         changes: PropTypes.bool,
     },
 
+
+    /**
+     * Return initial state
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             showing: false,
             rendering: false,
             resolve: null,
-            reject: null
+        }
+    },
+
+    /**
+     * Put a hook on the current route when there're changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.changes !== nextProps.changes) {
+            if (nextProps.changes) {
+                nextProps.route.keep(this.confirmRouteChange);
+            } else {
+                nextProps.route.free(this.confirmRouteChange);
+            }
         }
     },
 
@@ -56,33 +76,14 @@ module.exports = React.createClass({
         )
     },
 
-    componentDidMount: function() {
-        this.monitorRoute();
-    },
-
-    componentDidUpdate: function(prevProps, prevState) {
-        if (prevProps.route !== this.props.route) {
-            this.monitorRoute();
-        }
-    },
-
-    monitorRoute: function() {
-        this.props.route.keep(this.confirmRouteChange);
-    },
-
     confirmRouteChange: function() {
-        if (this.props.changes) {
-            return new Promise((resolve, reject) => {
-                this.setState({
-                    showing: true,
-                    rendering: true,
-                    resolve,
-                    reject,
-                });
+        return new Promise((resolve, reject) => {
+            this.setState({
+                showing: true,
+                rendering: true,
+                resolve,
             });
-        } else {
-            return false;
-        }
+        });
     },
 
     /**
@@ -96,10 +97,9 @@ module.exports = React.createClass({
             showing: false,
             rendering: false,
             resolve: null,
-            reject: null,
         }, () => {
             if (resolve) {
-                resolve();
+                resolve(true);
             }
         });
     },
@@ -110,14 +110,13 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleCancel: function(evt) {
-        var reject = this.state.reject;
+        var resolve = this.state.resolve;
         this.setState({
             showing: false,
             resolve: null,
-            reject: null,
         }, () => {
-            if (reject) {
-                reject();
+            if (resolve) {
+                resolve(false);
             }
             setTimeout(() => {
                 if (!this.state.showing) {
