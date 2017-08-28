@@ -118,7 +118,7 @@ module.exports = React.createClass({
                 }
                 this.triggerChangeEvent();
             });
-            return Promise.resolve();
+            return Promise.resolve(true);
         } else {
             if (!noRedirecting) {
                 return this.triggerRedirectionRequest(url).then((newUrl) => {
@@ -165,7 +165,6 @@ module.exports = React.createClass({
             });
         }
         window.addEventListener('popstate', this.handlePopState);
-        document.addEventListener('click', this.handleClick);
     },
 
     /**
@@ -187,7 +186,6 @@ module.exports = React.createClass({
      */
     componentWillUnmount: function() {
         window.removeEventListener('popstate', this.handlePopState);
-        document.removeEventListener('click', this.handleClick);
     },
 
     /**
@@ -202,22 +200,6 @@ module.exports = React.createClass({
             this.setState(route, () => {
                 this.triggerChangeEvent();
             });
-        }
-    },
-
-    /**
-     * Called when users clicks on an element
-     *
-     * @param  {Event} evt
-     */
-    handleClick: function(evt) {
-        var target = evt.target;
-        if (target.tagName === 'A') {
-            var url = target.getAttribute('href');
-            if (url && url.indexOf(':') === -1) {
-                this.change(url);
-                evt.preventDefault();
-            }
         }
     },
 });

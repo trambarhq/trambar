@@ -82,7 +82,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <div>
+            <div onClick={this.handleClick}>
                 {this.renderUserInterface()}
                 {this.renderConfiguration()}
             </div>
@@ -186,7 +186,7 @@ module.exports = React.createClass({
     /**
      * Hide the splash screen once app is ready
      */
-    componentDidUpdate: function() {
+    componentDidUpdate: function(nextProps, nextState) {
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
             setTimeout(() => {
@@ -384,6 +384,23 @@ module.exports = React.createClass({
             console.error(err);
             return ErrorPage.getUrl({ errorCode });
         });
+    },
+
+    /**
+     * Called when users clicks on an element
+     *
+     * @param  {Event} evt
+     */
+    handleClick: function(evt) {
+        var target = evt.target;
+        debugger;
+        if (target.tagName === 'A') {
+            var url = target.getAttribute('href');
+            if (url && url.indexOf(':') === -1) {
+                this.state.route.change(url);
+                evt.preventDefault();
+            }
+        }
     },
 
     /**

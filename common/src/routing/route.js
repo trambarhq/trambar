@@ -28,7 +28,7 @@ function Route(routeManager) {
             if (ok) {
                 return routeManager.change(url, replacing);
             } else {
-                throw new Error('');
+                return false;
             }
         });
     };
@@ -42,27 +42,37 @@ function Route(routeManager) {
      */
     this.ask = function(url, interactive) {
         if (interactive) {
-            return Promise.reduce(callbacks, (aborted, callback) => {
-                if (aborted) {
+            return Promise.reduce(callbacks, (allowed, callback) => {
+                try {
+                    if (!allowed) {
+                        return false;
+                    }
+                    var confirmed = callback(url, true);
+                    return Promise.resolve(confirmed);
+                } catch (err) {
+                    console.error(err);
                     return true;
                 }
-                var blocking = callback(url, true);
-                return Promise.resolve(blocking);
-            }, false).then((blocking) => {
-                return !blocking;
+            }, true).then((allowed) => {
+                return allowed;
             });
         } else {
-            var blocking = _.reduce(callbacks, (aborted, callback) => {
-                if (aborted) {
+            var allowed = _.reduce(callbacks, (allowed, callback) => {
+                try {
+                    if (!allowed) {
+                        return false;
+                    }
+                    var confirmed = callback(false);
+                    if (typeof(confirmed) !== 'boolean') {
+                        throw new Error('Callback passed to keep() should return a boolean when interactive (2nd argument) is true');
+                    }
+                    return confirmed;
+                } catch (err) {
+                    console.error(err);
                     return true;
                 }
-                var blocking = callback(false);
-                if (typeof(blocking) !== 'boolean' || typeof(blocking) !== 'undefined') {
-                    throw new Error('Callback passed to keep() should return a boolean when interactive (2nd argument) is true');
-                }
-                return blocking;
-            }, false);
-            return !blocking;
+            }, true);
+            return allowed;
         }
     };
 

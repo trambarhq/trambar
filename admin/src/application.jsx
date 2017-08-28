@@ -96,7 +96,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <div>
+            <div onClick={this.handleClick}>
                 {this.renderUserInterface()}
                 {this.renderConfiguration()}
             </div>
@@ -363,6 +363,23 @@ module.exports = React.createClass({
             return ErrorPage.getUrl({ errorCode });
         });
     },
+
+    /**
+     * Called when users clicks on an element
+     *
+     * @param  {Event} evt
+     */
+    handleClick: function(evt) {
+        var target = evt.target;
+        if (target.tagName === 'A') {
+            var url = target.getAttribute('href');
+            if (url && url.indexOf(':') === -1) {
+                this.state.route.change(url);
+                evt.preventDefault();
+            }
+        }
+    },
+
 
     /**
      * Called when the UI theme changes
