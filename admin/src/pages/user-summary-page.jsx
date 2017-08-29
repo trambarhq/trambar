@@ -483,8 +483,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        var text = evt.target.value;
-        this.setUserProperty(`details.name`, text);
+        this.setUserProperty(`details.name`, evt.target.value);
     },
 
     /**
@@ -493,8 +492,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleUsernameChange: function(evt) {
-        var text = evt.target.value;
-        this.setUserProperty(`username`, text);
+        this.setUserProperty(`username`, evt.target.value);
     },
 
     /**
@@ -503,8 +501,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleEmailChange: function(evt) {
-        var text = evt.target.value;
-        this.setUserProperty(`details.email`, text);
+        this.setUserProperty(`details.email`, evt.target.value);
     },
 
     /**

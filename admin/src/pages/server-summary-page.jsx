@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var DataLossWarning = require('widgets/data-loss-warning');
@@ -263,13 +264,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderForm: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
         var server = this.getServer();
         var serverOriginal = this.props.server || emptyServer;
         var titleProps = {
             id: 'title',
-            value: p(_.get(server, 'details.title')),
+            value: server.details.title,
+            locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
         };
@@ -325,7 +326,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         };
         return (
             <div className="form">
-                <TextField {...titleProps}>{t('server-summary-title')}</TextField>
+                <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
                 <OptionList {...typeListProps}>
                     <label>{t('server-summary-type')}</label>
                     {_.map(typeOptionProps, renderOption)}
@@ -405,12 +406,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Called when user changes server title
      *
-     * @param  {Event} evt
+     * @param  {Object} evt
      */
     handleTitleChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setServerProperty(`details.title.${lang}`, text);
+        this.setServerProperty(`details.title`, evt.target.value);
     },
 
     /**
@@ -428,8 +427,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleApiUrlChange: function(evt) {
-        var text = evt.target.value;
-        this.setServerProperty(`details.api.url`, text);
+        this.setServerProperty(`details.api.url`, evt.target.value);
     },
 
     /**
@@ -438,8 +436,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleApiTokenChange: function(evt) {
-        var text = evt.target.value;
-        this.setServerProperty(`details.api.token`, text);
+        this.setServerProperty(`details.api.token`, evt.target.value);
     },
 
     /**
@@ -448,8 +445,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthUrlChange: function(evt) {
-        var text = evt.target.value;
-        this.setServerProperty(`details.oauth.baseURL`, text);
+        this.setServerProperty(`details.oauth.baseURL`, evt.target.value);
     },
 
     /**
@@ -458,8 +454,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthIdChange: function(evt) {
-        var text = evt.target.value;
-        this.setServerProperty(`details.oauth.clientID`, text);
+        this.setServerProperty(`details.oauth.clientID`, evt.target.value);
     },
 
     /**
@@ -468,8 +463,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthSecretChange: function(evt) {
-        var text = evt.target.value;
-        this.setServerProperty(`details.oauth.clientSecret`, text);
+        this.setServerProperty(`details.oauth.clientSecret`, evt.target.value);
     },
 });
 

@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -276,7 +277,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var hasIssueTracker = !!repo.details.issue_tracking;
         var titleProps = {
             id: 'title',
-            value: p(repo.details.title),
+            value: repo.details.title,
+            locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
         };
@@ -314,7 +316,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         ];
         return (
             <div className="form">
-                <TextField {...titleProps}>{t('repo-summary-title')}</TextField>
+                <MultilingualTextField {...titleProps}>{t('repo-summary-title')}</MultilingualTextField>
                 <TextField {...nameProps}>{t('repo-summary-gitlab-name')}</TextField>
                 <OptionList {...listProps}>
                     <label>{t('repo-summary-issue-tracker')}</label>
@@ -396,9 +398,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleTitleChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setRepoProperty(`details.title.${lang}`, text);
+        this.setRepoProperty(`details.title`, evt.target.value);
     },
 });
 

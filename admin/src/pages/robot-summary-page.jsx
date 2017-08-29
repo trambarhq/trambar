@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -281,13 +282,13 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderForm: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
         var robotOriginal = this.props.robot || emptyRobot;
         var robot = this.getRobot();
         var titleProps = {
             id: 'title',
-            value: p(robot.details.title),
+            value: robot.details.title,
+            locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
         };
@@ -299,16 +300,17 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var descriptionProps = {
             id: 'description',
-            value: p(robot.details.description),
+            value: robot.details.description,
             type: 'textarea',
+            locale: this.props.locale,
             onChange: this.handleDescriptionChange,
             readOnly,
         };
         return (
             <div className="form">
-                <TextField {...titleProps}>{t('robot-summary-title')}</TextField>
+                <MultilingualTextField {...titleProps}>{t('robot-summary-title')}</MultilingualTextField>
                 <TextField {...nameProps}>{t('robot-summary-name')}</TextField>
-                <TextField {...descriptionProps}>{t('robot-summary-description')}</TextField>
+                <MultilingualTextField {...descriptionProps}>{t('robot-summary-description')}</MultilingualTextField>
             </div>
         );
     },
@@ -373,9 +375,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleTitleChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setRobotProperty(`details.title.${lang}`, text);
+        this.setRobotProperty(`details.title`, evt.target.value);
     },
 
     /**
@@ -384,8 +384,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        var text = evt.target.value;
-        this.setRobotProperty(`name`, text);
+        this.setRobotProperty(`name`, evt.target.value);
     },
 
     /**
@@ -394,9 +393,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleDescriptionChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setRobotProperty(`details.description.${lang}`, text);
+        this.setRobotProperty(`details.description`, evt.target.value);
     },
 });
 

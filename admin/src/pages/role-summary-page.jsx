@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -262,13 +263,13 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderForm: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
         var roleOriginal = this.props.role || emptyRole;
         var role = this.getRole();
         var titleProps = {
             id: 'title',
-            value: p(role.details.title),
+            value: role.details.title,
+            locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
         };
@@ -280,16 +281,17 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var descriptionProps = {
             id: 'description',
-            value: p(role.details.description),
+            value: role.details.description,
             type: 'textarea',
+            locale: this.props.locale,
             onChange: this.handleDescriptionChange,
             readOnly,
         };
         return (
             <div className="form">
-                <TextField {...titleProps}>{t('role-summary-title')}</TextField>
+                <MultilingualTextField {...titleProps}>{t('role-summary-title')}</MultilingualTextField>
                 <TextField {...nameProps}>{t('role-summary-name')}</TextField>
-                <TextField {...descriptionProps}>{t('role-summary-description')}</TextField>
+                <MultilingualTextField {...descriptionProps}>{t('role-summary-description')}</MultilingualTextField>
             </div>
         );
     },
@@ -350,12 +352,10 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Called when user changes the title
      *
-     * @param  {Event} evt
+     * @param  {Object} evt
      */
     handleTitleChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setRoleProperty(`details.title.${lang}`, text);
+        this.setRoleProperty(`details.title`, evt.target.value);
     },
 
     /**
@@ -364,19 +364,16 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        var text = evt.target.value;
-        this.setRoleProperty(`name`, text);
+        this.setRoleProperty(`name`, evt.target.value);
     },
 
     /**
      * Called when user changes the description
      *
-     * @param  {Event} evt
+     * @param  {Object} evt
      */
     handleDescriptionChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setRoleProperty(`details.description.${lang}`, text);
+        this.setRoleProperty(`details.description`, evt.target.value);
     },
 });
 

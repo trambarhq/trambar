@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -90,7 +91,7 @@ module.exports = Relaks.createClass({
 var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'ProjectSummaryPage.Sync',
     propTypes: {
-        project: PropTypes.object.isRequired,
+        project: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -265,13 +266,14 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderForm: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
         var readOnly = !this.isEditing();
         var projectOriginal = this.props.project;
         var project = this.getProject();
         var titleProps = {
             id: 'title',
-            value: p(project.details.title),
+            value: project.details.title,
+            availableLanguageCodes: [ 'en', 'pl', 'ru' ],
+            locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
         };
@@ -283,8 +285,10 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var descriptionProps = {
             id: 'description',
-            value: p(project.details.description),
+            value: project.details.description,
+            availableLanguageCodes: [ 'en', 'pl', 'ru' ],
             type: 'textarea',
+            locale: this.props.locale,
             onChange: this.handleDescriptionChange,
             readOnly,
         };
@@ -354,9 +358,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         ];
         return (
             <div className="form">
-                <TextField {...titleProps}>{t('project-summary-title')}</TextField>
+                <MultilingualTextField {...titleProps}>{t('project-summary-title')}</MultilingualTextField>
                 <TextField {...nameProps}>{t('project-summary-name')}</TextField>
-                <TextField {...descriptionProps}>{t('project-summary-description')}</TextField>
+                <MultilingualTextField {...descriptionProps}>{t('project-summary-description')}</MultilingualTextField>
                 <OptionList {...listProps}>
                     <label>{t('project-summary-new-members')}</label>
                     {_.map(membershipOptionProps, renderOption)}
@@ -447,9 +451,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleTitleChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setProjectProperty(`details.title.${lang}`, text);
+        this.setProjectProperty(`details.title`, evt.target.value);
     },
 
     /**
@@ -458,8 +460,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        var text = evt.target.value;
-        this.setProjectProperty(`name`, text);
+        this.setProjectProperty(`name`, evt.target.value);
     },
 
     /**
@@ -468,9 +469,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleDescriptionChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.props.locale.lang;
-        this.setProjectProperty(`details.description.${lang}`, text);
+        this.setProjectProperty(`details.description`, evt.target.value);
     },
 
     /**
