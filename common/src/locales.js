@@ -11,6 +11,18 @@ module.exports = [
         defaultCountry: 'cz'
     },
     {
+        name: 'Dansk',
+        code: 'da',
+        direction: 'ltr',
+        countries: {
+            dk: 'Danmark',
+            fo: 'Færøerne',
+            gl: 'Grønland',
+            de: 'Tyskland',
+        },
+        defaultCountry: 'dk'
+    },
+    {
         name: 'Deutsch',
         code: 'de',
         direction: 'ltr',
@@ -22,6 +34,16 @@ module.exports = [
             ch: 'Schweiz',
         },
         defaultCountry: 'de',
+    },
+    {
+        name: 'Ελληνικά',
+        code: 'el',
+        direction: 'ltr',
+        countries: {
+            gr: 'Ελλάδα',
+            cy: 'Κύπρος',
+        },
+        defaultCountry: 'gr',
     },
     {
         name: 'English',
@@ -102,6 +124,27 @@ module.exports = [
         defaultCountry: 'fr',
     },
     {
+        name: '한국어',
+        code: 'ko',
+        direction: 'ltr',
+        countries: {
+            kr: '한국',
+            cn: '중국',
+        },
+        defaultCountry: 'kr',
+    },
+    {
+        name: 'Hrvatski',
+        code: 'hr',
+        direction: 'ltr',
+        countries: {
+            ba: 'Bosna i Hercegovina',
+            hr: 'Hrvatska',
+            rs: 'Srbija',
+        },
+        defaultCountry: 'hr',
+    },
+    {
         name: 'Italiano',
         code: 'it',
         direction: 'ltr',
@@ -112,6 +155,30 @@ module.exports = [
             si: 'Slovenia',
         },
         defaultCountry: 'it',
+    },
+    {
+        name: 'Magyar',
+        countries: {
+            hr: 'Magyarország',
+            ro: 'Románia',
+        },
+        defaultCountry: 'hu'
+    },
+    {
+        name: 'Nederlands',
+        countries: {
+            be: 'België',
+            nl: 'Nederland',
+            sr: 'Suriname',
+        },
+        defaultCountry: 'nl',
+    },
+    {
+        name: '日本語',
+        countries: {
+            jp: '日本',
+        },
+        defaultCountry: 'jp',
     },
     {
         name: 'Norsk',
@@ -208,6 +275,26 @@ module.exports = [
             fi: 'Finland',
             se: 'Sverige',
         },
+        defaultCountry: 'se',
+    },
+    {
+        name: 'Tiếng Việt',
+        code: 'vi',
+        direction: 'ltr',
+        countries: {
+            vn: 'Việt Nam',
+        },
+        defaultCountry: 'vn'
+    },
+    {
+        name: 'Türkçe',
+        code: 'tr',
+        direction: 'ltr',
+        countries: {
+            cy: 'Kıbrıs',
+            tr: 'Türkiye',
+        },
+        defaultCountry: 'tr',
     },
     {
         name: '中文',
