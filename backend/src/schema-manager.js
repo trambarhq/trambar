@@ -10,6 +10,7 @@ var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Role = require('accessors/role');
 var Server = require('accessors/server');
+var System = require('accessors/system');
 var User = require('accessors/user');
 
 // project accessors
@@ -168,6 +169,7 @@ var globalAccessors = [
     Repo,
     Role,
     Server,
+    System,
     User,
 ];
 var projectAccessors = [

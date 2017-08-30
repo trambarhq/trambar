@@ -196,11 +196,20 @@ module.exports = React.createClass({
      */
     handleTextChange: function(evt) {
         var text = evt.target.value;
+        var lang = this.state.selectedLanguageCode;
         if (text) {
             this.value = _.clone(this.props.value);
-            this.value[this.state.selectedLanguageCode] = text;
+            this.value[lang] = text;
         } else {
-            this.value = _.omit(this.props.value, this.state.selectedLanguageCode);
+            this.value = _.omit(this.props.value, lang);
+            if (!_.includes(this.props.availableLanguageCodes, lang)) {
+                // choose a new language when text of a no-longer-available
+                // language is removed
+                var language = _.first(this.getLanguages());
+                if (language) {
+                    this.setState({ selectedLanguageCode: language.code });
+                }
+            }
         }
         if (this.props.onChange) {
             this.props.onChange({

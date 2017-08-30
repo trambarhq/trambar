@@ -66,6 +66,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
+            system: null,
             server: null,
 
             database: this.props.database,
@@ -75,6 +76,11 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            var criteria = {};
+            return db.findOne({ table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
+        }).then(() => {
             var criteria = {
                 id: parseInt(this.props.route.parameters.serverId)
             };
@@ -89,6 +95,7 @@ module.exports = Relaks.createClass({
 var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'ServerSummaryPage.Sync',
     propTypes: {
+        system: PropTypes.object,
         server: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -267,9 +274,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var readOnly = !this.isEditing();
         var server = this.getServer();
         var serverOriginal = this.props.server || emptyServer;
+        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var titleProps = {
             id: 'title',
             value: server.details.title,
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,

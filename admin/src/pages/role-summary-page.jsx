@@ -65,6 +65,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
+            system: null,
             role: null,
 
             database: this.props.database,
@@ -74,6 +75,11 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            var criteria = {};
+            return db.findOne({ table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
+        }).then(() => {
             var roleId = parseInt(this.props.route.parameters.roleId);
             if (roleId) {
                 var criteria = {
@@ -91,6 +97,7 @@ module.exports = Relaks.createClass({
 var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'RoleSummaryPage.Sync',
     propTypes: {
+        system: PropTypes.object,
         role: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -266,9 +273,11 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         var readOnly = !this.isEditing();
         var roleOriginal = this.props.role || emptyRole;
         var role = this.getRole();
+        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var titleProps = {
             id: 'title',
             value: role.details.title,
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
@@ -282,6 +291,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         var descriptionProps = {
             id: 'description',
             value: role.details.description,
+            availableLanguageCodes: inputLanguages,
             type: 'textarea',
             locale: this.props.locale,
             onChange: this.handleDescriptionChange,

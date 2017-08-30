@@ -21,6 +21,7 @@ function start() {
             'user',
             'preferences',
             'project',
+            'system',
 
             'bookmark',
             'listing',

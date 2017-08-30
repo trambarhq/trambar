@@ -68,6 +68,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
+            system: null,
             project: null,
             repo: null,
             statistics: null,
@@ -79,6 +80,11 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            var criteria = {};
+            return db.findOne({ table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
+        }).then(() => {
             var repoId = parseInt(this.props.route.parameters.repoId);
             if (repoId) {
                 var criteria = {
@@ -113,6 +119,7 @@ module.exports = Relaks.createClass({
 var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'RepoSummaryPage.Sync',
     propTypes: {
+        system: PropTypes.object,
         repo: PropTypes.object,
         project: PropTypes.object,
 
@@ -286,10 +293,12 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var readOnly = !this.isEditing();
         var repoOriginal = this.props.repo || emptyRepo;
         var repo = this.getRepo();
+        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var hasIssueTracker = !!repo.details.issue_tracking;
         var titleProps = {
             id: 'title',
             value: repo.details.title,
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,

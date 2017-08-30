@@ -498,7 +498,7 @@ function importProjectMemberships(db, server, project) {
                 }
             });
             if (oldMemberUsers.length > 0) {
-                project.user_ids = _.intersect(project.user_ids, _.map(oldMemberUsers, 'id'));
+                project.user_ids = _.intersection(project.user_ids, _.map(oldMemberUsers, 'id'));
             }
             // add user ids of new members
             var newMemberUsers = _.filter(users, (user) => {

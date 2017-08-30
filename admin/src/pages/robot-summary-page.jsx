@@ -65,6 +65,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
+            system: null,
             project: null,
             robot: null,
 
@@ -75,8 +76,14 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<RobotSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            var criteria = {};
+            return db.findOne({ table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
+        }).then(() => {
+            var projectId = parseInt(this.props.route.parameters.projectId);
             var criteria = {
-                id: parseInt(this.props.route.parameters.projectId)
+                id: projectId
             };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
@@ -104,6 +111,7 @@ module.exports = Relaks.createClass({
 var RobotSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'RobotSummaryPage.Sync',
     propTypes: {
+        system: PropTypes.object,
         robot: PropTypes.object,
         project: PropTypes.object,
 
@@ -285,9 +293,11 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         var readOnly = !this.isEditing();
         var robotOriginal = this.props.robot || emptyRobot;
         var robot = this.getRobot();
+        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var titleProps = {
             id: 'title',
             value: robot.details.title,
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
@@ -302,6 +312,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
             id: 'description',
             value: robot.details.description,
             type: 'textarea',
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleDescriptionChange,
             readOnly,

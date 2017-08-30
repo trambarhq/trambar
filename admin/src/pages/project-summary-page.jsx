@@ -68,6 +68,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
+            system: null,
             project: null,
             statistics: null,
 
@@ -78,6 +79,11 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            var criteria = {};
+            return db.findOne({ table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
+        }).then(() => {
             var projectId = parseInt(this.props.route.parameters.projectId);
             if (projectId) {
                 var criteria = {
@@ -105,6 +111,7 @@ module.exports = Relaks.createClass({
 var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'ProjectSummaryPage.Sync',
     propTypes: {
+        system: PropTypes.object,
         project: PropTypes.object,
         statistics: PropTypes.object,
 
@@ -284,10 +291,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var readOnly = !this.isEditing();
         var projectOriginal = this.props.project;
         var project = this.getProject();
+        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var titleProps = {
             id: 'title',
             value: project.details.title,
-            availableLanguageCodes: [ 'en', 'pl', 'ru' ],
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly,
@@ -301,7 +309,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var descriptionProps = {
             id: 'description',
             value: project.details.description,
-            availableLanguageCodes: [ 'en', 'pl', 'ru' ],
+            availableLanguageCodes: inputLanguages,
             type: 'textarea',
             locale: this.props.locale,
             onChange: this.handleDescriptionChange,
