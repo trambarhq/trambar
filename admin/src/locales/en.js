@@ -221,7 +221,13 @@ module.exports = function(languageCode) {
         'server-type-github': 'GitHub',
         'server-type-google': 'Google',
 
-        'settings-edit': 'Edit Settings',
+        'settings-cancel': 'Cancel',
+        'settings-edit': 'Edit settings',
+        'settings-input-languages': 'Input languages',
+        'settings-save': 'Save settings',
+        'settings-site-title': 'Site name',
+        'settings-site-description': 'Description',
+        'settings-site-domain-name': 'Domain name',
         'settings-title': 'Settings',
 
         'sign-in-password': 'Password:',

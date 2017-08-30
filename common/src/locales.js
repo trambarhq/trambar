@@ -158,6 +158,7 @@ module.exports = [
     },
     {
         name: 'Magyar',
+        code: 'hu',
         countries: {
             hr: 'Magyarország',
             ro: 'Románia',
@@ -166,6 +167,7 @@ module.exports = [
     },
     {
         name: 'Nederlands',
+        code: 'nl',
         countries: {
             be: 'België',
             nl: 'Nederland',
@@ -175,6 +177,8 @@ module.exports = [
     },
     {
         name: '日本語',
+        code: 'jp',
+        direction: 'ltr',
         countries: {
             jp: '日本',
         },

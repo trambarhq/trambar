@@ -1,5 +1,17 @@
 .settings-page {
-    .push-button {
+    .buttons {
         float: right;
+    }
+
+    .form {
+        float: left;
+        max-width: 40em;
+        width: 100%;
+        padding-left: 0.5em;
+        margin-right: 2em;
+    }
+
+    .instructions {
+        padding-top: 1.2em;
     }
 }
