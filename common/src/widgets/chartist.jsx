@@ -13,7 +13,18 @@ module.exports = React.createClass({
         className: PropTypes.string,
         options: PropTypes.object,
         responsiveOptions: PropTypes.array,
-        style: PropTypes.object
+        style: PropTypes.object,
+        onDraw: PropTypes.func,
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.onDraw !== nextProps.onDraw) {
+            if (this.chartist) {
+                this.chartist.off(this.props.onDraw);
+            } else {
+                this.chartist.on(nextProps.onDraw);
+            }
+        }
     },
 
     render: function() {
@@ -48,6 +59,9 @@ module.exports = React.createClass({
         var ChartClass = Chartist[_.upperFirst(this.props.type)];
         var container = this.refs.container;
         this.chartist = new ChartClass(container, this.props.data, this.props.options, this.props.responsiveOptions);
+        if (this.props.onDraw) {
+            this.chartist.on('draw', this.props.onDraw);
+        }
     },
 
     updateChart: function() {

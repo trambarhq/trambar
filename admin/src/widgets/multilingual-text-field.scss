@@ -11,7 +11,7 @@
         display: block;
         width: 100%;
         transition: border-color 1s ease-out;
-        border: 1px solid rgba(0,0,0,1);
+        border: 1px solid #000000;
         font-size: 1em;
         margin-top: 2px;
         margin-bottom: 0;
@@ -35,7 +35,7 @@
         flex-direction: row;
         position: relative;
         background-color: #000000;
-        border: 1px solid rgba(0,0,0,1);
+        border: 1px solid #000000;
         border-top: 0;
         transition: border-color 1s ease-out;
     }
@@ -44,7 +44,7 @@
         flex: 1 1 auto;
         text-align: center;
         font-variant: small-caps;
-        color: #fff;
+        color: #ffffff;
         font-size: 0.8em;
         padding: 0.25em 0 0.25em 0;
         transition: font-size 0.25s;
@@ -94,12 +94,12 @@
     &.readonly {
         input[type=text],
         textarea {
-            border-color: rgba(0,0,0,0);
+            border-color: #ffffff;
         }
 
         .tabs {
-        	background-color: #fff;
-            border-color: rgba(0,0,0,0);
+        	background-color: #ffffff;
+            border-color: #ffffff;
         }
 
         .tab {

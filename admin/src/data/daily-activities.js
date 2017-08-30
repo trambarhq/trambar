@@ -140,6 +140,7 @@ function getRangeFilters(dateRange) {
 var summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) {
     var lastMonth = Moment().subtract(1, 'month').format('YYYY-MM');
     var thisMonth = Moment().format('YYYY-MM');
+    var dailyStats = mergeDailyActivities(dailyActivities);
     var summaryLastMonth = summarizeDailyActivities(dailyActivities, lastMonth);
     var summaryThisMonth = summarizeDailyActivities(dailyActivities, thisMonth);
     var summaryToDate = summarizeDailyActivities(dailyActivities);
@@ -159,6 +160,7 @@ var summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) 
         last_month: summaryLastMonth,
         this_month: summaryThisMonth,
         to_date: summaryToDate,
+        daily: dailyStats,
     }
 });
 
@@ -178,6 +180,14 @@ function summarizeDailyActivities(dailyActivities, month) {
                 }
             });
         });
+    });
+    return stats;
+}
+
+function mergeDailyActivities(dailyActivities) {
+    var stats = {};
+    _.each(dailyActivities, (monthlyStats) => {
+        _.assign(stats, monthlyStats.details);
     });
     return stats;
 }

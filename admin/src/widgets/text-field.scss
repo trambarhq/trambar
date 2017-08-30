@@ -13,7 +13,7 @@
         display: block;
         width: 100%;
         transition: border-color 1s ease-out;
-        border: 1px solid rgba(0,0,0,1);
+        border: 1px solid #000000;
         font-size: 1em;
         margin-top: 2px;
         padding: 2px 2px 1px 4px;
@@ -28,7 +28,7 @@
         input[type=password],
         input[type=email],
         textarea {
-            border-color: rgba(0,0,0,0);
+            border-color: #ffffff;
         }
     }
 }

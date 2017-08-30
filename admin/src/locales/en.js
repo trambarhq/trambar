@@ -1,5 +1,15 @@
 module.exports = function(languageCode) {
     return {
+        'activity-chart-legend-push': 'Code pushes',
+        'activity-chart-legend-issue': 'Issues',
+        'activity-chart-legend-member': 'Membership changes',
+        'activity-chart-legend-milestone': 'Milestones',
+        'activity-chart-legend-repo': 'Repository changes',
+        'activity-chart-legend-story': 'Stories',
+        'activity-chart-legend-survey': 'Surveys',
+        'activity-chart-legend-task-list': 'Task lists',
+        'activity-chart-legend-wiki': 'Wiki edits',
+
         'activity-tooltip-$count': (count) => {
             return (count === 1) ? `1 story` : `${count} stories`;
         },
@@ -24,7 +34,7 @@ module.exports = function(languageCode) {
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 survey` : `${count} surveys`;
         },
-        'activity-tooltip-$count-survey': (count) => {
+        'activity-tooltip-$count-tasj-list': (count) => {
             return (count === 1) ? `1 task list` : `${count} task lists`;
         },
         'activity-tooltip-$count-wiki': (count) => {
@@ -86,8 +96,8 @@ module.exports = function(languageCode) {
         'project-summary-new-members-approved-user-auto-join': 'Approved users become members automatically',
         'project-summary-new-members-manual': 'Members are added manually',
         'project-summary-new-members-team-member-auto-join': 'Team members become project members automatically',
-
         'project-summary-save': 'Save Project',
+        'project-summary-statistics': 'Activities',
         'project-summary-title': 'Name',
 
         'project-list-$title-with-$name': (title, name) => {
@@ -143,6 +153,7 @@ module.exports = function(languageCode) {
         'repo-summary-issue-tracker-import-disallowed': 'Do not provide issue tracking option',
         'repo-summary-issue-tracker-not-available': 'Not available',
         'repo-summary-save': 'Save Repository',
+        'repo-summary-statistics': 'Activities',
         'repo-summary-title': 'Name',
 
         'repository-tooltip-$count': (count) => {
@@ -301,6 +312,7 @@ module.exports = function(languageCode) {
         'user-summary-roles': 'Roles',
         'user-summary-role-none': 'None',
         'user-summary-save': 'Save user',
+        'user-summary-statistics': 'Activities',
         'user-summary-type': 'User type',
         'user-summary-type-admin': 'Administrator',
         'user-summary-type-guest': 'Guest',

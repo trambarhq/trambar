@@ -7,12 +7,15 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var DailyActivities = require('data/daily-activities');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
+var ActivityChart = require('widgets/activity-chart');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./project-summary-page.scss');
@@ -66,6 +69,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ server: '~', schema: 'global', by: this });
         var props = {
             project: null,
+            statistics: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -83,6 +87,16 @@ module.exports = Relaks.createClass({
             }
         }).then((project) => {
             props.project = project;
+            meanwhile.show(<ProjectSummaryPageSync {...props} />);
+        }).then(() => {
+            // load project statistics (unless we're creating a new project)
+            if (props.project) {
+                return DailyActivities.loadProjectStatistics(db, [ props.project ]).then((hash) => {
+                    return hash[props.project.id];
+                });
+            }
+        }).then((statistics) => {
+            props.statistics = statistics;
             return <ProjectSummaryPageSync {...props} />;
         });
     }
@@ -92,6 +106,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'ProjectSummaryPage.Sync',
     propTypes: {
         project: PropTypes.object,
+        statistics: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -392,14 +407,24 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render statistics bar chart
+     * Render activity chart
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderChart: function() {
+        if (this.isCreating()) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        var chartProps = {
+            statistics: this.props.statistics,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
         return (
             <div className="statistics">
-                <h2>Statistics</h2>
+                <h2>{t('project-summary-statistics')}</h2>
+                <ActivityChart {...chartProps} />
             </div>
         );
     },

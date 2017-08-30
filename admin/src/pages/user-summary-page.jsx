@@ -8,11 +8,14 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var DailyActivities = require('data/daily-activities');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
+var ActivityChart = require('widgets/activity-chart');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-summary-page.scss');
@@ -73,6 +76,8 @@ module.exports = Relaks.createClass({
         var props = {
             user: null,
             roles: null,
+            project: null,
+            statistics: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -81,6 +86,7 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<UserSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            // load selected user
             var userId = parseInt(this.props.route.parameters.userId);
             if (userId) {
                 var criteria = {
@@ -92,10 +98,34 @@ module.exports = Relaks.createClass({
             props.user = user;
             meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
+            // load all roles
             var criteria = {};
             return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
+            meanwhile.show(<UserSummaryPageSync {...props} />);
+        }).then(() => {
+            // load project if project id is provider (i.e. member summary)
+            var projectId = parseInt(this.props.route.parameters.projectId);
+            if (projectId) {
+                var criteria = {
+                    id: projectId
+                };
+                return db.findOne({ table: 'project', criteria });
+            }
+        }).then((project) => {
+            props.project = project;
+            meanwhile.show(<UserSummaryPageSync {...props} />);
+        }).then(() => {
+            // load statistics if project is specified (unless we're creating a
+            // new member)
+            if (props.project && props.user) {
+                return DailyActivities.loadUserStatistics(db, props.project, [ props.user ]).then((hash) => {
+                    return hash[props.user.id];
+                });
+            }
+        }).then((statistics) => {
+            props.statistics = statistics;
             return <UserSummaryPageSync {...props} />;
         });
     }
@@ -106,6 +136,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object,
+        statistics: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -418,7 +450,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render statistics bar chart
+     * Render activity chart
      *
      * @return {ReactElement|null}
      */
@@ -426,9 +458,19 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         if (!this.getProjectId()) {
             return null;
         }
+        if (this.isCreating()) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        var chartProps = {
+            statistics: this.props.statistics,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
         return (
             <div className="statistics">
-                <h2>Statistics</h2>
+                <h2>{t('user-summary-statistics')}</h2>
+                <ActivityChart {...chartProps} />
             </div>
         );
     },

@@ -7,12 +7,15 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var DailyActivities = require('data/daily-activities');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
+var ActivityChart = require('widgets/activity-chart');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./repo-summary-page.scss');
@@ -67,6 +70,7 @@ module.exports = Relaks.createClass({
         var props = {
             project: null,
             repo: null,
+            statistics: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -93,6 +97,14 @@ module.exports = Relaks.createClass({
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
+            meanwhile.show(<RepoSummaryPageSync {...props} />);
+        }).then(() => {
+            // load statistics
+            return DailyActivities.loadRepoStatistics(db, props.project, [ props.repo ]).then((hash) => {
+                return hash[props.repo.id];
+            });
+        }).then((statistics) => {
+            props.statistics = statistics;
             return <RepoSummaryPageSync {...props} />;
         });
     }
@@ -345,14 +357,21 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render statistics bar chart
+     * Render activity chart
      *
      * @return {ReactElement}
      */
     renderChart: function() {
+        var t = this.props.locale.translate;
+        var chartProps = {
+            statistics: this.props.statistics,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
         return (
             <div className="statistics">
-                <h2>Statistics</h2>
+                <h2>{t('repo-summary-statistics')}</h2>
+                <ActivityChart {...chartProps} />
             </div>
         );
     },

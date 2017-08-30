@@ -1,0 +1,64 @@
+.activity-chart {
+    .legend {
+        text-align: right;
+        font-size: 0.8em;
+        margin-bottom: 1em;
+        margin-right: 30px;
+
+        .item {
+            display: inline-block;
+            white-space: nowrap;
+            margin-left: 0.6em;
+
+            .ct-chart-bar {
+                width: 0.8em;
+                height: 0.8em;
+                vertical-align: middle;
+                margin-right: 0.3em;
+            }
+
+            .label {
+                vertical-align: middle;
+            }
+        }
+    }
+
+    .scroll-container {
+        direction: rtl;
+        overflow-y: hidden;
+        overflow-x: auto;
+
+        .contents {
+            direction: ltr;
+            min-width: 100%;
+        }
+    }
+
+    // overrides
+    .ct-label.ct-horizontal.ct-end {
+        min-width: 10em;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .ct-label.ct-vertical.ct-start {
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .ct-line {
+        stroke-linecap: round;
+        stroke-width: 2px;
+    }
+
+    .ct-grid.ct-horizontal.month-start {
+        stroke: #000000;
+        stroke-width: 1px;
+        stroke-dasharray: none;
+    }
+
+    .ct-grid.ct-horizontal.today {
+        stroke-width: 1px;
+        stroke-dasharray: none;
+    }
+}
