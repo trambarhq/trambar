@@ -14,6 +14,7 @@ var DailyActivities = require('data/daily-activities');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ProfileImage = require('widgets/profile-image');
 var ActivityTooltip = require('tooltips/activity-tooltip');
 var RoleTooltip = require('tooltips/role-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
@@ -393,9 +394,6 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         } else {
             var name = user.details.name;
             var username = user.username;
-            var resources = _.get(user, 'details.resources');
-            var profileImage = _.find(resources, { type: 'image' });
-            var imageUrl = this.props.theme.getImageUrl(profileImage, 24, 24);
             var url;
             var badge;
             if (this.state.renderingFullList) {
@@ -421,7 +419,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             return (
                 <td>
                     <a href={url}>
-                        <img className="profile-image" src={imageUrl} />
+                        <ProfileImage user={user} theme={this.props.theme} />
                         {' '}
                         {t('user-list-$name-with-$username', name, username)}
                         {badge}
@@ -651,7 +649,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 user_ids: this.state.selectedUserIds
             };
             return db.saveOne({ table: 'project' }, columns).then((project) => {
-                return this.setEditability(false);
+                this.setState({ hasChanges: false }, () => {
+                    return this.setEditability(false);
+                });
             });
         });
     },

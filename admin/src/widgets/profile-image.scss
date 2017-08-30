@@ -1,0 +1,11 @@
+.profile-image {
+    &.small {
+        width: 1.5em;
+        height: 1.5em;
+        vertical-align: middle;
+    }
+}
+
+SVG.profile-image {
+    background-color: #999999;
+}

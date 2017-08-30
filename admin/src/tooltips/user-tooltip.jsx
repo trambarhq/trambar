@@ -9,6 +9,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var Tooltip = require('widgets/tooltip');
+var ProfileImage = require('widgets/profile-image');
 
 require('./user-tooltip.scss');
 
@@ -47,13 +48,10 @@ module.exports = React.createClass({
                     userId: user.id,
                 });
             }
-            var resources = _.get(user, 'details.resources');
-            var profileImage = _.find(resources, { type: 'image' });
-            var imageUrl = this.props.theme.getImageUrl(profileImage, 24, 24);
             return (
                 <div className="item" key={i}>
                     <a href={url}>
-                        <img className="profile-image" src={imageUrl} />
+                        <ProfileImage user={user} theme={this.props.theme} />
                         {' '}
                         {user.details.name}
                     </a>

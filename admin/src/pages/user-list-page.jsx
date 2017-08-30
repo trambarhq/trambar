@@ -14,6 +14,7 @@ var UserSummaryPage = require('pages/user-summary-page');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var ProfileImage = require('widgets/profile-image');
 var ProjectTooltip = require('tooltips/project-tooltip');
 var RoleTooltip = require('tooltips/role-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
@@ -351,9 +352,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else {
             var name = user.details.name;
             var username = user.username;
-            var resources = _.get(user, 'details.resources');
-            var profileImage = _.find(resources, { type: 'image' });
-            var imageUrl = this.props.theme.getImageUrl(profileImage, 24, 24);
             var url;
             var badge;
             if (this.state.renderingPartialList) {
@@ -369,7 +367,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             return (
                 <td>
                     <a href={url}>
-                        <img className="profile-image" src={imageUrl} />
+                        <ProfileImage user={user} theme={this.props.theme} />
                         {' '}
                         {t('user-list-$name-with-$username', name, username)}
                         {badge}
