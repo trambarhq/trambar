@@ -437,12 +437,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         );
     },
 
-    componentDidUpdate: function(prevProps, prevState) {
-        if (prevProps.route !== this.props.route) {
-            this.setState({ newProject: null });
-        }
-    },
-
     /**
      * Called when user clicks edit button
      *
@@ -481,14 +475,14 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Called when user changes the title
      *
-     * @param  {Event} evt
+     * @param  {Object} evt
      */
     handleTitleChange: function(evt) {
         this.setProjectProperty(`details.title`, evt.target.value);
     },
 
     /**
-     * Called when user changes the title
+     * Called when user changes the name
      *
      * @param  {Event} evt
      */
@@ -499,7 +493,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Called when user changes the title
      *
-     * @param  {Event} evt
+     * @param  {Object} evt
      */
     handleDescriptionChange: function(evt) {
         this.setProjectProperty(`details.description`, evt.target.value);
