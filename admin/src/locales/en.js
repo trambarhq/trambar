@@ -302,6 +302,8 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'user-summary-auth-server': 'Authentication server',
+        'user-summary-auth-server-none': 'None (password only)',
         'user-summary-cancel': 'Cancel',
         'user-summary-edit': 'Edit user',
         'user-summary-email': 'E-mail',
