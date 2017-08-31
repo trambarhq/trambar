@@ -320,7 +320,10 @@ function copyRepoDetails(repo, project) {
  */
 function importUsers(db, server) {
     var url = `/users`;
-    return fetchAll(server, url).then((accounts) => {
+    var query = {
+        active: true
+    };
+    return fetchAll(server, url, query).then((accounts) => {
         return User.find(db, 'global', { server_id: server.id }, '*').then((users) => {
             var imageUrls = _.transform(accounts, (list, account) => {
                 var url = account.avatar_url;
@@ -366,7 +369,6 @@ function importUsers(db, server) {
                         var user = {
                             server_id: server.id,
                             external_id: account.id,
-                            type: 'member',
                             details: {},
                         };
                         copyUserDetails(user, account, images);
@@ -426,6 +428,14 @@ function copyUserDetails(user, account, images) {
     user.details.twiter_username = account.twitter || undefined;
     user.details.linkedin_username = account.linkedin_name || undefined;
     user.details.email = account.email;
+
+    if (!user.type) {
+        if (account.is_admin) {
+            user.type = 'admin';
+        } else {
+            user.type = 'member';
+        }
+    }
 
     var image = images[account.avatar_url];
     if (image) {
@@ -508,7 +518,6 @@ function importProjectMemberships(db, server, project) {
                     }
                 }
             });
-            console.log(members);
             if (newMemberUsers.length > 0) {
                 project.user_ids = _.union(project.user_ids, _.map(newMemberUsers, 'id'));
             }
