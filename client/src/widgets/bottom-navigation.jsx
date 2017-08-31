@@ -48,7 +48,7 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var location = _.pick(this.props.route.parameters, 'server', 'schema');
-        var section = _.get(this.props.route.parameters, 'navigation.bottom.section');
+        var section = _.get(this.props.route.component, 'navigation.bottom.section');
         var newsButtonProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',

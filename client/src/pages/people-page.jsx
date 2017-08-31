@@ -23,38 +23,38 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('//:server/:schema/people/:roleIds/', url)
-                      || Route.match('//:server/:schema/people/', url)
-                      || Route.match('/:schema/people/:roleIds/', url)
-                      || Route.match('/:schema/people/', url);
-            if (params) {
-                params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
-                params.navigation = {
-                    top: {
-                        dateSelection: false,
-                        roleSelection: true,
-                        textSearch: true,
-                    },
-                    bottom: {
-                        section: 'people'
-                    }
-                };
-                return params;
-            }
+            return Route.match('//:server/:schema/people/:roleIds/', url)
+                || Route.match('//:server/:schema/people/', url)
+                || Route.match('/:schema/people/:roleIds/', url)
+                || Route.match('/:schema/people/', url);
         },
 
         getUrl: function(params) {
             var server = params.server;
             var schema = params.schema;
-            var roles = _.join(params.roleIds, '+');
+            var roleIds = params.roleIds;
             var url = `/${schema}/people/`;
             if (server) {
                 url = `//${server}` + url;
             }
-            if (roles) {
+            if (roleIds) {
+                if (roleIds instanceof Array) {
+                    roleIds = roleIds.join('+');
+                }
                 url += `${rolesId}/`;
             }
             return url;
+        },
+
+        navigation: {
+            top: {
+                dateSelection: false,
+                roleSelection: true,
+                textSearch: true,
+            },
+            bottom: {
+                section: 'people'
+            }
         },
     },
 
@@ -82,7 +82,7 @@ module.exports = Relaks.createClass({
             props.currentUser = currentUser;
             meanwhile.check();
         }).then(() => {
-            var roleIds = route.parameters.roleIds;
+            var roleIds = _.filter(_.map(_.split(route.parameters.roleIds, '+'), parseInt));
             var searchString = route.query.q;
             var criteria = {};
             if (!_.isEmpty(roleIds)) {

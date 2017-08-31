@@ -27,39 +27,28 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('//:server/:schema/news/:roleIds/:date/', url)
-                      || Route.match('//:server/:schema/news/:roleIds/', url)
-                      || Route.match('//:server/:schema/news/', url)
-                      || Route.match('/:schema/news/:roleIds/:date/', url)
-                      || Route.match('/:schema/news/:roleIds/', url)
-                      || Route.match('/:schema/news/', url);
-            if (params) {
-                params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
-                params.navigation = {
-                    top: {
-                        dateSelection: true,
-                        roleSelection: true,
-                        textSearch: true,
-                    },
-                    bottom: {
-                        section: 'news'
-                    }
-                };
-                return params;
-            }
+            return Route.match('//:server/:schema/news/:roleIds/:date/', url)
+                || Route.match('//:server/:schema/news/:roleIds/', url)
+                || Route.match('//:server/:schema/news/', url)
+                || Route.match('/:schema/news/:roleIds/:date/', url)
+                || Route.match('/:schema/news/:roleIds/', url)
+                || Route.match('/:schema/news/', url);
         },
 
         getUrl: function(params) {
             var server = params.server;
             var schema = params.schema;
-            var roles = _.join(params.roleIds, '+');
+            var roleIds = params.roleIds;
             var date = params.date;
             var url = `/${schema}/news/`;
             if (server) {
                 url = `//${server}` + url;
             }
-            if (roles) {
-                url += `${roles}/`;
+            if (roleIds && roleIds !== 'all') {
+                if (roleIds instanceof Array) {
+                    roleIds = roleIds.join('+');
+                }
+                url += `${roleIds}/`;
             } else if (date) {
                 url += `all/`;
             }
@@ -68,12 +57,23 @@ module.exports = Relaks.createClass({
             }
             return url;
         },
+
+        navigation: {
+            top: {
+                dateSelection: true,
+                roleSelection: true,
+                textSearch: true,
+            },
+            bottom: {
+                section: 'news'
+            }
+        },
     },
 
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var date = route.parameters.date;
-        var roleIds = route.parameters.roleIds;
+        var roleIds = _.filter(_.map(_.split(route.parameters.roleIds, '+'), parseInt));
         var searchString = route.query.q;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
