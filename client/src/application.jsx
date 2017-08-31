@@ -393,8 +393,10 @@ module.exports = React.createClass({
      */
     handleClick: function(evt) {
         var target = evt.target;
-        debugger;
-        if (target.tagName === 'A') {
+        while (target && target.tagName !== 'A') {
+            target = target.parentNode;
+        }
+        if (target) {
             var url = target.getAttribute('href');
             if (url && url.indexOf(':') === -1) {
                 this.state.route.change(url);

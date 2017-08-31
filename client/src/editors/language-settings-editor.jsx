@@ -51,7 +51,7 @@ module.exports = React.createClass({
     },
 
     renderList: function() {
-        var languages = this.props.locale.directory;
+        var languages = _.filter(this.props.locale.directory, { locales: { client: true } });
         return _.map(languages, this.renderButton);
     },
 

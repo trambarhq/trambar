@@ -23,7 +23,8 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/settings/', url);
+            var params = Route.match('/:schema/settings/', url)
+                      || Route.match('//:server/:schema/settings/', url);
             if (params) {
                 params.navigation = {
                     top: {},
@@ -36,9 +37,13 @@ module.exports = Relaks.createClass({
         },
 
         getUrl: function(params) {
-            var server = params.server || '~';
+            var server = params.server;
             var schema = params.schema;
-            return `/${server}/${schema}/settings/`;
+            var url = `/${schema}/settings/`;
+            if (server) {
+                url = `//${server}` + url;
+            }
+            return url;
         },
     },
 
@@ -123,5 +128,5 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <LanguageSettingsEditor {...props} />;
-    },    
+    },
 });

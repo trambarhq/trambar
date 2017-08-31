@@ -68,9 +68,6 @@ module.exports = React.createClass({
                 return 0;
             }
             var server = getServerName(location);
-            if (!server) {
-                throw new Error('No server specified');
-            }
             var authCacheEntry = authCache[server];
             if (authCacheEntry) {
                 return authCacheEntry.user_id;
@@ -643,7 +640,7 @@ module.exports = React.createClass({
         _.forIn(evt.changes, (idList, name) => {
             var server = evt.server;
             if (server === window.location.hostname) {
-                server = '~';
+                server = undefined;
             }
             var parts = _.split(name, '.');
             var location = {
@@ -800,7 +797,7 @@ function getAuthToken(location) {
  * @return {String}
  */
 function getServerName(location) {
-    if (location.server === '~') {
+    if (!location.server) {
         return window.location.hostname;
     } else {
         return location.server;

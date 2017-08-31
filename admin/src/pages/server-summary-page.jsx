@@ -64,7 +64,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
             server: null,
@@ -401,7 +401,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var server = this.getServer();
         return db.start().then((serverId) => {
             return db.saveOne({ table: 'server' }, server).then((server) => {

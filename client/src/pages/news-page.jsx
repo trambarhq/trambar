@@ -27,8 +27,12 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/news/:roleIds/:date/', url)
-                      || Route.match('/:server/:schema/news/:roleIds/', url);
+            var params = Route.match('//:server/:schema/news/:roleIds/:date/', url)
+                      || Route.match('//:server/:schema/news/:roleIds/', url)
+                      || Route.match('//:server/:schema/news/', url)
+                      || Route.match('/:schema/news/:roleIds/:date/', url)
+                      || Route.match('/:schema/news/:roleIds/', url)
+                      || Route.match('/:schema/news/', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
@@ -46,15 +50,23 @@ module.exports = Relaks.createClass({
         },
 
         getUrl: function(params) {
-            var server = params.server || '~';
+            var server = params.server;
             var schema = params.schema;
-            var roles = _.join(params.roleIds, '+') || 'all';
+            var roles = _.join(params.roleIds, '+');
             var date = params.date;
-            if (date) {
-                return `/${server}/${schema}/news/${roles}/${date}/`;
-            } else {
-                return `/${server}/${schema}/news/${roles}/`;
+            var url = `/${schema}/news/`;
+            if (server) {
+                url = `//${server}` + url;
             }
+            if (roles) {
+                url += `${roles}/`;
+            } else if (date) {
+                url += `all/`;
+            }
+            if (date) {
+                url += `${date}/`
+            }
+            return url;
         },
     },
 

@@ -23,7 +23,7 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             project: null,
             user: null,

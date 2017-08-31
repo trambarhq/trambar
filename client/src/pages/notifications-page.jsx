@@ -22,8 +22,10 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/notifications/:date/', url)
-                      || Route.match('/:server/:schema/notifications/', url);
+            var params = Route.match('//:server/:schema/notifications/:date/', url)
+                      || Route.match('//:server/:schema/notifications/', url)
+                      || Route.match('/:schema/notifications/:date/', url)
+                      || Route.match('/:schema/notifications/', url);
             if (params) {
                 params.navigation = {
                     top: {
@@ -40,14 +42,17 @@ module.exports = Relaks.createClass({
         },
 
         getUrl: function(params) {
-            var server = params.server || '~';
+            var server = params.server;
             var schema = params.schema;
             var date = params.date;
-            if (date) {
-                return `/${server}/${schema}/notifications/${date}/`;
-            } else {
-                return `/${server}/${schema}/notifications/`;
+            var url = `/${schema}/notifications/`;
+            if (server) {
+                url = `//${server}` + url;
             }
+            if (date) {
+                url += `${date}/`;
+            }
+            return url;
         },
     },
 

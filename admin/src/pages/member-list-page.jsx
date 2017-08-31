@@ -68,7 +68,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             project: null,
             users: null,
@@ -642,7 +642,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     handleSaveClick: function() {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         return db.start().then((currentUserId) => {
             var columns = {
                 id: this.props.project.id,

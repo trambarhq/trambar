@@ -23,7 +23,10 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/people/:roleIds/', url);
+            var params = Route.match('//:server/:schema/people/:roleIds/', url)
+                      || Route.match('//:server/:schema/people/', url)
+                      || Route.match('/:schema/people/:roleIds/', url)
+                      || Route.match('/:schema/people/', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
@@ -41,10 +44,17 @@ module.exports = Relaks.createClass({
         },
 
         getUrl: function(params) {
-            var server = params.server || '~';
+            var server = params.server;
             var schema = params.schema;
-            var roles = _.join(params.roleIds, '+') || 'all';
-            return `/${server}/${schema}/people/${roles}/`;
+            var roles = _.join(params.roleIds, '+');
+            var url = `/${schema}/people/`;
+            if (server) {
+                url = `//${server}` + url;
+            }
+            if (roles) {
+                url += `${rolesId}/`;
+            }
+            return url;
         },
     },
 

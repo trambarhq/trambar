@@ -23,7 +23,8 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            var params = Route.match('/:server/:schema/bookmarks/:roleIds', url);
+            var params = Route.match('/:schema/bookmarks/:roleIds', url)
+                      || Route.match('//:server/:schema/bookmarks/:roleIds', url);
             if (params) {
                 params.roleIds = _.filter(_.map(_.split(params.roleIds, '+'), parseInt));
                 params.navigation = {
@@ -41,9 +42,13 @@ module.exports = Relaks.createClass({
         },
 
         getUrl: function(params) {
-            var server = params.server || '~';
+            var server = params.server;
             var schema = params.schema;
-            return `/${server}/${schema}/bookmarks/`;
+            var url = `/${schema}/bookmarks/`;
+            if (server) {
+                url = `//${server}` + url;
+            }
+            return url;
         },
     },
 

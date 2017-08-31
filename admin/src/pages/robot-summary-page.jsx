@@ -63,7 +63,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ server: '~', schema: 'global', by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
             project: null,
@@ -369,7 +369,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleSaveClick: function(evt) {
         var schema = this.props.project.name;
-        var db = this.props.database.use({ server: '~', schema, by: this });
+        var db = this.props.database.use({ schema, by: this });
         var robot = this.getRobot();
         return db.start().then((currentUserId) => {
             return db.saveOne({ table: 'robot' }, robot).then((robot) => {
