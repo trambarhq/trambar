@@ -18,7 +18,7 @@ module.exports = React.createClass({
      * Set the text labels on mount
      */
     componentWillMount: function() {
-        this.updateLabels(this.props);
+        this.updateLabels();
     },
 
     /**
@@ -36,6 +36,7 @@ module.exports = React.createClass({
      * @param  {Object} props
      */
     updateLabels: function(props) {
+        props = props || this.props;
         var m = (props.time) ? Moment(props.time) : null;
         var state = {
             relativeTime: m ? m.fromNow() : null,
