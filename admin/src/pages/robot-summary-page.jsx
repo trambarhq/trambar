@@ -7,6 +7,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var SlugGenerator = require('utils/slug-generator');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
@@ -154,6 +156,13 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
     setRobotProperty: function(path, value) {
         var robot = this.getRobot();
         var newRobot = _.decoupleSet(robot, path, value);
+        if (path === 'details.title') {
+            var autoNameBefore = SlugGenerator.fromTitle(robot.details.title);
+            var autoNameAfter = SlugGenerator.fromTitle(newRobot.details.title);
+            if (!robot.name || robot.name === autoNameBefore) {
+                newRobot.name = autoNameAfter;
+            }
+        }
         var hasChanges = true;
         if (_.isEqual(newRobot, this.props.robot)) {
             newRobot = null;

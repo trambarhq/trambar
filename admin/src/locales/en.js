@@ -160,7 +160,7 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 repository` : `${count} repositories`;
         },
 
-        'robot-list-add': 'Add robot',
+        'robot-list-new': 'New robot',
         'robot-list-title': 'Robots',
 
         'robot-summary-$title': (title) => {

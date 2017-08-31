@@ -7,6 +7,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var SlugGenerator = require('utils/slug-generator');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
@@ -140,6 +142,13 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     setRoleProperty: function(path, value) {
         var role = this.getRole();
         var newRole = _.decoupleSet(role, path, value);
+        if (path === 'details.title') {
+            var autoNameBefore = SlugGenerator.fromTitle(role.details.title);
+            var autoNameAfter = SlugGenerator.fromTitle(newRole.details.title);
+            if (!role.name || role.name === autoNameBefore) {
+                newRole.name = autoNameAfter;
+            }
+        }
         var hasChanges = true;
         if (_.isEqual(newRole, this.props.role)) {
             newRole = null;

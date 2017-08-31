@@ -151,7 +151,7 @@ var RobotListPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="buttons">
                 <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('robot-list-add')}
+                    {t('robot-list-new')}
                 </PushButton>
             </div>
         );

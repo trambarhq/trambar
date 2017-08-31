@@ -8,6 +8,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 var DailyActivities = require('data/daily-activities');
+var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -154,6 +155,13 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     setProjectProperty: function(path, value) {
         var project = this.getProject();
         var newProject = _.decoupleSet(project, path, value);
+        if (path === 'details.title') {
+            var autoNameBefore = SlugGenerator.fromTitle(project.details.title);
+            var autoNameAfter = SlugGenerator.fromTitle(newProject.details.title);
+            if (!project.name || project.name === autoNameBefore) {
+                newProject.name = autoNameAfter;
+            }
+        }
         var hasChanges = true;
         if (_.isEqual(newProject, this.props.project)) {
             newProject = null;
