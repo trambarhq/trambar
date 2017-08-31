@@ -10,10 +10,19 @@
 
     .window-container {
         position: absolute;
-        top: 1.2em;
+        top: 100%;
         left: 0.5em;
         width: 50vw;
         z-index: 100;
+        margin-top: 0.2em;
+    }
+
+    &.upward {
+        .window-container {
+            top: auto;
+            bottom: 100%;
+            margin-bottom: 0.2em;
+        }
     }
 
     .window {

@@ -5,7 +5,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
 var NavigationTree = require('widgets/navigation-tree');
+var Tooltip = require('widgets/tooltip');
 
 require('./side-navigation.scss');
 
@@ -43,6 +45,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return language object from directory
+     *
+     * @param  {String} code
+     *
+     * @return {Object}
+     */
+    getLanguage: function(code) {
+        if (!code) {
+            code = this.props.locale.lang;
+        }
+        var languages = this.props.locale.directory;
+        return _.find(languages, { code });
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -56,6 +73,7 @@ module.exports = React.createClass({
             <nav className={className}>
                 {this.renderHeader()}
                 {this.renderNavTree()}
+                {this.renderBottomButtons()}
             </nav>
         );
     },
@@ -68,6 +86,108 @@ module.exports = React.createClass({
             theme: this.props.theme,
         };
         return <NavigationTree {...navProps} />;
+    },
+
+    renderBottomButtons: function() {
+        return (
+            <div className="bottom-buttons">
+                {this.renderLanguageButton()}
+                {this.renderCountryButton()}
+                {this.renderUserButton()}
+            </div>
+        );
+    },
+
+    renderLanguageButton: function() {
+        var selected = this.getLanguage(this.props.locale.lang);
+        var languages = _.filter(this.props.locale.directory, { locales: { admin: true } });
+        var items = _.map(languages, (language, i) => {
+            var props = {
+                key: i,
+                className: 'item',
+                'data-code': language.code,
+                onClick: this.handleLanguageClick,
+            };
+            if (language === selected) {
+                props.className += ' selected';
+                props.onClick = null;
+            }
+            return (
+                <div {...props}>
+                    <i className="fa fa-check-circle-o" /> {language.name}
+                </div>
+            )
+        });
+        return (
+            <div className="button language">
+                <Tooltip upward>
+                    <inline>
+                        <i className="fa fa-language" />
+                        {' '}
+                        {selected.name}
+                    </inline>
+                    <window>
+                        {items}
+                    </window>
+                </Tooltip>
+            </div>
+        );
+    },
+
+    renderCountryButton: function() {
+        var language = this.getLanguage();
+        if (_.size(language.countries) <= 1) {
+            return null;
+        }
+        var countryCode = _.last(_.split(this.props.locale.languageCode, '-'));
+        if (!countryCode) {
+            countryCode = language.defaultCountry;
+        }
+        var countryName = language.countries[countryCode];
+        var items = _.map(language.countries, (name, code) => {
+            var props = {
+                key: code,
+                className: 'item',
+                'data-code': code,
+                onClick: this.handleCountryClick,
+            };
+            if (code === countryCode) {
+                props.className += ' selected';
+                props.onClick = null;
+            }
+            return (
+                <div {...props}>
+                    <i className="fa fa-check-circle-o" /> {name}
+                </div>
+            )
+        });
+        return (
+            <div className="button country">
+                <Tooltip upward>
+                    <inline>
+                        {countryName}
+                    </inline>
+                    <window>
+                        {items}
+                    </window>
+                </Tooltip>
+            </div>
+        );
+    },
+
+    renderUserButton: function() {
+        var language = this.getLanguage();
+        return (
+            <div className="button user">
+                <Tooltip upward>
+                    <inline>
+                        <i className="fa fa-user-circle-o" />
+                    </inline>
+                    <window>
+                    </window>
+                </Tooltip>
+            </div>
+        )
     },
 
     renderHeader: function() {
@@ -129,5 +249,17 @@ module.exports = React.createClass({
 
     handleHeaderClick: function() {
 
+    },
+
+    handleLanguageClick: function(evt) {
+        var code = evt.currentTarget.getAttribute('data-code');
+        var language = this.getLanguage(code);
+        return this.props.locale.change(`${language.code}-${language.defaultCountry}`);
+    },
+
+    handleCountryClick: function(evt) {
+        var code = evt.currentTarget.getAttribute('data-code');
+        var language = this.getLanguage();
+        return this.props.locale.change(`${language.code}-${code}`);
     },
 });

@@ -59,6 +59,10 @@ module.exports = [
             us: 'United States',
         },
         defaultCountry: 'us',
+        locales: {
+            admin: true,
+            client: true,
+        }
     },
     {
         name: 'Español',
@@ -192,6 +196,10 @@ module.exports = [
             no: 'Norge',
         },
         defaultCountry: 'no',
+        locales: {
+            admin: true,
+            client: true,
+        },
     },
     {
         name: 'Polski',
@@ -204,6 +212,10 @@ module.exports = [
             ua: 'Ukraina',
         },
         defaultCountry: 'pl',
+        locales: {
+            admin: true,
+            client: true,
+        },
     },
     {
         name: 'Português',
@@ -240,6 +252,10 @@ module.exports = [
             es: 'Эстония',
         },
         defaultCountry: 'ru',
+        locales: {
+            admin: true,
+            client: true,
+        },
     },
     {
         name: 'Srpski',
@@ -261,6 +277,10 @@ module.exports = [
             se: 'Ruotsi',
         },
         defaultCountry: 'fi',
+        locales: {
+            admin: true,
+            client: true,
+        },
     },
     {
         name: 'Slovenčina',
@@ -312,5 +332,9 @@ module.exports = [
             tw: '台灣',
         },
         defaultCountry: 'us',
+        locales: {
+            admin: true,
+            client: true,
+        },
     },
 ];

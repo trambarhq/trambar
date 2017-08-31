@@ -10,7 +10,7 @@ var Tooltip = require('widgets/tooltip');
 module.exports = React.createClass({
     displayName: 'ModifiedTimeTooltip',
     propTypes: {
-        time: PropTypes.string.isRequired,
+        time: PropTypes.string,
         disabled: PropTypes.bool,
     },
 
@@ -18,7 +18,7 @@ module.exports = React.createClass({
      * Set the text labels on mount
      */
     componentWillMount: function() {
-        this.updateLabels();
+        this.updateLabels(this.props);
     },
 
     /**
@@ -36,11 +36,10 @@ module.exports = React.createClass({
      * @param  {Object} props
      */
     updateLabels: function(props) {
-        props = props || this.props;
-        var m = Moment(props.time);
+        var m = (props.time) ? Moment(props.time) : null;
         var state = {
-            relativeTime: m.fromNow(),
-            absoluteTime: m.format('lll'),
+            relativeTime: m ? m.fromNow() : null,
+            absoluteTime: m ? m.format('lll') : null,
         };
         if (!_.isEqual(state, this.state)) {
             this.setState(state);

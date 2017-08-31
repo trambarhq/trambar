@@ -6,7 +6,9 @@ require('./tooltip.scss');
 module.exports = React.createClass({
     displayName: 'Tooltip',
     propTypes: {
+        upward: PropTypes.bool,
         disabled: PropTypes.bool,
+        ignoreClicks: PropTypes.bool,
     },
 
     getInitialState: function() {
@@ -29,8 +31,11 @@ module.exports = React.createClass({
         if (this.state.live) {
             className += ' live';
         }
+        if (this.props.upward) {
+            className += ' upward';
+        }
         if (this.props.className) {
-            className = className + ' ' + this.props.className;
+            className += ' ' + this.props.className;
         }
         return (
             <div ref="container" className={className}>
@@ -55,7 +60,7 @@ module.exports = React.createClass({
         }
         var window = this.findElement('window');
         return (
-            <div className="window-container">
+            <div className="window-container" onClick={this.handleWindowClick}>
                 <div className="window">
                     {window.props.children}
                 </div>
@@ -103,6 +108,12 @@ module.exports = React.createClass({
             this.setState({ open: false });
         }
     },
+
+    handleWindowClick: function(evt) {
+        if (!this.props.ignoreClicks) {
+            this.setState({ open: false });
+        }
+    }
 });
 
 function hasContents(props) {

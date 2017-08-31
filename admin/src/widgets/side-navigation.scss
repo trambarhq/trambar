@@ -3,7 +3,6 @@
     position: relative;
     color: #fff;
     background-color: #006699;
-    overflow: auto;
     min-width: 15em;
     max-width: 20em;
 
@@ -31,9 +30,77 @@
         transition: opacity 1s ease-out 1s;
     }
 
+    .bottom-buttons {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        background-color: #005580;
+        transition: bottom 1s linear 1s;
+
+        .button {
+            position: relative;
+            float: left;
+
+            .label {
+                display: inline-block;
+                color: #0077b3;
+                padding: 0.4em 0.5em 0.3em 0.5em;
+                cursor: pointer;
+
+                &:hover {
+                    color: #99ddff;
+                }
+            }
+
+            &.country {
+                .label {
+                    border-left: 1px solid #006699;
+                }
+            }
+
+            &.user {
+                float: right;
+                .label {
+                    border-left: 1px solid #006699;
+                }
+            }
+
+            .tooltip {
+                .item {
+                    color: #777777;
+                    margin-top: 0.25em;
+                    margin-right: 0.25em;
+                    cursor: pointer;
+
+                    .fa {
+                        visibility: hidden;
+                    }
+
+                    &:hover {
+                        color: #0077b3;
+                    }
+
+                    &.selected {
+                        cursor: default;
+                        color: #0077b3;
+
+                        .fa {
+                            visibility: visible;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     &.hidden {
         .app-name, .navigation-tree {
             opacity: 0;
+        }
+
+        .bottom-buttons {
+            bottom: -2em;
         }
     }
 }
