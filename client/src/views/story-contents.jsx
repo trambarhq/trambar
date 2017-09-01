@@ -136,6 +136,7 @@ module.exports = React.createClass({
      */
     renderAuthorNames: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var authors = this.props.authors;
         if (!_.every(authors, _.isObject)) {
             authors = [];
@@ -147,15 +148,15 @@ module.exports = React.createClass({
                 contents = '\u00a0';
                 break;
             case 1:
-                contents = authors[0].details.name;
+                contents = p(authors[0].details.name);
                 break;
             case 2:
-                var name1 = authors[0].details.name;
-                var name2 = authors[1].details.name;
+                var name1 = p(authors[0].details.name);
+                var name2 = p(authors[1].details.name);
                 contents = t('story-author-$name1-and-$name2', name1, name2);
                 break;
             default:
-                var name = authors[0].details.name;
+                var name = p(authors[0].details.name);
                 var coauthors = _.slice(authors, 1);
                 var props = {
                     users: coauthors,
@@ -302,9 +303,10 @@ module.exports = React.createClass({
      */
     renderRepoText: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var story = this.props.story;
         var action = story.details.action;
-        var repoName = _.get(this.props.repo, 'details.name');
+        var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
         var url = _.get(this.props.repo, 'details.web_url');
         return (
             <div className="repo">
@@ -324,9 +326,10 @@ module.exports = React.createClass({
      */
     renderMemberText: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var story = this.props.story;
         var action = story.details.action;
-        var repoName = _.get(this.props.repo, 'details.name');
+        var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
         var url = _.get(this.props.repo, 'details.web_url');
         return (
             <div className="member">
@@ -467,7 +470,7 @@ module.exports = React.createClass({
         var files = _.get(this.props.story, 'details.files');
         var lines = _.get(this.props.story, 'details.lines');
         var commits = _.get(this.props.story, 'details.commit_ids.length');
-        var repoName = _.get(this.props.repo, 'details.name');
+        var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
         var branch = story.details.branch;
         var fileChangeTypes = [ 'added', 'removed', 'modified', 'renamed' ];
         var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {

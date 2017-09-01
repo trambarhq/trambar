@@ -45,7 +45,7 @@ module.exports = React.createClass({
     renderText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var name = _.get(this.props.respondent, 'details.name', '');
+        var name = p(_.get(this.props.respondent, 'details.name'));
         if (this.props.reaction.published) {
             switch (this.props.reaction.type) {
                 case 'like':

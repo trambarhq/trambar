@@ -65,7 +65,7 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        var users = sortUsers(this.props.users);
+        var users = sortUsers(this.props.users, this.props.locale);
         return (
             <div className="user-selection-list">
                 {_.map(users, this.renderUser)}
@@ -109,6 +109,7 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
 });
 
 function User(props) {
+    var p = props.locale.pick;
     var classNames = [ 'user' ];
     if (props.selected) {
         classNames.push('selected');
@@ -119,7 +120,7 @@ function User(props) {
     var resources = _.get(props.user, 'details.resources');
     var profileImage = _.find(resources, { type: 'image' });
     var imageUrl = props.theme.getImageUrl(profileImage, 24, 24);
-    var name = _.get(props.user, 'details.name');
+    var name = p(_.get(props.user, 'details.name'));
     var containerProps = {
         className: classNames.join(' '),
         'data-user-id': props.user.id,
@@ -134,6 +135,10 @@ function User(props) {
     );
 }
 
-var sortUsers = Memoize(function(users) {
-    return _.orderBy(users, [ 'details.name' ], [ 'asc' ]);
+var sortUsers = Memoize(function(users, locale) {
+    var p = locale.pick;
+    var name = (user) => {
+        return p(user.details.name);
+    };
+    return _.orderBy(users, [ name ], [ 'asc' ]);
 });

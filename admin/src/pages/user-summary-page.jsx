@@ -15,6 +15,7 @@ var SlugGenerator = require('utils/slug-generator');
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
+var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var ActivityChart = require('widgets/activity-chart');
@@ -76,6 +77,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
+            system: null,
             user: null,
             roles: null,
             project: null,
@@ -89,6 +91,11 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<UserSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
+            var criteria = {};
+            return db.findOne({ table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
+        }).then(() => {
             // load selected user
             var userId = parseInt(this.props.route.parameters.userId);
             if (userId) {
@@ -144,6 +151,7 @@ module.exports = Relaks.createClass({
 var UserSummaryPageSync = module.exports.Sync = React.createClass({
     displayName: 'UserSummaryPage.Sync',
     propTypes: {
+        system: PropTypes.object,
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
@@ -292,9 +300,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var member = !!this.props.route.parameters.projectId;
         var user = this.getUser();
-        var name = _.get(user, 'details.name');
+        var name = p(user.details.name);
         return (
             <div className="user-summary-page">
                 {this.renderButtons()}
@@ -355,31 +364,32 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var userRoles = findRoles(roles, user);
         var userRolesOriginal = findRoles(roles, userOriginal);
         var servers = this.props.servers;
-
+        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var nameProps = {
             id: 'name',
-            value: _.get(user, 'details.name', ''),
+            value: user.details.name,
+            availableLanguageCodes: inputLanguages,
             locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly,
         };
         var usernameProps = {
             id: 'username',
-            value: _.get(user, 'username', ''),
+            value: user.username,
             locale: this.props.locale,
             onChange: this.handleUsernameChange,
             readOnly: readOnly || !!user.external_id,
         };
         var emailProps = {
             id: 'email',
-            value: _.get(user, 'details.email', ''),
+            value: user.details.email,
             locale: this.props.locale,
             onChange: this.handleEmailChange,
             readOnly: readOnly,
         };
         var phoneProps = {
             id: 'phone',
-            value: _.get(user, 'details.phone', ''),
+            value: user.details.phone,
             locale: this.props.locale,
             onChange: this.handlePhoneChange,
             readOnly: readOnly,
@@ -462,7 +472,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         }));
         return (
             <div className="form">
-                <TextField {...nameProps}>{t('user-summary-name')}</TextField>
+                <MultilingualTextField {...nameProps}>{t('user-summary-name')}</MultilingualTextField>
                 <TextField {...usernameProps}>{t('user-summary-username')}</TextField>
                 <TextField {...emailProps}>{t('user-summary-email')}</TextField>
                 <TextField {...phoneProps}>{t('user-summary-phone')}</TextField>

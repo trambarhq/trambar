@@ -347,10 +347,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      */
     renderNameColumn: function(user) {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         if (!user) {
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
-            var name = user.details.name;
+            var name = p(user.details.name);
             var username = user.username;
             var url;
             var badge;
@@ -582,7 +583,9 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
-                return 'details.name';
+                return (user) => {
+                    return p(user.details.name);
+                };
             case 'type':
                 var types = [ 'guest', 'member', 'admin' ];
                 return (user) => {

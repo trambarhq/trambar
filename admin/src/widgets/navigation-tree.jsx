@@ -270,12 +270,13 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
      */
     getMemberNode: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var user = this.state.user;
         var userId = this.props.route.parameters.userId;
         var projectId = this.props.route.parameters.projectId;
         var label = (userId === 'new')
                   ? <i>{t('nav-member-new')}</i>
-                  : user.details.name || user.username || '-';
+                  : p(user.details.name) || user.username || '-';
         var url = (projectId && userId)
                 ? require('pages/user-summary-page').getUrl({ projectId, userId })
                 : null;
@@ -376,11 +377,12 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
      */
     getUserNode: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var user = this.state.user;
         var userId = this.props.route.parameters.userId;
         var label = (userId === 'new')
                   ? <i>{t('nav-user-new')}</i>
-                  : user.details.name || user.username || '-';
+                  : p(user.details.name) || user.username || '-';
         var url = (userId)
                 ? require('pages/user-summary-page').getUrl({ userId })
                 : null;

@@ -129,7 +129,10 @@ module.exports = React.createClass({
      * @return {Array<ReactElement>}
      */
     renderUserList: function(limit) {
-        var users = _.sortBy(this.props.users, 'details.name');
+        var p = this.props.locale.pick;
+        var users = _.sortBy(this.props.users, (user) => {
+            return p(user.details.name);
+        });
         if (users.length > limit) {
             var t = this.props.locale.translate;
             var chunk = _.slice(users, limit);

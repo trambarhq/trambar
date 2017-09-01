@@ -40,6 +40,7 @@ module.exports = React.createClass({
 
     renderSenderNames: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var userId = _.get(this.props.currentUser, 'id');
         var isOwner = _.some(this.props.senders, { id: userId });
         var others = _.filter(this.props.senders, (s) => {
@@ -52,7 +53,7 @@ module.exports = React.createClass({
                     contents = t('bookmark-you-bookmarked-it');
                     break;
                 case 1:
-                    var name = _.map(others, 'details.name');
+                    var name = p(others[0].details.name);
                     contents = t('bookmark-you-bookmarked-it-and-$name-recommends-it', name);
                     break;
                 default:
@@ -70,16 +71,16 @@ module.exports = React.createClass({
         } else {
             switch (others.length) {
                 case 1:
-                    var name = _.get(others[0], 'details.name');
+                    var name = p(others[0].details.name);
                     contents = t('bookmark-$name-recommends-this', name);
                     break;
                 case 2:
-                    var name1 = _.get(others[0], 'details.name');
-                    var name2 = _.get(others[1], 'details.name');
+                    var name1 = p(others[0].details.name);
+                    var name2 = p(others[1].details.name);
                     contents = t('bookmark-$name1-and-$name2-recommend-this', name1);
                     break;
                 default:
-                    var name = _.get(others[0], 'details.name');
+                    var name = p(others[0].details.name);
                     var additional = _.slice(others, 1);
                     var props = {
                         users: additional,

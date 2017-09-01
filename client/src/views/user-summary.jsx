@@ -62,7 +62,10 @@ module.exports = React.createClass({
     },
 
     renderRoles: function() {
-        var names = _.map(this.props.roles, 'details.name');
+        var p = this.props.locale.pick;
+        var names = _.map(this.props.roles, (role) => {
+            return p(role.details.title) || role.name;
+        });
         return (
             <span className="roles">
                 {names.join(', ') || '\u00a0'}
@@ -71,7 +74,8 @@ module.exports = React.createClass({
     },
 
     renderName: function() {
-        var name = _.get(this.props.user, 'details.name', '');
+        var p = this.props.locale.pick;
+        var name = p(_.get(this.props.user, 'details.name', ''));
         return (
             <h2 className="name">
                 {name}

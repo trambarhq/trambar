@@ -12,7 +12,10 @@ module.exports = React.createClass({
     displayName: 'MultilingualTextField',
     propTypes: {
         type: PropTypes.string,
-        value: PropTypes.object,
+        value: PropTypes.oneOfType([
+            PropTypes.object,
+            PropTypes.string,
+        ]),
         availableLanguageCodes: PropTypes.arrayOf(PropTypes.string),
 
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -88,6 +91,18 @@ module.exports = React.createClass({
         }));
     },
 
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.locale !== nextProps.locale) {
+            // which to the language of the new locale if it's
+            // one of the available languages
+            var lang = nextProps.locale.lang;
+            var available = this.props.availableLanguageCodes;
+            if (_.includes(available, lang)) {
+                this.setState({ selectedLanguageCode: lang });
+            }
+        }
+    },
+
     /**
      * Render component
      *
@@ -113,7 +128,13 @@ module.exports = React.createClass({
         if (languages.length > 1) {
             classNames.push('multiple-languages');
         }
-        inputProps.value = this.props.value[this.state.selectedLanguageCode] || '';
+        if (this.props.value instanceof Object) {
+            inputProps.value = this.props.value[this.state.selectedLanguageCode] || '';
+        } else if (typeof(this.props.value) === 'string') {
+            inputProps.value = this.props.value;
+        } else {
+            inputProps.value = '';
+        }
         inputProps.lang = this.state.selectedLangaugeCode;
         inputProps.onChange = this.handleTextChange;
         return (
@@ -200,7 +221,16 @@ module.exports = React.createClass({
         var text = evt.target.value;
         var lang = this.state.selectedLanguageCode;
         if (text) {
-            this.value = _.clone(this.props.value);
+            if (this.props.value instanceof Object) {
+                this.value = _.clone(this.props.value);
+            } else if (typeof(this.props.value) === 'string') {
+                // convert a string to a multi-lingual object
+                this.value = _.transform(this.props.availableLanguageCodes, (text, code) => {
+                    text[code] = this.props.value;
+                }, {});
+            } else {
+                this.value = {};
+            }
             this.value[lang] = text;
         } else {
             this.value = _.omit(this.props.value, lang);

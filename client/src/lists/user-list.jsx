@@ -99,7 +99,7 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        var users = sortUsers(this.props.users);
+        var users = sortUsers(this.props.users, this.props.locale);
         return (
             <div className="user-list">
                 {_.map(users, this.renderUser)}
@@ -129,8 +129,12 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 });
 
-var sortUsers = Memoize(function(users) {
-    return _.orderBy(users, [ 'details.name' ], [ 'asc' ]);
+var sortUsers = Memoize(function(users, locale) {
+    var p = locale.pick;
+    var name = (user) => {
+        return p(user.details.name);
+    };
+    return _.orderBy(users, [ name ], [ 'asc' ]);
 });
 
 var findRoles = Memoize(function(roles, user) {
