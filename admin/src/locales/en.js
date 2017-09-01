@@ -91,6 +91,16 @@ module.exports = function(languageCode) {
         'nav-users': 'Users',
         'nav-user-new': 'New user',
 
+        'project-list-$title-with-$name': (title, name) => {
+            if (title) {
+                return `${title} (${name})`;
+            } else {
+                return name;
+            }
+        },
+        'project-list-new': 'New project',
+        'project-list-title': 'Projects',
+
         'project-summary-$title': (title) => {
             var text = 'Project';
             if (title) {
@@ -116,16 +126,6 @@ module.exports = function(languageCode) {
         'project-summary-save': 'Save project',
         'project-summary-statistics': 'Activities',
         'project-summary-title': 'Name',
-
-        'project-list-$title-with-$name': (title, name) => {
-            if (title) {
-                return `${title} (${name})`;
-            } else {
-                return name;
-            }
-        },
-        'project-list-new': 'New project',
-        'project-list-title': 'Projects',
 
         'project-tooltip-$count-others': (count) => {
             return (count === 1) ? `1 other` : `${count} others`;
