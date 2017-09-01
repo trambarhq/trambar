@@ -65,7 +65,7 @@ module.exports = React.createClass({
             });
             var listUrl = require('pages/project-list-page').getUrl();
             var tooltip = (
-                <Tooltip className="project" disabled={this.props.disabled} key={1}>
+                <Tooltip className="project" disabled={this.props.disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>
                     <window>
                         {list}

@@ -29,7 +29,7 @@ module.exports = React.createClass({
 
     render: function() {
         var className = 'tooltip';
-        if (this.state.live) {
+        if (this.state.live && !this.props.disabled) {
             className += ' live';
         }
         if (this.props.upward) {

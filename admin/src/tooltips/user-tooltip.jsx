@@ -68,7 +68,7 @@ module.exports = React.createClass({
             });
         }
         return (
-            <Tooltip className="user">
+            <Tooltip className="user" disabled={list.length === 0}>
                 <inline>{label}</inline>
                 <window>
                     {list}

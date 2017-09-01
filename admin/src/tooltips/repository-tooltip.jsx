@@ -28,24 +28,21 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         var label = t('repository-tooltip-$count', this.props.repos.length);
         var list = _.map(this.props.repos, (repo, i) => {
             var url = require('pages/repo-summary-page').getUrl({
                 projectId: this.props.project.id,
                 repoId: repo.id,
             });
-            var iconName;
-            switch (repo.type) {
-                case 'gitlab':
-                    iconName = repo.type;
-                    break;
-            }
+            var iconName = repo.type;
+            var name = p(repo.details.title) || t(`server-type-${repo.type}`);
             return (
                 <div className="item" key={i}>
                     <a href={url}>
                         <i className={`fa fa-${iconName}`}/>
                         {' '}
-                        {repo.details.name}
+                        {name}
                     </a>
                 </div>
             );
@@ -54,7 +51,7 @@ module.exports = React.createClass({
             projectId: this.props.project.id,
         });
         return (
-            <Tooltip className="repository" disabled={this.props.disabled}>
+            <Tooltip className="repository" disabled={this.props.disabled || list.length === 0}>
                 <inline>{label}</inline>
                 <window>
                     {list}
