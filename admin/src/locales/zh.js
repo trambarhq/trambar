@@ -3,6 +3,21 @@ module.exports = function(languageCode) {
         'app-name': '電車吧',
         'app-title': '電車吧—管理控制台',
 
+        'confirmation-cancel': '取消',
+        'confirmation-confirm': '接受',
+        'confirmation-data-loss': '你確定要放棄你所做的更改嗎？',
+
+        'date-range-$start-$end': (start, end) => {
+            if (start) {
+                if (end) {
+                    return `${start}–${end}`;
+                } else {
+                    return `${start}–`;
+                }
+            }
+            return '';
+        },
+
         'member-list-$name-with-$username': (name, username) => {
             if (name) {
                 if (username) {
@@ -52,6 +67,11 @@ module.exports = function(languageCode) {
         'repo-list-save': '保存儲存庫名單',
         'repo-list-title': '儲存庫',
 
+        'repository-tooltip-$count': (count) => {
+            var num = cardinal(count);
+            return `${num}個儲存庫`;
+        },
+
         'role-list-new': '新角色',
         'role-list-title': '角色',
 
@@ -69,11 +89,23 @@ module.exports = function(languageCode) {
         'role-summary-save': '保存角色',
         'role-summary-title': '名稱',
 
+        'server-list-new': '新服務器',
+        'server-list-title': '服務器',
+
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',
         'server-type-gitlab': 'GitLab',
         'server-type-github': 'GitHub',
         'server-type-google': 'Google',
+
+        'settings-cancel': '取消',
+        'settings-edit': '更改設置',
+        'settings-input-languages': '輸入語言',
+        'settings-save': '保存設置',
+        'settings-site-title': '系統名稱',
+        'settings-site-description': '描述',
+        'settings-site-domain-name': '域名',
+        'settings-title': '設置',
 
         'table-heading-date-range': '活動期間',
         'table-heading-email': '電郵地址',
@@ -127,5 +159,85 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+
+        'user-summary-$name': (name) => {
+            var text = '用戶';
+            if (name) {
+                text += `：${name}`;
+            }
+            return text;
+        },
+        'user-summary-auth-server': '認證服務器',
+        'user-summary-auth-server-none': '沒有',
+        'user-summary-cancel': '取消',
+        'user-summary-edit': '更改用戶',
+        'user-summary-email': '電郵地址',
+        'user-summary-member-$name': (name) => {
+            var text = '成員';
+            if (name) {
+                text += `：${name}`;
+            }
+            return text;
+        },
+        'user-summary-github': 'GitHub用戶名',
+        'user-summary-ichat': 'iChat用戶名',
+        'user-summary-linkedin': 'Linkedin用戶名',
+        'user-summary-member-edit': '更改成員',
+        'user-summary-member-save': '保存成員',
+        'user-summary-name': '姓名',
+        'user-summary-phone': '電話號碼',
+        'user-summary-roles': '角色用戶',
+        'user-summary-role-none': '沒有',
+        'user-summary-save': '更改用戶',
+        'user-summary-skype': 'Skype用戶名',
+        'user-summary-slack': 'Slack用戶名',
+        'user-summary-social-links': 'Social links',
+        'user-summary-stackoverflow': 'StackOverflow用戶名',
+        'user-summary-statistics': 'Activities',
+        'user-summary-twitter': 'Twitter user name',
+        'user-summary-type': 'User type',
+        'user-summary-type-admin': '管理员',
+        'user-summary-type-guest': '來客',
+        'user-summary-type-member': 'Team member',
+        'user-summary-username': 'User name',
+        'user-summary-visibility': 'Visibility',
+        'user-summary-visibility-hidden': 'User is not shown in People section',
+        'user-summary-visibility-shown': 'User is listed in People section',
+
+        'user-tooltip-$count': (count) => {
+            var num = cardinal(count);
+            return `${num}個用戶`;
+        },
     };
 };
+
+var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
+
+function cardinalT(num) {
+    return cardinal(num, true);
+}
+
+function cardinalS(num) {
+    return cardinal(num, false);
+}
+
+function cardinal(num, traditional) {
+    if (num === 2) {
+        return (traditional) ? '兩' : '两';
+    } else if (num < 10) {
+        return chineseNumbers[num];
+    } else if (num < 100) {
+        var text = '十';
+        var tens = Math.floor(num / 10);
+        var ones = Math.floor(num % 10);
+        if (tens > 1) {
+            text = chineseNumbers[tens] + text;
+        }
+        if (ones) {
+            text = text + chineseNumbers[ones];
+        }
+        return text;
+    } else {
+        return String(num);
+    }
+}
