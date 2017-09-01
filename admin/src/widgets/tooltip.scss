@@ -25,6 +25,17 @@
         }
     }
 
+    &.leftward {
+        .window-container {
+            left: auto;
+            right: 0.3em;
+
+            .window {
+                float: right;
+            }
+        }
+    }
+
     .window {
         display: inline-block;
         padding: 0.4em 0.5em 0.4em 0.5em;

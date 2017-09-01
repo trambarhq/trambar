@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 // widgets
 var NavigationTree = require('widgets/navigation-tree');
 var Tooltip = require('widgets/tooltip');
+var SignOffMenu = require('widgets/sign-off-menu');
 
 require('./side-navigation.scss');
 
@@ -20,6 +21,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSignOff: PropTypes.func,
     },
 
     /**
@@ -78,6 +81,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render navigation tree
+     *
+     * @return {ReactElement}
+     */
     renderNavTree: function() {
         var navProps = {
             database: this.props.database,
@@ -88,6 +96,11 @@ module.exports = React.createClass({
         return <NavigationTree {...navProps} />;
     },
 
+    /**
+     * Render language and user button
+     *
+     * @return {ReactElement}
+     */
     renderBottomButtons: function() {
         return (
             <div className="bottom-buttons">
@@ -98,6 +111,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render language button
+     *
+     * @return {ReactElement}
+     */
     renderLanguageButton: function() {
         var selected = this.getLanguage(this.props.locale.lang);
         var languages = _.filter(this.props.locale.directory, { locales: { admin: true } });
@@ -134,6 +152,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render country button
+     *
+     * @return {ReactElement}
+     */
     renderCountryButton: function() {
         var language = this.getLanguage();
         if (_.size(language.countries) <= 1) {
@@ -175,30 +198,52 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render user button
+     *
+     * @return {ReactElement}
+     */
     renderUserButton: function() {
-        var language = this.getLanguage();
+        var t = this.props.locale.translate;
+        var menuProps = {
+            database: this.props.database,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onSignOff: this.props.onSignOff,
+        };
         return (
             <div className="button user">
-                <Tooltip upward>
+                <Tooltip upward leftward>
                     <inline>
                         <i className="fa fa-user-circle-o" />
                     </inline>
                     <window>
+                        <SignOffMenu {...menuProps} />
                     </window>
                 </Tooltip>
             </div>
         )
     },
 
+    /**
+     * Render logo and app name
+     *
+     * @return {ReactElement}
+     */
     renderHeader: function() {
         return (
-            <header onClick={this.handleHeaderClick}>
+            <header>
                 {this.renderLogo()}
                 {this.renderAppName()}
             </header>
         );
     },
 
+    /**
+     * Render app name
+     *
+     * @return {ReactElement}
+     */
     renderAppName: function() {
         var t = this.props.locale.translate;
         return (
@@ -206,6 +251,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render logo
+     *
+     * @return {ReactElement}
+     */
     renderLogo: function() {
         return (
             <svg className="logo" xmlns="http://www.w3.org/2000/svg" viewBox="1000 1000 5080 6299" preserveAspectRatio="xMidYMid" style={{ strokeLinejoin: 'round', strokeWidth: 30 }}>
@@ -241,22 +291,31 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Initiate transition on mount
+     */
     componentDidMount: function() {
         setTimeout(() => {
             this.setState({ ready: true });
         }, 100);
     },
 
-    handleHeaderClick: function() {
-
-    },
-
+    /**
+     * Called when user select a language
+     *
+     * @param  {Event} evt
+     */
     handleLanguageClick: function(evt) {
         var code = evt.currentTarget.getAttribute('data-code');
         var language = this.getLanguage(code);
         return this.props.locale.change(`${language.code}-${language.defaultCountry}`);
     },
 
+    /**
+     * Called when user select a country
+     *
+     * @param  {Event} evt
+     */
     handleCountryClick: function(evt) {
         var code = evt.currentTarget.getAttribute('data-code');
         var language = this.getLanguage();

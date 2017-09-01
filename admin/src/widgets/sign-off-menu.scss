@@ -1,0 +1,35 @@
+.sign-off-menu {
+    text-align: center;
+    padding-top: 0.25em;
+
+    A {
+        display: block;
+        cursor: pointer;
+
+        &:link, &:visited {
+            color: #777777;
+            text-decoration: none;
+        }
+
+        &:hover {
+            color: #004466;
+        }
+    }
+
+    .name {
+        padding: 0.5em 0.25em 0.25em 0.25em;
+        text-align: center;
+    }
+
+    .sign-off {
+        text-align: center;
+        padding: 0.5em 0.25em 0 0.25em;
+        border-top: 1px solid #dddddd;
+        color: #777777;
+        cursor: pointer;
+
+        &:hover {
+            color: #004466;
+        }
+    }
+}

@@ -236,6 +236,8 @@ module.exports = function(languageCode) {
         'sign-in-title-oauth': 'Sign in through OAuth',
         'sign-in-username': 'User name:',
 
+        'sign-off-menu-sign-off': 'Sign off',
+
         'table-heading-date-range': 'Active period',
         'table-heading-email': 'E-mail',
         'table-heading-identifier': 'Identifier',

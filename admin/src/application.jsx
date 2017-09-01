@@ -120,10 +120,12 @@ module.exports = React.createClass({
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
+            onSignOff: this.handleSignOff,
         };
         if (this.state.showingSignInPage) {
             CurrentPage = SignInPage;
             navProps.disabled = true;
+            navProps.onSignOff = null;
             pageProps.server = this.state.authenticationDetails.server;
             pageProps.onSuccess = this.handleSignInSuccess;
         }
@@ -395,6 +397,15 @@ module.exports = React.createClass({
     handleThemeChange: function(evt) {
         var theme = new Theme(evt.target);
         this.setState({ theme });
+    },
+
+    /**
+     * Called when user clicks on sign-off button
+     *
+     * @param  {Event} evt
+     */
+    handleSignOff: function(evt) {
+        console.log('sign off');
     },
 
     /**

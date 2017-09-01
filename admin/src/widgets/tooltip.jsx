@@ -7,6 +7,7 @@ module.exports = React.createClass({
     displayName: 'Tooltip',
     propTypes: {
         upward: PropTypes.bool,
+        leftward: PropTypes.bool,
         disabled: PropTypes.bool,
         ignoreClicks: PropTypes.bool,
     },
@@ -33,6 +34,9 @@ module.exports = React.createClass({
         }
         if (this.props.upward) {
             className += ' upward';
+        }
+        if (this.props.leftward) {
+            className += ' leftward';
         }
         if (this.props.className) {
             className += ' ' + this.props.className;

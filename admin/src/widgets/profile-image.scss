@@ -4,6 +4,12 @@
         height: 1.5em;
         vertical-align: middle;
     }
+
+    &.large {
+        width: 6em;
+        height: 6em;
+        vertical-align: middle;
+    }
 }
 
 SVG.profile-image {

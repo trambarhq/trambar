@@ -27,7 +27,7 @@ function ProfileImage(props) {
 
 ProfileImage.propTypes = {
     user: PropTypes.object,
-    size: PropTypes.oneOf([ 'small' ]),
+    size: PropTypes.oneOf([ 'small', 'large' ]),
     theme: PropTypes.instanceOf(Theme),
 };
 
@@ -37,4 +37,5 @@ ProfileImage.defaultProps = {
 
 var imageResolutions = {
     small: 24,
+    large: 96,
 };
