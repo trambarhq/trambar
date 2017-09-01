@@ -425,7 +425,7 @@ function copyUserDetails(user, account, images) {
     user.details.last_name = (nameParts.length >= 2) ? _.last(nameParts) : undefined;
     user.details.gitlab_url = account.web_url;
     user.details.skype_username = account.skype || undefined;
-    user.details.twiter_username = account.twitter || undefined;
+    user.details.twitter_username = account.twitter || undefined;
     user.details.linkedin_username = account.linkedin_name || undefined;
     user.details.email = account.email;
 

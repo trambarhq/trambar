@@ -6,9 +6,25 @@
     .form {
         float: left;
         max-width: 40em;
-        width: 100%;
+        min-width: 20em;
+        width: 50%;
         padding-left: 0.5em;
         margin-right: 2em;
+
+        &.social {
+            clear: left;
+        }
+    }
+
+    .social-toggle {
+        float: left;
+        clear: left;
+        margin-top: 0;
+        cursor: pointer;
+
+        &:hover {
+            color: #004466;
+        }
     }
 
     .instructions {

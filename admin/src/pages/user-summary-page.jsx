@@ -16,6 +16,7 @@ var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var OptionList = require('widgets/option-list');
+var CollapsibleContainer = require('widgets/collapsible-container');
 var ActivityChart = require('widgets/activity-chart');
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -164,6 +165,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         return {
             newUser: null,
             hasChanges: false,
+            showingSocialLinks: false,
         };
     },
 
@@ -298,6 +300,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderButtons()}
                 <h2>{t(member ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
                 {this.renderForm()}
+                {this.renderSocialLinksToggle()}
+                {this.renderSocialLinksForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
             </div>
@@ -368,6 +372,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             id: 'email',
             value: _.get(user, 'details.email', ''),
             onChange: this.handleEmailChange,
+            readOnly: readOnly,
+        };
+        var phoneProps = {
+            id: 'phone',
+            value: _.get(user, 'details.phone', ''),
+            onChange: this.handlePhoneChange,
             readOnly: readOnly,
         };
         var typeListProps = {
@@ -451,6 +461,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 <TextField {...nameProps}>{t('user-summary-name')}</TextField>
                 <TextField {...usernameProps}>{t('user-summary-username')}</TextField>
                 <TextField {...emailProps}>{t('user-summary-email')}</TextField>
+                <TextField {...phoneProps}>{t('user-summary-phone')}</TextField>
                 <OptionList {...typeListProps}>
                     <label>{t('user-summary-type')}</label>
                     {_.map(typeOptionProps, renderOption)}
@@ -467,6 +478,91 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     <label>{t('user-summary-auth-server')}</label>
                     {_.map(authOptionProps, renderOption)}
                 </OptionList>
+            </div>
+        );
+    },
+
+    /**
+     * Render heading that expands the social links section when clicked
+     *
+     * @return {ReactElement}
+     */
+    renderSocialLinksToggle: function() {
+        var t = this.props.locale.translate;
+        var iconName = (!this.state.showingSocialLinks)
+                     ? 'angle-double-down'
+                     : 'angle-double-up';
+        return (
+            <h2 className="social-toggle" onClick={this.handleSocialLinksToggleClick}>
+                {t('user-summary-social-links')}
+                {' '}
+                <i className={`fa fa-${iconName}`} />
+            </h2>
+        )
+    },
+
+    /**
+     * Render text fields for entering social network accounts
+     *
+     * @return {ReactElement}
+     */
+    renderSocialLinksForm: function() {
+        var t = this.props.locale.translate;
+        var user = this.getUser();
+        var readOnly = !this.isEditing();
+        var skypeProps = {
+            id: 'skype',
+            value: _.get(user, 'details.skype_username', ''),
+            onChange: this.handleSkypeUsernameChange,
+            readOnly,
+        };
+        var slackProps = {
+            id: 'skype',
+            value: _.get(user, 'details.slack_username', ''),
+            onChange: this.handleSlackUsernameChange,
+            readOnly,
+        };
+        var ichatProps = {
+            id: 'ichat',
+            value: _.get(user, 'details.ichat_username', ''),
+            onChange: this.handleIchatUsernameChange,
+            readOnly,
+        };
+        var twitterProps = {
+            id: 'twitter',
+            value: _.get(user, 'details.twitter_username', ''),
+            onChange: this.handleTwitterUsernameChange,
+            readOnly,
+        };
+        var linkedinProps = {
+            id: 'skype',
+            value: _.get(user, 'details.linkedin_username', ''),
+            onChange: this.handleLinkedinUsernameChange,
+            readOnly,
+        };
+        var githubProps = {
+            id: 'github',
+            value: _.get(user, 'details.github_username', ''),
+            onChange: this.handleGitHubUsernameChange,
+            readOnly,
+        };
+        var stackoverflowProps = {
+            id: 'skype',
+            value: _.get(user, 'details.stackoverflow_username', ''),
+            onChange: this.handleStackoverflowUsernameChange,
+            readOnly,
+        };
+        return (
+            <div className="form social">
+                <CollapsibleContainer open={this.state.showingSocialLinks}>
+                    <TextField {...skypeProps}>{t('user-summary-skype')}</TextField>
+                    <TextField {...slackProps}>{t('user-summary-slack')}</TextField>
+                    <TextField {...ichatProps}>{t('user-summary-ichat')}</TextField>
+                    <TextField {...twitterProps}>{t('user-summary-twitter')}</TextField>
+                    <TextField {...linkedinProps}>{t('user-summary-linkedin')}</TextField>
+                    <TextField {...githubProps}>{t('user-summary-github')}</TextField>
+                    <TextField {...stackoverflowProps}>{t('user-summary-stackoverflow')}</TextField>
+                </CollapsibleContainer>
             </div>
         );
     },
@@ -578,12 +674,21 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user changes username
+     * Called when user changes email address
      *
      * @param  {Event} evt
      */
     handleEmailChange: function(evt) {
         this.setUserProperty(`details.email`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes phone number
+     *
+     * @param  {Event} evt
+     */
+    handlePhoneChange: function(evt) {
+        this.setUserProperty(`details.phone`, evt.target.value);
     },
 
     /**
@@ -651,6 +756,77 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         this.setUserProperty('server_id', serverId);
     },
 
+    /**
+     * Called when user clicks on social link heading
+     *
+     * @param  {Event} evt
+     */
+    handleSocialLinksToggleClick: function(evt) {
+        this.setState({ showingSocialLinks: !this.state.showingSocialLinks });
+    },
+
+    /**
+     * Called when user changes Skype username
+     *
+     * @param  {Event} evt
+     */
+    handleSkypeUsernameChange: function(evt) {
+        this.setUserProperty(`details.skype_username`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes Slack username
+     *
+     * @param  {Event} evt
+     */
+    handleSlackUsernameChange: function(evt) {
+        this.setUserProperty(`details.slack_username`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes iChat username
+     *
+     * @param  {Event} evt
+     */
+    handleIchatUsernameChange: function(evt) {
+        this.setUserProperty(`details.ichat_username`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes Twitter username
+     *
+     * @param  {Event} evt
+     */
+    handleTwitterUsernameChange: function(evt) {
+        this.setUserProperty(`details.twitter_username`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes Linkedin username
+     *
+     * @param  {Event} evt
+     */
+    handleLinkedinUsernameChange: function(evt) {
+        this.setUserProperty(`details.linkedin_username`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes Github username
+     *
+     * @param  {Event} evt
+     */
+    handleGitHubUsernameChange: function(evt) {
+        this.setUserProperty(`details.github_username`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes StackOverflow username
+     *
+     * @param  {Event} evt
+     */
+    handleStackoverflowUsernameChange: function(evt) {
+        this.setUserProperty(`details.stackoverflow_username`, evt.target.value);
+    },
 });
 
 var emptyUser = {
