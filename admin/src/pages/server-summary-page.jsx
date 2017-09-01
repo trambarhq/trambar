@@ -7,6 +7,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var SlugGenerator = require('utils/slug-generator');
+
 // widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
@@ -138,6 +140,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     setServerProperty: function(path, value) {
         var server = this.getServer();
         var newServer = _.decoupleSet(server, path, value);
+        if (path === 'details.title') {
+            var autoNameBefore = SlugGenerator.fromTitle(role.details.title);
+            var autoNameAfter = SlugGenerator.fromTitle(newRole.details.title);
+            if (!role.name || role.name === autoNameBefore) {
+                newRole.name = autoNameAfter;
+            }
+        }
         var hasChanges = true;
         if (_.isEqual(newServer, this.props.server)) {
             newServer = null;
@@ -283,6 +292,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleTitleChange,
             readOnly,
         };
+        var nameProps = {
+            id: 'name',
+            value: server.name,
+            locale: this.props.locale,
+            onChange: this.handleNameChange,
+            readOnly,
+        };
         var typeListProps = {
             onOptionClick: this.handleTypeOptionClick,
             readOnly,
@@ -305,35 +321,35 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var needOAuthUrl = (server.type === 'gitlab');
         var apiUrlProps = {
             id: 'api_url',
-            value: _.get(server, 'details.api.url', ''),
+            value: _.get(server, 'settings.api.url', ''),
             locale: this.props.locale,
             onChange: this.handleApiUrlChange,
             readOnly: readOnly,
         };
         var apiTokenProps = {
             id: 'api_token',
-            value: _.get(server, 'details.api.token', ''),
+            value: _.get(server, 'settings.api.token', ''),
             locale: this.props.locale,
             onChange: this.handleApiTokenChange,
             readOnly: readOnly,
         };
         var oauthUrlProps = {
             id: 'oauth_token',
-            value: _.get(server, 'details.oauth.baseURL', ''),
+            value: _.get(server, 'settings.oauth.baseURL', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthUrlChange,
             readOnly: readOnly,
         };
         var oauthIdProps = {
             id: 'oauth_id',
-            value: _.get(server, 'details.oauth.clientID', ''),
+            value: _.get(server, 'settings.oauth.clientID', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthIdChange,
             readOnly: readOnly,
         };
         var oauthSecretProps = {
             id: 'oauth_secret',
-            value: _.get(server, 'details.oauth.clientSecret', ''),
+            value: _.get(server, 'settings.oauth.clientSecret', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthSecretChange,
             readOnly: readOnly,
@@ -341,6 +357,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
+                <TextField {...nameProps}>{t('server-summary-name')}</TextField>
                 <OptionList {...typeListProps}>
                     <label>{t('server-summary-type')}</label>
                     {_.map(typeOptionProps, renderOption)}
@@ -427,6 +444,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user changes server name
+     *
+     * @param  {Object} evt
+     */
+    handleNameChange: function(evt) {
+        this.setServerProperty(`name`, evt.target.value);
+    },
+
+    /**
      * Called when user changes server type
      *
      * @param  {Object} evt
@@ -441,7 +467,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleApiUrlChange: function(evt) {
-        this.setServerProperty(`details.api.url`, evt.target.value);
+        this.setServerProperty(`settings.api.url`, evt.target.value);
     },
 
     /**
@@ -450,7 +476,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleApiTokenChange: function(evt) {
-        this.setServerProperty(`details.api.token`, evt.target.value);
+        this.setServerProperty(`settings.api.token`, evt.target.value);
     },
 
     /**
@@ -459,7 +485,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthUrlChange: function(evt) {
-        this.setServerProperty(`details.oauth.baseURL`, evt.target.value);
+        this.setServerProperty(`settings.oauth.baseURL`, evt.target.value);
     },
 
     /**
@@ -468,7 +494,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthIdChange: function(evt) {
-        this.setServerProperty(`details.oauth.clientID`, evt.target.value);
+        this.setServerProperty(`settings.oauth.clientID`, evt.target.value);
     },
 
     /**
@@ -477,7 +503,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthSecretChange: function(evt) {
-        this.setServerProperty(`details.oauth.clientSecret`, evt.target.value);
+        this.setServerProperty(`settings.oauth.clientSecret`, evt.target.value);
     },
 });
 

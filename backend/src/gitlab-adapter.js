@@ -88,7 +88,7 @@ function handleDatabaseChanges(events) {
                         if (!server) {
                             return;
                         }
-                        if (!server.details.api || !server.details.api.url || !server.details.api.token) {
+                        if (!server.settings.api || !server.settings.api.url || !server.settings.api.token) {
                             return;
                         }
                         return importServerObjects(db, server);
@@ -1403,7 +1403,7 @@ function importWikiEvent(db, server, repo, message, project) {
 
 function fetch(server, uri, query) {
     return new Promise((resolve, reject) => {
-        var api = server.details.api;
+        var api = server.settings.api;
         var options = {
             json: true,
             baseUrl: api.url,
@@ -1457,7 +1457,7 @@ function fetchAll(server, uri, params) {
 
 function post(server, uri, payload) {
     return new Promise((resolve, reject) => {
-        var api = server.details.api;
+        var api = server.settings.api;
         var options = {
             json: true,
             baseUrl: api.url,
@@ -1482,7 +1482,7 @@ function post(server, uri, payload) {
 
 function remove(server, uri) {
     return new Promise((resolve, reject) => {
-        var api = server.details.api;
+        var api = server.settings.api;
         var options = {
             json: true,
             baseUrl: api.url,

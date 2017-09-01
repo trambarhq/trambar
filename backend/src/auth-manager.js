@@ -251,7 +251,7 @@ function handleOAuthRequest(req, res, done) {
                 var options = {
                     session: false,
                 };
-                var credentials = _.extend(server.details.oauth, {
+                var credentials = _.extend(server.settings.oauth, {
                     callbackURL: `${protocol}://${host}/auth/${provider}/callback?sid=${serverId}&token=${token}`,
                     passReqToCallback: true,
                 });
@@ -401,8 +401,8 @@ function getServerName(server) {
  * @return {Boolean}
  */
 function canProvideAccess(server, area) {
-    if (server.details.oauth) {
-        if (server.details.oauth.clientID && server.details.oauth.clientSecret) {
+    if (server.settings.oauth) {
+        if (server.settings.oauth.clientID && server.settings.oauth.clientSecret) {
             if (area === 'admin') {
                 switch (server.type) {
                     case 'gitlab':

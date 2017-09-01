@@ -14,6 +14,7 @@ module.exports = _.create(Data, {
         details: Object,
         type: String,
         name: String,
+        settings: Object,
     },
     criteria: {
         id: Number,
@@ -82,16 +83,13 @@ module.exports = _.create(Data, {
             _.each(objects, (object, index) => {
                 var row = rows[index];
                 object.type = row.type;
-                object.details = {};
+                object.name = row.name;
                 if (credentials.unrestricted) {
-                    object.details = _.obscure(row.details, [
-                        'title',
-                        'description',
+                    object.settings = _.obscure(row.settings, [
                         'api.url',
                         'oauth.baseURL',
                         'oauth.clientID',
                     ]);
-                    object.settings = row.settings;
                 }
             });
             return objects;

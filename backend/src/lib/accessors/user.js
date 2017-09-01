@@ -20,6 +20,7 @@ module.exports = _.create(Data, {
         requested_project_ids: Array(Number),
         approved: Boolean,
         hidden: Boolean,
+        settings: Object,
     },
     criteria: {
         id: Number,
@@ -59,6 +60,7 @@ module.exports = _.create(Data, {
                 request_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
                 approved boolean NOT NULL DEFAULT true,
+                settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} ((details->>'email')) WHERE details ? 'email';
@@ -79,7 +81,7 @@ module.exports = _.create(Data, {
         var sql = `
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO client_role;
+            GRANT SELECT, UPDATE  ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
     },
@@ -122,7 +124,12 @@ module.exports = _.create(Data, {
                     object.approved = row.approved;
                     object.hidden = row.hidden;
                     object.requested_project_ids = row.requested_project_ids;
+                    object.settings = row.settings;
                 } else {
+                    // user settings can only be seen by the user himself
+                    if (row.id === credentials.user.id) {
+                        object.settings = row.settings;
+                    }
                     // don't export these unless they're not their usual values
                     if (!row.approved) {
                         object.approved = row.approved;

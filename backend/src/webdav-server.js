@@ -10,7 +10,6 @@ var Database = require('database');
 
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
-var Preferences = require('accessors/preferences');
 var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Role = require('accessors/role');
@@ -29,7 +28,6 @@ var Task = require('accessors/task');
 var globalAccessors = [
     Authentication,
     Authorization,
-    Preferences,
     Project,
     Repo,
     Role,

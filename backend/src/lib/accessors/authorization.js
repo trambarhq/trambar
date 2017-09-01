@@ -53,6 +53,8 @@ module.exports = _.create(Data, {
             CREATE INDEX ON ${table} (token);
         `;
         return db.execute(sql).then(() => {
+            // create stored procs for checking and extending authorization
+            // these will run as the root user
             var storeProcs = {
                 checkAuthorization: {
                     function: function(token, area) {
@@ -98,6 +100,8 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     grant: function(db, schema) {
+        // authorization check is performed through a stored procedure
+        // other DB roles don't need direct access to this table
         var table = this.getTableName(schema);
         var sql = `
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO auth_role;
