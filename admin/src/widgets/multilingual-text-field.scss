@@ -95,6 +95,8 @@
         input[type=text],
         textarea {
             border-color: #ffffff;
+            cursor: text;
+            outline: none;
         }
 
         .tabs {

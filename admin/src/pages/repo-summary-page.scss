@@ -6,7 +6,8 @@
     .form {
         float: left;
         max-width: 40em;
-        width: 100%;
+        min-width: 20em;
+        width: 50%;
         padding-left: 0.5em;
         margin-right: 2em;
     }

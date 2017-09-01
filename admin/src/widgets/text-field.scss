@@ -29,6 +29,8 @@
         input[type=email],
         textarea {
             border-color: #ffffff;
+            cursor: text;
+            outline: none;
         }
     }
 }
