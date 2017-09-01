@@ -325,13 +325,13 @@ module.exports = [
         code: 'zh',
         direction: 'ltr',
         countries: {
-            ch: '中国',
+            cn: '中国',
             hk: '香港',
             mo: '澳門',
             sg: '新加坡',
             tw: '台灣',
         },
-        defaultCountry: 'us',
+        defaultCountry: 'cn',
         locales: {
             admin: true,
             client: true,

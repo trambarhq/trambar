@@ -269,7 +269,11 @@ var RobotListPageSync = module.exports.Sync = React.createClass({
         if (!robot) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={robot.mtime} /></td>;
+            var props = {
+                time: robot.mtime,
+                locale: this.props.locale,
+            };
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 

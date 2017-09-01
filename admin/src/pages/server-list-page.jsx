@@ -271,7 +271,11 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
         if (!server) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={server.mtime} /></td>;
+            var props = {
+                time: server.mtime,
+                locale: this.props.locale,
+            };
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 

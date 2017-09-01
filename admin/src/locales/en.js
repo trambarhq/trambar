@@ -59,6 +59,23 @@ module.exports = function(languageCode) {
             return '';
         },
 
+        'member-list-$name-with-$username': (name, username) => {
+            if (name) {
+                if (username) {
+                    return `${name} (${username})`;
+                } else {
+                    return name;
+                }
+            } else {
+                return username;
+            }
+        },
+        'member-list-cancel': 'Cancel',
+        'member-list-edit': 'Edit member List',
+        'member-list-new': 'New member',
+        'member-list-save': 'Save member List',
+        'member-list-title': 'Members',
+
         'nav-member-new': 'New member',
         'nav-members': 'Members',
         'nav-projects': 'Projects',
@@ -73,6 +90,16 @@ module.exports = function(languageCode) {
         'nav-settings': 'Settings',
         'nav-users': 'Users',
         'nav-user-new': 'New user',
+
+        'project-list-$title-with-$name': (title, name) => {
+            if (title) {
+                return `${title} (${name})`;
+            } else {
+                return name;
+            }
+        },
+        'project-list-new': 'New project',
+        'project-list-title': 'Projects',
 
         'project-summary-$title': (title) => {
             var text = 'Project';
@@ -96,46 +123,19 @@ module.exports = function(languageCode) {
         'project-summary-new-members-approved-user-auto-join': 'Approved users become members automatically',
         'project-summary-new-members-manual': 'Members are added manually',
         'project-summary-new-members-team-member-auto-join': 'Team members become project members automatically',
-        'project-summary-save': 'Save Project',
+        'project-summary-save': 'Save project',
         'project-summary-statistics': 'Activities',
         'project-summary-title': 'Name',
-
-        'project-list-$title-with-$name': (title, name) => {
-            if (title) {
-                return `${title} (${name})`;
-            } else {
-                return name;
-            }
-        },
-        'project-list-new': 'New Project',
-        'project-list-title': 'Projects',
 
         'project-tooltip-$count-others': (count) => {
             return (count === 1) ? `1 other` : `${count} others`;
         },
 
-        'member-list-$name-with-$username': (name, username) => {
-            if (name) {
-                if (username) {
-                    return `${name} (${username})`;
-                } else {
-                    return name;
-                }
-            } else {
-                return username;
-            }
-        },
-        'member-list-cancel': 'Cancel',
-        'member-list-edit': 'Edit Member List',
-        'member-list-new': 'New Member',
-        'member-list-save': 'Save Member List',
-        'member-list-title': 'Members',
-
         'repo-list-cancel': 'Cancel',
-        'repo-list-edit': 'Edit Repository List',
+        'repo-list-edit': 'Edit repository list',
         'repo-list-issue-tracker-enabled-false': '',
         'repo-list-issue-tracker-enabled-true': 'Enabled',
-        'repo-list-save': 'Save Repository List',
+        'repo-list-save': 'Save repository list',
         'repo-list-title': 'Repositories',
 
         'repo-summary-$title': (title) => {
@@ -146,13 +146,13 @@ module.exports = function(languageCode) {
             return text;
         },
         'repo-summary-cancel': 'Cancel',
-        'repo-summary-edit': 'Edit Repository',
+        'repo-summary-edit': 'Edit repository',
         'repo-summary-gitlab-name': 'GitLab project name',
         'repo-summary-issue-tracker': 'Issue tracker',
         'repo-summary-issue-tracker-import-allowed': 'Allow team members to copy post into issue tracker',
         'repo-summary-issue-tracker-import-disallowed': 'Do not provide issue tracking option',
         'repo-summary-issue-tracker-not-available': 'Not available',
-        'repo-summary-save': 'Save Repository',
+        'repo-summary-save': 'Save repository',
         'repo-summary-statistics': 'Activities',
         'repo-summary-title': 'Name',
 
@@ -198,7 +198,7 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 other` : `${count} others`;
         },
 
-        'server-list-new': 'New Server',
+        'server-list-new': 'New server',
         'server-list-title': 'Servers',
 
         'server-summary-api-token': 'API token',
@@ -240,7 +240,6 @@ module.exports = function(languageCode) {
 
         'table-heading-date-range': 'Active period',
         'table-heading-email': 'E-mail',
-        'table-heading-identifier': 'Identifier',
         'table-heading-issue-tracker': 'Issue tracker',
         'table-heading-last-modified': 'Last modified',
         'table-heading-last-month': 'Last month',
@@ -254,7 +253,6 @@ module.exports = function(languageCode) {
         'table-heading-to-date': 'To date',
         'table-heading-type': 'Type',
         'table-heading-users': 'Users',
-        'table-heading-username': 'User name',
 
         'text-field-placeholder-none': 'none',
 
@@ -276,7 +274,7 @@ module.exports = function(languageCode) {
         },
         'user-list-approve': 'Approve new users',
         'user-list-cancel': 'Cancel',
-        'user-list-new': 'New User',
+        'user-list-new': 'New user',
         'user-list-save': 'Approve selected',
         'user-list-title': 'Users',
         'user-list-user-$type-$approved': (type, approved) => {

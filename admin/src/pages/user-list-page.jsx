@@ -494,6 +494,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             var props = {
                 time: user.mtime,
                 disabled: this.state.renderingPartialList,
+                locale: this.props.locale,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
