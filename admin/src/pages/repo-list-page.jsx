@@ -588,7 +588,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         if (!repo) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={repo.mtime} /></td>;
+            var props = {
+                time: repo.mtime,
+                locale: this.props.locale,
+            };
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 

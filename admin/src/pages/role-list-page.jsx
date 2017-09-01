@@ -285,7 +285,11 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         if (!role) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={role.mtime} /></td>;
+            var props = {
+                time: role.mtime,
+                locale: this.props.locale,
+            };
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 

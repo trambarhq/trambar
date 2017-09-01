@@ -1,6 +1,8 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 
+var Locale = require('locale/locale');
+
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
@@ -12,6 +14,8 @@ module.exports = React.createClass({
     propTypes: {
         time: PropTypes.string,
         disabled: PropTypes.bool,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
     },
 
     /**
@@ -37,7 +41,11 @@ module.exports = React.createClass({
      */
     updateLabels: function(props) {
         props = props || this.props;
-        var m = (props.time) ? Moment(props.time) : null;
+        var m;
+        if (props.time) {
+            m = Moment(props.time);
+            m.locale(props.locale.languageCode);
+        };
         var state = {
             relativeTime: m ? m.fromNow() : null,
             absoluteTime: m ? m.format('lll') : null,

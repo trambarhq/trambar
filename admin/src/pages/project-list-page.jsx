@@ -448,7 +448,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         if (!project) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            return <td><ModifiedTimeTooltip time={project.mtime} /></td>;
+            var props = {
+                time: project.mtime,
+                locale: this.props.locale,
+            };
+            return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     },
 
