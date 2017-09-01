@@ -314,6 +314,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         var nameProps = {
             id: 'name',
             value: robot.name,
+            locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly,
         };

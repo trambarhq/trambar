@@ -359,24 +359,28 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var nameProps = {
             id: 'name',
             value: _.get(user, 'details.name', ''),
+            locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly,
         };
         var usernameProps = {
             id: 'username',
             value: _.get(user, 'username', ''),
+            locale: this.props.locale,
             onChange: this.handleUsernameChange,
             readOnly: readOnly || !!user.external_id,
         };
         var emailProps = {
             id: 'email',
             value: _.get(user, 'details.email', ''),
+            locale: this.props.locale,
             onChange: this.handleEmailChange,
             readOnly: readOnly,
         };
         var phoneProps = {
             id: 'phone',
             value: _.get(user, 'details.phone', ''),
+            locale: this.props.locale,
             onChange: this.handlePhoneChange,
             readOnly: readOnly,
         };
@@ -513,42 +517,49 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var skypeProps = {
             id: 'skype',
             value: _.get(user, 'details.skype_username', ''),
+            locale: this.props.locale,
             onChange: this.handleSkypeUsernameChange,
             readOnly,
         };
         var slackProps = {
             id: 'skype',
             value: _.get(user, 'details.slack_username', ''),
+            locale: this.props.locale,
             onChange: this.handleSlackUsernameChange,
             readOnly,
         };
         var ichatProps = {
             id: 'ichat',
             value: _.get(user, 'details.ichat_username', ''),
+            locale: this.props.locale,
             onChange: this.handleIchatUsernameChange,
             readOnly,
         };
         var twitterProps = {
             id: 'twitter',
             value: _.get(user, 'details.twitter_username', ''),
+            locale: this.props.locale,
             onChange: this.handleTwitterUsernameChange,
             readOnly,
         };
         var linkedinProps = {
             id: 'skype',
             value: _.get(user, 'details.linkedin_username', ''),
+            locale: this.props.locale,
             onChange: this.handleLinkedinUsernameChange,
             readOnly,
         };
         var githubProps = {
             id: 'github',
             value: _.get(user, 'details.github_username', ''),
+            locale: this.props.locale,
             onChange: this.handleGitHubUsernameChange,
             readOnly,
         };
         var stackoverflowProps = {
             id: 'skype',
             value: _.get(user, 'details.stackoverflow_username', ''),
+            locale: this.props.locale,
             onChange: this.handleStackoverflowUsernameChange,
             readOnly,
         };

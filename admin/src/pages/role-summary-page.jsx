@@ -294,6 +294,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         var nameProps = {
             id: 'name',
             value: role.name,
+            locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly,
         };

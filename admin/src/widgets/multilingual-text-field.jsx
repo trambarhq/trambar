@@ -15,7 +15,7 @@ module.exports = React.createClass({
         value: PropTypes.object,
         availableLanguageCodes: PropTypes.arrayOf(PropTypes.string),
 
-        locale: PropTypes.instanceOf(Locale),
+        locale: PropTypes.instanceOf(Locale).isRequired,
 
         onChange: PropTypes.func,
     },
@@ -95,21 +95,23 @@ module.exports = React.createClass({
      */
     render: function() {
         var classNames = [ 'multilingual-text-field' ];
-        if (this.props.readOnly) {
-            classNames.push('readonly');
-            if (!(this.state.expandedByMouseOver || this.state.expandedByTouch)) {
-                classNames.push('collapsed');
-            }
-        }
-        var languages = this.getLanguages();
-        if (languages.length > 1) {
-            classNames.push('multiple-languages');
-        }
         var Input = 'input';
         var inputProps = _.omit(this.props, 'children', 'availableLanguageCodes', 'locale');
         if (this.props.type === 'textarea') {
             Input = AutosizeTextArea;
             inputProps = _.omit(inputProps, 'type');
+        }
+        if (this.props.readOnly) {
+            classNames.push('readonly');
+            if (!(this.state.expandedByMouseOver || this.state.expandedByTouch)) {
+                classNames.push('collapsed');
+            }
+            var t = this.props.locale.translate;
+            inputProps.placeholder = t('text-field-placeholder-none');
+        }
+        var languages = this.getLanguages();
+        if (languages.length > 1) {
+            classNames.push('multiple-languages');
         }
         inputProps.value = this.props.value[this.state.selectedLanguageCode] || '';
         inputProps.lang = this.state.selectedLangaugeCode;

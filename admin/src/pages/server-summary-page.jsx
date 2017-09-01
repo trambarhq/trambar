@@ -306,30 +306,35 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var apiUrlProps = {
             id: 'api_url',
             value: _.get(server, 'details.api.url', ''),
+            locale: this.props.locale,
             onChange: this.handleApiUrlChange,
             readOnly: readOnly,
         };
         var apiTokenProps = {
             id: 'api_token',
             value: _.get(server, 'details.api.token', ''),
+            locale: this.props.locale,
             onChange: this.handleApiTokenChange,
             readOnly: readOnly,
         };
         var oauthUrlProps = {
             id: 'oauth_token',
             value: _.get(server, 'details.oauth.baseURL', ''),
+            locale: this.props.locale,
             onChange: this.handleOAuthUrlChange,
             readOnly: readOnly,
         };
         var oauthIdProps = {
             id: 'oauth_id',
             value: _.get(server, 'details.oauth.clientID', ''),
+            locale: this.props.locale,
             onChange: this.handleOAuthIdChange,
             readOnly: readOnly,
         };
         var oauthSecretProps = {
             id: 'oauth_secret',
             value: _.get(server, 'details.oauth.clientSecret', ''),
+            locale: this.props.locale,
             onChange: this.handleOAuthSecretChange,
             readOnly: readOnly,
         };

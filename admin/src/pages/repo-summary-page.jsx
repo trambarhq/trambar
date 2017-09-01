@@ -306,6 +306,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var nameProps = {
             id: 'name',
             value: repo.name,
+            locale: this.props.locale,
             readOnly: true,
         };
         var listProps = {

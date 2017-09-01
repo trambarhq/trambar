@@ -254,11 +254,12 @@ module.exports = function(languageCode) {
         'table-heading-users': 'Users',
         'table-heading-username': 'User name',
 
+        'text-field-placeholder-none': 'none',
+
         'tooltip-$first-and-$tooltip': (first, tooltip) => {
             return [ first, ' and ', tooltip ];
         },
         'tooltip-more': 'More',
-
 
         'user-list-$name-with-$username': (name, username) => {
             if (name) {

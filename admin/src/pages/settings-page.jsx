@@ -73,7 +73,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<SettingsPageSync {...props} />);
+        meanwhile.show(<SettingsPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
@@ -249,6 +249,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         var domainNameProps = {
             id: 'name',
             value: system.domain_name,
+            locale: this.props.locale,
             onChange: this.handleDomainNameChange,
             readOnly,
         };

@@ -311,6 +311,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var nameProps = {
             id: 'name',
             value: project.name,
+            locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly,
         };
