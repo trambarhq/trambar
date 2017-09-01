@@ -62,21 +62,22 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                type: row.type,
-                name: row.name,
-                server_id: row.server_id,
-                external_id: row.external_id,
-            };
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.name = row.name;
+                if (credentials.unrestricted) {
+                    object.server_id = row.server_id;
+                    object.external_id = row.external_id;
+                }
+            });
+            return objects;
         });
     }
 });

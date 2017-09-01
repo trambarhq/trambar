@@ -69,20 +69,19 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-            };
-            if (credentials.unrestricted) {
-                object.settings = row.settings;
-            }
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                if (credentials.unrestricted) {
+                    object.settings = row.settings;
+                }
+            });
+            return objects;
         });
     },
 });

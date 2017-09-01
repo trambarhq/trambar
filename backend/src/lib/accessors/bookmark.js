@@ -60,21 +60,21 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                story_id: row.story_id,
-                user_ids: row.user_ids,
-                target_user_id: row.target_user_id,
-                public: row.public
-            };
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.story_id = row.story_id;
+                object.user_ids = row.user_ids;
+                object.target_user_id = row.target_user_id;
+
+                // TODO: check user ids
+            });
+            return objects;
         });
     },
 
@@ -86,10 +86,11 @@ module.exports = _.create(Data, {
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials) {
+    import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
             var original = originals[index];
             if (original) {

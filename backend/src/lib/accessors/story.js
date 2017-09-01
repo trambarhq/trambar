@@ -138,32 +138,38 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                type: row.type,
-                user_ids: row.user_ids,
-                role_ids: row.role_ids,
-                ptime: row.ptime,
-                public: row.public,
-                published: row.published,
-            };
-            if (row.published_version_id) {
-                object.published_version_id = row.published_version_id;
-            }
-            if (row.repo_id) {
-                object.repo_id = row.repo_id;
-            }
-            if (row.external_id) {
-                object.external_id = row.external_id;
-            }
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.user_ids = row.user_ids;
+                object.role_ids = row.role_ids;
+                object.ptime = row.ptime;
+                object.public = row.public;
+                object.published = row.published;
+                if (row.published_version_id) {
+                    object.published_version_id = row.published_version_id;
+                }
+                if (row.repo_id) {
+                    object.repo_id = row.repo_id;
+                }
+                if (row.external_id) {
+                    object.external_id = row.external_id;
+                }
+                if (!object.published) {
+                    // don't send text when object isn't published and
+                    // there the user isn't the owner
+                    if (object.user_id !== credentials.user.id) {
+                        object.details = _.omit(object.details, 'text', 'resources');
+                    }
+                }
+            });
+            return objects;
         });
     },
 
@@ -175,10 +181,11 @@ module.exports = _.create(Data, {
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials) {
+    import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
             var original = originals[index];
             if (original) {

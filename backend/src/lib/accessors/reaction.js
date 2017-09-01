@@ -113,7 +113,7 @@ module.exports = _.create(Data, {
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials) {
+    import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
             var original = originals[index];
             if (original) {
@@ -161,10 +161,11 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
+    export: function(db, schema, rows, credentials, options) {
         return Promise.map(rows, (row) => {
             var object = {
                 id: row.id,
@@ -178,19 +179,36 @@ module.exports = _.create(Data, {
                 public: row.public,
                 published: row.published,
             };
-            if (!object.published) {
-                if (object.user_id !== credentials.user.id) {
-                    object.details = _.omit(object.details, 'text', 'resources');
-                }
-            }
-            if (row.repo_id) {
-                object.repo_id = row.repo_id;
-            }
-            if (row.external_id) {
-                object.external_id = row.external_id;
-            }
             return object;
         });
+
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.story_id = row.story_id;
+                object.user_id = row.user_id;
+                object.target_user_ids = row.target_user_ids;
+                object.ptime = row.ptime;
+                object.public = row.public;
+                object.published = row.published;
+                if (row.repo_id) {
+                    object.repo_id = row.repo_id;
+                }
+                if (row.external_id) {
+                    object.external_id = row.external_id;
+                }
+                if (!object.published) {
+                    // don't send text when object isn't published and
+                    // there the user isn't the owner
+                    if (object.user_id !== credentials.user.id) {
+                        object.details = _.omit(object.details, 'text', 'resources');
+                    }
+                }
+            });
+            return objects;
+        });
+
     },
 
     createAlert(schema, reaction, story, sender, languageCode) {

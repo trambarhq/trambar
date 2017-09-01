@@ -90,6 +90,34 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Object>}
+     */
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                if (row.dirty) {
+                    object.dirty = true;
+                }
+                // update access time so regeneration can be expedited
+                this.touch(db, schema, row);
+            });
+            return objects;
+        });
+    },
+
+    import: null,
+
+    /**
      * Lock a row for updates
      *
      * @param  {Database} db

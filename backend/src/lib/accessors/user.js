@@ -104,35 +104,35 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                type: row.type,
-                username: row.username,
-                role_ids: row.role_ids,
-            };
-            if (credentials.unrestricted) {
-                object.server_id = row.server_id;
-                object.external_id = row.external_id;
-                object.approved = row.approved;
-                object.hidden = row.hidden;
-                object.requested_project_ids = row.requested_project_ids;
-            } else {
-                // don't export these unless they're not their usual values
-                if (!row.approved) {
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.username = row.username;
+                object.role_ids = row.role_ids;
+
+                if (credentials.unrestricted) {
+                    object.server_id = row.server_id;
+                    object.external_id = row.external_id;
                     object.approved = row.approved;
-                }
-                if (row.hidden) {
                     object.hidden = row.hidden;
+                    object.requested_project_ids = row.requested_project_ids;
+                } else {
+                    // don't export these unless they're not their usual values
+                    if (!row.approved) {
+                        object.approved = row.approved;
+                    }
+                    if (row.hidden) {
+                        object.hidden = row.hidden;
+                    }
                 }
-            }
-            return object;
+            });
+            return objects;
         });
     },
 
@@ -144,10 +144,11 @@ module.exports = _.create(Data, {
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials) {
+    import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
             var original = originals[index];
             if (!credentials.unrestricted) {

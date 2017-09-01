@@ -121,27 +121,27 @@ module.exports = _.create(LiveData, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            if (credentials.user.id !== row.target_user_id) {
-                throw new HttpError(403);
-            }
-            // update access time so regeneration can be expedited
-            this.touch(db, schema, row);
-            // add new stories from list of candidates
-            this.finalize(db, schema, row);
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                type: row.type,
-                target_user_id: row.target_user_id,
-                filters: row.filters,
-                story_ids: _.map(row.details.stories, 'id')
-            };
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return LiveData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.target_user_id = row.target_user_id;
+                object.filters = row.filters;
+                object.story_ids = _.map(row.details.stories, 'id');
+                object.details = undefined;
+
+                if (credentials.user.id !== row.target_user_id) {
+                    throw new HttpError(403);
+                }
+                // add new stories from list of candidates
+                this.finalize(db, schema, row);
+            });
+            return objects;
         });
     },
 

@@ -111,23 +111,18 @@ module.exports = _.create(LiveData, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            this.touch(db, schema, row);
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                type: row.type,
-                filters: row.filters,
-            };
-            if (row.dirty) {
-                object.dirty = true;
-            }
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return LiveData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.filters = row.filters;
+            });
+            return objects;
         });
     }
 });

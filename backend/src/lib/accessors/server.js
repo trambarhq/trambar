@@ -73,28 +73,28 @@ module.exports = _.create(Data, {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: {},
-                type: row.type,
-            };
-            if (credentials.unrestricted) {
-                object.details = _.obscure(row.details, [
-                    'title',
-                    'description',
-                    'api.url',
-                    'oauth.baseURL',
-                    'oauth.clientID',
-                ]);
-                object.settings = row.settings;
-            }
-            return object;
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.type = row.type;
+                object.details = {};
+                if (credentials.unrestricted) {
+                    object.details = _.obscure(row.details, [
+                        'title',
+                        'description',
+                        'api.url',
+                        'oauth.baseURL',
+                        'oauth.clientID',
+                    ]);
+                    object.settings = row.settings;
+                }
+            });
+            return objects;
         });
     }
 });

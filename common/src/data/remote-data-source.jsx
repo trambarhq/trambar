@@ -418,65 +418,43 @@ module.exports = React.createClass({
         });
     },
 
-    getBaseUrl: function(location) {
-        var server = getServerName(location);
-        var protocol = getProtocol(server);
-        var prefix = this.props.urlPrefix;
-        return `${protocol}://${server}${prefix}`;
-    },
-
     discoverRemoteObjects: function(query) {
-        var baseUrl = this.getBaseUrl(query);
-        var schema = query.schema;
-        var table = query.table;
-        var url = `${baseUrl}/data/discovery/${schema}/${table}/`;
-        var payload = _.clone(query.criteria);
-        payload.token = getAuthToken(query);
-        var options = {
-            contentType: 'json',
-            responseType: 'json',
-        };
-        //console.log(`Discovery: ${table}`);
-        return HttpRequest.fetch('POST', url, payload, options).then((result) => {
-            return result;
-        });
+        var location = getSearchLocation(query);
+        return this.performRemoteAction(location, 'discovery', query.criteria);
     },
 
     retrieveRemoteObjects: function(location, ids) {
+        return this.performRemoteAction(location, 'retrieval', { ids });
+    },
+
+    storeRemoteObjects: function(location, objects) {
+        return this.performRemoteAction(location, 'storage', { objects });
+    },
+
+    performRemoteAction: function(location, action, payload) {
         var baseUrl = this.getBaseUrl(location);
         var schema = location.schema;
         var table = location.table;
-        var url = `${baseUrl}/data/retrieval/${schema}/${table}/`;
-        var payload = { ids };
+        var url = `${baseUrl}/data/${action}/${schema}/${table}/`;
+        payload = _.clone(payload);
         payload.token = getAuthToken(location);
-        if (this.props.retrievalFlags) {
+        if (action === 'retrieval' || action === 'storage') {
             _.assign(payload, this.props.retrievalFlags);
         }
         var options = {
             contentType: 'json',
             responseType: 'json',
         };
-        //console.log(`Retrieval: ${table}`);
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         });
     },
 
-    storeRemoteObjects: function(location, objects) {
-        var baseUrl = this.getBaseUrl(location);
-        var schema = location.schema;
-        var table = location.table;
-        var url = `${baseUrl}/data/storage/${schema}/${table}/`;
-        var payload = { objects };
-        payload.token = getAuthToken(location);
-        var options = {
-            contentType: 'json',
-            responseType: 'json',
-        };
-        //console.log(`Storage: ${table}`);
-        return HttpRequest.fetch('POST', url, payload, options).then((result) => {
-            return result;
-        });
+    getBaseUrl: function(location) {
+        var server = getServerName(location);
+        var protocol = getProtocol(server);
+        var prefix = this.props.urlPrefix;
+        return `${protocol}://${server}${prefix}`;
     },
 
     storeLocalObjects: function(location, objects) {

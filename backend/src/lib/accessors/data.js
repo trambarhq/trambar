@@ -29,7 +29,7 @@ module.exports = {
     getTableName: function(schema) {
         // allow non-alphanumeric schema name during testing
         if (!process.env.DOCKER_MOCHA) {
-            if (!/^\w+$/.test(schema)) {
+            if (!/^[\w\-]+$/.test(schema)) {
                 throw new Error('Invalid name: ' + schema);
             }
         }
@@ -359,13 +359,29 @@ module.exports = {
      * @param  {Schema} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    export: function(db, schema, rows, credentials) {
-        return Promise.map(rows, (row) => {
-            return _.omit(row, 'ctime', 'mtime', 'deleted');
+    export: function(db, schema, rows, credentials, options) {
+        var objects = _.map(rows, (row) => {
+            var object = {
+                id: row.id,
+                gn: row.gn,
+                details: row.details,
+            };
+            if (row.deleted) {
+                object.deleted = row.deleted;
+            }
+            if (options.include_ctime) {
+                object.ctime = row.ctime;
+            }
+            if (options.include_mtime) {
+                object.mtime = row.mtime;
+            }
+            return object;
         });
+        return Promise.resolve(objects);
     },
 
     /**
@@ -376,10 +392,11 @@ module.exports = {
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
+     * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials) {
+    import: function(db, schema, objects, originals, credentials, options) {
         return Promise.map(objects, (object) => {
             // these properties cannot be modified from the client side
             if (object.hasOwnProperty('gn') || object.hasOwnProperty('ctime') || object.hasOwnProperty('mtime')) {

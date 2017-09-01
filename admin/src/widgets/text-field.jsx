@@ -12,7 +12,7 @@ module.exports = TextField;
 function TextField(props) {
     var classNames = [ 'text-field'];
     var Input = 'input';
-    var inputProps = _.omit(props, 'children');
+    var inputProps = _.omit(props, 'children', 'locale');
     if (props.type === 'textarea') {
         Input = AutosizeTextArea;
         inputProps = _.omit(inputProps, 'type');

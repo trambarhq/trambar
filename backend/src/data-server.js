@@ -180,30 +180,18 @@ function handleRetrieval(req, res) {
                 throw new HttpError(400);
             }
 
+            var options = {
+                include_ctime: params.include_ctime,
+                include_mtime: params.include_mtime,
+            };
+
             // look up the rows by id
             var accessor = getAccessor(schema, table);
             return accessor.find(db, schema, { id: ids }, '*').then((rows) => {
                 // export the row, checking if user has access to objects and
                 // trimming out sensitive data
-                return accessor.export(db, schema, rows, credentials).then((objects) => {
+                return accessor.export(db, schema, rows, credentials, options).then((objects) => {
                     // add ctime and/or mtime if the client wants them
-                    if (params.include_ctime || params.include_mtime) {
-                        _.each(objects, (object, index) => {
-                            var row = rows[index];
-                            if (!row || row.id !== object.id) {
-                                // look for the row if the two arrays don't line up
-                                row = _.find(rows, { id: object.id });
-                            }
-                            if (row) {
-                                if (params.include_ctime) {
-                                    object.ctime = row.ctime;
-                                }
-                                if (params.include_mtime) {
-                                    object.mtime = row.mtime;
-                                }
-                            }
-                        });
-                    }
                     return objects;
                 });
             });
@@ -240,6 +228,11 @@ function handleStorage(req, res) {
                 throw new HttpError(400);
             }
 
+            var options = {
+                include_ctime: params.include_ctime,
+                include_mtime: params.include_mtime,
+            };
+
             // load the original objects if id list isn't empty
             var accessor = getAccessor(schema, table);
             var ids = _.filter(_.map(objects, 'id'));
@@ -253,7 +246,7 @@ function handleStorage(req, res) {
                     return _.find(originals, { id: object.id }) || null;
                 });
             }).then((originals) => {
-                return accessor.import(db, schema, objects, originals, credentials).then((rows) => {
+                return accessor.import(db, schema, objects, originals, credentials, options).then((rows) => {
                     return db.begin().then(() => {
                         return accessor.save(db, schema, rows);
                     }).then((rows) => {
@@ -269,7 +262,7 @@ function handleStorage(req, res) {
                     });
                 });
             }).then((rows) => {
-                return accessor.export(db, schema, rows, credentials);
+                return accessor.export(db, schema, rows, credentials, options);
             });
         }).finally(() => {
             return db.close();
