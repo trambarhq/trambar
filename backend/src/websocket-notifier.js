@@ -18,10 +18,10 @@ var sockets = [];
 function start() {
     return Database.open(true).then((db) => {
         var tables = [
-            'user',
-            'preferences',
             'project',
+            'server',
             'system',
+            'user',
 
             'bookmark',
             'listing',

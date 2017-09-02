@@ -630,16 +630,14 @@ module.exports = React.createClass({
     handleChangeNotification: function(evt) {
         var changed = false;
         _.forIn(evt.changes, (idList, name) => {
-            var server = evt.server;
-            if (server === window.location.hostname) {
-                server = undefined;
-            }
             var parts = _.split(name, '.');
             var location = {
-                server,
                 schema: parts[0],
                 table: parts[1]
             };
+            if (evt.server !== window.location.hostname) {
+                location.server = evt.server;
+            }
             var relevantSearches = this.getRelevantRecentSearches(location);
             _.each(relevantSearches, (search) => {
                 var dirty = false;
