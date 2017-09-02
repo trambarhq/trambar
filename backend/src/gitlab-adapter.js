@@ -88,7 +88,10 @@ function handleDatabaseChanges(events) {
                         if (!server) {
                             return;
                         }
-                        if (!server.settings.api || !server.settings.api.url || !server.settings.api.token) {
+                        if (!server.settings.api || !server.settings.oauth) {
+                            return;
+                        }
+                        if (!server.settings.api.access_token || !server.settings.oauth.baseURL) {
                             return;
                         }
                         return importServerObjects(db, server);
@@ -1403,14 +1406,16 @@ function importWikiEvent(db, server, repo, message, project) {
 
 function fetch(server, uri, query) {
     return new Promise((resolve, reject) => {
-        var api = server.settings.api;
+        // TODO: handle token refreshing
+        var baseUrl = _.trimEnd(server.settings.oauth.baseURL, '/') + '/api/v4';
+        var token = server.settings.api.access_token;
         var options = {
             json: true,
-            baseUrl: api.url,
             headers: {
-                'PRIVATE-TOKEN': api.token,
+                Authorization: `Bearer ${token}`,
             },
             qs: query,
+            baseUrl,
             uri,
         };
         Request.get(options, (err, resp, body) => {
