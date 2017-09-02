@@ -22,9 +22,8 @@ _.mixin({
             defaultValue = emptyObject;
         }
         var dstObj = _.clone(srcObj);
-        var defaultValueHere = (0 < path.length) ? emptyObject : defaultValue;
-        if (!(dstObj instanceof defaultValueHere.constructor)) {
-            dstObj = defaultValueHere;
+        if (!(dstObj instanceof Object)) {
+            dstObj = {};
         }
         var dstParent = dstObj;
         var srcParent = srcObj;
@@ -32,9 +31,16 @@ _.mixin({
             var key = path[i];
             var srcChild = srcParent ? srcParent[key] : undefined;
             var dstChild = _.clone(srcChild);
-            var defaultValueHere = (i < path.length - 1) ? emptyObject : defaultValue;
-            if (!(dstChild instanceof defaultValueHere.constructor)) {
-                dstChild = defaultValue;
+            if (i === path.length - 1) {
+                // make sure the node at the end of the path matches the type
+                // of the default value
+                if (!(dstChild instanceof defaultValue.constructor)) {
+                    dstChild = defaultValue;
+                }
+            } else {
+                if (!(dstChild instanceof Object)) {
+                    dstChild = {};
+                }
             }
             dstParent[key] = dstChild;
             dstParent = dstChild;
