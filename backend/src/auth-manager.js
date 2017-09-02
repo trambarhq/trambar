@@ -15,14 +15,6 @@ var Authorization = require('accessors/authorization');
 var Server = require('accessors/server');
 var User = require('accessors/user');
 
-const plugins = {
-    dropbox: 'passport-dropbox-oauth2',
-    facebook: 'passport-facebook',
-    github: 'passport-github',
-    gitlab: 'passport-gitlab2',
-    google: 'passport-google-oauth2',
-};
-
 var server;
 
 function start() {
@@ -33,8 +25,8 @@ function start() {
     app.post('/auth/session', handleAuthenticationStart);
     app.get('/auth/session/:token', handleAuthorizationRetrieval);
     app.post('/auth/htpasswd', handleHttpasswdRequest);
-    app.get('/auth/:provider', handleOAuthRequest);
-    app.get('/auth/:provider/:callback', handleOAuthRequest, handleOAuthRequestCompletion);
+    app.get('/auth/:provider', handleOAuthActivationRequest, handleOAuthRequest);
+    app.get('/auth/:provider/:callback', handleOAuthActivationRequest, handleOAuthRequest);
     server = app.listen(80);
 }
 
@@ -52,13 +44,17 @@ function stop() {
 };
 
 /**
- * Send response to browser as JSON object
+ * Send response to browser as JSON object or HTML text
  *
  * @param  {Response} res
- * @param  {Object} result
+ * @param  {Object|String} result
  */
 function sendResponse(res, result) {
-    res.json(result);
+    if (typeof(result) === 'string') {
+        res.type('html').send(result);
+    } else {
+        res.json(result);
+    }
 }
 
 /**
@@ -136,6 +132,12 @@ function handleAuthenticationStart(req, res) {
     });
 }
 
+/**
+ * Handle authentication by password stored in a htpasswd file
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
 function handleHttpasswdRequest(req, res) {
     var token = req.body.token;
     var username = _.trim(_.lowerCase(req.body.username));
@@ -227,9 +229,6 @@ function handleAuthorizationRetrieval(req, res) {
  * @param  {Function} done
  */
 function handleOAuthRequest(req, res, done) {
-    var host = req.headers['host'];
-    var protocol = req.headers['x-connection-protocol'];
-    var provider = req.params.provider;
     var serverId = parseInt(req.query.sid);
     var token = req.query.token;
     Database.open().then((db) => {
@@ -243,92 +242,114 @@ function handleOAuthRequest(req, res, done) {
                 deleted: false,
             };
             return Server.findOne(db, 'global', criteria, '*').then((server) => {
-                if (!server || server.type !== provider) {
+                if (!server) {
                     throw new HttpError(400);
                 }
-                var Strategy = require(plugins[server.type]);
-                var providerSpecific;
-                var options = {
-                    session: false,
-                };
-                var credentials = _.extend(server.settings.oauth, {
-                    callbackURL: `${protocol}://${host}/auth/${provider}/callback?sid=${serverId}&token=${token}`,
-                    passReqToCallback: true,
+                var params = { sid: serverId, token };
+                return authenticateThruPassport(req, res, server, params).then((account) => {
+                    // look for a user with the external id
+                    var externalId = parseInt(account.profile.id);
+                    var criteria = {
+                        external_id: externalId,
+                        server_id: serverId,
+                        deleted: false,
+                    };
+                    return User.findOne(db, 'global', criteria, 'id, type').then((user) => {
+                        if (!user) {
+                            // look for a user that isn't bound to an external account yet
+                            var criteria = {
+                                external_id: null,
+                                deleted: false,
+                            };
+                            return User.find(db, 'global', criteria, '*').then((user) => {
+                                var emails = _.map(account.profile.emails, 'value');
+                                // TODO: match based on e-mail or account name
+                            });
+                        }
+                        return user;
+                    }).then((user) => {
+                        // save the info from provider for potential future use
+                        var details = {
+                            profile: account.profile._json,
+                            access_token: account.accessToken,
+                            refresh_token: account.refreshToken,
+                        };
+                        return authorizeUser(db, user, authentication, server.type, server.id, details);
+                    });
                 });
-                switch (provider) {
-                    case 'facebook':
-                        credentials.profileFields = ['id', 'email', 'gender', 'link', 'locale', 'name', 'timezone', 'verified'];
-                        break;
-                }
-                var strategy = new Strategy(credentials, processOAuthProfile);
-                Passport.use(strategy);
-                var authenticate = Passport.authenticate(provider, options);
-                authenticate(req, res, done);
             });
         });
+    }).then(() => {
+        var html = `<script> close() </script>`;
+        sendResponse(res, html);
     }).catch((err) => {
         // display error
         sendError(res, err);
     });
 }
 
-function handleOAuthRequestCompletion(req, res) {
-    var html = `<script> close() </script>`;
-    res.send(html);
-}
-
 /**
- * Process profile retrieved from OAuth provider
+ * Acquire access token from an OAuth provider
  *
- * @param  {Request}  req
- * @param  {Object}   accessToken
- * @param  {Object}   refreshToken
- * @param  {Object}   profile
- * @param  {Function} cb
+ * @param  {Request}   req
+ * @param  {Response}  res
+ * @param  {Function}  done
  */
-function processOAuthProfile(req, accessToken, refreshToken, profile, cb) {
-    var provider = req.params.provider;
+function handleOAuthActivationRequest(req, res, done) {
+    if (!req.query.activation) {
+        done();
+        return;
+    }
+
     var serverId = parseInt(req.query.sid);
     var token = req.query.token;
     Database.open().then((db) => {
-        return Authentication.findOne(db, 'global', { token }, '*').then((authentication) => {
-            if (!authentication) {
-                throw new HttpError(400);
-            }
-            // look for a user with the external id
-            var externalId = parseInt(profile.id);
+        // make sure we have admin access
+        return Authorization.check(db, token, 'admin').then((userId) => {
             var criteria = {
-                external_id: externalId,
-                server_id: serverId,
+                id: serverId,
                 deleted: false,
             };
-            return User.findOne(db, 'global', criteria, 'id, type').then((user) => {
-                if (!user) {
-                    // look for a user that isn't bound to an external account yet
-                    var criteria = {
-                        external_id: null,
-                        deleted: false,
-                    };
-                    return User.find(db, 'global', criteria, '*').then((user) => {
-                        var emails = _.map(profile.emails, 'value');
-                        // TODO: match based on e-mail or account name
-                    });
+            return Server.findOne(db, 'global', criteria, '*').then((server) => {
+                if (!server) {
+                    throw new HttpError(400);
                 }
-                return user;
-            }).then((user) => {
-                // save the info from provider for potential future use
-                var details = {
-                    profile: profile._json,
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                };
-                return authorizeUser(db, user, authentication, provider, serverId, details);
+                var params = { activation: 1, sid: serverId, token };
+                var scope;
+                if (server.type === 'gitlab') {
+                    scope = [ 'api' ];
+                }
+                return authenticateThruPassport(req, res, server, params, scope).then((account) => {
+                    var profile = account.profile._json;
+                    var isAdmin = false;
+                    if (server.type === 'gitlab') {
+                        isAdmin = profile.is_admin;
+                    }
+                    if (!isAdmin) {
+                        var name = account.profile.displayName;
+                        throw new HttpError(403, {
+                            reason: `The account "${name}" does not have administrative access`,
+                        });
+                    }
+                    // save the access and refresh tokens
+                    var settings = _.clone(server.settings);
+                    settings.api = {
+                        access_token: account.accessToken,
+                        refresh_token: account.refreshToken,
+                    };
+                    return Server.updateOne(db, 'global', { id: server.id, settings });
+                });
             });
         });
-    }).then((authorization) => {
-        cb(null, authorization);
+    }).then(() => {
+        var html = `
+            <h1>Success</h1>
+            <script> setTimeout(close, 500) </script>
+        `;
+        sendResponse(res, html);
     }).catch((err) => {
-        cb(err);
+        // display error
+        sendError(res, err);
     });
 }
 
@@ -417,6 +438,48 @@ function canProvideAccess(server, area) {
         }
     }
     return false;
+}
+
+const plugins = {
+    dropbox: 'passport-dropbox-oauth2',
+    facebook: 'passport-facebook',
+    github: 'passport-github',
+    gitlab: 'passport-gitlab2',
+    google: 'passport-google-oauth2',
+};
+
+function authenticateThruPassport(req, res, server, params, scope) {
+    return new Promise((resolve, reject) => {
+        // obtain info needed for callback URL from Request object
+        var host = req.headers['host'];
+        var protocol = req.headers['x-connection-protocol'];
+        var provider = req.params.provider;
+        // add params as query variables in callback URL
+        var query = _.reduce(params, (query, value, name) => {
+            if (query) {
+                query += '&';
+            }
+            query += name + '=' + value;
+            return query;
+        }, '');
+        var url = `${protocol}://${host}/auth/${provider}/callback?${query}`;
+        // add callback URL to server's OAuth credentials
+        var credentials = _.extend({}, server.settings.oauth, { callbackURL: url });
+        var options = { session: false, scope };
+        if (provider === 'facebook') {
+            // ask Facebook to return these fields
+            credentials.profileFields = [ 'id', 'email', 'gender', 'link', 'name', 'verified' ];
+        }
+        // create strategy object, resolving promise when we have the profile
+        var Strategy = require(plugins[server.type]);
+        var strategy = new Strategy(credentials, (accessToken, refreshToken, profile) => {
+            resolve({ accessToken, refreshToken, profile });
+        });
+        // trigger Passport middleware manually
+        Passport.use(strategy);
+        var auth = Passport.authenticate(server.type, options);
+        auth(req, res);
+    });
 }
 
 exports.start = start;

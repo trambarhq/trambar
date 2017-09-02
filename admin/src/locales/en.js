@@ -117,7 +117,7 @@ module.exports = function(languageCode) {
         'project-summary-delete': 'Delete Project',
         'project-summary-description': 'Description',
         'project-summary-edit': 'Edit Project',
-        'project-summary-name': 'URL Slug',
+        'project-summary-name': 'Identifier',
         'project-summary-new-members': 'New members',
         'project-summary-new-members-allow-request': 'People can request to join project',
         'project-summary-new-members-approved-user-auto-join': 'Approved users become members automatically',
@@ -173,7 +173,7 @@ module.exports = function(languageCode) {
         'robot-summary-cancel': 'Cancel',
         'robot-summary-description': 'Description',
         'robot-summary-edit': 'Edit robot',
-        'robot-summary-name': 'URL Slug',
+        'robot-summary-name': 'Identifier',
         'robot-summary-save': 'Save robot',
         'robot-summary-title': 'Name',
 
@@ -190,7 +190,7 @@ module.exports = function(languageCode) {
         'role-summary-cancel': 'Cancel',
         'role-summary-description': 'Description',
         'role-summary-edit': 'Edit role',
-        'role-summary-name': 'URL Slug',
+        'role-summary-name': 'Identifier',
         'role-summary-save': 'Save role',
         'role-summary-title': 'Name',
 
@@ -201,13 +201,18 @@ module.exports = function(languageCode) {
         'server-list-new': 'New server',
         'server-list-title': 'Servers',
 
-        'server-summary-api-token': 'API token',
-        'server-summary-api-url': 'API URL',
+        'server-summary-acquire': 'Acquire API access',
+        'server-summary-api-access': 'API access',
+        'server-summary-api-access-acquired': 'Administrative access acquired',
+        'server-summary-api-access-not-applicable': 'Not applicable',
+        'server-summary-api-access-pending': 'Waiting for user action',
+        'server-summary-api-url': 'API URL (override)',
         'server-summary-cancel': 'Cancel',
         'server-summary-edit': 'Edit server',
         'server-summary-member-$name': (name) => {
             return `Server: ${name}`;
         },
+        'server-summary-name': 'Identifier',
         'server-summary-oauth-id': 'OAuth client ID',
         'server-summary-oauth-secret': 'OAuth client secret',
         'server-summary-oauth-url': 'OAuth URL',

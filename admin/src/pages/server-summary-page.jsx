@@ -140,11 +140,24 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     setServerProperty: function(path, value) {
         var server = this.getServer();
         var newServer = _.decoupleSet(server, path, value);
-        if (path === 'details.title') {
-            var autoNameBefore = SlugGenerator.fromTitle(role.details.title);
-            var autoNameAfter = SlugGenerator.fromTitle(newRole.details.title);
-            if (!role.name || role.name === autoNameBefore) {
-                newRole.name = autoNameAfter;
+        if (path === 'type') {
+            // derive title from type
+            var t = this.props.locale.translate;
+            var p = this.props.locale.pick;
+            var autoTitleBefore = t(`server-type-${server.type}`);
+            var autoTitleAfter = t(`server-type-${newServer.type}`);
+            var title = p(server.details.title);
+            if (!title || title === autoTitleBefore) {
+                var lang = this.props.locale.lang;
+                newServer = _.decoupleSet(newServer, `details.title.${lang}`, autoTitleAfter);
+            }
+        }
+        if (path === 'details.title' || path === 'type') {
+            // derive name from title
+            var autoNameBefore = SlugGenerator.fromTitle(server.details.title);
+            var autoNameAfter = SlugGenerator.fromTitle(newServer.details.title);
+            if (!server.name || server.name === autoNameBefore) {
+                newServer.name = autoNameAfter;
             }
         }
         var hasChanges = true;
@@ -251,7 +264,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         if (this.isEditing()) {
             return (
-                <div className="buttons">
+                <div key="edit" className="buttons">
                     <PushButton className="cancel" onClick={this.handleCancelClick}>
                         {t('server-summary-cancel')}
                     </PushButton>
@@ -263,8 +276,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var server = this.getServer();
+            var canAcquire = hasIntegration(server);
             return (
-                <div className="buttons">
+                <div key="view" className="buttons">
+                    <PushButton className="acquire" hidden={!canAcquire} onClick={this.handleAcquireClick}>
+                        {t('server-summary-acquire')}
+                    </PushButton>
+                    {' '}
                     <PushButton className="add" onClick={this.handleEditClick}>
                         {t('server-summary-edit')}
                     </PushButton>
@@ -316,23 +335,24 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 ],
             };
         });
+        var apiAccess;
+        if (hasIntegration(server)) {
+            if (_.get(server.settings, 'api.access_token')) {
+                apiAccess = t('server-summary-api-access-acquired');
+            } else {
+                apiAccess = t('server-summary-api-access-pending');
+            }
+        } else {
+            apiAccess = t('server-summary-api-access-not-applicable');
+        }
+        var apiAccessProps = {
+            id: 'access',
+            value: apiAccess,
+            locale: this.props.locale,
+            readOnly: true
+        };
         var showApiSection = (server.type === 'gitlab');
-        var showOAuthSection = true;
         var needOAuthUrl = (server.type === 'gitlab');
-        var apiUrlProps = {
-            id: 'api_url',
-            value: _.get(server, 'settings.api.url', ''),
-            locale: this.props.locale,
-            onChange: this.handleApiUrlChange,
-            readOnly: readOnly,
-        };
-        var apiTokenProps = {
-            id: 'api_token',
-            value: _.get(server, 'settings.api.token', ''),
-            locale: this.props.locale,
-            onChange: this.handleApiTokenChange,
-            readOnly: readOnly,
-        };
         var oauthUrlProps = {
             id: 'oauth_token',
             value: _.get(server, 'settings.oauth.baseURL', ''),
@@ -354,6 +374,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleOAuthSecretChange,
             readOnly: readOnly,
         };
+        var apiUrlProps = {
+            id: 'api_url',
+            value: _.get(server, 'settings.api.url', ''),
+            locale: this.props.locale,
+            onChange: this.handleApiUrlChange,
+            readOnly: readOnly,
+        };
         return (
             <div className="form">
                 <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
@@ -362,20 +389,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                     <label>{t('server-summary-type')}</label>
                     {_.map(typeOptionProps, renderOption)}
                 </OptionList>
-                <CollapsibleContainer open={showApiSection}>
-                    <TextField {...apiUrlProps}>{t('server-summary-api-url')}</TextField>
-                </CollapsibleContainer>
-                <CollapsibleContainer open={showApiSection}>
-                    <TextField {...apiTokenProps}>{t('server-summary-api-token')}</TextField>
-                </CollapsibleContainer>
-                <CollapsibleContainer open={showOAuthSection && needOAuthUrl}>
+                <CollapsibleContainer open={needOAuthUrl}>
                     <TextField {...oauthUrlProps}>{t('server-summary-oauth-url')}</TextField>
                 </CollapsibleContainer>
-                <CollapsibleContainer open={showOAuthSection}>
-                    <TextField {...oauthIdProps}>{t('server-summary-oauth-id')}</TextField>
-                </CollapsibleContainer>
-                <CollapsibleContainer open={showOAuthSection}>
-                    <TextField {...oauthSecretProps}>{t('server-summary-oauth-secret')}</TextField>
+                <TextField {...oauthIdProps}>{t('server-summary-oauth-id')}</TextField>
+                <TextField {...oauthSecretProps}>{t('server-summary-oauth-secret')}</TextField>
+                <TextField {...apiAccessProps}>{t('server-summary-api-access')}</TextField>
+                <CollapsibleContainer open={showApiSection}>
+                    <TextField {...apiUrlProps}>{t('server-summary-api-url')}</TextField>
                 </CollapsibleContainer>
             </div>
         );
@@ -505,12 +526,47 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     handleOAuthSecretChange: function(evt) {
         this.setServerProperty(`settings.oauth.clientSecret`, evt.target.value);
     },
+
+    /**
+     * Called when user clicks on "Acquire API access" button
+     *
+     * @param  {Event} evt
+     */
+    handleAcquireClick: function(evt) {
+        var conn = this.props.database.access({ server: null })
+        var server = this.getServer();
+        var baseUrl = `${conn.protocol}://${conn.server}`;
+        var query = `activation=1&sid=${server.id}&token=${conn.token}`;
+        var url = `${baseUrl}/auth/${server.type}?${query}`;
+
+        var width = 800;
+        var height = 600;
+        var options = {
+            width,
+            height,
+            left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
+            top: window.screenTop + Math.round((window.outerHeight - height) / 2),
+            toolbar: 'no',
+            menubar: 'no',
+            status: 'no',
+        };
+        var pairs = _.map(options, (value, name) => {
+            return `${name}=${value}`;
+        });
+        window.open(url, 'api-access-oauth', pairs.join(','));
+    },
 });
 
 var serverTypes = [
     'dropbox',
     'facebook',
     'github',
+    'gitlab',
+    'google',
+];
+
+var integratedServerTypes = [
+    'dropbox',
     'gitlab',
     'google',
 ];
@@ -530,4 +586,8 @@ function getServerIcon(type) {
         default:
             return type;
     }
+}
+
+function hasIntegration(server) {
+    return _.includes(integratedServerTypes, server.type)
 }

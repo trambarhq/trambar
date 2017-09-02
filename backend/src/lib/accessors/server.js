@@ -41,6 +41,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
+                name varchar(64) NOT NULL DEFAULT '',
                 type varchar(64),
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
@@ -59,8 +60,9 @@ module.exports = _.create(Data, {
      */
     grant: function(db, schema) {
         var table = this.getTableName(schema);
+        // Auth Manager needs to be able to update a server's OAuth tokens
         var sql = `
-            GRANT SELECT ON ${table} TO auth_role;
+            GRANT SELECT, UPDATE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
         `;
         return db.execute(sql).return(true);

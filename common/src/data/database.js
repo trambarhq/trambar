@@ -70,6 +70,18 @@ function Database(remoteDataSource, context) {
         location = merge(context, location);
         return remoteDataSource.start(location);
     };
+
+    /**
+     * Return the access token, server name, and protocol
+     *
+     * @param  {Object} location
+     *
+     * @return {Object}
+     */
+    this.access = function(location) {
+        location = merge(context, location);
+        return remoteDataSource.getCredentials(location);
+    };
 }
 
 function merge(context, query) {

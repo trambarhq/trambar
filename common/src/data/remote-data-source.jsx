@@ -54,6 +54,20 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return credentials used to access a location
+     *
+     * @param  {Object} location
+     *
+     * @return {Object}
+     */
+    getCredentials: function(location) {
+        var token = getAuthToken(location);
+        var server = getServerName(location);
+        var protocol = getProtocol(server);
+        return { token, protocol, server };
+    },
+
+    /**
      * Begin data access at given location, returning the user id
      *
      * @param  {Object} location

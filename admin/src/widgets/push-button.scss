@@ -7,10 +7,6 @@
         background-color: #006699;
         border: 2px outset #0088cc;
 
-        &:active {
-            border-style: inset;
-        }
-
         &:disabled {
             color: #5c8599;
         }
@@ -29,5 +25,15 @@
         color: #ffffff;
         background-color: #cc2929;
         border: 2px outset #ff3333;
+    }
+
+    &.acquire {
+        color: #ffffff;
+        background-color: #007826;
+        border: 2px outset #00ab36;
+    }
+
+    &:active {
+        border-style: inset;
     }
 }
