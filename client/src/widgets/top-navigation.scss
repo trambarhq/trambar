@@ -1,9 +1,17 @@
 .top-navigation {
     flex: 0 1 auto;
-    background-color: #262626;
-    border-bottom: 1px solid #171717;
-    padding-left: 4px;
-    padding-right: 4px;
+    display: flex;
+    align-items: flex-end;
+    transition: height 1s;
+    z-index: 2;     // drawn over the start page (z-index = 1)
+
+    .container {
+        background-color: #262626;
+        border-bottom: 1px solid #171717;
+        padding-left: 4px;
+        padding-right: 4px;
+        width: 100%;
+    }
 
     .button {
         font-size: 1.4em;

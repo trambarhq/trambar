@@ -278,8 +278,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      */
     openPopUpWindow: function(url) {
         return new Promise((resolve, reject) => {
-            var width = 400;
-            var height = 500;
+            var width = 800;
+            var height = 600;
             var options = {
                 width,
                 height,

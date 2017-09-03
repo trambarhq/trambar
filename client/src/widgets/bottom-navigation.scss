@@ -1,13 +1,18 @@
 .bottom-navigation {
+    display: flex;
+    align-items: flex-start;
     flex: 0 1 auto;
-    background-color: #262626;
-    border-top: 1px solid #323232;
-    padding-left: 4px;
-    padding-right: 4px;
+    transition: height 1s;
+    z-index: 2;     // drawn over the start page (z-index = 1)
 
-    .button-container {
+    .container {
         display: flex;
         flex-direction: row;
+        background-color: #262626;
+        border-top: 1px solid #323232;
+        padding-left: 4px;
+        padding-right: 4px;
+        width: 100%;
     }
 
     .button {

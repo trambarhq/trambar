@@ -15,6 +15,8 @@ require('./top-navigation.scss');
 module.exports = React.createClass({
     displayName: 'TopNavigation',
     propTypes: {
+        hidden: PropTypes.bool,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -32,7 +34,35 @@ module.exports = React.createClass({
         return {
             selectedControl,
             expanded: !!selectedControl,
+            height: (this.props.hidden) ? 0 : 'auto',
         };
+    },
+
+    /**
+     * Change this.state.height when this.props.hidden changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.hidden !== nextProps.hidden) {
+            var container = this.refs.container;
+            var contentHeight = container.offsetHeight;
+            if (nextProps.hidden) {
+                // hiding navigation:
+                //
+                // render with height = contentHeight, then
+                // render with height = 0 immediately
+                this.setState({ height: contentHeight });
+                setTimeout(() => { this.setState({ height: 0 }) }, 0);
+            } else {
+                // showing navigation:
+                //
+                // render with height = contentHeight, then
+                // render with height = auto after a second
+                this.setState({ height: contentHeight });
+                setTimeout(() => { this.setState({ height: 'auto' }) }, 1000);
+            }
+        }
     },
 
     /**
@@ -41,11 +71,14 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var style = { height: this.state.height };
         return (
-            <header className="top-navigation">
-                {this.renderSpacerBar()}
-                {this.renderButtonBar()}
-                {this.renderCollapsibleControl()}
+            <header className="top-navigation" style={style}>
+                <div ref="container" className="container">
+                    {this.renderSpacerBar()}
+                    {this.renderButtonBar()}
+                    {this.renderCollapsibleControl()}
+                </div>
             </header>
         );
     },

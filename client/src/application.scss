@@ -29,4 +29,5 @@ body {
     background-color: #4d3936;
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 0;     // drawn beneath the start page (z-index = 1)
 }

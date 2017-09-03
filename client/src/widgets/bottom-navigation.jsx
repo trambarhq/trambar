@@ -21,10 +21,45 @@ require('./bottom-navigation.scss');
 module.exports = React.createClass({
     displayName: 'BottomNavigation',
     propTypes: {
+        hidden: PropTypes.bool,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    getInitialState: function() {
+        return {
+            height: (this.props.hidden) ? 0 : 'auto',
+        };
+    },
+
+    /**
+     * Change this.state.height when this.props.hidden changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.hidden !== nextProps.hidden) {
+            var container = this.refs.container;
+            var contentHeight = container.offsetHeight;
+            if (nextProps.hidden) {
+                // hiding navigation:
+                //
+                // render with height = contentHeight, then
+                // render with height = 0 immediately
+                this.setState({ height: contentHeight });
+                setTimeout(() => { this.setState({ height: 0 }) }, 0);
+            } else {
+                // showing navigation:
+                //
+                // render with height = contentHeight, then
+                // render with height = auto after a second
+                this.setState({ height: contentHeight });
+                setTimeout(() => { this.setState({ height: 'auto' }) }, 1000);
+            }
+        }
     },
 
     /**
@@ -33,8 +68,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var style = { height: this.state.height };
         return (
-            <footer className="bottom-navigation">
+            <footer className="bottom-navigation" style={style}>
                 {this.renderButtons()}
             </footer>
         );
@@ -85,7 +121,7 @@ module.exports = React.createClass({
             onClick: this.handleButtonClick,
         };
         return (
-            <div className="button-container">
+            <div ref="container" className="container">
                 <Button {...newsButtonProps} />
                 <Button {...notificationsButtonProps} />
                 <Button {...bookmarksButtonProps} />

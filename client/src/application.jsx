@@ -66,6 +66,7 @@ module.exports = React.createClass({
             theme: null,
 
             unauthorizedLocation: null,
+            renderingStartPage: false,
         };
     },
 
@@ -90,28 +91,60 @@ module.exports = React.createClass({
         if (!this.isReady()) {
             return null;
         }
+        var navProps = {
+            database: this.state.database,
+            route: this.state.route,
+            locale: this.state.locale,
+            theme: this.state.theme
+        };
+        if (this.state.unauthorizedLocation) {
+            // don't show navigation when we're prompting user to log in
+            navProps.hidden = true;
+        }
+        return (
+            <div className="application">
+                <TopNavigation {...navProps} />
+                <section className="page-view-port">
+                    {this.renderCurrentPage()}
+                </section>
+                <BottomNavigation {...navProps} />
+                {this.renderStartPage()}
+            </div>
+        );
+    },
+
+    renderCurrentPage: function() {
         var CurrentPage = this.state.route.component;
-        var props = {
+        var pageProps = {
             database: this.state.database,
             route: this.state.route,
             payloads: this.state.payloads,
             locale: this.state.locale,
             theme: this.state.theme,
         };
-        if (this.state.unauthorizedLocation) {
-            CurrentPage = StartPage;
-            props.unauthorized = true;
-            props.unauthorizedLocation = this.state.unauthorizedLocation;
+        return <CurrentPage {...pageProps} />
+    },
+
+    /**
+     * Render the start page. The start page is different from the other pages
+     * because it takes up the whole screen.
+     *
+     * @return {ReactElement}
+     */
+    renderStartPage: function() {
+        if (!this.state.renderingStartPage) {
+            return null;
         }
-        return (
-            <div className="application">
-                <TopNavigation {...props} />
-                <section className="page-view-port">
-                    <CurrentPage {...props} />
-                </section>
-                <BottomNavigation {...props} />
-            </div>
-        );
+        var pageProps = {
+            database: this.state.database,
+            route: this.state.route,
+            payloads: this.state.payloads,
+            locale: this.state.locale,
+            theme: this.state.theme,
+            unauthorizedLocation: this.state.unauthorizedLocation,
+            onAuthorization: this.handleAuthorization,
+        };
+        return <StartPage {...pageProps} />
     },
 
     renderConfiguration: function() {
@@ -221,8 +254,10 @@ module.exports = React.createClass({
             if (credentials && credentials.token && credentials.user_id) {
                 this.authRequest.resolve(credentials)
             } else {
-                var unauthorizedLocation = { server, schema };
-                this.setState({ unauthorizedLocation });
+                this.setState({
+                    unauthorizedLocation: { server, schema },
+                    renderingStartPage: true
+                });
             }
         }).catch((err) => {
             this.authRequest.reject(err);
