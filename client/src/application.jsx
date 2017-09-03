@@ -29,7 +29,6 @@ var ErrorPage = require('pages/error-page');
 // widgets
 var TopNavigation = require('widgets/top-navigation');
 var BottomNavigation = require('widgets/bottom-navigation');
-var SignInDialogBox = require('dialogs/sign-in-dialog-box');
 
 var pageClasses = [
     StartPage,
@@ -66,9 +65,7 @@ module.exports = React.createClass({
             locale: null,
             theme: null,
 
-            showingSignInDialogBox: false,
-            renderingSignInDialogBox: false,
-            authenticationDetails: null,
+            unauthorizedLocation: null,
         };
     },
 
@@ -101,6 +98,11 @@ module.exports = React.createClass({
             locale: this.state.locale,
             theme: this.state.theme,
         };
+        if (this.state.unauthorizedLocation) {
+            CurrentPage = StartPage;
+            props.unauthorized = true;
+            props.unauthorizedLocation = this.state.unauthorizedLocation;
+        }
         return (
             <div className="application">
                 <TopNavigation {...props} />
@@ -108,26 +110,8 @@ module.exports = React.createClass({
                     <CurrentPage {...props} />
                 </section>
                 <BottomNavigation {...props} />
-                {this.renderSignInDialogBox()}
             </div>
         );
-    },
-
-    renderSignInDialogBox: function() {
-        if (!this.state.renderingSignInDialogBox) {
-            return null;
-        }
-        var dialogProps = {
-            show: this.state.showingSignInDialogBox,
-            server: this.state.authenticationDetails.server,
-            database: this.state.database,
-            route: this.state.route,
-            locale: this.state.locale,
-            theme: this.state.theme,
-            onSuccess: this.handleSignInSuccess,
-            onCancel: this.handleSignInCancel,
-        };
-        return <SignInDialogBox {...dialogProps} />
     },
 
     renderConfiguration: function() {
@@ -213,7 +197,8 @@ module.exports = React.createClass({
      * @return {Promise<Object>}
      */
     handleDatabaseAuthRequest: function(evt) {
-        var server = evt.server
+        var server = evt.server;
+        var schema = evt.schema;
         if (this.authRequest) {
             if (this.authRequest.server === server) {
                 return this.authRequest.promise;
@@ -236,14 +221,8 @@ module.exports = React.createClass({
             if (credentials && credentials.token && credentials.user_id) {
                 this.authRequest.resolve(credentials)
             } else {
-                if (!credentials) {
-                    credentials = { server };
-                }
-                this.setState({
-                    showingSignInDialogBox: true,
-                    renderingSignInDialogBox: true,
-                    authenticationDetails: credentials
-                });
+                var unauthorizedLocation = { server, schema };
+                this.setState({ unauthorizedLocation });
             }
         }).catch((err) => {
             this.authRequest.reject(err);
@@ -256,7 +235,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleSignInSuccess: function(evt) {
+    handleAuthorization: function(evt) {
         // return the info to code that were promised
         var credentials = evt.credentials;
         if (this.authRequest) {
@@ -271,27 +250,10 @@ module.exports = React.createClass({
         }, credentials);
         db.saveOne({ table: 'user_credentials' }, record);
 
-        // hide the dialog box
         this.setState({
-            showingSignInDialogBox: false,
+            unauthorizedLocation: null
         });
-        setTimeout(() => {
-            this.setState({
-                renderingSignInDialogBox: false,
-                authenticationDetails: null
-            });
-        }, 1000);
     },
-
-    /**
-     * Called when user cancels sign-in process
-     *
-     * @param  {Object} evt
-     */
-    handleSignCancel: function(evt) {
-        // TODO: redirect to appropriate page
-    },
-
 
     /**
      * Called when media payloads changes

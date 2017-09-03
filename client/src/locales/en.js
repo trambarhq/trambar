@@ -140,15 +140,19 @@ module.exports = function(languageCode) {
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 
+        'server-type-dropbox': 'Dropbox',
+        'server-type-facebook': 'Facebook',
+        'server-type-gitlab': 'GitLab',
+        'server-type-github': 'GitHub',
+        'server-type-google': 'Google',
+
         'settings-language': 'Language',
         'settings-notification': 'Notification',
         'settings-projects': 'Projects',
         'settings-user-profile': 'User Profile',
 
-        'sign-in-cancel': 'Cancel',
-        'sign-in-with-$provider': (provider) => {
-            return `Sign in with ${provider}`;
-        },
+        'start-social-login': 'Social login',
+        'start-system-title-default': 'Trambar',
 
         'statistics-bar': 'Bar',
         'statistics-line': 'Line',

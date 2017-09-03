@@ -8,11 +8,12 @@ var FS = Promise.promisifyAll(require('fs'));
 var Moment = require('moment');
 var HtpasswdAuth = require('htpasswd-auth');
 var HttpError = require('errors/http-error');
-
 var Database = require('database');
+
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
 var Server = require('accessors/server');
+var System = require('accessors/system');
 var User = require('accessors/user');
 
 var server;
@@ -107,21 +108,27 @@ function handleAuthenticationStart(req, res) {
             var criteria = {
                 deleted: false,
             };
-            return Server.find(db, 'global', criteria, '*').filter((server) => {
-                if (canProvideAccess(server, area)) {
-                    return true;
-                }
-            }).then((servers) => {
-                var token = authentication.token;
-                var providers = _.map(servers, (server) => {
-                    var name = server.details.name;
+            return Server.find(db, 'global', criteria, '*').then((servers) => {
+                var providers = _.filter(_.map(servers, (server) => {
+                    if (canProvideAccess(server, area)) {
+                        return {
+                            type: server.type,
+                            details: server.details,
+                            url: `/auth/${server.type}?sid=${server.id}&token=${authentication.token}`,
+                        };
+                    }
+                }));
+                return System.findOne(db, 'global', criteria, '*').then((system) => {
+                    if (!system) {
+                        // in case the system object hasn't been created yet
+                        system = { details: {} };
+                    }
                     return {
-                        name: getServerName(server),
-                        type: server.type,
-                        url: `/auth/${server.type}?sid=${server.id}&token=${token}`,
+                        system: _.pick(system, 'details'),
+                        authentication: _.pick(authentication, 'token'),
+                        providers,
                     };
                 });
-                return { token, providers };
             });
         });
     }).then((results) => {
@@ -393,27 +400,6 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
 }
 
 /**
- * Return name of server
- *
- * @param  {Server} server
- *
- * @return {String}
- */
-function getServerName(server) {
-    var name = server.details.name;
-    if (!name) {
-        switch (server.type) {
-            case 'Dropbox': return 'dropbox';
-            case 'facebook': return 'Facebook';
-            case 'gitlab': return 'GitLab';
-            case 'github': return 'GitHub';
-            case 'google': return 'Google';
-        }
-    }
-    return name;
-}
-
-/**
  * Return true if server can provide access to an area
  *
  * @param  {Server} server
@@ -440,7 +426,7 @@ function canProvideAccess(server, area) {
     return false;
 }
 
-const plugins = {
+var plugins = {
     dropbox: 'passport-dropbox-oauth2',
     facebook: 'passport-facebook',
     github: 'passport-github',

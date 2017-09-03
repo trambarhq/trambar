@@ -1,0 +1,91 @@
+.start-page {
+    display: flex;
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    background-color: #4d3936;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+    background-blend-mode: soft-light;
+
+    .bar {
+        display: flex;
+        align-self: center;
+        flex-direction: column;
+        flex: 1 0 auto;
+        background-color: rgba(77, 57, 54, 0.97);
+        width: 100%;
+        min-height: 25vh;
+        color: #ffffff;
+        overflow: hidden;
+
+        .content-area {
+            align-self: center;
+            text-align: center;
+            flex: 1 1 auto;
+            width: 90%;
+            max-width: 80em;
+            padding-bottom: 1.4em;
+
+            .section {
+                display: inline-block;
+                text-align: left;
+                width: 48%;
+                min-width: 30em;
+                vertical-align: top;
+                padding-left: 1em;
+                padding-right: 1em;
+            }
+
+            .section p {
+                margin-bottom: 0;
+
+                &.description p {
+                    white-space: pre-line;
+                }
+            }
+        }
+    }
+
+    .button {
+        display: block;
+        font-size: 1.2em;
+        border: 1px solid #ffffff;
+        padding: 0.5em 0.5em 0.5em 0.5em;
+        max-width: 15em;
+        cursor: pointer;
+        margin-top: 0.5em;
+        padding-left: 1em;
+        vertical-align: middle;
+
+        .fa {
+            font-size: 1.2em;
+            vertical-align: middle;
+            margin-left: 1.5em;
+            margin-right: 0.75em;
+            vertical-align: middle;
+        }
+
+        .label {
+            display: inline-block;
+            max-width: 8.5em;
+            vertical-align: middle;
+        }
+
+        &:link, &:visited {
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        &:hover {
+            background-color: #fca326;
+            color: #000000;
+        }
+    }
+}

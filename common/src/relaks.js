@@ -192,6 +192,7 @@ function render() {
         var element = promise;
         relaks.meanwhile = null;
         relaks.promisedElement = element;
+        relaks.progressElement = null;
     }
 
     // we have triggered the asynchronize operation and are waiting for it to

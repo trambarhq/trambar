@@ -171,11 +171,6 @@ var traditionalPhrases = {
     'settings-projects': '項目',
     'settings-user-profile': '用戶資料',
 
-    'sign-in-cancel': '取消',
-    'sign-in-with-$provider': (provider) => {
-        return `用${provider}登錄`;
-    },
-
     'statistics-bar': '條圖',
     'statistics-line': '線圖',
     'statistics-pie': '餅圖',
