@@ -24,7 +24,9 @@ body {
 }
 
 .page-view-port {
-    flex: 1 1 auto;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
     position: relative;
     background-color: #4d3936;
     overflow-y: auto;

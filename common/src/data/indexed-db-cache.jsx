@@ -24,7 +24,7 @@ module.exports = React.createClass({
     find: function(query) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = query.server || '~';
+                var server = query.server;
                 var schema = query.schema;
                 var table = query.table;
                 var local = (schema === 'local');
@@ -104,7 +104,7 @@ module.exports = React.createClass({
     save: function(location, objects) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = location.server || '~';
+                var server = location.server;
                 var schema = location.schema;
                 var table = location.table;
                 var local = (schema === 'local');
@@ -134,7 +134,7 @@ module.exports = React.createClass({
     remove: function(location, objects) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = location.server || '~';
+                var server = location.server;
                 var schema = location.schema;
                 var table = location.table;
                 var local = (schema === 'local');

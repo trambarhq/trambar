@@ -151,6 +151,7 @@ module.exports = function(languageCode) {
         'settings-projects': 'Projects',
         'settings-user-profile': 'User Profile',
 
+        'start-projects': 'Projects',
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',
 
@@ -222,7 +223,7 @@ module.exports = function(languageCode) {
         'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
             var text = `Pushed changes to branch “${branch}”`;
             if (repo) {
-                text += `of project “${repo}”`;
+                text += ` of project “${repo}”`;
             }
             return text;
         },

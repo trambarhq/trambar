@@ -65,7 +65,8 @@ module.exports = React.createClass({
             locale: null,
             theme: null,
 
-            unauthorizedLocation: null,
+            canAccessServer: false,
+            canAccessSchema: false,
             renderingStartPage: false,
         };
     },
@@ -76,6 +77,16 @@ module.exports = React.createClass({
             && !!this.state.route
             && !!this.state.locale
             && !!this.state.theme;
+    },
+
+    isShowingStartPage: function() {
+        if (this.state.route.component === StartPage) {
+            return true;
+        }
+        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
+            return true;
+        }
+        return false;
     },
 
     render: function() {
@@ -95,10 +106,9 @@ module.exports = React.createClass({
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
-            theme: this.state.theme
+            theme: this.state.theme,
         };
-        if (this.state.unauthorizedLocation) {
-            // don't show navigation when we're prompting user to log in
+        if (this.isShowingStartPage()) {
             navProps.hidden = true;
         }
         return (
@@ -113,8 +123,19 @@ module.exports = React.createClass({
         );
     },
 
+
+    /**
+     * Render the current page as indicated by the route, unless it's the
+     * start page
+     *
+     * @return {ReactElement|null}
+     */
     renderCurrentPage: function() {
         var CurrentPage = this.state.route.component;
+        if (CurrentPage === StartPage) {
+            // page will be rendered by renderStartPage()
+            return null;
+        }
         var pageProps = {
             database: this.state.database,
             route: this.state.route,
@@ -127,21 +148,27 @@ module.exports = React.createClass({
 
     /**
      * Render the start page. The start page is different from the other pages
-     * because it takes up the whole screen.
+     * because it takes up the whole screen. It can also overlay another page
+     * during transition.
      *
      * @return {ReactElement}
      */
     renderStartPage: function() {
-        if (!this.state.renderingStartPage) {
-            return null;
+        if (!this.isShowingStartPage()) {
+            // see if we still need to render the start page due to transition
+            if (!this.state.renderingStartPage) {
+                return null;
+            }
         }
         var pageProps = {
+            canAccessServer: this.state.canAccessServer,
+            canAccessSchema: this.state.canAccessSchema,
+
             database: this.state.database,
             route: this.state.route,
-            payloads: this.state.payloads,
             locale: this.state.locale,
             theme: this.state.theme,
-            unauthorizedLocation: this.state.unauthorizedLocation,
+
             onAuthorization: this.handleAuthorization,
         };
         return <StartPage {...pageProps} />
@@ -154,7 +181,8 @@ module.exports = React.createClass({
             locale: this.state.locale,
             cacheName: 'trambar',
             onChange: this.handleDatabaseChange,
-            onAuthRequest: this.handleDatabaseAuthRequest,
+            onAuthorization: this.handleAuthorization,
+            onExpiration: this.handleExpiration,
             onAlertClick: this.handleAlertClick,
         };
         var uploadManagerProps = {
@@ -212,6 +240,21 @@ module.exports = React.createClass({
         }
     },
 
+    loadCredentialsFromCache: function(server) {
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var criteria = { server };
+        return db.findOne({ table: 'user_credentials', criteria });
+    },
+
+    saveCredentialsToCache: function(server, credentials) {
+        // save the credentials
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var record = _.extend({
+            key: server,
+        }, credentials);
+        return db.saveOne({ table: 'user_credentials' }, record);
+    },
+
     /**
      * Called when the database queries might yield new results
      *
@@ -223,71 +266,35 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when RemoteDataSource needs credentials for accessing a server
-     *
-     * @param  {Object} evt
-     *
-     * @return {Promise<Object>}
-     */
-    handleDatabaseAuthRequest: function(evt) {
-        var server = evt.server;
-        var schema = evt.schema;
-        if (this.authRequest) {
-            if (this.authRequest.server === server) {
-                return this.authRequest.promise;
-            }
-            this.authRequest.reject(new Error('Request cancelled'));
-            this.authRequest = null;
-        }
-
-        this.authRequest = {};
-        this.authRequest.server = server;
-        this.authRequest.promise = new Promise((resolve, reject) => {
-            this.authRequest.resolve = resolve;
-            this.authRequest.reject = reject;
-        });
-
-        // retrieve credentials from database
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server };
-        db.findOne({ table: 'user_credentials', criteria }).then((credentials) => {
-            if (credentials && credentials.token && credentials.user_id) {
-                this.authRequest.resolve(credentials)
-            } else {
-                this.setState({
-                    unauthorizedLocation: { server, schema },
-                    renderingStartPage: true
-                });
-            }
-        }).catch((err) => {
-            this.authRequest.reject(err);
-        })
-        return this.authRequest.promise;
-    },
-
-    /**
      * Called when sign-in was successful
      *
      * @param  {Object} evt
      */
     handleAuthorization: function(evt) {
-        // return the info to code that were promised
-        var credentials = evt.credentials;
-        if (this.authRequest) {
-            this.authRequest.resolve(credentials);
-            this.authRequest = null;
+        this.saveCredentialsToCache(evt.server, evt.credentials);
+
+        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
+            // see if it's possible to access the server now
+            var dataSource = this.components.remoteDataSource;
+            var server = this.state.route.server || window.location.hostname;
+            var schema = this.state.route.schema;
+            var newState = {
+                canAccessServer: dataSource.hasAuthorization(server),
+                canAccessSchema: dataSource.hasAuthorization(server, schema),
+            };
+            this.setState(newState);
         }
+    },
 
-        // save the credentials
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var record = _.extend({
-            key: credentials.server,
-        }, credentials);
-        db.saveOne({ table: 'user_credentials' }, record);
-
-        this.setState({
-            unauthorizedLocation: null
-        });
+    /**
+     * Called when
+     *
+     * @param  {[type]} evt
+     *
+     * @return {[type]}
+     */
+    handleExpiration: function(evt) {
+        console.log(evt);
     },
 
     /**
@@ -346,7 +353,41 @@ module.exports = React.createClass({
      */
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
-        this.setState({ route });
+        var dataSource = this.components.remoteDataSource;
+        var server = route.parameters.server || location.hostname;
+        var schema = route.parameters.schema;
+        if (dataSource.hasAuthorization(server, schema)) {
+            // route is accessible
+            this.setState({
+                route,
+                canAccessServer: true,
+                canAccessSchema: true,
+            });
+        } else {
+            // see if user credentials are stored locally
+            this.loadCredentialsFromCache(server).then((authorization) => {
+                if (authorization) {
+                    dataSource.addAuthorization(server, authorization);
+                }
+                if (dataSource.hasAuthorization(server, schema)) {
+                    // route is now accessible
+                    this.setState({
+                        route,
+                        canAccessServer: true,
+                        canAccessSchema: true,
+                    });
+                } else {
+                    // show start page, where user can log in or choose another project
+                    // it's possible that we have access to the server but not the schema
+                    this.setState({
+                        route,
+                        canAccessServer: dataSource.hasAuthorization(server),
+                        canAccessSchema: false,
+                        renderingStartPage: true
+                    });
+                }
+            });
+        }
     },
 
     /**

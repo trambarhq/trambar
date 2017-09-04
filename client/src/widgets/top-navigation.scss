@@ -1,5 +1,7 @@
 .top-navigation {
-    flex: 0 1 auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
     display: flex;
     align-items: flex-end;
     transition: height 1s;

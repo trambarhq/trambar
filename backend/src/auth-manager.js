@@ -12,6 +12,7 @@ var Database = require('database');
 
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
+var Project = require('accessors/project');
 var Server = require('accessors/server');
 var System = require('accessors/system');
 var User = require('accessors/user');
@@ -23,8 +24,8 @@ function start() {
     app.set('json spaces', 2);
     app.use(BodyParser.json());
     app.use(Passport.initialize());
-    app.post('/auth/session', handleAuthenticationStart);
-    app.get('/auth/session/:token', handleAuthorizationRetrieval);
+    app.post('/auth/session', handleSessionStart);
+    app.get('/auth/session/:token', handleSessionRetrieval);
     app.post('/auth/htpasswd', handleHttpasswdRequest);
     app.get('/auth/:provider', handleOAuthActivationRequest, handleOAuthRequest);
     app.get('/auth/:provider/:callback', handleOAuthActivationRequest, handleOAuthRequest);
@@ -87,7 +88,9 @@ function sendError(res, err) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleAuthenticationStart(req, res) {
+function handleSessionStart(req, res) {
+    var host = req.headers['host'];
+    var protocol = req.headers['x-connection-protocol'];
     var area = req.body.area;
     Database.open().then((db) => {
         // generate a random token for tracking the authentication
@@ -111,10 +114,11 @@ function handleAuthenticationStart(req, res) {
             return Server.find(db, 'global', criteria, '*').then((servers) => {
                 var providers = _.filter(_.map(servers, (server) => {
                     if (canProvideAccess(server, area)) {
+                        var url = `${protocol}://${host}/auth/${server.type}?sid=${server.id}&token=${authentication.token}`;
                         return {
                             type: server.type,
                             details: server.details,
-                            url: `/auth/${server.type}?sid=${server.id}&token=${authentication.token}`,
+                            url,
                         };
                     }
                 }));
@@ -209,17 +213,50 @@ function handleHttpasswdRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleAuthorizationRetrieval(req, res) {
+function handleSessionRetrieval(req, res) {
     var token = req.params.token;
     Database.open().then((db) => {
         return Authorization.findOne(db, 'global', { token }, 'token, user_id').then((authorization) => {
             if (!authorization) {
-                throw new HttpError(404);
+                return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+                    if (authentication) {
+                        throw new HttpError(404);
+                    }
+                    // no authorization yet
+                    return {};
+                });
             }
-            return {
-                token: authorization.token,
-                user_id: authorization.user_id,
-            };
+            // see which projects the user has access to
+            return User.findOne(db, 'global', { id: authorization.user_id }, 'id, type, approved, requested_project_ids').then((user) => {
+                return Project.find(db, 'global', { deleted: false }, 'name, user_ids, settings').filter((project) => {
+                    if (_.includes(project.user_ids, user.id)) {
+                        return true;
+                    }
+                    if (_.includes(user.requested_project_ids, user.id)) {
+                        if (user.type === 'member') {
+                            if (project.settings.grant_team_members_read_only) {
+                                return true;
+                            }
+                        } else if (user.approved) {
+                            if (project.settings.grant_approved_users_read_only) {
+                                return true;
+                            }
+                        } else {
+                            if (project.settings.grant_unapproved_users_read_only) {
+                                return true;
+                            }
+                        }
+                    }
+                });
+            }).then((accessibleProjects) => {
+                return {
+                    authorization: {
+                        token: authorization.token,
+                        user_id: authorization.user_id,
+                        scope: _.map(accessibleProjects, 'name'),
+                    }
+                };
+            });
         });
     }).then((results) => {
         sendResponse(res, results);
@@ -243,7 +280,6 @@ function handleOAuthRequest(req, res, done) {
             if (!authentication) {
                 throw new HttpError(400);
             }
-        }).then(() => {
             var criteria = {
                 id: serverId,
                 deleted: false,

@@ -64,6 +64,7 @@ module.exports = _.create(Data, {
     grant: function(db, schema) {
         var table = this.getTableName(schema);
         var sql = `
+            GRANT SELECT ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;

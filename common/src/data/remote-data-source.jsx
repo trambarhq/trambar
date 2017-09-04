@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var HttpRequest = require('transport/http-request');
+var HttpError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
 var Locale = require('locale/locale');
 
@@ -25,7 +26,8 @@ module.exports = React.createClass({
         retrievalFlags: PropTypes.object,
         locale: PropTypes.instanceOf(Locale),
         onChange: PropTypes.func,
-        onAuthRequest: PropTypes.func,
+        onAuthorization: PropTypes.func,
+        onExpiration: PropTypes.func,
         onAlertClick: PropTypes.func,
     },
     components: ComponentRefs({
@@ -53,18 +55,78 @@ module.exports = React.createClass({
         };
     },
 
-    /**
-     * Return credentials used to access a location
-     *
-     * @param  {Object} location
-     *
-     * @return {Object}
-     */
-    getCredentials: function(location) {
-        var token = getAuthToken(location);
-        var server = getServerName(location);
-        var protocol = getProtocol(server);
-        return { token, protocol, server };
+    beginAuthorization: function(location, area) {
+        var session = getSession(location.server);
+        if (!session.authorizationPromise) {
+            var server = location.server;
+            var protocol = location.protocol;
+            var url = `${protocol}//${server}/auth/session`;
+            var options = { responseType: 'json', contentType: 'json' };
+            session.authorizationPromise = HttpRequest.fetch('POST', url, { area }, options).then((res) => {
+                session.authentication = res.authentication;
+                // return login information to caller
+                return {
+                    system: res.system,
+                    providers: res.providers,
+                };
+            }).catch((err) => {
+                // clear the promise if it fails
+                session.authorizationPromise = null;
+                throw err;
+            });
+        }
+        return session.authorizationPromise;
+    },
+
+    checkAuthorizationStatus: function(location) {
+        var session = getSession(location.server);
+        var token = session.authentication.token;
+        var server = location.server;
+        var protocol = location.protocol;
+        var url = `${protocol}//${server}/auth/session/${token}`;
+        var options = { responseType: 'json' };
+        return HttpRequest.fetch('GET', url, {}, options).then((res) => {
+            var authorization = res.authorization;
+            if (authorization) {
+                console.log(authorization);
+                session.authorization = authorization;
+                this.triggerAuthorizationEvent(server, authorization);
+                return true;
+            } else {
+                return false;
+            }
+        }).catch((err) => {
+            // clear the promise if the session has disappeared
+            session.authorizationPromise = null;
+            throw err;
+        });;
+    },
+
+    getActivationLink: function(location, oauthServerType, oauthServerId) {
+        var session = getSession(location.server);
+        var token = session.authorization.token;
+        var server = location.server;
+        var protocol = location.protocol;
+        var query = `activation=1&sid=${oauthServerId}&token=${token}`;
+        var url = `${protocol}//${server}/auth/${oauthServerType}?${query}`;
+        return url;
+    },
+
+    hasAuthorization: function(server, schema) {
+        var session = getSession(server);
+        if (session.authorization) {
+            if (schema) {
+                return _.includes(session.authorization.scope, schema);
+            } else {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    addAuthorization: function(server, authorization) {
+        var session = getSession(server);
+        session.authorization = authorization;
     },
 
     /**
@@ -81,22 +143,21 @@ module.exports = React.createClass({
             if (location.schema === 'local') {
                 return 0;
             }
-            var server = getServerName(location);
-            var authCacheEntry = authCache[server];
-            if (authCacheEntry) {
-                return authCacheEntry.user_id;
-            }
-            return this.triggerAuthRequest(server).then((credentials) => {
-                authCache[server] = credentials;
+            var session = getSession(location.server);
+            if (session.authorization) {
                 var notifier = this.components.notifier;
                 if (notifier) {
-                    var protocol = getProtocol(server);
-                    notifier.connect(protocol, server, credentials.token).catch((err) => {
+                    var protocol = location.protocol;
+                    var server = location.server;
+                    var token = session.authorization.token;
+                    notifier.connect(protocol, server, token).catch((err) => {
                         console.error(`Unable to establish WebSocket connection: ${server}`);
                     });
                 }
-                return credentials.user_id || 0;
-            });
+                return session.authorization.user_id;
+            } else {
+                throw new HttpError(401);
+            }
         });
     },
 
@@ -189,6 +250,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Inform parent component that database queries could yield new results
+     */
     triggerChangeEvent: function() {
         if (this.props.onChange) {
             this.props.onChange({
@@ -199,32 +263,34 @@ module.exports = React.createClass({
     },
 
     /**
-     * Trigger the onAuthRequest handler in order to obtain user
-     * authentication info from parent component
+     * Trigger the onAuthorization handler so user credentials can be saved
      *
      * @param  {String} server
-     *
-     * @return {Promise<Object>}
+     * @param  {Object} credentials
      */
-    triggerAuthRequest: function(server) {
-        if (this.props.onAuthRequest) {
-            return this.props.onAuthRequest({
-                type: 'auth_request',
+    triggerAuthorizationEvent: function(server, credentials) {
+        if (this.props.onAuthorization) {
+            return this.props.onAuthorization({
+                type: 'authorization',
                 target: this,
-                server: server
-            }).then((credentials) => {
-                if (process.env.NODE_ENV !== 'production') {
-                    if (!credentials.user_id) {
-                        console.warn('Missing user_id');
-                    }
-                    if (!credentials.token) {
-                        console.warn('Missing authorization token');
-                    }
-                }
-                return credentials;
+                server: server,
+                credentials: credentials,
             });
-        } else {
-            return Promise.reject(new Error('onAuthRequest is not set'));
+        }
+    },
+
+    /**
+     * Inform parent component that saved credentials are no longer valid
+     *
+     * @param  {String} server
+     */
+    triggerExpirationEvent: function(server) {
+        if (this.props.onExpiration) {
+            return this.props.onExpiration({
+                type: 'expiration',
+                target: this,
+                server: server,
+            });
         }
     },
 
@@ -446,12 +512,15 @@ module.exports = React.createClass({
     },
 
     performRemoteAction: function(location, action, payload) {
-        var baseUrl = this.getBaseUrl(location);
+        var server = location.server;
+        var protocol = location.protocol;
+        var prefix = this.props.urlPrefix;
         var schema = location.schema;
         var table = location.table;
-        var url = `${baseUrl}/data/${action}/${schema}/${table}/`;
+        var url = `${protocol}//${server}${prefix}/data/${action}/${schema}/${table}/`;
+        var session = getSession(location.server);
         payload = _.clone(payload);
-        payload.token = getAuthToken(location);
+        payload.token = session.authorization.token;
         if (action === 'retrieval' || action === 'storage') {
             _.assign(payload, this.props.retrievalFlags);
         }
@@ -461,14 +530,12 @@ module.exports = React.createClass({
         };
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
+        }).catch((err) => {
+            if (err.statusCode === 403) {
+                this.triggerExpirationEvent(location.server);
+            }
+            throw err;
         });
-    },
-
-    getBaseUrl: function(location) {
-        var server = getServerName(location);
-        var protocol = getProtocol(server);
-        var prefix = this.props.urlPrefix;
-        return `${protocol}://${server}${prefix}`;
     },
 
     storeLocalObjects: function(location, objects) {
@@ -632,12 +699,11 @@ module.exports = React.createClass({
         _.forIn(evt.changes, (idList, name) => {
             var parts = _.split(name, '.');
             var location = {
+                protocol: evt.protocol,
+                server: evt.server,
                 schema: parts[0],
                 table: parts[1]
             };
-            if (evt.server !== window.location.hostname) {
-                location.server = evt.server;
-            }
             var relevantSearches = this.getRelevantRecentSearches(location);
             _.each(relevantSearches, (search) => {
                 var dirty = false;
@@ -757,52 +823,21 @@ function getTimeElapsed(start, end) {
 }
 
 function getSearchLocation(search) {
-    return _.pick(search, 'server', 'schema', 'table');
+    return _.pick(search, 'protocol', 'server', 'schema', 'table');
 }
 
 function getSearchQuery(search) {
-    return _.pick(search, 'server', 'schema', 'table', 'criteria');
+    return _.pick(search, 'protocol', 'server', 'schema', 'table', 'criteria');
 }
 
-/**
- * Return auth token for the location, saved earlier
- *
- * @param  {Object} location
- *
- * @return {String|undefined}
- */
-function getAuthToken(location) {
-    var server = getServerName(location);
-    var authCacheEntry = authCache[server];
-    if (authCacheEntry) {
-        return authCacheEntry.token;
+var sessions = {};
+
+function getSession(server) {
+    var session = sessions[server];
+    if (!session) {
+        session = sessions[server] = {};
     }
-}
-
-/**
- * Get the domain name or ip address from a location object
- *
- * @param  {Object} location
- *
- * @return {String}
- */
-function getServerName(location) {
-    if (!location.server) {
-        return window.location.hostname;
-    } else {
-        return location.server;
-    }
-}
-
-/**
- * Return 'http' if server is localhost, 'https' otherwise
- *
- * @param  {String} server
- *
- * @return {String}
- */
-function getProtocol(server) {
-    return /^localhost\b/.test(server) ? 'http' : 'http';
+    return session;
 }
 
 function getExpectedObjectCount(criteria) {

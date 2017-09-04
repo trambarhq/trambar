@@ -13,7 +13,8 @@ require('./start-page.scss');
 module.exports = Relaks.createClass({
     displayName: 'StartPage',
     propTypes: {
-        unauthorizedLocation: PropTypes.object,
+        canAccessServer: PropTypes.bool,
+        canAccessSchema: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -48,12 +49,17 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ schema: 'global', by: this });
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = 'global';
+        var db = this.props.database.use({ server, schema, by: this });
         var props = {
-            system: this.state.system,
-            providers: this.state.providers,
+            currentUser: null,
+            system: null,
+            providers: null,
             projects: null,
-            unauthorizedLocation: this.props.unauthorizedLocation,
+            canAccessServer: this.props.canAccessServer,
+            canAccessSchema: this.props.canAccessSchema,
 
             database: this.props.database,
             route: this.props.route,
@@ -62,33 +68,27 @@ module.exports = Relaks.createClass({
 
             onOAuthEnded: this.handleOAuthEnded,
         };
-        if (this.props.unauthorizedLocation) {
-            if (!this.state.system) {
-                // ask server to create an authentication session, used to
-                // track the status of the sign-in process
-                var conn = this.props.database.access(this.props.unauthorizedLocation);
-                var url = `${conn.protocol}://${conn.server}/auth/session`;
-                var options = { responseType: 'json', contentType: 'json' };
-                var payload = { area: 'client' };
-                meanwhile.show(<StartPageSync {...props} />, 250);
-                return HttpRequest.fetch('POST', url, payload, options).then((session) => {
-                    if (session.system) {
-                        // setState will trigger a redraw, so don't bother updating props
-                        this.setState({
-                            system: session.system,
-                            providers: session.providers,
-                            authentication: session.authentication,
-                        });
-                    }
-                    return <StartPageSync {...props} />;
-                });
-            } else {
+        if (!this.props.canAccessServer) {
+            // start authorization process--will receive system description
+            // and list of OAuth providers along with links
+            meanwhile.show(<StartPageSync {...props} />, 250);
+            return db.beginAuthorization('client').then((info) => {
+                props.system = info.system;
+                props.providers = info.providers;
                 return <StartPageSync {...props} />;
-            }
+            });
         } else {
             // handle things normally after we've gained authorization
             meanwhile.show(<StartPageSync {...props} />, 250);
-            return db.start().then((userId) => {
+            return db.start().then((currentUserId) => {
+                // load current user
+                var criteria = {
+                    id: currentUserId
+                };
+                return db.findOne({ table: 'user', criteria });
+            }).then((user) => {
+                props.currentUser = user;
+            }).then(() => {
                 // load system info
                 var criteria = {};
                 return db.findOne({ table: 'system', criteria });
@@ -107,50 +107,25 @@ module.exports = Relaks.createClass({
     },
 
     /**
-     * Inform parent component that sign-in was successful
-     *
-     * @param  {Object} credentials
-     */
-    triggerAuthorizationEvent: function(credentials) {
-        if (this.props.onAuthorization) {
-            this.props.onAuthorization({
-                type: 'authorization',
-                target: this,
-                credentials,
-            });
-        }
-    },
-
-    /**
      * Retrieve authorization object from server
      */
     handleOAuthEnded: function() {
-        var token = this.state.authentication.token;
-        var conn = this.props.database.access(this.props.unauthorizedLocation);
-        var url = `${conn.protocol}://${conn.server}/auth/session/${token}`;
-        var options = { responseType: 'json' };
-        return HttpRequest.fetch('GET', url, {}, options).then((session) => {
-            if (session.authorization) {
-                var credentials = {
-                    server: this.props.unauthorizedLocation.server,
-                    token: session.authorization.token,
-                    user_id: session.authorization.user_id,
-                };
-                this.triggerAuthorizationEvent(credentials);
-            }
-        }).catch((err) => {
-            console.log(err.message);
-        });
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var db = this.props.database.use({ server, by: this });
+        db.checkAuthorizationStatus();
     },
 });
 
 var StartPageSync = module.exports.Sync = React.createClass({
     displayName: 'StartPage.Sync',
     propTypes: {
+        currentUser: PropTypes.object,
         system: PropTypes.object,
         providers: PropTypes.arrayOf(PropTypes.object),
         projects: PropTypes.arrayOf(PropTypes.object),
-        unauthorizedLocation: PropTypes.object,
+        canAccessServer: PropTypes.bool,
+        canAccessSchema: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -218,7 +193,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderButtons: function() {
-        if (this.props.unauthorizedLocation) {
+        if (!this.props.canAccessServer) {
             return this.renderOAuthButtons();
         } else {
             return this.renderProjectButtons();
@@ -255,18 +230,144 @@ var StartPageSync = module.exports.Sync = React.createClass({
     renderOAuthButton: function(provider, i) {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var name = p(provider.title) || t(`server-type-${provider.type}`);
+        var name = p(provider.details.title) || t(`server-type-${provider.type}`);
         var icon = getServerIcon(provider.type);
-        var conn = this.props.database.access(this.props.unauthorizedLocation);
-        var url = `${conn.protocol}://${conn.server}` + provider.url;
         return (
-            <a key={i} className="button" href={url} onClick={this.handleOAuthButtonClick}>
+            <a key={i} className="oauth-button" href={provider.url} onClick={this.handleOAuthButtonClick}>
                 <i className={`fa fa-fw fa-${icon}`}></i>
                 <span className="label">
                     {name}
                 </span>
             </a>
         );
+    },
+
+    renderProjectButtons: function() {
+        var t = this.props.locale.translate;
+        var projects = this.props.projects;
+        if (!projects) {
+            return null;
+        }
+        return (
+            <div className="section buttons">
+                <h2>{t('start-projects')}</h2>
+                <div className="scrollable">
+                    {_.map(projects, this.renderProjectButton)}
+                </div>
+            </div>
+        );
+    },
+
+    renderProjectButton: function(project, i) {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var name = p(project.details.title) || project.name;
+        var description = p(project.details.description);
+
+        // project picture
+        var icon;
+        var resources = _.get(project, 'details.resources');
+        var projectImage = _.find(resources, { type: 'image' });
+        if (projectImage) {
+            var imageUrl = this.props.theme.getImageUrl(projectImage, 56, 56);
+            icon = <img src={imageUrl} />;
+        } else {
+            // use logo, with alternating background color
+            var Logo = require('trambar-logo.svg');
+            var num = (project.id % 5) + 1;
+            icon = <div className={`default v${num}`}><Logo /></div>;
+        }
+
+        // add badge to indicate membership status
+        var currentUser = this.props.currentUser;
+        var isMember = _.includes(project.user_ids, currentUser.id);
+        var isPendingMember = _.includes(currentUser.requested_project_ids, project.id);
+        var badge;
+        if (isMember) {
+            // is member
+            badge = <i className="fa fa-user-circle-o badge" />;
+        } else if (isPendingMember) {
+            // pending
+            badge = <i className="fa fa-clock-o badge" />;
+        }
+
+        var props = {
+            key: i,
+            'data-project-id': project.id,
+            className: 'project-button'
+        };
+        var viewable = false;
+        if (isMember) {
+            viewable = true;
+        } else if (isPendingMember) {
+            // see if the project is read-only for pending member
+            var ac = _.get(project.settings, 'access_control', {});
+            if (currentUser.type === 'member') {
+                viewable = ac.grant_team_members_read_only;
+            } else if (currentUser.approved) {
+                viewable = ac.grant_approved_users_read_only;
+            } else {
+                viewable = ac.grant_unapproved_users_read_only;
+            }
+        }
+        if (viewable) {
+            // link to the project's news page
+            props.href = require('pages/news-page').getUrl({
+                server: this.props.route.parameters.server,
+                schema: project.name,
+            });
+        } else {
+            // add handler for requesting access
+            // (or just show the project info if user has joined already)
+            //
+            // the backend won't send projects that don't have
+            // settings.membership.allow_request = true
+            props.onClick = this.handleProjectButtonClick;
+        }
+
+        return (
+            <a {...props}>
+                <div className="icon">{icon}</div>
+                <div className="text">
+                    {badge}
+                    <div className="title">
+                        {name}
+                    </div>
+                    <div className="description">
+                        <div className="contents">
+                            {description}
+                            <div className="ellipsis">...</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        );
+    },
+
+    /**
+     * Render dialog box for joining a project
+     *
+     * @return {ReactElement|null}
+     */
+    renderProjectDialog: function() {
+        if (!this.state.renderingProjectDialog) {
+            return null;
+        }
+        var dialogProps = {
+            show: this.state.showingProjectDialog,
+            project: this.state.selectedProject,
+            user: this.props.currentUser,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onConfirm: this.handleProjectRequestConfirm,
+            onCancel: this.handleProjectRequestCancel,
+            onComplete: this.handleProjectRequestComplete,
+        };
+        return <ProjectInfoDialogBox {...dialogProps} />;
     },
 
     /**
@@ -330,6 +431,63 @@ var StartPageSync = module.exports.Sync = React.createClass({
         return this.openPopUpWindow(url).then(() => {
             this.triggerOAuthEndedEvent();
         });
+    },
+
+    /**
+     * Called when user clicks on a project of which he's not a member
+     *
+     * @param  {Event} evt
+     */
+    handleProjectButtonClick: function(evt) {
+        var id = parseInt(evt.currentTarget.getAttribute('data-project-id'));
+        var selectedProject = _.find(this.props.projects, { id });
+        this.setState({
+            selectedProject,
+            showingProjectDialog: true,
+            renderingProjectDialog: true,
+        });
+    },
+
+    /**
+     * Called when user clicks the confirm button in the project dialog box
+     *
+     * @param  {Event} evt
+     */
+    handleProjectRequestConfirm: function(evt) {
+        var projectId = this.state.selectedProject.id;
+        var projectIds = this.props.currentUser.requested_project_ids;
+        var newUserProps = {
+            id: this.props.currentUser.id,
+            requested_project_ids: _.union(projectIds, [ projectId ])
+        };
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var db = this.props.database.use({ server, by: this });
+        return db.saveOne({ schema: 'global', table: 'user' }, newUserProps);
+    },
+
+    /**
+     * Called when user clicks outside the project dialog box or the cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleProjectRequestCancel: function(evt) {
+        this.setState({ showingProjectDialog: false });
+        setTimeout(() => {
+            this.setState({ renderingProjectDialog: false });
+        }, 500);
+    },
+
+    /**
+     * Called when user clicks outside the project dialog box or the ok button
+     *
+     * @param  {Event} evt
+     */
+    handleProjectRequestComplete: function(evt) {
+        this.setState({ showingProjectDialog: false });
+        setTimeout(() => {
+            this.setState({ renderingProjectDialog: false });
+        }, 500);
     },
 });
 

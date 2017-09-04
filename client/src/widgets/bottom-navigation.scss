@@ -1,7 +1,9 @@
 .bottom-navigation {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
     display: flex;
     align-items: flex-start;
-    flex: 0 1 auto;
     transition: height 1s;
     z-index: 2;     // drawn over the start page (z-index = 1)
 

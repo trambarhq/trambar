@@ -41,27 +41,47 @@
                 vertical-align: top;
                 padding-left: 1em;
                 padding-right: 1em;
-            }
 
-            .section p {
-                margin-bottom: 0;
+                .scrollable {
+                    margin-top: 1em;
+                    max-height: 60vh;
+                    overflow: auto;
 
-                &.description p {
-                    white-space: pre-line;
+                    &::-webkit-scrollbar-track {
+                    	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+                    	border-radius: 10px;
+                    	background-color: transparent;
+                    }
+
+                    &::-webkit-scrollbar {
+                    	width: 14px;
+                    	background-color: transparent;
+                    }
+
+                    &::-webkit-scrollbar-thumb {
+                    	border-radius: 10px;
+                    	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+                    	background-color: #402f2d;
+                    }
+                }
+
+                &.description {
+                    .scrollable {
+                        white-space: pre-line;
+                    }
                 }
             }
         }
     }
 
-    .button {
+    .oauth-button {
         display: block;
         font-size: 1.2em;
         border: 1px solid #ffffff;
-        padding: 0.5em 0.5em 0.5em 0.5em;
+        padding: 0.5em 0.5em 0.5em 1em;
         max-width: 15em;
         cursor: pointer;
         margin-top: 0.5em;
-        padding-left: 1em;
         vertical-align: middle;
 
         .fa {
@@ -76,6 +96,101 @@
             display: inline-block;
             max-width: 8.5em;
             vertical-align: middle;
+        }
+
+        &:link, &:visited {
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        &:hover {
+            background-color: #fca326;
+            color: #000000;
+        }
+    }
+
+    .project-button {
+        display: block;
+        border: 1px solid #ffffff;
+        max-width: 34em;
+        cursor: pointer;
+        margin-bottom: 0.5em;
+        vertical-align: middle;
+        height: calc(3.5em + 2px);
+
+        .icon {
+            float: left;
+
+            .default {
+                text-align: center;
+                width: 3.5em;
+                height: 3.5em;
+
+                &.v1 {
+                    background-color: #ff9900;
+                }
+
+                &.v2 {
+                    background-color: #00cc33;
+                }
+
+                &.v3 {
+                    background-color: #3399ff;
+                }
+
+                &.v4 {
+                    background-color: #ff6666;
+                }
+
+                &.v5 {
+                    background-color: #cc66ff;
+                }
+
+                svg {
+                    margin-top: 0.5em;
+                    height: 2.25em;
+                }
+            }
+        }
+
+        .text {
+            overflow: hidden;
+
+            .title {
+                font-size: 1em;
+                margin: 0.25em 0.25em 0 0.35em;
+                font-weight: bold;
+                font-variant: small-caps;
+            }
+
+            .description {
+                font-size: 0.8em;
+                margin: 0.1em 0.25em 0 0.40em;
+                white-space: pre-line;
+                overflow: hidden;
+                height: calc(2em + 5px);
+
+                .contents {
+                    width: calc(100% - 1em);
+                    position: relative;
+                    display: block;
+                    max-height: 3em;
+
+                    .ellipsis {
+                        position: absolute;
+                        right: -1em;
+                        top: calc(4em + 2px - 100%);
+                        text-align: left;
+                    }
+                }
+            }
+
+            .badge {
+                color: #606060;
+                margin-top: 0.2em;
+                margin-right: 0.2em;
+                float: right;
+            }
         }
 
         &:link, &:visited {

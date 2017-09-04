@@ -160,16 +160,14 @@ module.exports = React.createClass({
     createSocket: function(protocol, server, token) {
         //console.log('Connecting to ' + server);
         return new Promise((resolve, reject) => {
-            var url = `${protocol}://${server}/socket`;
+            var url = `${protocol}//${server}/socket`;
             var socket = new SockJS(url);
             var isFulfilled = false;
             socket.onopen = (evt) => {
                 if (!isFulfilled) {
-
+                    isFulfilled = true;
+                    resolve(socket);
                 }
-                isFulfilled = true;
-                resolve(socket);
-                //console.log(`Connected to ${server}`);
             };
             socket.onclose = () => {
                 if (!isFulfilled) {
@@ -191,6 +189,7 @@ module.exports = React.createClass({
             this.props.onNotify({
                 type: 'notify',
                 target: this,
+                protocol: this.state.protocol,
                 server: this.state.server,
                 changes: changes
             });
@@ -220,13 +219,13 @@ module.exports = React.createClass({
             var server = this.state.server;
             var protocol = this.state.protocol;
             if (alert.profile_image) {
-                options.icon = `${protocol}://${server}${alert.profile_image}`;
+                options.icon = `${protocol}//${server}${alert.profile_image}`;
             }
             if (alert.message) {
                 options.body = alert.message;
             } else if (alert.attached_image) {
                 // show attach image only if there's no text
-                options.image = `${protocol}://${server}${alert.attached_image}`;
+                options.image = `${protocol}//${server}${alert.attached_image}`;
             }
             options.lang = this.props.locale.languageCode;
             var notification = new Notification(alert.title, options);

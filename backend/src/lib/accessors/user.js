@@ -57,7 +57,7 @@ module.exports = _.create(Data, {
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 server_id int,
                 external_id bigint,
-                request_project_ids int[],
+                requested_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
                 approved boolean NOT NULL DEFAULT true,
                 settings jsonb NOT NULL DEFAULT '{}',
