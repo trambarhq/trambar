@@ -105,7 +105,7 @@ function handleDiscovery(req, res) {
     var params = req.body || req.query;
     var schema = req.params.schema;
     var table = req.params.table;
-    return Database.open(schema).then((db) => {
+    return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
             var criteria = _.omit(params, 'token');
             if (criteria.order) {
@@ -156,7 +156,7 @@ function handleRetrieval(req, res) {
     var params = req.body || req.query;
     var schema = req.params.schema;
     var table = req.params.table;
-    return Database.open(schema).then((db) => {
+    return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
             return fetchCredentials(db, userId);
         }).then((credentials) => {
@@ -214,7 +214,7 @@ function handleStorage(req, res) {
     var params = req.body;
     var schema = req.params.schema;
     var table = req.params.table;
-    return Database.open(schema).then((db) => {
+    return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
             return fetchCredentials(db, userId);
         }).then((credentials) => {

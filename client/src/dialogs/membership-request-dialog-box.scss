@@ -1,0 +1,65 @@
+.membership-request-dialog-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 80%;
+    max-width: 40em;
+    width: 80%;
+    background-color: #362a2a;
+    box-shadow: 2px 2px 2px #000000;
+    color: #cccccc;
+    margin: auto;
+    padding: 0.4em 0.5em 0.4em 0.5em;
+
+    .scrollable {
+        flex-grow: 1;
+        flex-shrink: 1;
+        flex-basis: auto;
+        overflow: auto;
+    }
+
+    .buttons {
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: auto;
+        padding: 0.5em 0 0.2em 0.2em;
+        text-align: right;
+        border-top: 1px solid #666666;
+    }
+
+    .title {
+        font-size: 1.4em;
+        font-weight: bold;
+        margin-bottom: 0.3em;
+    }
+
+    .description {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+        white-space: pre-line;
+
+        img {
+            float: left;
+            width: 8em;
+            margin-right: 0.5em;
+            margin-bottom: 0.3em;
+        }
+    }
+
+    .collapsible-container {
+        transition-duration: 1s;
+    }
+
+    .message {
+        font-size: 0.9em;
+        padding: 0.35em 0.35em 0.35em 0.35em;
+        color: #000000;
+
+        &.accepted {
+            background-color: #66cc66;
+        }
+
+        &.requested {
+            background-color: #dddd66;
+        }
+    }
+}

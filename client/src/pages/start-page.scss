@@ -23,7 +23,7 @@
         width: 100%;
         min-height: 25vh;
         position: relative;
-        color: #ffffff;
+        color: #cccccc;
         overflow: hidden;
 
         .content-area {
@@ -92,7 +92,7 @@
     .oauth-button {
         display: block;
         font-size: 1.2em;
-        border: 1px solid #ffffff;
+        border: 1px solid #cccccc;
         padding: 0.5em 0.5em 0.5em 1em;
         max-width: 15em;
         cursor: pointer;
@@ -115,7 +115,7 @@
 
         &:link, &:visited {
             text-decoration: none;
-            color: #ffffff;
+            color: #cccccc;
         }
 
         &:hover {
@@ -126,7 +126,7 @@
 
     .project-button {
         display: block;
-        border: 1px solid #ffffff;
+        border: 1px solid #cccccc;
         max-width: 34em;
         cursor: pointer;
         margin-bottom: 0.5em;
@@ -210,7 +210,7 @@
 
         &:link, &:visited {
             text-decoration: none;
-            color: #ffffff;
+            color: #cccccc;
         }
 
         &:hover {

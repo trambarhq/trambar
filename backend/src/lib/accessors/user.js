@@ -129,6 +129,7 @@ module.exports = _.create(Data, {
                     // user settings can only be seen by the user himself
                     if (row.id === credentials.user.id) {
                         object.settings = row.settings;
+                        object.requested_project_ids = row.requested_project_ids;
                     }
                     // don't export these unless they're not their usual values
                     if (!row.approved) {

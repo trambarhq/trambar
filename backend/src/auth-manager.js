@@ -173,7 +173,8 @@ function handleHttpasswdRequest(req, res) {
                     username,
                     deleted: false,
                 };
-                return User.findOne(db, 'global', criteria, 'id, type, approved, requested_project_ids').then((user) => {
+                var userColumns = 'id, type, approved, requested_project_ids';
+                return User.findOne(db, 'global', criteria, userColumns).then((user) => {
                     if (!user) {
                         // create the admin user if it's not there
                         var name = _.capitalize(username);
@@ -231,7 +232,9 @@ function handleSessionRetrieval(req, res) {
                 });
             }
             // see which projects the user has access to
-            return User.findOne(db, 'global', { id: user_id }, 'id, type, approved, requested_project_ids').then((user) => {
+            var userId = authorization.user_id;
+            var userColumns = 'id, type, approved, requested_project_ids';
+            return User.findOne(db, 'global', { id: userId }, userColumns).then((user) => {
                 return findAccessibleProjects(db, user).then((projects) => {
                     return {
                         authorization: {

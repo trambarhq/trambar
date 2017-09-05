@@ -8,6 +8,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var MembershipRequestDialogBox = require('dialogs/membership-request-dialog-box');
+
 require('./start-page.scss');
 
 module.exports = Relaks.createClass({
@@ -142,7 +145,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             transition: null,
-            newProjects: [],
+            selectedProjectId: 0,
+            newProjectIds: [],
         };
     },
 
@@ -187,6 +191,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
                         {this.renderButtons()}
                     </div>
                 </div>
+                {this.renderProjectDialog()}
             </div>
         );
     },
@@ -379,21 +384,25 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (!this.state.renderingProjectDialog) {
             return null;
         }
+        var selectedProject = _.find(this.props.projects, { id: this.state.selectedProjectId });
+        if (!selectedProject) {
+            return null;
+        }
         var dialogProps = {
             show: this.state.showingProjectDialog,
-            project: this.state.selectedProject,
-            user: this.props.currentUser,
+            currentUser: this.props.currentUser,
+            project: selectedProject,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onConfirm: this.handleProjectRequestConfirm,
-            onCancel: this.handleProjectRequestCancel,
-            onComplete: this.handleProjectRequestComplete,
+            onConfirm: this.handleMembershipRequestConfirm,
+            onClose: this.handleMembershipRequestClose,
+            onProceed: this.handleMembershipRequestProceed,
         };
-        return <ProjectInfoDialogBox {...dialogProps} />;
+        return <MembershipRequestDialogBox {...dialogProps} />;
     },
 
     componentDidMount: function() {
@@ -497,10 +506,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleProjectButtonClick: function(evt) {
-        var id = parseInt(evt.currentTarget.getAttribute('data-project-id'));
-        var selectedProject = _.find(this.props.projects, { id });
+        var projectId = parseInt(evt.currentTarget.getAttribute('data-project-id'));
         this.setState({
-            selectedProject,
+            selectedProjectId: projectId,
             showingProjectDialog: true,
             renderingProjectDialog: true,
         });
@@ -511,8 +519,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleProjectRequestConfirm: function(evt) {
-        var projectId = this.state.selectedProject.id;
+    handleMembershipRequestConfirm: function(evt) {
+        var projectId = this.state.selectedProjectId;
         var projectIds = this.props.currentUser.requested_project_ids;
         var newUserProps = {
             id: this.props.currentUser.id,
@@ -529,7 +537,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleProjectRequestCancel: function(evt) {
+    handleMembershipRequestClose: function(evt) {
         this.setState({ showingProjectDialog: false });
         setTimeout(() => {
             this.setState({ renderingProjectDialog: false });
@@ -537,15 +545,18 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks outside the project dialog box or the ok button
+     * Called when user clicks the proceed button
      *
      * @param  {Event} evt
      */
-    handleProjectRequestComplete: function(evt) {
-        this.setState({ showingProjectDialog: false });
-        setTimeout(() => {
-            this.setState({ renderingProjectDialog: false });
-        }, 500);
+    handleMembershipRequestProceed: function(evt) {
+        this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
+
+        var url = require('pages/news-page').getUrl({
+            server: this.props.route.parameters.server,
+            schema: this.state.selectProject.name,
+        });
+        this.props.route.change(url);
     },
 });
 

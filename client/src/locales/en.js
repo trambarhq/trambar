@@ -82,6 +82,13 @@ module.exports = function(languageCode) {
         'media-next': 'Next',
         'media-previous': 'Previous',
 
+        'membership-request-cancel': 'Cancel',
+        'membership-request-join': 'Join',
+        'membership-request-ok': 'OK',
+        'membership-request-proceed': 'Proceed',
+        'membership-request-you-are-now-member': 'You are now a member in this project',
+        'membership-request-you-have-requested-membership': 'You have requested membership in this project',
+
         'notification-$user-commented-on-your-commit': (user) => {
             return `${user} commented on your commit`;
         },
