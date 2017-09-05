@@ -154,6 +154,7 @@ module.exports = function(languageCode) {
         'start-projects': 'Projects',
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',
+        'start-welcome': 'Welcome!',
 
         'statistics-bar': 'Bar',
         'statistics-line': 'Line',

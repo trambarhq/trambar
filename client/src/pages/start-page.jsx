@@ -142,6 +142,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             transition: null,
+            newProjects: [],
         };
     },
 
@@ -163,6 +164,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var t = this.props.locale.translate;
         var style;
         if (this.props.system) {
             var resources = _.get(this.props.system, 'details.resources');
@@ -179,6 +181,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         return (
             <div className={classNames.join(' ')} style={style}>
                 <div className="bar">
+                    <h1 className="welcome">{t('start-welcome')}</h1>
                     <div className="content-area">
                         {this.renderDescription()}
                         {this.renderButtons()}
@@ -405,8 +408,16 @@ var StartPageSync = module.exports.Sync = React.createClass({
     transitionOut: function() {
         var speed = 'fast';
         var duration = 1300;
+        var schema = this.props.route.parameters.schema;
+        if (_.some(this.state.newProjects, { name: schema })) {
+            // show welcome message when we're heading to a new project
+            speed = 'slow';
+            duration = 3700;
+        }
         this.setState({ transition: `transition-out-${speed}` }, () => {
             setTimeout(() => {
+                // tell parent component that we don't need to render
+                // the page anymore
                 if (this.props.onExit) {
                     this.props.onExit({
                         type: 'exit',
