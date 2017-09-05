@@ -169,7 +169,8 @@ module.exports = React.createClass({
             locale: this.state.locale,
             theme: this.state.theme,
 
-            onAuthorization: this.handleAuthorization,
+            onEntry: this.handleStartPageEntry,
+            onExit: this.handleStartPageExit,
         };
         return <StartPage {...pageProps} />
     },
@@ -383,11 +384,28 @@ module.exports = React.createClass({
                         route,
                         canAccessServer: dataSource.hasAuthorization(server),
                         canAccessSchema: false,
-                        renderingStartPage: true
                     });
                 }
             });
         }
+    },
+
+    /**
+     * Called when the StartPage mounts
+     *
+     * @param  {Object} evt
+     */
+    handleStartPageEntry: function(evt) {
+        this.setState({ renderingStartPage: true });
+    },
+
+    /**
+     * Called when the StartPage has transitioned out
+     *
+     * @param  {Object} evt
+     */
+    handleStartPageExit: function(evt) {
+        this.setState({ renderingStartPage: false });
     },
 
     /**

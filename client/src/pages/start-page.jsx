@@ -21,7 +21,8 @@ module.exports = Relaks.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onAuthorization: PropTypes.func,
+        onEntry: PropTypes.func,
+        onExit: PropTypes.func,
     },
 
     statics: {
@@ -66,6 +67,8 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
 
+            onEntry: this.props.onEntry,
+            onExit: this.props.onExit,
             onOAuthEnded: this.handleOAuthEnded,
         };
         if (!this.props.canAccessServer) {
@@ -131,11 +134,27 @@ var StartPageSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onEntry: PropTypes.func,
+        onExit: PropTypes.func,
     },
 
     getInitialState: function() {
         return {
+            transition: null,
         };
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.route !== nextProps.route
+         || this.props.canAccessServer !== nextProps.canAccessServer
+         || this.props.canAccessSchema !== nextProps.canAccessSchema) {
+             if (nextProps.route.component !== module.exports) {
+                 if (nextProps.canAccessServer && nextProps.canAccessSchema) {
+                     this.transitionOut();
+                 }
+             }
+        }
     },
 
     /**
@@ -153,8 +172,12 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 style = { backgroundImage: `url(${imageUrl})` };
             }
         }
+        var classNames = [ 'start-page' ];
+        if (this.state.transition) {
+            classNames.push(this.state.transition);
+        }
         return (
-            <div className="start-page" style={style}>
+            <div className={classNames.join(' ')} style={style}>
                 <div className="bar">
                     <div className="content-area">
                         {this.renderDescription()}
@@ -368,6 +391,30 @@ var StartPageSync = module.exports.Sync = React.createClass({
             onComplete: this.handleProjectRequestComplete,
         };
         return <ProjectInfoDialogBox {...dialogProps} />;
+    },
+
+    componentDidMount: function() {
+        if (this.props.onEntry) {
+            this.props.onEntry({
+                type: 'entry',
+                target: this,
+            });
+        }
+    },
+
+    transitionOut: function() {
+        var speed = 'fast';
+        var duration = 1300;
+        this.setState({ transition: `transition-out-${speed}` }, () => {
+            setTimeout(() => {
+                if (this.props.onExit) {
+                    this.props.onExit({
+                        type: 'exit',
+                        target: this,
+                    });
+                }
+            }, duration);
+        });
     },
 
     /**

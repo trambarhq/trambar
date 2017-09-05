@@ -4,7 +4,7 @@
     flex-basis: auto;
     display: flex;
     align-items: flex-end;
-    transition: height 1s;
+    transition: height 0.7s;
     z-index: 2;     // drawn over the start page (z-index = 1)
 
     .container {
