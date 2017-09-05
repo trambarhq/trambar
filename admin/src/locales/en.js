@@ -235,10 +235,16 @@ module.exports = function(languageCode) {
         'settings-site-domain-name': 'Domain name',
         'settings-title': 'Settings',
 
+        'sign-in-$title': (title) => {
+            var text = `Sign in`;
+            if (title) {
+                text += `: ${title}`;
+            }
+            return text;
+        },
         'sign-in-password': 'Password:',
         'sign-in-submit': 'Sign in',
-        'sign-in-title': 'Sign in',
-        'sign-in-title-oauth': 'Sign in through OAuth',
+        'sign-in-oauth': 'Sign in through OAuth',
         'sign-in-username': 'User name:',
 
         'sign-off-menu-sign-off': 'Sign off',

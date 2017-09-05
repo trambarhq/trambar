@@ -16,6 +16,8 @@ require('./navigation-tree.scss');
 module.exports = Relaks.createClass({
     displayName: 'NavigationTree',
     propTypes: {
+        disabled: PropTypes.bool,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -32,6 +34,7 @@ module.exports = Relaks.createClass({
             robot: null,
             server: null,
 
+            disabled: this.props.disabled,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -60,6 +63,14 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             return <NavigationTreeSync {...props} />;
+        }).catch((err) => {
+            if (err.statusCode === 401) {
+                // render the component even when we don't have access yet
+                // --for appearance sake
+                return <NavigationTreeSync {...props} />;
+            } else {
+                throw err;
+            }
         });
     },
 });
@@ -67,6 +78,7 @@ module.exports = Relaks.createClass({
 var NavigationTreeSync = module.exports.Sync = React.createClass({
     displayName: 'NavigationTree.Sync',
     propTypes: {
+        disabled: PropTypes.bool,
         project: PropTypes.object,
         user: PropTypes.object,
         role: PropTypes.object,
@@ -109,9 +121,13 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        var classNames = [ 'navigation-tree' ];
+        if (this.props.disabled) {
+            classNames.push('disabled');
+        }
         var rootNodes = this.getRootNodes();
         return (
-            <div ref="container" className="navigation-tree">
+            <div ref="container" className={classNames.join(' ')}>
                 {_.map(rootNodes, this.renderRootNode)}
                 {this.renderArrow()}
             </div>
@@ -130,10 +146,14 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         if (this.isActive(node)) {
             ref = 'activeLink';
         }
+        var url;
+        if (!this.props.disabled) {
+            url = node.url
+        }
         var subtree;
         return (
             <div key={key} className={`level${level}`}>
-                <a ref={ref} href={node.url}>{node.label}</a>
+                <a ref={ref} href={url}>{node.label}</a>
                 {this.renderChildNodes(node, level + 1)}
             </div>
         );

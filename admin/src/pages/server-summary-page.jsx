@@ -533,11 +533,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleAcquireClick: function(evt) {
-        var conn = this.props.database.access({ server: null })
+        var db = this.props.database.use({ by: this });
         var server = this.getServer();
-        var baseUrl = `${conn.protocol}://${conn.server}`;
-        var query = `activation=1&sid=${server.id}&token=${conn.token}`;
-        var url = `${baseUrl}/auth/${server.type}?${query}`;
+        var url = db.getActivationUrl(server);
 
         var width = 800;
         var height = 600;

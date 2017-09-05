@@ -73,6 +73,11 @@ module.exports = React.createClass({
         payloadManager: PayloadManager,
     }),
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             database: null,
@@ -81,11 +86,15 @@ module.exports = React.createClass({
             locale: null,
             theme: null,
 
-            showingSignInPage: false,
-            authenticationDetails: null,
+            canAccessServer: false,
         };
     },
 
+    /**
+     * Return true once all plumbings are ready
+     *
+     * @return {Boolean}
+     */
     isReady: function() {
         return !!this.state.database
             && !!this.state.payloads
@@ -94,6 +103,11 @@ module.exports = React.createClass({
             && !!this.state.theme;
     },
 
+    /**
+     * Render the application
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div onClick={this.handleClick}>
@@ -103,10 +117,40 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render user interface
+     *
+     * @return {ReactElement|null}
+     */
     renderUserInterface: function() {
         if (!this.isReady()) {
             return null;
         }
+        var navProps = {
+            database: this.state.database,
+            route: this.state.route,
+            locale: this.state.locale,
+            theme: this.state.theme,
+            disabled: !this.state.canAccessServer,
+            onSignOff: this.handleSignOff,
+        };
+        return (
+            <div className="application">
+                <SideNavigation {...navProps} />
+                <section className="page-view-port">
+                    {this.renderCurrentPage()}
+                </section>
+            </div>
+        );
+    },
+
+    /**
+     * Render the current page, as indicated by the route--or the login page
+     * if the server isn't accessible yet
+     *
+     * @return {ReactElement}
+     */
+    renderCurrentPage: function() {
         var CurrentPage = this.state.route.component;
         var pageProps = {
             database: this.state.database,
@@ -115,30 +159,17 @@ module.exports = React.createClass({
             locale: this.state.locale,
             theme: this.state.theme,
         };
-        var navProps = {
-            database: this.state.database,
-            route: this.state.route,
-            locale: this.state.locale,
-            theme: this.state.theme,
-            onSignOff: this.handleSignOff,
-        };
-        if (this.state.showingSignInPage) {
+        if (!this.state.canAccessServer) {
             CurrentPage = SignInPage;
-            navProps.disabled = true;
-            navProps.onSignOff = null;
-            pageProps.server = this.state.authenticationDetails.server;
-            pageProps.onSuccess = this.handleSignInSuccess;
         }
-        return (
-            <div className="application">
-                <SideNavigation {...navProps} />
-                <section className="page-view-port">
-                    <CurrentPage {...pageProps} />
-                </section>
-            </div>
-        );
+        return <CurrentPage {...pageProps} />;
     },
 
+    /**
+     * Render non-visual components
+     *
+     * @return {ReactElement}
+     */
     renderConfiguration: function() {
         var setters = this.components.setters;
         var remoteDataSourceProps = {
@@ -151,7 +182,8 @@ module.exports = React.createClass({
                 include_mtime: true,
             },
             onChange: this.handleDatabaseChange,
-            onAuthRequest: this.handleDatabaseAuthRequest,
+            onAuthorization: this.handleAuthorization,
+            onExpiration: this.handleExpiration,
         };
         var payloadManagerProps = {
             ref: setters.payloadManager,
@@ -211,6 +243,36 @@ module.exports = React.createClass({
     },
 
     /**
+     * Load user credentials (authorization token, user_id, etc.) from local cache
+     *
+     * @param  {String} server
+     *
+     * @return {Promise<Object|null>}
+     */
+    loadCredentialsFromCache: function(server) {
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var criteria = { server };
+        return db.findOne({ table: 'user_credentials', criteria });
+    },
+
+    /**
+     * Save user credentials to local cache
+     *
+     * @param  {String} server
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
+    saveCredentialsToCache: function(server, credentials) {
+        // save the credentials
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var record = _.extend({
+            key: server,
+        }, credentials);
+        return db.saveOne({ table: 'user_credentials' }, record);
+    },
+
+    /**
      * Called when the database queries might yield new results
      *
      * @param  {Object} evt
@@ -221,72 +283,33 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when RemoteDataSource needs credentials for accessing a server
-     *
-     * @param  {Object} evt
-     *
-     * @return {Promise<Object>}
-     */
-    handleDatabaseAuthRequest: function(evt) {
-        var server = evt.server
-        if (this.authRequest) {
-            if (this.authRequest.server === server) {
-                return this.authRequest.promise;
-            }
-            this.authRequest.reject(new Error('Request cancelled'));
-            this.authRequest = null;
-        }
-
-        this.authRequest = {};
-        this.authRequest.server = server;
-        this.authRequest.promise = new Promise((resolve, reject) => {
-            this.authRequest.resolve = resolve;
-            this.authRequest.reject = reject;
-        });
-
-        // retrieve credentials from database
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server };
-        db.findOne({ table: 'user_credentials', criteria }).then((credentials) => {
-            if (credentials && credentials.token && credentials.user_id) {
-                this.authRequest.resolve(credentials)
-            } else {
-                if (!credentials) {
-                    credentials = { server };
-                }
-                this.setState({
-                    showingSignInPage: true,
-                    authenticationDetails: credentials
-                });
-            }
-        }).catch((err) => {
-            this.authRequest.reject(err);
-        })
-        return this.authRequest.promise;
-    },
-
-    /**
      * Called when sign-in was successful
      *
      * @param  {Object} evt
      */
-    handleSignInSuccess: function(evt) {
-        // return the info to code that were promised
-        var credentials = evt.credentials;
-        if (this.authRequest) {
-            this.authRequest.resolve(credentials);
-            this.authRequest = null;
-        }
+    handleAuthorization: function(evt) {
+        this.saveCredentialsToCache(evt.server, evt.credentials);
 
-        // save the credentials
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var record = _.extend({
-            key: credentials.server,
-        }, credentials);
-        db.saveOne({ table: 'user_credentials' }, record).then(() => {
-            // starting rendering the proper page
-            this.setState({ showingSignInPage: false });
-        });
+        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
+            // see if it's possible to access the server now
+            var dataSource = this.components.remoteDataSource;
+            var server = this.state.route.server || window.location.hostname;
+            var schema = this.state.route.schema;
+            var newState = {
+                canAccessServer: dataSource.hasAuthorization(server),
+                canAccessSchema: dataSource.hasAuthorization(server, schema),
+            };
+            this.setState(newState);
+        }
+    },
+
+    /**
+     * Called if user credentials aren't valid anymore
+     *
+     * @param  {Object} evt
+     */
+    handleExpiration: function(evt) {
+        console.log(evt);
     },
 
     /**
@@ -345,7 +368,35 @@ module.exports = React.createClass({
      */
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
-        this.setState({ route });
+        var dataSource = this.components.remoteDataSource;
+        var server = route.parameters.server || location.hostname;
+        if (dataSource.hasAuthorization(server)) {
+            // route is accessible
+            this.setState({
+                route,
+                canAccessServer: true,
+            });
+        } else {
+            // see if user credentials are stored locally
+            this.loadCredentialsFromCache(server).then((authorization) => {
+                if (authorization) {
+                    dataSource.addAuthorization(server, authorization);
+                }
+                if (dataSource.hasAuthorization(server)) {
+                    // route is now accessible
+                    this.setState({
+                        route,
+                        canAccessServer: true,
+                    });
+                } else {
+                    // show login page
+                    this.setState({
+                        route,
+                        canAccessServer: false,
+                    });
+                }
+            });
+        }
     },
 
     /**
@@ -370,11 +421,12 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when users clicks on an element
+     * Called when users clicks on an element anywhere on the page
      *
      * @param  {Event} evt
      */
     handleClick: function(evt) {
+        // trap clicks on hyperlinks
         var target = evt.target;
         while (target && target.tagName !== 'A') {
             target = target.parentNode;
@@ -382,12 +434,12 @@ module.exports = React.createClass({
         if (target) {
             var url = target.getAttribute('href');
             if (url && url.indexOf(':') === -1) {
+                // relative links are handled by RouteManager
                 this.state.route.change(url);
                 evt.preventDefault();
             }
         }
     },
-
 
     /**
      * Called when the UI theme changes
@@ -405,6 +457,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleSignOff: function(evt) {
+        // TODO
         console.log('sign off');
     },
 

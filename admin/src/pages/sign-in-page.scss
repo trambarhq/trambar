@@ -7,10 +7,10 @@
         }
     }
 
-    .options {
+    .oauth-buttons {
         max-width: 20em;
 
-        .option {
+        .oauth-button {
             display: block;
             padding: 1em 1em 1em 1em;
             margin-bottom: 0.5em;
@@ -18,7 +18,6 @@
             background-color: transparent;
             border: 1px solid #000000;
             text-align: left;
-            cursor: pointer;
 
             &:not(:disabled) {
                 &.emphasized, &:hover, &:active {
@@ -27,6 +26,11 @@
 
                 &:active {
                 }
+            }
+
+            &:link, &:visited {
+                text-decoration: none;
+                color: #000000;
             }
 
             .fa {

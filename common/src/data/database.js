@@ -88,6 +88,14 @@ function Database(remoteDataSource, context) {
     this.checkAuthorizationStatus = function() {
         return remoteDataSource.checkAuthorizationStatus(context);
     };
+
+    this.submitPassword = function(username, password) {
+        return remoteDataSource.submitPassword(context, username, password);
+    };
+
+    this.getActivationUrl = function(oauthServer) {
+        return remoteDataSource.getActivationUrl(context, oauthServer);
+    };
 }
 
 function merge(context, query) {

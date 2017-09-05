@@ -173,7 +173,7 @@ function handleHttpasswdRequest(req, res) {
                     username,
                     deleted: false,
                 };
-                return User.findOne(db, 'global', criteria, 'id, type').then((user) => {
+                return User.findOne(db, 'global', criteria, 'id, type, approved, requested_project_ids').then((user) => {
                     if (!user) {
                         // create the admin user if it's not there
                         var name = _.capitalize(username);
@@ -191,10 +191,15 @@ function handleHttpasswdRequest(req, res) {
                 });
             }).then((user) => {
                 return authorizeUser(db, user, authentication, 'htpasswd').then((authorization) => {
-                    return {
-                        token: authorization.token,
-                        user_id: authorization.user_id,
-                    };
+                    return findAccessibleProjects(db, user).then((projects) => {
+                        return {
+                            authorization: {
+                                token: authorization.token,
+                                user_id: authorization.user_id,
+                                scope: _.map(projects, 'name'),
+                            }
+                        };
+                    });
                 });
             });
         });
@@ -226,35 +231,16 @@ function handleSessionRetrieval(req, res) {
                 });
             }
             // see which projects the user has access to
-            return User.findOne(db, 'global', { id: authorization.user_id }, 'id, type, approved, requested_project_ids').then((user) => {
-                return Project.find(db, 'global', { deleted: false }, 'name, user_ids, settings').filter((project) => {
-                    if (_.includes(project.user_ids, user.id)) {
-                        return true;
-                    }
-                    if (_.includes(user.requested_project_ids, user.id)) {
-                        if (user.type === 'member') {
-                            if (project.settings.grant_team_members_read_only) {
-                                return true;
-                            }
-                        } else if (user.approved) {
-                            if (project.settings.grant_approved_users_read_only) {
-                                return true;
-                            }
-                        } else {
-                            if (project.settings.grant_unapproved_users_read_only) {
-                                return true;
-                            }
+            return User.findOne(db, 'global', { id: user_id }, 'id, type, approved, requested_project_ids').then((user) => {
+                return findAccessibleProjects(db, user).then((projects) => {
+                    return {
+                        authorization: {
+                            token: authorization.token,
+                            user_id: authorization.user_id,
+                            scope: _.map(projects, 'name'),
                         }
-                    }
+                    };
                 });
-            }).then((accessibleProjects) => {
-                return {
-                    authorization: {
-                        token: authorization.token,
-                        user_id: authorization.user_id,
-                        scope: _.map(accessibleProjects, 'name'),
-                    }
-                };
             });
         });
     }).then((results) => {
@@ -390,7 +376,7 @@ function handleOAuthActivationRequest(req, res, done) {
         `;
         sendResponse(res, html);
     }).catch((err) => {
-        // display error
+        // TODO: display error as HTML
         sendError(res, err);
     });
 }
@@ -431,6 +417,40 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
             area: authentication.area,
         };
         return Authorization.insertOne(db, 'global', authorization);
+    });
+}
+
+/**
+ * Find projects that a user has access to (read-write or read-only)
+ *
+ * @param  {Database} db
+ * @param  {User} user
+ *
+ * @return {Promise<Array<Object>}
+ */
+function findAccessibleProjects(db, user) {
+    return Project.find(db, 'global', { deleted: false }, 'name, user_ids, settings').filter((project) => {
+        if (user.type === 'admin') {
+            return true;
+        }
+        if (_.includes(project.user_ids, user.id)) {
+            return true;
+        }
+        if (_.includes(user.requested_project_ids, user.id)) {
+            if (user.type === 'member') {
+                if (project.settings.grant_team_members_read_only) {
+                    return true;
+                }
+            } else if (user.approved) {
+                if (project.settings.grant_approved_users_read_only) {
+                    return true;
+                }
+            } else {
+                if (project.settings.grant_unapproved_users_read_only) {
+                    return true;
+                }
+            }
+        }
     });
 }
 

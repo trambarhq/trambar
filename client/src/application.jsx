@@ -57,6 +57,11 @@ module.exports = React.createClass({
         uploadManager: PayloadManager,
     }),
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             database: null,
@@ -71,6 +76,11 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Return true once all plumbings are ready
+     *
+     * @return {Boolean}
+     */
     isReady: function() {
         return !!this.state.database
             && !!this.state.payloads
@@ -79,6 +89,11 @@ module.exports = React.createClass({
             && !!this.state.theme;
     },
 
+    /**
+     * Return true if the start page should be shown
+     *
+     * @return {Boolean}
+     */
     isShowingStartPage: function() {
         if (this.state.route.component === StartPage) {
             return true;
@@ -89,6 +104,11 @@ module.exports = React.createClass({
         return false;
     },
 
+    /**
+     * Render the application
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div onClick={this.handleClick}>
@@ -98,6 +118,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render user interface
+     *
+     * @return {ReactElement|null}
+     */
     renderUserInterface: function() {
         if (!this.isReady()) {
             return null;
@@ -175,6 +200,11 @@ module.exports = React.createClass({
         return <StartPage {...pageProps} />
     },
 
+    /**
+     * Render non-visual components
+     *
+     * @return {ReactElement}
+     */
     renderConfiguration: function() {
         var setters = this.components.setters;
         var remoteDataSourceProps = {
@@ -241,12 +271,27 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Load user credentials (authorization token, user_id, etc.) from local cache
+     *
+     * @param  {String} server
+     *
+     * @return {Promise<Object|null>}
+     */
     loadCredentialsFromCache: function(server) {
         var db = this.state.database.use({ by: this, schema: 'local' });
         var criteria = { server };
         return db.findOne({ table: 'user_credentials', criteria });
     },
 
+    /**
+     * Save user credentials to local cache
+     *
+     * @param  {String} server
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Object>}
+     */
     saveCredentialsToCache: function(server, credentials) {
         // save the credentials
         var db = this.state.database.use({ by: this, schema: 'local' });
@@ -288,11 +333,9 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when
+     * Called if user credentials aren't valid anymore
      *
-     * @param  {[type]} evt
-     *
-     * @return {[type]}
+     * @param  {Object} evt
      */
     handleExpiration: function(evt) {
         console.log(evt);
@@ -391,7 +434,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when the StartPage mounts
+     * Called when StartPage mounts
      *
      * @param  {Object} evt
      */
@@ -400,7 +443,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when the StartPage has transitioned out
+     * Called when StartPage has transitioned out
      *
      * @param  {Object} evt
      */
@@ -443,11 +486,12 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when users clicks on an element
+     * Called when users clicks on an element anywhere on the page
      *
      * @param  {Event} evt
      */
     handleClick: function(evt) {
+        // trap clicks on hyperlinks
         var target = evt.target;
         while (target && target.tagName !== 'A') {
             target = target.parentNode;
@@ -455,6 +499,7 @@ module.exports = React.createClass({
         if (target) {
             var url = target.getAttribute('href');
             if (url && url.indexOf(':') === -1) {
+                // relative links are handled by RouteManager
                 this.state.route.change(url);
                 evt.preventDefault();
             }
@@ -478,6 +523,7 @@ module.exports = React.createClass({
      */
     handleAlertClick: function(evt) {
         var alert = evt.alert;
+        // TODO
         console.log(alert);
         // this is needed in Chrome
         window.focus();

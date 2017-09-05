@@ -88,6 +88,7 @@ module.exports = React.createClass({
      */
     renderNavTree: function() {
         var navProps = {
+            disabled: this.props.disabled,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,

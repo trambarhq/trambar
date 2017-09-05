@@ -55,6 +55,15 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Create a login session and retrieve information about the remote server,
+     * including a list of OAuth providers
+     *
+     * @param  {Object} location
+     * @param  {String} area
+     *
+     * @return {Promise<Object>}
+     */
     beginAuthorization: function(location, area) {
         var session = getSession(location.server);
         if (!session.authorizationPromise) {
@@ -78,6 +87,14 @@ module.exports = React.createClass({
         return session.authorizationPromise;
     },
 
+    /**
+     * Query server to see if authorization has been granted and if so,
+     * trigger the onAuthorization event
+     *
+     * @param  {Object} location
+     *
+     * @return {Promise<Boolean>}
+     */
     checkAuthorizationStatus: function(location) {
         var session = getSession(location.server);
         var token = session.authentication.token;
@@ -98,19 +115,69 @@ module.exports = React.createClass({
             // clear the promise if the session has disappeared
             session.authorizationPromise = null;
             throw err;
-        });;
+        });
     },
 
-    getActivationLink: function(location, oauthServerType, oauthServerId) {
+    /**
+     * Authenticate user through username and password
+     *
+     * @param  {Object} location
+     * @param  {String} username
+     * @param  {String} password
+     *
+     * @return {Promise<Boolean>}
+     */
+    submitPassword: function(location, username, password) {
+        var session = getSession(location.server);
+        var token = session.authentication.token;
+        var server = location.server;
+        var protocol = location.protocol;
+        var url = `${protocol}//${server}/auth/htpasswd`;
+        var payload = { token, username, password };
+        var options = { responseType: 'json', contentType: 'json' };
+        return HttpRequest.fetch('POST', url, payload, options).then((res) => {
+            var authorization = res.authorization;
+            if (authorization) {
+                session.authorization = authorization;
+                this.triggerAuthorizationEvent(server, authorization);
+                return true;
+            } else {
+                return false;
+            }
+        }).catch((err) => {
+            // clear the promise if the session has disappeared
+            session.authorizationPromise = null;
+            throw err;
+        });
+    },
+
+    /**
+     * Return an URL for granting OAuth access to the backend
+     *
+     * @param  {Object} location
+     * @param  {Object} oauthServer
+     *
+     * @return {String}
+     */
+    getActivationUrl: function(location, oauthServer) {
         var session = getSession(location.server);
         var token = session.authorization.token;
         var server = location.server;
         var protocol = location.protocol;
-        var query = `activation=1&sid=${oauthServerId}&token=${token}`;
-        var url = `${protocol}//${server}/auth/${oauthServerType}?${query}`;
+        var query = `activation=1&sid=${oauthServer.id}&token=${token}`;
+        var url = `${protocol}//${server}/auth/${oauthServer.type}?${query}`;
         return url;
     },
 
+    /**
+     * Return true if the current user has access to the specified server
+     * and (optionally) the specified schema
+     *
+     * @param  {String} server
+     * @param  {String} schema
+     *
+     * @return {Boolean}
+     */
     hasAuthorization: function(server, schema) {
         var session = getSession(server);
         if (session.authorization) {
@@ -123,6 +190,12 @@ module.exports = React.createClass({
         return false;
     },
 
+    /**
+     * Add authorization info that was retrieved earlier
+     *
+     * @param  {String} server
+     * @param  {Object} authorization
+     */
     addAuthorization: function(server, authorization) {
         var session = getSession(server);
         session.authorization = authorization;
@@ -530,7 +603,8 @@ module.exports = React.createClass({
         return HttpRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         }).catch((err) => {
-            if (err.statusCode === 403) {
+            if (err.statusCode === 401) {
+                clearSession(location.server);
                 this.triggerExpirationEvent(location.server);
             }
             throw err;
@@ -837,6 +911,10 @@ function getSession(server) {
         session = sessions[server] = {};
     }
     return session;
+}
+
+function clearSession(server) {
+    sessions[server] = null;
 }
 
 function getExpectedObjectCount(criteria) {

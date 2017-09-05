@@ -32,14 +32,16 @@
     }
 
     A {
+        cursor: default;
+
         &:link, &:visited {
             color: #ffffff;
             text-decoration: none;
             cursor: pointer;
-        }
 
-        &:hover {
-            color: #99ddff;
+            &:hover {
+                color: #99ddff;
+            }
         }
     }
 
@@ -111,6 +113,16 @@
             .fourth {
                 left: 1.5em;
             }
+        }
+    }
+
+    &.disabled {
+        A {
+            color: #2483b3;
+        }
+
+        .arrow {
+            opacity: 0;
         }
     }
 }

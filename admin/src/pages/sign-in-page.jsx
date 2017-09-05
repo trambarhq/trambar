@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
+var Relaks = require('relaks');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -13,17 +14,73 @@ var TextField = require('widgets/text-field');
 
 require('./sign-in-page.scss');
 
-module.exports = React.createClass({
+module.exports = Relaks.createClass({
     displayName: 'SignInPage',
     propTypes: {
-        server: PropTypes.string.isRequired,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    renderAsync: function(meanwhile) {
+        var db = this.props.database.use({ by: this });
+        var props = {
+            system: null,
+            providers: null,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onOAuthEnd: this.handleOAuthEnd,
+            onPasswordSubmit: this.handlePasswordSubmit,
+        };
+        // start authorization process--will receive system description
+        // and list of OAuth providers along with links
+        meanwhile.show(<SignInPageSync {...props} />, 250);
+        return db.beginAuthorization('admin').then((info) => {
+            props.system = info.system;
+            props.providers = info.providers;
+            return <SignInPageSync {...props} />;
+        });
+    },
+
+    /**
+     * Retrieve authorization object from server
+     *
+     * @param  {Object} evt
+     */
+    handleOAuthEnd: function(evt) {
+        var db = this.props.database.use({ by: this });
+        db.checkAuthorizationStatus();
+    },
+
+    /**
+     * Submit username/password to server
+     *
+     * @param  {Object} evt
+     */
+    handlePasswordSubmit: function(evt) {
+        var db = this.props.database.use({ by: this });
+        db.submitPassword(evt.username, evt.password);
+    },
+})
+
+var SignInPageSync = module.exports.Sync = React.createClass({
+    displayName: 'SignInPage.Sync',
+    propTypes: {
+        system: PropTypes.object,
+        providers: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onSuccess: PropTypes.func,
+        onOAuthEnd: PropTypes.func,
+        onPasswordSubmit: PropTypes.func,
     },
 
     /**
@@ -35,9 +92,6 @@ module.exports = React.createClass({
         return {
             username: '',
             password: '',
-            selectedProvider: null,
-            token: null,
-            providers: null,
         };
     },
 
@@ -57,33 +111,24 @@ module.exports = React.createClass({
     },
 
     /**
-     * Create Authentication object on mount
-     */
-    componentWillMount: function() {
-        this.createAuthenticationObject(this.props.server, 'admin').then((authentication) => {
-            this.setState({
-                token: authentication.token,
-                providers: authentication.providers
-            });
-        });
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render: function() {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var system = this.props.system;
+        var title = p(_.get(system, 'details.title'));
         return (
             <div className="sign-in-page">
-                <h2>{t('sign-in-title')}</h2>
+                <h2>{t('sign-in-$title', title)}</h2>
                 <section>
                     {this.renderForm()}
                 </section>
-                <h2>{t('sign-in-title-oauth')}</h2>
+                <h2>{t('sign-in-oauth')}</h2>
                 <section>
-                    {this.renderOAuthOptions()}
+                    {this.renderOAuthButtons()}
                 </section>
             </div>
         );
@@ -120,12 +165,12 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthOptions: function() {
+    renderOAuthButtons: function() {
         var t = this.props.locale.translate;
-        var providers = _.sortBy(this.state.providers, [ 'type', 'name' ]);
+        var providers = _.sortBy(this.props.providers, [ 'type', 'name' ]);
         return (
-            <div className="options">
-                {_.map(providers, this.renderOAuthOption)}
+            <div className="oauth-buttons">
+                {_.map(providers, this.renderOAuthButton)}
             </div>
         );
     },
@@ -138,75 +183,23 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthOption: function(provider, i) {
+    renderOAuthButton: function(provider, i) {
         var t = this.props.locale.translate;
-        var props = {
+        var p = this.props.locale.pick;
+        var title = p(provider.details.title) || t(`server-type-${provider.type}`);
+        var icon = getServerIcon(provider.type);
+        var buttonProps = {
             key: i,
-            label: provider.name,
-            description: provider.description,
-            icon: provider.type,
+            className: 'oauth-button',
             name: provider.name,
-            onClick: this.handleOptionClick,
+            onClick: this.handleOAuthButtonClick,
         };
-        return <Option {...props} />
-    },
-
-    /**
-     * Sign in through Oauth
-     *
-     * @param  {String} provider
-     *
-     * @return {Promise<Object>}
-     */
-    signInWithOAuth: function(provider) {
-        var token = this.state.token;
-        var server = this.props.server;
-        var protocol = 'http';
-        var url = `${protocol}://${server}` + provider.url;
-        return this.openPopUpWindow(url).then(() => {
-            // when the popup closes, see if we can obtain an authorization object
-            // with the token
-            return this.fetchAuthorizationObject(server, token).then((authorization) => {
-                var credentials = {
-                    server,
-                    token: authorization.token,
-                    user_id: authorization.user_id,
-                };
-                this.triggerSuccessEvent(credentials);
-            }).catch((err) => {
-            });
-        });
-    },
-
-    /**
-     * Ask server to create an authentication object, used to track the status
-     * of the sign-in process
-     *
-     * @param  {String} server
-     * @param  {String} area
-     *
-     * @return {Promise<Object>}
-     */
-    createAuthenticationObject: function(server, area) {
-        var protocol = 'http';
-        var url = `${protocol}://${server}/auth/session`;
-        var options = { responseType: 'json', contentType: 'json' };
-        return HttpRequest.fetch('POST', url, { area }, options);
-    },
-
-    /**
-     * Retrieve authorization object from server
-     *
-     * @param  {String} server
-     * @param  {String} token
-     *
-     * @return {Promise<Object>}
-     */
-    fetchAuthorizationObject: function(server, token) {
-        var protocol = 'http';
-        var url = `${protocol}://${server}/auth/session/${token}`;
-        var options = { responseType: 'json' };
-        return HttpRequest.fetch('GET', url, {}, options);
+        return (
+            <a {...buttonProps}>
+                <i className={`fa fa-${icon}`} />
+                <span className="label">{title}</span>
+            </a>
+        );
     },
 
     /**
@@ -248,86 +241,84 @@ module.exports = React.createClass({
     },
 
     /**
-     * Inform parent component that sign-in was successful
-     *
-     * @param  {Object} credentials
+     * Signal to parent component that the OAuth login process has ended
      */
-    triggerSuccessEvent: function(credentials) {
-        if (this.props.onSuccess) {
-            this.props.onSuccess({
-                type: 'success',
+    triggerOAuthEndEvent: function() {
+        if (this.props.onOAuthEnd) {
+            this.props.onOAuthEnd({
+                type: 'oauthended',
                 target: this,
-                credentials,
+            })
+        }
+    },
+
+    /**
+     * Tell parent component to sign-in using username and password
+     *
+     * @param  {String} username
+     * @param  {String} password
+     */
+    triggerPasswordSubmitEvent: function(username, password) {
+        if (this.props.onPasswordSubmit) {
+            this.props.onPasswordSubmit({
+                type: 'passwordsubmit',
+                target: this,
+                username,
+                password,
             });
         }
     },
 
     /**
-     * Called when user clicks on one of the sign-in options
+     * Called when user clicks on one of the OAuth buttons
      *
      * @param  {Event} evt
      */
-    handleOptionClick: function(evt) {
-        var selectedProvider = _.find(this.state.providers, { name: evt.currentTarget.name });
-        this.setState({ selectedProvider }, () => {
-            this.signInWithOAuth(selectedProvider).then((err) => {
-                this.setState({ selectedProvider: null });
-            });
+    handleOAuthButtonClick: function(evt) {
+        var url = evt.currentTarget.getAttribute('href');
+        evt.preventDefault();
+        return this.openPopUpWindow(url).then(() => {
+            this.triggerOAuthEndEvent();
         });
     },
 
+    /**
+     * Called when user changes the username
+     *
+     * @param  {Event} evt
+     */
     handleUsernameChange: function(evt) {
         this.setState({ username: evt.target.value });
     },
 
+    /**
+     * Called when user changes the password
+     *
+     * @param  {Event} evt
+     */
     handlePasswordChange: function(evt) {
         this.setState({ password: evt.target.value });
     },
 
+    /**
+     * Called when user presses enter or clicks on submit button
+     *
+     * @param  {Event} evt
+     */
     handleFormSubmit: function(evt) {
         evt.preventDefault();
         if (!this.canSubmitForm()) {
             return;
         }
-        var server = this.props.server;
-        var protocol = 'http';
-        var url = `${protocol}://${server}/auth/htpasswd`;
-        var payload = {
-            token: this.state.token,
-            username: this.state.username,
-            password: this.state.password,
-        };
-        var options = {
-            responseType: 'json',
-            contentType: 'json',
-        };
-        return HttpRequest.fetch('POST', url, payload, options).then((authorization) => {
-            var credentials = {
-                server,
-                token: authorization.token,
-                user_id: authorization.user_id,
-            };
-            this.triggerSuccessEvent(credentials);
-        }).catch((err) => {
-            console.error(err);
-        })
+        this.triggerPasswordSubmitEvent(this.state.username, this.state.password);
     },
 });
 
-function Option(props) {
-    if (props.hidden) {
-        return null;
+function getServerIcon(type) {
+    switch (type) {
+        case 'facebook':
+            return 'facebook-official';
+        default:
+            return type;
     }
-    var buttonProps = {
-        className: 'option',
-        name: props.name,
-        disabled: props.disabled,
-        onClick: (!props.disabled) ? props.onClick : null,
-    };
-    return (
-        <button {...buttonProps}>
-            <i className={`fa fa-${props.icon}`} />
-            <span className="label">{props.label}</span>
-        </button>
-    );
 }

@@ -69,7 +69,7 @@ module.exports = Relaks.createClass({
 
             onEntry: this.props.onEntry,
             onExit: this.props.onExit,
-            onOAuthEnded: this.handleOAuthEnded,
+            onOAuthEnd: this.handleOAuthEnd,
         };
         if (!this.props.canAccessServer) {
             // start authorization process--will receive system description
@@ -112,7 +112,7 @@ module.exports = Relaks.createClass({
     /**
      * Retrieve authorization object from server
      */
-    handleOAuthEnded: function() {
+    handleOAuthEnd: function() {
         var route = this.props.route;
         var server = route.parameters.server;
         var db = this.props.database.use({ server, by: this });
@@ -467,12 +467,12 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Signal to parent component that the OAuth login process has completed
+     * Signal to parent component that the OAuth login process has ended
      */
-    triggerOAuthEndedEvent: function() {
-        if (this.props.onOAuthEnded) {
-            this.props.onOAuthEnded({
-                type: 'oauthcomplete',
+    triggerOAuthEndEvent: function() {
+        if (this.props.onOAuthEnd) {
+            this.props.onOAuthEnd({
+                type: 'oauthended',
                 target: this,
             })
         }
@@ -487,7 +487,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var url = evt.currentTarget.getAttribute('href');
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
-            this.triggerOAuthEndedEvent();
+            this.triggerOAuthEndEvent();
         });
     },
 
