@@ -138,7 +138,6 @@ function handleSessionStart(req, res) {
     }).then((results) => {
         sendResponse(res, results);
     }).catch((err) => {
-        console.error(err);
         sendError(res, err);
     });
 }
@@ -219,7 +218,7 @@ function handleSessionRetrieval(req, res) {
         return Authorization.findOne(db, 'global', { token }, 'token, user_id').then((authorization) => {
             if (!authorization) {
                 return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
-                    if (authentication) {
+                    if (!authentication) {
                         throw new HttpError(404);
                     }
                     // no authorization yet
