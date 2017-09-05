@@ -132,7 +132,7 @@ module.exports = React.createClass({
      */
     renderCurrentPage: function() {
         var CurrentPage = this.state.route.component;
-        if (CurrentPage === StartPage) {
+        if (this.isShowingStartPage()) {
             // page will be rendered by renderStartPage()
             return null;
         }
@@ -155,7 +155,7 @@ module.exports = React.createClass({
      */
     renderStartPage: function() {
         if (!this.isShowingStartPage()) {
-            // see if we still need to render the start page due to transition
+            // see if we still need to render the page during transition
             if (!this.state.renderingStartPage) {
                 return null;
             }

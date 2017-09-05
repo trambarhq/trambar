@@ -88,7 +88,6 @@ module.exports = React.createClass({
         return HttpRequest.fetch('GET', url, {}, options).then((res) => {
             var authorization = res.authorization;
             if (authorization) {
-                console.log(authorization);
                 session.authorization = authorization;
                 this.triggerAuthorizationEvent(server, authorization);
                 return true;
