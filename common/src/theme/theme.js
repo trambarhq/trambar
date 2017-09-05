@@ -19,8 +19,8 @@ function Theme(themeManager) {
         return !this.isAboveMode(mode);
     };
 
-    this.getImageUrl = function(image, width, height) {
-        return themeManager.getImageUrl(image, width, height);
+    this.getImageUrl = function(image, params) {
+        return themeManager.getImageUrl(image, params);
     };
 
     this.getVideoUrl = function(image, bandwidth) {

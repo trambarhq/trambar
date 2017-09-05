@@ -151,7 +151,7 @@ module.exports = React.createClass({
         var theme = this.props.theme;
         var image = _.omit(res, 'clip');
         var props = {
-            src: theme.getImageUrl(image, width, height)
+            src: theme.getImageUrl(image, { width, height })
         };
         return (
             <div className="image">
@@ -194,10 +194,11 @@ module.exports = React.createClass({
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
             var url;
+            var size = { width: 28, height: 28 };
             if (res.type === 'image') {
-                url = theme.getImageUrl(res, 28, 28);
+                url = theme.getImageUrl(res, size);
             } else {
-                url = theme.getPosterUrl(res, 28, 28);
+                url = theme.getPosterUrl(res, size);
             }
             var props = {
                 url,

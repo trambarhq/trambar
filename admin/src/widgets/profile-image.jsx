@@ -14,7 +14,7 @@ function ProfileImage(props) {
         var profileImage = _.find(resources, { type: 'image' });
         if (profileImage) {
             var width = imageResolutions[props.size];
-            imageUrl = props.theme.getImageUrl(profileImage, width, width);
+            imageUrl = props.theme.getImageUrl(profileImage, { width: width, height: width });
         }
     }
     if (imageUrl) {

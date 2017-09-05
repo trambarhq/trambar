@@ -165,7 +165,7 @@ module.exports = React.createClass({
      */
     renderImage: function(res) {
         var imageProps = {
-            src: this.props.theme.getImageUrl(res, 512)
+            src: this.props.theme.getImageUrl(res, { width: 512 })
         };
         return (
             <div className="image" onClick={this.handleImageClick}>

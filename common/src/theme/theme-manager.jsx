@@ -43,12 +43,11 @@ module.exports = React.createClass({
      * Return URL of resized image
      *
      * @param  {String|Object} image
-     * @param  {Number|String|undefined} width
-     * @param  {Number|String|undefined} height
+     * @param  {Object} params
      *
      * @return {String|undefined}
      */
-    getImageUrl: function(image, width, height) {
+    getImageUrl: function(image, params) {
         var server = this.state.server;
         var protocol = (server === 'localhost') ? 'http' : 'http';
         var filters = [];
@@ -72,6 +71,10 @@ module.exports = React.createClass({
         if (!baseUrl) {
             return;
         }
+
+        var width = (params) ? params.width : undefined;
+        var height = (params) ? params.height : undefined;
+        var quality = (params) ? params.quality : undefined;
         if (typeof(width) === 'string') {
             width = decodeLength(width);
         }
@@ -88,6 +91,9 @@ module.exports = React.createClass({
             filters.push(`h${height}`);
         } else if (height === undefined && width !== undefined) {
             filters.push(`w${width}`);
+        }
+        if (quality !== undefined) {
+            filters.push(`q${quality}`);
         }
         var path = '';
         if (filters.length > 0) {

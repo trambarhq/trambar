@@ -70,7 +70,7 @@ module.exports = React.createClass({
         var leadAuthor = _.get(this.props.authors, 0);
         var resources = _.get(leadAuthor, 'details.resources');
         var profileImage = _.find(resources, { type: 'image' });
-        var url = this.props.theme.getImageUrl(profileImage, 48, 48);
+        var url = this.props.theme.getImageUrl(profileImage, { width: 48, height: 48 });
         return (
             <div className="profile-image">
                 <img src={url} />

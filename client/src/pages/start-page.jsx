@@ -170,7 +170,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             var resources = _.get(this.props.system, 'details.resources');
             var backgroundImage = _.find(resources, { type: 'image' });
             if (backgroundImage) {
-                var imageUrl = this.props.theme.getImageUrl(backgroundImage, 1024);
+                var imageUrl = this.props.theme.getImageUrl(backgroundImage, { width: 1024, quality: 40 });
                 style = { backgroundImage: `url(${imageUrl})` };
             }
         }
@@ -295,7 +295,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var resources = _.get(project, 'details.resources');
         var projectImage = _.find(resources, { type: 'image' });
         if (projectImage) {
-            var imageUrl = this.props.theme.getImageUrl(projectImage, 56, 56);
+            var imageUrl = this.props.theme.getImageUrl(projectImage, { width: 56, height: 56 });
             icon = <img src={imageUrl} />;
         } else {
             // use logo, with alternating background color

@@ -215,7 +215,7 @@ function User(props) {
     var classNames = [ 'user' ];
     var resources = _.get(props.user, 'details.resources');
     var profileImage = _.find(resources, { type: 'image' });
-    var imageUrl = props.theme.getImageUrl(profileImage, 24, 24);
+    var imageUrl = props.theme.getImageUrl(profileImage, { width: 24, height: 24 });
     var name = _.get(props.user, 'details.name');
     return (
         <div className={classNames.join(' ')}>
