@@ -21,8 +21,6 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSignOff: PropTypes.func,
     },
 
     /**
@@ -210,11 +208,10 @@ module.exports = React.createClass({
             database: this.props.database,
             locale: this.props.locale,
             theme: this.props.theme,
-            onSignOff: this.props.onSignOff,
         };
         return (
             <div className="button user">
-                <Tooltip upward leftward>
+                <Tooltip upward leftward disabled={this.props.disabled}>
                     <inline>
                         <i className="fa fa-user-circle-o" />
                     </inline>

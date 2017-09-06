@@ -58,7 +58,12 @@ module.exports = _.create(Data, {
             var storeProcs = {
                 checkAuthorization: {
                     function: function(token, area) {
-                        var sql = `SELECT user_id, area FROM ${table} WHERE token = $1 AND (area = $2 OR $2 IS NULL) AND expiration_date >= current_date LIMIT 1`;
+                        var sql = `SELECT user_id, area FROM ${table}
+                                   WHERE token = $1
+                                   AND (area = $2 OR $2 IS NULL)
+                                   AND expiration_date >= current_date
+                                   AND deleted = false
+                                   LIMIT 1`;
                         var row = plv8.execute(sql, [ token, area ])[0];
                         return (row) ? row.user_id : null;
                     },
@@ -68,7 +73,10 @@ module.exports = _.create(Data, {
 
                 extendAuthorization: {
                     function: function(token, expire) {
-                        var sql = `UPDATE ${table} SET expiration_date = $2 WHERE token = $1`;
+                        var sql = `UPDATE ${table}
+                                   SET expiration_date = $2
+                                   WHERE token = $1
+                                   AND deletd = false`;
                         plv8.execute(sql, [ token, expire ]);
                     },
                     arguments: 'token text, expire date',

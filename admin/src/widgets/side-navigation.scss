@@ -42,17 +42,6 @@
             position: relative;
             float: left;
 
-            .label {
-                display: inline-block;
-                color: #0077b3;
-                padding: 0.4em 0.5em 0.3em 0.5em;
-                cursor: pointer;
-
-                &:hover {
-                    color: #99ddff;
-                }
-            }
-
             &.country {
                 .label {
                     border-left: 1px solid #006699;
@@ -72,6 +61,22 @@
             }
 
             .tooltip {
+                .label {
+                    display: inline-block;
+                    color: #0077b3;
+                    padding: 0.4em 0.5em 0.3em 0.5em;
+                }
+
+                &.live {
+                    .label {
+                        cursor: pointer;
+
+                        &:hover {
+                            color: #99ddff;
+                        }
+                    }
+                }
+
                 .item {
                     color: #777777;
                     margin-top: 0.25em;
@@ -80,10 +85,6 @@
 
                     .fa {
                         visibility: hidden;
-                    }
-
-                    &:hover {
-                        color: #0077b3;
                     }
 
                     &.selected {

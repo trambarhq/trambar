@@ -152,6 +152,29 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove authorization
+     *
+     * @param  {Object} location
+     *
+     * @return {Promise<Boolean>}
+     */
+    endAuthorization: function(location) {
+        var session = getSession(location.server);
+        var token = session.authorization.token;
+        var server = location.server;
+        var protocol = location.protocol;
+        var url = `${protocol}//${server}/auth/session/${token}/end`;
+        var options = { responseType: 'json', contentType: 'json' };
+        return HttpRequest.fetch('POST', url, {}, options).then(() => {
+            session.authentication = null;
+            session.authorizationPromise = null;
+            session.authorization = null;
+            this.triggerExpirationEvent(server);
+            return true;
+        });
+    },
+
+    /**
      * Return an URL for granting OAuth access to the backend
      *
      * @param  {Object} location
@@ -291,7 +314,7 @@ module.exports = React.createClass({
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
         if (location.schema === 'local') {
-            this.removeLocalObjects(location, objects);
+            return this.removeLocalObjects(location, objects);
         } else {
             // set the deleted flag
             objects = _.map(objects, (object) => {

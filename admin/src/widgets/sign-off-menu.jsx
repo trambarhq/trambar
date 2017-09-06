@@ -18,8 +18,6 @@ module.exports = Relaks.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSignOff: PropTypes.func,
     },
 
     renderAsync: function(meanwhile) {
@@ -41,11 +39,16 @@ module.exports = Relaks.createClass({
                             {p(user.details.name)}
                         </div>
                     </a>
-                    <div className="sign-off" onClick={this.props.onSignOff}>
+                    <div className="sign-off" onClick={this.handleSignOffClick}>
                         {t('sign-off-menu-sign-off')}
                     </div>
                 </div>
             );
         });
+    },
+
+    handleSignOffClick: function() {
+        var db = this.props.database.use({ by: this });
+        db.endAuthorization();
     },
 });

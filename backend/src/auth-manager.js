@@ -26,6 +26,7 @@ function start() {
     app.use(Passport.initialize());
     app.post('/auth/session', handleSessionStart);
     app.get('/auth/session/:token', handleSessionRetrieval);
+    app.post('/auth/session/:token/end', handleSessionTermination);
     app.post('/auth/htpasswd', handleHttpasswdRequest);
     app.get('/auth/:provider', handleOAuthActivationRequest, handleOAuthRequest);
     app.get('/auth/:provider/:callback', handleOAuthActivationRequest, handleOAuthRequest);
@@ -221,9 +222,10 @@ function handleHttpasswdRequest(req, res) {
 function handleSessionRetrieval(req, res) {
     var token = req.params.token;
     Database.open().then((db) => {
-        return Authorization.findOne(db, 'global', { token }, 'token, user_id').then((authorization) => {
+        var criteria = { token, deleted: false };
+        return Authorization.findOne(db, 'global', criteria, 'token, user_id').then((authorization) => {
             if (!authorization) {
-                return Authentication.findOne(db, 'global', { token }, 'id').then((authentication) => {
+                return Authentication.findOne(db, 'global', criteria, 'id').then((authentication) => {
                     if (!authentication) {
                         throw new HttpError(404);
                     }
@@ -245,6 +247,30 @@ function handleSessionRetrieval(req, res) {
                     };
                 });
             });
+        });
+    }).then((results) => {
+        sendResponse(res, results);
+    }).catch((err) => {
+        sendError(res, err);
+    });
+}
+
+/**
+ * Mark authorization object as deleted
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
+function handleSessionTermination(req, res) {
+    var token = req.params.token;
+    Database.open().then((db) => {
+        var criteria = { token, deleted: false };
+        return Authorization.findOne(db, 'global', criteria, 'id').then((authorization) => {
+            if (!authorization) {
+                throw new HttpError(404);
+            }
+            authorization.deleted = true;
+            return Authorization.updateOne(db, 'global', authorization).return(true);
         });
     }).then((results) => {
         sendResponse(res, results);

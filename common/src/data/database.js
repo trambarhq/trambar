@@ -93,6 +93,10 @@ function Database(remoteDataSource, context) {
         return remoteDataSource.submitPassword(context, username, password);
     };
 
+    this.endAuthorization = function() {
+        return remoteDataSource.endAuthorization(context);
+    };
+
     this.getActivationUrl = function(oauthServer) {
         return remoteDataSource.getActivationUrl(context, oauthServer);
     };

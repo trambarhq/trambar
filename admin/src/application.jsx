@@ -132,7 +132,6 @@ module.exports = React.createClass({
             locale: this.state.locale,
             theme: this.state.theme,
             disabled: !this.state.canAccessServer,
-            onSignOff: this.handleSignOff,
         };
         return (
             <div className="application">
@@ -273,6 +272,20 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove user credentials from local cache
+     *
+     * @param  {String} server
+     *
+     * @return {Promise<Object>}
+     */
+    removeCredentialsFromCache: function(server) {
+        // save the credentials
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var record = { key: server };
+        return db.removeOne({ table: 'user_credentials' }, record);
+    },
+
+    /**
      * Called when the database queries might yield new results
      *
      * @param  {Object} evt
@@ -290,16 +303,13 @@ module.exports = React.createClass({
     handleAuthorization: function(evt) {
         this.saveCredentialsToCache(evt.server, evt.credentials);
 
-        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
+        if (!this.state.canAccessServer) {
             // see if it's possible to access the server now
             var dataSource = this.components.remoteDataSource;
-            var server = this.state.route.server || window.location.hostname;
-            var schema = this.state.route.schema;
-            var newState = {
+            var server = window.location.hostname;
+            this.setState({
                 canAccessServer: dataSource.hasAuthorization(server),
-                canAccessSchema: dataSource.hasAuthorization(server, schema),
-            };
-            this.setState(newState);
+            });
         }
     },
 
@@ -309,7 +319,14 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        console.log(evt);
+        this.removeCredentialsFromCache(evt.server);
+
+        var server = window.location.hostname;
+        if (evt.server === server) {
+            this.setState({
+                canAccessServer: false
+            });
+        }
     },
 
     /**
@@ -449,16 +466,6 @@ module.exports = React.createClass({
     handleThemeChange: function(evt) {
         var theme = new Theme(evt.target);
         this.setState({ theme });
-    },
-
-    /**
-     * Called when user clicks on sign-off button
-     *
-     * @param  {Event} evt
-     */
-    handleSignOff: function(evt) {
-        // TODO
-        console.log('sign off');
     },
 
     /**
