@@ -18,6 +18,7 @@ var sockets = [];
 function start() {
     return Database.open(true).then((db) => {
         var tables = [
+            'picture',
             'project',
             'server',
             'system',

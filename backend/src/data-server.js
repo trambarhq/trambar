@@ -10,6 +10,7 @@ var HttpError = require('errors/http-error');
 
 // global accessors
 var Authorization = require('accessors/authorization');
+var Picture = require('accessors/picture');
 var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Role = require('accessors/role');
@@ -318,6 +319,7 @@ function fetchCredentials(db, userId) {
 }
 
 var globalAccessors = [
+    Picture,
     Project,
     Repo,
     Role,

@@ -5,6 +5,7 @@ var Database = require('database');
 // global accessors
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
+var Picture = require('accessors/picture');
 var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Role = require('accessors/role');
@@ -163,6 +164,7 @@ function upgradeDatabase(db) {
 var globalAccessors = [
     Authentication,
     Authorization,
+    Picture,
     Project,
     Repo,
     Role,
