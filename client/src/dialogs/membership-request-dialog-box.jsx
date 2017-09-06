@@ -7,6 +7,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var Scrollable = require('widgets/scrollable');
 var CollapsibleContainer = require('widgets/collapsible-container');
 
 require('./membership-request-dialog-box.scss');
@@ -86,14 +87,14 @@ module.exports = React.createClass({
             image = <img src={imageUrl} />;
         }
         return (
-            <div className="scrollable">
+            <Scrollable>
                 <div className="title">{title}</div>
                 {this.renderMessage()}
                 <div className="description">
                     {image}
                     {description}
                 </div>
-            </div>
+            </Scrollable>
         );
     },
 

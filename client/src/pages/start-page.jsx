@@ -9,6 +9,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
+var Scrollable = require('widgets/scrollable');
 var MembershipRequestDialogBox = require('dialogs/membership-request-dialog-box');
 
 require('./start-page.scss');
@@ -290,9 +291,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="section buttons">
                 <h2>{t('start-projects')}</h2>
-                <div className="scrollable">
+                <Scrollable>
                     {_.map(projects, this.renderProjectButton)}
-                </div>
+                </Scrollable>
             </div>
         );
     },

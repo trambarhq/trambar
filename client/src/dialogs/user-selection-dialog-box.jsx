@@ -9,6 +9,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var Scrollable = require('widgets/scrollable');
 var UserSelectionList = require('lists/user-selection-list');
 
 require('./user-selection-dialog-box.scss');
@@ -89,9 +90,9 @@ module.exports = React.createClass({
             onSelect: this.handleListSelect,
         };
         return (
-            <div className="scrollable">
+            <Scrollable>
                 <UserSelectionList {...listProps} />
-            </div>
+            </Scrollable>
         );
     },
 

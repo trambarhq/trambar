@@ -7,6 +7,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var Scrollable = require('widgets/scrollable');
 
 require('./multiple-user-names.scss');
 
@@ -108,11 +109,11 @@ module.exports = React.createClass({
         return (
             <Overlay {...overlayProps}>
                 <div className="multiple-user-names-dialog-box">
-                    <div className="scrollable">
+                    <Scrollable>
                         <div className="list">
                             {this.renderUserList()}
                         </div>
-                    </div>
+                    </Scrollable>
                     <div className="buttons">
                         <PushButton {...buttonProps} />
                     </div>
