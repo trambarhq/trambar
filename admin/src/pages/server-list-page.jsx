@@ -12,6 +12,7 @@ var Theme = require('theme/theme');
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
+var UserTooltip = require('tooltips/user-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 
 require('./server-list-page.scss');
@@ -58,10 +59,10 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             servers: null,
-            projects: null,
+            users: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -72,9 +73,18 @@ module.exports = Relaks.createClass({
         return db.start().then((currentUserId) => {
             // load all servers
             var criteria = {};
-            return db.find({ schema: 'global', table: 'server', criteria });
+            return db.find({ table: 'server', criteria });
         }).then((servers) => {
             props.servers = servers;
+            meanwhile.show(<ServerListPageSync {...props} />);
+        }).then(() => {
+            // load users associated with servers
+            var criteria = {
+                server_id: _.map(props.servers, 'id')
+            };
+            return db.find({ table: 'user', criteria });
+        }).then((users) => {
+            props.users = users;
             return <ServerListPageSync {...props} />;
         });
     }
@@ -84,7 +94,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
     displayName: 'ServerListPage.Sync',
     propTypes: {
         servers: PropTypes.arrayOf(PropTypes.object),
-        projects: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -171,6 +181,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             <tr>
                 {this.renderTitleColumn()}
                 {this.renderTypeColumn()}
+                {this.renderUsersColumn()}
                 {this.renderModifiedTimeColumn()}
             </tr>
         );
@@ -184,7 +195,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
     renderRows: function() {
         var servers = sortServers(
             this.props.servers,
-            this.props.projects,
+            this.props.users,
             this.props.locale,
             this.state.sortColumns,
             this.state.sortDirections
@@ -205,6 +216,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             <tr key={i}>
                 {this.renderTitleColumn(server)}
                 {this.renderTypeColumn(server)}
+                {this.renderUsersColumn(server)}
                 {this.renderModifiedTimeColumn(server)}
             </tr>
         );
@@ -213,7 +225,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
     /**
      * Render title column, either the heading or a data cell
      *
-     * @param  {Object|null} project
+     * @param  {Object|null} server
      *
      * @return {ReactElement}
      */
@@ -253,6 +265,30 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
             return <td>{t(`server-type-${server.type}`)}</td>
+        }
+    },
+
+    /**
+     * Render users column, either the heading or a data cell
+     *
+     * @param  {Object|null} server
+     *
+     * @return {ReactElement|null}
+     */
+    renderUsersColumn: function(server) {
+        if (this.props.theme.isBelowMode('standard')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!server) {
+            return <TH id="users">{t('table-heading-users')}</TH>;
+        } else {
+            var props = {
+                users: findUsers(this.props.users, server),
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <td><UserTooltip {...props} /></td>;
         }
     },
 
@@ -304,7 +340,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
     },
 });
 
-var sortServers = Memoize(function(servers, projects, locale, columns, directions) {
+var sortServers = Memoize(function(servers, users, locale, columns, directions) {
     var t = locale.translate;
     var p = locale.pick;
     columns = _.map(columns, (column) => {
@@ -316,6 +352,10 @@ var sortServers = Memoize(function(servers, projects, locale, columns, direction
             case 'type':
                 return (server) => {
                     return t(`server-type-${server.type}`);
+                };
+            case 'users':
+                return (server) => {
+                    return _.size(findUsers(users, server));
                 };
             default:
                 return column;
@@ -332,3 +372,7 @@ function getServerIcon(type) {
             return type;
     }
 }
+
+var findUsers = Memoize(function(users, server) {
+    return _.filter(users, { server_id: server.id });
+});
