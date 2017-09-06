@@ -284,7 +284,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
 
     renderProjectButtons: function() {
         var t = this.props.locale.translate;
-        var projects = this.props.projects;
+        var projects = sortProject(this.props.projects, this.props.locale);
         if (!projects) {
             return null;
         }
@@ -576,4 +576,11 @@ function getServerIcon(type) {
         default:
             return type;
     }
+}
+
+function sortProject(projects, locale) {
+    var p = locale.pick;
+    return _.sortBy(projects, (project) => {
+        return p(project.details.title) || project.name;
+    });
 }

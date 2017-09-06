@@ -98,15 +98,8 @@ module.exports = _.create(Data, {
                         accessible = true;
                     } else {
                         var ms = _.get(row, 'settings.membership', {});
-                        var ac = _.get(row, 'settings.access_control', {});
                         if (ms.allow_request) {
-                            if (user.type === 'member') {
-                                accessible = !!ac.grant_team_members_read_only;
-                            } else if (user.approved) {
-                                accessible = !!ac.grant_approved_users_read_only;
-                            } else {
-                                accessible = !!ac.grant_unapproved_users_read_only;
-                            }
+                            accessible = true;
                         }
                     }
                 }
