@@ -85,28 +85,36 @@ module.exports = Relaks.createClass({
             });
         } else {
             // handle things normally after we've gained authorization
-            meanwhile.show(<StartPageSync {...props} />, 250);
+            //
+            // keep showing what was there before until we've retrieved the
+            // system object
+            meanwhile.show(<StartPageSync {...props} />);
+            var userId;
             return db.start().then((currentUserId) => {
-                // load current user
-                var criteria = {
-                    id: currentUserId
-                };
-                return db.findOne({ table: 'user', criteria });
-            }).then((user) => {
-                props.currentUser = user;
-            }).then(() => {
+                // load the current user later
+                userId = currentUserId;
+
                 // load system info
                 var criteria = {};
                 return db.findOne({ table: 'system', criteria });
             }).then((system) => {
                 props.system = system;
-                meanwhile.show(<StartPageSync {...props} />);
+                meanwhile.show(<StartPageSync {...props} />, 250);
             }).then(() => {
                 // load projects
                 var criteria = {};
                 return db.find({ table: 'project', criteria });
             }).then((projects) => {
                 props.projects = projects;
+                meanwhile.show(<StartPageSync {...props} />);
+            }).then(() => {
+                // load current user
+                var criteria = {
+                    id: userId
+                };
+                return db.findOne({ table: 'user', criteria });
+            }).then((user) => {
+                props.currentUser = user;
                 return <StartPageSync {...props} />;
             });
         }

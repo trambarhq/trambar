@@ -82,8 +82,10 @@ module.exports = React.createClass({
                         var noteId = this.props.reaction.external_id;
                         switch (storyType) {
                             case 'push':
+                                // there's no mechanism for retrieving the note id of
+                                // commit comments
                                 var commitId = this.props.reaction.details.commit_id;
-                                url = `${baseUrl}/commits/${commitId}/`;
+                                url = `${baseUrl}/commit/${commitId}/`;
                                 break;
                             case 'issue':
                                 var issueId = this.props.story.details.number;
