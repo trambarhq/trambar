@@ -66,7 +66,7 @@ module.exports = _.create(Data, {
         var sql = `
             GRANT SELECT ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
-            GRANT SELECT ON ${table} TO client_role;
+            GRANT SELECT, UPDATE ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
     },
@@ -85,13 +85,46 @@ module.exports = _.create(Data, {
      */
     export: function(db, schema, rows, credentials, options) {
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
+            var user = credentials.user;
+
+            objects = _.filter(objects, (object, index) => {
                 var row = rows[index];
-                object.name = row.name;
-                object.repo_ids = row.repo_ids;
-                object.user_ids = row.user_ids;
+                var accessible = false;
                 if (credentials.unrestricted) {
-                    object.settings = row.settings;
+                    accessible = true;
+                } else if (_.includes(row.user_ids, user.id)) {
+                    accessible = true;
+                } else {
+                    if (user.type === 'admin') {
+                        accessible = true;
+                    } else {
+                        var ms = _.get(row, 'settings.membership', {});
+                        var ac = _.get(row, 'settings.access_control', {});
+                        console.log(ms);
+                        if (ms.allow_request) {
+                            if (user.type === 'member') {
+                                accessible = !!ac.grant_team_members_read_only;
+                            } else if (user.approved) {
+                                accessible = !!ac.grant_approved_users_read_only;
+                            } else {
+                                accessible = !!ac.grant_unapproved_users_read_only;
+                            }
+                        }
+                    }
+                }
+                if (accessible) {
+                    object.name = row.name;
+                    object.repo_ids = row.repo_ids;
+                    object.user_ids = row.user_ids;
+                    if (credentials.unrestricted) {
+                        object.settings = row.settings;
+                    } else {
+                        object.settings = _.pick(row.settings, 'access_control');
+                    }
+                    return true;
+                } else {
+                    console.log(object)
+                    return false;
                 }
             });
             return objects;

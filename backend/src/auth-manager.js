@@ -439,18 +439,20 @@ function findAccessibleProjects(db, user) {
         if (_.includes(project.user_ids, user.id)) {
             return true;
         }
-        if (_.includes(user.requested_project_ids, user.id)) {
-            if (user.type === 'member') {
-                if (project.settings.grant_team_members_read_only) {
-                    return true;
-                }
-            } else if (user.approved) {
-                if (project.settings.grant_approved_users_read_only) {
-                    return true;
-                }
-            } else {
-                if (project.settings.grant_unapproved_users_read_only) {
-                    return true;
+        if (project.settings.allow_request) {
+            if (_.includes(user.requested_project_ids, user.id)) {
+                if (user.type === 'member') {
+                    if (project.settings.grant_team_members_read_only) {
+                        return true;
+                    }
+                } else if (user.approved) {
+                    if (project.settings.grant_approved_users_read_only) {
+                        return true;
+                    }
+                } else {
+                    if (project.settings.grant_unapproved_users_read_only) {
+                        return true;
+                    }
                 }
             }
         }
