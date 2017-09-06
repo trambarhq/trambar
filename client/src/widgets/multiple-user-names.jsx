@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
 var Scrollable = require('widgets/scrollable');
+var ProfileImage = require('widgets/profile-image');
 
 require('./multiple-user-names.scss');
 
@@ -214,13 +215,15 @@ module.exports = React.createClass({
 
 function User(props) {
     var classNames = [ 'user' ];
-    var resources = _.get(props.user, 'details.resources');
-    var profileImage = _.find(resources, { type: 'image' });
-    var imageUrl = props.theme.getImageUrl(profileImage, { width: 24, height: 24 });
+    var imageProps = {
+        user: props.user,
+        theme: props.theme,
+        size: 'small',
+    };
     var name = _.get(props.user, 'details.name');
     return (
         <div className={classNames.join(' ')}>
-            <img className="profile-image" src={imageUrl} />
+            <ProfileImage {...imageProps} />
             <span className="name">{name}</span>
         </div>
     );

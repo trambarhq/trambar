@@ -19,6 +19,7 @@ var UpdateCheck = require('mixins/update-check');
 var AutosizeTextArea = require('widgets/autosize-text-area');
 var PushButton = require('widgets/push-button');
 var HeaderButton = require('widgets/header-button');
+var ProfileImage = require('widgets/profile-image');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
@@ -111,14 +112,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderProfileImage: function() {
-        var resources = _.get(this.props.currentUser, 'details.resources');
-        var profileImage = _.find(resources, { type: 'image' });
-        var url = this.props.theme.getImageUrl(profileImage, { width: 24, height: 24 });
-        return (
-            <div className="profile-image">
-                <img src={url} />
-            </div>
-        );
+        var props = {
+            user: this.props.currentUser,
+            theme: this.props.theme,
+            size: 'small',
+        };
+        return <ProfileImage {...props} />;
     },
 
     /**

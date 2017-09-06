@@ -1,0 +1,22 @@
+.profile-image {
+    vertical-align: middle;
+
+    &.small {
+        width: 1.5em;
+        height: 1.5em;
+    }
+
+    &.medium {
+        width: 3em;
+        height: 3em;
+    }
+
+    &.large {
+        width: 5em;
+        height: 5em;
+    }
+}
+
+svg.profile-image {
+    background-color: #999999;
+}

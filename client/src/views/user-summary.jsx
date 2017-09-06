@@ -11,6 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var UserSection = require('widgets/user-section');
 var Time = require('widgets/time');
+var ProfileImage = require('widgets/profile-image');
 
 require('./user-summary.scss');
 
@@ -51,14 +52,12 @@ module.exports = React.createClass({
     },
 
     renderProfileImage: function() {
-        var resources = _.get(this.props.user, 'details.resources');
-        var profileImage = _.find(resources, { type: 'image' });
-        var url = this.props.theme.getImageUrl(profileImage, { width: 80, height: 80 });
-        return (
-            <div className="profile-image">
-                <img src={url} />
-            </div>
-        );
+        var props = {
+            user: this.props.user,
+            theme: this.props.theme,
+            size: 'large',
+        };
+        return <ProfileImage {...props} />;
     },
 
     renderRoles: function() {

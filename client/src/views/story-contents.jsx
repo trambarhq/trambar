@@ -13,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var StoryText = require('widgets/story-text');
+var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MultipleUserNames = require('widgets/multiple-user-names');
 var Time = require('widgets/time');
@@ -118,15 +119,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderProfileImage: function() {
-        var leadAuthor = _.get(this.props.authors, 0);
-        var resources = _.get(leadAuthor, 'details.resources');
-        var profileImage = _.find(resources, { type: 'image' });
-        var url = this.props.theme.getImageUrl(profileImage, { width: 48, height: 48 });
-        return (
-            <div className="profile-image">
-                <img src={url} />
-            </div>
-        );
+        var props = {
+            user: _.get(this.props.authors, 0),
+            theme: this.props.theme,
+            size: 'medium',
+        };
+        return <ProfileImage {...props} />;
     },
 
     /**

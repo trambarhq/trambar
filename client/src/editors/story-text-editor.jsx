@@ -13,6 +13,7 @@ var StorySection = require('widgets/story-section');
 var MultipleUserNames = require('widgets/multiple-user-names');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
+var ProfileImage = require('widgets/profile-image');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 var AutosizeTextArea = require('widgets/autosize-text-area');
 var StoryText = require('widgets/story-text');
@@ -67,15 +68,12 @@ module.exports = React.createClass({
     },
 
     renderProfileImage: function() {
-        var leadAuthor = _.get(this.props.authors, 0);
-        var resources = _.get(leadAuthor, 'details.resources');
-        var profileImage = _.find(resources, { type: 'image' });
-        var url = this.props.theme.getImageUrl(profileImage, { width: 48, height: 48 });
-        return (
-            <div className="profile-image">
-                <img src={url} />
-            </div>
-        );
+        var props = {
+            user: _.get(this.props.authors, 0),
+            theme: this.props.theme,
+            size: 'medium',
+        };
+        return <ProfileImage {...props} />;
     },
 
     /**

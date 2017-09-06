@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
@@ -6,6 +7,9 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+
+// widgets
+var ProfileImage = require('widgets/profile-image');
 
 require('./user-selection-list.scss');
 
@@ -117,18 +121,20 @@ function User(props) {
     if (props.disabled) {
         classNames.push('disabled');
     }
-    var resources = _.get(props.user, 'details.resources');
-    var profileImage = _.find(resources, { type: 'image' });
-    var imageUrl = props.theme.getImageUrl(profileImage, { width: 24, height: 24 });
     var name = p(_.get(props.user, 'details.name'));
     var containerProps = {
         className: classNames.join(' '),
         'data-user-id': props.user.id,
         onClick: !props.disabled ? props.onClick : null,
-    }
+    };
+    var imageProps = {
+        user: props.user,
+        theme: props.theme,
+        size: 'small',
+    };
     return (
         <div {...containerProps}>
-            <img className="profile-image" src={imageUrl} />
+            <ProfileImage {...imageProps} />
             <span className="name">{name}</span>
             <i className="fa fa-check-circle" />
         </div>
