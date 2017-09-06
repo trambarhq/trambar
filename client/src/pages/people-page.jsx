@@ -23,10 +23,10 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('//:server/:schema/people/:roleIds/', url)
-                || Route.match('//:server/:schema/people/', url)
-                || Route.match('/:schema/people/:roleIds/', url)
-                || Route.match('/:schema/people/', url);
+            return Route.match('//:server/:schema/people/:roleIds/?', url)
+                || Route.match('//:server/:schema/people/?', url)
+                || Route.match('/:schema/people/:roleIds/?', url)
+                || Route.match('/:schema/people/?', url);
         },
 
         getUrl: function(params) {

@@ -40,7 +40,7 @@ module.exports = Relaks.createClass({
          * @return {Object|null}
          */
         parseUrl: function(url) {
-            return Route.match('/projects/:projectId/members/', url);
+            return Route.match('/projects/:projectId/members/?', url);;
         },
 
         /**
@@ -615,7 +615,8 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         } else {
             var props = {
                 time: user.mtime,
-                disabled: this.state.renderingFullList
+                disabled: this.state.renderingFullList,
+                locale: this.props.locale,
             }
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }

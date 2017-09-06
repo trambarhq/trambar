@@ -89,7 +89,7 @@ Route.match = function(route, url) {
     var names = [];
     var pattern = route.replace(/(:\w+)/g, (name) => {
         names.push(name);
-        return '([^\\/]*)';
+        return '([^\\/]+)';
     });
     var regExp = new RegExp('^' + pattern);
     var m = regExp.exec(url);

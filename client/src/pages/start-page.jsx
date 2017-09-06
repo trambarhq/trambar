@@ -31,8 +31,8 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('//:server/start/', url)
-                || Route.match('/start/', url);
+            return Route.match('//:server/start/?', url)
+                || Route.match('/start/?', url);
         },
 
         getUrl: function(params) {

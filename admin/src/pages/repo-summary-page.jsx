@@ -38,7 +38,7 @@ module.exports = Relaks.createClass({
          * @return {Object|null}
          */
         parseUrl: function(url) {
-            return Route.match('/projects/:projectId/repos/:repoId/', url);
+            return Route.match('/projects/:projectId/repos/:repoId/?', url);
         },
 
         /**

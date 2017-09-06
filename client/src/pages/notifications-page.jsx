@@ -22,10 +22,10 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('//:server/:schema/notifications/:date/', url)
-                || Route.match('//:server/:schema/notifications/', url)
-                || Route.match('/:schema/notifications/:date/', url)
-                || Route.match('/:schema/notifications/', url);
+            return Route.match('//:server/:schema/notifications/:date/?', url)
+                || Route.match('//:server/:schema/notifications/?', url)
+                || Route.match('/:schema/notifications/:date/?', url)
+                || Route.match('/:schema/notifications/?', url);
         },
 
         getUrl: function(params) {

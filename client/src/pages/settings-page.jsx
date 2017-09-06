@@ -23,8 +23,8 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/:schema/settings/', url)
-                || Route.match('//:server/:schema/settings/', url);
+            return Route.match('/:schema/settings/?', url)
+                || Route.match('//:server/:schema/settings/?', url);
         },
 
         getUrl: function(params) {

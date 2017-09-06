@@ -18,7 +18,7 @@ module.exports = React.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/error/:errorCode/', url);
+            return Route.match('/error/:errorCode/?', url);
         },
 
         getUrl: function(params) {

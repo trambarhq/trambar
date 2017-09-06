@@ -87,8 +87,9 @@ module.exports = React.createClass({
             }
             var params = page.parseUrl(url);
             if (params) {
+                var canonicalUrl = page.getUrl(params, query);
                 route = {
-                    url: url,
+                    url: canonicalUrl,
                     component: page,
                     parameters: params,
                     query: query,
@@ -110,7 +111,7 @@ module.exports = React.createClass({
         if (route) {
             this.setState(route, () => {
                 // set the browser location
-                var fullUrl = this.state.baseUrl + url;
+                var fullUrl = this.state.baseUrl + route.url;
                 if (replacing) {
                     history.replaceState({}, '', fullUrl);
                 } else {
