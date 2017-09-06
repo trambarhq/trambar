@@ -86,7 +86,6 @@ module.exports = _.create(Data, {
     export: function(db, schema, rows, credentials, options) {
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             var user = credentials.user;
-
             objects = _.filter(objects, (object, index) => {
                 var row = rows[index];
                 var accessible = false;
@@ -100,7 +99,6 @@ module.exports = _.create(Data, {
                     } else {
                         var ms = _.get(row, 'settings.membership', {});
                         var ac = _.get(row, 'settings.access_control', {});
-                        console.log(ms);
                         if (ms.allow_request) {
                             if (user.type === 'member') {
                                 accessible = !!ac.grant_team_members_read_only;

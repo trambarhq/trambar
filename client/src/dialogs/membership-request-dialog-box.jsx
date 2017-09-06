@@ -56,7 +56,7 @@ module.exports = React.createClass({
     render: function() {
         var overlayProps = {
             show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
+            onBackgroundClick: this.handleCloseClick,
         };
         var classNames = [ 'membership-request-dialog-box' ];
         return (

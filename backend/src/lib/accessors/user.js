@@ -159,7 +159,13 @@ module.exports = _.create(Data, {
     import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
             var original = originals[index];
-            if (!credentials.unrestricted) {
+            if (credentials.unrestricted) {
+                if (object.approved) {
+                    // clear the list of requested projects
+                    object = _.clone(object);
+                    object.requested_project_ids = null;
+                }
+            } else {
                 if (!original) {
                     // normal user cannot create new user
                     throw new HttpError(403);
@@ -176,11 +182,10 @@ module.exports = _.create(Data, {
                     // users cannot delete themselves
                     throw new HttpError(403);
                 }
-            }
-            if (object.approved) {
-                // clear the list of requested projects
-                object = _.clone(object);
-                object.requested_project_ids = null;
+                if (object.approved) {
+                    // user cannot approve himself
+                    throw new HttpError(403);
+                }
             }
             return object;
         });
@@ -201,41 +206,76 @@ module.exports = _.create(Data, {
      */
     associate: function(db, schema, objects, originals, rows, credentials) {
         // look for newly approved users and add them to requested projects
-        var newProjectMemberIds = {};
+        var actions = [];
         _.each(objects, (object, index) => {
             var original = originals[index];
             var row = rows[index];
+            var userId = row.id;
+            // user.approved can only be set by an admin
+            // an error would occur earlier if the current user isn't an admin
             if (object.approved) {
+                // use list from the object sent, in case changes were made
                 var projectIds = object.requested_project_ids;
                 if (!projectIds) {
                     // get the list of ids from the original row
+                    // (since import() has cleared requested_project_ids)
                     if (original) {
                         projectIds = original.requested_project_ids;
                     }
                 }
                 _.each(projectIds, (projectId) => {
-                    var ids = newProjectMemberIds[projectId];
-                    if (ids) {
-                        ids.push(row.id);
-                    } else {
-                        newProjectMemberIds[projectId] = [ row.id ];
+                    actions.push({ type: 'add-always', projectId, userId });
+                });
+            } else {
+                var projectIds = row.requested_project_ids;
+                _.each(projectIds, (projectId) => {
+                    if (row.type === 'member' || row.type === 'admin') {
+                        actions.push({ type: 'add-if-members-allowed', projectId, userId });
+                    } else if (row.approved) {
+                        actions.push({ type: 'add-if-approved-users-allowed', projectId, userId });
                     }
                 });
             }
         });
-        if (_.isEmpty(newProjectMemberIds)) {
+        if (_.isEmpty(actions)) {
             return Promise.resolve();
         }
         // update user_ids column in project table
         var Project = require('accessors/project');
         var criteria = {
-            id: _.map(_.keys(newProjectMemberIds), parseInt)
+            id: _.uniq(_.map(actions, 'projectId'))
         };
-        return Project.find(db, schema, criteria, 'id, user_ids').then((projects) => {
-            _.each(projects, (project) => {
-                project.user_ids = _.union(project.user_ids, newProjectMemberIds[project.id]);
+        return Project.find(db, schema, criteria, 'id, user_ids, settings').then((projects) => {
+            // see which project need be updated
+            var updatedProjects = _.filter(projects, (project) => {
+                // get the actions for this project
+                var projectActions = _.filter(actions, { projectId: project.id });
+                var projectChanged = false;
+                _.each(projectActions, (action) => {
+                    // check the project's settings to see if user should be added
+                    var adding = false;
+                    var membership = project.settings.membership || {};
+                    switch (action.type) {
+                        case 'add-always':
+                            adding = true;
+                            break;
+                        case 'add-if-members-allowed':
+                            adding = !!membership.accept_team_member_automatically;
+                            break;
+                        case 'add-if-approved-users-allowed':
+                            adding = !!membership.accept_approved_users_automaticlly;
+                            break;
+                    }
+                    if (adding) {
+                        project.user_ids = _.union(project.user_ids, [ action.userId ]);
+                        projectChanged = true;
+                    }
+                });
+                return projectChanged;
             });
-            return Project.update(db, schema, projects);
-        }).return();
+            if (!_.isEmpty(updatedProjects)) {
+                return Project.update(db, schema, updatedProjects).return();
+            }
+        });
     },
 });
