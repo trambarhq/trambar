@@ -457,6 +457,14 @@ module.exports = React.createClass({
             if (changed) {
                 this.triggerChangeEvent();
             }
+            // returning null here to keep Bluebird from complaing about
+            // orphaned promises (which can be created by change handlers)
+            return null;
+        }).catch((err) => {
+            // ignore error
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(err.message);
+            }
         });
         //console.log('checkSearchFreshness: false');
         return false;
@@ -466,7 +474,7 @@ module.exports = React.createClass({
         if (search.schema === 'local') {
             return true;
         }
-        var minimum = search.minimum || 1;
+        var minimum = (typeof(search.minimum) === 'number') ? search.minimum : 1;
         var expected = getExpectedObjectCount(search.criteria);
         if (minimum < expected) {
             minimum = expected;
@@ -506,6 +514,13 @@ module.exports = React.createClass({
             this.searchRemoteDatabase(search).then((changed) => {
                 if (changed) {
                     this.triggerChangeEvent();
+                }
+                // returning null to suppress warning
+                return null;
+            }).catch((err) => {
+                // ignore error
+                if (process.env.NODE_ENV !== 'production') {
+                    console.error(err.message);
                 }
             });
         }
@@ -900,7 +915,7 @@ function getSearchLocation(search) {
 }
 
 function getSearchQuery(search) {
-    return _.pick(search, 'protocol', 'server', 'schema', 'table', 'criteria');
+    return _.pick(search, 'protocol', 'server', 'schema', 'table', 'criteria', 'minimum');
 }
 
 var sessions = {};

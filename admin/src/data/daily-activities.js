@@ -15,13 +15,15 @@ function loadProjectStatistics(db, projects) {
             type: 'story-date-range',
             filters: {},
         };
-        return db.findOne({ schema, table: 'statistics', criteria }).then((dateRange) => {
+        // don't stall rendering when stats for
+        var minimum = 0;
+        return db.findOne({ schema, table: 'statistics', criteria, minimum }).then((dateRange) => {
             if (!isValidRange(dateRange)) {
                 return;
             }
             var filters = getRangeFilters(dateRange);
             var criteria = { type: 'daily-activities', filters };
-            return db.find({ schema, table: 'statistics', criteria }).then((dailyActivities) => {
+            return db.find({ schema, table: 'statistics', criteria, minimum }).then((dailyActivities) => {
                 return summarizeStatistics(dailyActivities, dateRange, project);
             });
         });

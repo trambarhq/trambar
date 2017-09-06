@@ -121,7 +121,6 @@ module.exports = _.create(Data, {
                     }
                     return true;
                 } else {
-                    console.log(object)
                     return false;
                 }
             });
