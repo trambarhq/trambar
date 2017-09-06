@@ -23,16 +23,25 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('/:schema/bookmarks/:roleIds', url)
-                || Route.match('//:server/:schema/bookmarks/:roleIds', url);
+            return Route.match('/:schema/bookmarks/?', url)
+                || Route.match('/:schema/bookmarks/:roleIds/?', url)
+                || Route.match('//:server/:schema/bookmarks/?', url)
+                || Route.match('//:server/:schema/bookmarks/:roleIds/?', url);
         },
 
         getUrl: function(params) {
             var server = params.server;
             var schema = params.schema;
+            var roleIds = params.roleIds
             var url = `/${schema}/bookmarks/`;
             if (server) {
                 url = `//${server}` + url;
+            }
+            if (roleIds) {
+                if (roleIds instanceof Array) {
+                    roleIds = roleIds.join('+');
+                }
+                url += `${roleIds}/`;
             }
             return url;
         },
