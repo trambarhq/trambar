@@ -13,6 +13,7 @@ var Crypto = require('crypto');
 var Moment = require('moment');
 
 var Database = require('database');
+var Picture = require('accessors/picture');
 var Task = require('accessors/task');
 var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
@@ -48,6 +49,7 @@ function start() {
         app.post('/internal/import', handleImageImport);
 
         createCacheFolders();
+        importStockPhotos();
 
         server = app.listen(80, () => {
             resolve();
@@ -617,6 +619,44 @@ function createCacheFolders() {
     if (!FS.existsSync(audioCacheFolder)) {
         FS.mkdirSync(audioCacheFolder);
     }
+}
+
+function importStockPhotos() {
+    Database.open().then((db) => {
+        var purposes = [ 'background', 'profile-image', 'project-emblem' ];
+        return Promise.map(purposes, (purpose) => {
+            var folder = `../media/${purpose}`;
+            return FS.readdirAsync(folder).each((file) => {
+                var url = `/media/images/${file}`;
+                var criteria = { purpose, url };
+                return Picture.findOne(db, 'global', criteria, 'id').then((picture) => {
+                    if (picture) {
+                        return false;
+                    }
+                    // assume the files are already named as their MD5 hash
+                    var srcPath = `${folder}/${file}`;
+                    return getImageMetadata(srcPath).then((metadata) => {
+                        var details = {
+                            url,
+                            width: metadata.width,
+                            height: metadata.height,
+                            format: metadata.format,
+                        };
+                        var picture = { purpose, details };
+                        return Picture.insertOne(db, 'global', picture);
+                    }).then((picture) => {
+                        var dstPath = `${imageCacheFolder}/${file}`;
+                        return FS.statAsync(dstPath).then((stat) => {
+                            return true;
+                        }).catch((err) => {
+                            console.log(dstPath + ' -> ' + srcPath);
+                            return FS.symlinkAsync(srcPath, dstPath).return(true);
+                        });
+                    });
+                });
+            });
+        });
+    });
 }
 
 var operators = {
