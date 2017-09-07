@@ -75,6 +75,12 @@ module.exports = _.create(Data, {
         return db.execute(sql);
     },
 
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
     apply: function(criteria, query) {
         var special = [ 'time_range', 'newer_than', 'older_than', 'ready' ];
         Data.apply.call(this, _.omit(criteria, special), query);

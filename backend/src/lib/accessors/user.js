@@ -86,6 +86,12 @@ module.exports = _.create(Data, {
         return db.execute(sql).return(true);
     },
 
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
     apply: function(criteria, query) {
         var special = [ 'email' ];
         Data.apply.call(this, _.omit(criteria, special), query);

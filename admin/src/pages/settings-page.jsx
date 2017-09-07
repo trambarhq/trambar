@@ -14,6 +14,7 @@ var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
+var ImageSelector = require('widgets/image-selector');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./settings-page.scss');
@@ -262,6 +263,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleDescriptionChange,
             readOnly,
         };
+        var backgroundImageProps = {
+            purpose: 'background',
+            resources: system.details.resources,
+            database: this.props.database,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
         var languageListProps = {
             onOptionClick: this.handleLanguageOptionClick,
             readOnly,
@@ -280,6 +288,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 <MultilingualTextField {...titleProps}>{t('settings-site-title')}</MultilingualTextField>
                 <TextField {...domainNameProps}>{t('settings-site-domain-name')}</TextField>
                 <MultilingualTextField {...descriptionProps}>{t('settings-site-description')}</MultilingualTextField>
+                <ImageSelector {...backgroundImageProps}>{t('settings-background-image')}</ImageSelector>
                 <OptionList {...languageListProps}>
                     <label>{t('settings-input-languages')}</label>
                     {_.map(languageOptionProps, renderOption)}

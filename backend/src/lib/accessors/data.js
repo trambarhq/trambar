@@ -136,6 +136,12 @@ module.exports = {
         return Promise.resolve(false);
     },
 
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
     apply: function(criteria, query) {
         var params = query.parameters;
         var conds = query.conditions;

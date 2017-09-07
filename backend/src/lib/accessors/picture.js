@@ -21,6 +21,7 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         purpose: String,
         user_id: Number,
+        url: String,
     },
 
     /**
@@ -41,10 +42,11 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                purpose varchart(64) NOT NULL,
+                purpose varchar(64) NOT NULL,
                 user_id int NOT NULL DEFAULT 0,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} ((details->'url'));
         `;
         return db.execute(sql);
     },
@@ -63,6 +65,24 @@ module.exports = _.create(Data, {
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
         `;
         return db.execute(sql).return(true);
+    },
+
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
+    apply: function(criteria, query) {
+        var special = [ 'url' ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.url !== undefined) {
+            params.push(criteria.url);
+            conds.push(`details->>'url' = $${params.length}`);
+        }
     },
 
     /**

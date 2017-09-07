@@ -114,7 +114,14 @@ Database.prototype.execute = function(sql, parameters) {
         return Promise.reject('Connection was closed: ' + sql.substr(0, 20) + '...');
     }
     // convert promise to Bluebird variety
-    return Promise.resolve(this.client.query(sql, parameters));
+    return Promise.resolve(this.client.query(sql, parameters)).catch((err) => {
+        if (err.code === '42601') {
+            // syntax error
+            console.log('A syntax error was encountering running the following statement:');
+            console.log(sql);
+        }
+        throw err;
+    });
 };
 
 Database.prototype.begin = function() {

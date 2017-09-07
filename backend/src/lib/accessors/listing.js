@@ -65,6 +65,12 @@ module.exports = _.create(LiveData, {
         return db.execute(sql);
     },
 
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
     apply: function(criteria, query) {
         var special = [ 'filters', 'match_any', 'has_candidates' ];
         LiveData.apply.call(this, _.omit(criteria, special), query);

@@ -78,11 +78,17 @@ module.exports = _.create(Data, {
             );
             CREATE INDEX ON ${table} (ptime) WHERE repo_id IS NOT NULL AND ptime IS NOT NULL;
             CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
-            CREATE INDEX ON test.story USING gin((details->'commit_ids')) WHERE details ? 'commit_ids';
+            CREATE INDEX ON ${table} USING gin((details->'commit_ids')) WHERE details ? 'commit_ids';
         `;
         return db.execute(sql);
     },
 
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
     apply: function(criteria, query) {
         var special = [
             'time_range',
