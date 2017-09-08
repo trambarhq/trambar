@@ -59,6 +59,15 @@ module.exports = function(languageCode) {
             return '';
         },
 
+        'image-album-cancel': 'Cancel',
+        'image-album-manage': 'Manage album',
+        'image-album-remove': 'Remove selected',
+        'image-album-select': 'Use selected',
+
+        'image-selector-crop-image': 'Adjust image size/position',
+        'image-selector-choose-from-album': 'Choose from album',
+        'image-selector-upload-file': 'Upload image',
+
         'member-list-$name-with-$username': (name, username) => {
             if (name) {
                 if (username) {
@@ -226,6 +235,7 @@ module.exports = function(languageCode) {
         'server-type-github': 'GitHub',
         'server-type-google': 'Google',
 
+        'settings-background-image': 'Background image',
         'settings-cancel': 'Cancel',
         'settings-edit': 'Edit settings',
         'settings-input-languages': 'Input languages',

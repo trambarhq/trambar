@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var FS = Promise.promisifyAll(require('fs'));
+var Path = require('path');
 var ChildProcess = require('child_process');
 var Express = require('express');
 var BodyParser = require('body-parser');
@@ -625,7 +626,7 @@ function importStockPhotos() {
     Database.open().then((db) => {
         var purposes = [ 'background', 'profile-image', 'project-emblem' ];
         return Promise.map(purposes, (purpose) => {
-            var folder = `../media/${purpose}`;
+            var folder = Path.resolve(`../media/${purpose}`);
             return FS.readdirAsync(folder).each((file) => {
                 var url = `/media/images/${file}`;
                 var criteria = { purpose, url };

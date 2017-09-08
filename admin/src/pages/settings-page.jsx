@@ -6,6 +6,7 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+var Payloads = require('transport/payloads');
 
 // widgets
 // widgets
@@ -26,6 +27,7 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
     statics: {
@@ -73,6 +75,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            payloads: this.props.payloads,
         };
         meanwhile.show(<SettingsPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
@@ -269,6 +272,9 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             database: this.props.database,
             locale: this.props.locale,
             theme: this.props.theme,
+            payloads: this.props.payloads,
+            onChange: this.handleBackgroundImageChange,
+            readOnly,
         };
         var languageListProps = {
             onOptionClick: this.handleLanguageOptionClick,
@@ -375,6 +381,15 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     handleDescriptionChange: function(evt) {
         this.setSystemProperty(`details.description`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes the background image
+     *
+     * @param  {Object} evt
+     */
+    handleBackgroundImageChange: function(evt) {
+        this.setSystemProperty(`details.resources`, evt.target.value);
     },
 
     /**

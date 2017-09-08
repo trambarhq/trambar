@@ -1,0 +1,81 @@
+.image-selector {
+    margin-bottom: 1em;
+    overflow: hidden;
+
+    label {
+        display: block;
+        font-weight: 600;
+    }
+
+    .contents {
+        margin-top: 4px;
+        // padding: 2px 2px 1px 4px;
+
+        .image {
+            float: left;
+            z-index: 1;
+
+            A {
+                display: block;
+            }
+
+            IMG {
+            }
+
+            .placeholder {
+                display: block;
+                position: relative;
+                background-color: #eeeeee;
+
+                .fa {
+                    display: block;
+                    position: absolute;
+                    font-size: 2em;
+                    top: 0;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    margin: auto;
+                    height: 1em;
+                    width: 1em;
+                }
+            }
+        }
+
+        .options {
+            float: left;
+            margin-left: 0.35em;
+            transition: opacity 1s;
+            z-index: 0;
+            overflow: hidden;
+
+            .option {
+                display: block;
+                font-weight: normal;
+                padding: 0.25em 0.4em 0.15em 0.4em;
+                cursor: pointer;
+
+                INPUT[type="file"] {
+                    position: absolute;
+                    z-index: -50000;
+                    width: 1px;
+                    height: 1px;
+                }
+
+                &:hover {
+                    background-color: #99ddff;
+                }
+            }
+        }
+    }
+
+    &.readonly {
+        .options {
+            opacity: 0;
+
+            .option {
+                cursor: default;
+            }
+        }
+    }
+}

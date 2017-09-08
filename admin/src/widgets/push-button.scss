@@ -1,6 +1,12 @@
 .push-button {
     font-size: 1.2em;
     padding: 0.14em 0.5em 0.14em 0.5em;
+    background-color: #cccccc;
+    border: 2px outset #eeeeee;
+
+    &:disabled {
+        color: #999999;
+    }
 
     &.add, &.edit, &.save, &.submit, &.confirm {
         color: #ffffff;
@@ -12,19 +18,14 @@
         }
     }
 
-    &.cancel {
-        background-color: #cccccc;
-        border: 2px outset #eeeeee;
-
-        &:active {
-            border-style: inset;
-        }
-    }
-
     &.remove, &.confirm-danger {
         color: #ffffff;
         background-color: #cc2929;
         border: 2px outset #ff3333;
+
+        &:disabled {
+            color: #cc7a7a;
+        }
     }
 
     &.acquire {

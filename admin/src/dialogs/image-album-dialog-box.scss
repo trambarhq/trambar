@@ -1,0 +1,55 @@
+.image-album-dialog-box {
+    display: flex;
+    flex-direction: column;
+    background-color: #006699;
+    color: #ffffff;
+    width: 80vw;
+    max-height: 60vh;
+    padding: 1em 1em 1em 1em;
+    box-shadow: 5px 5px 4px #000000;
+
+    .scrollable {
+        flex-grow: 1;
+        flex-shrink: 1;
+        flex-basis: auto;
+        margin-bottom: 0.5em;
+        min-height: 30vh;
+        text-align: center;
+        overflow: auto;
+
+        .picture {
+            display: inline-block;
+            border: 5px solid #ffffff;
+            margin: 0.3em 0.4em 0.3em 0.4em;
+            cursor: pointer;
+
+            IMG {
+                display: block;
+            }
+
+            &.selected {
+                border-color: #99ddff;
+            }
+
+            &.deleting {
+                border-color: #ff9999;
+            }
+        }
+    }
+
+    .buttons {
+        flex-grow: 1;
+        flex-shrink: 1;
+        flex-basis: auto;
+        border-top: 1px solid #ffffff;
+        padding-top: 0.8em;
+
+        .left {
+            float: left;
+        }
+
+        .right {
+            float: right;
+        }
+    }
+}
