@@ -23,7 +23,7 @@
             margin: 0.3em 0.4em 0.3em 0.4em;
             cursor: pointer;
 
-            IMG {
+            IMG, CANVAS {
                 display: block;
             }
 
@@ -33,6 +33,10 @@
 
             &.deleting {
                 border-color: #ff9999;
+            }
+
+            &.disabled {
+                cursor: wait;
             }
         }
     }
@@ -50,6 +54,19 @@
 
         .right {
             float: right;
+        }
+
+        label.push-button {
+            display: inline-block;
+            vertical-align: top;
+            user-select: none;
+
+            INPUT[type="file"] {
+                position: absolute;
+                z-index: -50000;
+                width: 1px;
+                height: 1px;
+            }
         }
     }
 }

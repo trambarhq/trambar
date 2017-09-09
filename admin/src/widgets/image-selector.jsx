@@ -283,6 +283,7 @@ module.exports = React.createClass({
                 database: this.props.database,
                 locale: this.props.locale,
                 theme: this.props.theme,
+                payloads: this.props.payloads,
                 onSelect: this.handleImageSelect,
                 onCancel: this.handleDialogCancel,
             };
@@ -342,10 +343,13 @@ module.exports = React.createClass({
         var file = evt.target.files[0];
         if (file) {
             return BlobReader.loadImage(file).then((img) => {
-                var format = _.last(_.split(file.type, '/'));
-                var width = img.naturalWidth;
-                var height = img.naturalHeight;
-                var image = { format, file, width, height, type: 'image' };
+                var image = {
+                    format: _.last(_.split(file.type, '/')),
+                    width: img.naturalWidth,
+                    height: img.naturalHeight,
+                    type: 'image',
+                    file,
+                };
                 return this.setImage(image);
             });
         }

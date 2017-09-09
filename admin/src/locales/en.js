@@ -63,6 +63,7 @@ module.exports = function(languageCode) {
         'image-album-manage': 'Manage album',
         'image-album-remove': 'Remove selected',
         'image-album-select': 'Use selected',
+        'image-album-upload': 'Upload files',
 
         'image-selector-crop-image': 'Adjust size/position',
         'image-selector-choose-from-album': 'Choose from album',

@@ -1,11 +1,15 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var BlobReader = require('utils/blob-reader');
+var ImageView = require('media/image-view');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+var Payloads = require('transport/payloads');
 
 // widgets
 var Overlay = require('widgets/overlay');
@@ -23,6 +27,7 @@ module.exports = Relaks.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
 
         onSelect: PropTypes.func,
         onCancel: PropTypes.func,
@@ -68,6 +73,7 @@ module.exports = Relaks.createClass({
             database: this.props.database,
             locale: this.props.locale,
             theme: this.props.theme,
+            payloads: this.props.payloads,
             onSelect: this.props.onSelect,
             onCancel: this.props.onCancel,
         };
@@ -98,6 +104,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
 
         onSelect: PropTypes.func,
         onCancel: PropTypes.func,
@@ -155,10 +162,6 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
      */
     renderPicture: function(picture, i) {
         var image = picture.details;
-        var height = 120;
-        var width = Math.round(image.width * height / image.height);
-        var imageUrl = this.props.theme.getImageUrl(image, { height, width });
-        var style = { height, width };
         var props = {
             key: i,
             className: 'picture',
@@ -181,11 +184,26 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                 }
             }
         }
-        return (
-            <div {...props}>
-                <img src={imageUrl} style={style} />
-            </div>
-        );
+        var height = 120;
+        var width = Math.round(image.width * height / image.height);
+        var style = { height, width };
+        if (image.url) {
+            var url = this.props.theme.getImageUrl(image, { height, width });
+            return (
+                <div {...props}>
+                    <img src={url} style={style} />
+                </div>
+            );
+        } else if (image.file) {
+            var imageUrl = URL.createObjectURL(image.file);
+            props.className += ' disabled';
+            props.onClick = null;
+            return (
+                <div {...props}>
+                    <ImageView url={imageUrl} style={style} />
+                </div>
+            );
+        }
     },
 
     /**
@@ -196,6 +214,13 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.state.managingImages) {
+            var inputProps = {
+                type: 'file',
+                value: '',
+                accept: 'image/*',
+                multiple: true,
+                onChange: this.handleUploadChange,
+            };
             var cancelProps = {
                 className: 'cancel',
                 onClick: this.handleCancelClick,
@@ -207,6 +232,12 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
             };
             return (
                 <div key="manage" className="buttons">
+                    <div className="left">
+                        <label className="push-button">
+                            {t('image-album-upload')}
+                            <input {...inputProps} />
+                        </label>
+                    </div>
                     <div className="right">
                         <PushButton {...cancelProps}>{t('image-album-cancel')}</PushButton>
                         {' '}
@@ -242,6 +273,52 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
+    },
+
+    /**
+     * Add image files to album
+     *
+     * @param  {Array<File>} files
+     *
+     * @return {Promise<Picture>}
+     */
+    uploadFiles: function(files) {
+        files = _.filter(files, (file) => {
+            return /^image\//.test(file.type);
+        });
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var payloads = this.props.payloads;
+        return db.start().then((currentUserId) => {
+            return Promise.mapSeries(files, (file) => {
+                return BlobReader.loadImage(file).then((img) => {
+                    var res = {
+                        format: _.last(_.split(file.type, '/')),
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        file: file,
+                        type: 'image',
+                    };
+                    return payloads.queue(res).then((payloadId) => {
+                        res.payload_id = payloadId;
+                        return {
+                            purpose: this.props.purpose,
+                            user_id: currentUserId,
+                            details: _.omit(res, 'type'),
+                        };
+                    });
+                });
+            }).then((pictures) => {
+                return db.save({ table: 'picture' }, pictures).mapSeries((picture) => {
+                    // reattach blob
+                    var payloadId = picture.details.payload_id;
+                    var criteria = { payload_id: payloadId };
+                    var payload = payloads.find(criteria);
+                    picture.details.file = payload.file;
+                    // send the file
+                    return payloads.send(payloadId).return(picture);
+                });
+            });
+        });
     },
 
     /**
@@ -331,8 +408,20 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
             });
         }
     },
+
+    /**
+     * Called after user has selected some files
+     *
+     * @param  {Event} evt
+     */
+    handleUploadChange: function(evt) {
+        var files = evt.target.files;
+        if (files.length) {
+            return this.uploadFiles(files);
+        }
+    }
 });
 
 var sortPictures = Memoize(function(pictures) {
-    return _.sortBy(pictures, 'mtime');
+    return _.orderBy(pictures, 'mtime', 'desc');
 });
