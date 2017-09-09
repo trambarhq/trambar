@@ -6,6 +6,7 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+var Payloads = require('transport/payloads');
 
 var DailyActivities = require('data/daily-activities');
 var SlugGenerator = require('utils/slug-generator');
@@ -16,6 +17,7 @@ var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
+var ImageSelector = require('widgets/image-selector');
 var ActivityChart = require('widgets/activity-chart');
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -28,6 +30,7 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
     statics: {
@@ -77,6 +80,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            payloads: this.props.payloads,
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
@@ -120,6 +124,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
     /**
@@ -130,6 +135,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             newProject: null,
+            saving: false,
         };
     },
 
@@ -226,7 +232,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() === this.isEditing(nextProps)) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 this.setState({
                     newProject: null,
@@ -324,6 +330,18 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleDescriptionChange,
             readOnly,
         };
+        var emblemProps = {
+            purpose: 'project-emblem',
+            desiredWidth: 200,
+            desiredHeight: 200,
+            resources: project.details.resources,
+            database: this.props.database,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            payloads: this.props.payloads,
+            onChange: this.handleEmblemChange,
+            readOnly,
+        };
         var listProps = {
             onOptionClick: this.handleOptionClick,
             readOnly,
@@ -393,6 +411,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 <MultilingualTextField {...titleProps}>{t('project-summary-title')}</MultilingualTextField>
                 <TextField {...nameProps}>{t('project-summary-name')}</TextField>
                 <MultilingualTextField {...descriptionProps}>{t('project-summary-description')}</MultilingualTextField>
+                <ImageSelector {...emblemProps}>{t('project-summary-emblem')}</ImageSelector>
                 <OptionList {...listProps}>
                     <label>{t('project-summary-new-members')}</label>
                     {_.map(membershipOptionProps, renderOption)}
@@ -470,13 +489,29 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
-        return db.start().then((currentUserId) => {
-            return db.saveOne({ table: 'project' }, project).then((project) => {
-                this.setState({ hasChanges: false }, () => {
-                    this.setEditability(false, project);
+        if (this.state.saving) {
+            return;
+        }
+        this.setState({ saving: true }, () => {
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
+            var payloads = this.props.payloads;
+            return payloads.prepare(project).then(() => {
+                return db.start().then((currentUserId) => {
+                    return db.saveOne({ table: 'project' }, project).then((project) => {
+                        // reattach blob, if any
+                        payloads.reattach(project);
+                        return payloads.dispatch(project).then(() => {
+                            this.setState({ hasChanges: false, saving: false }, () => {
+                                this.setEditability(false, project);
+                            });
+                            return null;
+                        });
+                    });
                 });
+            }).catch((err) => {
+                console.error(err);
+                this.setState({ saving: false });
             });
         });
     },
@@ -506,6 +541,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleDescriptionChange: function(evt) {
         this.setProjectProperty(`details.description`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes the project emblem
+     *
+     * @param  {Object} evt
+     */
+    handleEmblemChange: function(evt) {
+        this.setProjectProperty(`details.resources`, evt.target.value);
     },
 
     /**

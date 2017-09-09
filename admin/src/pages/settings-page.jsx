@@ -107,8 +107,8 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     getInitialState: function() {
         return {
-            saving: false,
             newSystem: null,
+            saving: false,
         };
     },
 
@@ -173,16 +173,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() === this.isEditing(nextProps)) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 this.setState({
                     newSystem: null,
                     hasChanges: false,
                 });
             }
-        }
-        if (this.props.system !== nextProps.system) {
-            nextProps.payloads.reattach(nextProps.system);
         }
     },
 
@@ -355,11 +352,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         }
         this.setState({ saving: true }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
-            var payloads = this.props.payloads;
             var system = this.getSystem();
+            var payloads = this.props.payloads;
             return payloads.prepare(system).then(() => {
                 return db.start().then((currentUserId) => {
                     return db.saveOne({ table: 'system' }, system).then((system) => {
+                        // reattach blob, if any
+                        payloads.reattach(system);
                         return payloads.dispatch(system).then(() => {
                             this.setState({ hasChanges: false, saving: false }, () => {
                                 this.setEditability(false);

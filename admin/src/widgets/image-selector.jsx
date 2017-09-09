@@ -116,18 +116,17 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function() {
+        var height = 120, width = 160;
         var image = this.getImage();
         if (image) {
-            var height = 120;
-            var width = Math.round(image.width * height / image.height);
-            var dimensions = { width, height };
+            width = Math.round(image.width * height / image.height);
             if (image.url) {
-                var imageUrl = this.props.theme.getImageUrl(image, dimensions);
+                var imageUrl = this.props.theme.getImageUrl(image, { width, height });
                 var fullImageUrl = this.props.theme.getImageUrl(image);
                 return (
                     <div className="image">
                         <a href={fullImageUrl} target="_blank">
-                            <img src={imageUrl} style={dimensions} />
+                            <img src={imageUrl} style={{ width, height }} />
                         </a>
                     </div>
                 );
@@ -136,18 +135,17 @@ module.exports = React.createClass({
                 var imageUrl = URL.createObjectURL(image.file);
                 return (
                     <div className="image">
-                        <ImageView url={imageUrl} style={dimensions} />
+                        <ImageView url={imageUrl} style={{ width, height }} />
                     </div>
                 );
             }
         } else {
-            var style = {
-                width: 160,
-                height: 120,
-            };
+            if (this.props.desiredWidth && this.props.desiredHeight) {
+                width = Math.round(this.props.desiredWidth * height / this.props.desiredHeight);
+            }
             return (
                 <div className="image">
-                    <div className="placeholder" style={style}>
+                    <div className="placeholder" style={{ width, height }}>
                         <i className="fa fa-photo" />
                     </div>
                 </div>
