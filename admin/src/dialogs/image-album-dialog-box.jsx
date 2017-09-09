@@ -115,6 +115,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
             managingImages: false,
             selectedPictureId: null,
             deletionCandidateIds: [],
+            isDropTarget: false,
         };
     },
 
@@ -128,11 +129,16 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
             show: this.props.show,
             onBackgroundClick: this.handleBackgroundClick,
         };
+        var dialogProps = {
+            className: 'image-album-dialog-box',
+            onDragEnter: this.handleDragEnter,
+        };
         return (
             <Overlay {...overlayProps}>
-                <div className="image-album-dialog-box">
+                <div  {...dialogProps}>
                     {this.renderPictures()}
                     {this.renderButtons()}
+                    {this.renderDropIndicator()}
                 </div>
             </Overlay>
         );
@@ -276,6 +282,24 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Render visual indicator when files are dragged over dialog box
+     *
+     * @return {ReactElement|null}
+     */
+    renderDropIndicator: function() {
+        if (!this.state.isDropTarget) {
+            return null;
+        }
+        var props = {
+            className: 'drop-target',
+            onDragLeave: this.handleDragLeave,
+            onDragOver: this.handleDragOver,
+            onDrop: this.handleDrop,
+        };
+        return <div {...props} />;
+    },
+
+    /**
      * Add image files to album
      *
      * @param  {Array<File>} files
@@ -315,7 +339,8 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                     var payload = payloads.find(criteria);
                     picture.details.file = payload.file;
                     // send the file
-                    return payloads.send(payloadId).return(picture);
+                    payloads.send(payloadId);
+                    return picture;
                 });
             });
         });
@@ -419,7 +444,29 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         if (files.length) {
             return this.uploadFiles(files);
         }
-    }
+    },
+
+    handleDragEnter: function(evt) {
+        this.setState({ isDropTarget: true });
+    },
+
+    handleDragLeave: function(evt) {
+        this.setState({ isDropTarget: false });
+    },
+
+    handleDragOver: function(evt) {
+        evt.preventDefault();
+    },
+
+    handleDrop: function(evt) {
+        evt.preventDefault();
+        var files = evt.dataTransfer.files;
+        var items = evt.dataTransfer.items;
+        if (files.length > 0) {
+            this.uploadFiles(files);
+        }
+        this.setState({ isDropTarget: false });
+    },
 });
 
 var sortPictures = Memoize(function(pictures) {

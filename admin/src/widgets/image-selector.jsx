@@ -47,8 +47,8 @@ module.exports = React.createClass({
         return {
             showingCroppingDialogBox: false,
             renderingCroppingDialogBox: false,
-            showingAlbumDialogBox: false,
-            renderingAlbumDialogBox: false,
+            showingAlbumDialogBox: true,
+            renderingAlbumDialogBox: true,
         };
     },
 
