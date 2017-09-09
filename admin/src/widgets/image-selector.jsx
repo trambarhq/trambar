@@ -1,5 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var BlobReader = require('utils/blob-reader');
+var ImageView = require('media/image-view');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -60,6 +62,33 @@ module.exports = React.createClass({
     },
 
     /**
+     * Update resource array and past it to parent component through an
+     * onChange event
+     *
+     * @param  {Object} image
+     */
+    setImage: function(image) {
+        var resources = _.slice(this.props.resources);
+        var index = _.findIndex(resources, { type: 'image' });
+        if (index !== -1) {
+            if (image) {
+                resources[index] = image;
+            } else {
+                resources.splice(index, 1);
+            }
+        } else {
+            resources.push(image);
+        }
+        if (this.props.onChange) {
+            this.value = resources;
+            this.props.onChange({
+                type: 'change',
+                target: this,
+            });
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -89,15 +118,28 @@ module.exports = React.createClass({
     renderImage: function() {
         var image = this.getImage();
         if (image) {
-            var imageUrl = this.props.theme.getImageUrl(image, { height: 80 });
-            var fullImageUrl = this.props.theme.getImageUrl(image);
-            return (
-                <div className="image">
-                    <a href={fullImageUrl} target="_blank">
-                        <img src={imageUrl} />
-                    </a>
-                </div>
-            );
+            var height = 120;
+            var width = Math.round(image.width * height / image.height);
+            var dimensions = { width, height };
+            if (image.url) {
+                var imageUrl = this.props.theme.getImageUrl(image, dimensions);
+                var fullImageUrl = this.props.theme.getImageUrl(image);
+                return (
+                    <div className="image">
+                        <a href={fullImageUrl} target="_blank">
+                            <img src={imageUrl} style={dimensions} />
+                        </a>
+                    </div>
+                );
+            } else if (image.file) {
+                // need to use ImageView, which handles JPEG orientation
+                var imageUrl = URL.createObjectURL(image.file);
+                return (
+                    <div className="image">
+                        <ImageView url={imageUrl} style={dimensions} />
+                    </div>
+                );
+            }
         } else {
             var style = {
                 width: 160,
@@ -253,25 +295,29 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleImageSelect: function(evt) {
-        var imageBefore = this.getImage();
-        var imageAfter = _.clone(evt.image);
+        var image = _.clone(evt.image);
         // TODO: apply clip rect
-        imageAfter.type = 'image';
-        var resources = _.slice(this.props.resources);
-        if (imageBefore) {
-            var index = _.indexOf(resources, imageBefore);
-            resources[index] = imageAfter;
-        } else {
-            resources.push(imageAfter);
-        }
-        if (this.props.onChange) {
-            this.value = resources;
-            this.props.onChange({
-                type: 'change',
-                target: this,
+        image.type = 'image';
+        this.setImage(image);
+        this.handleDialogCancel();
+    },
+
+    /**
+     * Called when user selects a file on his computer
+     *
+     * @param  {Event} evt
+     */
+    handleUploadChange: function(evt) {
+        var file = evt.target.files[0];
+        if (file) {
+            return BlobReader.loadImage(file).then((img) => {
+                var format = _.last(_.split(file.type, '/'));
+                var width = img.naturalWidth;
+                var height = img.naturalHeight;
+                var image = { format, file, width, height, type: 'image' };
+                return this.setImage(image);
             });
         }
-        this.handleDialogCancel();
     },
 
     /**

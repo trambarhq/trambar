@@ -325,6 +325,7 @@ var globalAccessors = [
     Role,
     Server,
     System,
+    Task,
     User,
 ];
 var projectAccessors = [

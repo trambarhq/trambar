@@ -20,6 +20,8 @@ var Reaction = require('accessors/reaction');
 var Robot = require('accessors/robot');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
+
+// appear in both
 var Task = require('accessors/task');
 
 var database;
@@ -170,6 +172,7 @@ var globalAccessors = [
     Role,
     Server,
     System,
+    Task,
     User,
 ];
 var projectAccessors = [
@@ -231,13 +234,17 @@ function createSchema(db, schema) {
             }
         });
     }).then(() => {
-        // grant specific table access to roles
+        // create tables
         return Promise.each(accessors, (accessor) => {
-            return accessor.create(db, schema).then(() => {
-                return accessor.grant(db, schema);
-            }).then(() => {
-                return accessor.watch(db, schema);
-            });
+            return accessor.create(db, schema);
+        });
+    }).then(() => {
+        return Promise.each(accessors, (accessor) => {
+            return accessor.grant(db, schema);
+        });
+    }).then(() => {
+        return Promise.each(accessors, (accessor) => {
+            return accessor.watch(db, schema);
         });
     }).then(() => {
         var latestVersion = _.max(_.map(accessors), 'version');

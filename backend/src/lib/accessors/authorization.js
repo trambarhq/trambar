@@ -52,51 +52,7 @@ module.exports = _.create(Data, {
             );
             CREATE INDEX ON ${table} (token);
         `;
-        return db.execute(sql).then(() => {
-            // create stored procs for checking and extending authorization
-            // these will run as the root user
-            var storeProcs = {
-                checkAuthorization: {
-                    function: function(token, area) {
-                        var sql = `SELECT user_id, area FROM ${table}
-                                   WHERE token = $1
-                                   AND (area = $2 OR $2 IS NULL)
-                                   AND expiration_date >= current_date
-                                   AND deleted = false
-                                   LIMIT 1`;
-                        var row = plv8.execute(sql, [ token, area ])[0];
-                        return (row) ? row.user_id : null;
-                    },
-                    arguments: 'token text, area text',
-                    return: 'int',
-                },
-
-                extendAuthorization: {
-                    function: function(token, expire) {
-                        var sql = `UPDATE ${table}
-                                   SET expiration_date = $2
-                                   WHERE token = $1
-                                   AND deletd = false`;
-                        plv8.execute(sql, [ token, expire ]);
-                    },
-                    arguments: 'token text, expire date',
-                    return: 'void',
-                },
-            };
-            var sql = _.map(storeProcs, (proc, name) => {
-                var m = /{([\s\S]*)}/.exec(proc.function);
-                var code = m[1];
-                return `
-                    CREATE OR REPLACE FUNCTION "${name}"(${proc.arguments}) RETURNS ${proc.return}
-                    AS $$\n${code}\n$$
-                    LANGUAGE plv8 SECURITY DEFINER;
-                `
-            }).join('\n');
-            // replace "${table}" with actual value since the functions aren't
-            // actual closures
-            sql = _.replace(sql, /\${table}/g, table);
-            return db.execute(sql);
-        });
+        return db.execute(sql);
     },
 
     /**

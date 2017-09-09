@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var HttpError = require('errors/http-error');
 var Data = require('accessors/data');
+var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -64,6 +65,7 @@ module.exports = _.create(Data, {
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} ((details->>'email')) WHERE details ? 'email';
+            CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
         `;
         return db.execute(sql);
     },
@@ -84,6 +86,21 @@ module.exports = _.create(Data, {
             GRANT SELECT, UPDATE  ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
+    },
+
+    /**
+     * Attach triggers to this table, also add trigger on task so details
+     * are updated when tasks complete
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return Data.watch.call(this, db, schema).then(() => {
+            return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
+        });
     },
 
     /**

@@ -18,14 +18,52 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             payloads: [],
         };
     },
 
-    get: function() {
-        return this.state.payloads;
+    /**
+     * Return base URL of server where files will be uploaded,
+     * based on the current route
+     *
+     * @return {String}
+     */
+    getBaseUrl: function() {
+        // use logic for data server selection
+        var db = this.getDatabase();
+        var server = db.context.server;
+        var protocol = db.context.protocol;
+        return `${protocol}//${server}`;
+    },
+
+    /**
+     * Return a database object with server info attached
+     *
+     * @return {Database}
+     */
+    getDatabase: function() {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema || 'global';
+        var db = this.props.database.use({ server, schema, by: this });
+        return db;
+    },
+
+    /**
+     * Return the current database schema as indicated by the route
+     *
+     * @return {String}
+     */
+    getSchema: function() {
+        var db = this.getDatabase();
+        return db.context.schema;
     },
 
     /**
@@ -118,11 +156,16 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Create a task object for tracking progress of upload and backend
+     * processing
+     *
+     * @param  {String} action
+     *
+     * @return {Promise<Task>}
+     */
     createTask: function(action) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var db = this.getDatabase();
         return db.start().then((userId) => {
             var task = {
                 action: action,
@@ -154,8 +197,6 @@ module.exports = React.createClass({
      * Begin sending a previously queued payload
      *
      * @param  {Number} payloadId
-     *
-     * @return {Promise}
      */
     send: function(payloadId) {
         var payload = _.find(this.state.payloads, { payload_id: payloadId });
@@ -183,9 +224,16 @@ module.exports = React.createClass({
             this.updatePayloadStatus(payloadId, state);
         });
         payload.promise = promise;
-        return promise;
+        return;
     },
 
+    /**
+     * Create an instance of FormData for uploading the given payload
+     *
+     * @param  {Object} payload
+     *
+     * @return {FormData}
+     */
     getFormData: function(payload) {
         var formData = new FormData;
         var params = _.pick(payload, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
@@ -198,12 +246,16 @@ module.exports = React.createClass({
         return formData;
     },
 
+    /**
+     * Return URL for uploading the given payload
+     *
+     * @param  {Object} payload
+     *
+     * @return {String}
+     */
     getUrl: function(payload) {
-        var route = this.props.route;
-        var server = getServerName(route.parameters);
-        var protocol = getProtocol(server);
-        var schema = route.parameters.schema;
-        var url = `${protocol}://${server}`;
+        var schema = this.getSchema();
+        var url = this.getBaseUrl();
         var id = payload.payload_id;
         switch (payload.action) {
             case 'upload image':
@@ -234,9 +286,7 @@ module.exports = React.createClass({
      * @param  {BlobStream} stream
      */
     stream: function(stream) {
-        var route = this.props.route;
-        var server = getServerName(route.parameters);
-        var protocol = getProtocol(server);
+        var url = this.getBaseUrl();
         var attempts = 1;
         var failureCount = 0;
         var error;
@@ -245,7 +295,7 @@ module.exports = React.createClass({
         Async.do(() => {
             // get the next unsent part and send it
             return stream.pull().then((blob) => {
-                var url = `${protocol}://${server}/media/stream`;
+                url += `/media/stream`;
                 if (stream.id) {
                     // append to existing stream
                     url += `/${stream.id}`;
@@ -300,16 +350,30 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Render component
+     *
+     * @return {null}
+     */
     render: function() {
         return null;
     },
 
+    /**
+     * Fire initial onChange event upon receiving a database object
+     *
+     * @param  {Object} prevProps
+     */
     componentDidUpdate: function(prevProps) {
         if (!prevProps.database && this.props.database) {
             this.triggerChangeEvent();
         }
     },
 
+    /**
+     * Inform parent component that changes concerning the payloads
+     * have occurred (progress made or error encountered)
+     */
     triggerChangeEvent: function() {
         if (this.props.onChange) {
             this.props.onChange({
@@ -319,29 +383,3 @@ module.exports = React.createClass({
         }
     },
 });
-
-/**
- * Get the domain name or ip address from a location object
- *
- * @param  {Object} location
- *
- * @return {String}
- */
-function getServerName(location) {
-    if (location.server === '~') {
-        return window.location.hostname;
-    } else {
-        return location.server;
-    }
-}
-
-/**
- * Return 'http' if server is localhost, 'https' otherwise
- *
- * @param  {String} server
- *
- * @return {String}
- */
-function getProtocol(server) {
-    return /^localhost\b/.test(server) ? 'http' : 'http';
-}

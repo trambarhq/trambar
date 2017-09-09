@@ -210,9 +210,8 @@ function processWebsiteScreenshot(schema, taskId, url) {
                     var height = metadata.height;
                     var clip = getDefaultClippingRect(width, height, 'top');
                     var posterUrl = `/media/images/${hash}`;
-                    var website = { title, width, height, clip, poster_url: posterUrl };
-                    var preserve = { clip: true };
-                    return updateAssociatedObject(schema, taskId, website, preserve);
+                    var details = { title, width, height, clip, poster_url: posterUrl };
+                    return saveTaskOutcome(schema, taskId, details);
                 });
             });
         });
@@ -289,9 +288,8 @@ function processImageUpload(schema, taskId, srcPath, dstPath, url) {
             var width = metadata.width;
             var height = metadata.height;
             var clip = getDefaultClippingRect(width, height, 'center');
-            var image = { url, format, width, height, clip };
-            var preserve = { clip: true };
-            return updateAssociatedObject(schema, taskId, image, preserve);
+            var details = { url, format, width, height, clip };
+            return saveTaskOutcome(schema, taskId, details);
         });
     });
 }
@@ -395,9 +393,8 @@ function processMediaPosterUpload(schema, taskId, srcPath, dstPath, url) {
             var width = metadata.width;
             var height = metadata.height;
             var clip = getDefaultClippingRect(width, height, 'center');
-            var video = { poster_url: url, width, height, clip };
-            var preserve = { clip: true, payload_id: true };
-            return updateAssociatedObject(schema, taskId, video, preserve);
+            var details = { poster_url: url, width, height, clip };
+            return saveTaskOutcome(schema, taskId, details);
         });
     });
 }
@@ -419,9 +416,8 @@ function processMediaUpload(schema, taskId, srcPath, dstPath, type, srcHash, url
         var job = startTranscodingJob(dstPath, type, srcHash);
         return awaitTranscodingJob(job);
     }).then((job) => {
-        var media = { url, versions: job.profiles };
-        var preserve = {};
-        return updateAssociatedObject(schema, taskId, media, preserve);
+        var details = { url, versions: job.profiles };
+        return saveTaskOutcome(schema, taskId, details);
     });
 }
 
@@ -438,9 +434,9 @@ function processMediaStream(schema, taskId, streamId) {
     var job = findTranscodingJob(streamId);
     return awaitTranscodingJob(job).then((job) => {
         var url = `/media/${job.type}s/${job.originalHash}`;
-        var media = { url, stream: undefined, versions: job.profiles };
+        var details = { url, versions: job.profiles };
         var preserve = {};
-        return updateAssociatedObject(schema, taskId, media, preserve);
+        return saveTaskOutcome(schema, taskId, details);
     });
 }
 
@@ -624,34 +620,36 @@ function createCacheFolders() {
 
 function importStockPhotos() {
     Database.open().then((db) => {
-        var purposes = [ 'background', 'profile-image', 'project-emblem' ];
-        return Promise.map(purposes, (purpose) => {
-            var folder = Path.resolve(`../media/${purpose}`);
-            return FS.readdirAsync(folder).each((file) => {
-                var url = `/media/images/${file}`;
-                var criteria = { purpose, url };
-                return Picture.findOne(db, 'global', criteria, 'id').then((picture) => {
-                    if (picture) {
-                        return false;
-                    }
-                    // assume the files are already named as their MD5 hash
-                    var srcPath = `${folder}/${file}`;
-                    return getImageMetadata(srcPath).then((metadata) => {
-                        var details = {
-                            url,
-                            width: metadata.width,
-                            height: metadata.height,
-                            format: metadata.format,
-                        };
-                        var picture = { purpose, details };
-                        return Picture.insertOne(db, 'global', picture);
-                    }).then((picture) => {
-                        var dstPath = `${imageCacheFolder}/${file}`;
-                        return FS.statAsync(dstPath).then((stat) => {
-                            return true;
-                        }).catch((err) => {
-                            console.log(dstPath + ' -> ' + srcPath);
-                            return FS.symlinkAsync(srcPath, dstPath).return(true);
+        return db.need('global').then(() => {
+            var purposes = [ 'background', 'profile-image', 'project-emblem' ];
+            return Promise.map(purposes, (purpose) => {
+                var folder = Path.resolve(`../media/${purpose}`);
+                return FS.readdirAsync(folder).each((file) => {
+                    var url = `/media/images/${file}`;
+                    var criteria = { purpose, url };
+                    return Picture.findOne(db, 'global', criteria, 'id').then((picture) => {
+                        if (picture) {
+                            return false;
+                        }
+                        // assume the files are already named as their MD5 hash
+                        var srcPath = `${folder}/${file}`;
+                        return getImageMetadata(srcPath).then((metadata) => {
+                            var details = {
+                                url,
+                                width: metadata.width,
+                                height: metadata.height,
+                                format: metadata.format,
+                            };
+                            var picture = { purpose, details };
+                            return Picture.insertOne(db, 'global', picture);
+                        }).then((picture) => {
+                            var dstPath = `${imageCacheFolder}/${file}`;
+                            return FS.statAsync(dstPath).then((stat) => {
+                                return true;
+                            }).catch((err) => {
+                                console.log(dstPath + ' -> ' + srcPath);
+                                return FS.symlinkAsync(srcPath, dstPath).return(true);
+                            });
                         });
                     });
                 });
@@ -898,49 +896,12 @@ function checkTaskToken(schema, taskId, token) {
  *
  * @return {Promise}
  */
-function updateAssociatedObject(schema, taskId, params, preserve) {
+function saveTaskOutcome(schema, taskId, details) {
     return Database.open().then((db) => {
-        return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
-            var associate = _.get(task, 'details.associated_object');
-            var table = _.get(associate, 'type');
-            var id = _.get(associate, 'id');
-            var accessor = getAccessor(associate.type);
-            if (!accessor) {
-                return;
-            }
-            return accessor.findOne(db, schema, { id }, '*').then((row) => {
-                if (!row) {
-                    return;
-                }
-                // task ids are used as payload ids on frontend
-                var resources = _.get(row, 'details.resources');
-                var res = _.find(resources, { payload_id: taskId });
-                if (res) {
-                    _.forIn(params, (value, name) => {
-                        // set properties, overwrite values received from
-                        // client-side unless it's flagged
-                        if (res[name] == null || !preserve[name]) {
-                            res[name] = value;
-                        }
-                    });
-                    // clear the payload id if it's no longer needed
-                    // (i.e. the task has been completed)
-                    if (!preserve.payload_id) {
-                        res.payload_id = undefined;
-
-                        if (row.published === true && row.ptime === null) {
-                            // set ptime if all tasks are done
-                            var ready = _.every(resources, (res) => {
-                                return !res.payload_id;
-                            });
-                            if (ready) {
-                                row.ptime = Moment().toISOString();
-                            }
-                        }
-                    }
-                    return accessor.updateOne(db, schema, row);
-                }
-            })
+        return Task.updateOne(db, schema, {
+            id: taskId,
+            completion: 100,
+            details
         });
     });
 }

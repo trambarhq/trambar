@@ -79,8 +79,24 @@ module.exports = _.create(Data, {
             CREATE INDEX ON ${table} (ptime) WHERE repo_id IS NOT NULL AND ptime IS NOT NULL;
             CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
             CREATE INDEX ON ${table} USING gin((details->'commit_ids')) WHERE details ? 'commit_ids';
+            CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
         `;
         return db.execute(sql);
+    },
+
+    /**
+     * Attach triggers to this table, also add trigger on task so details
+     * are updated when tasks complete
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return Data.watch.call(this, db, schema).then(() => {
+            return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
+        });
     },
 
     /**
@@ -277,40 +293,6 @@ module.exports = _.create(Data, {
                 throw new HttpError(400);
             }*/
             return objects;
-        });
-    },
-
-    /**
-     * Create associations between newly created or modified rows with
-     * rows in other tables
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Array<Object>} objects,
-     * @param  {Array<Object>} originals
-     * @param  {Array<Object>} rows
-     * @param  {Object} credentials
-     *
-     * @return {Promise<Array<Object>>}
-     */
-    associate: function(db, schema, objects, originals, rows, credentials) {
-        return Promise.each(rows, (row, index) => {
-            var original = originals[index];
-            var payloadIdsBefore = getPayloadIds(original);
-            var payloadIdsAfter = getPayloadIds(row);
-            var newPayloadIds = _.difference(payloadIdsAfter, payloadIdsBefore);
-            if (!_.isEmpty(newPayloadIds)) {
-                // payload ids are actually task ids
-                return Task.find(db, schema, { id: newPayloadIds }, '*').then((tasks) => {
-                    _.each(tasks, (task) => {
-                        task.details.associated_object = {
-                            type: this.table,
-                            id: row.id,
-                        };
-                    });
-                    return Task.save(db, schema, tasks);
-                });
-            }
         });
     },
 });

@@ -97,6 +97,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
     /**
@@ -106,6 +107,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     getInitialState: function() {
         return {
+            saving: false,
             newSystem: null,
         };
     },
@@ -178,6 +180,9 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     hasChanges: false,
                 });
             }
+        }
+        if (this.props.system !== nextProps.system) {
+            nextProps.payloads.reattach(nextProps.system);
         }
     },
 
@@ -345,13 +350,27 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var system = this.getSystem();
-        return db.start().then((currentUserId) => {
-            return db.saveOne({ table: 'system' }, system).then((system) => {
-                this.setState({ hasChanges: false }, () => {
-                    this.setEditability(false);
+        if (this.state.saving) {
+            return;
+        }
+        this.setState({ saving: true }, () => {
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var payloads = this.props.payloads;
+            var system = this.getSystem();
+            return payloads.prepare(system).then(() => {
+                return db.start().then((currentUserId) => {
+                    return db.saveOne({ table: 'system' }, system).then((system) => {
+                        return payloads.dispatch(system).then(() => {
+                            this.setState({ hasChanges: false, saving: false }, () => {
+                                this.setEditability(false);
+                            });
+                            return null;
+                        });
+                    });
                 });
+            }).catch((err) => {
+                console.error(err);
+                this.setState({ saving: false });
             });
         });
     },

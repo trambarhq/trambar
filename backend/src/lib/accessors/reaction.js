@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var Data = require('accessors/data');
+var Task = require('accessors/task');
 var HttpError = require('errors/http-error');
 
 module.exports = _.create(Data, {
@@ -71,8 +72,24 @@ module.exports = _.create(Data, {
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
+            CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
         `;
         return db.execute(sql);
+    },
+
+    /**
+     * Attach triggers to this table, also add trigger on task so details
+     * are updated when tasks complete
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return Data.watch.call(this, db, schema).then(() => {
+            return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
+        });
     },
 
     /**

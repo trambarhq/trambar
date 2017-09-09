@@ -33,11 +33,13 @@ module.exports = {
                 throw new Error('Invalid name: ' + schema);
             }
         }
-        if (this.schema === 'global' && schema !== 'global') {
-            throw new Error('Referencing global table in project-specific schema: ' + this.table);
-        }
-        if (this.schema === 'project' && schema === 'global') {
-            throw new Error('Referencing project-specific table in global schema: ' + this.table);
+        if (this.schema !== 'both') {
+            if (this.schema === 'global' && schema !== 'global') {
+                throw new Error('Referencing global table in project-specific schema: ' + this.table);
+            }
+            if (this.schema === 'project' && schema === 'global') {
+                throw new Error('Referencing project-specific table in global schema: ' + this.table);
+            }
         }
         return `"${schema}"."${this.table}"`;
     },

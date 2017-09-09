@@ -5,7 +5,7 @@ var Data = require('accessors/data');
 var HttpError = require('errors/http-error');
 
 module.exports = _.create(Data, {
-    schema: 'project',
+    schema: 'both',
     table: 'task',
     columns: {
         id: Number,
@@ -16,12 +16,14 @@ module.exports = _.create(Data, {
         details: Object,
         action: String,
         token: String,
+        completion: Number,
         user_id: Number,
     },
     criteria: {
         id: Number,
         action: String,
         token: String,
+        completion: Number,
         deleted: Boolean,
     },
 
@@ -45,11 +47,24 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 action varchar(64) NOT NULL,
                 token varchar(64) NOT NULL,
+                completion int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
                 PRIMARY KEY (id)
             );
         `;
         return db.execute(sql);
+    },
+
+    createUpdateTrigger: function(db, schema, targetTable, method) {
+        var table = this.getTableName(schema);
+        var triggerName = 'update' + _.capitalize(targetTable);
+        var sql = `
+            CREATE TRIGGER "${triggerName}"
+            AFTER UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "${method}"(${targetTable});
+        `;
+        return db.execute(sql).return(true);
     },
 
     /**

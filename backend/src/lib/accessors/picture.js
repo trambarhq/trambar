@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var HttpError = require('errors/http-error');
 var Data = require('accessors/data');
+var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -52,6 +53,21 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Attach triggers to this table, also add trigger on task so details
+     * are updated when tasks complete
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return Data.watch.call(this, db, schema).then(() => {
+            return Task.createUpdateTrigger(db, schema, this.table, 'updateAlbum');
+        });
+    },
+
+    /**
      * Grant privileges to table to appropriate Postgres users
      *
      * @param  {Database} db
@@ -63,6 +79,7 @@ module.exports = _.create(Data, {
         var table = this.getTableName(schema);
         var sql = `
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
+            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
     },

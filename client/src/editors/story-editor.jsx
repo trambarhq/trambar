@@ -86,7 +86,7 @@ module.exports = React.createClass({
                 // (properties in nextDraft are favored in conflicts)
                 nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
             }
-            this.reattachBlobs(nextDraft);
+            this.props.payloads.reattach(nextDraft);
             nextState.draft = nextDraft;
         } else {
             nextState.draft = createBlankStory(nextProps.currentUser);
@@ -408,29 +408,17 @@ module.exports = React.createClass({
         // send images and videos to server
         var resources = story.details.resources || [];
         var payloads = this.props.payloads;
-        var payloadIds = [];
-        return Promise.each(resources, (res) => {
-            if (!res.payload_id) {
-                // acquire a task id for each attached resource
-                return payloads.queue(res).then((payloadId) => {
-                    if (payloadId) {
-                        res.payload_id = payloadId;
-                        payloadIds.push(payloadId);
-                    }
-                });
-            }
-        }).then(() => {
+        return payloads.prepare(story).then(() => {
             var route = this.props.route;
             var server = route.parameters.server;
             var schema = route.parameters.schema;
             var db = this.props.database.use({ server, schema, by: this });
             return db.start().then(() => {
                 return db.saveOne({ table: 'story' }, story).then((story) => {
-                    return Promise.each(payloadIds, (payloadId) => {
-                        // start file upload
-                        return payloads.send(payloadId);
-                    }).then(() => {
-                        this.reattachBlobs(story);
+                    // start file upload
+                    return payloads.dispatch(story).then(() => {
+                        // reattach blobs to new copy of object
+                        payloads.reattach(story);
                         return this.changeDraft(story);
                     });
                 });
@@ -519,29 +507,6 @@ module.exports = React.createClass({
             return this.removeBookmarks(redundantBookmarks).then((redundantBookmarks) => {
                 return _.concat(newBookmarks, redundantBookmarks);
             });
-        });
-    },
-
-    /**
-     * Reattach blobs that were filtered out when objects are saved
-     *
-     * @param  {Story} story
-     */
-    reattachBlobs: function(story) {
-        var payloads = this.props.payloads;
-        var resources = _.get(story, 'details.resources');
-        _.each(resources, (res) => {
-            // these properties also exist in the corresponding payload objects
-            // find payload with one of them
-            var criteria = _.pick(res, 'payload_id', 'url', 'poster_url');
-            var payload = payloads.find(criteria);
-            if (payload) {
-                _.forIn(payload, (value, name) => {
-                    if (value instanceof Blob) {
-                        res[name] = value;
-                    }
-                });
-            }
         });
     },
 
