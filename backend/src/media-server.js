@@ -910,6 +910,7 @@ function saveTaskOutcome(schema, taskId, details) {
         return Task.updateOne(db, schema, {
             id: taskId,
             completion: 100,
+            etime: Moment().toISOString(),
             details
         });
     });

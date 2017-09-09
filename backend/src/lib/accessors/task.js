@@ -19,6 +19,7 @@ module.exports = _.create(Data, {
         details: Object,
         completion: Number,
         user_id: Number,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -51,6 +52,7 @@ module.exports = _.create(Data, {
                 options jsonb NOT NULL DEFAULT '{}',
                 completion int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
         `;
