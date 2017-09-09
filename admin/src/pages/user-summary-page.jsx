@@ -477,7 +477,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var authOptionProps = _.concat({
             name: 'none',
             selected: !user.server_id,
-            previous: !userOriginal.server_id,
+            previous: (userOriginal.id) ? !userOriginal.server_id : undefined,
             children: t('user-summary-auth-server-none')
         }, _.map(servers, (server) => {
             return {
