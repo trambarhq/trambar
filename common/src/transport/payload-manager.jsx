@@ -70,10 +70,11 @@ module.exports = React.createClass({
      * Create a payload of files needed by a res
      *
      * @param  {Object} res
+     * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    queue: function(res) {
+    queue: function(res, options) {
         // see what action need to be perform for the resource
         var action = this.getAction(res);
         if (!action) {
@@ -82,7 +83,7 @@ module.exports = React.createClass({
 
         // create a task object on the server-side to track
         // backend processing of the payload
-        return this.createTask(action).then((task) => {
+        return this.createTask(action, options).then((task) => {
             var params = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
             var payload = _.assign({
                 payload_id: task.id,
@@ -161,14 +162,16 @@ module.exports = React.createClass({
      * processing
      *
      * @param  {String} action
+     * @param  {Object} options
      *
      * @return {Promise<Task>}
      */
-    createTask: function(action) {
+    createTask: function(action, options) {
         var db = this.getDatabase();
         return db.start().then((userId) => {
             var task = {
                 action: action,
+                options: options,
                 user_id: userId,
             };
             return db.saveOne({ table: 'task' }, task);

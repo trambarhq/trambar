@@ -68,6 +68,24 @@ module.exports = React.createClass({
      * @param  {Object} image
      */
     setImage: function(image) {
+        if (this.props.desiredWidth && this.props.desiredHeight) {
+            // center a clipping rect over the image if there's none
+            if (!image.clip) {
+                var ratio = this.props.desiredWidth / this.props.desiredHeight;
+                var width = image.width;
+                var height = Math.round(width / ratio);
+                var left = 0;
+                var top = Math.round((image.height - height) / 2);
+                if (top < 0) {
+                    height = image.height;
+                    width = Math.round(height * ratio);
+                    left = Math.round((image.width - width) / 2);
+                    top = 0;
+                }
+                image = _.clone(image);
+                image.clip = { left, top, width, height };
+            }
+        }
         var resources = _.slice(this.props.resources);
         var index = _.findIndex(resources, { type: 'image' });
         if (index !== -1) {
@@ -119,23 +137,39 @@ module.exports = React.createClass({
         var height = 120, width = 160;
         var image = this.getImage();
         if (image) {
-            width = Math.round(image.width * height / image.height);
+            var imgWidth = image.width;
+            var imgHeight = image.height;
+            if (image.clip) {
+                imgWidth = image.clip.width;
+                imgHeight = image.clip.height;
+            }
+            width = Math.round(imgWidth * height / imgHeight);
+            var clip = image.clip;
+            if (!(this.props.desiredWidth && this.props.desiredHeight)) {
+                clip = null;
+            }
             if (image.url) {
-                var imageUrl = this.props.theme.getImageUrl(image, { width, height });
-                var fullImageUrl = this.props.theme.getImageUrl(image);
+                var url = this.props.theme.getImageUrl(image, {
+                    width,
+                    height,
+                    noClipping: !clip
+                });
+                var fullResUrl = this.props.theme.getImageUrl(image, {
+                    noClipping: !clip
+                });
                 return (
                     <div className="image">
-                        <a href={fullImageUrl} target="_blank">
-                            <img src={imageUrl} style={{ width, height }} />
+                        <a href={fullResUrl} target="_blank">
+                            <img src={url} style={{ width, height }} />
                         </a>
                     </div>
                 );
             } else if (image.file) {
                 // need to use ImageView, which handles JPEG orientation
-                var imageUrl = URL.createObjectURL(image.file);
+                var url = URL.createObjectURL(image.file);
                 return (
                     <div className="image">
-                        <ImageView url={imageUrl} style={{ width, height }} />
+                        <ImageView url={url} clippingRect={clip} style={{ width, height }} />
                     </div>
                 );
             }
@@ -161,9 +195,9 @@ module.exports = React.createClass({
     renderOptions: function() {
         return (
             <div className="options">
-                {this.renderResizeOption()}
                 {this.renderChooseOption()}
                 {this.renderUploadOption()}
+                {this.renderResizeOption()}
             </div>
         )
     },
@@ -294,7 +328,6 @@ module.exports = React.createClass({
      */
     handleImageSelect: function(evt) {
         var image = _.clone(evt.image);
-        // TODO: apply clip rect
         image.type = 'image';
         this.setImage(image);
         this.handleDialogCancel();

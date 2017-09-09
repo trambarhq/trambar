@@ -120,7 +120,9 @@ function handleDatabaseChanges(events) {
                 if (!idList) {
                     idList = changes[table] = [];
                 }
-                idList.push(event.id);
+                if (!_.includes(idList, event.id)) {
+                    idList.push(event.id);
+                }
             }
         });
         if (!_.isEmpty(changes)) {

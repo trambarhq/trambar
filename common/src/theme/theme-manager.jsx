@@ -52,9 +52,13 @@ module.exports = React.createClass({
         var protocol = (server === 'localhost') ? 'http' : 'http';
         var filters = [];
         var baseUrl;
+        var noClipping = (params) ? params.noClipping : undefined;
+        var width = (params) ? params.width : undefined;
+        var height = (params) ? params.height : undefined;
+        var quality = (params) ? params.quality : undefined;
         if (typeof(image) === 'object') {
             baseUrl = image.url;
-            if (image.clip) {
+            if (image.clip && !noClipping) {
                 var rect = [
                     image.clip.left,
                     image.clip.top,
@@ -71,10 +75,6 @@ module.exports = React.createClass({
         if (!baseUrl) {
             return;
         }
-
-        var width = (params) ? params.width : undefined;
-        var height = (params) ? params.height : undefined;
-        var quality = (params) ? params.quality : undefined;
         if (typeof(width) === 'string') {
             width = decodeLength(width);
         }

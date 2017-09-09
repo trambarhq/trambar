@@ -16,6 +16,7 @@ module.exports = _.create(Data, {
         details: Object,
         action: String,
         token: String,
+        details: Object,
         completion: Number,
         user_id: Number,
     },
@@ -47,6 +48,7 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 action varchar(64) NOT NULL,
                 token varchar(64) NOT NULL,
+                options jsonb NOT NULL DEFAULT '{}',
                 completion int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
                 PRIMARY KEY (id)
@@ -82,10 +84,12 @@ module.exports = _.create(Data, {
     export: function(db, schema, rows, credentials, options) {
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
+                // TODO: access control
                 var row = rows[index];
                 object.action = row.action;
                 object.token = row.token;
                 object.user_id = row.user_id;
+                object.options = row.options;
             });
             return objects;
         });

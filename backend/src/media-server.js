@@ -206,11 +206,13 @@ function processWebsiteScreenshot(schema, taskId, url) {
             var dstPath = `${imageCacheFolder}/${hash}`;
             return moveFile(tempPath, dstPath).then(() => {
                 return getImageMetadata(dstPath).then((metadata) => {
-                    var width = metadata.width;
-                    var height = metadata.height;
-                    var clip = getDefaultClippingRect(width, height, 'top');
-                    var posterUrl = `/media/images/${hash}`;
-                    var details = { title, width, height, clip, poster_url: posterUrl };
+                    var details = {
+                        title: title,
+                        width: metadata.width,
+                        height: metadata.height,
+                        clip: getDefaultClippingRect(width, height, 'top'),
+                        poster_url: `/media/images/${hash}`,
+                    };
                     return saveTaskOutcome(schema, taskId, details);
                 });
             });
@@ -283,12 +285,12 @@ function handleImageImport(req, res) {
 function processImageUpload(schema, taskId, srcPath, dstPath, url) {
     return moveFile(srcPath, dstPath).then(() => {
         return getImageMetadata(dstPath).then((metadata) => {
-            // update the object associated with task (no need to wait for it)
-            var format = metadata.format;
-            var width = metadata.width;
-            var height = metadata.height;
-            var clip = getDefaultClippingRect(width, height, 'center');
-            var details = { url, format, width, height, clip };
+            var details = {
+                url: url,
+                format: metadata.format,
+                width: metadata.width,
+                height: metadata.height,
+            };
             return saveTaskOutcome(schema, taskId, details);
         });
     });
@@ -390,10 +392,13 @@ function handleMediaUpload(req, res, type) {
 function processMediaPosterUpload(schema, taskId, srcPath, dstPath, url) {
     return moveFile(srcPath, dstPath).then(() => {
         return getImageMetadata(dstPath).then((metadata) => {
-            var width = metadata.width;
-            var height = metadata.height;
             var clip = getDefaultClippingRect(width, height, 'center');
-            var details = { poster_url: url, width, height, clip };
+            var details = {
+                poster_url: url,
+                width: metadata.width,
+                height: metadata.height,
+                clip,
+            };
             return saveTaskOutcome(schema, taskId, details);
         });
     });
@@ -416,7 +421,10 @@ function processMediaUpload(schema, taskId, srcPath, dstPath, type, srcHash, url
         var job = startTranscodingJob(dstPath, type, srcHash);
         return awaitTranscodingJob(job);
     }).then((job) => {
-        var details = { url, versions: job.profiles };
+        var details = {
+            url: url,
+            versions: job.profiles
+        };
         return saveTaskOutcome(schema, taskId, details);
     });
 }
@@ -433,9 +441,10 @@ function processMediaUpload(schema, taskId, srcPath, dstPath, type, srcHash, url
 function processMediaStream(schema, taskId, streamId) {
     var job = findTranscodingJob(streamId);
     return awaitTranscodingJob(job).then((job) => {
-        var url = `/media/${job.type}s/${job.originalHash}`;
-        var details = { url, versions: job.profiles };
-        var preserve = {};
+        var details = {
+            url: `/media/${job.type}s/${job.originalHash}`,
+            versions: job.profiles
+        };
         return saveTaskOutcome(schema, taskId, details);
     });
 }

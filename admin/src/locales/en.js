@@ -64,7 +64,7 @@ module.exports = function(languageCode) {
         'image-album-remove': 'Remove selected',
         'image-album-select': 'Use selected',
 
-        'image-selector-crop-image': 'Adjust image size/position',
+        'image-selector-crop-image': 'Adjust size/position',
         'image-selector-choose-from-album': 'Choose from album',
         'image-selector-upload-file': 'Upload image',
 

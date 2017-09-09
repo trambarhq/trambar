@@ -54,15 +54,17 @@ function Payloads(payloadManager) {
      * Scan an object's resource array and queue blobs for uploading
      *
      * @param  {Object} object
+     * @param  {Object} options
      *
      * @return {Promise}
      */
-    this.prepare = function(object) {
+    this.prepare = function(object, options) {
         var resources = _.get(object, 'details.resources', []);
         return Promise.each(resources, (res) => {
             if (!res.payload_id) {
                 // acquire a task id for each attached resource
-                return this.queue(res).then((payloadId) => {
+                var typeOptions = _.get(options, res.type);
+                return this.queue(res, typeOptions).then((payloadId) => {
                     if (payloadId) {
                         res.payload_id = payloadId;
                     }

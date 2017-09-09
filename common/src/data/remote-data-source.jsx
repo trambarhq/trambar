@@ -815,6 +815,7 @@ module.exports = React.createClass({
                 schema: parts[0],
                 table: parts[1]
             };
+            console.log('Change notification: ', location.table, idList);
             var relevantSearches = this.getRelevantRecentSearches(location);
             _.each(relevantSearches, (search) => {
                 var dirty = false;

@@ -178,7 +178,7 @@ function Meanwhile(component) {
  */
 Meanwhile.prototype.check = function() {
     var relaks = this.component.relaks;
-    if (this !== relaks.meanwhile) {
+    if (!relaks || this !== relaks.meanwhile) {
         // throw exception to break promise chain
         // promise library should catch and pass it to reject()
         // defined down below
