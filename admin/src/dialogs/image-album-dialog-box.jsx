@@ -306,7 +306,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<Picture>}
      */
-    uploadFiles: function(files) {
+    uploadPictures: function(files) {
         files = _.filter(files, (file) => {
             return /^image\//.test(file.type);
         });
@@ -343,6 +343,27 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                     return picture;
                 });
             });
+        });
+    },
+
+    /**
+     * Remove specified pictures
+     *
+     * @param  {Array<Number>} pictureIds
+     *
+     * @return {Promise<Array>}
+     */
+    removePictures: function(pictureIds) {
+        var hash = _.keyBy(this.props.pictures, 'id');
+        var pictures = _.filter(_.map(pictureIds, (id) => {
+            return hash[id];
+        }));
+        if (_.isEmpty(pictures)) {
+            return;
+        }
+        var db = this.props.database.use({ schema: 'global', by: this });
+        return db.start().then((currentUserId) => {
+            return db.remove({ table: 'picture' }, pictures);
         });
     },
 
@@ -442,31 +463,64 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
     handleUploadChange: function(evt) {
         var files = evt.target.files;
         if (files.length) {
-            return this.uploadFiles(files);
+            return this.uploadPictures(files);
         }
     },
 
+    /**
+     * Called when dragged file(s) enters dialog box
+     *
+     * @param  {Event} evt
+     */
     handleDragEnter: function(evt) {
         this.setState({ isDropTarget: true });
     },
 
+    /**
+     * Called when drag files are no longer over dialog box
+     *
+     * @param  {Event} evt
+     */
     handleDragLeave: function(evt) {
         this.setState({ isDropTarget: false });
     },
 
+    /**
+     * Called when user is dragging file(s) over dialog box
+     *
+     * @param  {Event} evt
+     */
     handleDragOver: function(evt) {
+        // allow drop
         evt.preventDefault();
     },
 
+    /**
+     * Called when user drop file(s) onto dialog box
+     *
+     * @param  {Event} evt
+     */
     handleDrop: function(evt) {
         evt.preventDefault();
         var files = evt.dataTransfer.files;
         var items = evt.dataTransfer.items;
         if (files.length > 0) {
-            this.uploadFiles(files);
+            this.uploadPictures(files);
         }
         this.setState({ isDropTarget: false });
     },
+
+    /**
+     * Called when user clicks remove
+     *
+     * @param  {Event} evt
+     */
+    handleRemoveClick: function(evt) {
+        var pictureIds = this.state.deletionCandidateIds;
+        this.setState({ deletionCandidateIds: [] }, () => {
+            this.removePictures(pictureIds);
+        });
+    }
 });
 
 var sortPictures = Memoize(function(pictures) {
