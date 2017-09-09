@@ -123,6 +123,7 @@ module.exports = React.createClass({
             }
             var t = this.props.locale.translate;
             inputProps.placeholder = t('text-field-placeholder-none');
+            inputProps.spellCheck = false;
         }
         var languages = this.getLanguages();
         if (languages.length > 1) {
@@ -134,6 +135,10 @@ module.exports = React.createClass({
             inputProps.value = this.props.value;
         } else {
             inputProps.value = '';
+        }
+        if (inputProps.spellCheck === false) {
+            // force redraw by adding zero-width no-break space
+            inputProps.value += '\ufeff';
         }
         inputProps.lang = this.state.selectedLangaugeCode;
         inputProps.onChange = this.handleTextChange;

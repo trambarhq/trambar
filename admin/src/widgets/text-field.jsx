@@ -21,8 +21,13 @@ function TextField(props) {
         classNames.push('readonly');
         var t = props.locale.translate;
         inputProps.placeholder = t('text-field-placeholder-none');
+        inputProps.spellCheck = false;
     }
     inputProps.value = inputProps.value || '';
+    if (inputProps.spellCheck === false) {
+        // force redraw by adding zero-width no-break space
+        inputProps.value += '\ufeff';
+    }
     return (
         <div className={classNames.join(' ')}>
             <label htmlFor={props.id}>{props.children}</label>
