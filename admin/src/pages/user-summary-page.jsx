@@ -7,6 +7,7 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
+var Payloads = require('transport/payloads');
 
 var DailyActivities = require('data/daily-activities');
 var SlugGenerator = require('utils/slug-generator');
@@ -17,6 +18,7 @@ var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
+var ImageSelector = require('widgets/image-selector');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var ActivityChart = require('widgets/activity-chart');
 var DataLossWarning = require('widgets/data-loss-warning');
@@ -30,6 +32,7 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
     statics: {
@@ -88,6 +91,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            payloads: this.props.payloads,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />, 250);
         return db.start().then((currentUserId) => {
@@ -162,6 +166,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
     /**
@@ -394,6 +399,18 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handlePhoneChange,
             readOnly: readOnly,
         };
+        var profileImageProps = {
+            purpose: 'profile-image',
+            desiredWidth: 200,
+            desiredHeight: 200,
+            resources: user.details.resources,
+            database: this.props.database,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            payloads: this.props.payloads,
+            onChange: this.handleProfileImageChange,
+            readOnly,
+        };
         var typeListProps = {
             onOptionClick: this.handleTypeOptionClick,
             readOnly,
@@ -476,6 +493,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 <TextField {...usernameProps}>{t('user-summary-username')}</TextField>
                 <TextField {...emailProps}>{t('user-summary-email')}</TextField>
                 <TextField {...phoneProps}>{t('user-summary-phone')}</TextField>
+                <ImageSelector {...profileImageProps}>{t('user-summary-profile-image')}</ImageSelector>
                 <OptionList {...typeListProps}>
                     <label>{t('user-summary-type')}</label>
                     {_.map(typeOptionProps, renderOption)}
@@ -656,22 +674,39 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var user = this.getUser();
-        return db.start().then((currentUserId) => {
-            if (!user.id) {
-                // creating a new user
-                var projectId = this.getProjectId();
-                if (projectId) {
-                    // add user to project
-                    user.requested_project_ids = [ projectId ];
-                }
-                user.approved = true;
-            }
-            return db.saveOne({ table: 'user' }, user).then((user) => {
-                this.setState({ hasChanges: false }, () => {
-                    return this.setEditability(false, user);
+        if (this.state.saving) {
+            return;
+        }
+        this.setState({ saving: true }, () => {
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var user = this.getUser();
+            var payloads = this.props.payloads;
+            return payloads.prepare(user).then(() => {
+                return db.start().then((currentUserId) => {
+                    if (!user.id) {
+                        // creating a new user
+                        var projectId = this.getProjectId();
+                        if (projectId) {
+                            // add user to project--on approval, the user id
+                            // will get added to user_ids of project on backend
+                            user.requested_project_ids = [ projectId ];
+                        }
+                        user.approved = true;
+                    }
+                    return db.saveOne({ table: 'user' }, user).then((user) => {
+                        // reattach blob, if any
+                        payloads.reattach(user);
+                        return payloads.dispatch(user).then(() => {
+                            this.setState({ hasChanges: false, saving: false }, () => {
+                                return this.setEditability(false, user);
+                            });
+                            return null;
+                        });
+                    });
                 });
+            }).catch((err) => {
+                console.error(err);
+                this.setState({ saving: false });
             });
         });
     },
@@ -710,6 +745,15 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handlePhoneChange: function(evt) {
         this.setUserProperty(`details.phone`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes profile image
+     *
+     * @param  {Object} evt
+     */
+    handleProfileImageChange: function(evt) {
+        this.setUserProperty(`details.resources`, evt.target.value);
     },
 
     /**

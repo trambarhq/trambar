@@ -344,6 +344,7 @@ module.exports = function(languageCode) {
         'user-summary-member-save': 'Save member',
         'user-summary-name': 'Name',
         'user-summary-phone': 'Phone number',
+        'user-summary-profile-image': 'Profile image',
         'user-summary-roles': 'Roles',
         'user-summary-role-none': 'None',
         'user-summary-save': 'Save user',
