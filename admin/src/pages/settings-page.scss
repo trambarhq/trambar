@@ -15,4 +15,16 @@
     .instructions {
         padding-top: 1.2em;
     }
+
+    .option-list {
+        .pos {
+            background-color: #000000;
+            color: #eeeeee;
+            display: inline-block;
+            font-size: 0.7em;
+            padding: 0.1em 0.4em 0.1em 0.4em;
+            border-radius: 1em;
+            vertical-align: 0.07em;
+        }
+    }
 }

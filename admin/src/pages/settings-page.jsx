@@ -284,11 +284,16 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         };
         var languages = this.props.locale.directory;
         var languageOptionProps = _.map(languages, (language) => {
+            var index = _.indexOf(inputLanguages, language.code);
+            var badge;
+            if (index !== -1) {
+                badge = <span className="pos">{index + 1}</span>;
+            }
             return {
                 name: language.code,
                 selected: _.includes(inputLanguages, language.code),
                 previous: _.includes(inputLanguagesOriginal, language.code),
-                children: language.name,
+                children: <span>{language.name} {badge}</span>,
             };
         });
         return (
