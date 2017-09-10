@@ -241,7 +241,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 problems.server_id = 'validation-password-for-admin-only';
             }
         } else {
-            if (!user.email) {
+            if (!user.details.email) {
                 problems.email = 'validation-required-for-oauth';
             }
         }
