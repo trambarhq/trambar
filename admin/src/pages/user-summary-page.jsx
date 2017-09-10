@@ -836,7 +836,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSkypeUsernameChange: function(evt) {
-        this.setUserProperty(`details.skype_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.skype_username`, username);
     },
 
     /**
@@ -845,7 +846,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSlackUsernameChange: function(evt) {
-        this.setUserProperty(`details.slack_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.slack_username`, username);
     },
 
     /**
@@ -854,7 +856,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleIchatUsernameChange: function(evt) {
-        this.setUserProperty(`details.ichat_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.ichat_username`, username);
     },
 
     /**
@@ -863,7 +866,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleTwitterUsernameChange: function(evt) {
-        this.setUserProperty(`details.twitter_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.twitter_username`, username);
     },
 
     /**
@@ -872,7 +876,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleLinkedinUsernameChange: function(evt) {
-        this.setUserProperty(`details.linkedin_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.linkedin_username`, username);
     },
 
     /**
@@ -881,7 +886,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleGitHubUsernameChange: function(evt) {
-        this.setUserProperty(`details.github_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.github_username`, username);
     },
 
     /**
@@ -890,7 +896,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleStackoverflowUsernameChange: function(evt) {
-        this.setUserProperty(`details.stackoverflow_username`, evt.target.value);
+        var username = extractUsername(evt.target.value);
+        this.setUserProperty(`details.stackoverflow_username`, username);
     },
 });
 
@@ -917,4 +924,14 @@ var findRoles = Memoize(function(roles, user) {
 
 function renderOption(props, i) {
     return <option key={i} {...props} />;
+}
+
+function extractUsername(text, type) {
+    if (/https?:/.test(text)) {
+        // remove query string
+        text = _.trim(text.replace(/\?.*/, ''));
+        var parts = _.filter(text.split('/'));
+        return parts[parts.length - 1];
+    }
+    return text;
 }
