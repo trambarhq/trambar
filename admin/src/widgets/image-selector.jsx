@@ -212,13 +212,16 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var className = 'option';
+        var props = {
+            className: 'option',
+            onClick: this.handleCropClick,
+        };
         var image = this.getImage();
         if (!image) {
-            className += ' disabled';
+            props.className += ' disabled';
         }
         return (
-            <div className={className} onClick={this.handleCropClick}>
+            <div {...props}>
                 <i className="fa fa-crop" />
                 {' '}
                 {t('image-selector-crop-image')}
@@ -274,8 +277,8 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderDialogBox: function() {
+        var image = this.getImage();
         if (this.state.renderingAlbumDialogBox) {
-            var image = this.getImage();
             var dialogBoxProps = {
                 show: this.state.showingAlbumDialogBox,
                 purpose: this.props.purpose,
@@ -291,23 +294,18 @@ module.exports = React.createClass({
         } else if (this.state.renderingCroppingDialogBox) {
             var dialogBoxProps = {
                 show: this.state.showingCroppingDialogBox,
+                image: image,
+                desiredWidth: this.props.desiredWidth,
+                desiredHeight: this.props.desiredHeight,
+                locale: this.props.locale,
+                theme: this.props.theme,
+                onSelect: this.handleImageSectionSelect,
+                onCancel: this.handleDialogCancel,
             };
             return <ImageCroppingDialogBox {...dialogBoxProps} />;
         } else {
             return null;
         }
-    },
-
-    /**
-     * Called when user clicks crop button
-     *
-     * @param  {Event} evt
-     */
-    handleChooseClick: function(evt) {
-        this.setState({
-            showingCroppingDialogBox: true,
-            renderingCroppingDialogBox: true,
-        });
     },
 
     /**
@@ -323,6 +321,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user clicks crop button
+     *
+     * @param  {Event} evt
+     */
+    handleCropClick: function(evt) {
+        this.setState({
+            showingCroppingDialogBox: true,
+            renderingCroppingDialogBox: true,
+        });
+    },
+
+    /**
      * Called when user selects an image from album
      *
      * @param  {Object} evt
@@ -330,6 +340,18 @@ module.exports = React.createClass({
     handleImageSelect: function(evt) {
         var image = _.clone(evt.image);
         image.type = 'image';
+        this.setImage(image);
+        this.handleDialogCancel();
+    },
+
+    /**
+     * Called when user changes the clipping rect
+     *
+     * @param  {Object} evt
+     */
+    handleImageSectionSelect: function(evt) {
+        var image = _.clone(this.getImage());
+        image.clip = evt.clippingRect;
         this.setImage(image);
         this.handleDialogCancel();
     },

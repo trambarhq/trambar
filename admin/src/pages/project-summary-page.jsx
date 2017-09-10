@@ -332,8 +332,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var emblemProps = {
             purpose: 'project-emblem',
-            desiredWidth: 200,
-            desiredHeight: 200,
+            desiredWidth: 500,
+            desiredHeight: 500,
             resources: project.details.resources,
             database: this.props.database,
             locale: this.props.locale,

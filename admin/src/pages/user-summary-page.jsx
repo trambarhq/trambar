@@ -401,8 +401,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var profileImageProps = {
             purpose: 'profile-image',
-            desiredWidth: 200,
-            desiredHeight: 200,
+            desiredWidth: 500,
+            desiredHeight: 500,
             resources: user.details.resources,
             database: this.props.database,
             locale: this.props.locale,

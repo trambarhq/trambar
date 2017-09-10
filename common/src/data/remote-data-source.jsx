@@ -35,9 +35,14 @@ module.exports = React.createClass({
         notifier: Notifier,
     }),
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
-            refreshInterval: 15 * 60,
+            refreshInterval: 15 * 60,   // 15 minutes
             urlPrefix: '',
         };
     },
@@ -276,6 +281,15 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Save objects to specified location, which may be the user's computer
+     * (if schema is "local") or the remote server.
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     save: function(location, objects) {
         var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
@@ -309,6 +323,14 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Remove objects at given location
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     remove: function(location, objects) {
         var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
@@ -318,9 +340,8 @@ module.exports = React.createClass({
         } else {
             // set the deleted flag
             objects = _.map(objects, (object) => {
-                object = _.clone(object);
-                object.deleted = true;
-                return object;
+                // only the id is needed--no point in sending the other properties
+                return { id: object.id, deleted: true };
             });
             return this.storeRemoteObjects(location, objects).then((objects) => {
                 var endTime = getCurrentTime();
@@ -461,6 +482,18 @@ module.exports = React.createClass({
         return search;
     },
 
+    /**
+     * Check whether a search occured recently enough to not warrant a
+     * server-side scan. Searches are invalidated by messages over WebSocket.
+     * Nonetheless, we check with the server periodically just in case.
+     *
+     * When a search doesn't seem fresh, this function triggers a server-side
+     * search. An onChange event might occur afterward.
+     *
+     * @param  {Object} search
+     *
+     * @return {Boolean}
+     */
     checkSearchFreshness: function(search) {
         if (search.schema === 'local') {
             return true;
@@ -492,6 +525,25 @@ module.exports = React.createClass({
         //console.log('checkSearchFreshness: false');
         return false;
     },
+
+    /**
+     * Check if an existing search result set has the expected number of objects.
+     * If so, and the search is recent enough, return false. The existing search
+     * results will be returned and nothing else happens.
+     *
+     * If the search would yield an indeterminant number of objects, then this
+     * function returns true if there're a certain number of objects while
+     * triggering a search on the server side. An onChange event might fire
+     * some time later.
+     *
+     * When we don't have the minimal number of objects, the function returns
+     * false, which means the promise return by the search function won't
+     * resolve until we have the actual data.
+     *
+     * @param  {Object} search
+     *
+     * @return {Boolean}
+     */
 
     checkSearchValidity: function(search) {
         if (search.schema === 'local') {
@@ -550,6 +602,13 @@ module.exports = React.createClass({
         return true;
     },
 
+    /**
+     * Perform a search on the server sude
+     *
+     * @param  {Object} search
+     *
+     * @return {Promise<Boolean>}
+     */
     searchRemoteDatabase: function(search) {
         var location = getSearchLocation(search);
         var query = getSearchQuery(search);
@@ -608,19 +667,53 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Discover objects that mean the criteria specified in the query. Will
+     * produce an array of ids and generation numbers.
+     *
+     * @param  {Object} query
+     *
+     * @return {Promise<Array<Object>>}
+     */
     discoverRemoteObjects: function(query) {
         var location = getSearchLocation(query);
         return this.performRemoteAction(location, 'discovery', query.criteria);
     },
 
+    /**
+     * Retrieve objects that were discovered
+     *
+     * @param  {Object} location
+     * @param  {Array<Number>} ids
+     *
+     * @return {Promise<Array<Object>>}
+     */
     retrieveRemoteObjects: function(location, ids) {
         return this.performRemoteAction(location, 'retrieval', { ids });
     },
 
+    /**
+     * Save objects to remote database
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     storeRemoteObjects: function(location, objects) {
         return this.performRemoteAction(location, 'storage', { objects });
     },
 
+    /**
+     * Perform either a discovery, retrieval, or storage operation at remote
+     * server
+     *
+     * @param  {Object} location
+     * @param  {String} action
+     * @param  {*} payload
+     *
+     * @return {Prmise}
+     */
     performRemoteAction: function(location, action, payload) {
         var server = location.server;
         var protocol = location.protocol;

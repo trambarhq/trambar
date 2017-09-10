@@ -65,6 +65,9 @@ module.exports = function(languageCode) {
         'image-album-select': 'Use selected',
         'image-album-upload': 'Upload files',
 
+        'image-cropping-cancel': 'Cancel',
+        'image-cropping-select': 'OK',
+
         'image-selector-crop-image': 'Adjust size/position',
         'image-selector-choose-from-album': 'Choose from album',
         'image-selector-upload-file': 'Upload image',
