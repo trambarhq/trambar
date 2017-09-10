@@ -21,6 +21,7 @@ var OptionList = require('widgets/option-list');
 var ImageSelector = require('widgets/image-selector');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var ActivityChart = require('widgets/activity-chart');
+var InputError = require('widgets/input-error');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-summary-page.scss');
@@ -179,6 +180,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             newUser: null,
             hasChanges: false,
             showingSocialLinks: false,
+            saving: false,
+            problems: {},
         };
     },
 
@@ -217,6 +220,32 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             hasChanges = false;
         }
         this.setState({ newUser, hasChanges });
+    },
+
+    /**
+     * Look for problems in user object
+     *
+     * @return {Object|null}
+     */
+    findProblems: function() {
+        var problems = {};
+        var user = this.getUser();
+        if (!user.username) {
+            problems.username = 'validation-required';
+        }
+        if (!user.type) {
+            problems.type = 'validation-required';
+        }
+        if (user.server_id == null) {
+            if (user.type && user.type !== 'admin') {
+                problems.server_id = 'validation-password-for-admin-only';
+            }
+        } else {
+            if (!user.email) {
+                problems.email = 'validation-required-for-oauth';
+            }
+        }
+        return problems;
     },
 
     /**
@@ -294,6 +323,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     newUser: null,
                     hasChanges: false,
                 });
+            } else {
+                this.setState({ problems: {} });
             }
         }
     },
@@ -370,6 +401,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var userRolesOriginal = findRoles(roles, userOriginal);
         var servers = this.props.servers;
         var inputLanguages = _.get(this.props.system, 'settings.input_languages');
+        var problems = this.state.problems;
         var nameProps = {
             id: 'name',
             value: user.details.name,
@@ -441,7 +473,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var roleOptionProps = _.concat({
             name: 'none',
-            selected: userRoles && _.isEmpty(userRoles),
+            selected: _.isEmpty(userRoles),
             previous: userRolesOriginal && _.isEmpty(userRolesOriginal),
             children: t('user-summary-role-none')
         }, _.map(roles, (role) => {
@@ -459,13 +491,13 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var visibilityOptionProps = [
             {
                 name: 'show',
-                selected: _.get(user, 'hidden') === false,
+                selected: _.get(user, 'hidden', false) === false,
                 previous: _.get(userOriginal, 'hidden') === false,
                 children: t('user-summary-visibility-shown'),
             },
             {
                 name: 'hidden',
-                selected: _.get(user, 'hidden') === true,
+                selected: _.get(user, 'hidden', false) === true,
                 previous: _.get(userOriginal, 'hidden') === true,
                 children: t('user-summary-visibility-hidden'),
             }
@@ -474,12 +506,20 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             onOptionClick: this.handleAuthOptionClick,
             readOnly,
         };
-        var authOptionProps = _.concat({
-            name: 'none',
-            selected: !user.server_id,
-            previous: (userOriginal.id) ? !userOriginal.server_id : undefined,
-            children: t('user-summary-auth-server-none')
-        }, _.map(servers, (server) => {
+        var authOptionProps = _.concat([
+            {
+                name: 'none',
+                selected: (user.server_id == null),
+                previous: (userOriginal.server_id === null),
+                children: t('user-summary-auth-server-none')
+            },
+            {
+                name: '0',
+                selected: (user.server_id === 0),
+                previous: (userOriginal.server_id === 0),
+                children: t('user-summary-auth-server-any')
+            }
+        ], _.map(servers, (server) => {
             return {
                 name: String(server.id),
                 selected: (user.server_id === server.id),
@@ -490,12 +530,21 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 <MultilingualTextField {...nameProps}>{t('user-summary-name')}</MultilingualTextField>
-                <TextField {...usernameProps}>{t('user-summary-username')}</TextField>
-                <TextField {...emailProps}>{t('user-summary-email')}</TextField>
+                <TextField {...usernameProps}>
+                    {t('user-summary-username')}
+                    <InputError>{t(problems.username)}</InputError>
+                </TextField>
+                <TextField {...emailProps}>
+                    {t('user-summary-email')}
+                    <InputError>{t(problems.email)}</InputError>
+                </TextField>
                 <TextField {...phoneProps}>{t('user-summary-phone')}</TextField>
                 <ImageSelector {...profileImageProps}>{t('user-summary-profile-image')}</ImageSelector>
                 <OptionList {...typeListProps}>
-                    <label>{t('user-summary-type')}</label>
+                    <label>
+                        {t('user-summary-type')}
+                        <InputError>{t(problems.type)}</InputError>
+                    </label>
                     {_.map(typeOptionProps, renderOption)}
                 </OptionList>
                 <OptionList {...roleListProps}>
@@ -507,7 +556,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     {_.map(visibilityOptionProps, renderOption)}
                 </OptionList>
                 <OptionList {...authListProps}>
-                    <label>{t('user-summary-auth-server')}</label>
+                    <label>
+                        {t('user-summary-auth-server')}
+                        <InputError>{t(problems.server_id)}</InputError>
+                    </label>
                     {_.map(authOptionProps, renderOption)}
                 </OptionList>
             </div>
@@ -677,7 +729,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         if (this.state.saving) {
             return;
         }
-        this.setState({ saving: true }, () => {
+        var problems = this.findProblems();
+        if (_.some(problems)) {
+            this.setState({ problems });
+            return;
+        }
+        this.setState({ saving: true, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
             var user = this.getUser();
             var payloads = this.props.payloads;
@@ -726,6 +783,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleUsernameChange: function(evt) {
+        var username = extractUsername(evt.target.value);
+        username = _.toLower(username);
         this.setUserProperty(`username`, evt.target.value);
     },
 
@@ -902,7 +961,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
 });
 
 var emptyUser = {
-    details: {}
+    details: {},
 };
 
 var sortRoles = Memoize(function(roles, locale) {

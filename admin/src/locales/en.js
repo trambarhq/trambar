@@ -330,6 +330,7 @@ module.exports = function(languageCode) {
             return text;
         },
         'user-summary-auth-server': 'Authentication server',
+        'user-summary-auth-server-any': 'Any',
         'user-summary-auth-server-none': 'None (password only)',
         'user-summary-cancel': 'Cancel',
         'user-summary-edit': 'Edit user',
@@ -370,5 +371,9 @@ module.exports = function(languageCode) {
         'user-tooltip-$count': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;
         },
+
+        'validation-password-for-admin-only': 'Only administrators can sign in using password',
+        'validation-required': 'Required',
+        'validation-required-for-oauth': 'Required when OAuth is used',
     };
 };

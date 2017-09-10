@@ -95,6 +95,7 @@ module.exports = Relaks.createClass({
 });
 
 var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
+    displayName: 'ImageAlbumDialogBox.Sync',
     propTypes: {
         show: PropTypes.bool,
         projects: PropTypes.arrayOf(PropTypes.object),

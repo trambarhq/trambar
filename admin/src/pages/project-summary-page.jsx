@@ -19,6 +19,7 @@ var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var ImageSelector = require('widgets/image-selector');
 var ActivityChart = require('widgets/activity-chart');
+var InputError = require('widgets/input-error');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./project-summary-page.scss');
@@ -136,6 +137,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return {
             newProject: null,
             saving: false,
+            problems: {},
         };
     },
 
@@ -174,6 +176,20 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             hasChanges = false;
         }
         this.setState({ newProject, hasChanges });
+    },
+
+    /**
+     * Look for problems in user object
+     *
+     * @return {Object|null}
+     */
+    findProblems: function() {
+        var problems = {};
+        var project = this.getProject();
+        if (!project.name) {
+            problems.name = 'validation-required';
+        }
+        return problems;
     },
 
     /**
@@ -238,6 +254,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                     newProject: null,
                     hasChanges: false,
                 });
+            } else {
+                this.setState({ problems: {} });
             }
         }
     },
@@ -306,6 +324,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var projectOriginal = this.props.project;
         var project = this.getProject();
         var inputLanguages = _.get(this.props.system, 'settings.input_languages');
+        var problems = this.state.problems;
         var titleProps = {
             id: 'title',
             value: project.details.title,
@@ -409,7 +428,10 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 <MultilingualTextField {...titleProps}>{t('project-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>{t('project-summary-name')}</TextField>
+                <TextField {...nameProps}>
+                    {t('project-summary-name')}
+                    <InputError>{t(problems.name)}</InputError>
+                </TextField>
                 <MultilingualTextField {...descriptionProps}>{t('project-summary-description')}</MultilingualTextField>
                 <ImageSelector {...emblemProps}>{t('project-summary-emblem')}</ImageSelector>
                 <OptionList {...listProps}>
@@ -492,7 +514,12 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         if (this.state.saving) {
             return;
         }
-        this.setState({ saving: true }, () => {
+        var problems = this.findProblems();
+        if (_.some(problems)) {
+            this.setState({ problems });
+            return;
+        }
+        this.setState({ saving: true, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
             var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
             var payloads = this.props.payloads;
@@ -531,7 +558,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        this.setProjectProperty(`name`, evt.target.value);
+        var name = _.trim(_.toLower(evt.target.value));
+        this.setProjectProperty(`name`, name);
     },
 
     /**

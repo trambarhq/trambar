@@ -38,5 +38,8 @@ function TextField(props) {
 
 TextField.defaultProps = {
     type: 'text',
+};
+
+TextField.propTypes = {
     locale: PropTypes.instanceOf(Locale).isRequired,
 };
