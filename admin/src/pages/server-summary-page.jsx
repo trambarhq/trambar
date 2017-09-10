@@ -16,6 +16,7 @@ var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var CollapsibleContainer = require('widgets/collapsible-container');
+var InputError = require('widgets/input-error');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./server-summary-page.scss');
@@ -115,6 +116,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return {
             newServer: null,
             hasChanges: false,
+            saving: false,
+            problems: {},
         };
     },
 
@@ -167,6 +170,38 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         }
         this.setState({ newServer, hasChanges });
     },
+
+    /**
+     * Look for problems in server object
+     *
+     * @return {Object}
+     */
+    findProblems: function() {
+        var problems = {};
+        var server = this.getServer();
+        if (!server.name) {
+            problems.name = 'validation-required';
+        }
+        if (!server.type) {
+            problems.type = 'validation-required';
+        }
+        var oauth = server.settings.oauth;
+        if (oauth) {
+            if (oauth.clientID && !oauth.clientSecret) {
+                problems.clientSecret = 'validation-required';
+            }
+            if (!oauth.clientID && oauth.clientSecret) {
+                problems.clientID = 'validation-required';
+            }
+            if ((oauth.clientID || oauth.clientSecret) && !oauth.baseURL) {
+                if (server.type === 'gitlab') {
+                    problems.baseURL = 'validation-required';
+                }
+            }
+        }
+        return problems;
+    },
+
 
     /**
      * Return server id specified in URL
@@ -229,6 +264,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 newServer: null,
                 hasChanges: false,
             });
+        } else {
+            this.setState({ problems: {} });
         }
     },
 
@@ -303,6 +340,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var server = this.getServer();
         var serverOriginal = this.props.server || emptyServer;
         var inputLanguages = _.get(this.props.system, 'settings.input_languages');
+        var problems = this.state.problems;
         var titleProps = {
             id: 'title',
             value: server.details.title,
@@ -384,16 +422,31 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>{t('server-summary-name')}</TextField>
+                <TextField {...nameProps}>
+                    {t('server-summary-name')}
+                    <InputError>{t(problems.name)}</InputError>
+                </TextField>
                 <OptionList {...typeListProps}>
-                    <label>{t('server-summary-type')}</label>
+                    <label>
+                        {t('server-summary-type')}
+                        <InputError>{t(problems.type)}</InputError>
+                    </label>
                     {_.map(typeOptionProps, renderOption)}
                 </OptionList>
                 <CollapsibleContainer open={needOAuthUrl}>
-                    <TextField {...oauthUrlProps}>{t('server-summary-oauth-url')}</TextField>
+                    <TextField {...oauthUrlProps}>
+                        {t('server-summary-oauth-url')}
+                        <InputError>{t(problems.baseURL)}</InputError>
+                    </TextField>
                 </CollapsibleContainer>
-                <TextField {...oauthIdProps}>{t('server-summary-oauth-id')}</TextField>
-                <TextField {...oauthSecretProps}>{t('server-summary-oauth-secret')}</TextField>
+                <TextField {...oauthIdProps}>
+                    {t('server-summary-oauth-id')}
+                    <InputError>{t(problems.clientID)}</InputError>
+                </TextField>
+                <TextField {...oauthSecretProps}>
+                    {t('server-summary-oauth-secret')}
+                    <InputError>{t(problems.clientSecret)}</InputError>
+                </TextField>
                 <TextField {...apiAccessProps}>{t('server-summary-api-access')}</TextField>
                 <CollapsibleContainer open={showApiSection}>
                     <TextField {...apiUrlProps}>{t('server-summary-api-url')}</TextField>
@@ -444,12 +497,22 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var server = this.getServer();
-        return db.start().then((serverId) => {
-            return db.saveOne({ table: 'server' }, server).then((server) => {
-                this.setState({ hasChanges: false }, () => {
-                    return this.setEditability(false, server);
+        if (this.state.saving) {
+            return;
+        }
+        var problems = this.findProblems();
+        if (_.some(problems)) {
+            this.setState({ problems });
+            return;
+        }
+        this.setState({ saving: true, problems: {} }, () => {
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var server = this.getServer();
+            return db.start().then((serverId) => {
+                return db.saveOne({ table: 'server' }, server).then((server) => {
+                    this.setState({ hasChanges: false }, () => {
+                        return this.setEditability(false, server);
+                    });
                 });
             });
         });
@@ -470,7 +533,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleNameChange: function(evt) {
-        this.setServerProperty(`name`, evt.target.value);
+        var name = _.trim(_.toLower(evt.target.value))
+        this.setServerProperty(`name`, name);
     },
 
     /**
@@ -570,7 +634,8 @@ var integratedServerTypes = [
 ];
 
 var emptyServer = {
-    details: {}
+    details: {},
+    settings: {},
 };
 
 function renderOption(props, i) {

@@ -179,9 +179,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Look for problems in user object
+     * Look for problems in project object
      *
-     * @return {Object|null}
+     * @return {Object}
      */
     findProblems: function() {
         var problems = {};

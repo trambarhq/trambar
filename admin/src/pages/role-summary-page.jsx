@@ -15,6 +15,7 @@ var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
+var InputError = require('widgets/input-error');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./role-summary-page.scss');
@@ -117,6 +118,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         return {
             newRole: null,
             hasChanges: false,
+            saving: false,
+            problems: {},
         };
     },
 
@@ -155,6 +158,20 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             hasChanges = false;
         }
         this.setState({ newRole, hasChanges });
+    },
+
+    /**
+     * Look for problems in project object
+     *
+     * @return {Object}
+     */
+    findProblems: function() {
+        var problems = {};
+        var role = this.getRole();
+        if (!role.name) {
+            problems.name = 'validation-required';
+        }
+        return problems;
     },
 
     /**
@@ -218,6 +235,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 newRole: null,
                 hasChanges: false,
             });
+        } else {
+            this.setState({ problems: {} });
         }
     },
 
@@ -283,6 +302,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         var roleOriginal = this.props.role || emptyRole;
         var role = this.getRole();
         var inputLanguages = _.get(this.props.system, 'settings.input_languages');
+        var problems = this.state.problems;
         var titleProps = {
             id: 'title',
             value: role.details.title,
@@ -310,7 +330,10 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 <MultilingualTextField {...titleProps}>{t('role-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>{t('role-summary-name')}</TextField>
+                <TextField {...nameProps}>
+                    {t('role-summary-name')}
+                    <InputError>{t(problems.name)}</InputError>
+                </TextField>
                 <MultilingualTextField {...descriptionProps}>{t('role-summary-description')}</MultilingualTextField>
             </div>
         );
@@ -358,12 +381,22 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var role = this.getRole();
-        return db.start().then((currentUserId) => {
-            return db.saveOne({ table: 'role' }, role).then((role) => {
-                this.setState({ hasChanges: false }, () => {
-                    return this.setEditability(false, role);
+        if (this.state.saving) {
+            return;
+        }
+        var problems = this.findProblems();
+        if (_.some(problems)) {
+            this.setState({ problems });
+            return;
+        }
+        this.setState({ saving: true, problems: {} }, () => {
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var role = this.getRole();
+            return db.start().then((currentUserId) => {
+                return db.saveOne({ table: 'role' }, role).then((role) => {
+                    this.setState({ hasChanges: false }, () => {
+                        return this.setEditability(false, role);
+                    });
                 });
             });
         });
@@ -384,7 +417,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        this.setRoleProperty(`name`, evt.target.value);
+        var name = _.trim(_.toLower(evt.target.value))
+        this.setRoleProperty(`name`, name);
     },
 
     /**

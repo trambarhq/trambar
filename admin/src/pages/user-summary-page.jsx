@@ -225,7 +225,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Look for problems in user object
      *
-     * @return {Object|null}
+     * @return {Object}
      */
     findProblems: function() {
         var problems = {};
