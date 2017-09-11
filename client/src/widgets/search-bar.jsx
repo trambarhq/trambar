@@ -57,6 +57,7 @@ module.exports = React.createClass({
             type: 'text',
             value: this.state.keywords,
             onChange: this.handleChange,
+            onKeyDown: this.handleKeyDown,
         };
         return (
             <div className="search-bar">
@@ -90,7 +91,18 @@ module.exports = React.createClass({
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
-        this.timeout = setTimeout(this.performSearch, 500);
+        this.timeout = setTimeout(this.performSearch, 800);
+    },
+
+    /**
+     * Called when user press a key
+     *
+     * @param  {Evt} evt
+     */
+    handleKeyDown: function(evt) {
+        if (evt.keyCode === 13) {
+            this.performSearch();
+        }
     },
 });
 
