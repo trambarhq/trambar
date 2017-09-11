@@ -101,7 +101,8 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
      */
     getRoleIds: function() {
         var route = this.props.route;
-        return _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
+        var roleIds = _.map(_.split(route.parameters.roles, '+'), Number);
+        return _.filter(roleIds);
     },
 
     /**

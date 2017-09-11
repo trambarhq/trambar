@@ -82,7 +82,7 @@ module.exports = Relaks.createClass({
             props.currentUser = currentUser;
             meanwhile.check();
         }).then(() => {
-            var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
+            var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
             var criteria = {
                 hidden: false
             };

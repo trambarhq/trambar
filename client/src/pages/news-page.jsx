@@ -78,8 +78,8 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var date = route.parameters.date;
-        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
-        var searchString = route.query.q;
+        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
+        var searchString = route.query.search;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });

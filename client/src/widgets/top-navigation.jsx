@@ -32,7 +32,7 @@ module.exports = React.createClass({
             selectedControl = 'search';
         } else if (route.parameters.date) {
             selectedControl = 'calendar';
-        } else if (!_.isEmpty(route.parameters.roleIds)) {
+        } else if (route.parameters.roles && route.parameters.roles !== 'all') {
             selectedControl = 'filter';
         }
         return {

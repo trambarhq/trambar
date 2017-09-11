@@ -69,7 +69,7 @@ module.exports = Relaks.createClass({
         var route = this.props.route;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
-        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
+        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             bookmarks: null,
