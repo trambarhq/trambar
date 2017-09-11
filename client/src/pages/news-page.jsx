@@ -27,28 +27,28 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('//:server/:schema/news/:roleIds/:date/?', url)
-                || Route.match('//:server/:schema/news/:roleIds/?', url)
+            return Route.match('//:server/:schema/news/:roles/:date/?', url)
+                || Route.match('//:server/:schema/news/:roles/?', url)
                 || Route.match('//:server/:schema/news/?', url)
-                || Route.match('/:schema/news/:roleIds/:date/?', url)
-                || Route.match('/:schema/news/:roleIds/?', url)
+                || Route.match('/:schema/news/:roles/:date/?', url)
+                || Route.match('/:schema/news/:roles/?', url)
                 || Route.match('/:schema/news/?', url);
         },
 
         getUrl: function(params) {
             var server = params.server;
             var schema = params.schema;
-            var roleIds = params.roleIds;
+            var roles = params.roles;
             var date = params.date;
             var url = `/${schema}/news/`;
             if (server) {
                 url = `//${server}` + url;
             }
-            if (roleIds && roleIds !== 'all') {
-                if (roleIds instanceof Array) {
-                    roleIds = roleIds.join('+');
-                }
-                url += `${roleIds}/`;
+            if (roles instanceof Array) {
+                roles = roles.join('+');
+            }
+            if (roles && roles !== 'all') {
+                url += `${roles}/`;
             } else if (date) {
                 url += `all/`;
             }
@@ -73,7 +73,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var date = route.parameters.date;
-        var roleIds = _.filter(_.map(_.split(route.parameters.roleIds, '+'), parseInt));
+        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
         var searchString = route.query.q;
         var server = route.parameters.server;
         var schema = route.parameters.schema;

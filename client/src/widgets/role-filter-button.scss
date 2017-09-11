@@ -1,0 +1,82 @@
+.role-filter-button {
+    display: inline-block;
+    margin-right: 0.5em;
+    vertical-align: top;
+    cursor: pointer;
+
+    .contents {
+        position: relative;
+        border: 1px solid #444444;
+        margin: 1px;
+        overflow: hidden;
+
+        .row {
+            width: 12em;
+            height: 3em;
+
+            .profile-image {
+                display: inline-block;
+            }
+        }
+
+        .band {
+            position: absolute;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            left: 0;
+            right: 0;
+            top: 3em;
+            background-color: #1a1a1a;
+            color: #eeeeee;
+            padding: 0.25em 0.25em 0.25em 0.25em;
+            min-height: 3em;
+
+            .title {
+                width: 100%;
+                text-align: center;
+                line-height: 1.25em;
+
+                .user-count {
+                    float: right;
+                    line-height: 0.5em;
+                    padding-top: 0.2em;
+
+                    .number {
+                        font-size: 0.6em;
+                        vertical-align: -2px;
+                        margin-left: 2px;
+                    }
+                }
+            }
+        }
+    }
+
+    &.selected {
+        .contents {
+            border: 2px solid #eeeeee;
+            margin: 0;
+        }
+
+        .band {
+            background-color: #eeeeee;
+            color: #000000;
+        }
+    }
+
+    &.no-roles {
+        .message {
+            color: #444444;
+            position: absolute;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
+        cursor: default;
+    }
+}

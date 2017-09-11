@@ -23,25 +23,25 @@ module.exports = Relaks.createClass({
 
     statics: {
         parseUrl: function(url) {
-            return Route.match('//:server/:schema/people/:roleIds/?', url)
+            return Route.match('//:server/:schema/people/:roles/?', url)
                 || Route.match('//:server/:schema/people/?', url)
-                || Route.match('/:schema/people/:roleIds/?', url)
+                || Route.match('/:schema/people/:roles/?', url)
                 || Route.match('/:schema/people/?', url);
         },
 
         getUrl: function(params) {
             var server = params.server;
             var schema = params.schema;
-            var roleIds = params.roleIds;
+            var roles = params.roles;
             var url = `/${schema}/people/`;
             if (server) {
                 url = `//${server}` + url;
             }
-            if (roleIds) {
-                if (roleIds instanceof Array) {
-                    roleIds = roleIds.join('+');
-                }
-                url += `${rolesId}/`;
+            if (roles instanceof Array) {
+                roles = roles.join('+');
+            }
+            if (roles && roles !== 'all') {
+                url += `${roles}/`;
             }
             return url;
         },
@@ -82,14 +82,12 @@ module.exports = Relaks.createClass({
             props.currentUser = currentUser;
             meanwhile.check();
         }).then(() => {
-            var roleIds = _.filter(_.map(_.split(route.parameters.roleIds, '+'), parseInt));
-            var searchString = route.query.q;
-            var criteria = {};
+            var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
+            var criteria = {
+                hidden: false
+            };
             if (!_.isEmpty(roleIds)) {
                 criteria.role_ids = roleIds;
-            }
-            if (searchString) {
-                criteria.search = searchString;
             }
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {

@@ -24,24 +24,24 @@ module.exports = Relaks.createClass({
     statics: {
         parseUrl: function(url) {
             return Route.match('/:schema/bookmarks/?', url)
-                || Route.match('/:schema/bookmarks/:roleIds/?', url)
+                || Route.match('/:schema/bookmarks/:roles/?', url)
                 || Route.match('//:server/:schema/bookmarks/?', url)
-                || Route.match('//:server/:schema/bookmarks/:roleIds/?', url);
+                || Route.match('//:server/:schema/bookmarks/:roles/?', url);
         },
 
         getUrl: function(params) {
             var server = params.server;
             var schema = params.schema;
-            var roleIds = params.roleIds
+            var roles = params.roles
             var url = `/${schema}/bookmarks/`;
             if (server) {
                 url = `//${server}` + url;
             }
-            if (roleIds) {
-                if (roleIds instanceof Array) {
-                    roleIds = roleIds.join('+');
-                }
-                url += `${roleIds}/`;
+            if (roles instanceof Array) {
+                roles = roles.join('+');
+            }
+            if (roles && roles !== 'all') {
+                url += `${roles}/`;
             }
             return url;
         },
@@ -69,7 +69,7 @@ module.exports = Relaks.createClass({
         var route = this.props.route;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
-        var roleIds = _.filter(_.map(_.split(route.parameters.roleIds, '+'), parseInt));
+        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), parseInt));
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             bookmarks: null,

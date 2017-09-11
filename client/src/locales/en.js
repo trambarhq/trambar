@@ -144,6 +144,8 @@ module.exports = function(languageCode) {
         'photo-capture-retake': 'Retake',
         'photo-capture-snap': 'Snap',
 
+        'role-filter-no-roles': 'No roles defined',
+
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 

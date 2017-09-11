@@ -9,6 +9,7 @@ var Theme = require('theme/theme');
 // widgets
 var CollapsibleContainer = require('widgets/collapsible-container');
 var CalendarBar = require('widgets/calendar-bar');
+var RoleFilterBar = require('widgets/role-filter-bar');
 
 require('./top-navigation.scss');
 
@@ -86,10 +87,10 @@ module.exports = React.createClass({
     /**
      * Render a bar on iOS where the status bar overlays the app
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderSpacerBar: function() {
-
+        return null;
     },
 
     /**
@@ -146,11 +147,16 @@ module.exports = React.createClass({
     renderControl: function() {
         switch (this.state.selectedControl) {
             case 'calendar': return this.renderCalendarBar();
-            case 'filter': return <div><p>Filter</p></div>;
+            case 'filter': return this.renderRoleFilterBar();
             case 'search': return <div><p>Search</p></div>;
         }
     },
 
+    /**
+     * Render a list of calendars covering the project period
+     *
+     * @return {ReactElement}
+     */
     renderCalendarBar: function() {
         var route = this.props.route;
         var params = _.get(route.component, 'navigation.top', {});
@@ -163,9 +169,25 @@ module.exports = React.createClass({
             statisticsType: params.statisticsType,
             onSelect: this.handleCalendarSelect,
         };
-        return (
-            <CalendarBar {...props} />
-        );
+        return <CalendarBar {...props} />;
+    },
+
+    /**
+     * Render a list of roles
+     *
+     * @return {ReactElement}
+     */
+    renderRoleFilterBar: function() {
+        var route = this.props.route;
+        var params = _.get(route.component, 'navigation.top', {});
+        var selection = route.parameters.date;
+        var props = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <RoleFilterBar {...props} />;
     },
 
     toggleControl: function(name) {
