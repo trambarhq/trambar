@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
+var DateTracker = require('utils/date-tracker');
 
 var Locale = require('locale/locale');
 
@@ -16,7 +17,7 @@ module.exports = React.createClass({
 
         locale: PropTypes.instanceOf(Locale).isRequired,
 
-        onSelect: PropTypes.func,
+        onDateClick: PropTypes.func,
     },
 
     /**
@@ -105,6 +106,9 @@ module.exports = React.createClass({
                 } else if (!activities) {
                     classNames.push('disabled');
                 }
+                if (date === DateTracker.today) {
+                    classNames.push('today');
+                }
                 var props = {
                     className: classNames.join(' '),
                     'data-date': date,
@@ -142,21 +146,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Call onSelect handler
-     *
-     * @param  {String} date
-     */
-    triggerSelectEvent: function(date) {
-        if (this.props.onSelect) {
-            this.props.onSelect({
-                type: 'select',
-                target: this,
-                selection: date,
-            });
-        }
-    },
-
-    /**
      * Called when user clicks on the calendar
      *
      * @param  {Event} evt
@@ -164,7 +153,13 @@ module.exports = React.createClass({
     handleClick: function(evt) {
         var date = evt.target.getAttribute('data-date');
         if (date) {
-            this.triggerSelectEvent(date);
+            if (this.props.onDateClick) {
+                this.props.onDateClick({
+                    type: 'dateclick',
+                    target: this,
+                    date,
+                });
+            }
         }
     },
 });

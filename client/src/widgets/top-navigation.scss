@@ -25,18 +25,18 @@
         text-align: center;
         padding: 6px 6px 6px 6px;
         cursor: pointer;
-        color: #888;
+        color: #888888;
 
         &:hover {
-            color: #ccc;
+            color: #cccccc;
         }
 
         &.active {
-            color: #fff;
+            color: #eeeeee;
         }
 
         &.disabled {
-            color: #333;
+            color: #333333;
             cursor: not-allowed;
         }
 

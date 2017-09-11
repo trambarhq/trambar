@@ -50,9 +50,13 @@
             cursor: default;
         }
 
+        TD.today {
+            color: #eeeeee;
+        }
+
         TD.selected {
             color: #000000;
-            background-color: #ffffff;
+            background-color: #eeeeee;
         }
     }
 }

@@ -158,15 +158,10 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderCalendarBar: function() {
-        var route = this.props.route;
-        var params = _.get(route.component, 'navigation.top', {});
-        var selection = route.parameters.date;
         var props = {
-            selection,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
-            statisticsType: params.statisticsType,
             onSelect: this.handleCalendarSelect,
         };
         return <CalendarBar {...props} />;
@@ -178,9 +173,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderRoleFilterBar: function() {
-        var route = this.props.route;
-        var params = _.get(route.component, 'navigation.top', {});
-        var selection = route.parameters.date;
         var props = {
             database: this.props.database,
             route: this.props.route,
@@ -207,13 +199,6 @@ module.exports = React.createClass({
         route.change(url, true);
     },
 
-    changeRoute: function(newParam) {
-        var route = this.props.route;
-        var params = _.assign({}, route.parameters, newParam)
-        var url = route.component.getUrl(params);
-        route.change(url, true);
-    },
-
     handleCalendarClick: function(evt) {
         this.toggleControl('calendar');
     },
@@ -225,10 +210,6 @@ module.exports = React.createClass({
     handleSearchClick: function(evt) {
         this.toggleControl('search');
     },
-
-    handleCalendarSelect: function(evt) {
-        this.changeRoute({ date: evt.selection });
-    }
 });
 
 function Button(props) {

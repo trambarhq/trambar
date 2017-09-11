@@ -27,8 +27,6 @@ module.exports = Relaks.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onSelect: PropTypes.func,
     },
 
     renderAsync: function(meanwhile) {
@@ -39,17 +37,16 @@ module.exports = Relaks.createClass({
         var currentUserId;
         var props = {
             projectRange: null,
+            dailyActivities: null,
 
-            selection: this.props.selection,
+            route: this.props.route,
             locale: this.props.locale,
-            onSelect: this.props.onSelect,
-            loading: true,
         };
         meanwhile.show(<CalendarBarSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load project-date-range statistics
+            // load story-date-range statistics
             var criteria = {
-                type: 'project-date-range',
+                type: 'story-date-range',
                 filters: {},
             };
             currentUserId = userId;
@@ -101,7 +98,6 @@ module.exports = Relaks.createClass({
             }
         }).then((statistics) => {
             props.dailyActivities = statistics;
-            props.loading = true;
             return <CalendarBarSync {...props} />;
         });
     },
@@ -110,13 +106,11 @@ module.exports = Relaks.createClass({
 var CalendarBarSync = module.exports.Sync = React.createClass({
     displayName: 'CalendarBar.Sync',
     propTypes: {
-        selection: PropTypes.string,
         projectRange: PropTypes.object,
         dailyActivities: PropTypes.arrayOf(PropTypes.object),
 
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onSelect: PropTypes.func,
     },
 
     render: function() {
@@ -170,7 +164,7 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
                 selection: this.props.selection,
                 dailyActivities: month.activities,
                 locale: this.props.locale,
-                onSelect: this.props.onSelect,
+                onDateClick: this.handleDateClick,
                 key: index,
             };
             return <Calendar {...props} />;
@@ -181,4 +175,17 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
             </div>
         );
     },
+
+    /**
+     * Called when user clicks on a date
+     *
+     * @param  {Object} evt
+     */
+    handleDateClick: function(evt) {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.date = evt.date;
+        var url = route.component.getUrl(params);
+        route.change(url, true);
+    }
 })
