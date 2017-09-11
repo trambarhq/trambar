@@ -212,8 +212,12 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 other` : `${count} others`;
         },
 
+        'server-list-api-access-false': '',
+        'server-list-api-access-true': 'Acquired',
         'server-list-new': 'New server',
         'server-list-title': 'Servers',
+        'server-list-oauth-false': '',
+        'server-list-oauth-true': 'Active',
 
         'server-summary-acquire': 'Acquire API access',
         'server-summary-api-access': 'API access',
@@ -264,12 +268,14 @@ module.exports = function(languageCode) {
 
         'sign-off-menu-sign-off': 'Sign off',
 
+        'table-heading-api-access': 'API access﻿',
         'table-heading-date-range': 'Active period',
         'table-heading-email': 'E-mail',
         'table-heading-issue-tracker': 'Issue tracker',
         'table-heading-last-modified': 'Last modified',
         'table-heading-last-month': 'Last month',
         'table-heading-name': 'Name',
+        'table-heading-oauth': 'OAuth authentication',
         'table-heading-projects': 'Projects',
         'table-heading-repositories': 'Repositories',
         'table-heading-roles': 'Roles',

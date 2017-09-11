@@ -181,6 +181,8 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             <tr>
                 {this.renderTitleColumn()}
                 {this.renderTypeColumn()}
+                {this.renderOAuthColumn()}
+                {this.renderAPIColumn()}
                 {this.renderUsersColumn()}
                 {this.renderModifiedTimeColumn()}
             </tr>
@@ -216,6 +218,8 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             <tr key={i}>
                 {this.renderTitleColumn(server)}
                 {this.renderTypeColumn(server)}
+                {this.renderOAuthColumn(server)}
+                {this.renderAPIColumn(server)}
                 {this.renderUsersColumn(server)}
                 {this.renderModifiedTimeColumn(server)}
             </tr>
@@ -265,6 +269,46 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
             return <td>{t(`server-type-${server.type}`)}</td>
+        }
+    },
+
+    /**
+     * Render column indicating whether oauth authentication is active
+     *
+     * @param  {Object|null} server
+     *
+     * @return {ReactElement}
+     */
+    renderOAuthColumn: function(server) {
+        if (this.props.theme.isBelowMode('wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!server) {
+            return <TH id="oauth">{t('table-heading-oauth')}</TH>;
+        } else {
+            var active = hasOAuthCredentials(server);
+            return <td>{t(`server-list-oauth-${active}`)}</td>
+        }
+    },
+
+    /**
+     * Render column indicating whether oauth authentication is active
+     *
+     * @param  {Object|null} server
+     *
+     * @return {ReactElement}
+     */
+    renderAPIColumn: function(server) {
+        if (this.props.theme.isBelowMode('wide')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!server) {
+            return <TH id="api">{t('table-heading-api-access')}</TH>;
+        } else {
+            var active = hasAPICredentials(server);
+            return <td>{t(`server-list-api-access-${active}`)}</td>
         }
     },
 
@@ -371,6 +415,26 @@ function getServerIcon(type) {
         default:
             return type;
     }
+}
+
+function hasOAuthCredentials(server) {
+    var oauth = server.settings.oauth;
+    if (oauth) {
+        if (oauth.clientID && oauth.clientSecret) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function hasAPICredentials(server) {
+    var api = server.settings.api;
+    if (api) {
+        if (api.access_token) {
+            return true;
+        }
+    }
+    return false;
 }
 
 var findUsers = Memoize(function(users, server) {
