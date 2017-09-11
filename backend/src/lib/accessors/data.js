@@ -191,40 +191,110 @@ module.exports = {
             criteria.limit = criteria.limit;
         }
         if (criteria.order) {
+            var parts = _.split(/\s+/, criteria.order);
+            var column = parts[0];
+            var dir = _.toLower(parts[1]);
+            if (this.columns.hasOwnProperty(column)) {
+                query.order = column;
+                if (dir === 'asc' || dir === 'desc') {
+                    query.order += ' ' + dir;
+                }
+            }
             query.order = criteria.order;
         }
     },
 
+    /**
+     * Look for rows matching criteria
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     * @param  {String} columns
+     *
+     * @return {Promise<Array>}
+     */
     find: function(db, schema, criteria, columns) {
         var table = this.getTableName(schema);
         var query = {
             conditions: [],
             parameters: [],
             order: 'id DESC',
+            columns: columns,
+            table: table,
             limit: 50000
         };
-        this.apply(criteria, query);
+        var promise = this.apply(criteria, query);
+        if (promise && promise.then instanceof Function) {
+            // apply() returns a promise--wait for it to resolve
+            promise.then(() => {
+                return this.run(db, query);
+            });
+        } else {
+            // run query immediately
+            return this.run(db, query);
+        }
+    },
+
+    /**
+     * Run a query
+     *
+     * @param  {Database} db
+     * @param  {Object} query
+     *
+     * @return {Promise<Array>}
+     */
+    run: function(db, query) {
         var sql = `
-            SELECT ${columns}
-            FROM ${table}
+            SELECT ${query.columns}
+            FROM ${query.table}
             WHERE ${query.conditions.join(' AND ') || true}
+            ORDER BY ${query.order}
             LIMIT ${query.limit}
         `;
         return db.query(sql, query.parameters);
     },
 
+    /**
+     * Look for one row
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     * @param  {String} columns
+     *
+     * @return {Promise<Object>}
+     */
     findOne: function(db, schema, criteria, columns) {
         return this.find(db, schema, criteria, columns).get(0).then((row) => {
             return row || null;
         });
     },
 
+    /**
+     * Update multiple rows
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     *
+     * @return {Promise<Array>}
+     */
     update: function(db, schema, rows) {
         return Promise.mapSeries(rows, (row) => {
             return this.updateOne(db, schema, row);
         });
     },
 
+    /**
+     * Update one row
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} row
+     *
+     * @return {Promise<Object>}
+     */
     updateOne: function(db, schema, row) {
         var table = this.getTableName(schema);
         var assignments = [];

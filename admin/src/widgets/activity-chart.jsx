@@ -24,6 +24,7 @@ module.exports = React.createClass({
     render: function() {
         return (
             <div className="activity-chart">
+                <h2>{this.props.children}</h2>
                 {this.renderLegend()}
                 {this.renderChart()}
             </div>

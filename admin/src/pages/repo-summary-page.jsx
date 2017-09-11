@@ -380,8 +380,9 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         };
         return (
             <div className="statistics">
-                <h2>{t('repo-summary-statistics')}</h2>
-                <ActivityChart {...chartProps} />
+                <ActivityChart {...chartProps}>
+                    {t('repo-summary-statistics')}
+                </ActivityChart>
             </div>
         );
     },

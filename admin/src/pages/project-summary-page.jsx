@@ -481,8 +481,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         };
         return (
             <div className="statistics">
-                <h2>{t('project-summary-statistics')}</h2>
-                <ActivityChart {...chartProps} />
+                <ActivityChart {...chartProps}>
+                    {t('project-summary-statistics')}
+                </ActivityChart>
             </div>
         );
     },

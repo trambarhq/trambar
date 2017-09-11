@@ -3,7 +3,11 @@ var MarkGor = require('mark-gor/react');
 
 var Locale = require('locale/locale');
 
+// mixins
 var UpdateCheck = require('mixins/update-check');
+
+// widgets
+var CollapsibleContainer = require('widgets/collapsible-container');
 
 require('./instruction-block.scss');
 
@@ -40,7 +44,9 @@ module.exports = React.createClass({
         }
         return (
             <div className={classNames.join(' ')}>
-                {contents}
+                <CollapsibleContainer open={!this.props.hidden}>
+                    <div className="contents">{contents}</div>
+                </CollapsibleContainer>
             </div>
         );
     },

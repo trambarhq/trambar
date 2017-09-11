@@ -16,6 +16,8 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             contentHeight: undefined,
+            collapsing: false,
+            expanding: false,
         };
     },
 
@@ -25,6 +27,13 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
+        if (this.props.open !== nextProps.open) {
+            if (nextProps.open) {
+                this.setState({ collapsing: false, expanding: true });
+            } else {
+                this.setState({ collapsing: true, expanding: false });
+            }
+        }
     },
 
     /**
@@ -39,8 +48,14 @@ module.exports = React.createClass({
         } else {
             style.height = 0;
         }
+        var className = 'collapsible-container';
+        if (this.state.expanding) {
+            className += ' expanding';
+        } else if (this.state.collapsing) {
+            className += ' collapsing';
+        }
         return (
-            <div ref="container" className="collapsible-container" style={style}>
+            <div ref="container" className={className} style={style}>
                 <div ref="contents" className="collapsible-contents">
                     {this.props.children}
                 </div>
