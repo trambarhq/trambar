@@ -10,6 +10,7 @@ var Theme = require('theme/theme');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var CalendarBar = require('widgets/calendar-bar');
 var RoleFilterBar = require('widgets/role-filter-bar');
+var SearchBar = require('widgets/search-bar');
 
 require('./top-navigation.scss');
 
@@ -27,7 +28,9 @@ module.exports = React.createClass({
     getInitialState: function() {
         var route = this.props.route;
         var selectedControl = null;
-        if (route.parameters.date) {
+        if (route.query.search) {
+            selectedControl = 'search';
+        } else if (route.parameters.date) {
             selectedControl = 'calendar';
         } else if (!_.isEmpty(route.parameters.roleIds)) {
             selectedControl = 'filter';
@@ -148,7 +151,7 @@ module.exports = React.createClass({
         switch (this.state.selectedControl) {
             case 'calendar': return this.renderCalendarBar();
             case 'filter': return this.renderRoleFilterBar();
-            case 'search': return <div><p>Search</p></div>;
+            case 'search': return this.renderSearchBar();
         }
     },
 
@@ -180,6 +183,19 @@ module.exports = React.createClass({
             theme: this.props.theme,
         };
         return <RoleFilterBar {...props} />;
+    },
+
+    /**
+     * Render search bar
+     *
+     * @return {ReactElement}
+     */
+    renderSearchBar: function() {
+        var props = {
+            route: this.props.route,
+            locale: this.props.locale,
+        };
+        return <SearchBar {...props} />;
     },
 
     toggleControl: function(name) {

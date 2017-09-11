@@ -40,6 +40,7 @@ module.exports = Relaks.createClass({
             var schema = params.schema;
             var roles = params.roles;
             var date = params.date;
+            var search = params.search;
             var url = `/${schema}/news/`;
             if (server) {
                 url = `//${server}` + url;
@@ -54,6 +55,10 @@ module.exports = Relaks.createClass({
             }
             if (date) {
                 url += `${date}/`
+            }
+            if (search) {
+                search = _.replace(encodeURIComponent(search), /%20/g, '+');
+                url += `?search=${search}`;
             }
             return url;
         },

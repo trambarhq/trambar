@@ -1,0 +1,20 @@
+.search-bar {
+    padding: 4px 9px 8px 4px;
+    text-align: right;
+
+    label {
+        color: #999999;
+        margin-right: 0.35em;
+    }
+
+    input {
+        font-size: 1em;
+        min-width: 20em;
+        max-width: 40em;
+        width: 28%;
+        color: #eeeeee;
+        background-color: #333333;
+        border: 1px inset #444444;
+        padding: 4px 3px 3px 3px;
+    }
+}

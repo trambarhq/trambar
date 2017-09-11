@@ -144,7 +144,7 @@ module.exports = React.createClass({
             }
             var params = page.parseUrl(path);
             if (params) {
-                var canonicalUrl = page.getUrl(params, query);
+                var canonicalUrl = page.getUrl(_.assign({}, params, query));
                 route = {
                     url: canonicalUrl,
                     component: page,
@@ -295,6 +295,7 @@ function parseQueryString(queryString) {
         var parts = _.split(pair, '=');
         var name = decodeURIComponent(parts[0]);
         var value = decodeURIComponent(parts[1] || '');
+        value = _.replace(value, /\+/g, ' ');
         values[name] = value;
     });
     return values;

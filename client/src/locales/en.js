@@ -146,6 +146,8 @@ module.exports = function(languageCode) {
 
         'role-filter-no-roles': 'No roles defined',
 
+        'search-bar-keywords': 'Keywords',
+
         'selection-cancel': 'Cancel',
         'selection-ok': 'OK',
 
