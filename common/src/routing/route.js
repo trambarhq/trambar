@@ -9,6 +9,7 @@ function Route(routeManager) {
     this.component = routeManager.getComponent();
     this.parameters = routeManager.getParameters();
     this.query = routeManager.getQuery();
+    this.hash = routeManager.getHash();
 
     var callbacks = [];
     var self = this;

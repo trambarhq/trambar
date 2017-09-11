@@ -13,16 +13,27 @@ module.exports = React.createClass({
         onRedirectionRequest: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             baseUrl: this.getBaseUrl(),
             url: null,
             component: null,
             parameters: null,
-            query: null
+            query: null,
+            hash: '',
         };
     },
 
+    /**
+     * Return the base URL by matching the current URL to a list of candidates
+     *
+     * @return {String}
+     */
     getBaseUrl: function() {
         var path = window.location.pathname;
         var baseUrl = _.find(this.props.baseUrls, (url) => {
@@ -39,22 +50,59 @@ module.exports = React.createClass({
         return baseUrl;
     },
 
+    /**
+     * Return the current URL
+     *
+     * @return {String}
+     */
     getUrl: function() {
         return this.state.url;
     },
 
+    /**
+     * Return the current component class
+     *
+     * @return {ReactClass}
+     */
     getComponent: function() {
         return this.state.component;
     },
 
+    /**
+     * Return parameters extract from the current URL
+     *
+     * @return {Object}
+     */
     getParameters: function() {
         return this.state.parameters;
     },
 
+    /**
+     * Return query variable extract from the current URL
+     *
+     * @return {Object}
+     */
     getQuery: function() {
         return this.state.query;
     },
 
+    /**
+     * Return the current hash
+     *
+     * @return {String}
+     */
+    getHash: function() {
+        return this.state.hash;
+    },
+
+    /**
+     * Set route to URL pointed to by a hyperlink or the location object
+     *
+     * @param  {Location|HTMLAnchorElement} location
+     * @param  {Boolean} replacing
+     *
+     * @return {Promise}
+     */
     goTo: function(location, replacing) {
         var baseUrl = this.state.baseUrl;
         if (baseUrl !== undefined) {
@@ -67,12 +115,21 @@ module.exports = React.createClass({
         return Promise.reject(new Error('Cannot route to location not at the base URL'));
     },
 
-    goBack: function() {
-
-    },
-
+    /**
+     * Find a route
+     *
+     * @param  {String} url
+     *
+     * @return {Object}
+     */
     find: function(url) {
         var path = url;
+        var hash = '';
+        var hashIndex = path.indexOf('#');
+        if (hashIndex !== -1) {
+            hash = path.substr(hashIndex + 1);
+            path = path.substr(0, hashIndex);
+        }
         var query = {};
         var queryIndex = path.indexOf('?');
         if (queryIndex !== -1) {
@@ -93,6 +150,7 @@ module.exports = React.createClass({
                     component: page,
                     parameters: params,
                     query: query,
+                    hash: hash,
                 };
                 routes.push(route);
             }
@@ -103,6 +161,15 @@ module.exports = React.createClass({
         return route;
     },
 
+    /**
+     * Change route
+     *
+     * @param  {String} url
+     * @param  {Boolean} replacing
+     * @param  {Boolean} noRedirecting
+     *
+     * @return {Promise<Boolean>}
+     */
     change: function(url, replacing, noRedirecting) {
         if (this.state.url === url) {
             return Promise.resolve();
@@ -126,11 +193,14 @@ module.exports = React.createClass({
                     return this.change(newUrl, replacing, true);
                 });
             } else {
-                throw new Error('Unable to find page');
+                return Promise.reject(new Error('Unable to find page'));
             }
         }
     },
 
+    /**
+     * Fire off a change event
+     */
     triggerChangeEvent: function() {
         if (this.props.onChange) {
             this.props.onChange({
@@ -140,6 +210,14 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Ask parent component for a URL to redirect to when URL does not match
+     * any route
+     *
+     * @param  {String} url
+     *
+     * @return {Promise<String>}
+     */
     triggerRedirectionRequest: function(url) {
         if (this.props.onRedirectionRequest) {
             return this.props.onRedirectionRequest({
@@ -152,8 +230,13 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {null}
+     */
     render: function() {
-        return <div/>;
+        return null;
     },
 
     /**
