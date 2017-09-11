@@ -85,7 +85,7 @@ module.exports = React.createClass({
                 var pageName = _.get(page, 'displayName', 'Page')
                 throw new Error(`${pageName} does not implement the static function parseUrl()`);
             }
-            var params = page.parseUrl(url);
+            var params = page.parseUrl(path);
             if (params) {
                 var canonicalUrl = page.getUrl(params, query);
                 route = {
@@ -97,8 +97,8 @@ module.exports = React.createClass({
                 routes.push(route);
             }
         });
-        // pick the one with the most parameters
-        routes = _.sortBy(routes, 'route.parameters.url.length');
+        // pick the one with longest match
+        routes = _.sortBy(routes, 'route.parameters.match.length');
         var route = _.last(routes) || null;
         return route;
     },

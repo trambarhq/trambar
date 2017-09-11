@@ -98,7 +98,7 @@ Route.match = function(route, url) {
         _.each(names, (name, index) => {
             params[name.substr(1)] = m[index + 1];
         });
-        params.url = m[0];
+        params.match = m[0];
         return params;
     }
 };
