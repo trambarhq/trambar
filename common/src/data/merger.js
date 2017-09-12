@@ -66,7 +66,7 @@ function mergeStrings(a, b, c) {
         var snippet = diff[i];
         if (snippet.removed) {
             var a = snippet.value, b = '';
-            if (diff[i + 1].added) {
+            if (diff[i + 1] && diff[i + 1].added) {
                 // if the next item is an add, then it's a replace operation
                 b = diff[i + 1].value;
                 i++;

@@ -416,11 +416,7 @@ module.exports = React.createClass({
             return db.start().then(() => {
                 return db.saveOne({ table: 'story' }, story).then((story) => {
                     // start file upload
-                    return payloads.dispatch(story).then(() => {
-                        // reattach blobs to new copy of object
-                        payloads.reattach(story);
-                        return this.changeDraft(story);
-                    });
+                    return payloads.dispatch(story).return(story);
                 });
             });
         });

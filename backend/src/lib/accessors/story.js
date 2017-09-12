@@ -191,7 +191,7 @@ module.exports = _.create(Data, {
                 if (!object.published) {
                     // don't send text when object isn't published and
                     // there the user isn't the owner
-                    if (object.user_id !== credentials.user.id) {
+                    if (!_.includes(object.user_ids, credentials.user.id)) {
                         object.details = _.omit(object.details, 'text', 'resources');
                     }
                 }

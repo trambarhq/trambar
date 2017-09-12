@@ -362,10 +362,7 @@ module.exports = React.createClass({
                 return db.saveOne({ table: 'reaction' }, reaction).then((reaction) => {
                     return Promise.each(payloadIds, (payloadId) => {
                         // start file upload
-                        return payloads.send(payloadId);
-                    }).then(() => {
-                        this.reattachBlobs(reaction);
-                        return this.changeDraft(reaction);
+                        return payloads.send(payloadId).return(reaction);
                     });
                 });
             });
