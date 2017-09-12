@@ -215,6 +215,7 @@ function handleStorage(req, res) {
     var params = req.body;
     var schema = req.params.schema;
     var table = req.params.table;
+    // need exclusive connection for transaction
     return Database.open(true).then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
             return fetchCredentials(db, userId);

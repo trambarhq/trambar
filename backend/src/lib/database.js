@@ -351,4 +351,65 @@ Database.prototype.updateJavaScriptFunctions = function(f) {
             return this.execute(sql);
         });
     });
-}
+};
+
+var dictionaryFiles = {
+    en: 'english',
+    cz: 'czech',
+    nl: 'dutch',
+    fr: 'french',
+    da: 'danish',
+    en: 'english',
+    de: 'german',
+    it: 'italian',
+    no: 'norwegian',
+    pl: 'polish',
+    pt: 'portuguese',
+    es: 'spanish',
+    tr: 'turkish',
+    ru: 'russian',
+    sv: 'swedish',
+};
+
+var stemDirctionaries = {
+    fi: 'finnish_stem',
+    hu: 'hungarian_stem',
+};
+
+Database.prototype.createDictionaries = function(languageCode) {
+    // see if there's a dictionary file for the language
+    var dictFile = dictionaryFiles[languageCode];
+    if (dictFile) {
+        // see if ispell dictionary already exists
+        var dictName = `ispell_${dictFile}`;
+        var sql = `
+            SELECT dictname FROM pg_catalog.pg_ts_dict
+            WHERE dictname = '${dictName}'
+        `;
+        return this.query(sql).then((rows) => {
+            if (!_.isEmpty(rows)) {
+                return;
+            }
+            var sql = `
+                CREATE TEXT SEARCH DICTIONARY ${dictName} (
+                    template  = ispell,
+                    dictfile = ${dictFile},
+                    afffile = ${dictFile},
+                    stopwords = ${dictFile}
+                )
+            `;
+            return this.execute(sql).catch((err) => {
+                if (err.code !== '23505') {
+                    throw err;
+                }
+            });
+        }).then(() => {
+            return [ dictName, 'simple' ];
+        });
+    } else {
+        // use snowball dictionary if there's one
+        var stem = stemDirctionaries
+        var list = (stem) ? [ stem, 'simple' ] : [ 'simple' ]
+        return Promise.resolve(list);
+    };
+};

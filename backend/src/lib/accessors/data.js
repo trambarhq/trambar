@@ -200,7 +200,6 @@ module.exports = {
                     query.order += ' ' + dir;
                 }
             }
-            query.order = criteria.order;
         }
     },
 
@@ -224,14 +223,13 @@ module.exports = {
             table: table,
             limit: 50000
         };
-        var promise = this.apply(criteria, query);
-        if (promise && promise.then instanceof Function) {
-            // apply() returns a promise--wait for it to resolve
-            promise.then(() => {
+        if (this.apply.length === 4) {
+            // the four-argument form of the function works asynchronously
+            return this.apply(db, schema, criteria, query).then(() => {
                 return this.run(db, query);
             });
         } else {
-            // run query immediately
+            this.apply(criteria, query);
             return this.run(db, query);
         }
     },
@@ -326,6 +324,15 @@ module.exports = {
         });
     },
 
+    /**
+     * Insert rows into table
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     *
+     * @return {Promise<Array<Object>>}
+     */
     insert: function(db, schema, rows) {
         if (_.isEmpty(rows)) {
             return Promise.resolve([]);
@@ -382,12 +389,30 @@ module.exports = {
         });
     },
 
+    /**
+     * Insert one row into table
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} row
+     *
+     * @return {Promise<Object>}
+     */
     insertOne: function(db, schema, row) {
         return this.insert(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });
     },
 
+    /**
+     * Insert or update rows depending on whether id is present
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     *
+     * @return {Promise<Array<Object>>}
+     */
     save: function(db, schema, rows) {
         var updates = _.filter(rows, (row) => {
             return row.id > 0;
@@ -402,6 +427,15 @@ module.exports = {
         });
     },
 
+    /**
+     * Insert or update a row
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} rows
+     *
+     * @return {Promise<Object>}
+     */
     saveOne: function(db, schema, row) {
         if (row.id > 0) {
             return this.updateOne(db, schema, row);
@@ -410,6 +444,15 @@ module.exports = {
         }
     },
 
+    /**
+     * Delete rows by their ids
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     *
+     * @return {Promise<Array<Object>>}
+     */
     remove: function(db, schema, rows) {
         var table = this.getTableName(schema);
         var ids = _.map(rows, 'id');
@@ -423,6 +466,15 @@ module.exports = {
         return db.query(sql, parameters);
     },
 
+    /**
+     * Delete one row
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} rows
+     *
+     * @return {Promise<Object>}
+     */
     removeOne: function(db, schema, row) {
         return this.remove(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
@@ -500,4 +552,159 @@ module.exports = {
     associate: function(db, schema, objects, originals, rows, credentials) {
         return Promise.resolve();
     },
+
+    /**
+     * Add text search to query
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} search
+     * @param  {Object} query
+     *
+     * @return {Promise}
+     */
+    applyTextSearch(db, schema, search, query) {
+        // obtain languages for which we have indices
+        return this.getTextSearchLanguages(db, schema).then((languageCodes) => {
+            if (_.isEmpty(languageCodes)) {
+                query.conditions.push('false');
+                return;
+            }
+            var lang = search.lang;
+            var searchText = search.text;
+            var value = `$${query.parameters.push(searchText)}`;
+
+            // search query in each language
+            var tsQueries = _.map(languageCodes, (code) => {
+                // TODO: handle query in a more sophisticated manner
+                return `plainto_tsquery('search_${code}', ${value}) AS query_${code}`;
+            });
+            // text vector in each language
+            var tsVectors = _.map(languageCodes, (code) => {
+                var vector = `to_tsvector('search_${code}', details->'text'->>'${code}')`;
+                // give results in the user's language a higher weight
+                // A = 1.0, B = 0.4 by default
+                var weight = (code === lang) ? 'A' : 'B';
+                vector = `setweight(${vector}, '${weight}') AS vector_${code}`;
+                return vector;
+            });
+            // conditions
+            var tsConds = _.map(languageCodes, (code) => {
+                return `vector_${code} @@ query_${code}`;
+            });
+            // search result rankings
+            var tsRanks = _.map(languageCodes, (code) => {
+                return `ts_rank_cd(vector_${code}, query_${code})`;
+            });
+            var tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
+            query.columns += `, ${tsRank} AS relevance`;
+            query.table += `, ${tsVectors.join(', ')}`;
+            query.table += `, ${tsQueries.join(', ')}`;
+            query.conditions.push(`details ? 'text'`);
+            query.conditions.push(`(${tsConds.join(' OR ')})`);
+            query.order = `relevance DESC`;
+        });
+    },
+
+    /**
+     * Return languages for which there're text search indices
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Array<String>>}
+     */
+    getTextSearchLanguages: function(db, schema) {
+        var promise = _.get(searchLanguagesPromises, [ schema, this.table ]);
+        if (!promise) {
+            var prefix = `${this.table}_search_`;
+            var sql = `
+                SELECT indexname FROM pg_indexes
+                WHERE indexname LIKE '${prefix}%'
+            `;
+            promise = db.query(sql).then((rows) => {
+                return _.map(rows, (row) => {
+                    var name = row['indexname'];
+                    return name.substr(prefix.length);
+                });
+            });
+            _.set(searchLanguagesPromises, [ schema, this.table ], promise);
+        }
+        return promise;
+    },
+
+    /**
+     * Add indices for text search in specified languages
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<String>} codes
+     *
+     * @return {Promise}
+     */
+    addTextSearchLanguages: function(db, schema, codes) {
+        return Promise.each(codes, (code) => {
+            // create language
+            return this.createSearchConfigure(db, code).then(() => {
+                var vector = ``
+                var sql = `
+                    CREATE INDEX CONCURRENTLY ${this.table}_search_${code}
+                    ON "${schema}"."${this.table}"
+                    USING gin((to_tsvector('search_${code}', details->'text'->>'${code}')))
+                    WHERE details ? 'text'
+                `;
+                return db.execute(sql).then(() => {
+                    _.set(searchLanguagesPromises, [ schema, this.table ], null);
+                }).catch((err) => {
+                    // "index already exists"
+                    if (err.code !== '42P07') {
+                        throw err;
+                    }
+                });
+            });
+        });
+    },
+
+    /**
+     * Create search configure for searching text of given language
+     *
+     * @param  {Database} db
+     * @param  {String} code
+     *
+     * @return {Promise}
+     */
+    createSearchConfigure: function(db, code) {
+        if (!/^[a-z]{2}$/.test(code)) {
+            return Promise.reject(new Error(`Invalid language code: ${code}`));
+        }
+        // see if configuration exists already
+        var configName = `search_${code}`;
+        var sql = `
+            SELECT cfgname FROM pg_catalog.pg_ts_config
+            WHERE cfgname = 'search_${code}';
+        `;
+        return db.query(sql).then((rows) => {
+            if (!_.isEmpty(rows)) {
+                return;
+            }
+            // create dictionaries for language first
+            return db.createDictionaries(code).then((dicts) => {
+                console.log(dicts);
+                var sql = `
+                    CREATE TEXT SEARCH CONFIGURATION search_${code}
+                    (COPY = pg_catalog.english);
+                    ALTER TEXT SEARCH CONFIGURATION search_${code}
+                    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
+                    WITH ${dicts.join(', ')};
+                `;
+                return db.execute(sql);
+            }).catch((err) => {
+                if (err.code !== '23505') {
+                    throw err;
+                }
+            });
+        });
+    },
 };
+
+var searchLanguagesPromises = {};

@@ -40,6 +40,7 @@ module.exports = _.create(Data, {
         newer_than: String,
         older_than: String,
         ready: Boolean,
+        search: Object,
     },
 
     /**
@@ -95,11 +96,21 @@ module.exports = _.create(Data, {
     /**
      * Add conditions to SQL query based on criteria object
      *
+     * @param  {Database} db
+     * @param  {String} schema
      * @param  {Object} criteria
      * @param  {Object} query
+     *
+     * @return {Promise}
      */
-    apply: function(criteria, query) {
-        var special = [ 'time_range', 'newer_than', 'older_than', 'ready' ];
+    apply: function(db, schema, criteria, query) {
+        var special = [
+            'time_range',
+            'newer_than',
+            'older_than',
+            'ready',
+            'search',
+        ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
@@ -123,6 +134,10 @@ module.exports = _.create(Data, {
                 conds.push(`ptime IS NULL`);
             }
         }
+        if (criteria.search) {
+            return this.applyTextSearch(db, schema, criteria.search, query);
+        }
+        return Promise.resolve();
     },
 
     /**

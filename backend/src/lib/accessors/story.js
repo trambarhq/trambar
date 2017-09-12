@@ -103,10 +103,14 @@ module.exports = _.create(Data, {
     /**
      * Add conditions to SQL query based on criteria object
      *
+     * @param  {Database} db
+     * @param  {String} schema
      * @param  {Object} criteria
      * @param  {Object} query
+     *
+     * @return {Promise}
      */
-    apply: function(criteria, query) {
+    apply: function(db, schema, criteria, query) {
         var special = [
             'time_range',
             'newer_than',
@@ -148,39 +152,9 @@ module.exports = _.create(Data, {
             }
         }
         if (criteria.search) {
-            var lang = criteria.search.lang;
-            var value = `$${params.push(criteria.search.text)}`;
-            // TODO: obtain languages for which we have indices
-            var languageCodes = [ lang ];
-            // search query in each language
-            var tsQueries = _.map(languageCodes, (code) => {
-                // TODO: handle query in a more sophisticated manner
-                return `plainto_tsquery('search_${code}', ${value}) AS query_${code}`;
-            });
-            // text vector in each language
-            var tsVectors = _.map(languageCodes, (code) => {
-                var vector = `to_tsvector('search_${code}', details->'text'->>'${code}')`;
-                // give results in the user's language a higher weight
-                // A = 1.0, B = 0.4 by default
-                var weight = (code === lang) ? 'A' : 'B';
-                vector = `setweight(${vector}, '${weight}') AS vector_${code}`;
-                return vector;
-            });
-            // conditions
-            var tsConds = _.map(languageCodes, (code) => {
-                return `vector_${code} @@ query_${code}`;
-            });
-            // search result rankings
-            var tsRanks = _.map(languageCodes, (code) => {
-                return `ts_rank_cd(vector_${code}, query_${code})`;
-            });
-            var tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
-            conds.push('(' + tsConds.join(' OR ') + ')');
-            query.table += `, ${tsVectors.join(', ')}`;
-            query.table += `, ${tsQueries.join(', ')}`;
-            query.columns += `, ${tsRank} AS relevance`;
-            query.order = `relevance DESC`;
+            return this.applyTextSearch(db, schema, criteria.search, query);
         }
+        return Promise.resolve();
     },
 
     /**

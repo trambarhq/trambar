@@ -63,7 +63,12 @@ function start() {
                 return upgradeDatabase(db);
             }
         }).then(() => {
-            return db.listen([ 'project' ], 'change', handleDatabaseChanges, 0);
+            var tables = [
+                'project',
+                'story',
+                'reaction',
+            ]
+            return db.listen(tables, 'change', handleDatabaseChanges, 0);
         }).then(() => {
             messageQueueInterval = setInterval(() => {
                 cleanMessageQueue(db);
@@ -84,12 +89,11 @@ function handleDatabaseChanges(events) {
     var db = this;
     return Promise.each(events, (event) => {
         if (event.table === 'project') {
-            var nameDiff = event.diff.name;
-            if (nameDiff) {
-                var nameBefore = nameDiff[0];
-                var nameAfter = nameDiff[1];
+            if (event.diff.name) {
+                var nameBefore = event.diff.name[0];
+                var nameAfter = event.diff.name[1];
                 if (!nameBefore && nameAfter) {
-                    if (event.op == 'INSERT' || event.op === 'UPDATE') {
+                    if (event.op === 'INSERT' || event.op === 'UPDATE') {
                         return createSchema(db, nameAfter);
                     }
                 } else if (nameBefore && !nameAfter) {
@@ -99,6 +103,33 @@ function handleDatabaseChanges(events) {
                 } else if (nameBefore && nameAfter) {
                     if (event.op === 'UPDATE') {
                         return renameSchema(db, nameBefore, nameAfter);
+                    }
+                }
+            }
+        } else if (event.table === 'story' || event.table === 'reaction') {
+            if (event.diff.details) {
+                if (event.op === 'INSERT' || event.op === 'UPDATE') {
+                    var accessor;
+                    if (event.table === 'story') {
+                        accessor = Story;
+                    } else if (event.table === 'reaction') {
+                        accessor = Reaction;
+                    }
+
+                    // see if new languages are introduced
+                    var detailsBefore = event.diff.details[0];
+                    var detailsAfter = event.diff.details[1];
+                    var languagesBefore = (detailsBefore) ? _.keys(detailsBefore.text) : [];
+                    var languagesAfter = (detailsAfter) ? _.keys(detailsAfter.text) : [];
+                    var newLanguages = _.difference(languagesAfter, languagesBefore);
+                    if (newLanguages) {
+                        // make sure we have indices for these languages
+                        return accessor.getTextSearchLanguages(db, event.schema).then((existing) => {
+                            // cap number of indices at 4
+                            _.pullAll(newLanguages, existing).splice(4 - existing.length);
+                            console.log(newLanguages)
+                            return accessor.addTextSearchLanguages(db, event.schema, newLanguages);
+                        });
                     }
                 }
             }
