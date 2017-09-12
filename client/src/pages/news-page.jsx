@@ -121,7 +121,10 @@ module.exports = Relaks.createClass({
                     criteria.role_ids = roleIds;
                 }
                 if (searchString) {
-                    criteria.search = searchString;
+                    criteria.search = {
+                        lang: this.props.locale.lang,
+                        text: searchString,
+                    };
                     criteria.limit = 200;
                 } else {
                     criteria.limit = 500;

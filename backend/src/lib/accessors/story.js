@@ -44,6 +44,7 @@ module.exports = _.create(Data, {
         commit_id: String,
         bumped_after: String,
         url: String,
+        search: Object,
     },
 
     /**
@@ -114,34 +115,30 @@ module.exports = _.create(Data, {
             'commit_id',
             'bumped_after',
             'url',
+            'search',
         ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
         var conds = query.conditions;
         if (criteria.time_range !== undefined) {
-            params.push(criteria.time_range);
-            conds.push(`ptime <@ $${params.length}::tsrange`);
+            conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
         if (criteria.newer_than !== undefined) {
-            params.push(criteria.newer_than);
-            conds.push(`ptime > $${params.length}`);
+            conds.push(`ptime > $${params.push(criteria.newer_than)}`);
         }
         if (criteria.older_than !== undefined) {
-            params.push(criteria.older_than);
-            conds.push(`ptime < $${params.length}`);
+            conds.push(`ptime < $${params.push(criteria.older_than)}`);
         }
         if (criteria.bumped_after !== undefined) {
-            params.push(criteria.bumped_after);
-            conds.push(`(ptime > $${params.length} || btime > $${params.length})`);
+            var value = `$${params.push(criteria.bumped_after)}`
+            conds.push(`(ptime > ${time} || btime > ${time})`);
         }
         if (criteria.commit_id !== undefined) {
-            params.push(criteria.commit_id);
-            conds.push(`details->'commit_ids' ? $${params.length}`);
+            conds.push(`details->'commit_ids' ? $${params.push(criteria.commit_id)}`);
         }
         if (criteria.url !== undefined) {
-            params.push(criteria.url);
-            conds.push(`details->>'url' = $${params.length}`);
+            conds.push(`details->>'url' = $${params.push(criteria.url)}`);
         }
         if (criteria.ready !== undefined) {
             if (criteria.ready === true) {
@@ -149,6 +146,40 @@ module.exports = _.create(Data, {
             } else {
                 conds.push(`ptime IS NULL`);
             }
+        }
+        if (criteria.search) {
+            var lang = criteria.search.lang;
+            var value = `$${params.push(criteria.search.text)}`;
+            // TODO: obtain languages for which we have indices
+            var languageCodes = [ lang ];
+            // search query in each language
+            var tsQueries = _.map(languageCodes, (code) => {
+                // TODO: handle query in a more sophisticated manner
+                return `plainto_tsquery('search_${code}', ${value}) AS query_${code}`;
+            });
+            // text vector in each language
+            var tsVectors = _.map(languageCodes, (code) => {
+                var vector = `to_tsvector('search_${code}', details->'text'->>'${code}')`;
+                // give results in the user's language a higher weight
+                // A = 1.0, B = 0.4 by default
+                var weight = (code === lang) ? 'A' : 'B';
+                vector = `setweight(${vector}, '${weight}') AS vector_${code}`;
+                return vector;
+            });
+            // conditions
+            var tsConds = _.map(languageCodes, (code) => {
+                return `vector_${code} @@ query_${code}`;
+            });
+            // search result rankings
+            var tsRanks = _.map(languageCodes, (code) => {
+                return `ts_rank_cd(vector_${code}, query_${code})`;
+            });
+            var tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
+            conds.push('(' + tsConds.join(' OR ') + ')');
+            query.table += `, ${tsVectors.join(', ')}`;
+            query.table += `, ${tsQueries.join(', ')}`;
+            query.columns += `, ${tsRank} AS relevance`;
+            query.order = `relevance DESC`;
         }
     },
 
