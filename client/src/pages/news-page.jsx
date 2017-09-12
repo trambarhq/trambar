@@ -125,7 +125,7 @@ module.exports = Relaks.createClass({
                         lang: this.props.locale.lang,
                         text: searchString,
                     };
-                    criteria.limit = 200;
+                    criteria.limit = 100;
                 } else {
                     criteria.limit = 500;
                 }

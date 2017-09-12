@@ -32,12 +32,17 @@ module.exports = Relaks.createClass({
             var server = params.server;
             var schema = params.schema;
             var date = params.date;
+            var search = params.search;
             var url = `/${schema}/notifications/`;
             if (server) {
                 url = `//${server}` + url;
             }
             if (date) {
                 url += `${date}/`;
+            }
+            if (search) {
+                search = _.replace(encodeURIComponent(search), /%20/g, '+');
+                url += `?search=${search}`;
             }
             return url;
         },
@@ -46,7 +51,7 @@ module.exports = Relaks.createClass({
             top: {
                 dateSelection: true,
                 roleSelection: false,
-                textSearch: false,
+                textSearch: true,
             },
             bottom: {
                 section: 'notifications'
@@ -59,6 +64,7 @@ module.exports = Relaks.createClass({
         var date = route.parameters.date;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
+        var searchString = route.query.search;
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             currentUser: null,
@@ -89,8 +95,15 @@ module.exports = Relaks.createClass({
                 var rangeEnd = e.toISOString();
                 var range = `[${rangeStart},${rangeEnd}]`;
                 criteria.time_range = range;
-            } else {
+            }
+            if (searchString) {
+                criteria.search = {
+                    lang: this.props.locale.lang,
+                    text: searchString,
+                };
                 criteria.limit = 100;
+            } else {
+                criteria.limit = 500;
             }
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
