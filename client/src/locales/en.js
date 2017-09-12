@@ -190,6 +190,7 @@ module.exports = function(languageCode) {
         'story-cancel': 'Cancel',
         'story-coauthors': 'Coauthors',
         'story-comment': 'Comment',
+        'story-drop-files-here': 'Drag and drop files here',
         'story-file': 'File',
         'story-issue-current-status': 'Current status:',
         'story-issue-opened-$number-$title': (number, title) => {

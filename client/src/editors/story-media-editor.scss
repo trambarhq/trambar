@@ -15,63 +15,17 @@
         justify-content: center;
 
         position: relative;
-    }
 
-    .drop-zone {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-    }
-
-    .drop-zone.valid {
-        border: 2px solid yellow;
-    }
-
-    .drop-zone.invalid {
-        border: 2px solid red;
-        cursor: no-drop;
-    }
-
-    .audio-placeholder {
-        font-size: 4em;
+        .drop-zone {
+            width: 100%;
+        }
     }
 
     .message {
         border: 2px dashed #666666;
         padding: 2em;
         color: #666666;
-    }
-
-    .image-cropper {
-        max-width: 600px;
-        width: 100%;
-    }
-
-    .resources {
-        position: relative;
-        width: 100%;
-
-        .navigation {
-            position: absolute;
-            width: 100%;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            opacity: 1;
-            transition: opacity .5s;
-
-            .left {
-                float: left;
-            }
-
-            .right {
-                float: right;
-            }
-
-            &.hidden {
-                opacity: 0;
-            }
-        }
+        margin: 0 2em 0 2em;
+        text-align: center;
     }
 }

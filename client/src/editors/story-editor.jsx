@@ -518,8 +518,15 @@ module.exports = React.createClass({
             var delay;
             switch (evt.path) {
                 case 'details.resources':
+                    var newFile = _.some(story.details.resources, (res) => {
+                        if (!res.url && !res.payload_id) {
+                            return true;
+                        }
+                    });
                     // upload resources immediately
-                    delay = 0;
+                    if (newFile) {
+                        delay = 0;
+                    }
                     break;
                 case 'user_ids':
                     // make story available to other users immediately
