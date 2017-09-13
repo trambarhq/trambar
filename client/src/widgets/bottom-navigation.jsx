@@ -16,6 +16,9 @@ var NotificationsPage = require('pages/notifications-page');
 var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
 
+// widgets
+var Link = require('widgets/link');
+
 require('./bottom-navigation.scss');
 
 module.exports = React.createClass({
@@ -89,35 +92,35 @@ module.exports = React.createClass({
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
-            href: NewsPage.getUrl(location),
+            url: NewsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var notificationsButtonProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
-            href: NotificationsPage.getUrl(location),
+            url: NotificationsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var bookmarksButtonProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
-            href: BookmarksPage.getUrl(location),
+            url: BookmarksPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var peopleButtonProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
-            href: PeoplePage.getUrl(location),
+            url: PeoplePage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         var settingsButtonProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
-            href: SettingsPage.getUrl(location),
+            url: SettingsPage.getUrl(location),
             onClick: this.handleButtonClick,
         };
         return (
@@ -134,7 +137,6 @@ module.exports = React.createClass({
 
 function Button(props) {
     var classes = [ 'button' ];
-    var clickHandler = props.onClick;
     if (props.className) {
         classes.push(props.className);
     }
@@ -142,10 +144,10 @@ function Button(props) {
         classes.push('active');
     }
     return (
-        <a className={classes.join(' ')} href={props.href} onClick={clickHandler}>
+        <Link className={classes.join(' ')} url={props.url}>
             <i className={`fa fa-${props.icon}`} />
             {' '}
             <span className="label">{props.label}</span>
-        </a>
+        </Link>
     );
 }

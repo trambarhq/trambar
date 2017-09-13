@@ -23,7 +23,7 @@
         text-align: center;
         padding: 6px 6px 6px 6px;
         cursor: pointer;
-        color: #888;
+        color: #888888;
 
         .fa {
             font-size: 1.4em;
@@ -32,24 +32,20 @@
         .label {
             font-size: 0.8em;
             vertical-align: 0.2em;
-            color: #666;
+            color: #666666;
         }
 
         &:link, &:visited {
-            color: #888;
+            color: #888888;
             text-decoration: none;
         }
 
-        &:hover {
-            color: #ccc;
+        &:hover, &:hover .label {
+            color: #eeeeee;
         }
 
-        &.active {
-            color: #fff;
-        }
-
-        &.active .label {
-            color: #fff;
+        &.active, &.active .label {
+            color: #ffffff;
         }
     }
 }
