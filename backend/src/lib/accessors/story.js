@@ -135,7 +135,7 @@ module.exports = _.create(Data, {
             conds.push(`ptime < $${params.push(criteria.older_than)}`);
         }
         if (criteria.bumped_after !== undefined) {
-            var value = `$${params.push(criteria.bumped_after)}`
+            var time = `$${params.push(criteria.bumped_after)}`
             conds.push(`(ptime > ${time} || btime > ${time})`);
         }
         if (criteria.commit_id !== undefined) {

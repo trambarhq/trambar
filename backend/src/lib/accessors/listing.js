@@ -32,6 +32,7 @@ module.exports = _.create(LiveData, {
         filters_hash: String,
         target_user_id: Number,
         match_any: Array(Object),
+        has_candidates: Array(Number),
     },
 
     /**
@@ -72,18 +73,22 @@ module.exports = _.create(LiveData, {
      * @param  {Object} query
      */
     apply: function(criteria, query) {
-        var special = [ 'filters', 'match_any', 'has_candidates' ];
+        var special = [
+            'filters',
+            'match_any',
+            'has_candidates'
+        ];
         LiveData.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
         var conds = query.conditions;
         if (criteria.match_any) {
-            params.push(criteria.match_any);
-            conds.push(`"matchAny"(filters, $${params.length})`);
+            var objects = `$${params.push(criteria.match_any)}`;
+            conds.push(`"matchAny"(filters, ${objects})`);
         }
         if (criteria.has_candidates) {
-            params.push(criteria.has_candidates);
-            conds.push(`"hasCandidates"(filters, $${params.length})`);
+            var storyIds = `$${params.push(criteria.has_candidates)}`;
+            conds.push(`"hasCandidates"(filters, ${storyIds})`);
         }
     },
 

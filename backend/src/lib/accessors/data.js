@@ -152,27 +152,25 @@ module.exports = {
             if (criteria.hasOwnProperty(name)) {
                 // assume that none of the column names requires double quotes
                 var value = criteria[name];
-                var bound = '$' + index++;
-                params.push(value);
                 if (type === Array || type instanceof Array) {
                     if (value instanceof Array) {
                         // overlaps
-                        conds.push(`${name} && ${bound}`);
+                        conds.push(`${name} && $${params.push(value)}`);
                     } else {
                         // contains
-                        conds.push(`${name} @> ${bound}`);
+                        conds.push(`${name} @> $${params.push(value)}`);
                     }
                 } else {
                     if (value instanceof Array) {
                         // equals any
-                        conds.push(`${name} = ANY(${bound})`);
+                        conds.push(`${name} = ANY($${params.push(value)})`);
                     } else if (value === null) {
                         params.pop();
                         index--;
                         conds.push(`${name} IS NULL`);
                     } else {
                         // equals
-                        conds.push(`${name} = ${bound}`);
+                        conds.push(`${name} = $${params.push(value)}`);
                     }
 
                 }
@@ -183,8 +181,7 @@ module.exports = {
             if (criteria.fn === null) {
                 conds.push(`details->>'fn' IS NULL`);
             } else {
-                params.push(criteria.fn);
-                conds.push(`details->>'fn' = ${'$' + params.length}`);
+                conds.push(`details->>'fn' = $${params.push(criteria.fn)}`);
             }
         }
         if (criteria.limit) {

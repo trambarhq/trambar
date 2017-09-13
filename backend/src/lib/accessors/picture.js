@@ -97,8 +97,7 @@ module.exports = _.create(Data, {
         var params = query.parameters;
         var conds = query.conditions;
         if (criteria.url !== undefined) {
-            params.push(criteria.url);
-            conds.push(`details->>'url' = $${params.length}`);
+            conds.push(`details->>'url' = $${params.push(criteria.url)}`);
         }
     },
 

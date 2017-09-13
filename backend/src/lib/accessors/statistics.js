@@ -75,8 +75,8 @@ module.exports = _.create(LiveData, {
         var params = query.parameters;
         var conds = query.conditions;
         if (criteria.match_any) {
-            params.push(criteria.match_any);
-            conds.push(`"matchAny"(filters, $${params.length})`);
+            var objects = `$${params.push(criteria.match_any)}`;
+            conds.push(`"matchAny"(filters, ${objects})`);
         }
     },
 

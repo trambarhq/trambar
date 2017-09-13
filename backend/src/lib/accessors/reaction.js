@@ -116,16 +116,13 @@ module.exports = _.create(Data, {
         var params = query.parameters;
         var conds = query.conditions;
         if (criteria.time_range !== undefined) {
-            params.push(criteria.time_range);
-            conds.push(`ptime <@ $${params.length}::tsrange`);
+            conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
         if (criteria.newer_than !== undefined) {
-            params.push(criteria.newer_than);
-            conds.push(`ptime > $${params.length}`);
+            conds.push(`ptime > $${params.push(criteria.newer_than)}`);
         }
         if (criteria.older_than !== undefined) {
-            params.push(criteria.older_than);
-            conds.push(`ptime < $${params.length}`);
+            conds.push(`ptime < $${params.push(criteria.older_than)}`);
         }
         if (criteria.ready !== undefined) {
             if (criteria.ready === true) {
