@@ -21,7 +21,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         user: PropTypes.object.isRequired,
-        story: PropTypes.object,
+        stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         dailyActivities: PropTypes.object,
 
@@ -40,7 +40,7 @@ module.exports = React.createClass({
         if (this.props.theme.mode === 'columns-1') {
             return (
                 <div className="story-view columns-1">
-                    {this.renderStory()}
+                    {this.renderSummary()}
                     {this.renderStatistics()}
                 </div>
             );
@@ -48,7 +48,7 @@ module.exports = React.createClass({
             return (
                 <div className="story-view columns-2">
                     <div className="column-1">
-                        {this.renderStory()}
+                        {this.renderSummary()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -59,7 +59,7 @@ module.exports = React.createClass({
             return (
                 <div className="story-view columns-3">
                     <div className="column-1">
-                        {this.renderStory()}
+                        {this.renderSummary()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -72,11 +72,11 @@ module.exports = React.createClass({
         }
     },
 
-    renderStory: function() {
+    renderSummary: function() {
         var props = {
             user: this.props.user,
             roles: this.props.roles,
-            story: this.props.story,
+            stories: this.props.stories,
             cornerPopUp: this.renderPopUpMenu('main'),
 
             database: this.props.database,

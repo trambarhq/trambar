@@ -132,10 +132,11 @@ module.exports = Relaks.createClass({
                 return db.find({ table: 'story', criteria });
             } else {
                 // load story in listing
-                var criteria = {};
-                criteria.type = 'news';
-                criteria.target_user_id = props.currentUser.id;
-                criteria.filters = {};
+                var criteria = {
+                    type: 'news',
+                    target_user_id: props.currentUser.id,
+                    filters: {},
+                };
                 if (!_.isEmpty(roleIds)) {
                     criteria.filters.role_ids = roleIds;
                 }

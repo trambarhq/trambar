@@ -197,7 +197,10 @@ module.exports = _.create(Data, {
     invalidate: function(db, schema, ids) {
         var table = this.getTableName(schema);
         var parameters = [ ids ];
-        var sql = `UPDATE ${table} SET dirty = true WHERE id = ANY($1) RETURNING id, dirty`;
+        var sql = `
+            UPDATE ${table} SET dirty = true
+            WHERE id = ANY($1) RETURNING id, dirty
+        `;
         return db.execute(sql, parameters).return();
     },
 

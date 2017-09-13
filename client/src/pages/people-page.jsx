@@ -101,7 +101,7 @@ module.exports = Relaks.createClass({
             if (searchString) {
                 users = findMatchingUsers(users, searchString);
             }
-            props.users = users
+            props.users = users;
             return <PeoplePageSync {...props} />;
         });
     }
@@ -111,6 +111,8 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
     displayName: 'PeoplePageSync',
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object),
+        listings: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,

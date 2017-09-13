@@ -38,6 +38,8 @@ module.exports = Relaks.createClass({
         var props = {
             roles: null,
             dailyActivities: null,
+            listings: null,
+            stories: null,
 
             users: this.props.users,
             currentUser: this.props.currentUser,
@@ -45,7 +47,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            loading: true,
         };
         meanwhile.show(<UserListSync {...props} />, 250);
         return db.start().then((userId) => {
@@ -76,7 +77,30 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
-            props.loading = false;
+            meanwhile.show(<UserListSync {...props} />);
+        }).then(() => {
+            // load story listings, one per user
+            var criteria = {
+                type: 'news',
+                target_user_id: props.currentUser.id,
+                filters: _.map(props.users, (user) => {
+                    return {
+                        user_ids: [ user.id ]
+                    };
+                }),
+            };
+            return db.find({ table: 'listing', criteria });
+        }).then((listings) => {
+            props.listings = listings;
+        }).then(() => {
+            // load stories in listings
+            var storyIds = _.flatten(_.map(props.listings, 'story_ids'));
+            var criteria = {
+                id: _.uniq(storyIds)
+            };
+            return db.find({ table: 'story', criteria });
+        }).then((stories) => {
+            props.stories = stories;
             return <UserListSync {...props} />;
         });
     }
@@ -89,6 +113,8 @@ var UserListSync = module.exports.Sync = React.createClass({
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
         roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.arrayOf(PropTypes.object),
+        listings: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -110,10 +136,13 @@ var UserListSync = module.exports.Sync = React.createClass({
     renderUser: function(user, index) {
         var roles = findRoles(this.props.roles, user);
         var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
+        var listing = findListing(this.props.listings, user);
+        var stories = findStories(this.props.stories, listing);
         var userProps = {
             user,
             roles,
             dailyActivities,
+            stories,
             currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
@@ -154,5 +183,28 @@ var findDailyActivities = Memoize(function(dailyActivities, user) {
         });
     } else {
         return null;
+    }
+});
+
+var findListing = Memoize(function(listings, user) {
+    if (user) {
+        return _.find(listings, (listing) => {
+            if (listing.filters.user_ids[0] === user.id) {
+                return true;
+            }
+        });
+    } else {
+        return null;
+    }
+});
+
+var findStories = Memoize(function(stories, listing) {
+    if (listing) {
+        var hash = _.keyBy(stories, 'id');
+        return _.filter(_.map(listing.story_ids, (id) => {
+            return hash[id];
+        }));
+    } else {
+        return [];
     }
 });

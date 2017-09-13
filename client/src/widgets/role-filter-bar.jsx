@@ -9,10 +9,6 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var NewsPage = require('pages/news-page');
-var NotificationsPage = require('pages/notifications-page');
-var UserActivityPage = require('pages/user-activity-page');
-
 // mixins
 var UpdateCheck = require('mixins/update-check');
 

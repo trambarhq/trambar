@@ -38,5 +38,5 @@ ProfileImage.defaultProps = {
 var imageResolutions = {
     small: 24,
     medium: 48,
-    large: 80,
+    large: 96,
 };

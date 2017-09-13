@@ -9,7 +9,7 @@ var Locale = require('locale/locale');
 
 var NewsPage = require('pages/news-page');
 var NotificationsPage = require('pages/notifications-page');
-var UserActivityPage = require('pages/user-activity-page');
+var PersonPage = require('pages/person-page');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -86,10 +86,12 @@ module.exports = Relaks.createClass({
                             time_range: timeRange
                         };
                     });
-                } else if (route.component === UserActivityPage) {
+                } else if (route.component === PersonPage) {
+                    var userId = parseInt(route.parameters.userId);
                     criteria.type = 'daily-activities';
                     criteria.filters =  _.map(timeRanges, (timeRange) => {
                         return {
+                            user_ids: [ userId ],
                             time_range: timeRange
                         };
                     });
