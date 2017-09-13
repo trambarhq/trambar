@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -33,6 +34,7 @@ module.exports = Relaks.createClass({
             var server = params.server;
             var schema = params.schema;
             var roles = params.roles;
+            var search = params.search;
             var url = `/${schema}/people/`;
             if (server) {
                 url = `//${server}` + url;
@@ -42,6 +44,10 @@ module.exports = Relaks.createClass({
             }
             if (roles && roles !== 'all') {
                 url += `${roles}/`;
+            }
+            if (search) {
+                search = _.replace(encodeURIComponent(search), /%20/g, '+');
+                url += `?search=${search}`;
             }
             return url;
         },
@@ -62,6 +68,7 @@ module.exports = Relaks.createClass({
         var route = this.props.route;
         var server = route.parameters.server;
         var schema = route.parameters.schema;
+        var searchString = route.query.search;
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
             stories: null,
@@ -91,6 +98,9 @@ module.exports = Relaks.createClass({
             }
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
+            if (searchString) {
+                users = findMatchingUsers(users, searchString);
+            }
             props.users = users
             return <PeoplePageSync {...props} />;
         });
@@ -133,3 +143,37 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         return <UserList {...listProps} />
     },
 });
+
+var findMatchingUsers = Memoize(function(users, search) {
+    var searchWords = _.split(_.toLower(search), /\+/);
+    return _.filter(users, (user) => {
+        // not using a short-circuited construct here for easier debugging
+        if (match(user.details.name, searchWords)) {
+            return true;
+        }
+        if (match(user.username, searchWords)) {
+            return true;
+        }
+        if (match(user.details.email, searchWords)) {
+            return true;
+        }
+    });
+});
+
+function match(text, searchWords) {
+    if (text instanceof Object) {
+        for (var lang in text) {
+            if (match(text[lang], searchWords)) {
+                return true;
+            }
+        }
+    }
+    var words = _.split(_.toLower(_.trim(text)), /\s+/);
+    // require matching of every search word
+    return _.every(searchWords, (searchWord) => {
+        // it's a match when the string starts with the search word
+        return _.some(words, (word) => {
+            return _.startsWith(word, searchWord);
+        });
+    });
+}
