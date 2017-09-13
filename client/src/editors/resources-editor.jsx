@@ -31,7 +31,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
 
-        onChange: PropTypes.func,
+        onChange: PropTypes.func.isRequired,
     },
 
     /**
@@ -363,13 +363,11 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     triggerChangeEvent: function(resources) {
-        if (this.props.onChange) {
-            return this.props.onChange({
-                type: 'change',
-                target: this,
-                resources,
-            });
-        }
+        return this.props.onChange({
+            type: 'change',
+            target: this,
+            resources,
+        });
     },
 
     /**

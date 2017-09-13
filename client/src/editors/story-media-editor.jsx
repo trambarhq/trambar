@@ -34,10 +34,10 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
 
-        onChange: PropTypes.func,
+        onChange: PropTypes.func.isRequired,
     },
     components: ComponentRefs({
-        editor: ResourcesEditor
+        resEditor: ResourcesEditor
     }),
 
     /**
@@ -130,7 +130,7 @@ module.exports = React.createClass({
     renderResources: function() {
         var t = this.props.locale.translate;
         var editorProps = {
-            ref: this.components.setters.editor,
+            ref: this.components.setters.resEditor,
             resources: _.get(this.props.story, 'details.resources'),
             locale: this.props.locale,
             theme: this.props.theme,
@@ -157,7 +157,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePhotoClick: function(evt) {
-        this.components.editor.capture('image');
+        this.components.resEditor.capture('image');
     },
 
     /**
@@ -166,7 +166,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleVideoClick: function(evt) {
-        this.components.editor.capture('video');
+        this.components.resEditor.capture('video');
     },
 
     /**
@@ -175,7 +175,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAudioClick: function(evt) {
-        this.components.editor.capture('audio');
+        this.components.resEditor.capture('audio');
     },
 
     /**
@@ -185,7 +185,7 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
-        this.components.editor.importFiles(files);
+        this.components.resEditor.importFiles(files);
         return null;
     },
 
@@ -195,8 +195,8 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDrop: function(evt) {
-        this.components.editor.importFiles(evt.files);
-        this.components.editor.importDataItems(evt.items);
+        this.components.resEditor.importFiles(evt.files);
+        this.components.resEditor.importDataItems(evt.items);
         return null;
     },
 
@@ -209,7 +209,7 @@ module.exports = React.createClass({
         var files = evt.clipboardData.files;
         if (!_.isEmpty(files)) {
             evt.preventDefault();
-            this.components.editor.importFiles(files);
+            this.components.resEditor.importFiles(files);
         }
         return null;
     },
@@ -227,15 +227,12 @@ module.exports = React.createClass({
         if (_.isEmpty(story.details.resources)) {
             delete story.details.resources;
         }
-        if (this.props.onChange) {
-            return this.props.onChange({
-                type: 'change',
-                target: this,
-                story,
-                path,
-            });
-        }
-        return ;
+        return this.props.onChange({
+            type: 'change',
+            target: this,
+            story,
+            path,
+        });
     },
 
     /**

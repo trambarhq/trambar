@@ -518,13 +518,8 @@ module.exports = React.createClass({
             var delay;
             switch (evt.path) {
                 case 'details.resources':
-                    var newFile = _.some(story.details.resources, (res) => {
-                        if (!res.url && !res.payload_id) {
-                            return true;
-                        }
-                    });
                     // upload resources immediately
-                    if (newFile) {
+                    if (hasUnsentFiles(story.details.resources)) {
                         delay = 0;
                     }
                     break;
@@ -627,3 +622,11 @@ var createBlankStory = Memoize(function(currentUser) {
     details: {},
     public: true,
 });
+
+function hasUnsentFiles(resources) {
+    return _.some(resources, (res) => {
+        if (!res.url && !res.payload_id) {
+            return true;
+        }
+    });
+}

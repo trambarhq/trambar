@@ -2,9 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
-var BlobReader = require('utils/blob-reader');
-var LinkParser = require('utils/link-parser');
 var DeviceManager = require('media/device-manager');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -20,10 +19,8 @@ var AutosizeTextArea = require('widgets/autosize-text-area');
 var PushButton = require('widgets/push-button');
 var HeaderButton = require('widgets/header-button');
 var ProfileImage = require('widgets/profile-image');
-var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
-var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
-var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
-var StoryText = require('widgets/story-text');
+var DropZone = require('widgets/drop-zone');
+var ResourcesEditor = require('editors/resources-editor');
 
 require('./comment-editor.scss');
 
@@ -45,6 +42,9 @@ module.exports = React.createClass({
 
         onFinish: PropTypes.func,
     },
+    components: ComponentRefs({
+        resEditor: ResourcesEditor
+    }),
 
     /**
      * Return initial state of component
@@ -76,6 +76,12 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Update reaction object with information from new props
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
     updateDraft: function(nextState, nextProps) {
         if (nextProps.reaction) {
             nextState.draft = nextProps.reaction;
@@ -84,6 +90,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div className="comment-editor">
@@ -91,15 +102,17 @@ module.exports = React.createClass({
                     {this.renderProfileImage()}
                 </div>
                 <div className="editor-column">
-                    <div className="text">
-                        {this.renderTextArea()}
+                    <div className="media">
+                        {this.renderResources()}
                     </div>
                     <div className="controls">
-                        {this.renderMediaButtons()}
-                        {this.renderActionButtons()}
-                        {this.renderPhotoDialog()}
-                        {this.renderAudioDialog()}
-                        {this.renderVideoDialog()}
+                        <div className="textarea">
+                            {this.renderTextArea()}
+                        </div>
+                        <div className="buttons">
+                            {this.renderMediaButtons()}
+                            {this.renderActionButtons()}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -217,61 +230,28 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render dialogbox for capturing picture through MediaStream API
+     * Render resources editor
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
-    renderPhotoDialog: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
-        var props = {
-            show: this.state.capturingPhoto,
+    renderResources: function() {
+        var t = this.props.locale.translate;
+        var editorProps = {
+            ref: this.components.setters.resEditor,
+            resources: _.get(this.state.draft, 'details.resources'),
             locale: this.props.locale,
-            onCapture: this.handlePhotoCapture,
-            onCancel: this.handlePhotoCancel,
+            theme: this.props.theme,
+            payloads: this.props.payloads,
+            onChange: this.handleResourcesChange,
         };
-        return <PhotoCaptureDialogBox {...props} />
+        return (
+            <ResourcesEditor {...editorProps} />
+        );
     },
 
     /**
-     * Render dialogbox for capturing video through MediaStream API
-     *
-     * @return {ReactElement|null}
+     * Remove event handler on unmount
      */
-    renderVideoDialog: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
-        var props = {
-            show: this.state.capturingVideo,
-            payloads: this.props.payloads,
-            locale: this.props.locale,
-            onCapture: this.handleVideoCapture,
-            onCancel: this.handleVideoCancel,
-        };
-        return <VideoCaptureDialogBox {...props} />
-    },
-
-    /**
-     * Render dialogbox for capturing video through MediaStream API
-     *
-     * @return {ReactElement|null}
-     */
-    renderAudioDialog: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
-        var props = {
-            show: this.state.capturingAudio,
-            payloads: this.props.payloads,
-            locale: this.props.locale,
-            onCapture: this.handleAudioCapture,
-            onCancel: this.handleAudioCancel,
-        };
-        return <AudioCaptureDialogBox {...props} />
-    },
-
     componentWillUnmount: function() {
         DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
@@ -303,6 +283,12 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Save reaction to server after specified delay
+     *
+     * @param  {Reactopn} reaction
+     * @param  {Number} delay
+     */
     autosaveReaction: function(reaction, delay) {
         if (delay) {
             this.cancelAutosave();
@@ -318,6 +304,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Clear autosave timeout function and event handler
+     */
     cancelAutosave: function() {
         if (this.autosaveTimeout) {
             clearTimeout(this.autosaveTimeout);
@@ -340,30 +329,16 @@ module.exports = React.createClass({
         this.cancelAutosave();
 
         // send images and videos to server
-        var resources = reaction.details.resources || [];
         var payloads = this.props.payloads;
-        var payloadIds = [];
-        return Promise.each(resources, (res) => {
-            if (!res.payload_id) {
-                // acquire a task id for each attached resource
-                return payloads.queue(res).then((payloadId) => {
-                    if (payloadId) {
-                        res.payload_id = payloadId;
-                        payloadIds.push(payloadId);
-                    }
-                });
-            }
-        }).then(() => {
+        return payloads.prepare(reaction).then(() => {
             var route = this.props.route;
             var server = route.parameters.server;
             var schema = route.parameters.schema;
             var db = this.props.database.use({ server, schema, by: this });
             return db.start().then(() => {
                 return db.saveOne({ table: 'reaction' }, reaction).then((reaction) => {
-                    return Promise.each(payloadIds, (payloadId) => {
-                        // start file upload
-                        return payloads.send(payloadId).return(reaction);
-                    });
+                    // start file upload
+                    return payloads.dispatch(reaction).return(reaction);
                 });
             });
         });
@@ -382,183 +357,6 @@ module.exports = React.createClass({
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
-    },
-
-
-    /**
-     * Attach a resource to the story
-     *
-     * @param  {Object} res
-     *
-     * @return {Promise<Number>}
-     */
-    attachResource: function(res) {
-        var reaction = _.decoupleSet(this.state.draft, 'details.resources', [ res ]);
-        return this.changeDraft(reaction).return(0);
-    },
-
-    /**
-     * Attach an image to the story
-     *
-     * @param  {Object} image
-     *
-     * @return {Promise<Number>}
-     */
-    attachImage: function(image) {
-        var res = _.clone(image);
-        res.type = 'image';
-        if (image.width && image.height) {
-            res.clip = getDefaultClippingRect(image.width, image.height);
-        }
-        return this.attachResource(res);
-    },
-
-    /**
-     * Attach a video to the story
-     *
-     * @param  {Object} video
-     *
-     * @return {Promise<Number>}
-     */
-    attachVideo: function(video) {
-        var res = _.clone(video);
-        res.type = 'video';
-        if (video.width && video.height) {
-            res.clip = getDefaultClippingRect(video.width, video.height);
-        }
-        return this.attachResource(res);
-    },
-
-    /**
-     * Attach an audio to the story
-     *
-     * @param  {Object} audio
-     *
-     * @return {Promise<Number>}
-     */
-    attachAudio: function(audio) {
-        var res = _.clone(audio);
-        res.type = 'audio';
-        return this.attachResource(res);
-    },
-
-    /**
-     * Attach a link to a website to the story
-     *
-     * @param  {Object} website
-     *
-     * @return {Promise<Number>}
-     */
-    attachWebsite: function(website) {
-        var res = _.clone(website);
-        res.type = 'website';
-        return this.attachResource(res);
-    },
-
-    /**
-     * Attach the contents of a file to the story
-     *
-     * @param  {File} file
-     *
-     * @return {Promise<Number|null>}
-     */
-    importFile: function(file) {
-        if (/^image\//.test(file.type)) {
-            return BlobReader.loadImage(file).then((img) => {
-                var format = _.last(_.split(file.type, '/'));
-                var width = img.naturalWidth;
-                var height = img.naturalHeight;
-                var image = { format, file, width, height };
-                return this.attachImage(image);
-            });
-        } else if (/^video\//.test(file.type)) {
-            var format = _.last(_.split(file.type, '/'));
-            var video = { format, file };
-            return this.attachVideo(video);
-        } else if (/^audio\//.test(file.type)) {
-            var format = _.last(_.split(file.type, '/'));
-            var audio = { format, file };
-            return this.attachVideo(audio);
-        } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
-            return BlobReader.loadText(file).then((text) => {
-                var link = LinkParser.parse(text);
-                if (link) {
-                    var website = {
-                        url: link.url,
-                        title: link.name || _.replace(file.name, /\.\w+$/, ''),
-                    };
-                    return this.attachWebsite(website);
-                }
-            });
-        } else {
-            console.log(file);
-            return Promise.resolve(null);
-        }
-    },
-
-    /**
-     * Attach non-file drag-and-drop contents to story
-     *
-     * @param  {Array<DataTransferItem>} items
-     *
-     * @return {Promise}
-     */
-    importDataItems: function(items) {
-        var stringItems = _.filter(items, (item) => {
-            if (item.kind === 'string') {
-                return /^text\/(html|uri-list)/.test(item.type);
-            }
-        });
-        // since items are ephemeral, we need to call getAsString() on each
-        // of them at this point (and not in a callback)
-        var stringPromises = {};
-        _.each(stringItems, (item) => {
-            stringPromises[item.type] = retrieveDataItemText(item);
-        });
-        return Promise.props(stringPromises).then((strings) => {
-            var html = strings['text/html'];
-            var url = strings['text/uri-list'];
-            if (url) {
-                // see if it's an image being dropped
-                var isImage = /<img\b/i.test(html);
-                if (isImage) {
-                    var image = { external_url: url };
-                    return this.attachImage(image);
-                } else {
-                    var website = { url };
-                    if (html) {
-                        // get plain text from html
-                        var node = document.createElement('DIV');
-                        node.innerHTML = html.replace(/<.*?>/g, '');
-                        website.title = node.innerText;
-                    }
-                    return this.attachWebsite(website);
-                }
-            }
-        });
-    },
-
-    /**
-     * Reattach blobs that were filtered out when objects are saved
-     *
-     * @param  {Reaction} reaction
-     */
-    reattachBlobs: function(reaction) {
-        var payloads = this.props.payloads;
-        var resources = _.get(reaction, 'details.resources');
-        _.each(resources, (res) => {
-            // these properties also exist in the corresponding payload objects
-            // find payload with one of them
-            var criteria = _.pick(res, 'payload_id', 'url', 'poster_url');
-            var payload = payloads.find(criteria);
-            if (payload) {
-                _.forIn(payload, (value, name) => {
-                    if (value instanceof Blob) {
-                        res[name] = value;
-                    }
-                });
-            }
-        });
     },
 
     /**
@@ -589,6 +387,7 @@ module.exports = React.createClass({
 
         return this.changeDraft(draft).then(() => {
             this.autosaveReaction(draft, AUTOSAVE_DURATION);
+            return null;
         });
     },
 
@@ -637,32 +436,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePhotoClick: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingPhoto: true });
-        }
-    },
-
-    /**
-     * Called when user clicks x or outside the photo dialog
-     *
-     * @param  {Event} evt
-     */
-    handlePhotoCancel: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingPhoto: false });
-        }
-    },
-
-    /**
-     * Called after user has taken a photo
-     *
-     * @param  {Object} evt
-     */
-    handlePhotoCapture: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingPhoto: false });
-            this.attachImage(evt.image);
-        }
+        this.components.resEditor.capture('image');
     },
 
     /**
@@ -671,32 +445,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleVideoClick: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingVideo: true });
-        }
-    },
-
-    /**
-     * Called when user clicks x or outside the photo dialog
-     *
-     * @param  {Event} evt
-     */
-    handleVideoCancel: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingVideo: false });
-        }
-    },
-
-    /**
-     * Called after user has shot a video
-     *
-     * @param  {Object} evt
-     */
-    handleVideoCapture: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingVideo: false });
-            this.attachVideo(evt.video);
-        }
+        this.components.resEditor.capture('video');
     },
 
     /**
@@ -705,32 +454,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAudioClick: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingAudio: true });
-        }
-    },
-
-    /**
-     * Called when user clicks x or outside the photo dialog
-     *
-     * @param  {Event} evt
-     */
-    handleAudioCancel: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingAudio: false });
-        }
-    },
-
-    /**
-     * Called after user has shot a video
-     *
-     * @param  {Object} evt
-     */
-    handleAudioCapture: function(evt) {
-        if (process.env.PLATFORM === 'browser') {
-            this.setState({ capturingAudio: false });
-            this.attachAudio(evt.audio);
-        }
+        this.components.resEditor.capture('audio');
     },
 
     /**
@@ -740,10 +464,28 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
-        if (files.length >= 1) {
-            this.importFile(files[0]);
-        }
+        this.components.resEditor.importFiles(files);
         return null;
+    },
+
+    /**
+     * Called when user add or remove a resource or adjusted image cropping
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise}
+     */
+    handleResourcesChange: function(evt) {
+        var path = `details.resources`;
+        var draft = _.decoupleSet(this.state.draft, path, evt.resources);
+        return this.changeDraft(draft).then((draft) => {
+            var delay = AUTOSAVE_DURATION;
+            if (hasUnsentFiles(evt.resources)) {
+                delay = 0;
+            }
+            this.autosaveReaction(draft, delay);
+            return null;
+        });
     },
 
     /**
@@ -777,37 +519,10 @@ var createBlankComment = Memoize(function(story, currentUser) {
     };
 });
 
-/**
- * Return a square clipping rect
- *
- * @param  {Number} width
- * @param  {Number} height
- * @param  {String} align
- *
- * @return {Object}
- */
-function getDefaultClippingRect(width, height, align) {
-    var left = 0, top = 0;
-    var length = Math.min(width, height);
-    if (align === 'center' || !align) {
-        if (width > length) {
-            left = Math.floor((width - length) / 2);
-        } else if (height > length) {
-            top = Math.floor((height - length) / 2);
+function hasUnsentFiles(resources) {
+    return _.some(resources, (res) => {
+        if (!res.url && !res.payload_id) {
+            return true;
         }
-    }
-    return { left, top, width: length, height: length };
-}
-
-/**
- * Retrieve the text in a DataTransferItem
- *
- * @param  {DataTransferItem} item
- *
- * @return {Promise<String>}
- */
-function retrieveDataItemText(item) {
-    return new Promise((resolve, reject) => {
-        item.getAsString(resolve);
     });
 }

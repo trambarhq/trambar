@@ -4,22 +4,35 @@
     padding: 0.1em 0.1em 0.1em 0.1em;
 
     .profile-image-column {
-        flex: 0 0 auto;
+        flex-grow: 0;
+        flex-shrink: 0;
     }
 
     .editor-column {
-        flex: 1 1 auto;
+        flex-grow: 1;
+        flex-shrink: 1;
+
+        .media {
+            .image-cropper {
+                margin-bottom: 0.5em;
+            }
+        }
 
         .controls {
-            display: flow-root;
-            margin-top: 0.2em;
-
-            .media-buttons {
-                float: left;
+            .textarea {
             }
 
-            .action-buttons {
-                float: right;
+            .buttons {
+                display: flow-root;
+                margin-top: 0.2em;
+
+                .media-buttons {
+                    float: left;
+                }
+
+                .action-buttons {
+                    float: right;
+                }
             }
         }
     }
