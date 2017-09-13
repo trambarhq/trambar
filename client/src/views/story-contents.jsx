@@ -241,7 +241,7 @@ module.exports = React.createClass({
         return (
             <div>
                 {this.renderText()}
-                {this.renderResources()}
+                {this.renderMedia()}
             </div>
         )
     },
@@ -549,7 +549,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderResources: function() {
+    renderMedia: function() {
         var resources = _.get(this.props.story, 'details.resources');
         if (_.isEmpty(resources)) {
             return null;

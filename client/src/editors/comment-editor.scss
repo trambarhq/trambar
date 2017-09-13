@@ -6,6 +6,10 @@
     .profile-image-column {
         flex-grow: 0;
         flex-shrink: 0;
+
+        .profile-image {
+            margin: 0 0.4em 0 0.2em;
+        }
     }
 
     .editor-column {
@@ -13,9 +17,8 @@
         flex-shrink: 1;
 
         .media {
-            .image-cropper {
-                margin-bottom: 0.5em;
-            }
+            max-width: 300px;
+            padding: 0em 1em 0.25em 1em;
         }
 
         .controls {
@@ -24,9 +27,9 @@
 
             .buttons {
                 display: flow-root;
-                margin-top: 0.2em;
 
                 .media-buttons {
+                    padding-top: 0.30em;
                     float: left;
                 }
 
@@ -35,9 +38,5 @@
                 }
             }
         }
-    }
-
-    .profile-image {
-        margin: 0 0.4em 0 0.2em;
     }
 }

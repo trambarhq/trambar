@@ -17,7 +17,7 @@ var UpdateCheck = require('mixins/update-check');
 var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
 var DropZone = require('widgets/drop-zone');
-var ResourcesEditor = require('editors/resources-editor');
+var MediaEditor = require('editors/media-editor');
 
 require('./story-media-editor.scss');
 
@@ -37,7 +37,7 @@ module.exports = React.createClass({
         onChange: PropTypes.func.isRequired,
     },
     components: ComponentRefs({
-        resEditor: ResourcesEditor
+        mediaEditor: MediaEditor
     }),
 
     /**
@@ -130,7 +130,7 @@ module.exports = React.createClass({
     renderResources: function() {
         var t = this.props.locale.translate;
         var editorProps = {
-            ref: this.components.setters.resEditor,
+            ref: this.components.setters.mediaEditor,
             resources: _.get(this.props.story, 'details.resources'),
             locale: this.props.locale,
             theme: this.props.theme,
@@ -138,11 +138,11 @@ module.exports = React.createClass({
             onChange: this.handleResourcesChange,
         };
         return (
-            <ResourcesEditor {...editorProps}>
+            <MediaEditor {...editorProps}>
                 <div className="message">
                     {t('story-drop-files-here')}
                 </div>
-            </ResourcesEditor>
+            </MediaEditor>
         );
     },
 
@@ -157,7 +157,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePhotoClick: function(evt) {
-        this.components.resEditor.capture('image');
+        this.components.mediaEditor.capture('image');
     },
 
     /**
@@ -166,7 +166,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleVideoClick: function(evt) {
-        this.components.resEditor.capture('video');
+        this.components.mediaEditor.capture('video');
     },
 
     /**
@@ -175,7 +175,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAudioClick: function(evt) {
-        this.components.resEditor.capture('audio');
+        this.components.mediaEditor.capture('audio');
     },
 
     /**
@@ -185,7 +185,7 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
-        this.components.resEditor.importFiles(files);
+        this.components.mediaEditor.importFiles(files);
         return null;
     },
 
@@ -195,8 +195,8 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDrop: function(evt) {
-        this.components.resEditor.importFiles(evt.files);
-        this.components.resEditor.importDataItems(evt.items);
+        this.components.mediaEditor.importFiles(evt.files);
+        this.components.mediaEditor.importDataItems(evt.items);
         return null;
     },
 
@@ -209,7 +209,7 @@ module.exports = React.createClass({
         var files = evt.clipboardData.files;
         if (!_.isEmpty(files)) {
             evt.preventDefault();
-            this.components.resEditor.importFiles(files);
+            this.components.mediaEditor.importFiles(files);
         }
         return null;
     },

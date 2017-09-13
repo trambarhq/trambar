@@ -19,10 +19,10 @@ var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
 var ImageCropper = require('media/image-cropper');
 
-require('./resources-editor.scss');
+require('./media-editor.scss');
 
 module.exports = React.createClass({
-    displayName: 'ResourcesEditor',
+    displayName: 'MediaEditor',
     mixins: [ UpdateCheck ],
     propTypes: {
         resources: PropTypes.arrayOf(PropTypes.object),
@@ -187,9 +187,9 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <div className="resources-editor">
-                {this.renderSelectedResource()}
-                {this.renderResourceNavigation()}
+            <div className="media-editor">
+                {this.renderResource()}
+                {this.renderNavigation()}
                 {this.renderPhotoDialog()}
                 {this.renderAudioDialog()}
                 {this.renderVideoDialog()}
@@ -202,7 +202,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderSelectedResource: function(res) {
+    renderResource: function(res) {
         var index = this.getSelectedResourceIndex();
         var res = _.get(this.props.resources, index);
         if (!res) {
@@ -228,7 +228,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderResourceNavigation: function() {
+    renderNavigation: function() {
         var index = this.getSelectedResourceIndex();
         var count = this.getResourceCount();
         if (count === 0) {

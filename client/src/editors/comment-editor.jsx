@@ -20,7 +20,7 @@ var PushButton = require('widgets/push-button');
 var HeaderButton = require('widgets/header-button');
 var ProfileImage = require('widgets/profile-image');
 var DropZone = require('widgets/drop-zone');
-var ResourcesEditor = require('editors/resources-editor');
+var MediaEditor = require('editors/media-editor');
 
 require('./comment-editor.scss');
 
@@ -43,7 +43,7 @@ module.exports = React.createClass({
         onFinish: PropTypes.func,
     },
     components: ComponentRefs({
-        resEditor: ResourcesEditor
+        mediaEditor: MediaEditor
     }),
 
     /**
@@ -102,9 +102,6 @@ module.exports = React.createClass({
                     {this.renderProfileImage()}
                 </div>
                 <div className="editor-column">
-                    <div className="media">
-                        {this.renderResources()}
-                    </div>
                     <div className="controls">
                         <div className="textarea">
                             {this.renderTextArea()}
@@ -113,6 +110,9 @@ module.exports = React.createClass({
                             {this.renderMediaButtons()}
                             {this.renderActionButtons()}
                         </div>
+                    </div>
+                    <div className="media">
+                        {this.renderMedia()}
                     </div>
                 </div>
             </div>
@@ -234,10 +234,10 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderResources: function() {
+    renderMedia: function() {
         var t = this.props.locale.translate;
         var editorProps = {
-            ref: this.components.setters.resEditor,
+            ref: this.components.setters.mediaEditor,
             resources: _.get(this.state.draft, 'details.resources'),
             locale: this.props.locale,
             theme: this.props.theme,
@@ -245,7 +245,7 @@ module.exports = React.createClass({
             onChange: this.handleResourcesChange,
         };
         return (
-            <ResourcesEditor {...editorProps} />
+            <MediaEditor {...editorProps} />
         );
     },
 
@@ -436,7 +436,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePhotoClick: function(evt) {
-        this.components.resEditor.capture('image');
+        this.components.mediaEditor.capture('image');
     },
 
     /**
@@ -445,7 +445,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleVideoClick: function(evt) {
-        this.components.resEditor.capture('video');
+        this.components.mediaEditor.capture('video');
     },
 
     /**
@@ -454,7 +454,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAudioClick: function(evt) {
-        this.components.resEditor.capture('audio');
+        this.components.mediaEditor.capture('audio');
     },
 
     /**
@@ -464,7 +464,7 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
-        this.components.resEditor.importFiles(files);
+        this.components.mediaEditor.importFiles(files);
         return null;
     },
 

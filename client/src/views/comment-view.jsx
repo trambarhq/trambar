@@ -8,6 +8,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var ProfileImage = require('widgets/profile-image');
+var MediaView = require('views/media-view');
 
 require('./comment-view.scss');
 
@@ -25,15 +26,34 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div className="comment-view">
-                {this.renderProfileImage()}
-                {this.renderText()}
+                <div className="profile-image-column">
+                    {this.renderProfileImage()}
+                </div>
+                <div className="contents-column">
+                    <div className="text">
+                        {this.renderText()}
+                    </div>
+                    <div className="media">
+                        {this.renderMedia()}
+                    </div>
+                </div>
             </div>
         );
     },
 
+    /**
+     * Render profile image
+     *
+     * @return {ReactElement}
+     */
     renderProfileImage: function() {
         var props = {
             user: this.props.respondent,
@@ -43,6 +63,11 @@ module.exports = React.createClass({
         return <ProfileImage {...props} />;
     },
 
+    /**
+     * Render user name and text
+     *
+     * @return {ReactElement}
+     */
     renderText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
@@ -123,5 +148,23 @@ module.exports = React.createClass({
                 </span>
             );
         }
+    },
+
+    /**
+     * Render attached media
+     *
+     * @return {ReactElement}
+     */
+    renderMedia: function() {
+        var resources = _.get(this.props.reaction, 'details.resources');
+        if (_.isEmpty(resources)) {
+            return null;
+        }
+        var props = {
+            locale: this.props.locale,
+            theme: this.props.theme,
+            resources,
+        };
+        return <MediaView {...props} />
     },
 });
