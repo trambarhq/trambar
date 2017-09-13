@@ -50,12 +50,15 @@ module.exports = React.createClass({
         }
     },
 
-    pick: function(languageVersions) {
+    pick: function(languageVersions, overrideLanguageCode) {
         if (typeof(languageVersions) === 'string') {
             return languageVersions;
         }
         // no support for country-specific versions
         var currentLanguageCode = this.state.languageCode.substr(0, 2);
+        if (overrideLanguageCode) {
+            currentLanguageCode = overrideLanguageCode.substr(0, 2);
+        }
         var matchingPhrase = '';
         var firstNonEmptyPhrase = '';
         var defaultLanguageCode = this.props.defaultLanguageCode.substr(0, 2);

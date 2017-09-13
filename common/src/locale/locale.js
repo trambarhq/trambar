@@ -12,8 +12,8 @@ function Locale(localeManager) {
         return localeManager.translate.apply(localeManager, arguments);
     };
 
-    this.pick = function(phraseVersions) {
-        return localeManager.pick(phraseVersions);
+    this.pick = function(phraseVersions, overrideLanguageCode) {
+        return localeManager.pick(phraseVersions, overrideLanguageCode);
     };
 
     this.change = function(languageCode) {

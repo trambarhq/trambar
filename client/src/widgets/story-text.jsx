@@ -15,17 +15,15 @@ module.exports.updateList = updateList;
 require('./story-text.scss');
 
 function StoryText(props) {
+    var p = props.locale.pick;
     var options = props.options;
-    var languageCode = options.languageCode || props.locale.languageCode;
     var storyType = _.get(props.story, 'type');
     var markdown = _.get(props.story, 'details.markdown', false);
     var listType;
     if (storyType === 'survey' || storyType === 'task-list') {
         listType = storyType;
     }
-    var lang = languageCode.substr(0, 2);
-    var text = _.get(props.story, 'details.text');
-    var contents = _.get(text, lang, '');
+    var contents = p(props.story.details.text, options.languageCode);
     var classNames = [ 'story-text' ];
     if (!markdown) {
         classNames.push('plain-text');
@@ -52,7 +50,7 @@ function StoryText(props) {
 
     var containerProps = _.omit(props, _.keys(StoryText.propTypes));
     containerProps.className = classNames.join(' ');
-    containerProps.lang = languageCode;
+    containerProps.lang = options.languageCode || props.locale.languageCode;
     if (markdown) {
         return <div {...containerProps}>{contents}</div>;
     } else {
