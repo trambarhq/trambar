@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Chartist = require('widgets/chartist');
 var Moment = require('moment');
 var DateTracker = require('utils/date-tracker');
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -123,7 +124,8 @@ module.exports = React.createClass({
         }
         var t = this.props.locale.translate;
         var details = _.get(this.props.dailyActivities, 'details', {});
-        var indices = getActivityIndices(details);
+        var dates = getDates(DateTracker.today, 14);
+        var indices = getActivityIndices(details, dates);
         var items = _.map(indices, (index, type) => {
             var props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
@@ -306,9 +308,10 @@ var storyTypes = [
     'task-list',
 ];
 
-var getActivityIndices = function(activities) {
+var getActivityIndices = Memoize(function(activities, dates) {
     var present = {};
-    _.forIn(activities, (counts, date) => {
+    _.each(dates, (date) => {
+        var counts = activities[date];
         _.forIn(counts, (count, type) => {
             if (count) {
                 present[type] = true;
@@ -322,9 +325,9 @@ var getActivityIndices = function(activities) {
         }
     });
     return indices;
-};
+});
 
-var getActivitySeries = function(activities, dates) {
+var getActivitySeries = Memoize(function(activities, dates) {
     return _.map(storyTypes, (type) => {
         // don't include series that are completely empty
         var empty = true;
@@ -337,13 +340,13 @@ var getActivitySeries = function(activities, dates) {
         });
         return (empty) ? [] : series;
     });
-};
+});
 
-var getDateLabel = function(dates, languageCode) {
+var getDateLabel = Memoize(function(dates, languageCode) {
     return _.map(dates, (date) => {
         return Moment(date).format('dd');
     });
-};
+});
 
 function LegendItem(props) {
     return (
