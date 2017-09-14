@@ -197,7 +197,6 @@ module.exports = React.createClass({
             type: 'line',
             data: { labels, series },
             options: {
-                height: 500,
                 fullWidth: true,
                 chartPadding: {
                     right: 10
