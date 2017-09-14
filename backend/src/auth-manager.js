@@ -185,7 +185,8 @@ function handleHttpasswdRequest(req, res) {
                         var user = {
                             type: 'admin',
                             username,
-                            details: { name }
+                            details: { name },
+                            hidden: true,
                         };
                         return User.insertOne(db, 'global', user);
                     }
