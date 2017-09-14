@@ -40,10 +40,11 @@ module.exports = React.createClass({
     render: function() {
         var Tag = this.props.tag;
         var className = this.props.className;
+        var id = this.props.id;
         if (this.shouldRender()) {
             this.placeholderNode = null;
             return (
-                <Tag className={className} ref={this.setContainerNode}>
+                <Tag id={id} className={className} ref={this.setContainerNode}>
                     {this.props.children}
                 </Tag>
             );
@@ -51,7 +52,7 @@ module.exports = React.createClass({
             this.containerNode = null;
             var height = this.actualHeight || this.estimatedHeight;
             if (height) {
-                return <Tag className={className} ref={this.setPlaceholderNode} style={{ height }} />;
+                return <Tag id={id} className={className} ref={this.setPlaceholderNode} style={{ height }} />;
             } else {
                 return null;
             }

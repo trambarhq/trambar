@@ -41,6 +41,7 @@ module.exports = Relaks.createClass({
             var roles = params.roles;
             var date = params.date;
             var search = params.search;
+            var storyId = params.storyId;
             var url = `/${schema}/news/`;
             if (server) {
                 url = `//${server}` + url;
@@ -59,6 +60,9 @@ module.exports = Relaks.createClass({
             if (search) {
                 search = _.replace(encodeURIComponent(search), /%20/g, '+');
                 url += `?search=${search}`;
+            }
+            if (storyId) {
+                url += `#story-${storyId}`;
             }
             return url;
         },
@@ -147,6 +151,31 @@ module.exports = Relaks.createClass({
                     var criteria = {};
                     criteria.id = listing.story_ids;
                     return db.find({ table: 'story', criteria });
+                }).then((stories) => {
+                    var storyId = parseInt(_.replace(this.props.route.hash, /\D/g, ''));
+                    if (storyId) {
+                        // see if the story is in the list
+                        if (!_.find(stories, { id: storyId })) {
+                            // redirect to page showing stories on the date
+                            // of the story; to do that, we need the object
+                            // itself
+                            var criteria = { id: storyId };
+                            return db.findOne({ table: 'story', criteria }).then((story) => {
+                                if (story) {
+                                    var date = Moment(story.ptime).format('YYYY-MM-DD');
+                                    var url = require('pages/news-page').getUrl({
+                                        server,
+                                        schema,
+                                        date,
+                                        storyId
+                                    });
+                                    return this.props.route.change(url, true).return([]);
+                                }
+                                return stories;
+                            });
+                        }
+                    }
+                    return stories;
                 });
             }
         }).then((stories) => {

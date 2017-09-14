@@ -376,8 +376,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
             key: story.id,
         };
+        var id = `story-${story.id}`;
         return (
-            <OnDemand key={story.id} type="stories" initial={index < 10}>
+            <OnDemand key={story.id} id={id} type="stories" initial={index < 10}>
                 <StoryView {...storyProps} />
             </OnDemand>
         );

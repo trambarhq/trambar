@@ -9,6 +9,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
+var Link = require('widgets/link');
 var Time = require('widgets/time');
 var ProfileImage = require('widgets/profile-image');
 
@@ -34,8 +35,16 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var props = {
+            className: `notification-view ${this.props.theme.mode}`,
+            url: require('pages/news-page').getUrl({
+                server: this.props.route.parameters.server,
+                schema: this.props.route.parameters.schema,
+                storyId: this.props.reaction.story_id
+            }),
+        };
         return (
-            <div className={`notification-view ${this.props.theme.mode}`}>
+            <Link {...props}>
                 <div className="event">
                     {this.renderProfileImage()}
                     {this.renderText()}
@@ -44,7 +53,7 @@ module.exports = React.createClass({
                     {this.renderTime()}
                     {this.renderIcon()}
                 </div>
-            </div>
+            </Link>
         );
     },
 
@@ -104,6 +113,11 @@ module.exports = React.createClass({
         return <Time {...props} />;
     },
 
+    /**
+     * Render a small icon indicating the notification type
+     *
+     * @return {ReactElement}
+     */
     renderIcon: function() {
         var reactionType = _.get(this.props.reaction, 'type');
         var icon;

@@ -145,6 +145,9 @@ module.exports = React.createClass({
             var params = page.parseUrl(path);
             if (params) {
                 var canonicalUrl = page.getUrl(_.assign({}, params, query));
+                if (hash) {
+                    canonicalUrl += `#${hash}`;
+                }
                 route = {
                     url: canonicalUrl,
                     component: page,

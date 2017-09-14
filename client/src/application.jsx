@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
+var AnchorFinder = require('utils/anchor-finder');
 
 // non-visual components
 var RemoteDataSource = require('data/remote-data-source');
@@ -260,14 +261,23 @@ module.exports = React.createClass({
     },
 
     /**
-     * Hide the splash screen once app is ready
+     * Called after application has rerendered
      */
-    componentDidUpdate: function(nextProps, nextState) {
+    componentDidUpdate: function(prevProps, prevState) {
+        // hide the splash screen once app is ready
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
             setTimeout(() => {
                 this.hideSplashScreen();
             }, 100);
+        }
+
+        // see if there's a change in the URL hash
+        if (prevState.route !== this.state.route) {
+            if (!prevState.route || prevState.route.url !== this.state.route.url) {
+                // scroll to element with id matching hash
+                AnchorFinder.scrollTo(this.state.route.hash);
+            }
         }
     },
 
@@ -524,8 +534,15 @@ module.exports = React.createClass({
      */
     handleAlertClick: function(evt) {
         var alert = evt.alert;
-        // TODO
-        console.log(alert);
+        // redirect to news page
+        var route = this.state.route;
+        var url = require('pages/news-page').getUrl({
+            server: route.parameters.server,
+            schema: alert.schema,
+            storyId: alert.story_id,
+        });
+        route.change(url);
+
         // this is needed in Chrome
         window.focus();
     },
