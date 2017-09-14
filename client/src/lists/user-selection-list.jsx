@@ -44,8 +44,10 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<UserSelectionListSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load all users
-            var criteria = {};
+            // load users who aren't hidden
+            var criteria = {
+                hidden: false
+            };
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.users = users;
