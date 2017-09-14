@@ -30,6 +30,7 @@ describe('Route', function() {
                 getComponent: function() { return null },
                 getParameters: function() { return {} },
                 getQuery: function() { return {} },
+                getHash: function() { return '' },
             };
             var url = '/after/';
             var route = new Route(routeManager);

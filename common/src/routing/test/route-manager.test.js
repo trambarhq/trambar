@@ -18,6 +18,10 @@ MockPage.prototype.parseUrl = function(url) {
     }
 };
 
+MockPage.prototype.getUrl = function(params) {
+    return this.url;
+};
+
 var pages = [
     new MockPage('/home/', {}),
     new MockPage('/settings', {}),
