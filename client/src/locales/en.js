@@ -5,8 +5,10 @@ module.exports = function(languageCode) {
         'action-contact-by-phone': 'Contact by phone',
         'action-contact-by-skype': 'Contact by Skype',
         'action-contact-by-slack': 'Contact by Slack',
+        'action-contact-by-twitter': 'Contact by Twitter',
         'action-view-github-page': 'View Github page',
         'action-view-gitlab-page': 'View Gitlab page',
+        'action-view-linkedin-page': 'View linkedin page',
         'action-view-stackoverflow-page': 'View Stack Overflow Page',
 
         'app-name': 'Trambar',

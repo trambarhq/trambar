@@ -602,10 +602,17 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             readOnly,
         };
         var slackProps = {
-            id: 'skype',
-            value: _.get(user, 'details.slack_username', ''),
+            id: 'slack-team',
+            value: _.get(user, 'details.slack_team_id', ''),
             locale: this.props.locale,
-            onChange: this.handleSlackUsernameChange,
+            onChange: this.handleSlackTeamIDChange,
+            readOnly,
+        };
+        var slackProps = {
+            id: 'slack-user',
+            value: _.get(user, 'details.slack_user_id', ''),
+            locale: this.props.locale,
+            onChange: this.handleSlackUserIDChange,
             readOnly,
         };
         var ichatProps = {
@@ -622,36 +629,45 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleTwitterUsernameChange,
             readOnly,
         };
-        var linkedinProps = {
-            id: 'skype',
-            value: _.get(user, 'details.linkedin_username', ''),
-            locale: this.props.locale,
-            onChange: this.handleLinkedinUsernameChange,
-            readOnly,
-        };
         var githubProps = {
             id: 'github',
-            value: _.get(user, 'details.github_username', ''),
+            value: _.get(user, 'details.github_url', ''),
             locale: this.props.locale,
-            onChange: this.handleGitHubUsernameChange,
+            onChange: this.handleGitHubURLChange,
+            readOnly,
+        };
+        var gitlabProps = {
+            id: 'github',
+            value: _.get(user, 'details.gitlab_url', ''),
+            locale: this.props.locale,
+            onChange: this.handleGitlabURLChange,
+            readOnly,
+        };
+        var linkedinProps = {
+            id: 'skype',
+            value: _.get(user, 'details.linkedin_url', ''),
+            locale: this.props.locale,
+            onChange: this.handleLinkedinURLChange,
             readOnly,
         };
         var stackoverflowProps = {
             id: 'skype',
-            value: _.get(user, 'details.stackoverflow_username', ''),
+            value: _.get(user, 'details.stackoverflow_url', ''),
             locale: this.props.locale,
-            onChange: this.handleStackoverflowUsernameChange,
+            onChange: this.handleStackoverflowURLChange,
             readOnly,
         };
         return (
             <div className="form social">
                 <CollapsibleContainer open={this.state.showingSocialLinks}>
                     <TextField {...skypeProps}>{t('user-summary-skype')}</TextField>
+                    <TextField {...slackProps}>{t('user-summary-slack-team')}</TextField>
                     <TextField {...slackProps}>{t('user-summary-slack')}</TextField>
                     <TextField {...ichatProps}>{t('user-summary-ichat')}</TextField>
                     <TextField {...twitterProps}>{t('user-summary-twitter')}</TextField>
-                    <TextField {...linkedinProps}>{t('user-summary-linkedin')}</TextField>
                     <TextField {...githubProps}>{t('user-summary-github')}</TextField>
+                    <TextField {...gitlabProps}>{t('user-summary-gitlab')}</TextField>
+                    <TextField {...linkedinProps}>{t('user-summary-linkedin')}</TextField>
                     <TextField {...stackoverflowProps}>{t('user-summary-stackoverflow')}</TextField>
                 </CollapsibleContainer>
             </div>
@@ -784,8 +800,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
-        username = _.toLower(username);
+        var username = _.trim(_.toLower(username));
         this.setUserProperty(`username`, evt.target.value);
     },
 
@@ -896,18 +911,28 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSkypeUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
+        var username = _.trim(evt.target.value);
         this.setUserProperty(`details.skype_username`, username);
     },
 
     /**
-     * Called when user changes Slack username
+     * Called when user changes Slack user id
      *
      * @param  {Event} evt
      */
-    handleSlackUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
-        this.setUserProperty(`details.slack_username`, username);
+    handleSlackUserIDChange: function(evt) {
+        var username = _.trim(evt.target.value);
+        this.setUserProperty(`details.slack_user_id`, username);
+    },
+
+    /**
+     * Called when user changes Slack team id
+     *
+     * @param  {Event} evt
+     */
+    handleSlackTeamIDChange: function(evt) {
+        var username = _.trim(evt.target.value);
+        this.setUserProperty(`details.slack_team_id`, username);
     },
 
     /**
@@ -916,7 +941,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleIchatUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
+        var username = _.trim(evt.target.value);
         this.setUserProperty(`details.ichat_username`, username);
     },
 
@@ -935,9 +960,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleLinkedinUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
-        this.setUserProperty(`details.linkedin_username`, username);
+    handleLinkedinURLChange: function(evt) {
+        var url = _trim(evt.target.value);
+        this.setUserProperty(`details.linkedin_url`, url);
     },
 
     /**
@@ -945,9 +970,19 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleGitHubUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
-        this.setUserProperty(`details.github_username`, username);
+    handleGitHubURLChange: function(evt) {
+        var url = _trim(evt.target.value);
+        this.setUserProperty(`details.github_url`, url);
+    },
+
+    /**
+     * Called when user changes Gitlab username
+     *
+     * @param  {Event} evt
+     */
+    handleGitlabURLChange: function(evt) {
+        var url = _trim(evt.target.value);
+        this.setUserProperty(`details.gitlab_url`, url);
     },
 
     /**
@@ -955,9 +990,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleStackoverflowUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
-        this.setUserProperty(`details.stackoverflow_username`, username);
+    handleStackoverflowURLChange: function(evt) {
+        var url = _trim(evt.target.value);
+        this.setUserProperty(`details.stackoverflow_url`, url);
     },
 });
 

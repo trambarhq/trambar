@@ -42,7 +42,6 @@ module.exports = React.createClass({
             user: user.id,
             storyId: (story) ? story.id : 0,
         });
-        console.log(url);
         return url;
     },
 
