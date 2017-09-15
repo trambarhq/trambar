@@ -12,6 +12,8 @@ var UserProfileEditor = require('editors/user-profile-editor');
 var NotificationPreferencesEditor = require('editors/notification-preferences-editor');
 var LanguageSettingsEditor = require('editors/language-settings-editor');
 
+require('./settings-page.scss');
+
 module.exports = Relaks.createClass({
     displayName: 'SettingsPage',
     propTypes: {
@@ -79,7 +81,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>
+            <div className="settings-page">
                 {this.renderProjects()}
                 {this.renderUserProfile()}
                 {this.renderNotificationPreferences()}

@@ -123,7 +123,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>
+            <div className="people-page">
                 {this.renderList()}
             </div>
         );

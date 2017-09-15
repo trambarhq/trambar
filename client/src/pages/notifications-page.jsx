@@ -11,6 +11,8 @@ var Theme = require('theme/theme');
 // widgets
 var NotificationList = require('lists/notification-list');
 
+require('./notifications-page.scss');
+
 module.exports = Relaks.createClass({
     displayName: 'NotificationsPage',
     propTypes: {
@@ -127,7 +129,7 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>
+            <div className="notifications-page">
                 {this.renderList()}
             </div>
         );

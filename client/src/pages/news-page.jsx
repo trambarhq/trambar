@@ -15,6 +15,8 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StoryList = require('lists/story-list');
 
+require('./news-page.scss');
+
 module.exports = Relaks.createClass({
     displayName: 'NewsPage',
     propTypes: {
@@ -202,7 +204,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
 
     render: function() {
         return (
-            <div>
+            <div className="news-page">
                 {this.renderList()}
             </div>
         );

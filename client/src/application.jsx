@@ -141,7 +141,9 @@ module.exports = React.createClass({
             <div className="application">
                 <TopNavigation {...navProps} />
                 <section className="page-view-port">
-                    {this.renderCurrentPage()}
+                    <div className="contents">
+                        {this.renderCurrentPage()}
+                    </div>
                 </section>
                 <BottomNavigation {...navProps} />
                 {this.renderStartPage()}

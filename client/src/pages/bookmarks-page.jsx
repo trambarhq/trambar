@@ -11,6 +11,8 @@ var Theme = require('theme/theme');
 // widgets
 var BookmarkList = require('lists/bookmark-list');
 
+require('./bookmarks-page.scss');
+
 module.exports = Relaks.createClass({
     displayName: 'BookmarksPage',
     propTypes: {
@@ -121,7 +123,7 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         return (
-            <div>
+            <div className="bookmarks-page">
                 {this.renderList()}
             </div>
         );

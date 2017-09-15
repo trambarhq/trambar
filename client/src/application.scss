@@ -27,6 +27,9 @@ body {
     flex-grow: 1;
     flex-shrink: 1;
     flex-basis: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: relative;
     background-color: #4d3936;
     overflow-y: auto;
@@ -47,5 +50,10 @@ body {
         border-radius: 10px;
         -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
         background-color: #332624;
+    }
+
+    .contents {
+        width: 100%;
+        max-width: 125em;
     }
 }
