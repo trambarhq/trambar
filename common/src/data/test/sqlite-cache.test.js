@@ -3,14 +3,14 @@ var React = require('react');
 var Chai = require('chai'), expect = Chai.expect;
 var Enzyme = require('enzyme');
 
-var IndexedDBCache = require('data/indexed-db-cache.jsx');
+var SQLiteCache = require('data/sqlite-cache.jsx');
 
-describe('IndexedDBCache', function() {
-    var wrapper = Enzyme.mount(<IndexedDBCache databaseName="test"/>);
+describe('SQLiteCache', function() {
+    var wrapper = Enzyme.mount(<SQLiteCache databaseName="test"/>);
     var cache = wrapper.instance();
 
     describe('#save', function() {
-        it('should save an object to IndexedDB', function() {
+        it('should save an object to SQLite', function() {
             var location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -211,9 +211,7 @@ describe('IndexedDBCache', function() {
             }).then(() => {
                 return cache.save(location2, objects);
             }).then(() => {
-                return cache.clean({ server: 'mordor.me' }).then((count) => {
-                    expect(count).to.equal(10);
-                });
+                return cache.clean({ server: 'mordor.me' });
             }).then(() => {
                 return cache.find(location1).then((objects1) => {
                     return cache.find(location2).then((objects2) => {
@@ -244,9 +242,7 @@ describe('IndexedDBCache', function() {
             }).then(() => {
                 return cache.save(location2, objects);
             }).then(() => {
-                return cache.clean({ count: 4 }).then((count) => {
-                    expect(count).to.equal(4);
-                });
+                return cache.clean({ count: 4 });
             }).then(() => {
                 return cache.find(location1).then((objects1) => {
                     return cache.find(location2).then((objects2) => {
@@ -277,9 +273,7 @@ describe('IndexedDBCache', function() {
             }).then(() => {
                 return cache.save(location2, objects);
             }).then(() => {
-                return cache.clean({ before: ISODate('1990-01-5') }).then((count) => {
-                    expect(count).to.equal(8);
-                });;
+                return cache.clean({ before: ISODate('1990-01-5') });
             }).then(() => {
                 return cache.find(location1).then((objects1) => {
                     return cache.find(location2).then((objects2) => {

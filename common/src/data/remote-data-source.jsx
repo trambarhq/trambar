@@ -7,9 +7,9 @@ var HttpError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
 var Locale = require('locale/locale');
 
-var IndexedDBCache = (process.env.PLATFORM === 'browser') ? require('data/indexed-db-cache') : null;
-var SQLiteCache = (process.env.PLATFORM === 'cordova') ? require('data/sqlite-cache') : null;
-var LocalCache = IndexedDBCache || SQLiteCache;
+var IndexedDBCache = require('data/indexed-db-cache');
+var SQLiteCache = require('data/sqlite-cache');
+var LocalCache = SQLiteCache;
 
 var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
 var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;

@@ -10,21 +10,40 @@ module.exports = React.createClass({
     },
 
     statics: {
+        /**
+         * Return true if IndexedDB is available
+         *
+         * @return {Boolean}
+         */
         isAvailable: function() {
             return !!window.indexedDB;
         },
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             database: null,
         };
     },
 
+    /**
+     * Look for objects in cache
+     *
+     * Query object contains the name of the origin server, schema, and table
+     *
+     * @param  {Object} query
+     *
+     * @return {Promise<Array<Object>>}
+     */
     find: function(query) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = query.server;
+                var server = query.server || '';
                 var schema = query.schema;
                 var table = query.table;
                 var local = (schema === 'local');
@@ -34,7 +53,7 @@ module.exports = React.createClass({
                 var objectStore = transaction.objectStore(storeName);
                 var results = [];
                 var criteria = query.criteria;
-                if (criteria && criteria.id !== undefined && _.keys(criteria).length === 1) {
+                if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
                     // look up by id
                     var ids = criteria.id;
                     if (ids instanceof Array) {
@@ -101,10 +120,18 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Save objects originating from specified location into cache
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     save: function(location, objects) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = location.server;
+                var server = location.server || '';
                 var schema = location.schema;
                 var table = location.table;
                 var local = (schema === 'local');
@@ -131,10 +158,18 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Remove objects from cache that originated from specified location
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     remove: function(location, objects) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = location.server;
+                var server = location.server || '';
                 var schema = location.schema;
                 var table = location.table;
                 var local = (schema === 'local');
@@ -156,15 +191,28 @@ module.exports = React.createClass({
         });
     },
 
-    clean: function(params) {
+    /**
+     * Remove objects by one of three criteria:
+     *
+     * server - remove all objects from specified server
+     * count - remove certain number of objects, starting from those least recent
+     * before - remove objects with retrieval time (rtime) earlier than given value
+     *
+     * Return value is the number of objects removed
+     *
+     * @param  {Object} criteria
+     *
+     * @return {Promise<Number>}
+     */
+    clean: function(criteria) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
                 var storeName = 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
-                if (params.server) {
+                if (criteria.server !== undefined) {
                     var index = objectStore.index('server');
-                    var req = index.openCursor(params.server);
+                    var req = index.openCursor(criteria.server);
                     var count = 0;
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
@@ -176,16 +224,16 @@ module.exports = React.createClass({
                             resolve(count);
                         }
                     };
-                } else if (params.count) {
-                    var index = objectStore.index('server');
-                    var req = index.openCursor(params.server);
+                } else if (criteria.count !== undefined) {
+                    var index = objectStore.index('rtime');
+                    var req = index.openCursor();
                     var count = 0;
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
                             count++;
                             cursor.delete();
-                            if (count < params.count) {
+                            if (count < criteria.count) {
                                 cursor.continue();
                             } else {
                                 resolve(count);
@@ -194,16 +242,16 @@ module.exports = React.createClass({
                             resolve(count);
                         }
                     };
-                } else if (params.before) {
-                    var index = objectStore.index('server');
-                    var req = index.openCursor(params.server);
+                } else if (criteria.before !== undefined) {
+                    var index = objectStore.index('rtime');
+                    var req = index.openCursor();
                     var count = 0;
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
                             var record = cursor.value;
                             var object = record.data;
-                            if (object.rtime < params.before) {
+                            if (object.rtime < criteria.before) {
                                 count++;
                                 cursor.delete();
                                 cursor.continue();
@@ -219,6 +267,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Open database, creating schema if it doesn't exist already
+     *
+     * @return {Promise<IDBDatabase>}
+     */
     open: function() {
         if (!this.databasePromise) {
             this.databasePromise = new Promise((resolve, reject) => {
@@ -246,25 +299,11 @@ module.exports = React.createClass({
         return this.databasePromise;
     },
 
-    triggerChangeEvent: function() {
-        if (this.props.onChange) {
-            this.props.onChange({
-                type: 'change',
-                target: this,
-            });
-        }
-    },
-
-    triggerErrorEvent: function(err) {
-        if (this.props.onError) {
-            this.props.onError({
-                type: 'error',
-                target: this,
-                message: err.message
-            });
-        }
-    },
-
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return <div />;
     },
