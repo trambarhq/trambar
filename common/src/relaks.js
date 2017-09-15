@@ -1,52 +1,23 @@
 var React = require('react');
 
-var Relaks = module.exports = {};
+exports.Component = RelaksComponent;
+exports.createClass = createClass;
+exports.AsyncRenderingInterrupted = AsyncRenderingInterrupted;
+exports.Meanwhile = Meanwhile;
 
-Relaks.createClass = function(specs) {
-    var mergedSpecs = {};
-    for (var name in specs) {
-        mergedSpecs[name] = specs[name];
-    }
-    if (!mergedSpecs.render) {
-        mergedSpecs.render = render;
+function RelaksComponent() {
+}
 
-        if (specs.componentDidMount) {
-            var componentDidMountCustom = specs.componentDidMount;
-            mergedSpecs.componentDidMount = function() {
-                componentDidMount.call(this);
-                componentDidMountCustom.call(this);
-            };
-        } else {
-            mergedSpecs.componentDidMount = componentDidMount;
-        }
-        if (specs.componentWillUnmount) {
-            var componentWillUnmountCustom = specs.componentWillUnmount;
-            mergedSpecs.componentWillUnmount = function() {
-                componentWillUnmount.call(this);
-                componentWillUnmountCustom.call(this);
-            };
-        } else {
-            mergedSpecs.componentWillUnmount = componentWillUnmount;
-        }
-
-        if (!mergedSpecs.shouldComponentUpdate) {
-            mergedSpecs.shouldComponentUpdate = shouldComponentUpdate;
-        }
-    }
-    return React.createClass(mergedSpecs);
-};
-
-function render() {
+/**
+ * Render component, calling renderAsync() if necessary
+ *
+ * @return {ReactElement|null}
+ */
+RelaksComponent.prototype.render = function() {
     var relaks = this.relaks;
     if (!relaks) {
-        // create Relaks context
-        relaks = this.relaks = {
-            progressElement: null,
-            progressElementExpected: false,
-            promisedElement: null,
-            promisedElementExpected: false,
-            meanwhile: null,
-        };
+        console.warn('Relaks context is missing. Make sure you are calling componentWillMount() and componentWillUnmount() of the superclass');
+        return null;
     }
 
     // see if rendering is triggered by resolution of a promise,
@@ -67,7 +38,8 @@ function render() {
     if (relaks.meanwhile) {
         var previously = relaks.meanwhile;
         relaks.meanwhile = null;
-        // use a try block, in case the onCancel handler throws
+        // use a try block, in case user-supplied onCancel handler attached
+        // to the meanwhile object throws
         try {
             previously.cancel();
         } catch (err) {
@@ -75,7 +47,7 @@ function render() {
         }
     }
 
-    // create meanwhile object
+    // create new meanwhile object
     var meanwhile = relaks.meanwhile = new Meanwhile(this);
 
     // call user-defined renderAsync() in a try-catch block to catch potential errors
@@ -96,11 +68,15 @@ function render() {
     if (isPromise(promise)) {
         // set up handlers for the promise returned
         var resolve = (element) => {
-            meanwhile.clear();
             if (meanwhile !== relaks.meanwhile) {
-                // a new rendering has started--do nothing here
+                // a new rendering cycle has started
+                meanwhile.cancel();
+            } else if (!this.relaks) {
+                // component has been unmounted
+                meanwhile.cancel();
             } else {
                 // tell render() to show the element
+                meanwhile.finish();
                 relaks.promisedElement = element;
                 relaks.promisedElementExpected = true;
                 relaks.progressElement = null;
@@ -112,6 +88,8 @@ function render() {
             if (err instanceof AsyncRenderingInterrupted) {
                 // the rendering cycle was interrupted--do nothing
             } else {
+                // dump the error into the console and return what has been
+                // rendered so far or what was there before
                 console.error(err);
                 var element = relaks.progressElement || relaks.promisedElement;
                 resolve(element);
@@ -127,22 +105,31 @@ function render() {
     }
 
     // we have triggered the asynchronize operation and are waiting for it to
-    // complete; in the mean time we need to return something
+    // complete; in the meantime we need to return something
     if (relaks.promisedElement) {
         // show what was there before
         return relaks.promisedElement;
     }
     if (relaks.progressElement) {
-        // a progress element was provided synchronously by renderAsync()--show that
-        // clear the timeout if progress was set on a delay
+        // a progress element was provided synchronously by renderAsync()
+        // we'll display that; clear the timeout function if progress was
+        // set to show on a delay
         meanwhile.clear();
         return relaks.progressElement;
     }
     // umm, we got nothing
     return null;
-}
+};
 
-function shouldComponentUpdate(nextProps, nextState) {
+/**
+ * Return false if the component's props and state haven't changed.
+ *
+ * @param  {Object} nextProps
+ * @param  {Object} nextState
+ *
+ * @return {Boolean}
+ */
+RelaksComponent.prototype.shouldComponentUpdate = function(nextProps, nextState) {
     if (!compare(this.props, nextProps)) {
         return true;
     }
@@ -150,31 +137,50 @@ function shouldComponentUpdate(nextProps, nextState) {
         return true;
     }
     return false;
-}
+};
 
-function componentDidMount() {
-}
+/**
+ * Create Relaks context on mount.
+ */
+RelaksComponent.prototype.componentWillMount = function() {
+    this.relaks = {
+        progressElement: null,
+        progressElementExpected: false,
+        promisedElement: null,
+        promisedElementExpected: false,
+        meanwhile: null,
+    }
+};
 
-function componentWillUnmount() {
+/**
+ * Remove Relaks context on unmount, canceling any outstanding asynchronous
+ * rendering cycle.
+ */
+RelaksComponent.prototype.componentWillUnmount = function() {
     var relaks = this.relaks;
     if (relaks) {
         if (relaks.meanwhile) {
             relaks.meanwhile.cancel();
         }
-        this.relaks = null;
+        this.relaks = undefined;
     }
-}
+};
 
 function Meanwhile(component) {
     this.component = component;
     this.synchronous = true;
     this.showingProgress = false;
     this.updateTimeout = 0;
+    this.startTime = getTime();
+    this.canceled = false;
+    this.onCancel = null;
+    this.onComplete = null;
+    this.onProgress = null;
 }
 
 /**
  * Check if the rendering cycle isn't been superceded by a new one. If so
- * throw an exception to end it.
+ * throw an exception to end it. Ensure component is mounted as well.
  */
 Meanwhile.prototype.check = function() {
     var relaks = this.component.relaks;
@@ -205,21 +211,41 @@ Meanwhile.prototype.show = function(element, delay) {
     if (this.showingProgress) {
         // if so, show the new progress immediately
         this.update();
-    } else if (this.updateTimeout) {
-        // we've already schedule the displaying of progress
     } else {
-        if (delay) {
-            // show progress after a brief delay, to allow
-            // it to be bypassed by fast-resolving promises
-            this.updateTimeout = setTimeout(() => {
-                this.update();
-            }, delay);
-        } else if (delay === 0) {
+        if (this.updateTimeout) {
+            // we've already schedule the displaying of progress
+            if (delay !== undefined) {
+                // caller wants to set a new delay, remove the current one first
+                clearTimeout(this.updateTimeout);
+                this.updateTimeout = 0;
+
+                if (delay > 0) {
+                    // substract time already spent
+                    var elapsed = getTime() - this.startTime;
+                    delay -= elapsed;
+                }
+            } else {
+                // nothing to do--just wait for the initial timeout to fire
+                return;
+            }
+        }
+
+        if (delay > 0) {
+            if (delay !== Infinity) {
+                // show progress after a brief delay, to allow
+                // it to be bypassed by fast-resolving promises
+                this.updateTimeout = setTimeout(() => {
+                    this.update();
+                }, delay);
+            }
+        } else if (delay <= 0) {
             // caller wants it to be shown immediately
             this.update();
         } else {
             // when no delay is given, then progress is shown only
-            // if the component would be blank otherwise
+            // if the component would be blank otherwise--this is assuming
+            // that the first time this function was invoked was done so
+            // synchrously (i.e. not in a promise callback)
             //
             // if the component was rendered before, then nothing happens
             // until all promises resolve--or if a call to show() is made
@@ -236,7 +262,6 @@ Meanwhile.prototype.update = function() {
 
     // indicate that the component is displaying progress
     this.showingProgress = true;
-    console.log('Progress...');
 
     // toss the result of the previous rendering cycle
     relaks.promisedElement = null;
@@ -253,6 +278,11 @@ Meanwhile.prototype.update = function() {
         return;
     }
 
+    if (this.onProgress) {
+        var elapsed = getTime() - this.startTime;
+        this.onProgress({ type: 'progress', target: this, elapsed });
+    }
+
     // tell render() that it isn't triggered in the normal fashion
     relaks.progressElementExpected = true;
     this.component.forceUpdate();
@@ -263,8 +293,22 @@ Meanwhile.prototype.update = function() {
  */
 Meanwhile.prototype.cancel = function() {
     this.clear();
-    if (this.onCancel) {
-        this.onCancel({ type: 'cancel', target: this.component });
+    if (!this.canceled) {
+        this.canceled = true;
+        if (this.onCancel) {
+            this.onCancel({ type: 'cancel', target: this });
+        }
+    }
+};
+
+/**
+ * Clear timeout function and fire any onComplete handler
+ */
+Meanwhile.prototype.finish = function() {
+    this.clear();
+    if (this.onComplete) {
+        var elapsed = getTime() - this.startTime;
+        this.onComplete({ type: 'complete', target: this, elapsed });
     }
 };
 
@@ -277,6 +321,29 @@ Meanwhile.prototype.clear = function() {
         clearTimeout(this.updateTimeout);
         this.updateTimeout = 0;
     }
+};
+
+function AsyncRenderingInterrupted() {
+    this.message = 'Async rendering interrupted';
+}
+
+AsyncRenderingInterrupted.prototype = Object.create(Error.prototype)
+
+function createClass(specs) {
+    if (specs.render) {
+        throw new Error('Class definition should not contain render()');
+    }
+    if (!specs.renderAsync) {
+        throw new Error('Class definition should contain renderAsync()');
+    }
+
+    var own = RelaksComponent.prototype;
+    specs = clone(specs);
+    specs.render = own.render;
+    specs.componentWillMount = chain(specs.componentWillMount, own.componentWillMount);
+    specs.componentWillUnmount = chain(specs.componentWillUnmount, own.componentWillUnmount);
+    specs.shouldComponentUpdate = specs.shouldComponentUpdate || own.shouldComponentUpdate;
+    return React.createClass(specs);
 };
 
 /**
@@ -293,6 +360,29 @@ function isPromise(object) {
     return false;
 }
 
+/**
+ * Clone an object shallowly
+ *
+ * @param  {Object} object
+ *
+ * @return {Object}
+ */
+function clone(object) {
+    var newObject = {};
+    for (var name in object) {
+        newObject[name] = object[name];
+    }
+    return newObject;
+}
+
+/**
+ * Compare two objects shallowly
+ *
+ * @param  {Object} prevSet
+ * @param  {Object} nextSet
+ *
+ * @return {Boolean}
+ */
 function compare(prevSet, nextSet) {
     if (prevSet === nextSet) {
         return true;
@@ -310,8 +400,31 @@ function compare(prevSet, nextSet) {
     return true;
 }
 
-function AsyncRenderingInterrupted() {
-    this.message = 'Async rendering interrupted';
+/**
+ * Chain two zero-argument functions
+ *
+ * @param  {Function} f
+ * @param  {Function} g
+ *
+ * @return {Function}
+ */
+function chain(f, g) {
+    if (!f) {
+        return g;
+    }
+    return function() {
+        f();
+        g();
+    };
 }
 
-AsyncRenderingInterrupted.prototype = Object.create(Error.prototype)
+var scriptStartTime = new Date;
+
+/**
+ * Return the number of milliseconds passed since start of this script
+ *
+ * @return {Number}
+ */
+function getTime() {
+    return (new Date) - scriptStartTime;
+}
