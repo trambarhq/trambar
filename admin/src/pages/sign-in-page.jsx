@@ -141,12 +141,14 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             id: 'username',
             type: 'text',
             value: this.state.username,
+            locale: this.props.locale,
             onChange: this.handleUsernameChange,
         };
         var passwordProps = {
             id: 'password',
             type: 'password',
             value: this.state.password,
+            locale: this.props.locale,
             onChange: this.handlePasswordChange,
         };
         return (
