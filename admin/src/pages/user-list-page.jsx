@@ -47,13 +47,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/users/`;
-            if (query && query.approve) {
+            if (params && params.approve) {
                 url += '?approve=1';
             }
             return url;
@@ -143,7 +142,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(approve) {
-        var url = require('pages/user-list-page').getUrl({}, { approve });
+        var url = require('pages/user-list-page').getUrl({ approve });
         return this.props.route.change(url, true);
     },
 

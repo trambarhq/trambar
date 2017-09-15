@@ -44,13 +44,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/projects/${params.projectId}/robots/${params.robotId}/`;
-            if (query && query.edit) {
+            if (params.edit) {
                 url += `?edit=1`;
             }
             return url;
@@ -225,7 +224,7 @@ var RobotSummaryPageSync = module.exports.Sync = React.createClass({
         var projectId = this.getProjectId();
         var robotId = (newRobot) ? newRobot.id : this.getRobotId();
         var url = (robotId)
-                ? require('pages/robot-summary-page').getUrl({ projectId, robotId }, { edit })
+                ? require('pages/robot-summary-page').getUrl({ projectId, robotId, edit })
                 : require('pages/robot-list-page').getUrl({ projectId })
         var replace = (robotId) ? true : false;
         return this.props.route.change(url, replace);

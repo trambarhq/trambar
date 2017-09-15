@@ -46,13 +46,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/settings/`;
-            if (query && query.edit) {
+            if (params && params.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -162,7 +161,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit) {
-        var url = require('pages/settings-page').getUrl({}, { edit });
+        var url = require('pages/settings-page').getUrl({ edit });
         var replace = true;
         return this.props.route.change(url, replace);
     },

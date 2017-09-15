@@ -53,18 +53,17 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url;
             if (params.projectId) {
                 url = `/projects/${params.projectId}/members/${params.userId}/`;
             } else {
                 url = `/users/${params.userId}/`;
             }
-            if (query && query.edit) {
+            if (params && params.edit) {
                 url += `?edit=1`;
             }
             return url;
@@ -303,7 +302,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var projectId = this.getProjectId();
         var userId = (newUser) ? newUser.id : this.getUserId();
         var url = (userId)
-                ? require('pages/user-summary-page').getUrl({ projectId, userId }, { edit })
+                ? require('pages/user-summary-page').getUrl({ projectId, userId, edit })
                 : (projectId)
                 ? require('pages/member-list-page').getUrl({ projectId })
                 : require('pages/user-list-page').getUrl();

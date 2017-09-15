@@ -41,11 +41,10 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             return `/roles/`;
         },
     },

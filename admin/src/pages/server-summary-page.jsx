@@ -46,13 +46,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/servers/${params.serverId}/`;
-            if (query && query.edit) {
+            if (params.edit) {
                 url += `?edit=1`;
             }
             return url;
@@ -247,7 +246,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     setEditability: function(edit, newServer) {
         var serverId = (newServer) ? newServer.id : this.getServerId();
         var url = (serverId)
-                ? require('pages/server-summary-page').getUrl({ serverId }, { edit })
+                ? require('pages/server-summary-page').getUrl({ serverId, edit })
                 : require('pages/server-list-page').getUrl();
         var replace = (serverId) ? true : false;
         return this.props.route.change(url, replace);

@@ -47,13 +47,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/projects/${params.projectId}/members/`;
-            if (query && query.edit) {
+            if (params.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -176,7 +175,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      */
     setEditability: function(edit) {
         var projectId = this.getProjectId();
-        var url = require('pages/member-list-page').getUrl({ projectId }, { edit });
+        var url = require('pages/member-list-page').getUrl({ projectId, edit });
         return this.props.route.change(url, true);
     },
 

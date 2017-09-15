@@ -45,13 +45,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/projects/${params.projectId}/repos/${params.repoId}/`;
-            if (query && query.edit) {
+            if (params.edit) {
                 url += `?edit=1`;
             }
             return url;
@@ -210,7 +209,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     setEditability: function(edit) {
         var projectId = this.getProjectId();
         var repoId = this.getRepoId();
-        var url = require('pages/repo-summary-page').getUrl({ projectId, repoId }, { edit });
+        var url = require('pages/repo-summary-page').getUrl({ projectId, repoId, edit });
         return this.props.route.change(url, true);
     },
 

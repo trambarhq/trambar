@@ -50,13 +50,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/projects/${params.projectId}/`;
-            if (query && query.edit) {
+            if (params.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -236,7 +235,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     setEditability: function(edit, newProject) {
         var projectId = (newProject) ? newProject.id : this.getProjectId();
         var url = (projectId)
-                ? require('pages/project-summary-page').getUrl({ projectId }, { edit })
+                ? require('pages/project-summary-page').getUrl({ projectId, edit })
                 : require('pages/project-list-page').getUrl();
         var replace = (projectId) ? true : false;
         return this.props.route.change(url, replace);

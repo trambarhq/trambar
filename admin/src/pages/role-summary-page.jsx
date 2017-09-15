@@ -45,13 +45,12 @@ module.exports = Relaks.createClass({
          * Generate a URL of this page based on given parameters
          *
          * @param  {Object} params
-         * @param  {Object} query
          *
          * @return {String}
          */
-        getUrl: function(params, query) {
+        getUrl: function(params) {
             var url = `/roles/${params.roleId}/`;
-            if (query && query.edit) {
+            if (params.edit) {
                 url += '?edit=1';
             }
             return url;
@@ -218,7 +217,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     setEditability: function(edit, newRole) {
         var roleId = (newRole) ? newRole.id : this.getRoleId();
         var url = (roleId)
-                ? require('pages/role-summary-page').getUrl({ roleId }, { edit })
+                ? require('pages/role-summary-page').getUrl({ roleId, edit })
                 : require('pages/role-list-page').getUrl();
         var replace = (roleId) ? true : false;
         return this.props.route.change(url, replace);
