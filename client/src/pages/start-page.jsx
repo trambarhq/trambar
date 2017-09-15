@@ -319,9 +319,13 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
 
         // add badge to indicate membership status
+        var isMember = false;
+        var isPendingMember = false;
         var currentUser = this.props.currentUser;
-        var isMember = _.includes(project.user_ids, currentUser.id);
-        var isPendingMember = _.includes(currentUser.requested_project_ids, project.id);
+        if (currentUser) {
+            isMember = _.includes(project.user_ids, currentUser.id);
+            isPendingMember = _.includes(currentUser.requested_project_ids, project.id);
+        }
         var badge;
         if (isMember) {
             // is member
