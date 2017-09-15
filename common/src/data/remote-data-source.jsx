@@ -9,7 +9,12 @@ var Locale = require('locale/locale');
 
 var IndexedDBCache = require('data/indexed-db-cache');
 var SQLiteCache = require('data/sqlite-cache');
-var LocalCache = SQLiteCache;
+var LocalCache;
+if (IndexedDBCache.isAvailable()) {
+    LocalCache = IndexedDBCache;
+} else if (SQLiteCache.isAvailable()) {
+    LocalCache = SQLiteCache;
+}
 
 var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
 var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;
@@ -174,6 +179,7 @@ module.exports = React.createClass({
             session.authentication = null;
             session.authorizationPromise = null;
             session.authorization = null;
+            this.cleanCachedObjects(location);
             this.triggerExpirationEvent(server);
             return true;
         });
@@ -736,12 +742,21 @@ module.exports = React.createClass({
         }).catch((err) => {
             if (err.statusCode === 401) {
                 clearSession(location.server);
+                this.cleanCachedObjects(location);
                 this.triggerExpirationEvent(location.server);
             }
             throw err;
         });
     },
 
+    /**
+     * Store objects in local schema
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     storeLocalObjects: function(location, objects) {
         var cache = this.components.cache;
         if (!cache) {
@@ -750,6 +765,14 @@ module.exports = React.createClass({
         return cache.save(location, objects);
     },
 
+    /**
+     * Remove objects from local schema
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Array<Object>>}
+     */
     removeLocalObjects: function(location, objects) {
         var cache = this.components.cache;
         if (!cache) {
@@ -758,6 +781,13 @@ module.exports = React.createClass({
         return cache.remove(location, objects);
     },
 
+    /**
+     * Search locale cache
+     *
+     * @param  {Object} search
+     *
+     * @return {Promise<Array<Object>>}
+     */
     searchLocalCache: function(search) {
         var cache = this.components.cache;
         if (!cache) {
@@ -773,10 +803,18 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Update objects in local cache with remote copies
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Boolean>}
+     */
     updateCachedObjects: function(location, objects) {
         var cache = this.components.cache;
         if (!cache) {
-            return false;
+            return Promise.resolve(false);
         }
         return cache.save(location, objects).then((objects) => {
             return true;
@@ -786,10 +824,18 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Remove cached objects
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Promise<Boolean>}
+     */
     removeCachedObjects: function(location, objects) {
         var cache = this.components.cache;
         if (!cache) {
-            return false;
+            return Promise.resolve(false);
         }
         return cache.remove(location, objects).then((objects) => {
             return true;
@@ -797,6 +843,21 @@ module.exports = React.createClass({
             console.error(err);
             return false;
         });
+    },
+
+    /**
+     * Deleted all cached objects from a particular server
+     *
+     * @param  {Object} location
+     *
+     * @return {Promise<Number>}
+     */
+    cleanCachedObjects: function(location) {
+        var cache = this.components.cache;
+        if (!cache) {
+            return Promise.resolve(0);
+        }
+        return cache.clean({ server: location.server });
     },
 
     updateRecentSearchResults: function(location, objects) {
