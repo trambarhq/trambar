@@ -31,6 +31,21 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    getUrl: function(story) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var user = this.props.user;
+        var url = require('pages/person-page').getUrl({
+            server,
+            schema,
+            user: user.id,
+            storyId: (story) ? story.id : 0,
+        });
+        console.log(url);
+        return url;
+    },
+
     render: function() {
         return (
             <UserSection className="summary">
@@ -147,7 +162,7 @@ module.exports = React.createClass({
                 text = t(`user-summary-$name-started-task-list`, name);
                 break;
         }
-        var url = '#';
+        var url = this.getUrl(story);
         return (
             <div className="activity" key={story.id}>
                 <Link url={url}>{text}</Link>
@@ -161,7 +176,7 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var url = '#';
+        var url = this.getUrl();
         return (
             <Link url={url}>{t('user-summary-more')}</Link>
         );

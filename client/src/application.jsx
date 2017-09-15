@@ -22,6 +22,7 @@ var Theme = require('theme/theme');
 var StartPage = require('pages/start-page');
 var NewsPage = require('pages/news-page');
 var PeoplePage = require('pages/people-page');
+var PersonPage = require('pages/person-page');
 var NotificationsPage = require('pages/notifications-page');
 var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
@@ -35,6 +36,7 @@ var pageClasses = [
     StartPage,
     NewsPage,
     PeoplePage,
+    PersonPage,
     NotificationsPage,
     BookmarksPage,
     SettingsPage,
