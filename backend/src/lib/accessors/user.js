@@ -300,4 +300,18 @@ module.exports = _.create(Data, {
             }
         });
     },
+
+    /**
+     * Return false if the user has no access to system
+     *
+     * @param  {User} user
+     *
+     * @return {Boolean}
+     */
+    checkAccess: function(user) {
+        if (!user || user.deleted) {
+            return false;
+        }
+        return true;
+    }
 });

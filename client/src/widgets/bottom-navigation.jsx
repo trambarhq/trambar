@@ -53,14 +53,22 @@ module.exports = React.createClass({
                 // render with height = contentHeight, then
                 // render with height = 0 immediately
                 this.setState({ height: contentHeight });
-                setTimeout(() => { this.setState({ height: 0 }) }, 0);
+                setTimeout(() => {
+                    if (this.props.hidden) {
+                        this.setState({ height: 0 });
+                    }
+                }, 0);
             } else {
                 // showing navigation:
                 //
                 // render with height = contentHeight, then
                 // render with height = auto after a second
                 this.setState({ height: contentHeight });
-                setTimeout(() => { this.setState({ height: 'auto' }) }, 1000);
+                setTimeout(() => {
+                    if (!this.props.hidden) {
+                        this.setState({ height: 'auto' });
+                    }
+                }, 1000);
             }
         }
     },

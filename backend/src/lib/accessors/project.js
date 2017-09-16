@@ -89,6 +89,38 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
+    apply: function(criteria, query) {
+        Data.apply.call(this, criteria, query);
+
+        if (query.columns !== '*') {
+            // filter() needs these columns to work
+            query.columns += ', deleted, user_ids, settings';
+        }
+    },
+
+    /**
+     * Filter out rows that user doesn't have access to
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+    filter: function(db, schema, rows, credentials) {
+        rows = _.filter(rows, (row) => {
+            return this.checkAccess(row, credentials.user, 'know');
+        });
+        return Promise.resolve(rows);
+    },
+
+    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *
@@ -102,36 +134,15 @@ module.exports = _.create(Data, {
      */
     export: function(db, schema, rows, credentials, options) {
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            var user = credentials.user;
-            objects = _.filter(objects, (object, index) => {
+            _.each(objects, (object, index) => {
                 var row = rows[index];
-                var accessible = false;
+                object.name = row.name;
+                object.repo_ids = row.repo_ids;
+                object.user_ids = row.user_ids;
                 if (credentials.unrestricted) {
-                    accessible = true;
-                } else if (_.includes(row.user_ids, user.id)) {
-                    accessible = true;
+                    object.settings = row.settings;
                 } else {
-                    if (user.type === 'admin') {
-                        accessible = true;
-                    } else {
-                        var ms = _.get(row, 'settings.membership', {});
-                        if (ms.allow_request) {
-                            accessible = true;
-                        }
-                    }
-                }
-                if (accessible) {
-                    object.name = row.name;
-                    object.repo_ids = row.repo_ids;
-                    object.user_ids = row.user_ids;
-                    if (credentials.unrestricted) {
-                        object.settings = row.settings;
-                    } else {
-                        object.settings = _.pick(row.settings, 'access_control');
-                    }
-                    return true;
-                } else {
-                    return false;
+                    object.settings = _.pick(row.settings, 'access_control');
                 }
             });
             return objects;
@@ -189,6 +200,88 @@ module.exports = _.create(Data, {
             });
             return User.update(db, schema, users);
         }).return();
-
     },
+
+    /**
+     * Return false if the user has no access to project
+     *
+     * Need these columns: deleted, user_ids, settings
+     *
+     * @param  {Project} project
+     * @param  {User} user
+     * @param  {String} string
+     *
+     * @return {Boolean}
+     */
+    checkAccess: function(project, user, type) {
+        if (!project || project.deleted) {
+            return false;
+        }
+        // project member and admins have full access
+        if (_.includes(project.user_ids, user.id)) {
+            return true;
+        }
+        if (user.type === 'admin') {
+            return true;
+        }
+
+        // see if read-only access should be granted
+        var ms = project.settings.membership;
+        if (!ms) {
+            return false;
+        }
+        if (access === 'know' || access === 'read') {
+            // see if people can know about the project's existence
+            if (user.type === 'member') {
+                if (!ms.allow_request_from_team_members) {
+                    return false;
+                }
+            } else if (user.type === 'guest') {
+                if (user.approved) {
+                    if (!ms.allow_request_from_approved_guests) {
+                        return false;
+                    }
+                } else {
+                    if (!ms.allow_request_from_unapproved_guests) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+            if (access == 'know') {
+                return true;
+            }
+        }
+        var ac = project.settings.access_control;
+        if (!ac) {
+            return false;
+        }
+        if (access === 'read') {
+            if (!_.includes(user.requested_project_ids, user.id)) {
+                // only users who wants to join the project can have
+                // read-only access
+                return false;
+            }
+            if (user.type === 'member') {
+                if (!ac.grant_team_members_read_only) {
+                    return false;
+                }
+            } else if(user.type === 'guest') {
+                if (user.approved) {
+                    if (!ac.grant_approved_users_read_only) {
+                        return false;
+                    }
+                } else {
+                    if (!ac.grant_unapproved_users_read_only) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
 });

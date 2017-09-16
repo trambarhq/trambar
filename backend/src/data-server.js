@@ -108,6 +108,8 @@ function handleDiscovery(req, res) {
     var table = req.params.table;
     return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
+            return fetchCredentials(db, userId, schema, 'read');
+        }).then((credentials) => {
             var criteria = _.omit(params, 'token');
             if (criteria.order) {
                 // check clause for potential SQL injection
@@ -131,12 +133,16 @@ function handleDiscovery(req, res) {
                 criteria.deleted = false;
             }
             var accessor = getAccessor(schema, table);
-            return accessor.find(db, schema, criteria, 'id, gn');
-        }).then((rows) => {
-            return {
-                ids: _.map(rows, 'id'),
-                gns: _.map(rows, 'gn'),
-            }
+            return accessor.find(db, schema, criteria, 'id, gn').then((rows) => {
+                // remove objects that user has no access to
+                return accessor.filter(db, schema, rows, credentials).then((rows) => {
+                    // return only the ids and generation numbers
+                    return {
+                        ids: _.map(rows, 'id'),
+                        gns: _.map(rows, 'gn'),
+                    }
+                });
+            });
         }).finally(() => {
             return db.close();
         });
@@ -159,7 +165,7 @@ function handleRetrieval(req, res) {
     var table = req.params.table;
     return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
-            return fetchCredentials(db, userId);
+            return fetchCredentials(db, userId, schema, 'read');
         }).then((credentials) => {
             var ids;
             if (req.params.id !== undefined) {
@@ -188,11 +194,13 @@ function handleRetrieval(req, res) {
             // look up the rows by id
             var accessor = getAccessor(schema, table);
             return accessor.find(db, schema, { id: ids }, '*').then((rows) => {
-                // export the row, checking if user has access to objects and
-                // trimming out sensitive data
-                return accessor.export(db, schema, rows, credentials, options).then((objects) => {
-                    // add ctime and/or mtime if the client wants them
-                    return objects;
+                // remove objects that user has no access to
+                return accessor.filter(db, schema, rows, credentials).then((rows) => {
+                    // export the row, trimming out sensitive data
+                    return accessor.export(db, schema, rows, credentials, options).then((objects) => {
+                        // add ctime and/or mtime if the client wants them
+                        return objects;
+                    });
                 });
             });
         }).finally(() => {
@@ -218,7 +226,7 @@ function handleStorage(req, res) {
     // need exclusive connection for transaction
     return Database.open(true).then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
-            return fetchCredentials(db, userId);
+            return fetchCredentials(db, userId, schema, write);
         }).then((credentials) => {
             var objects = params.objects;
             // make sure objects are such
@@ -298,14 +306,17 @@ function checkAuthorization(db, token) {
  *
  * @param  {Database} db
  * @param  {Number} userId
+ * @param  {String} schema
+ * @param  {String} access
  *
  * @return {Object}
  */
-function fetchCredentials(db, userId) {
+function fetchCredentials(db, userId, schema, access) {
     var credentials = {};
-    return User.findOne(db, 'global', { id: userId, deleted: false }, '*').then((user) => {
-        if (!user) {
-            throw new HttpError(403);
+    return User.findOne(db, 'global', { id: userId }, '*').then((user) => {
+        if (!User.checkAccess(user)) {
+            // credentials are invalid if the user is missing or disabled
+            throw new HttpError(401);
         }
         credentials.user = user;
         credentials.area = area;
@@ -313,6 +324,16 @@ function fetchCredentials(db, userId) {
         // indicate that the user has admin access
         if (area === 'admin' && user.type === 'admin') {
             credentials.unrestricted = true;
+        }
+
+        if (schema && schema !== 'global') {
+            // apply project level access control
+            return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
+                if (!Project.checkAccess(project, user, access)) {
+                    throw new HttpError(403);
+                }
+                credentials.project = project;
+            });
         }
     }).then(() => {
         return credentials;

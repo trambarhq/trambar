@@ -33,6 +33,7 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
         onAuthorization: PropTypes.func,
         onExpiration: PropTypes.func,
+        onViolation: PropTypes.func,
         onAlertClick: PropTypes.func,
     },
     components: ComponentRefs({
@@ -205,23 +206,18 @@ module.exports = React.createClass({
 
     /**
      * Return true if the current user has access to the specified server
-     * and (optionally) the specified schema
      *
      * @param  {String} server
-     * @param  {String} schema
      *
      * @return {Boolean}
      */
-    hasAuthorization: function(server, schema) {
+    hasAuthorization: function(server) {
         var session = getSession(server);
         if (session.authorization) {
-            if (schema) {
-                return _.includes(session.authorization.scope, schema);
-            } else {
-                return true;
-            }
+            return true;
+        } else {
+            return false;
         }
-        return false;
     },
 
     /**
@@ -395,8 +391,8 @@ module.exports = React.createClass({
             return this.props.onAuthorization({
                 type: 'authorization',
                 target: this,
-                server: server,
-                credentials: credentials,
+                server,
+                credentials,
             });
         }
     },
@@ -411,7 +407,24 @@ module.exports = React.createClass({
             return this.props.onExpiration({
                 type: 'expiration',
                 target: this,
-                server: server,
+                server,
+            });
+        }
+    },
+
+    /**
+     * Inform parent component that an access violation has occurred
+     *
+     * @param  {String} server
+     * @param  {String} schema
+     */
+    triggerViolationEvent: function(server, schema) {
+        if (this.props.onViolation) {
+            return this.props.onViolation({
+                type: 'violation',
+                target: this,
+                server,
+                schema,
             });
         }
     },
@@ -743,6 +756,9 @@ module.exports = React.createClass({
                 clearSession(location.server);
                 this.cleanCachedObjects(location);
                 this.triggerExpirationEvent(location.server);
+            } else if (err.statusCode == 403) {
+                this.cleanCachedObjects(location);
+                this.triggerViolationEvent(location.server, location.schema);
             }
             throw err;
         });

@@ -303,12 +303,10 @@ module.exports = React.createClass({
     handleAuthorization: function(evt) {
         this.saveCredentialsToCache(evt.server, evt.credentials);
 
-        if (!this.state.canAccessServer) {
-            // see if it's possible to access the server now
-            var dataSource = this.components.remoteDataSource;
-            var server = window.location.hostname;
+        var server = window.location.hostname;
+        if (evt.server === server) {
             this.setState({
-                canAccessServer: dataSource.hasAuthorization(server),
+                canAccessServer: true
             });
         }
     },

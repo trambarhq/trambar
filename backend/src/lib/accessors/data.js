@@ -479,6 +479,20 @@ module.exports = {
     },
 
     /**
+     * Filter out rows that user doesn't have access to
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+     filter: function(db, schema, rows, credentials) {
+        return Promise.resolve(rows);
+    },
+
+    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *
