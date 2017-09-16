@@ -201,6 +201,7 @@ module.exports = React.createClass({
 
             onEntry: this.handleStartPageEntry,
             onExit: this.handleStartPageExit,
+            onAvailableSchemas: this.handleAvailableSchemas,
         };
         return <StartPage {...pageProps} />
     },
@@ -477,6 +478,20 @@ module.exports = React.createClass({
                         canAccessSchema: false,
                     });
                 }
+            });
+        }
+    },
+
+    /**
+     * Called when StartPage finds project the current user has access to
+     *
+     * @param  {Object} evt
+     */
+    handleAvailableSchemas: function(evt) {
+        var schema = this.state.route.parameters.schema;
+        if (_.includes(evt.schemas, schema)) {
+            this.setState({
+                canAccessSchema: true,
             });
         }
     },

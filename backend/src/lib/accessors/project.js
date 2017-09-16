@@ -209,11 +209,11 @@ module.exports = _.create(Data, {
      *
      * @param  {Project} project
      * @param  {User} user
-     * @param  {String} string
+     * @param  {String} access
      *
      * @return {Boolean}
      */
-    checkAccess: function(project, user, type) {
+    checkAccess: function(project, user, access) {
         if (!project || project.deleted) {
             return false;
         }
@@ -258,7 +258,7 @@ module.exports = _.create(Data, {
             return false;
         }
         if (access === 'read') {
-            if (!_.includes(user.requested_project_ids, user.id)) {
+            if (!_.includes(user.requested_project_ids, project.id)) {
                 // only users who wants to join the project can have
                 // read-only access
                 return false;

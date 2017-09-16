@@ -18,6 +18,9 @@ module.exports = React.createClass({
         show: PropTypes.bool,
         currentUser: PropTypes.object.isRequired,
         project: PropTypes.object.isRequired,
+        member: PropTypes.bool.isRequired,
+        pendingMember: PropTypes.bool.isRequired,
+        readAccess: PropTypes.bool.isRequired,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -25,28 +28,6 @@ module.exports = React.createClass({
         onConfirm: PropTypes.func,
         onClose: PropTypes.func,
         onProceed: PropTypes.func,
-    },
-
-    /**
-     * Return true if current user has become a member of this project
-     *
-     * @return {Boolean}
-     */
-    isMember: function() {
-        var project = this.props.project;
-        var user = this.props.currentUser;
-        return _.includes(project.user_ids, user.id);
-    },
-
-    /**
-     * Return true if current user has requested this project
-     *
-     * @return {Boolean}
-     */
-    isApplicant: function() {
-        var project = this.props.project;
-        var user = this.props.currentUser;
-        return _.includes(user.requested_project_ids, project.id);
     },
 
     /**
@@ -106,7 +87,7 @@ module.exports = React.createClass({
     renderMessage: function() {
         var t = this.props.locale.translate;
         var contents;
-        if (this.isMember()) {
+        if (this.props.member) {
             contents = (
                 <div className="message accepted">
                     <i className="fa fa-user-circle-o" />
@@ -114,7 +95,7 @@ module.exports = React.createClass({
                     {t('membership-request-you-are-now-member')}
                 </div>
             );
-        } else if (this.isApplicant()) {
+        } else if (this.props.pendingMember) {
             contents = (
                 <div className="message requested">
                     <i className="fa fa-clock-o" />
@@ -133,7 +114,7 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        if (this.isMember()) {
+        if (this.props.readAccess) {
             var proceedButtonProps = {
                 label: t('membership-request-proceed'),
                 onClick: this.handleProceedClick,
@@ -143,7 +124,7 @@ module.exports = React.createClass({
                     <PushButton {...proceedButtonProps} />
                 </div>
             );
-        } else if (this.isApplicant()) {
+        } else if (this.props.pendingMember) {
             var doneButtonProps = {
                 label: t('membership-request-ok'),
                 onClick: this.handleCloseClick,
@@ -191,6 +172,19 @@ module.exports = React.createClass({
     handleCloseClick: function(evt) {
         if (this.props.onClose) {
             this.props.onClose({ type: 'cancel', target: this });
+        }
+    },
+
+    /**
+     * Called when user click proceed button
+     *
+     * @param  {[type]} evt
+     *
+     * @return {[type]}
+     */
+    handleProceedClick: function(evt) {
+        if (this.props.onProceed) {
+            this.props.onProceed({ type: 'proceed', target: this });
         }
     },
 });

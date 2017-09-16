@@ -226,7 +226,7 @@ function handleStorage(req, res) {
     // need exclusive connection for transaction
     return Database.open(true).then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
-            return fetchCredentials(db, userId, schema, write);
+            return fetchCredentials(db, userId, schema, 'write');
         }).then((credentials) => {
             var objects = params.objects;
             // make sure objects are such
