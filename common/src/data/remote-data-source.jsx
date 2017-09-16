@@ -550,7 +550,6 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-
     checkSearchValidity: function(search) {
         if (search.schema === 'local') {
             return true;
@@ -846,7 +845,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Deleted all cached objects from a particular server
+     * Deleted all cached objects originating from given server
      *
      * @param  {Object} location
      *
@@ -860,6 +859,13 @@ module.exports = React.createClass({
         return cache.clean({ server: location.server });
     },
 
+    /**
+     * Insert new objects int recent search results (if the objects match the
+     * criteria)
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     */
     updateRecentSearchResults: function(location, objects) {
         var relevantSearches = this.getRelevantRecentSearches(location);
         _.each(relevantSearches, (search) => {
@@ -888,6 +894,12 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Remove objects from recent search results (because they've been deleted)
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     */
     removeFromRecentSearchResults: function(location, objects) {
         var relevantSearches = this.getRelevantRecentSearches(location);
         _.each(relevantSearches, (search) => {
@@ -922,6 +934,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div>
@@ -931,17 +948,25 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render local cache
+     *
+     * @return {ReactElement}
+     */
     renderLocalCache: function() {
         var setters = this.components.setters;
-        if (LocalCache.isAvailable()) {
-            var cacheProps = {
-                ref: setters.cache,
-                databaseName: this.props.cacheName,
-            };
-            return <LocalCache {...cacheProps} />;
-        }
+        var cacheProps = {
+            ref: setters.cache,
+            databaseName: this.props.cacheName,
+        };
+        return <LocalCache {...cacheProps} />;
     },
 
+    /**
+     * Render notifier
+     *
+     * @return {ReactElement}
+     */
     renderNotifier: function() {
         var setters = this.components.setters;
         if (Notifier.isAvailable()) {
@@ -955,10 +980,19 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Signal that the component is ready
+     */
     componentDidMount: function() {
         this.triggerChangeEvent();
     },
 
+    /**
+     * Called upon the arrival of a notification message, delivered through
+     * websocket or push
+     *
+     * @param  {Object} evt
+     */
     handleChangeNotification: function(evt) {
         var changed = false;
         _.forIn(evt.changes, (idList, name) => {
@@ -985,7 +1019,7 @@ module.exports = React.createClass({
                         }
                     });
                 } else {
-                    // we can't tell if new objects won't sudden show up
+                    // we can't tell if new objects won't suddenly show up
                     // in the search results
                     dirty = true;
                 }
@@ -1007,6 +1041,17 @@ module.exports = React.createClass({
 
 var authCache = {};
 
+/**
+ * Given lists of ids and gns (generation numbers), return the ids that
+ * either are missing from the list of objects or the objects' gns are
+ * different from the ones provided
+ *
+ * @param  {Array<Number>} ids
+ * @param  {Array<Number>} gns
+ * @param  {Array<Object>} objects
+ *
+ * @return {Array<Number>}
+ */
 function getUpdateList(ids, gns, objects) {
     var updated = [];
     _.each(ids, (id, i) => {
@@ -1020,6 +1065,15 @@ function getUpdateList(ids, gns, objects) {
     return updated;
 }
 
+/**
+ * Return ids of objects that aren't found in the list provided
+ *
+ * @param  {Array<Number>} ids
+ * @param  {Array<Number>} gns
+ * @param  {Array<Object>} objects
+ *
+ * @return {Array<Number>}
+ */
 function getRemovalList(ids, gns, objects) {
     var removal = [];
     _.each(objects, (object) => {
@@ -1030,6 +1084,15 @@ function getRemovalList(ids, gns, objects) {
     return removal;
 }
 
+/**
+ * Remove objects matching a list of ids from a sorted array, returning a
+ * new array
+ *
+ * @param  {Array<Object>} objects
+ * @param  {Array<Number>} ids
+ *
+ * @return {Array<Object>}
+ */
 function removeObjects(objects, ids) {
     if (_.isEmpty(ids)) {
         return objects;
@@ -1045,6 +1108,14 @@ function removeObjects(objects, ids) {
     return objects;
 }
 
+/**
+ * Return objects matching a list of ids from a sorted array
+ *
+ * @param  {Array<Object>} objects
+ * @param  {Array<Number>} ids
+ *
+ * @return {Array<Object>}
+ */
 function pickObjects(objects, ids) {
     var list = [];
     _.each(ids, (id) => {
@@ -1057,6 +1128,14 @@ function pickObjects(objects, ids) {
     return list;
 }
 
+/**
+ * Insert objects into an array of objects sorted by id, returning a new array
+ *
+ * @param  {Array<Object>} objects
+ * @param  {Array<Object>} newObjects
+ *
+ * @return {Array<Object>}
+ */
 function insertObjects(objects, newObjects) {
     objects = _.slice(objects);
     _.each(newObjects, (newObject) => {
@@ -1071,11 +1150,24 @@ function insertObjects(objects, newObjects) {
     return objects;
 }
 
+/**
+ * Return the current time as a ISO string
+ *
+ * @return {String}
+ */
 function getCurrentTime() {
     var now = new Date;
     return now.toISOString();
 }
 
+/**
+ * Get the difference between two time in milliseconds
+ *
+ * @param  {Date|String|null} start
+ * @param  {Date|String|null} end
+ *
+ * @return {Number}
+ */
 function getTimeElapsed(start, end) {
     if (!start) {
         return Infinity;
@@ -1088,16 +1180,37 @@ function getTimeElapsed(start, end) {
     return (e - s);
 }
 
+/**
+ * Obtain a location object from a search object
+ *
+ * @param  {Object} search
+ *
+ * @return {Object}
+ */
 function getSearchLocation(search) {
     return _.pick(search, 'protocol', 'server', 'schema', 'table');
 }
 
+/**
+ * Obtain a query object from a search object
+ *
+ * @param  {Object} search
+ *
+ * @return {Object}
+ */
 function getSearchQuery(search) {
     return _.pick(search, 'protocol', 'server', 'schema', 'table', 'criteria', 'minimum');
 }
 
 var sessions = {};
 
+/**
+ * Obtain object where authorization info for a server is stored
+ *
+ * @param  {String} server
+ *
+ * @return {Object}
+ */
 function getSession(server) {
     var session = sessions[server];
     if (!session) {
@@ -1106,17 +1219,41 @@ function getSession(server) {
     return session;
 }
 
+/**
+ * Remove authorization to a server
+ *
+ * @param  {String} server
+ */
 function clearSession(server) {
     sessions[server] = null;
 }
 
+/**
+ * Return the number of object expected
+ *
+ * @param  {Object} criteria
+ *
+ * @return {Number|undefined}
+ */
 function getExpectedObjectCount(criteria) {
-    if (criteria.hasOwnProperty('id')) {
-        var ids = criteria.id;
-        if (ids instanceof Array) {
-            return ids.length;
-        } else if (typeof(ids) === 'number') {
-            return ids > 0 ? 1 : 0;
+    return countCriteria('id') || countCriteria('filters');
+}
+
+/**
+ * Count criteria of a given type
+ *
+ * @param  {Object} criteria
+ * @param  {String} name
+ *
+ * @return {Number|undefined}
+ */
+function countCriteria(criteria, name) {
+    var value = criteria[name];
+    if (value != undefined) {
+        if (value instanceof Array) {
+            return value.length;
+        } else {
+            return 1;
         }
     }
 }
