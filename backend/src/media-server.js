@@ -399,7 +399,7 @@ function processMediaPosterUpload(schema, taskId, srcPath, dstPath, url) {
                 height: metadata.height,
                 clip,
             };
-            return saveTaskOutcome(schema, taskId, details);
+            return saveTaskProgress(schema, taskId, details);
         });
     });
 }
@@ -905,15 +905,34 @@ function checkTaskToken(schema, taskId, token) {
  *
  * @return {Promise}
  */
-function saveTaskOutcome(schema, taskId, details) {
+function saveTaskProgress(schema, taskId, details, completion) {
     return Database.open().then((db) => {
-        return Task.updateOne(db, schema, {
-            id: taskId,
-            completion: 100,
-            etime: Moment().toISOString(),
-            details
+        return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
+            if (completion) {
+                task.completion = completion;
+                if (completion === 100) {
+                    task.etime = Object('NOW()');
+                }
+                if (task.details) {
+                    _.assign(task.details, details);
+                }
+            }
+            return Task.updateOne(db, schema, task);
         });
     });
+}
+
+/**
+ * Update resources in an object associated with a task
+ *
+ * @param  {String} schema
+ * @param  {Number} taskId
+ * @param  {Object} details
+ *
+ * @return {Promise}
+ */
+function saveTaskOutcome(schema, taskId, details) {
+    return saveTaskProgress(schema, taskId, details, 100);
 }
 
 function createJobId() {
