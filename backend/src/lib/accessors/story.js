@@ -300,7 +300,10 @@ module.exports = _.create(Data, {
         if (storyBefore) {
             if (!_.includes(storyBefore.user_ids, credentials.user.id)) {
                 // can't modify an object that doesn't belong to the user
-                throw new HttpError(400);
+                // unless user is an admin
+                if (credentials.user.type !== 'admin') {
+                    throw new HttpError(400);
+                }
             }
             if (storyReceived.hasOwnProperty('user_ids')) {
                 if (!_.isEqual(storyReceived.user_ids, storyBefore.user_ids)) {
