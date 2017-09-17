@@ -9,11 +9,14 @@ var Locale = require('locale/locale');
 
 var IndexedDBCache = require('data/indexed-db-cache');
 var SQLiteCache = require('data/sqlite-cache');
+var LocalStorageCache = require('data/local-storage-cache');
 var LocalCache;
 if (IndexedDBCache.isAvailable()) {
     LocalCache = IndexedDBCache;
 } else if (SQLiteCache.isAvailable()) {
     LocalCache = SQLiteCache;
+} else if (LocalStorageCache.isAvailable()) {
+    LocalCache = LocalStorageCache;
 }
 
 var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
