@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
-var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -84,6 +83,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
+            var Task = require('accessors/task');
             return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
         });
     },
@@ -150,6 +150,27 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials, options) {
+        return Data.import.call(this, db, schema, objects, originals, credentials).map((projectReceived, index) => {
+            var projectBefore = originals[index];
+            this.checkWritePermission(projectReceived, projectBefore, credentials);
+
+            return projectReceived;
+        });
+    },
+
+    /**
      * Create associations between newly created or modified rows with
      * rows in other tables
      *
@@ -163,22 +184,37 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     associate: function(db, schema, objects, originals, rows, credentials) {
-        // remove ids from requested_project_ids of users who've just joined
+        return this.updateNewMembers(db, schema, objects, originals, rows);
+    },
+
+    /**
+     * Remove ids from requested_project_ids of users who've just joined
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} projectsReceived
+     * @param  {Array<Object>} projectsBefore
+     * @param  {Array<Object>} projectsAfter
+     *
+     * @return {Promise}
+     */
+    updateNewMembers: function(db, schema, projectsReceived, projectsBefore, projectsAfter) {
         // first, obtain ids of projects that new members are added to
         var newUserMemberships = {};
-        _.each(objects, (object, index) => {
-            var original = originals[index];
-            var row = rows[index];
-            if (object.user_ids) {
-                var newUserIds = (original)
-                               ? _.difference(row.user_ids, original.user_ids)
-                               : row.user_ids;
+        _.each(projectsReceived, (projectReceived, index) => {
+            var projectBefore = projectsBefore[index];
+            var projectAfter = projectsAfter[index];
+            if (projectReceived.user_ids) {
+                var newUserIds = projectAfter.user_ids;
+                if (projectBefore) {
+                    newUserIds = _.difference(projectAfter.user_ids, projectBefore.user_ids);
+                }
                 _.each(newUserIds, (userId) => {
                     var ids = newUserMemberships[userId];
                     if (ids) {
-                        ids.push(row.id);
+                        ids.push(projectAfter.id);
                     } else {
-                        newUserMemberships[userId] = [ row.id ];
+                        newUserMemberships[userId] = [ projectAfter.id ];
                     }
                 });
             }
