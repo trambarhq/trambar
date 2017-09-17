@@ -16,6 +16,7 @@ var UpdateCheck = require('mixins/update-check');
 var OnDemand = require('widgets/on-demand');
 var CommentView = require('views/comment-view');
 var CommentEditor = require('editors/comment-editor');
+var Scrollable = require('widgets/scrollable');
 
 require('./comment-list.scss');
 
@@ -58,7 +59,9 @@ module.exports = React.createClass({
     render: function() {
         return (
             <div className="comment-list">
-                {this.renderReactions()}
+                <Scrollable>
+                    {this.renderReactions()}
+                </Scrollable>
             </div>
         );
     },
@@ -85,7 +88,7 @@ module.exports = React.createClass({
             });
             if (!hasUserDraft) {
                 // add editor for blank comment
-                reactions.push(null);
+                reactions.unshift(null);
             }
         }
         return _.map(reactions, this.renderReaction);
@@ -110,7 +113,7 @@ module.exports = React.createClass({
             }
         }
         if (isUserDraft) {
-            return this.renderEditor(reaction, index === list.length - 1);
+            return this.renderEditor(reaction, index === 0);
         } else {
             return this.renderView(reaction);
         }
@@ -184,7 +187,7 @@ var sortReactions = Memoize(function(reactions, currentUser) {
     };
     return _.orderBy(reactions,
         [ 'published', 'ptime', ownByUser, 'id' ],
-        [ 'desc',      'asc',   'asc',     'asc' ]
+        [ 'asc',       'desc',  'desc',    'desc' ]
     );
 });
 

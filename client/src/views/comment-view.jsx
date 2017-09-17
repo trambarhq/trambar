@@ -43,9 +43,7 @@ module.exports = React.createClass({
                         {this.renderTime()}
                         {this.renderText()}
                     </div>
-                    <div className="media">
-                        {this.renderMedia()}
-                    </div>
+                    {this.renderMedia()}
                 </div>
             </div>
         );
@@ -180,6 +178,6 @@ module.exports = React.createClass({
             theme: this.props.theme,
             resources,
         };
-        return <MediaView {...props} />
+        return <div className="media"><MediaView {...props} /></div>;
     },
 });
