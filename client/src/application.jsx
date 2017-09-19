@@ -49,9 +49,6 @@ require('font-awesome-webpack');
 
 module.exports = React.createClass({
     displayName: 'Application',
-    propTypes: {
-
-    },
     components: ComponentRefs({
         remoteDataSource: RemoteDataSource,
         routeManager: RouteManager,

@@ -53,10 +53,7 @@ function start() {
                     }
                 });
                 socket.on('close', () => {
-                    var index = sockets.indexOf(socket);
-                    if (index !== -1) {
-                        sockets.splice(index, 1);
-                    }
+                    _.pull(sockets, socket);
                 });
 
                 // close the socket after five second if we fail to obtain user

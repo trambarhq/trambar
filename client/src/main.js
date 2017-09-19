@@ -14,8 +14,6 @@ function initialize(evt) {
     if (!appContainer) {
         throw new Error('Unable to find app element in DOM');
     }
-    var appProps = {
-    };
-    var appElement = React.createElement(Application, appProps)
+    var appElement = React.createElement(Application);
     ReactDOM.render(appElement, appContainer);
 }
