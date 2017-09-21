@@ -194,15 +194,12 @@ function handleHttpasswdRequest(req, res) {
                 });
             }).then((user) => {
                 return authorizeUser(db, user, authentication, 'htpasswd').then((authorization) => {
-                    return findAccessibleProjects(db, user).then((projects) => {
-                        return {
-                            authorization: {
-                                token: authorization.token,
-                                user_id: authorization.user_id,
-                                scope: _.map(projects, 'name'),
-                            }
-                        };
-                    });
+                    return {
+                        authorization: {
+                            token: authorization.token,
+                            user_id: authorization.user_id,
+                        }
+                    };
                 });
             });
         });
@@ -238,15 +235,12 @@ function handleSessionRetrieval(req, res) {
             var userId = authorization.user_id;
             var userColumns = 'id, type, approved, requested_project_ids';
             return User.findOne(db, 'global', { id: userId }, userColumns).then((user) => {
-                return findAccessibleProjects(db, user).then((projects) => {
-                    return {
-                        authorization: {
-                            token: authorization.token,
-                            user_id: authorization.user_id,
-                            scope: _.map(projects, 'name'),
-                        }
-                    };
-                });
+                return {
+                    authorization: {
+                        token: authorization.token,
+                        user_id: authorization.user_id,
+                    }
+                };
             });
         });
     }).then((results) => {
@@ -447,42 +441,6 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
             area: authentication.area,
         };
         return Authorization.insertOne(db, 'global', authorization);
-    });
-}
-
-/**
- * Find projects that a user has access to (read-write or read-only)
- *
- * @param  {Database} db
- * @param  {User} user
- *
- * @return {Promise<Array<Object>}
- */
-function findAccessibleProjects(db, user) {
-    return Project.find(db, 'global', { deleted: false }, 'name, user_ids, settings').filter((project) => {
-        if (user.type === 'admin') {
-            return true;
-        }
-        if (_.includes(project.user_ids, user.id)) {
-            return true;
-        }
-        if (project.settings.allow_request) {
-            if (_.includes(user.requested_project_ids, user.id)) {
-                if (user.type === 'member') {
-                    if (project.settings.grant_team_members_read_only) {
-                        return true;
-                    }
-                } else if (user.approved) {
-                    if (project.settings.grant_approved_users_read_only) {
-                        return true;
-                    }
-                } else {
-                    if (project.settings.grant_unapproved_users_read_only) {
-                        return true;
-                    }
-                }
-            }
-        }
     });
 }
 

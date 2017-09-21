@@ -164,12 +164,19 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function(res) {
+        var width = 512;
+        var height;
+        if (res.clip) {
+            height = Math.round(width * res.clip.height / res.clip.width);
+        } else if (res.width && res.height) {
+            height = Math.round(width * res.height / res.width);
+        }
         var imageProps = {
-            src: this.props.theme.getImageUrl(res, { width: 512 })
+            src: this.props.theme.getImageUrl(res, { width, height })
         };
         return (
             <div className="image" onClick={this.handleImageClick}>
-                <img {...imageProps} />
+                <img {...imageProps} width={width} height={height} />
             </div>
         );
     },

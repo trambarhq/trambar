@@ -198,6 +198,7 @@ module.exports = React.createClass({
 
             onEntry: this.handleStartPageEntry,
             onExit: this.handleStartPageExit,
+            onAvailableSchemas: this.handleAvailableSchemas,
         };
         return <StartPage {...pageProps} />
     },
@@ -216,6 +217,7 @@ module.exports = React.createClass({
             onChange: this.handleDatabaseChange,
             onAuthorization: this.handleAuthorization,
             onExpiration: this.handleExpiration,
+            onViolation: this.handleViolation,
             onAlertClick: this.handleAlertClick,
         };
         var uploadManagerProps = {
@@ -313,6 +315,20 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove user credentials from local cache
+     *
+     * @param  {String} server
+     *
+     * @return {Promise<Object>}
+     */
+    removeCredentialsFromCache: function(server) {
+        // save the credentials
+        var db = this.state.database.use({ by: this, schema: 'local' });
+        var record = { key: server };
+        return db.removeOne({ table: 'user_credentials' }, record);
+    },
+
+    /**
      * Called when the database queries might yield new results
      *
      * @param  {Object} evt
@@ -330,16 +346,14 @@ module.exports = React.createClass({
     handleAuthorization: function(evt) {
         this.saveCredentialsToCache(evt.server, evt.credentials);
 
-        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
-            // see if it's possible to access the server now
-            var dataSource = this.components.remoteDataSource;
-            var server = this.state.route.server || window.location.hostname;
-            var schema = this.state.route.schema;
-            var newState = {
-                canAccessServer: dataSource.hasAuthorization(server),
-                canAccessSchema: dataSource.hasAuthorization(server, schema),
-            };
-            this.setState(newState);
+        var server = this.state.route.server || window.location.hostname;
+        if (server === evt.server) {
+            // it's possible to access the server now
+            // assume we can access the schema too
+            this.setState({
+                canAccessServer: true,
+                canAccessSchema: true,
+            });
         }
     },
 
@@ -349,7 +363,30 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        console.log(evt);
+        this.removeCredentialsFromCache(evt.server);
+
+        var server = this.state.route.server || window.location.hostname;
+        if (evt.server === server) {
+            this.setState({
+                canAccessServer: false,
+                canAccessSchema: false,
+            });
+        }
+    },
+
+    /**
+     * Called if user tries to access something he has no access to
+     *
+     * @param  {Object} evt
+     */
+    handleViolation: function(evt) {
+        var server = this.state.route.server || window.location.hostname;
+        var schema = this.state.route.parameters.schema;
+        if (evt.server === server && evt.schema === schema) {
+            this.setState({
+                canAccessSchema: false,
+            });
+        }
     },
 
     /**
@@ -410,8 +447,7 @@ module.exports = React.createClass({
         var route = new Route(evt.target);
         var dataSource = this.components.remoteDataSource;
         var server = route.parameters.server || location.hostname;
-        var schema = route.parameters.schema;
-        if (dataSource.hasAuthorization(server, schema)) {
+        if (dataSource.hasAuthorization(server)) {
             // route is accessible
             this.setState({
                 route,
@@ -424,7 +460,7 @@ module.exports = React.createClass({
                 if (authorization) {
                     dataSource.addAuthorization(server, authorization);
                 }
-                if (dataSource.hasAuthorization(server, schema)) {
+                if (dataSource.hasAuthorization(server)) {
                     // route is now accessible
                     this.setState({
                         route,
@@ -433,13 +469,26 @@ module.exports = React.createClass({
                     });
                 } else {
                     // show start page, where user can log in or choose another project
-                    // it's possible that we have access to the server but not the schema
                     this.setState({
                         route,
-                        canAccessServer: dataSource.hasAuthorization(server),
+                        canAccessServer: false,
                         canAccessSchema: false,
                     });
                 }
+            });
+        }
+    },
+
+    /**
+     * Called when StartPage finds project the current user has access to
+     *
+     * @param  {Object} evt
+     */
+    handleAvailableSchemas: function(evt) {
+        var schema = this.state.route.parameters.schema;
+        if (_.includes(evt.schemas, schema)) {
+            this.setState({
+                canAccessSchema: true,
             });
         }
     },
@@ -513,6 +562,8 @@ module.exports = React.createClass({
                     evt.preventDefault();
                     // clear focus on change
                     target.blur();
+
+
                 }
             }
         }

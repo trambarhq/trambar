@@ -1,0 +1,14 @@
+.comment-list {
+
+    .scrollable {
+        display: flex;
+        flex-direction: column-reverse;
+        max-height: 24em;
+        padding-right: 0.25em;
+    }
+
+    .comment-view, .comment-editor {
+        flex-grow: 0;
+        flex-shrink: 0;
+    }
+}

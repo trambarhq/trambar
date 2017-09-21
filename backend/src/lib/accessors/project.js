@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
-var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -84,8 +83,41 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
+            var Task = require('accessors/task');
             return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
         });
+    },
+
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     */
+    apply: function(criteria, query) {
+        Data.apply.call(this, criteria, query);
+
+        if (query.columns !== '*') {
+            // filter() needs these columns to work
+            query.columns += ', deleted, user_ids, settings';
+        }
+    },
+
+    /**
+     * Filter out rows that user doesn't have access to
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+    filter: function(db, schema, rows, credentials) {
+        rows = _.filter(rows, (row) => {
+            return this.checkAccess(row, credentials.user, 'know');
+        });
+        return Promise.resolve(rows);
     },
 
     /**
@@ -102,39 +134,39 @@ module.exports = _.create(Data, {
      */
     export: function(db, schema, rows, credentials, options) {
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            var user = credentials.user;
-            objects = _.filter(objects, (object, index) => {
+            _.each(objects, (object, index) => {
                 var row = rows[index];
-                var accessible = false;
+                object.name = row.name;
+                object.repo_ids = row.repo_ids;
+                object.user_ids = row.user_ids;
                 if (credentials.unrestricted) {
-                    accessible = true;
-                } else if (_.includes(row.user_ids, user.id)) {
-                    accessible = true;
+                    object.settings = row.settings;
                 } else {
-                    if (user.type === 'admin') {
-                        accessible = true;
-                    } else {
-                        var ms = _.get(row, 'settings.membership', {});
-                        if (ms.allow_request) {
-                            accessible = true;
-                        }
-                    }
-                }
-                if (accessible) {
-                    object.name = row.name;
-                    object.repo_ids = row.repo_ids;
-                    object.user_ids = row.user_ids;
-                    if (credentials.unrestricted) {
-                        object.settings = row.settings;
-                    } else {
-                        object.settings = _.pick(row.settings, 'access_control');
-                    }
-                    return true;
-                } else {
-                    return false;
+                    object.settings = _.pick(row.settings, 'access_control');
                 }
             });
             return objects;
+        });
+    },
+
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials, options) {
+        return Data.import.call(this, db, schema, objects, originals, credentials).map((projectReceived, index) => {
+            var projectBefore = originals[index];
+            this.checkWritePermission(projectReceived, projectBefore, credentials);
+
+            return projectReceived;
         });
     },
 
@@ -152,22 +184,37 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     associate: function(db, schema, objects, originals, rows, credentials) {
-        // remove ids from requested_project_ids of users who've just joined
+        return this.updateNewMembers(db, schema, objects, originals, rows);
+    },
+
+    /**
+     * Remove ids from requested_project_ids of users who've just joined
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} projectsReceived
+     * @param  {Array<Object>} projectsBefore
+     * @param  {Array<Object>} projectsAfter
+     *
+     * @return {Promise}
+     */
+    updateNewMembers: function(db, schema, projectsReceived, projectsBefore, projectsAfter) {
         // first, obtain ids of projects that new members are added to
         var newUserMemberships = {};
-        _.each(objects, (object, index) => {
-            var original = originals[index];
-            var row = rows[index];
-            if (object.user_ids) {
-                var newUserIds = (original)
-                               ? _.difference(row.user_ids, original.user_ids)
-                               : row.user_ids;
+        _.each(projectsReceived, (projectReceived, index) => {
+            var projectBefore = projectsBefore[index];
+            var projectAfter = projectsAfter[index];
+            if (projectReceived.user_ids) {
+                var newUserIds = projectAfter.user_ids;
+                if (projectBefore) {
+                    newUserIds = _.difference(projectAfter.user_ids, projectBefore.user_ids);
+                }
                 _.each(newUserIds, (userId) => {
                     var ids = newUserMemberships[userId];
                     if (ids) {
-                        ids.push(row.id);
+                        ids.push(projectAfter.id);
                     } else {
-                        newUserMemberships[userId] = [ row.id ];
+                        newUserMemberships[userId] = [ projectAfter.id ];
                     }
                 });
             }
@@ -189,6 +236,88 @@ module.exports = _.create(Data, {
             });
             return User.update(db, schema, users);
         }).return();
-
     },
+
+    /**
+     * Return false if the user has no access to project
+     *
+     * Need these columns: deleted, user_ids, settings
+     *
+     * @param  {Project} project
+     * @param  {User} user
+     * @param  {String} access
+     *
+     * @return {Boolean}
+     */
+    checkAccess: function(project, user, access) {
+        if (!project || project.deleted) {
+            return false;
+        }
+        // project member and admins have full access
+        if (_.includes(project.user_ids, user.id)) {
+            return true;
+        }
+        if (user.type === 'admin') {
+            return true;
+        }
+
+        // see if read-only access should be granted
+        var ms = project.settings.membership;
+        if (!ms) {
+            return false;
+        }
+        if (access === 'know' || access === 'read') {
+            // see if people can know about the project's existence
+            if (user.type === 'member') {
+                if (!ms.allow_request_from_team_members) {
+                    return false;
+                }
+            } else if (user.type === 'guest') {
+                if (user.approved) {
+                    if (!ms.allow_request_from_approved_guests) {
+                        return false;
+                    }
+                } else {
+                    if (!ms.allow_request_from_unapproved_guests) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+            if (access == 'know') {
+                return true;
+            }
+        }
+        var ac = project.settings.access_control;
+        if (!ac) {
+            return false;
+        }
+        if (access === 'read') {
+            if (!_.includes(user.requested_project_ids, project.id)) {
+                // only users who wants to join the project can have
+                // read-only access
+                return false;
+            }
+            if (user.type === 'member') {
+                if (!ac.grant_team_members_read_only) {
+                    return false;
+                }
+            } else if(user.type === 'guest') {
+                if (user.approved) {
+                    if (!ac.grant_approved_users_read_only) {
+                        return false;
+                    }
+                } else {
+                    if (!ac.grant_unapproved_users_read_only) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
 });

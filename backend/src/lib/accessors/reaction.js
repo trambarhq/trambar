@@ -201,22 +201,6 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials, options) {
-        return Promise.map(rows, (row) => {
-            var object = {
-                id: row.id,
-                gn: row.gn,
-                details: row.details,
-                type: row.type,
-                story_id: row.story_id,
-                user_id: row.user_id,
-                target_user_ids: row.target_user_ids,
-                ptime: row.ptime,
-                public: row.public,
-                published: row.published,
-            };
-            return object;
-        });
-
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
@@ -243,7 +227,6 @@ module.exports = _.create(Data, {
             });
             return objects;
         });
-
     },
 
     createAlert(schema, reaction, story, sender, languageCode) {

@@ -1,6 +1,14 @@
 .calendar-bar {
     padding: 4px 4px 4px 4px;
-    direction: rtl;
     overflow-x: auto;
     white-space: nowrap;
+
+    display: flex;
+    width: 100%;
+    flex-direction: row-reverse;
+
+    .calendar {
+        flex-grow: 0;
+        flex-shrink: 0;
+    }
 }

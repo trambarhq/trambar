@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var HttpRequest = require('transport/http-request');
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -27,6 +28,7 @@ module.exports = Relaks.createClass({
 
         onEntry: PropTypes.func,
         onExit: PropTypes.func,
+        onAvailableSchemas: PropTypes.func,
     },
 
     statics: {
@@ -43,14 +45,6 @@ module.exports = Relaks.createClass({
             }
             return url;
         },
-    },
-
-    getInitialState: function() {
-        return {
-            system: null,
-            providers: null,
-            authentication: null,
-        };
     },
 
     renderAsync: function(meanwhile) {
@@ -73,6 +67,7 @@ module.exports = Relaks.createClass({
 
             onEntry: this.props.onEntry,
             onExit: this.props.onExit,
+            onAvailableSchemas: this.props.onAvailableSchemas,
             onOAuthEnd: this.handleOAuthEnd,
         };
         if (!this.props.canAccessServer) {
@@ -149,26 +144,79 @@ var StartPageSync = module.exports.Sync = React.createClass({
 
         onEntry: PropTypes.func,
         onExit: PropTypes.func,
+        onAvailableSchemas: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             transition: null,
             selectedProjectId: 0,
-            newProjectIds: [],
+            newProjectNames: [],
         };
     },
 
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route
-         || this.props.canAccessServer !== nextProps.canAccessServer
-         || this.props.canAccessSchema !== nextProps.canAccessSchema) {
-             if (nextProps.route.component !== module.exports) {
-                 if (nextProps.canAccessServer && nextProps.canAccessSchema) {
-                     this.transitionOut();
-                 }
-             }
+    /**
+     * Return true if current user is a member of the project
+     *
+     * @param  {Project} project
+     *
+     * @return {Boolean}
+     */
+    isMember: function(project) {
+        var currentUser = this.props.currentUser;
+        if (currentUser) {
+            return _.includes(project.user_ids, currentUser.id);
+        } else {
+            return false;
         }
+    },
+
+    /**
+     * Return true if current user has requested project membership
+     *
+     * @param  {Project} project
+     *
+     * @return {Boolean}
+     */
+    isPendingMember: function(project) {
+        var currentUser = this.props.currentUser;
+        if (currentUser) {
+            return _.includes(currentUser.requested_project_ids, project.id);
+        } else {
+            return false;
+        }
+    },
+
+    /**
+     * Return true if current user has read access to project
+     *
+     * @param  {Project} project
+     *
+     * @return {Boolean}
+     */
+    hasReadAccess: function(project) {
+        if (this.isMember(project)) {
+            return true;
+        } else if (this.isPendingMember(project)) {
+            // see if the project is read-only for pending member
+            var ac = _.get(project.settings, 'access_control', {});
+            var userType = this.props.currentUser.type;
+            if (userType === 'member') {
+                return ac.grant_team_members_read_only;
+            } else if (userType === 'guest') {
+                if (currentUser.approved) {
+                    return ac.grant_approved_guest_read_only;
+                } else {
+                    return ac.grant_unapproved_guest_read_only;
+                }
+            }
+        }
+        return false;
     },
 
     /**
@@ -319,18 +367,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
 
         // add badge to indicate membership status
-        var isMember = false;
-        var isPendingMember = false;
-        var currentUser = this.props.currentUser;
-        if (currentUser) {
-            isMember = _.includes(project.user_ids, currentUser.id);
-            isPendingMember = _.includes(currentUser.requested_project_ids, project.id);
-        }
         var badge;
-        if (isMember) {
+        if (this.isMember(project)) {
             // is member
             badge = <i className="fa fa-user-circle-o badge" />;
-        } else if (isPendingMember) {
+        } else if (this.isPendingMember(project)) {
             // pending
             badge = <i className="fa fa-clock-o badge" />;
         }
@@ -340,21 +381,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             'data-project-id': project.id,
             className: 'project-button'
         };
-        var viewable = false;
-        if (isMember) {
-            viewable = true;
-        } else if (isPendingMember) {
-            // see if the project is read-only for pending member
-            var ac = _.get(project.settings, 'access_control', {});
-            if (currentUser.type === 'member') {
-                viewable = ac.grant_team_members_read_only;
-            } else if (currentUser.approved) {
-                viewable = ac.grant_approved_users_read_only;
-            } else {
-                viewable = ac.grant_unapproved_users_read_only;
-            }
-        }
-        if (viewable) {
+        if (this.hasReadAccess(project)) {
             // link to the project's news page
             props.href = require('pages/news-page').getUrl({
                 server: this.props.route.parameters.server,
@@ -364,8 +391,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             // add handler for requesting access
             // (or just show the project info if user has joined already)
             //
-            // the backend won't send projects that don't have
-            // settings.membership.allow_request = true
+            // the backend won't send projects that the user can't join
             props.onClick = this.handleProjectButtonClick;
         }
 
@@ -405,6 +431,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
             show: this.state.showingProjectDialog,
             currentUser: this.props.currentUser,
             project: selectedProject,
+            member: this.isMember(selectedProject),
+            pendingMember: this.isPendingMember(selectedProject),
+            readAccess: this.hasReadAccess(selectedProject),
 
             database: this.props.database,
             route: this.props.route,
@@ -416,6 +445,45 @@ var StartPageSync = module.exports.Sync = React.createClass({
             onProceed: this.handleMembershipRequestProceed,
         };
         return <MembershipRequestDialogBox {...dialogProps} />;
+    },
+
+    /**
+     * Look
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        // let parent component know what projects the current user
+        // can access upon receiving a new list of projects
+        if (prevProps.projects !== this.props.projects
+         || prevProps.currentUser !== this.props.currentUser) {
+            var accessible = _.filter(this.props.projects, (project) => {
+                return this.hasReadAccess(project)
+            });
+            if (!_.isEmpty(accessible)) {
+                if (this.props.onAvailableSchemas) {
+                    this.props.onAvailableSchemas({
+                        type: 'available_schema',
+                        target: this,
+                        schemas: _.map(accessible, 'name'),
+                    });
+                }
+            }
+        }
+
+        // begin transition out of page if user has gain access
+        if (prevProps.route !== this.props.route
+         || prevProps.canAccessServer !== this.props.canAccessServer
+         || prevProps.canAccessSchema !== this.props.canAccessSchema) {
+             if (this.props.route.component !== module.exports) {
+                 // this page isn't the target--transition out if we have
+                 // access to the server and the schema
+                 if (this.props.canAccessSchema && this.props.canAccessServer) {
+                     this.transitionOut();
+                 }
+             }
+        }
     },
 
     componentDidMount: function() {
@@ -431,7 +499,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var speed = 'fast';
         var duration = 1300;
         var schema = this.props.route.parameters.schema;
-        if (_.some(this.state.newProjects, { name: schema })) {
+        if (_.includes(this.state.newProjectNames, schema)) {
             // show welcome message when we're heading to a new project
             speed = 'slow';
             duration = 3700;
@@ -534,6 +602,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
      */
     handleMembershipRequestConfirm: function(evt) {
         var projectId = this.state.selectedProjectId;
+        var project = _.find(this.props.projects, { id: projectId });
         var projectIds = this.props.currentUser.requested_project_ids;
         var newUserProps = {
             id: this.props.currentUser.id,
@@ -542,7 +611,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         var server = route.parameters.server;
         var db = this.props.database.use({ server, by: this });
-        return db.saveOne({ schema: 'global', table: 'user' }, newUserProps);
+        return db.saveOne({ schema: 'global', table: 'user' }, newUserProps).then(() => {
+            // remember that we have just joined this project
+            var newProjectNames = _.union(this.state.newProjectNames, [ project.name ]);
+            this.setState({ newProjectNames });
+        });
     },
 
     /**
@@ -565,9 +638,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
     handleMembershipRequestProceed: function(evt) {
         this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
 
+        var projectId = this.state.selectedProjectId;
+        var project = _.find(this.props.projects, { id: projectId });
         var url = require('pages/news-page').getUrl({
             server: this.props.route.parameters.server,
-            schema: this.state.selectProject.name,
+            schema: project.name,
         });
         this.props.route.change(url);
     },
@@ -582,9 +657,9 @@ function getServerIcon(type) {
     }
 }
 
-function sortProject(projects, locale) {
+var sortProject = Memoize(function(projects, locale) {
     var p = locale.pick;
     return _.sortBy(projects, (project) => {
         return p(project.details.title) || project.name;
     });
-}
+});

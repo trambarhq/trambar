@@ -9,6 +9,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
+var Time = require('widgets/time');
 
 require('./comment-view.scss');
 
@@ -39,11 +40,10 @@ module.exports = React.createClass({
                 </div>
                 <div className="contents-column">
                     <div className="text">
+                        {this.renderTime()}
                         {this.renderText()}
                     </div>
-                    <div className="media">
-                        {this.renderMedia()}
-                    </div>
+                    {this.renderMedia()}
                 </div>
             </div>
         );
@@ -151,6 +151,19 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render the publication time
+     *
+     * @return {ReactElement}
+     */
+    renderTime: function() {
+        var props = {
+            time: this.props.reaction.ptime,
+            locale: this.props.locale,
+        };
+        return <Time {...props} />
+    },
+
+    /**
      * Render attached media
      *
      * @return {ReactElement}
@@ -165,6 +178,6 @@ module.exports = React.createClass({
             theme: this.props.theme,
             resources,
         };
-        return <MediaView {...props} />
+        return <div className="media"><MediaView {...props} /></div>;
     },
 });

@@ -117,8 +117,12 @@ Database.prototype.execute = function(sql, parameters) {
     return Promise.resolve(this.client.query(sql, parameters)).catch((err) => {
         if (err.code === '42601') {
             // syntax error
-            console.log('A syntax error was encountering running the following statement:');
+            console.log('A syntax error was encountered running the following statement:');
             console.log(sql);
+        } else if (err.code === '42P18' || err.code === '42804') {
+            console.log('Data type error was encountered running the following statement:');
+            console.log(sql);
+            console.log(parameters);
         }
         throw err;
     });

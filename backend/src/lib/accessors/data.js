@@ -148,7 +148,6 @@ module.exports = {
         var params = query.parameters;
         var conds = query.conditions;
         _.forIn(this.criteria, (type, name) => {
-            var index = params.length + 1;
             if (criteria.hasOwnProperty(name)) {
                 // assume that none of the column names requires double quotes
                 var value = criteria[name];
@@ -165,8 +164,6 @@ module.exports = {
                         // equals any
                         conds.push(`${name} = ANY($${params.push(value)})`);
                     } else if (value === null) {
-                        params.pop();
-                        index--;
                         conds.push(`${name} IS NULL`);
                     } else {
                         // equals
@@ -295,25 +292,26 @@ module.exports = {
         var assignments = [];
         var columns = _.keys(this.columns);
         var parameters = [];
-        var index = 1;
         var id = 0;
         _.each(columns, (name) => {
             if (row.hasOwnProperty(name)) {
                 var value = row[name];
                 if (name !== 'id') {
-                    var bound = '$' + index++;
-                    parameters.push(value);
-                    assignments.push(`${name} = ${bound}`);
+                    if (value instanceof String) {
+                        // a boxed string--just insert it into the query
+                        assignments.push(`${name} = ${value.valueOf()}`);
+                    } else {
+                        assignments.push(`${name} = $${parameters.push(value)}`);
+                    }
                 } else {
                     id = value;
                 }
             }
         });
-        parameters.push(id);
         var sql = `
             UPDATE ${table}
             SET ${assignments.join(', ')}
-            WHERE id = $${index}
+            WHERE id = $${parameters.push(id)}
             RETURNING *
         `;
         return db.query(sql, parameters).get(0).then((row) => {
@@ -339,7 +337,6 @@ module.exports = {
         var parameters = [];
         var columns = _.keys(this.columns);
         var columnsPresent = [];
-        var index = 1;
         var manualId = false;
         // see which columns are being set
         _.each(rows, (row) => {
@@ -359,9 +356,12 @@ module.exports = {
             _.each(columnsPresent, (name) => {
                 if (row.hasOwnProperty(name)) {
                     var value = row[name];
-                    var bound = '$' + index++;
-                    parameters.push(value);
-                    values.push(bound);
+                    if (value instanceof String) {
+                        // a boxed string--just insert it into the query
+                        values.push(value.valueOf());
+                    } else {
+                        values.push(`$${parameters.push(value)}`);
+                    }
                 } else {
                     values.push('DEFAULT');
                 }
@@ -476,6 +476,20 @@ module.exports = {
         return this.remove(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });
+    },
+
+    /**
+     * Filter out rows that user doesn't have access to
+     *
+     * @param  {Database} db
+     * @param  {Schema} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array>}
+     */
+     filter: function(db, schema, rows, credentials) {
+        return Promise.resolve(rows);
     },
 
     /**

@@ -213,92 +213,172 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
-            var original = originals[index];
-            if (original) {
-                if (!_.includes(original.user_ids, credentials.user.id)) {
-                    // can't modify an object that doesn't belong to the user
-                    throw new HttpError(403);
-                }
-                if (object.hasOwnProperty('user_ids')) {
-                    if (!_.isEqual(object.user_ids, original.user_ids)) {
-                        if (original.user_ids[0] !== credentials.user.id) {
-                            // only the main author can modify the list
-                            throw new HttpError(403);
-                        }
-                        if (object.user_ids[0] !== original.user_ids[0]) {
-                            // cannot make someone else the main author
-                            throw new HttpError(403);
-                        }
+        return Data.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
+            _.each(objects, (storyReceived, index) => {
+                // make sure current user has permission to modify the object
+                var storyBefore = originals[index];
+                this.checkWritePermission(storyReceived, storyBefore, credentials);
+
+                // set the ptime if published is set and there're no outstanding
+                // media tasks
+                if (storyReceived.published && !storyReceived.ptime) {
+                    var payloadIds = getPayloadIds(storyReceived);
+                    if (_.isEmpty(payloadIds)) {
+                        storyReceived.ptime = Object('NOW()');
                     }
                 }
-            } else {
-                if (object.id) {
-                    throw new HttpError(400);
+                // update btime if user wants to bump story
+                if (storyReceived.bump) {
+                    storyReceived.btime = Object('NOW()');
+                    delete storyReceived.bump;
                 }
-                if (!object.hasOwnProperty('user_ids')) {
-                    throw new HttpError(403);
-                }
-                if (object.user_ids[0] !== credentials.user.id) {
-                    // the main author must be the current user
-                    throw new HttpError(403);
-                }
-            }
+            });
 
-            // set the ptime if published is set and there're no outstanding
-            // media tasks
-            if (object.published && !object.ptime) {
-                var payloadIds = getPayloadIds(object);
-                if (_.isEmpty(payloadIds)) {
-                    object.ptime = Moment().toISOString();
-                }
-            }
-            if (object.bump) {
-                object.btime = Moment().toISOString();
-                delete object.bump;
-            }
-            return object;
-        }).then((objects) => {
             // look for temporary copies created for editing published stories
-            var publishedTempCopies = _.filter(objects, (object) => {
-                if (object.published_version_id) {
-                    if (object.published) {
+            var publishedTempCopies = _.filter(objects, (storyReceived) => {
+                if (storyReceived.published_version_id) {
+                    if (storyReceived.published) {
                         return true;
                     }
                 }
             });
-            if (!_.isEmpty(publishedTempCopies)) {
-                // create copies of the temp objects that save to the published version
-                var publishedStories = _.map(publishedTempCopies, (tempCopy) => {
-                    // don't need the object any more
+            if (_.isEmpty(publishedTempCopies)) {
+                return objects;
+            };
+
+            // load the published versions
+            var criteria = {
+                id: _.map(publishedTempCopies, 'published_version_id'),
+                deleted: false,
+            };
+            return this.find(db, schema, criteria, '*').then((publishedVersions) => {
+                var publishedVersionUpdates = _.filter(_.map(publishedTempCopies, (tempCopy) => {
+                    var publishedVersion = _.find(publishedVersions, { id: tempCopy.published_version_id });
+                    if (!publishedVersion) {
+                        // the story has been deleted
+                        return null;
+                    }
+
+                    // update the original row with properties from the temp copy
+                    var updates = {};
+                    updates.id = publishedVersion.id;
+                    updates.details = _.omit(tempCopy.details, 'fn');
+                    updates.type = tempCopy.type;
+                    updates.user_ids = tempCopy.user_ids;
+                    updates.role_ids  = tempCopy.role_ids;
+                    updates.public = tempCopy.public;
+
+                    // stick contents of the original row into the temp copy
+                    // so we can retrieve them later potentially
+                    tempCopy.details = _.omit(publishedVersion.details, 'fn');
+                    tempCopy.type = publishedVersion.type;
+                    tempCopy.user_ids = publishedVersion.user_ids;
+                    tempCopy.role_ids  = publishedVersion.role_ids;
+                    tempCopy.public = publishedVersion.public;
                     tempCopy.deleted = true;
 
-                    var publishedStory = _.omit(tempCopy, 'deleted', 'published_version_id', 'ptime');
-                    publishedStory.details = _.omit(tempCopy.details, 'fn');
-                    publishedStory.id = tempCopy.published_version_id;
-                    return publishedStory;
-                });
-                // load the original objects
-                var publishedStoryIds = _.map(publishedStories, 'id');
-                return this.find(db, schema, { id: publishedStoryIds }, '*').then((publishedOriginals) => {
-                    publishedOriginals = _.map(publishedStories, (object) => {
-                        return _.find(publishedOriginals, { id: object.id }) || null;
-                    });
-                    // check permission
-                    return this.import(db, schema, publishedStories, publishedOriginals, credentials);
-                }).then((publishedStories) => {
-                    return _.concat(objects, publishedStories);
-                });
-            } else {
-                return objects;
-            }
-        }).then((objects) => {
-            /*if (!_.every(publishedOriginals, { published_version_id: null })) {
-                // prevent recursion
-                throw new HttpError(400);
-            }*/
-            return objects;
+                    // check permission again (just in case)
+                    this.checkWritePermission(updates, publishedVersion, credentials);
+                    return updates;
+                }));
+
+                // append to the list so the original rows are update and
+                // then dispatch to the client
+                return _.concat(objects, publishedVersionUpdates);
+            });
         });
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} storyReceived
+     * @param  {Object} storyBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(storyReceived, storyBefore, credentials) {
+        if (storyBefore) {
+            if (!_.includes(storyBefore.user_ids, credentials.user.id)) {
+                // can't modify an object that doesn't belong to the user
+                // unless user is an admin
+                if (credentials.user.type !== 'admin') {
+                    throw new HttpError(400);
+                }
+            }
+            if (storyReceived.hasOwnProperty('user_ids')) {
+                if (!_.isEqual(storyReceived.user_ids, storyBefore.user_ids)) {
+                    if (storyBefore.user_ids[0] !== credentials.user.id) {
+                        // only the main author can modify the list
+                        throw new HttpError(400);
+                    }
+                    if (storyReceived.user_ids[0] !== storyBefore.user_ids[0]) {
+                        // cannot make someone else the lead author
+                        throw new HttpError(400);
+                    }
+                }
+            }
+        } else {
+            if (storyReceived.id) {
+                throw new HttpError(400);
+            }
+            if (!storyReceived.hasOwnProperty('user_ids')) {
+                throw new HttpError(400);
+            }
+            if (storyReceived.user_ids[0] !== credentials.user.id) {
+                // the lead author must be the current user
+                throw new HttpError(400);
+            }
+        }
+    },
+
+    /**
+     * Repopulate role_ids with role ids of authors when their roles change,
+     * doing so selectively as the column is supposed to reflect their roles
+     * at the time when the stories were created.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Number>} userIds
+     *
+     * @return {Promise}
+     */
+    updateUserRoles: function(db, schema, userIds) {
+        var User = require('accessors/user');
+        var userTable = User.getTableName('global');
+        var storyTable = this.getTableName(schema);
+
+        // for normal stories, we update those published earlier on the same day
+        var condition1 = `
+            ptime > current_date::timestamp
+        `;
+        // for stories where ctime > ptime (meaning they were imported),
+        // we update those less than a week old.
+        var condition2 = `
+            ctime > ptime AND ctime > NOW() - INTERVAL '1 week'
+        `;
+        // subquery that yield story_id and role_id (unnested)
+        var roleIdSubQuery = `
+            SELECT s.id AS story_id, UNNEST(u.role_ids) AS role_id
+            FROM ${userTable} u
+            INNER JOIN ${storyTable} s
+            ON u.id = ANY(s.user_ids)
+        `;
+        // subquery that yield story_id and role_ids (aggregated, distinct)
+        var roleIdsSubQuery = `
+            SELECT story_id, array_agg(DISTINCT role_id) AS role_ids
+            FROM (${roleIdSubQuery}) AS story_role_id
+            GROUP BY story_id
+        `;
+        var sql = `
+            UPDATE ${storyTable}
+            SET role_ids = story_role_ids.role_ids
+            FROM (${roleIdsSubQuery}) AS story_role_ids
+            WHERE (${condition1} OR ${condition2})
+            AND user_ids && $1
+            AND id = story_role_ids.story_id
+        `;
+        console.log(sql);
+        return db.execute(sql, [ userIds ]);
     },
 });
 
