@@ -129,7 +129,7 @@ module.exports = _.create(LiveData, {
      * unnecessary information
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      * @param  {Object} options

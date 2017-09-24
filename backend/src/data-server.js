@@ -142,6 +142,9 @@ function handleDiscovery(req, res) {
                         gns: _.map(rows, 'gn'),
                     }
                 });
+            }).then((results) => {
+                accessor.sync(db, schema, criteria);
+                return results;
             });
         }).finally(() => {
             return db.close();

@@ -107,11 +107,11 @@ module.exports = _.create(Data, {
      * Filter out rows that user doesn't have access to
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
-     * @return {Promise<Array>}
+     * @return {Promise<Array<Object>>}
      */
     filter: function(db, schema, rows, credentials) {
         rows = _.filter(rows, (row) => {
@@ -125,7 +125,7 @@ module.exports = _.create(Data, {
      * unnecessary information
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      * @param  {Object} options
@@ -153,7 +153,7 @@ module.exports = _.create(Data, {
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
@@ -175,7 +175,7 @@ module.exports = _.create(Data, {
      * rows in other tables
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Array<Object>} rows
@@ -191,7 +191,7 @@ module.exports = _.create(Data, {
      * Remove ids from requested_project_ids of users who've just joined
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} projectsReceived
      * @param  {Array<Object>} projectsBefore
      * @param  {Array<Object>} projectsAfter
@@ -236,6 +236,38 @@ module.exports = _.create(Data, {
             });
             return User.update(db, schema, users);
         }).return();
+    },
+
+    /**
+     * Synchronize table with data sources
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     */
+    sync: function(db, schema, criteria) {
+        this.sendSyncNotification(db, schema, criteria);
+    },
+
+    /**
+     * Add members to a project atomically
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} projectId
+     * @param  {Array<Number>} userIds
+     *
+     * @return {Promise<Object>}
+     */
+    addMembers: function(db, schema, projectId, userIds) {
+        var table = this.getTableName(schema);
+        var params = [];
+        var sql = `
+            UPDATE ${table} SET user_ids = user_ids || $${params.push(userIds)}
+            WHERE id = $${params.push(projectId)}
+            RETURNING *
+        `;
+        return db.execute(sql, params);
     },
 
     /**

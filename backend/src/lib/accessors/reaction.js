@@ -16,6 +16,7 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         type: String,
+        tags: Array(String),
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
@@ -29,6 +30,7 @@ module.exports = _.create(Data, {
         id: Number,
         deleted: Boolean,
         type: String,
+        tags: Array(String),
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
@@ -62,6 +64,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
+                tags varchar(32)[] NOT NULL DEFAULT '{}'::text[],
                 story_id int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
                 target_user_ids int[] NOT NULL,
@@ -141,7 +144,7 @@ module.exports = _.create(Data, {
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
@@ -193,7 +196,7 @@ module.exports = _.create(Data, {
      * unnecessary information
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      * @param  {Object} options

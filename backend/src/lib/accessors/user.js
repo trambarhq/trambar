@@ -125,7 +125,7 @@ module.exports = _.create(Data, {
      * unnecessary information
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      * @param  {Object} options
@@ -170,7 +170,7 @@ module.exports = _.create(Data, {
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
@@ -234,7 +234,7 @@ module.exports = _.create(Data, {
      * rows in other tables
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Array<Object>} rows
@@ -253,7 +253,7 @@ module.exports = _.create(Data, {
      * criteria to projects they've requested
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} usersReceived
      * @param  {Array<Object>} usersBefore
      * @param  {Array<Object>} usersAfter
@@ -339,7 +339,7 @@ module.exports = _.create(Data, {
      * Update stories of users when they acquire new roles (or lose them)
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} usersBefore
      * @param  {Array<Object>} usersAfter
      *

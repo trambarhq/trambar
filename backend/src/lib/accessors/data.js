@@ -482,7 +482,7 @@ module.exports = {
      * Filter out rows that user doesn't have access to
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      *
@@ -497,7 +497,7 @@ module.exports = {
      * unnecessary information
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} rows
      * @param  {Object} credentials
      * @param  {Object} options
@@ -529,7 +529,7 @@ module.exports = {
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Object} credentials
@@ -552,7 +552,7 @@ module.exports = {
      * [description]
      *
      * @param  {Database} db
-     * @param  {Schema} schema
+     * @param  {String} schema
      * @param  {Array<Object>} objects
      * @param  {Array<Object>} originals
      * @param  {Array<Object>} rows
@@ -562,6 +562,32 @@ module.exports = {
      */
     associate: function(db, schema, objects, originals, rows, credentials) {
         return Promise.resolve();
+    },
+
+    /**
+     * Synchronize table with data sources
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     */
+    sync: function(db, schema, criteria) {
+    },
+
+    /**
+     * Notify other processes of the need to synchronize data
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     */
+    sendSyncNotification: function(db, schema, criteria) {
+        var table = this.table;
+        var info = { schema, table, criteria };
+        var channel = table + '_sync';
+        var msg = JSON.stringify(info);
+        var sql = `NOTIFY ${channel}, '${msg.replace(/'/g, "''")}'`;
+        db.execute(sql);
     },
 
     /**

@@ -1,34 +1,49 @@
+var _ = require('lodash');
+
 module.exports = TaskQueue;
 
 function TaskQueue() {
     this.tasks = [];
-    this.busy = false;
+    this.current = null;
 }
 
-TaskQueue.prototype.schedule = function(f) {
-    if (!f) {
+TaskQueue.prototype.schedule = function(name, func) {
+    if (!func) {
         return;
     }
-    this.tasks.push(f);
-    if (!this.busy) {
+    if (name) {
+        if (_.some(this.tasks, { name })) {
+            // already scheduled
+            return;
+        } else if (this.current && this.current.name === name) {
+            // already running
+            return;
+        }
+    }
+    this.tasks.push({
+        name,
+        func,
+    });
+    if (!this.current) {
         this.next();
     }
+    return null;
 }
 
 TaskQueue.prototype.next = function() {
-    var f = this.tasks.shift();
-    if (f) {
+    var task = this.tasks.shift();
+    if (task) {
         try {
-            var promise = f();
+            var promise = task.func();
         } catch(err) {
             console.error(err);
         }
         if (promise) {
-            this.busy = true;
+            this.current = task;
             promise.catch((err) => {
                 console.error(err);
             }).finally(() => {
-                this.busy = false;
+                this.current = null;
                 this.next();
             });
         } else {
