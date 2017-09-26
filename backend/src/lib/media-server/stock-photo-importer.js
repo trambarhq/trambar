@@ -1,4 +1,4 @@
-var Promise = require('promise');
+var Promise = require('bluebird');
 var FS = Promise.promisifyAll(require('fs'));
 var Path = require('path');
 var Database = require('database');

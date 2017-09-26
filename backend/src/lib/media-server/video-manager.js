@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var FS = Promise.promisifyAll(require('fs'));
 var ChildProcess = require('child_process');
 var Crypto = require('crypto');

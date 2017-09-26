@@ -12,7 +12,7 @@ exports.createScreenshot = createScreenshot;
  *
  * @return {Promise<String>}
  */
-function createWebsiteScreenshot(url, dstPath) {
+function createScreenshot(url, dstPath) {
     return startPhantom().then((instance) => {
         return B(instance.createPage()).then((page) => {
             return B(page.setting('userAgent')).then((ua) => {

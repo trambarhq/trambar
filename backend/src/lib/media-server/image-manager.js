@@ -1,15 +1,15 @@
-
 var _ = require('lodash');
 var Promise = require('bluebird');
 var FS = Promise.promisifyAll(require('fs'));
-var Path = require('path');
-var ChildProcess = require('child_process');
-var Express = require('express');
-var BodyParser = require('body-parser');
-var Multer  = require('multer');
 var Sharp = require('sharp');
 var Piexif = require("piexifjs");
 var Moment = require('moment');
+
+exports.applyFilters = applyFilters;
+exports.getImageMetadata = getImageMetadata;
+exports.getDefaultClippingRect = getDefaultClippingRect;
+exports.getJPEGDescription = getJPEGDescription;
+exports.addJPEGDescription = addJPEGDescription;
 
 /**
  * Return metadata of an image file
@@ -127,7 +127,7 @@ function applyFilters(path, filters, format) {
             image.jpeg({ quality });
             break;
     }
-    return B(image.toBuffer());
+    return Promise.resolve(image.toBuffer());
 }
 
 /**

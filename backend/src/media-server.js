@@ -13,7 +13,7 @@ var HttpError = require('errors/http-error');
 var FileManager = require('media-server/file-manager');
 var ImageManager = require('media-server/image-manager');
 var VideoManager = require('media-server/video-manager');
-var WebsiteCapturer = require('media-server/website-captuer');
+var WebsiteCapturer = require('media-server/website-capturer');
 var StockPhotoImporter = require('media-server/stock-photo-importer');
 
 var server;
@@ -232,7 +232,7 @@ function handleImageUpload(req, res) {
     var file = req.file;
     var url = req.body.external_url;
     return checkTaskToken(schema, taskId, req.query.token).then(() => {
-        return preserveFile(file, url, imageCacheFolder).then((imageFile) => {
+        return FileManager.preserveFile(file, url, imageCacheFolder).then((imageFile) => {
             if (!imageFile) {
                 throw new HttpError(400);
             }
@@ -349,7 +349,7 @@ function handleMediaUpload(req, res, type) {
                 });
                 return { url };
             })
-        });
+        }
     }).then((results) => {
         return FileManager.preserveFile(posterFile, posterUrl, imageCacheFolder).then((poster) => {
             if (poster) {
