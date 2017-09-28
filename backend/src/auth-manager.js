@@ -568,6 +568,7 @@ function createNewUser(db, server, account) {
     // TODO: add server settings
     var acceptingUser = true;
     var autoApprove = false;
+    var userType = 'guest';
     if (!acceptingUser) {
         throw new HttpError(403);
     }
@@ -576,6 +577,7 @@ function createNewUser(db, server, account) {
             external_id: parseInt(account.profile.id),
             server_id: server.id,
             username: preferredUsername,
+            type: userType,
             details: extractUserDetails(server.type, profile._json),
             approved: autoApprove,
         };
