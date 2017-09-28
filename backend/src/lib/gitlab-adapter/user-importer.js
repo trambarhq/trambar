@@ -216,6 +216,8 @@ function retrieveUser(server, glUserId) {
 /**
  * Ask Media Server to import a Gitlab user's avatar
  *
+ * @param  {Object} glUser
+ *
  * @return {Promise<Object>}
  */
 function retrieveProfileImage(glUser) {

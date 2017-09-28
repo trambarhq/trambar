@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Promise = require('bluebird')
 var FS = Promise.promisifyAll(require('fs'));
 var Request = require('request');
@@ -121,7 +122,7 @@ function preserveFile(file, url, dstFolder) {
         if (file) {
             return file.path;
         } else if (url) {
-            return downloadFile(url);
+            return downloadFile(url, dstFolder);
         }
     }).then((srcPath) => {
         if (srcPath) {
