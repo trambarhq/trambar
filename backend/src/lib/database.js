@@ -65,7 +65,7 @@ Database.open = function(exclusive) {
         var attempt;
         Async.begin(() => {
             attempt = 1;
-        })
+        });
         Async.while(() => {
             return Promise.resolve(pool.connect()).then((client) => {
                 // done--break out of loop
@@ -79,15 +79,15 @@ Database.open = function(exclusive) {
                     throw err;
                 }
             })
-        })
+        });
         Async.do(() => {
             // wait a second
             return Promise.delay(1000);
-        })
-        Async.finally(() => {
+        });
+        Async.return(() => {
             return db;
-        })
-        return Async.result();
+        });
+        return Async.end();
     } else {
         // run database queries through the pool
         var db = new Database(pool);
@@ -185,7 +185,7 @@ Database.prototype.need = function(schema, wait) {
     Async.begin(() => {
         found = false;
         startTime = new Date;
-    })
+    });
     Async.while(() => {
         // keep looking until the schema is found or if we're out of time
         var now = new Date;
@@ -196,15 +196,13 @@ Database.prototype.need = function(schema, wait) {
             found = exists;
             return !found;
         });
-    })
+    });
     Async.do(() => {
         // pause for half a second
         return Promise.delay(500);
-    })
-    Async.finally(() => {
-        return found;
-    })
-    return Async.result();
+    });
+    Async.return(() => { return found })
+    return Async.end();
 }
 
 /**

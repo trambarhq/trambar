@@ -29,16 +29,9 @@ function fetchAll(server, uri, params) {
             }
         });
     });
-    Async.while(() => {
-        return !done;
-    });
-    Async.finally((err) => {
-        if (err) {
-            throw err;
-        }
-        return _.flatten(objectLists);
-    });
-    return Async.result();
+    Async.while(() => { return !done });
+    Async.return(() => { return _.flatten(objectLists) });
+    return Async.end();
 }
 
 function post(server, uri, payload) {

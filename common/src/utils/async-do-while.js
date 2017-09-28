@@ -3,12 +3,15 @@ var Promise = require('bluebird');
 var beginFunc = null;
 var doFunc = null;
 var whileFunc = null;
-var finallyFunc = null;
+var returnFunc = null;
 var construct = '';
 
 exports.begin = function(f) {
 	if (doFunc || whileFunc) {
 		throw new Error('Cannot call begin() after while() or do()');
+	}
+	if (!(f instanceof Function)) {
+		throw new Error('Argument must be a function');
 	}
 	beginFunc = f;
 }
@@ -16,6 +19,9 @@ exports.begin = function(f) {
 exports.while = function(f) {
 	if (whileFunc) {
 		throw new Error('Cannot call while() consecutively');
+	}
+	if (!(f instanceof Function)) {
+		throw new Error('Argument must be a function');
 	}
 	if (doFunc) {
 		construct = 'do-while';
@@ -25,7 +31,11 @@ exports.while = function(f) {
 
 exports.do = function(f) {
 	if (doFunc) {
+		console.log(doFunc.toString())
 		throw new Error('Cannot call do() consecutively');
+	}
+	if (!(f instanceof Function)) {
+		throw new Error('Argument must be a function');
 	}
 	if (whileFunc) {
 		construct = 'while-do';
@@ -33,14 +43,20 @@ exports.do = function(f) {
 	doFunc = f;
 }
 
-exports.finally = function(f) {
+exports.return = function(f) {
 	if (!doFunc || !whileFunc) {
-		throw new Error('Cannot call finally() without calling while() and do() beforehand');
+		throw new Error('Cannot call return() without calling while() and do() beforehand');
 	}
-	finallyFunc = f;
+	if (!(f instanceof Function)) {
+		throw new Error('Argument must be a function');
+	}
+	returnFunc = f;
 }
 
 exports.end = function() {
+	if (!doFunc || !whileFunc) {
+		throw new Error('Cannot call end() without calling while() and do() beforehand');
+	}
 	var loopFunc;
 	if (construct === 'while-do') {
 		loopFunc = function() {
@@ -75,15 +91,21 @@ exports.end = function() {
 		begin: beginFunc || nop,
 		do: doFunc,
 		while: whileFunc,
-		finally: finallyFunc || nop,
+		return: returnFunc || nop,
 		loop: loopFunc
 	};
 	beginFunc = null;
 	doFunc = null;
 	whileFunc = null;
-	finallyFunc = null;
+	returnFunc = null;
 	construct = '';
 	return run.call(context);
+}
+
+var AsyncBreak = new Error;
+
+exports.break = function() {
+	throw AsyncBreak;
 }
 
 function run() {
@@ -91,13 +113,13 @@ function run() {
 		return this.begin();
 	}).then(() => {
 		return this.loop();
-	}).then(() => {
-		return this.finally();
 	}).catch((err) => {
-		return this.finally(err);
+		if (err !== AsyncBreak) {
+			throw err;
+		}
+	}).then(() => {
+		return this.return();
 	});
 }
-
-exports.result = exports.end;
 
 function nop() {};

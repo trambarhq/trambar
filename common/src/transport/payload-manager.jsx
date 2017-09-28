@@ -292,9 +292,7 @@ module.exports = React.createClass({
         var url = this.getBaseUrl();
         var attempts = 1;
         var failureCount = 0;
-        var error;
         var done = false;
-        Async.while(() => { return !done });
         Async.do(() => {
             // get the next unsent part and send it
             return stream.pull().then((blob) => {
@@ -325,17 +323,14 @@ module.exports = React.createClass({
                     // wait five seconds then try again
                     return Promise.delay(5000);
                 } else {
-                    error = err;
-                    done = true;
+                    throw err;
                 }
             });
         });
-        Async.finally(() => {
-            if (error) {
-                stream.abandon(error);
-            }
+        Async.while(() => { return !done });
+        Async.end().catch((err) => {
+            stream.abandon(err);
         });
-        Async.end();
     },
 
     /**

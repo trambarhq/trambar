@@ -61,15 +61,8 @@ function importEvents(db, server, repo, project) {
                 });
             });
         });
-        Async.while(() => {
-            return !done;
-        });
-        Async.finally((err) => {
-            if (err) {
-                throw err;
-            }
-            return stories;
-        });
+        Async.while(() => { return !done });
+        Async.return(() => { return stories });
         return Async.end();
     });
 }

@@ -84,10 +84,8 @@ module.exports = React.createClass({
         attempt = this.connectionAttempt = { server };
 
         var connected = false;
-        var abandoned = false;
         var delay = this.props.initialReconnectionDelay;
         var maximumDelay = this.props.maximumReconnectionDelay;
-        var lastError;
 
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
@@ -123,9 +121,7 @@ module.exports = React.createClass({
                     this.setState({ socket, protocol, server });
                 }
                 connected = true;
-                lastError = null;
             }).catch((err) => {
-                lastError = err;
                 delay *= 2;
                 if (delay > maximumDelay) {
                     delay = maximumDelay;
@@ -138,22 +134,13 @@ module.exports = React.createClass({
             if (attempt === this.connectionAttempt) {
                 return !connected;
             } else {
-                abandoned = true;
                 return false;
             }
         });
-        Async.finally((err) => {
-            this.connectionAttempt = null;
-            if (err) {
-                throw err;
-            }
-            if (lastError && !abandoned) {
-                throw lastError;
-            }
+        Async.return(() => {
             return connected;
         });
-
-        attempt.promise = Async.result();
+        attempt.promise = Async.end();
         return attempt.promise;
     },
 
