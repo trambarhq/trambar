@@ -115,12 +115,9 @@ Database.prototype.execute = function(sql, parameters) {
     }
     // convert promise to Bluebird variety
     return Promise.resolve(this.client.query(sql, parameters)).catch((err) => {
-        if (err.code === '42601') {
+        if (err.code.substr(0, 2) === '42') {
             // syntax error
-            console.log('A syntax error was encountered running the following statement:');
-            console.log(sql);
-        } else if (err.code === '42P18' || err.code === '42804') {
-            console.log('Data type error was encountered running the following statement:');
+            console.log('A syntax error or rule violation was encountered running the following statement:');
             console.log(sql);
             console.log(parameters);
         }

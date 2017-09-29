@@ -35,15 +35,26 @@ function importUsers(db, server, glUsers) {
             var user = _.find(users, { external_id: glUser.id });
             if (!user) {
                 // retrieve the full profile
-                return retrieveUser(server, glUserId).then((glUser) => {
-                    user = {
-                        server_id: server.id,
-                        external_id: glUser.id,
-                        details: {},
-                    };
+                return retrieveUser(server, glUser.id).then((glUser) => {
                     return retrieveProfileImage(glUser).then((image) => {
-                        copyUserDetails(user, glUser, image);
-                        return User.insertOne(db, 'global', user);
+                        // find user with the username
+                        var criteria = {
+                            username: glUser.username,
+                            deleted: false,
+                        };
+                        return User.findOne(db, 'global', criteria, '*').then((user) => {
+                            if (!user) {
+                                user = {
+                                    details: {},
+                                };
+                            }
+                            if (!user.server_id) {
+                                user.server_id = server.id;
+                                user.external_id = glUser.id;
+                            }
+                            copyUserDetails(user, glUser, image);
+                            return User.saveOne(db, 'global', user);
+                        });
                     });
                 });
             } else {
@@ -120,7 +131,7 @@ function copyUserDetails(user, glUser, profileImage) {
     // attach profile image
     if (profileImage) {
         var resources = user.details.resources;
-        var existing = _.find(resources, { type: image });
+        var existing = _.find(resources, { type: 'image' });
         if (existing) {
             if (existing.from_gitlab) {
                 var index = _.indexOf(resources, existing);
@@ -210,7 +221,7 @@ function retrieveRepoMembers(server, glRepoId) {
  */
 function retrieveUser(server, glUserId) {
     var url = `/users/${glUserId}`;
-    return Transport.fetch(url);
+    return Transport.fetch(server, url);
 }
 
 /**

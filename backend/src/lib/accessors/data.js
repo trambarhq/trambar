@@ -181,18 +181,22 @@ module.exports = {
                 conds.push(`details->>'fn' = $${params.push(criteria.fn)}`);
             }
         }
-        if (criteria.limit) {
+        if (typeof(criteria.limit) === 'number') {
             criteria.limit = criteria.limit;
         }
-        if (criteria.order) {
-            var parts = _.split(/\s+/, criteria.order);
-            var column = parts[0];
-            var dir = _.toLower(parts[1]);
-            if (this.columns.hasOwnProperty(column)) {
-                query.order = column;
-                if (dir === 'asc' || dir === 'desc') {
-                    query.order += ' ' + dir;
+        if (typeof(criteria.order) === 'string') {
+            if (criteria.order) {
+                var parts = _.split(/\s+/, criteria.order);
+                var column = parts[0];
+                var dir = _.toLower(parts[1]);
+                if (this.columns.hasOwnProperty(column)) {
+                    query.order = column;
+                    if (dir === 'asc' || dir === 'desc') {
+                        query.order += ' ' + dir;
+                    }
                 }
+            } else {
+                query.order = undefined;
             }
         }
     },
@@ -237,13 +241,16 @@ module.exports = {
      * @return {Promise<Array>}
      */
     run: function(db, query) {
-        var sql = `
-            SELECT ${query.columns}
-            FROM ${query.table}
-            WHERE ${query.conditions.join(' AND ') || true}
-            ORDER BY ${query.order}
-            LIMIT ${query.limit}
-        `;
+        var sql = `SELECT ${query.columns} FROM ${query.table}`;
+        if (!_.isEmpty(query.conditions)) {
+            sql += ` WHERE ${query.conditions.join(' AND ')}`;
+        }
+        if (query.order !== undefined) {
+            sql += ` ORDER BY ${query.order}`;
+        }
+        if (query.limit !== undefined) {
+            sql += ` LIMIT ${query.limit}`;
+        }
         return db.query(sql, query.parameters);
     },
 

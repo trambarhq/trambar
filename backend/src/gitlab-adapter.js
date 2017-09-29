@@ -134,10 +134,10 @@ function handleDatabaseEvent(event) {
                     return;
                 }
                 return Repo.find(db, 'global', { id: newRepoIds }, '*').then((repos) => {
-                    var serverIds = _.uniq(_.map(repo, 'server_id'));
+                    var serverIds = _.uniq(_.map(repos, 'server_id'));
                     return Server.find(db, 'global', { id: serverIds }, '*').then((servers) => {
                         _.each(repos, (repo) => {
-                            var server = _.find(servers, { id: repo.serverId });
+                            var server = _.find(servers, { id: repo.server_id });
                             if (!server) {
                                 return;
                             }

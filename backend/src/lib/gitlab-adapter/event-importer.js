@@ -305,13 +305,12 @@ function importRepoEvent(db, server, repo, event, author, project) {
  */
 function importPushEvent(db, server, repo, event, author, project) {
     var schema = project.name;
-    var ref = evt.data.ref;
-    var headId = evt.data.after;
-    var tailId = evt.data.before;
-    var count = evt.data.total_commits_count;
+    var ref = event.data.ref;
+    var headId = event.data.after;
+    var tailId = event.data.before;
+    var count = event.data.total_commits_count;
     return PushRetriever.retrievePush(server, repo, ref, headId, tailId, count).then((push) => {
         // look for component descriptions
-        var impact = new PushImpact(push);
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
             var commitIds = [];
             var details = {
@@ -452,6 +451,7 @@ function findLastEventTime(db, project, repo) {
     var criteria = {
         repo_id: repo.id,
         ready: true,
+        order: '',
     };
     return Story.findOne(db, schema, criteria, 'MAX(ptime) AS time').then((row) => {
         return (row && row.time) ? Moment(row.time) : null;
