@@ -7,6 +7,9 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
+var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
+var event = process.env.npm_lifecycle_event;
 
 var folders = _.mapValues({
     src: 'src',
@@ -18,6 +21,7 @@ var folders = _.mapValues({
 var env = {
     PLATFORM: 'browser',
     DEPLOYMENT: 'development',
+    NODE_ENV: (event === 'build') ? 'production' : 'development',
 };
 var constants = {};
 _.each(env, (value, name) => {
@@ -118,6 +122,12 @@ module.exports = {
         historyApiFallback: true
     }
 };
+
+if (event === 'build') {
+    // use Uglify to remove dead-code
+    console.log('Optimizing JS code');
+    module.exports.plugins.unshift(new UglifyJSPlugin());
+}
 
 function resolve(path) {
     if (_.isArray(path)) {
