@@ -9,7 +9,7 @@ var Theme = require('theme/theme');
 var UserSection = require('widgets/user-section');
 var HeaderButton = require('widgets/header-button');
 var OptionButton = require('widgets/option-button');
-var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
+var TelephoneNumberDialogBox = require('dialogs/telephone-number-dialog-box');
 
 require('./user-view-options.scss');
 
@@ -28,6 +28,11 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
     },
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
             inMenu: false,
@@ -35,17 +40,29 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
-            selectingRecipients: false,
+            showingPhoneDialog: false,
+            renderingPhoneDialog: false,
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         if (this.props.inMenu) {
             return (
                 <div className="view-options in-menu">
                     {this.renderButtons(this.props.section)}
+                    {this.renderPhoneDialog()}
                 </div>
             );
         } else {
@@ -57,12 +74,20 @@ module.exports = React.createClass({
                     </header>
                     <body>
                         {this.renderButtons('main')}
+                        {this.renderPhoneDialog()}
                     </body>
                 </UserSection>
             );
         }
     },
 
+    /**
+     * Render buttons
+     *
+     * @param  {String} section
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function(section) {
         var t = this.props.locale.translate;
         var details = this.props.user.details;
@@ -72,6 +97,7 @@ module.exports = React.createClass({
                 icon: 'phone-square',
                 url: `tel:${details.phone}`,
                 hidden: !details.phone,
+                onClick: this.handlePhoneClick,
             };
             var emailProps = {
                 label: t('action-contact-by-email'),
@@ -149,6 +175,55 @@ module.exports = React.createClass({
         }
     },
 
-    handlePhoneClick: function(evt) {
+    /**
+     * Render dialog box showing telephone number
+     *
+     * @return {ReactElement}
+     */
+    renderPhoneDialog: function() {
+        if (process.env.PLATFORM !== 'browser') return;
+
+        if (!this.state.renderingPhoneDialog) {
+            return null;
+        }
+        var dialogProps = {
+            show: this.state.showingPhoneDialog,
+            number: this.props.user.details.phone,
+            locale: this.props.locale,
+            onClose: this.handlePhoneDialogClose,
+        };
+        return <TelephoneNumberDialogBox {...dialogProps} />;
     },
+
+    /**
+     * Called when user click on "contact by phone"
+     *
+     * @param  {Event} evt
+     */
+    handlePhoneClick: function(evt) {
+        if (process.env.PLATFORM !== 'browser') return;
+
+        evt.preventDefault();
+        this.setState({
+            renderingPhoneDialog: true,
+            showingPhoneDialog: true,
+        });
+    },
+
+    /**
+     * Called when user closes telephone number dialog
+     *
+     * @param  {Event} evt
+     */
+    handlePhoneDialogClose: function(evt) {
+        if (process.env.PLATFORM !== 'browser') return;
+
+        this.setState({ showingPhoneDialog: false }, () => {
+            setTimeout(() => {
+                if (!this.state.showingPhoneDialog) {
+                    this.setState({ renderingPhoneDialog: false });
+                }
+            }, 500);
+        });
+    }
 });

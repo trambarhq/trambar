@@ -292,6 +292,8 @@ module.exports = function(languageCode) {
             return `task ${number}`;
         },
 
+        'telephone-dialog-close': 'Close',
+
         'user-actions': 'Actions',
 
         'user-statistics-legend-issue': 'Issues',
