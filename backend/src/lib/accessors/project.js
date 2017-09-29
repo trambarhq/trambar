@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
+var HttpError = require('errors/http-error');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -165,9 +166,23 @@ module.exports = _.create(Data, {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((projectReceived, index) => {
             var projectBefore = originals[index];
             this.checkWritePermission(projectReceived, projectBefore, credentials);
-
             return projectReceived;
         });
+    },
+
+    /**
+     * Throw if current user cannot make modifications
+     *
+     * @param  {[type]} projectReceived
+     * @param  {[type]} projectBefore
+     * @param  {[type]} credentials
+     *
+     * @return {[type]}
+     */
+    checkWritePermission: function(projectReceived, projectBefore, credentials) {
+        if (!credentials.unrestricted) {
+            throw new HttpError(400);
+        }
     },
 
     /**

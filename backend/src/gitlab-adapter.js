@@ -52,7 +52,9 @@ function start() {
             return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
                 var tables = [
                     'project',
+                    'repo',
                     'user',
+                    'role',
                 ];
                 return db.listen(tables, 'sync', handleDatabaseSyncRequests, 0);
             });
@@ -97,7 +99,7 @@ function handleDatabaseEvent(event) {
     var diff = event.diff;
     if (table === 'server') {
         // import roles, and repos from server when API access is gained
-        if (diff.details) {
+        if (diff.settings) {
             var criteria = {
                 id: event.id,
                 type: 'gitlab',
@@ -114,7 +116,7 @@ function handleDatabaseEvent(event) {
                     return;
                 }
                 taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                    return RepoImporter.importRepos(db, server);
+                    return RepoImporter.importRepositories(db, server);
                 });
             });
         }

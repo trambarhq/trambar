@@ -6,7 +6,7 @@ var Async = require('utils/async-do-while');
 
 var Transport = require('gitlab-adapter/transport');
 
-export.retrieveComponents = retrieveComponents;
+exports.retrieveDescriptions = retrieveDescriptions;
 
 /**
  * Retrieve component descriptions about a push

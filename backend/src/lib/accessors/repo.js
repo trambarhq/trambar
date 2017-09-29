@@ -96,5 +96,16 @@ module.exports = _.create(Data, {
             });
             return objects;
         });
-    }
+    },
+
+    /**
+     * Synchronize table with data sources
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     */
+    sync: function(db, schema, criteria) {
+        this.sendSyncNotification(db, schema, criteria);
+    },
 });

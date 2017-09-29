@@ -45,7 +45,7 @@ function importRepositories(db, server) {
 function deleteMissingRepos(db, repos, glRepos) {
     return Promise.filter(repos, (repo) => {
         // remove ones with corresponding Gitlab record
-        return !_.some(glRepos, { id: repo.external_id });
+        return _.some(glRepos, { id: repo.external_id });
     }).mapSeries((repo) => {
         return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
     });
@@ -61,7 +61,7 @@ function deleteMissingRepos(db, repos, glRepos) {
  */
 function addNewRepos(db, server, repos, glRepos) {
     return Promise.filter(glRepos, (glRepo) => {
-        return _.some(repos, { external_id: glRepo.id });
+        return !_.some(repos, { external_id: glRepo.id });
     }).mapSeries((glRepo) => {
         // fetch labels as well
         return retrieveLabels(server, glRepo.id).then((glLabels) => {
