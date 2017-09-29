@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var Promsie = require('bluebird');
+var Promise = require('bluebird');
 var ParseDiff = require('parse-diff');
 
 var Transport = require('gitlab-adapter/transport');
@@ -17,7 +17,7 @@ exports.retrievePush = retrievePush;
 function retrievePush(server, repo, ref, headId, tailId, count) {
     var push = new Push(ref, headId, tailId, count);
     // get the basic info of all commit
-    return retrieveCommit(server, repo, headId).then((commit) => {
+    return retrieveCommit(server, repo, push, headId).then((commit) => {
         push.head = commit;
         // retrieve diffs along the shortest path to the tail
         // (i.e. the head prior to the push)
@@ -35,25 +35,29 @@ function retrievePush(server, repo, ref, headId, tailId, count) {
  *
  * @param  {Server} server
  * @param  {Repo} repo
+ * @param  {Push} push
  * @param  {String} id
  *
  * @return {Promise<Commit>}
  */
-function retrieveCommit(server, repo, id) {
-    var commit = this.commits[id];
+function retrieveCommit(server, repo, push, id) {
+    var commit = push.commits[id];
     if (commit) {
         return Promise.resolve(commit);
     }
-    commit = this.commits[id] = new Commit(id);
+    commit = push.commits[id] = new Commit(id);
 
     var url = `/projects/${repo.external_id}/repository/commits/${id}`;
     return Transport.fetch(server, url).then((info) => {
-        this.author = info.author_email;
-        this.date = info.committed_date;
-        this.lines.added = info.stats.addition;
-        this.lines.deleted = info.stats.deletion;
-        return Promise.map(info.parent_ids, (parentId) => {
-            return retrieveCommit(server, url, parentId);
+        commit.author = info.author_email;
+        commit.date = info.committed_date;
+        commit.lines.added = info.stats.additions;
+        commit.lines.deleted = info.stats.deletions;
+        var parentIds = _.filter(info.parent_ids, (id) => {
+            return id !== push.tailId;
+        });
+        return Promise.map(parentIds, (parentId) => {
+            return retrieveCommit(server, repo, push, parentId);
         }).then((commits) => {
             commit.parents = commits;
             return commit;
@@ -72,11 +76,7 @@ function retrieveCommit(server, repo, id) {
  * @return {Promise}
  */
 function retrieveDiff(server, repo, commit) {
-    if (!commit.parents) {
-        // commit is actually the tail
-        return Promise.resolve();
-    }
-    var url = `/projects/${repo.external_id}/repository/commits/${hash}/diff`;
+    var url = `/projects/${repo.external_id}/repository/commits/${commit.id}/diff`;
     return Transport.fetch(server, url).then((info) => {
         var cf = commit.files;
         _.each(info, (file) => {
@@ -102,19 +102,22 @@ function retrieveDiff(server, repo, commit) {
                 cf.modified.push(file.new_path);
             }
         });
+        commit.hasDiff = true;
     }).then(() => {
         var parentCommit;
         if (commit.parents.length === 1) {
             parentCommit = commit.parents[0];
-        } else {
+        } else if (commit.parents.length > 1) {
             // see which of the parents has a shorter path
-            var distances = _.map(commit.parents, this.getShortestPath);
+            var distances = _.map(commit.parents, getShortestPath);
             var minDistance = _.min(distances);
             var index = _.indexOf(distances, minDistance);
             parentCommit = commit.parents[index];
         }
-        // fetch diff of parent
-        return retrieveDiff(server, repo, parentCommit);
+        if (parentCommit) {
+            // fetch diff of parent
+            return retrieveDiff(server, repo, parentCommit);
+        }
     });
 };
 
@@ -124,9 +127,6 @@ function retrieveDiff(server, repo, commit) {
  * @return {Number}
  */
 function getShortestPath(commit) {
-    if (!commit.parents) {
-        return 0;
-    }
     var distances = _.map(commit.parents, getShortestPath);
     var minDistance = _.min(distances);
     return minDistance + 1;
@@ -143,12 +143,12 @@ function getCommitChain(push) {
     var commits = [];
     var commit = push.head;
     while (commit) {
+        var parents = commit.parents;
         commits.push(commit);
         commit = null;
-        if (commit.parents) {
-            var parents = commit.parents;
+        if (parents) {
             for (var i = 0; i < parents.length; i++) {
-                if (parents[i].files) {
+                if (parents[i].hasDiff) {
                     commit = parents[i];
                     break;
                 }
@@ -172,7 +172,7 @@ function mergeCommits(push) {
         pl.deleted += cl.deleted;
 
         _.each(cf.added, (path) => {
-            if (!_.includes(pf.added(path))) {
+            if (!_.includes(pf.added, path)) {
                 pf.added.push(path);
             }
         });
@@ -212,10 +212,8 @@ function Push(ref, headId, tailId, count) {
     this.headId = headId;
     this.head = null;
     this.tailId = tailId;
-    this.tail = new Commit(tailId);
     this.count = count;
     this.commits = {};
-    this.commits[tailId] = this.tail;
     this.lines = {
         added: 0,
         deleted: 0,
@@ -243,4 +241,5 @@ function Commit(id) {
         renamed: [],
         modified: [],
     };
+    this.hasDiff = false;
 }

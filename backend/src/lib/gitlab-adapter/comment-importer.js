@@ -1,9 +1,16 @@
 var _ = require('lodash');
+var Moment = require('moment');
 
 var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
 
+var Transport = require('gitlab-adapter/transport');
+var UserImporter = require('gitlab-adapter/user-importer');
+
 exports.importComments = importComments;
+exports.importCommitComments = importCommitComments;
+exports.importIssueComments = importIssueComments;
+exports.importMergeRequestComments = importMergeRequestComments;
 
 /**
  * Import comments
@@ -110,20 +117,21 @@ function importStoryComments(db, server, url, project, story, extra) {
         repo_id: story.repo_id,
     };
     return Reaction.find(db, schema, criteria, '*').then((reactions) => {
-        return fetchAll(server, url).then((notes) => {
+        return Transport.fetchAll(server, url).then((notes) => {
             var changes = [];
             var nonSystemNotes = _.filter(notes, (note) => {
                 return !note.system;
             });
-            var accountIds = _.map(nonSystemNotes, (note) => {
-                return note.author.id;
-            });
-            return findUsers(db, server, accountIds).then((users) => {
+            var authors = _.map(nonSystemNotes, 'author');
+            return UserImporter.importUsers(db, server, authors).then((users) => {
                 _.each(nonSystemNotes, (note, index) => {
-                    // commit comments don't have ids for some reason
-                    var reaction = (note.id)
-                        ? _.find(reactions, { external_id: note.id })
-                        : reactions[index];
+                    var reaction;
+                    if (note.id) {
+                        reaction = _.find(reactions, { external_id: note.id });
+                    } else {
+                        // commit comments don't have ids for some reason
+                        reaction = reactions[index];
+                    }
                     var author = _.find(users, { external_id: note.author.id });
                     if (reaction || !author) {
                         return;

@@ -7,6 +7,7 @@ var Transport = require('gitlab-adapter/transport');
 var PushRetriever = require('gitlab-adapter/push-retriever');
 var PushDecorator = require('gitlab-adapter/push-decorator');
 var UserImporter = require('gitlab-adapter/user-importer');
+var CommentImporter = require('gitlab-adapter/comment-importer');
 
 // accessors
 var Reaction = require('accessors/reaction');
@@ -147,9 +148,7 @@ function importIssueEvent(db, server, repo, event, author, project) {
             }
             copyIssueDetails(story, issue);
             return Story.saveOne(db, schema, story).then((story) => {
-                return Promise.mapSeries(issue.assignees, (assignee) => {
-                    return findUser(db, server, assignee.id);
-                }).then((users) => {
+                return UserImporter.importUsers(db, server, issue.assignees).then((users) => {
                     // add assignment reaction
                     var criteria = {
                         type: 'assignment',
@@ -179,7 +178,7 @@ function importIssueEvent(db, server, repo, event, author, project) {
                         return Reaction.save(db, schema, changes);
                     });
                 }).then(() => {
-                    return importIssueComments(db, server, repo, issue, project);
+                    return CommentImporter.importIssueComments(db, server, repo, issue, project);
                 }).return(story);
             });
         });
@@ -338,8 +337,9 @@ function importPushEvent(db, server, repo, event, author, project) {
                 ptime: getPublicationTime(event),
             };
             return Story.insertOne(db, schema, story).then((story) => {
+                var commits = _.sortBy(_.values(push.commits), 'date');
                 return Promise.each(commits, (commit) => {
-                    return importCommitComments(db, server, repo, commit, project);
+                    return CommentImporter.importCommitComments(db, server, repo, commit, project);
                 }).return(story);
             });
         });

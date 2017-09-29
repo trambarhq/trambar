@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var Promsie = require('bluebird');
+var Promise = require('bluebird');
 var Request = require('request');
 var HttpError = require('errors/http-error');
 var Async = require('utils/async-do-while');
@@ -20,8 +20,8 @@ exports.retrieveDescriptions = retrieveDescriptions;
 function retrieveDescriptions(server, repo, push) {
     // list of files affect, whether they were add, modified or deleted
     var paths = _.flattenDeep(_.values(push.files));
-    //
     clearAffectedCacheEntries(server, repo, paths);
+    return Promise.resolve([]);
 }
 
 var trambarFolderCache;
