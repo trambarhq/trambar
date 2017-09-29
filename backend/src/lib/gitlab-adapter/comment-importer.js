@@ -47,7 +47,7 @@ function importComments(db, server, repo, event, project) {
 function importCommitComments(db, server, repo, commit, project) {
     var schema = project.name;
     var criteria = {
-        commit_id: commit.id,
+        commit_ids: commit.id,
     };
     return Story.findOne(db, schema, criteria, '*').then((story) => {
         if (!story) {

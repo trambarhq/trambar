@@ -43,7 +43,7 @@ module.exports = _.create(Data, {
         newer_than: String,
         older_than: String,
         ready: Boolean,
-        commit_id: String,
+        commit_ids: String,
         bumped_after: String,
         url: String,
         search: Object,
@@ -119,7 +119,7 @@ module.exports = _.create(Data, {
             'newer_than',
             'older_than',
             'ready',
-            'commit_id',
+            'commit_ids',
             'bumped_after',
             'url',
             'search',
@@ -141,8 +141,12 @@ module.exports = _.create(Data, {
             var time = `$${params.push(criteria.bumped_after)}`
             conds.push(`(ptime > ${time} || btime > ${time})`);
         }
-        if (criteria.commit_id !== undefined) {
-            conds.push(`details->'commit_ids' ? $${params.push(criteria.commit_id)}`);
+        if (criteria.commit_ids !== undefined) {
+            if (criteria.commit_ids instanceof Array) {
+                conds.push(`details->'commit_ids' ?| $${params.push(criteria.commit_ids)}`);
+            } else {
+                conds.push(`details->'commit_ids' ? $${params.push(criteria.commit_ids)}`);
+            }
         }
         if (criteria.url !== undefined) {
             conds.push(`details->>'url' = $${params.push(criteria.url)}`);

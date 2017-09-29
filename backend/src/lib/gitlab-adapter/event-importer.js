@@ -311,36 +311,50 @@ function importPushEvent(db, server, repo, event, author, project) {
     return PushRetriever.retrievePush(server, repo, ref, headId, tailId, count).then((push) => {
         // look for component descriptions
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
-            var commitIds = [];
-            var details = {
-                commit_ids: _.keys(push.commits),
-                commit_id_before: push.tailId,
-                commit_id_after: push.headId,
-                lines: push.lines,
-                files: _.transform(push.files, (counts, list, op) => {
-                    // set the count if there's are items
-                    if (!_.isEmpty(list)) {
-                        counts[op] = list.length;
-                    }
-                }, {}),
-                components: components,
-                branch: _.last(_.split(push.ref, '/')),
+            var commitIds = _.keys(push.commits);
+            var branch = _.last(_.split(push.ref, '/'));
+            // see if the commits from a branch
+            var criteria = {
+                commit_ids: commitIds,
+                order: '',
             };
-            var story = {
-                type: 'push',
-                user_ids: [ author.id ],
-                role_ids: author.role_ids,
-                repo_id: repo.id,
-                details,
-                published: true,
-                public: true,
-                ptime: getPublicationTime(event),
-            };
-            return Story.insertOne(db, schema, story).then((story) => {
-                var commits = _.sortBy(_.values(push.commits), 'date');
-                return Promise.each(commits, (commit) => {
-                    return CommentImporter.importCommitComments(db, server, repo, commit, project);
-                }).return(story);
+            return Story.find(db, project.name, criteria, `DISTINCT details->>'branch' AS branch`).then((rows) => {
+                return _.pull(_.map(rows, 'branch'), branch);
+            }).then((sourceBranches) => {
+                var details = {
+                    commit_ids: commitIds,
+                    commit_id_before: push.tailId,
+                    commit_id_after: push.headId,
+                    lines: push.lines,
+                    files: _.transform(push.files, (counts, list, op) => {
+                        // set the count if there's are items
+                        if (!_.isEmpty(list)) {
+                            counts[op] = list.length;
+                        }
+                    }, {}),
+                    components: components,
+                    branch: branch,
+                };
+                var story = {
+                    type: 'push',
+                    user_ids: [ author.id ],
+                    role_ids: author.role_ids,
+                    repo_id: repo.id,
+                    details,
+                    published: true,
+                    public: true,
+                    ptime: getPublicationTime(event),
+                };
+                if (sourceBranches) {
+                    details.source_branches = sourceBranches;
+                    story.type = 'merge';
+                }
+                return Story.insertOne(db, schema, story).then((story) => {
+                    var commits = _.sortBy(_.values(push.commits), 'date');
+                    return Promise.each(commits, (commit) => {
+                        return CommentImporter.importCommitComments(db, server, repo, commit, project);
+                    }).return(story);
+                });
             });
         });
     });

@@ -58,6 +58,30 @@ function start() {
                 ];
                 return db.listen(tables, 'sync', handleDatabaseSyncRequests, 0);
             });
+        }).then(() => {
+            // try importing events from all projects, as events could have
+            // occurred while Trambar is down
+            var criteria = {
+                deleted: false
+            };
+            return Project.find(db, 'global', criteria, '*').each((project) => {
+                var criteria = {
+                    id: project.repo_ids,
+                    type: 'gitlab',
+                    deleted: false,
+                };
+                return Repo.find(db, 'global', criteria, '*').each((repo) => {
+                    var criteria = {
+                        id: repo.server_id,
+                        deleted: false,
+                    };
+                    return Server.find(db, 'global', criteria, '*').each((server) => {
+                        return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                            return EventImporter.importEvents(db, server, repo, project);
+                        });
+                    });
+                });
+            });
         });
     });
 }
@@ -115,7 +139,7 @@ function handleDatabaseEvent(event) {
                 if (!server.settings.api.access_token || !server.settings.oauth.baseURL) {
                     return;
                 }
-                taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
                     return RepoImporter.importRepositories(db, server);
                 });
             });
@@ -141,7 +165,7 @@ function handleDatabaseEvent(event) {
                             if (!server) {
                                 return;
                             }
-                            taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                            return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
                                 // make sure the project-specific schema exists
                                 return db.need(project.name, 5000).then(() => {
                                     return EventImporter.importEvents(db, server, repo, project);
@@ -157,7 +181,7 @@ function handleDatabaseEvent(event) {
         Story.findOne(db, schema, { id: event.id }, '*').then((story) => {
             /*
             if (story.details.issue_tracking && story.repo_id) {
-                taskQueue.schedule(`export_story:${story.id}`, () => {
+                return taskQueue.schedule(`export_story:${story.id}`, () => {
                     return StoryExporter.exportStory(db, story);
                 });
             }
@@ -172,7 +196,7 @@ function handleDatabaseEvent(event) {
             return Story.findOne(db, schema, { id: reaction.story_id }, '*').then((story) => {
                 /*
                 if (story.details.issue_tracking && story.repo_id) {
-                    taskQueue.schedule(`export_reaction:${reaction.id}`() => {
+                    return taskQueue.schedule(`export_reaction:${reaction.id}`() => {
                         return CommentExporter.exportComment(db, reaction, story);
                     });
                 }
@@ -265,8 +289,9 @@ function handleHookCallback(req, res) {
                 }
             });
         });
+    }).finally(() => {
+        res.end();
     });
-    res.end();
 }
 
 exports.start = start;
