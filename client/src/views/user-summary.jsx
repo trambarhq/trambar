@@ -126,6 +126,9 @@ module.exports = React.createClass({
             case 'push':
                 text = t(`user-summary-$name-pushed-code`, name);
                 break;
+            case 'merge':
+                text = t(`user-summary-$name-merged-code`, name);
+                break;
             case 'issue':
                 text = t(`user-summary-$name-opened-an-issue`, name);
                 break;

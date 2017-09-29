@@ -300,6 +300,7 @@ var getDates = function(today, count) {
 
 var storyTypes = [
     'push',
+    'merge',
     'issue',
     'wiki',
     'milestone',

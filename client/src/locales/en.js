@@ -242,6 +242,19 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'story-push-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
+            var sources = branches.map((branch) => {
+                return `“${branch}”`;
+            });
+            for (var i = 0; i < branches.length; i++) {
+                sources.push
+            }
+            var text = `Merged code from ${sources.join(', ')} into branch “${branch}”`;
+            if (repo) {
+                text += ` of project “${repo}”`;
+            }
+            return text;
+        },
         'story-push-removed-$count-files': (count) => {
             return `${count} files removed`;
         },
@@ -294,6 +307,7 @@ module.exports = function(languageCode) {
         'user-summary-$name-edited-wiki-page': 'Edited a wiki page',
         'user-summary-$name-joined-repo': 'Joined a git project',
         'user-summary-$name-left-repo': 'Left a git project',
+        'user-summary-$name-merged-code': 'Performed a code merge',
         'user-summary-$name-posted-a-link': 'Post a link to a website',
         'user-summary-$name-posted-a-picture': 'Posted a picture',
         'user-summary-$name-posted-a-video-clip': 'Posted a video clip',

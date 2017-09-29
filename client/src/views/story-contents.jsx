@@ -7,6 +7,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+var StoryTypes = require('data/story-types');
+
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
@@ -188,45 +190,18 @@ module.exports = React.createClass({
     },
 
     renderGraphic: function() {
-        var icon, Icon;
-        switch (this.props.story.type) {
-            case 'push':
-                Icon = require('octicons/build/svg/repo-push.svg');
-                icon = <Icon className="push" />
-                break;
-            case 'issue':
-                switch (this.props.story.details.state) {
-                    case 'closed':
-                        Icon = require('octicons/build/svg/issue-closed.svg')
-                        break;
-                    case 'reopened':
-                        Icon = require('octicons/build/svg/issue-reopened.svg')
-                        break;
-                    case 'opened':
-                    default:
-                        Icon = require('octicons/build/svg/issue-opened.svg')
-                }
-                icon = <Icon className="issue" />
-                break;
-            case 'repo':
-                Icon = require('octicons/build/svg/repo.svg')
-                icon = <Icon className="repo" />
-                break;
-            case 'milestone':
-                Icon = require('octicons/build/svg/milestone.svg')
-                icon = <Icon className="milestone" />
-                break;
-            case 'member':
-                Icon = require('octicons/build/svg/person.svg')
-                icon = <Icon className="member" />
-                break;
-            case 'wiki':
-                Icon = require('octicons/build/svg/file-text.svg')
-                icon = <Icon className="file" />
-                break;
+        var type = this.props.story.type;
+        var Icon = StoryTypes.icons[type];
+        if (type === 'issue') {
+            var state = this.props.story.details.state;
+            Icon = StoryTypes.icons[type + '.' + state];
         }
-        if (icon) {
-            return <div className="graphic">{icon}</div>;
+        if (Icon) {
+            return (
+                <div className="graphic">
+                    <Icon className={type} />
+                </div>
+            );
         } else {
             return null;
         }
@@ -260,6 +235,7 @@ module.exports = React.createClass({
             case 'member':
                 return this.renderMemberText();
             case 'push':
+            case 'merge':
                 return this.renderPushText();
             case 'issue':
                 return this.renderIssueText();
@@ -503,12 +479,17 @@ module.exports = React.createClass({
                 url = `${baseUrl}/compare/${commitIdBefore}...${commitIdAfter}`;
             }
         }
+        var text;
+        if (story.type === 'push') {
+            text = t(`story-push-pushed-to-$branch-of-$repo`, branch, repoName);
+        } else if (story.type === 'merge') {
+            var sourceBranches = story.details.source_branches;
+            text = t(`story-push-merged-$branches-into-$branch-of-$repo`, sourceBranches, branch, repoName);
+        }
         return (
             <div className="push">
                 <p>
-                    <a href={url} target="_blank">
-                        {t(`story-push-pushed-to-$branch-of-$repo`, branch, repoName)}
-                    </a>
+                    <a href={url} target="_blank">{text}</a>
                 </p>
                 <div>
                     <ul className="files">{fileChanges}</ul>
