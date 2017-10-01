@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Request = require('request');
 var HttpError = require('errors/http-error');
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 
 var Transport = require('gitlab-adapter/transport');
 

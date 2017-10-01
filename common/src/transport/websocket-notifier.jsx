@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var SockJS = require('sockjs-client');
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 
 var Locale = require('locale/locale');
 

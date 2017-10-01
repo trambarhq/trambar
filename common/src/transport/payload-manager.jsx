@@ -4,7 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var HttpRequest = require('transport/http-request');
 var BlobStream = require('transport/blob-stream');
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 
 var Database = require('data/database');
 var Route = require('routing/route');

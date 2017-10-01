@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 
 var Transport = require('gitlab-adapter/transport');
 var PushRetriever = require('gitlab-adapter/push-retriever');

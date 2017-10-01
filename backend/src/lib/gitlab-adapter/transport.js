@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Request = require('request');
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
 
 exports.fetch = fetch;

@@ -3,8 +3,7 @@ var Promise = require('bluebird');
 var FS = require('fs');
 var PgPool = require('pg-pool')
 var PgTypes = require('pg').types;
-
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 
 module.exports = Database;
 

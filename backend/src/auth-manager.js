@@ -10,7 +10,7 @@ var Request = require('request');
 var HtpasswdAuth = require('htpasswd-auth');
 var HttpError = require('errors/http-error');
 var Database = require('database');
-var Async = require('utils/async-do-while');
+var Async = require('async-do-while');
 
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
