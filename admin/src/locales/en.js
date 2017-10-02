@@ -3,6 +3,7 @@ module.exports = function(languageCode) {
         'activity-chart-legend-push': 'Code pushes',
         'activity-chart-legend-issue': 'Issues',
         'activity-chart-legend-member': 'Membership changes',
+        'activity-chart-legend-merge': 'Code merges',
         'activity-chart-legend-milestone': 'Milestones',
         'activity-chart-legend-repo': 'Repository changes',
         'activity-chart-legend-story': 'Stories',
