@@ -91,7 +91,7 @@ module.exports = React.createClass({
     renderName: function() {
         var p = this.props.locale.pick;
         var user = this.props.user;
-        var name = p(user.details.name, '');
+        var name = p(user.details.name);
         return <h2 className="name">{name}</h2>;
     },
 

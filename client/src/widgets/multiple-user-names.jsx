@@ -163,6 +163,7 @@ module.exports = React.createClass({
             user,
             theme: this.props.theme,
             key: user.id,
+            locale: this.props.locale,
         };
         return <User {...userProps} />;
     },
@@ -220,7 +221,8 @@ function User(props) {
         theme: props.theme,
         size: 'small',
     };
-    var name = _.get(props.user, 'details.name');
+    var p = props.locale.pick;
+    var name = p(props.user.details.name);
     return (
         <div className={classNames.join(' ')}>
             <ProfileImage {...imageProps} />

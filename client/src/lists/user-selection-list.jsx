@@ -123,7 +123,7 @@ function User(props) {
     if (props.disabled) {
         classNames.push('disabled');
     }
-    var name = p(_.get(props.user, 'details.name'));
+    var name = p(props.user.details.name);
     var containerProps = {
         className: classNames.join(' '),
         'data-user-id': props.user.id,

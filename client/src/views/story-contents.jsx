@@ -136,7 +136,7 @@ module.exports = React.createClass({
      */
     renderAuthorNames: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
+        var n = this.props.locale.name;
         var authors = this.props.authors;
         if (!_.every(authors, _.isObject)) {
             authors = [];
@@ -148,15 +148,15 @@ module.exports = React.createClass({
                 contents = '\u00a0';
                 break;
             case 1:
-                contents = p(authors[0].details.name);
+                contents = n(authors[0].details.name, authors[0].details.gender);
                 break;
             case 2:
-                var name1 = p(authors[0].details.name);
-                var name2 = p(authors[1].details.name);
+                var name1 = n(authors[0].details.name, authors[0].details.gender);
+                var name2 = n(authors[1].details.name, authors[1].details.gender);
                 contents = t('story-author-$name1-and-$name2', name1, name2);
                 break;
             default:
-                var name = p(authors[0].details.name);
+                var name = p(authors[0].details.name, authors[0].details.gender);
                 var coauthors = _.slice(authors, 1);
                 var props = {
                     users: coauthors,

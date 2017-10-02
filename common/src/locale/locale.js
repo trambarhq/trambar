@@ -16,6 +16,13 @@ function Locale(localeManager) {
         return localeManager.pick(phraseVersions, overrideLanguageCode);
     };
 
+    this.name = function(nameVersions, gender, overrideLanguageCode) {
+        var name = localeManager.pick(nameVersions, overrideLanguageCode);
+        var obj = new String(name || '');
+        obj.gender = gender;
+        return obj;
+    };
+
     this.change = function(languageCode) {
         return localeManager.change(languageCode);
     };

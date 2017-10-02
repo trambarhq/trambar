@@ -62,6 +62,9 @@ module.exports = function(languageCode) {
         'comment-$user-commented-on-push': (user) => {
             return `${user} commented on a commit`;
         },
+        'comment-$user-commented-on-merge': (user) => {
+            return `${user} commented on a merge`;
+        },
         'comment-$user-completed-a-task': (user) => {
             return `${user} completed a task`;
         },
@@ -299,6 +302,7 @@ module.exports = function(languageCode) {
         'user-statistics-legend-issue': 'Issues',
         'user-statistics-legend-milestone': 'Milestones',
         'user-statistics-legend-push': 'Code pushes',
+        'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-story': 'Posts',
         'user-statistics-legend-survey': 'Surveys',
         'user-statistics-legend-task-list': 'Task lists',

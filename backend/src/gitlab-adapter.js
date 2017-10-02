@@ -252,9 +252,9 @@ function handleDatabaseSyncRequest(event) {
             });
         } else {
             return User.find(db, 'global', criteria, '*').each((user) => {
-                return Server.find(db, 'global', { id: repo.server_id, type: 'gitlab' }, '*').each((server) => {
+                return Server.find(db, 'global', { id: user.server_id, type: 'gitlab' }, '*').each((server) => {
                     return taskQueue.schedule(`update_user:${user.id}`, () => {
-                        return UserImporter.updateUser(db, user);
+                        return UserImporter.updateUser(db, server, user);
                     });
                 });
             });

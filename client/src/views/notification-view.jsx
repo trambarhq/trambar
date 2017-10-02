@@ -78,8 +78,9 @@ module.exports = React.createClass({
      */
     renderText: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var name = p(_.get(this.props.respondent, 'details.name'));
+        var n = this.props.locale.pick;
+        var user = this.props.respondent;
+        var name = (user) ? n(user.details.name, user.details.gender) : '';
         var reactionType = _.get(this.props.reaction, 'type');
         var storyType = _.get(this.props.story, 'type') || 'story';
         var text;
