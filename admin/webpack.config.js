@@ -123,7 +123,10 @@ module.exports = {
     ],
     devServer: {
         inline: true,
-        historyApiFallback: true
+        historyApiFallback: {
+            index: '/admin/'
+        },
+        publicPath: '/admin'
     }
 };
 
