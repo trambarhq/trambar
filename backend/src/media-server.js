@@ -39,7 +39,7 @@ function start() {
         app.post('/media/stream/:jobId', upload.single('file'), handleStreamAppend);
         app.post('/media/stream', upload.single('file'), handleStreamCreate);
 
-        app.post('/internal/import', handleImageImport);
+        app.post('/internal/import', upload.single('file'), handleImageImport);
 
         createCacheFolders();
         StockPhotoImporter.importPhotos();
@@ -261,9 +261,12 @@ function handleImageUpload(req, res) {
  * @param  {Response} res
  */
 function handleImageImport(req, res) {
-    var file = _.get(req.files, 'file.0');
+    var file = req.file;
     var url = req.body.external_url;
     return FileManager.preserveFile(file, url, imageCacheFolder).then((imageFile) => {
+        if (!imageFile) {
+            throw new HttpError(400);
+        }
         return ImageManager.getImageMetadata(imageFile.path).then((metadata) => {
             var url = `/media/images/${imageFile.hash}`;
             var format = metadata.format;
