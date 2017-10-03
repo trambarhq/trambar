@@ -13,7 +13,7 @@
     "test:docker:stop": "docker-compose -p test -f test.yml down"
   },
   "dependencies": {
-    "async-do-while": "0.0.1",
+    "async-do-while": "^0.0.3",
     "bcrypt": "^1.0.2",
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.2",
