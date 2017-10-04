@@ -86,6 +86,7 @@ module.exports = Relaks.createClass({
         var date = route.parameters.date;
         var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
         var searchString = route.query.search;
+        var searching = !!(date || searchString);
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
@@ -112,7 +113,7 @@ module.exports = Relaks.createClass({
             props.currentUser = user;
             meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
-            if (date || searchString) {
+            if (searching) {
                 // load story matching filters
                 var criteria = {};
                 if (date) {
@@ -182,6 +183,35 @@ module.exports = Relaks.createClass({
             }
         }).then((stories) => {
             props.stories = stories
+            meanwhile.show(<NewsPageSync {...props} />);
+        }).then(() => {
+            if (!searching) {
+                // look for story drafts
+                var criteria = {
+                    published: false,
+                    user_ids: [ props.currentUser.id ],
+                };
+                return db.find({ table: 'story', criteria });
+            }
+        }).then((stories) => {
+            if (stories) {
+                props.draftStories = stories;
+                meanwhile.show(<NewsPageSync {...props} />);
+            }
+        }).then(() => {
+            if (!searching) {
+                // look for pending stories
+                var criteria = {
+                    published: true,
+                    ready: false,
+                    user_ids: [ props.currentUser.id ],
+                };
+                return db.find({ table: 'story', criteria });
+            }
+        }).then((stories) => {
+            if (stories) {
+                props.pendingStories = stories;
+            }
             return <NewsPageSync {...props} />;
         });
     },
@@ -193,6 +223,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         showEditors: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
+        draftStories: PropTypes.arrayOf(PropTypes.object),
+        pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -214,6 +246,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             showEditors: this.props.showEditors,
             stories: this.props.stories,
+            draftStories: this.props.draftStories,
+            pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
