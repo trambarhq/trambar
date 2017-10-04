@@ -19,6 +19,7 @@ var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MultipleUserNames = require('widgets/multiple-user-names');
 var AppComponent = require('views/app-component');
+var AppComponentDialogBox = require('dialogs/app-component-dialog-box');
 var Scrollable = require('widgets/scrollable');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
@@ -55,6 +56,9 @@ module.exports = React.createClass({
         return {
             userAnswers: {},
             voteSubmitted: false,
+            selectedComponent: null,
+            showingComponentDialog: false,
+            renderingComponentDialog: false,
         };
     },
 
@@ -565,6 +569,7 @@ module.exports = React.createClass({
                 <Scrollable>
                     {_.map(components, this.renderAppComponent)}
                 </Scrollable>
+                {this.renderAppComponentDialog()}
             </div>
         );
     },
@@ -577,7 +582,7 @@ module.exports = React.createClass({
     renderAppComponent: function(component, i) {
         var componentProps = {
             key: i,
-            component,
+            component: component,
             locale: this.props.locale,
             theme: this.props.theme,
             onSelect: this.handleComponentSelect,
@@ -585,6 +590,25 @@ module.exports = React.createClass({
         return <AppComponent {...componentProps} />
     },
 
+    renderAppComponentDialog: function() {
+        if (!this.state.renderingComponentDialog) {
+            return null;
+        }
+        var dialogProps = {
+            show: this.state.showingComponentDialog,
+            component: this.state.selectedComponent,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onClose: this.handleComponentDialogClose,
+        };
+        return <AppComponentDialogBox {...dialogProps} />;
+    },
+
+    /**
+     * Inform parent component that changes were made to story
+     *
+     * @param  {Story} story
+     */
     triggerChangeEvent: function(story) {
         if (this.props.onChange) {
             this.props.onChange({
@@ -595,6 +619,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Inform parent component that there's a new reaction to story
+     *
+     * @param  {Story} story
+     */
     triggerReactionEvent: function(reaction) {
         if (this.props.onReaction) {
             this.props.onReaction({
@@ -655,6 +684,37 @@ module.exports = React.createClass({
         };
         this.triggerReactionEvent(reaction);
         this.setState({ voteSubmitted: true });
+    },
+
+    /**
+     * Called when user clicks on an app component description
+     *
+     * @param  {Object} evt
+     */
+    handleComponentSelect: function(evt) {
+        this.setState({
+            renderingComponentDialog: true,
+            showingComponentDialog: true,
+            selectedComponent: evt.component,
+        });
+    },
+
+    /**
+     * Called when user closes component description dialog
+     *
+     * @param  {Object} evt
+     */
+    handleComponentDialogClose: function(evt) {
+        this.setState({ showingComponentDialog: false }, () => {
+            setTimeout(() => {
+                if (!this.state.showingComponentDialog) {
+                    this.setState({
+                        renderingComponentDialog: false,
+                        selectedComponent: null
+                    });
+                }
+            }, 500);
+        })
     },
 });
 

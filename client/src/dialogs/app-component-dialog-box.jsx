@@ -1,19 +1,23 @@
-var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var MarkGor = require('mark-gor/react');
 
-var Theme = require('theme/theme');
 var Locale = require('locale/locale');
+var Theme = require('theme/theme');
 
-require('./app-component.scss');
+// widgets
+var Overlay = require('widgets/overlay');
+var PushButton = require('widgets/push-button');
+
+require('./app-component-dialog-box.scss');
 
 module.exports = React.createClass({
-    displayName: 'AppComponent',
+    displayName: 'AppComponentDialogBox',
     propTypes: {
+        show: PropTypes.bool,
         component: PropTypes.object.isRequired,
-        theme: PropTypes.instanceOf(Theme),
-        locale: PropTypes.instanceOf(Locale),
-        onSelect: PropTypes.func,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+        onClose: PropTypes.func,
     },
 
     /**
@@ -22,11 +26,23 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        if (!this.props.component) {
+            return null;
+        }
+        var overlayProps = {
+            show: this.props.show,
+            onBackgroundClick: this.props.onClose,
+        };
         return (
-            <div className="app-component" onClick={this.handleClick}>
-                {this.renderPicture()}
-                {this.renderText()}
-            </div>
+            <Overlay {...overlayProps}>
+                <div className="app-component-dialog-box">
+                    <div className="contents">
+                        {this.renderPicture()}
+                        {this.renderText()}
+                    </div>
+                    {this.renderButtons()}
+                </div>
+            </Overlay>
         );
     },
 
@@ -72,26 +88,25 @@ module.exports = React.createClass({
         var elements = MarkGor.parse(text);
         return (
             <div className="text">
-                <div className="text-contents">
-                    {elements}
-                    <div className="ellipsis">...</div>
-                </div>
+                {elements}
             </div>
         );
     },
 
     /**
-     * Called when user clicks on component description
+     * Render buttons
      *
-     * @param  {Event} evt
+     * @return {ReactElement}
      */
-    handleClick: function(evt) {
-        if (this.props.onSelect) {
-            this.props.onSelect({
-                type: 'select',
-                target: this,
-                component: this.props.component,
-            });
-        }
+    renderButtons: function() {
+        var closeButtonProps = {
+            label: 'OK',
+            onClick: this.props.onClose,
+        };
+        return (
+            <div className="buttons">
+                <PushButton {...closeButtonProps} />
+            </div>
+        );
     },
 });

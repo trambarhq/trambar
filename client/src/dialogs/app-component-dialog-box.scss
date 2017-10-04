@@ -1,0 +1,81 @@
+.app-component-dialog-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 80%;
+    width: 80%;
+    max-width: 40em;
+    background-color: #362a2a;
+    box-shadow: 2px 2px 2px #000000;
+    color: #999999;
+    margin: auto;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+
+    .contents {
+        flex-grow: 1;
+        flex-shrink: 1;
+        overflow: auto;
+        padding: 0.5em 0.5em 0.25em 0.5em;
+        margin-bottom: 0.25em;
+
+        .picture {
+            float: left;
+            margin-right: 1em;
+            margin-bottom: 0.5em;
+
+            .icon {
+                display: inline-block;
+                color: #000000;
+                background-color: #fca326;
+                height: 8em;
+                width: 8em;
+                padding-top: 2em;
+                text-align: center;
+
+                .fa {
+                    font-size: 4em;
+                }
+            }
+
+            IMG {
+                width: auto;
+                height: 8em;
+            }
+        }
+
+        .text {
+            H1:first-child,
+            H2:first-child,
+            H3:first-child,
+            H4:first-child,
+            H5:first-child,
+            H6:first-child,
+            P:first-child {
+                margin-top: 0.1em;
+            }
+        }
+
+        &::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+            background-color: transparent;
+        }
+
+        &::-webkit-scrollbar {
+            width: 10px;
+            background-color: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            border-radius: 2px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+            background-color: rgba(0,0,0,.1);
+        }
+    }
+
+    .buttons {
+        flex-grow: 0;
+        flex-shrink: 0;
+        padding: 0.4em 0 0.2em 0.2em;
+        text-align: right;
+        border-top: 1px solid #666666;
+    }
+}
