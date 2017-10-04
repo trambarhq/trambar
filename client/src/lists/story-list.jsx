@@ -205,8 +205,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         return (
             <div className="story-list">
                 {this.renderEditors()}
-                {this.renderPendingStories()}
-                {this.renderPublishedStories()}
+                {this.renderStories()}
             </div>
         );
     },
@@ -276,51 +275,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
      *
      * @return {Array<ReactElement>}
      */
-    renderPendingStories: function() {
-        if (!this.props.showEditors) {
-            return null;
-        }
-        var pendingStories = sortStories(this.props.pendingStories);
-        var newPendingStories = _.filter(pendingStories, (story) => {
-            return !story.published_version_id;
-        });
-        return _.map(pendingStories, this.renderPendingStory);
-    },
-
-    /**
-     * Render view of story in pending state
-     *
-     * @param  {Story} story
-     * @param  {Number} index
-     *
-     * @return {ReactElement}
-     */
-    renderPendingStory: function(story, index) {
-        var authors = findAuthors(this.props.pendingAuthors, story);
-        var storyProps = {
-            story,
-            authors,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            pending: true,
-            onCancel: this.props.onStoryCancel,
-            key: story.id,
-        };
-        return <StoryView {...storyProps} />;
-    },
-
-    /**
-     * Render published stories
-     *
-     * @return {ReactElement}
-     */
-    renderPublishedStories: function() {
-        var stories = sortStories(this.props.stories);
-        return _.map(stories, this.renderPublishedStory);
+    renderStories: function() {
+        var stories = sortStories(this.props.stories, this.props.pendingStories);
+        return _.map(stories, this.renderStory);
     },
 
     /**
@@ -331,7 +288,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderPublishedStory: function(story, index) {
+    renderStory: function(story, index) {
         // see if it's being editted
         var draft = _.find(this.props.draftStories, { published_version_id: story.id });
         if (draft) {
@@ -357,6 +314,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            pending: _.includes(this.props.pendingStories, story),
             key: story.id,
         };
         var id = `story-${story.id}`;
@@ -372,7 +330,15 @@ var array = Memoize(function(object) {
     return [ object ];
 });
 
-var sortStories = Memoize(function(stories) {
+var sortStories = Memoize(function(stories, pendingStories) {
+    if (!_.isEmpty(pendingStories)) {
+        stories = _.slice(stories);
+        _.each(pendingStories, (story) => {
+            if (!story.published_version_id) {
+                stories.push(story);
+            }
+        });
+    }
     return _.orderBy(stories, [ 'ptime' ], [ 'desc' ]);
 });
 

@@ -86,7 +86,7 @@ module.exports = Relaks.createClass({
         var date = route.parameters.date;
         var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
         var searchString = route.query.search;
-        var searching = !!(date || searchString);
+        var searching = !!(date || !_.isEmpty(roleIds) || searchString);
         var server = route.parameters.server;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
@@ -96,7 +96,7 @@ module.exports = Relaks.createClass({
             pendingStories: null,
             currentUser: null,
 
-            showEditors: !(date || !_.isEmpty(roleIds) || searchString),
+            showEditors: !searching,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
@@ -200,16 +200,20 @@ module.exports = Relaks.createClass({
             }
         }).then(() => {
             if (!searching) {
-                // look for pending stories
+                // look for pending stories, those written by the user but
+                // haven't found themselves into the listing yet
+                var userStoryIds = _.map(props.stories, 'id');
                 var criteria = {
                     published: true,
-                    ready: false,
+                    exclude_ids: userStoryIds,
                     user_ids: [ props.currentUser.id ],
                 };
+                console.log(criteria);
                 return db.find({ table: 'story', criteria });
             }
         }).then((stories) => {
             if (stories) {
+                console.log('pending', _.map(stories, 'id'));
                 props.pendingStories = stories;
             }
             return <NewsPageSync {...props} />;

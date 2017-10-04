@@ -40,6 +40,10 @@ exports.match = function(table, object, criteria) {
                         matching = false;
                     }
                 }
+            } else if (name === 'exclude_ids') {
+                if (_.includes(desiredValue, object.id)) {
+                    matching = false;
+                }
             } else {
                 // assume it matches
             }

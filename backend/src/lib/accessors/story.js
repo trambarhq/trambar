@@ -39,6 +39,7 @@ module.exports = _.create(Data, {
         external_id: Number,
         published: Boolean,
         public: Boolean,
+        exclude_ids: Array(Number),
         time_range: String,
         newer_than: String,
         older_than: String,
@@ -115,6 +116,7 @@ module.exports = _.create(Data, {
      */
     apply: function(db, schema, criteria, query) {
         var special = [
+            'exclude_ids',
             'time_range',
             'newer_than',
             'older_than',
@@ -128,6 +130,9 @@ module.exports = _.create(Data, {
 
         var params = query.parameters;
         var conds = query.conditions;
+        if (criteria.exclude_ids) {
+            conds.push(`NOT (id = ANY($${params.push(criteria.exclude_ids)}))`);
+        }
         if (criteria.time_range !== undefined) {
             conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
