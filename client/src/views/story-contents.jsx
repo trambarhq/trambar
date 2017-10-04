@@ -18,6 +18,8 @@ var StoryText = require('widgets/story-text');
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MultipleUserNames = require('widgets/multiple-user-names');
+var AppComponent = require('views/app-component');
+var Scrollable = require('widgets/scrollable');
 var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
 
@@ -196,6 +198,9 @@ module.exports = React.createClass({
             var state = this.props.story.details.state;
             Icon = StoryTypes.icons[type + '.' + state];
         }
+        if (type === 'story') {
+            Icon = null;
+        }
         if (Icon) {
             return (
                 <div className="graphic">
@@ -217,6 +222,7 @@ module.exports = React.createClass({
             <div>
                 {this.renderText()}
                 {this.renderMedia()}
+                {this.renderAppComponents()}
             </div>
         )
     },
@@ -541,6 +547,42 @@ module.exports = React.createClass({
             resources,
         };
         return <MediaView {...props} />
+    },
+
+    /**
+     * Render affected app components
+     *
+     * @return {ReactElement}
+     */
+    renderAppComponents: function() {
+        var components = _.get(this.props.story, 'details.components');
+        if (_.isEmpty(components)) {
+            return null;
+        }
+        return (
+            <div className="impact">
+                <p>The following components were impacted:</p>
+                <Scrollable>
+                    {_.map(components, this.renderAppComponent)}
+                </Scrollable>
+            </div>
+        );
+    },
+
+    /**
+     * Render an affected app component
+     *
+     * @return {ReactElement}
+     */
+    renderAppComponent: function(component, i) {
+        var componentProps = {
+            key: i,
+            component,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onSelect: this.handleComponentSelect,
+        };
+        return <AppComponent {...componentProps} />
     },
 
     triggerChangeEvent: function(story) {

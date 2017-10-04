@@ -317,6 +317,7 @@ function importPushEvent(db, server, repo, event, author, project) {
             var criteria = {
                 commit_ids: commitIds,
                 order: '',
+                deleted: false,
             };
             return Story.find(db, project.name, criteria, `DISTINCT details->>'branch' AS branch`).then((rows) => {
                 return _.pull(_.map(rows, 'branch'), branch);

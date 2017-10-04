@@ -1,0 +1,68 @@
+.app-component {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #211a1a;
+    margin: 0 0.25em 0.5em 0.25em;
+    background-color: #cccccc;
+    cursor: pointer;
+
+    .picture {
+        flex-grow: 0;
+        flex-shrink: 0;
+
+        .icon {
+            display: inline-block;
+            color: #000000;
+            background-color: #fca326;
+            height: 4em;
+            width: 4em;
+            padding-top: 1em;
+            text-align: center;
+
+            .fa {
+                font-size: 2em;
+            }
+        }
+
+        IMG {
+            display: block;
+            width: auto;
+            height: 4em;
+        }
+    }
+
+    .text {
+        flex-grow: 1;
+        flex-shrink: 1;
+        color: #333333;
+
+        font-size: 1em;
+        margin: 0.25em 0.25em 0 0.40em;
+        overflow: hidden;
+        height: calc(3em + 8px);
+
+        .text-contents {
+            width: calc(100% - 1em);
+            position: relative;
+            display: block;
+            max-height: 4em;
+
+            .ellipsis {
+                position: absolute;
+                right: -1em;
+                top: calc(6em + 6px - 100%);
+                text-align: left;
+            }
+
+            H1, H2, H3, H4, H5 {
+                font-size: 1em;
+                margin-top: 0;
+                margin-bottom: 0.2em;
+            }
+
+            P {
+                margin-top: 0;
+            }
+        }
+    }
+}
