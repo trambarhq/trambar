@@ -2,7 +2,6 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var HttpError = require('errors/http-error');
 var Data = require('accessors/data');
-var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -63,7 +62,8 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
-            return Task.createUpdateTrigger(db, schema, this.table, 'updateAlbum');
+            var Task = require('accessors/task');
+            return Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateAlbum', [ this.table ]);
         });
     },
 

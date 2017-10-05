@@ -99,7 +99,7 @@ module.exports = _.create(Data, {
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
             var Task = require('accessors/task');
-            return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
+            return Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
         });
     },
 

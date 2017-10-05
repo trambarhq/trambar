@@ -3,7 +3,6 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var HttpError = require('errors/http-error');
 var Data = require('accessors/data');
-var Task = require('accessors/task');
 
 module.exports = _.create(Data, {
     schema: 'project',
@@ -23,6 +22,7 @@ module.exports = _.create(Data, {
         repo_id: Number,
         external_id: Number,
         published: Boolean,
+        ready: Boolean,
         ptime: String,
         btime: String,
         public: Boolean,
@@ -38,12 +38,12 @@ module.exports = _.create(Data, {
         repo_id: Number,
         external_id: Number,
         published: Boolean,
+        ready: Boolean,
         public: Boolean,
         exclude_ids: Array(Number),
         time_range: String,
         newer_than: String,
         older_than: String,
-        ready: Boolean,
         commit_ids: String,
         bumped_after: String,
         url: String,
@@ -76,6 +76,7 @@ module.exports = _.create(Data, {
                 repo_id int,
                 external_id int,
                 published boolean NOT NULL DEFAULT false,
+                ready boolean NOT NULL DEFAULT true,
                 ptime timestamp,
                 btime timestamp,
                 public boolean NOT NULL DEFAULT false,
@@ -100,7 +101,8 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
-            return Task.createUpdateTrigger(db, schema, this.table, 'updateResource');
+            var Task = require('accessors/task');
+            return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table, 'ready' ]);
         });
     },
 
@@ -120,7 +122,6 @@ module.exports = _.create(Data, {
             'time_range',
             'newer_than',
             'older_than',
-            'ready',
             'commit_ids',
             'bumped_after',
             'url',
@@ -155,13 +156,6 @@ module.exports = _.create(Data, {
         }
         if (criteria.url !== undefined) {
             conds.push(`details->>'url' = $${params.push(criteria.url)}`);
-        }
-        if (criteria.ready !== undefined) {
-            if (criteria.ready === true) {
-                conds.push(`ptime IS NOT NULL`);
-            } else {
-                conds.push(`ptime IS NULL`);
-            }
         }
         if (criteria.search) {
             return this.applyTextSearch(db, schema, criteria.search, query);
@@ -200,9 +194,12 @@ module.exports = _.create(Data, {
                 if (row.external_id) {
                     object.external_id = row.external_id;
                 }
+                if (row.ready === false) {
+                    object.ready = false;
+                }
                 if (!object.published) {
                     // don't send text when object isn't published and
-                    // there the user isn't the owner
+                    // the user isn't the owner
                     if (!_.includes(object.user_ids, credentials.user.id)) {
                         object.details = _.omit(object.details, 'text', 'resources');
                     }
@@ -231,14 +228,15 @@ module.exports = _.create(Data, {
                 var storyBefore = originals[index];
                 this.checkWritePermission(storyReceived, storyBefore, credentials);
 
-                // set the ptime if published is set and there're no outstanding
-                // media tasks
+                // set the ptime if published is set
                 if (storyReceived.published && !storyReceived.ptime) {
-                    var payloadIds = getPayloadIds(storyReceived);
-                    if (_.isEmpty(payloadIds)) {
-                        storyReceived.ptime = Object('NOW()');
-                    }
+                    storyReceived.ptime = new String('NOW()');
                 }
+
+                // the story is ready if there're no outstanding media tasks
+                var payloadIds = getPayloadIds(storyReceived);
+                storyReceived.ready = _.isEmpty(payloadIds);
+
                 // update btime if user wants to bump story
                 if (storyReceived.bump) {
                     storyReceived.btime = Object('NOW()');

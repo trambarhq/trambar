@@ -269,6 +269,7 @@ function updateListing(schema, id) {
         // script won't waste time performing the same work
         return Listing.lock(db, schema, id, '1 minute', 'gn, type, filters, details').then((row) => {
             var criteria = _.extend({}, row.filters, {
+                published: true,
                 ready: true,
                 limit: 5000,
             });

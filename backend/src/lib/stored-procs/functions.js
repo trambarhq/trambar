@@ -34,7 +34,9 @@ exports.payloadIds = function(details) {
     if (resources instanceof Array) {
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
-            payloadIds.push(res.payload_id);
+            if (res.payload_id) {
+                payloadIds.push(res.payload_id);
+            }
         }
     }
     return (payloadIds.length > 0) ? payloadIds : null;

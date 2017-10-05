@@ -59,14 +59,13 @@ module.exports = _.create(Data, {
         return db.execute(sql);
     },
 
-    createUpdateTrigger: function(db, schema, targetTable, method) {
+    createUpdateTrigger: function(db, schema, triggerName, method, arguments) {
         var table = this.getTableName(schema);
-        var triggerName = 'update' + _.capitalize(targetTable);
         var sql = `
             CREATE TRIGGER "${triggerName}"
             AFTER UPDATE ON ${table}
             FOR EACH ROW
-            EXECUTE PROCEDURE "${method}"(${targetTable});
+            EXECUTE PROCEDURE "${method}"(${argument.join(', ')});
         `;
         return db.execute(sql).return(true);
     },
