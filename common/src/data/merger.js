@@ -4,22 +4,13 @@ var Diff = require('diff');
 exports.mergeObjects = mergeObjects;
 exports.mergeStrings = mergeStrings;
 
-function mergeObjects(a, b, c) {
-    if (!(a instanceof Object)) {
-        a = {};
-    }
-    if (!(b instanceof Object)) {
-        b = {};
-    }
-    if (!(c instanceof Object)) {
-        c = {};
-    }
+function mergeObjects(a, b, c, resolveFns) {
     var d = {};
     var keys = _.union(_.keys(a), _.keys(b));
     _.each(keys, (key) => {
-        var valueA = a[key];
-        var valueB = b[key];
-        var valueC = c[key];
+        var valueA = a ? a[key] : undefined;
+        var valueB = b ? b[key] : undefined;
+        var valueC = c ? c[key] : undefined;
         var valueD;
         if (_.isEqual(valueA, valueB)) {
             valueD = _.cloneDeep(valueA);
@@ -31,15 +22,19 @@ function mergeObjects(a, b, c) {
             valueD = _.cloneDeep(valueA);
         } else {
             // conflict
-            if (valueA instanceof Array || valueB instanceof Array) {
-                valueD = mergeArrays(valueA, valueB, valueC);
-            } else if (valueA instanceof Object || valueB instanceof Object) {
-                valueD = mergeObjects(valueA, valueB, valueC);
+            var resolve = resolveFns ? resolveFns[key] : undefined;
+            if (isObject(valueA) && isObject(valueB)) {
+                valueD = mergeObjects(valueA, valueB, valueC, resolve);
             } else if (typeof(valueA) === 'string' || typeof(valueB) === 'string') {
                 valueD = mergeStrings(valueA, valueB, valueC);
             } else {
-                // favor B if conflicts can't be merged
-                valueD = valueB;
+                if (typeof(resolve) === 'function') {
+                    // use resolve function if there's one
+                    valueD = resolve(valueA, valueB, valueC);
+                } else {
+                    // favor B when conflicts can't be merged
+                    valueD = valueB;
+                }
             }
         }
         if (valueD !== undefined) {
@@ -103,27 +98,6 @@ function mergeStrings(a, b, c) {
     return chosen.join('');
 }
 
-function mergeArrays(a, b, c) {
-    if (!(a instanceof Array)) {
-        a = [];
-    }
-    if (!(b instanceof Array)) {
-        b = [];
-    }
-    if (!(c instanceof Array)) {
-        c = [];
-    }
-    var d = _.slice(b);
-    if (a.length > c.length) {
-        if (_.isEqual(a.slice(0, c.length), c)) {
-            for (var i = c.length; i < a.length; i++) {
-                d.push(a[i]);
-            }
-        }
-    }
-    return d;
-}
-
 function getUnchangedRanges(before, after) {
     var ranges = [];
     var diff = Diff.diffSentences(before, after);
@@ -156,4 +130,8 @@ function inRanges(index, length, ranges) {
         }
     }
     return false;
+}
+
+function isObject(v) {
+    return typeof(v) === 'object' && v.constructor === Object;
 }

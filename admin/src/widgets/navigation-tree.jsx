@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -92,6 +93,11 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     },
 
     getInitialState: function() {
+        this.components = ComponentRefs({
+            activeLink: HTMLAnchorElement,
+            container: HTMLElement,
+            arrow: HTMLElement,
+        });
         return {
             arrowPosition: 0,
             arrowCount: 0,
@@ -121,13 +127,14 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
+        var setters = this.components.setters;
         var classNames = [ 'navigation-tree' ];
         if (this.props.disabled) {
             classNames.push('disabled');
         }
         var rootNodes = this.getRootNodes();
         return (
-            <div ref="container" className={classNames.join(' ')}>
+            <div ref={setters.container} className={classNames.join(' ')}>
                 {_.map(rootNodes, this.renderRootNode)}
                 {this.renderArrow()}
             </div>
@@ -144,7 +151,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         }
         var ref;
         if (this.isActive(node)) {
-            ref = 'activeLink';
+            ref = this.components.setters.activeLink;
         }
         var url;
         if (!this.props.disabled) {
@@ -175,7 +182,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
     renderArrow: function() {
         var numbers = [ 'zero', 'one', 'two', 'three', 'four' ];
         var arrowProps = {
-            ref: 'arrow',
+            ref: this.components.setters.arrow,
             className: `arrow ${numbers[this.state.arrowCount]} ${this.state.arrowAction}`,
             style: { top: this.state.arrowPosition },
         };
@@ -498,7 +505,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         setTimeout(() => {
             // find the link level
             var level = 0;
-            var active = this.refs.activeLink;
+            var active = this.components.activeLink;
             if (active) {
                 for (var n = active; n; n = n.parentNode) {
                     var m;
@@ -518,14 +525,14 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             this.setState({ arrowAction: action, arrowCount: level })
         }, 50);
 
-        var arrow = this.refs.arrow;
-        var container = this.refs.container;
+        var arrow = this.components.arrow;
+        var container = this.components.container;
         var interval = setInterval(() => {
             // calculate the position of the arrow
             // happens in an interval function since the link will
             // move during transition
             var pos = 0;
-            var active = this.refs.activeLink;
+            var active = this.components.activeLink;
             if (active) {
                 var arrowRect = arrow.getBoundingClientRect();
                 var linkRect = active.getBoundingClientRect();

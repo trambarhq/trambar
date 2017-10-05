@@ -16,10 +16,6 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
         onLoad: PropTypes.func,
     },
-    components: ComponentRefs({
-        container: HTMLElement,
-        image: ImageView,
-    }),
 
     getDefaultProps: function() {
         return {
@@ -28,6 +24,10 @@ module.exports = React.createClass({
     },
 
     getInitialState: function() {
+        this.components = ComponentRefs({
+            container: HTMLElement,
+            image: ImageView,
+        });
         return {
             clippingRect: this.props.clippingRect
         };

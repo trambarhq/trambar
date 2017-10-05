@@ -36,9 +36,6 @@ module.exports = React.createClass({
 
         onChange: PropTypes.func.isRequired,
     },
-    components: ComponentRefs({
-        mediaEditor: MediaEditor
-    }),
 
     /**
      * Return initial state of component
@@ -46,6 +43,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            mediaEditor: MediaEditor
+        });
         return {
             hasCamera: DeviceManager.hasDevice('videoinput'),
             hasMicrophone: DeviceManager.hasDevice('audioinput'),
@@ -137,6 +137,7 @@ module.exports = React.createClass({
             payloads: this.props.payloads,
             onChange: this.handleResourcesChange,
         };
+        console.log('renderResources');
         return (
             <MediaEditor {...editorProps}>
                 <div className="message">
@@ -185,6 +186,7 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
+        console.log(this.components);
         this.components.mediaEditor.importFiles(files);
         return null;
     },

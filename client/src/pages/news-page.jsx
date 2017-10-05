@@ -208,12 +208,10 @@ module.exports = Relaks.createClass({
                     exclude_ids: userStoryIds,
                     user_ids: [ props.currentUser.id ],
                 };
-                console.log(criteria);
                 return db.find({ table: 'story', criteria });
             }
         }).then((stories) => {
             if (stories) {
-                console.log('pending', _.map(stories, 'id'));
                 props.pendingStories = stories;
             }
             return <NewsPageSync {...props} />;

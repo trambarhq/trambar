@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 require('./autosize-text-area.scss');
 
@@ -11,6 +12,10 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            actual: HTMLTextAreaElement,
+            shadow: HTMLTextAreaElement,
+        });
         return {
             requiredHeight: undefined,
         };
@@ -22,14 +27,15 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var setters = this.components.setters;
         var style = _.extend({
             height: this.state.requiredHeight,
         }, this.props.style);
         var props = _.omit(this.props, 'style');
         return (
             <div className="autosize-text-area">
-                <textarea ref="shadow" style={style} className="shadow" value={props.value} readOnly />
-                <textarea ref="actual" style={style} {...props} />
+                <textarea ref={setters.shadow} style={style} className="shadow" value={props.value} readOnly />
+                <textarea ref={setters.actual} style={style} {...props} />
             </div>
         );
     },
@@ -66,15 +72,15 @@ module.exports = React.createClass({
     },
 
     focus: function() {
-        var actual = this.refs.actual;
+        var actual = this.components.actual;
         if (actual) {
             actual.focus();
         }
     },
 
     updateSize: function() {
-        var shadow = this.refs.shadow;
-        var actual = this.refs.actual;
+        var shadow = this.components.shadow;
+        var actual = this.components.actual;
         if (!shadow || !actual) {
             return;
         }

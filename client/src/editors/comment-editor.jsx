@@ -42,9 +42,6 @@ module.exports = React.createClass({
 
         onFinish: PropTypes.func,
     },
-    components: ComponentRefs({
-        mediaEditor: MediaEditor
-    }),
 
     /**
      * Return initial state of component
@@ -52,6 +49,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            mediaEditor: MediaEditor
+        });
         var nextState = {
             draft: null,
             hasCamera: DeviceManager.hasDevice('videoinput'),

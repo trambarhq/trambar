@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 require('./tooltip.scss');
 
@@ -13,6 +14,9 @@ module.exports = React.createClass({
     },
 
     getInitialState: function() {
+        this.components = ComponentRefs({
+            container: HTMLElement,
+        });
         return {
             open: false,
             live: hasContents(this.props),
@@ -28,6 +32,7 @@ module.exports = React.createClass({
     },
 
     render: function() {
+        var setters = this.components.setters;
         var className = 'tooltip';
         if (this.state.live && !this.props.disabled) {
             className += ' live';
@@ -42,7 +47,7 @@ module.exports = React.createClass({
             className += ' ' + this.props.className;
         }
         return (
-            <div ref="container" className={className}>
+            <div ref={setters.container} className={className}>
                 {this.renderLabel()}
                 {this.renderWindow()}
             </div>
@@ -101,7 +106,7 @@ module.exports = React.createClass({
 
     handleMouseDown: function(evt) {
         var inside = false;
-        var container = this.refs.container;
+        var container = this.components.container;
         for (var n = evt.target; n; n = n.parentNode) {
             if (n === container) {
                 inside = true;

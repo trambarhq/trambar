@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
 var JpegAnalyser = require('media/jpeg-analyser');
+var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
     displayName: 'ImageView',
@@ -11,10 +12,30 @@ module.exports = React.createClass({
         onLoad: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        this.components = ComponentRefs({
+            canvas: HTMLCanvasElement,
+        });
+        return {};
+    },
+
+    /**
+     * Load image on mount
+     */
     componentWillMount: function() {
         this.load(this.props.url);
     },
 
+    /**
+     * Update image when URL or clipping rect changes
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.url !== nextProps.url) {
             this.load(nextProps.url);
@@ -26,11 +47,20 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
+        var setters = this.components.setters;
         var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
-        return <canvas ref="canvas" {...props} />
+        return <canvas ref={setters.canvas} {...props} />
     },
 
+    /**
+     * Draw image on mount (if it manages to load that fast)
+     */
     componentDidMount: function() {
         if (this.image && this.redrawNeeded) {
             // image was loaded before first render
@@ -38,6 +68,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Inform parent component that loading is complete
+     */
     triggerLoadEvent: function() {
         if (this.props.onLoad) {
             this.props.onLoad({
@@ -100,7 +133,7 @@ module.exports = React.createClass({
         if (!image) {
             return;
         }
-        var canvas = this.refs.canvas;
+        var canvas = this.components.canvas;
         if (!canvas) {
             this.redrawNeeded = true;
             return;
@@ -167,7 +200,7 @@ module.exports = React.createClass({
      * Collapsed the canvas
      */
     clearCanvas: function() {
-        var canvas = this.refs.canvas;
+        var canvas = this.components.canvas;
         if (canvas) {
             canvas.width = 0;
         	canvas.height = 0;

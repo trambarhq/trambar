@@ -144,9 +144,9 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var n = this.props.locale.name;
         var authors = this.props.authors;
-        if (!_.every(authors, _.isObject)) {
-            authors = [];
-        }
+        var names = _.map(authors, (author) => {
+            return n(author.details.name, author.details.gender);
+        });
         var contents;
         switch (_.size(authors)) {
             // the list can be empty during loading
@@ -154,15 +154,12 @@ module.exports = React.createClass({
                 contents = '\u00a0';
                 break;
             case 1:
-                contents = n(authors[0].details.name, authors[0].details.gender);
+                contents = `${names[0]}`;
                 break;
             case 2:
-                var name1 = n(authors[0].details.name, authors[0].details.gender);
-                var name2 = n(authors[1].details.name, authors[1].details.gender);
-                contents = t('story-author-$name1-and-$name2', name1, name2);
+                contents = t('story-author-$name1-and-$name2', names[0], names[1]);
                 break;
             default:
-                var name = p(authors[0].details.name, authors[0].details.gender);
                 var coauthors = _.slice(authors, 1);
                 var props = {
                     users: coauthors,
@@ -173,7 +170,7 @@ module.exports = React.createClass({
                     key: 1,
                 };
                 var users = <MultipleUserNames {...props} />
-                contents = t('story-author-$name-and-$users', name, users, coauthors.length);
+                contents = t('story-author-$name-and-$users', names[0], users, coauthors.length);
         }
         return <span className="name">{contents}</span>;
     },

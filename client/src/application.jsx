@@ -49,13 +49,6 @@ require('font-awesome-webpack');
 
 module.exports = React.createClass({
     displayName: 'Application',
-    components: ComponentRefs({
-        remoteDataSource: RemoteDataSource,
-        routeManager: RouteManager,
-        localeManager: LocaleManager,
-        themeManager: ThemeManager,
-        uploadManager: PayloadManager,
-    }),
 
     /**
      * Return initial state of component
@@ -63,6 +56,13 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            remoteDataSource: RemoteDataSource,
+            routeManager: RouteManager,
+            localeManager: LocaleManager,
+            themeManager: ThemeManager,
+            uploadManager: PayloadManager,
+        });
         return {
             database: null,
             payloads: null,

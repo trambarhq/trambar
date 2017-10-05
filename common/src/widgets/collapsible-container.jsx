@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 require('./collapsible-container.scss');
 
@@ -14,6 +15,10 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            container: HTMLDivElement,
+            contents: HTMLDivElement,
+        });
         return {
             contentHeight: undefined,
             collapsing: false,
@@ -42,6 +47,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var setters = this.components.setters;
         var style = {};
         if (this.props.open) {
             style.height = this.state.contentHeight;
@@ -55,8 +61,8 @@ module.exports = React.createClass({
             className += ' collapsing';
         }
         return (
-            <div ref="container" className={className} style={style}>
-                <div ref="contents" className="collapsible-contents">
+            <div ref={setters.container} className={className} style={style}>
+                <div ref={setters.contents} className="collapsible-contents">
                     {this.props.children}
                 </div>
             </div>
@@ -70,7 +76,7 @@ module.exports = React.createClass({
     },
 
     componentDidUpdate: function(prevProps, prevState) {
-        var contentHeight = getContentHeight(this.refs.contents);
+        var contentHeight = getContentHeight(this.components.contents);
         if (this.state.contentHeight !== contentHeight) {
             this.setState({ contentHeight });
         }
