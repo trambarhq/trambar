@@ -9,6 +9,7 @@ var Theme = require('theme/theme');
 var Overlay = require('widgets/overlay');
 var MediaButton = require('widgets/media-button');
 var MediaDialogBox = require('dialogs/media-dialog-box');
+var ImageView = require('media/image-view');
 
 require('./media-view.scss');
 
@@ -164,19 +165,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function(res) {
-        var width = 512;
-        var height;
-        if (res.clip) {
-            height = Math.round(width * res.clip.height / res.clip.width);
-        } else if (res.width && res.height) {
-            height = Math.round(width * res.height / res.width);
-        }
-        var imageProps = {
-            src: this.props.theme.getImageUrl(res, { width, height })
-        };
         return (
             <div className="image" onClick={this.handleImageClick}>
-                <img {...imageProps} width={width} height={height} />
+                {this.renderImageElement(res)}
             </div>
         );
     },
@@ -189,12 +180,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderVideo: function(res) {
-        var imageProps = {
-            src: this.props.theme.getPosterUrl(res, 512)
-        };
         return (
             <div className="video" onClick={this.handleVideoClick}>
-                <img {...imageProps} />
+                {this.renderImageElement(res, 'poster')}
                 <i className="fa fa-play-circle-o icon" />
             </div>
         );
@@ -219,18 +207,49 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderWebsite: function(res) {
-        var imageProps = {
-            src: this.props.theme.getPosterUrl(res, 512)
-        };
-        var url = res.url;
         return (
             <div className="website">
-                <a href={url}>
-                    <img {...imageProps} />
+                <a href={res.url} target="_blank">
+                    {this.renderImageElement(res, 'poster')}
                     <i className="fa fa-external-link icon" />
                 </a>
             </div>
         );
+    },
+
+    renderImageElement: function(res, type) {
+        var clip = res.clip;
+        var width = 512;
+        var height;
+        if (clip) {
+            height = Math.round(width * clip.height / clip.width);
+        } else {
+            height = Math.round(width * res.height / res.width)
+        }
+        var url, file;
+        if (type === 'poster') {
+            if (res.poster_url) {
+                url = this.props.theme.getPosterUrl(res, { width, height });
+            } else if (res.poster_file) {
+                file = res.poster_file;
+            }
+        } else {
+            if (res.url) {
+                url = this.props.theme.getImageUrl(res, { width, height });
+            } else if (res.file) {
+                file = res.file;
+            }
+        }
+        if (url) {
+            return <img src={url} width={width} height={height} />;
+        } else if (file instanceof Blob) {
+            // use ImageView, which handles orientation
+            url = URL.createObjectURL(file);
+            return <ImageView url={url} clippingRect={clip} />;
+        } else {
+            // TODO: placeholder for pending images
+            return null;
+        }
     },
 
     /**

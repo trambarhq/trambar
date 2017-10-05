@@ -86,7 +86,6 @@ module.exports = React.createClass({
                 // (properties in nextDraft are favored in conflicts)
                 nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
             }
-            this.props.payloads.reattach(nextDraft);
             nextState.draft = nextDraft;
         } else {
             nextState.draft = createBlankStory(nextProps.currentUser);
