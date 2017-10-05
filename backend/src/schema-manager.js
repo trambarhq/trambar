@@ -384,13 +384,16 @@ function setSchemaVersion(db, schema, version) {
  * @return {Promise<Boolean>}
  */
 function createMessageQueue(db) {
+    var roleNames = _.map(roles, 'name');
     var sql = `
         CREATE TABLE IF NOT EXISTS "message_queue" (
             id serial,
             message jsonb NOT NULL,
             ctime timestamp NOT NULL DEFAULT NOW(),
             PRIMARY KEY (id)
-        )
+        );
+        GRANT SELECT, INSERT ON "message_queue" TO ${roleNames.join(', ')};
+        GRANT USAGE, SELECT ON message_queue_id_seq TO ${roleNames.join(', ')};
     `;
     return db.execute(sql).then(() => {
         return true;

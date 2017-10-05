@@ -93,7 +93,8 @@ function fetchDirtyListings(db) {
     return getProjectSchemas(db).each((schema) => {
         var criteria = { dirty: true };
         return Listing.find(db, schema, criteria, 'id, atime').each((row) => {
-            return addToListingQueue(schema, row.id, row.atime);
+            addToListingQueue(schema, row.id, row.atime);
+            return null;
         });
     });
 }
