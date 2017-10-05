@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var MediaLoader = require('media/media-loader');
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
 var FrameGrabber = require('media/frame-grabber');
@@ -56,22 +57,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Attach files selected by user
-     *
-     * @param  {Array<File>} files
-     *
-     * @return {Promise<Number>}
-     */
-    importFiles: function(files) {
-        return Promise.mapSeries(files, (file) => {
-            return this.importFile(file);
-        }).then((indices) => {
-            var firstIndex = _.find(indices, _.isNumber);
-            return this.selectResource(firstIndex);
-        });
-    },
-
-    /**
      * Attach non-file drag-and-drop contents
      *
      * @param  {Array<DataTransferItem>} items
@@ -97,21 +82,27 @@ module.exports = React.createClass({
                 // see if it's an image being dropped
                 var isImage = /<img\b/i.test(html);
                 if (isImage) {
-                    var image = { external_url: url };
-                    return this.addImage(image);
+                    return MediaLoader.loadImage(url).then((image) => {
+                        return {
+                            type: 'image',
+                            external_url: url,
+                            width: image.naturalWidth,
+                            height: image.naturalHeight,
+                            clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight)
+                        };
+                    });
                 } else {
-                    var website = { url };
-                    if (html) {
-                        // get plain text from html
-                        var node = document.createElement('DIV');
-                        node.innerHTML = html.replace(/<.*?>/g, '');
-                        website.title = node.innerText;
-                    }
-                    return this.attachWebsite(website);
+                    return {
+                        type: 'website',
+                        url: url,
+                        title: getInnerText(html),
+                    };
                 }
             }
-        }).then((index) => {
-            return this.selectResource(index);
+        }).then((res) => {
+            if (res) {
+                return this.addResources([ res ]);
+            }
         });
     },
 
@@ -391,129 +382,91 @@ module.exports = React.createClass({
     },
 
     /**
-     * Add a resource
+     * Add new resources
      *
-     * @param  {Object} res
+     * @param  {Array<Object>} newResources
      *
-     * @return {Promise<Number>}
+     * @return {Promise<Number|undefined>}
      */
-    addResource: function(res) {
+    addResources: function(newResources) {
+        if (_.isEmpty(newResources)) {
+            return Promise.resolve();
+        }
         var path = 'details.resources'
-        var resources = _.slice(this.props.resources);
-        var index = resources.push(res) - 1;
+        var resourcesBefore = this.props.resources || [];
+        var resources = _.concat(resourcesBefore, newResources);
+        var firstIndex = resourcesBefore.length;
         return this.triggerChangeEvent(resources).then(() => {
-            return index;
+            return this.selectResource(firstIndex);
         });
-    },
-
-    /**
-     * Add an image
-     *
-     * @param  {Object} image
-     *
-     * @return {Promise<Number>}
-     */
-    addImage: function(image) {
-        var res = _.clone(image);
-        res.type = 'image';
-        if (image.width && image.height) {
-            res.clip = getDefaultClippingRect(image.width, image.height);
-        }
-        return this.addResource(res);
-    },
-
-    /**
-     * Add a video
-     *
-     * @param  {Object} video
-     *
-     * @return {Promise<Number>}
-     */
-    addVideo: function(video) {
-        var res = _.clone(video);
-        res.type = 'video';
-        if (video.width && video.height) {
-            res.clip = getDefaultClippingRect(video.width, video.height);
-        }
-        return this.addResource(res);
-    },
-
-    /**
-     * Add an audio
-     *
-     * @param  {Object} audio
-     *
-     * @return {Promise<Number>}
-     */
-    addAudio: function(audio) {
-        var res = _.clone(audio);
-        res.type = 'audio';
-        return this.addResource(res);
-    },
-
-    /**
-     * Add a link to a website
-     *
-     * @param  {Object} website
-     *
-     * @return {Promise<Number>}
-     */
-    attachWebsite: function(website) {
-        var res = _.clone(website);
-        res.type = 'website';
-        return this.addResource(res);
     },
 
     /**
      * Add the contents of a file
      *
-     * @param  {File} file
+     * @param  {Array<File>} files
      *
      * @return {Promise<Number|null>}
      */
-    importFile: function(file) {
-        if (/^image\//.test(file.type)) {
-            return BlobReader.loadImage(file).then((img) => {
-                var format = _.last(_.split(file.type, '/'));
-                var width = img.naturalWidth;
-                var height = img.naturalHeight;
-                var image = { format, file, width, height };
-                return this.addImage(image);
-            });
-        } else if (/^video\//.test(file.type)) {
-            return BlobReader.loadVideo(file).then((vid) => {
-                var format = _.last(_.split(file.type, '/'));
-                var width = vid.videoWidth;
-                var height = vid.videoHeight;
-                var duration = vid.duration;
-                return FrameGrabber.capture(vid).then((poster) => {
-                    var video = {
-                        format, file, width, height, duration,
-                        poster_file: poster
-                    };
-                    return this.addVideo(video);
-                });
-            });
-        } else if (/^audio\//.test(file.type)) {
+    importFiles: function(files) {
+        files = _.slice(files);
+        var urls = [];
+        return Promise.map(files, (file, index) => {
+            var url = urls[index] = URL.createObjectURL(file);
             var format = _.last(_.split(file.type, '/'));
-            var audio = { format, file };
-            return this.addAudio(audio);
-        } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
-            return BlobReader.loadText(file).then((text) => {
-                var link = LinkParser.parse(text);
-                if (link) {
-                    var website = {
-                        url: link.url,
-                        title: link.name || _.replace(file.name, /\.\w+$/, ''),
+            if (/^image\//.test(file.type)) {
+                return MediaLoader.loadImage(url).then((image) => {
+                    return {
+                        type: 'image',
+                        format: format,
+                        file: file,
+                        width: image.naturalWidth,
+                        height: image.naturalHeight,
+                        clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
                     };
-                    return this.attachWebsite(website);
-                }
-            });
-        } else {
-            throw new Error('Unrecognized file type: ' + file.type);
-            console.log(file);
-            return Promise.resolve(null);
-        }
+                });
+            } else if (/^video\//.test(file.type)) {
+                return MediaLoader.loadVideo(url).then((video) => {
+                    return FrameGrabber.capture(video).then((poster) => {
+                        return {
+                            type: 'video',
+                            format: format,
+                            file: file,
+                            width: video.videoWidth,
+                            height: video.videoHeight,
+                            clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
+                            duration: video.duration,
+                        };
+                    });
+                });
+            } else if (/^audio\//.test(file.type)) {
+                return Media.loadAudio(url).then((audio) => {
+                    return {
+                        type: 'audio',
+                        format: format,
+                        file: file,
+                        duration: audio.duration,
+                    };
+                });
+            } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
+                return BlobReader.loadText(file).then((text) => {
+                    var link = LinkParser.parse(text);
+                    if (link) {
+                        return {
+                            type: 'website',
+                            url: link.url,
+                            title: link.name || _.replace(file.name, /\.\w+$/, ''),
+                        };
+                    }
+                });
+            }
+        }).then((resources) => {
+            return this.addResources(_.filter(resources));
+        }).finally(() => {
+            _.each(urls, (url) => {
+                URL.revokeObjectURL(url);
+            })
+        });
     },
 
     /**
@@ -522,7 +475,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handlePhotoCapture: function(evt) {
-        this.addImage(evt.image);
+        var res = _.clone(evt.image);
+        res.type = 'image';
+        res.clip = getDefaultClippingRect(image.width, image.height);
+        this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
 
@@ -532,7 +488,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleVideoCapture: function(evt) {
-        this.addVideo(evt.video);
+        var res = _.clone(evt.video);
+        res.type = 'video';
+        res.clip = getDefaultClippingRect(video.width, video.height);
+        this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
 
@@ -542,7 +501,9 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleAudioCapture: function(evt) {
-        this.addAudio(evt.audio);
+        var res = _.clone(evt.audio);
+        res.type = 'audio';
+        this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
 
@@ -672,4 +633,19 @@ function retrieveDataItemText(item) {
     return new Promise((resolve, reject) => {
         item.getAsString(resolve);
     });
+}
+
+/**
+ * Get plain text from HTML
+ *
+ * @param  {String} html
+ *
+ * @return {String}
+ */
+function getInnerText(html) {
+    if (html) {
+        var node = document.createElement('DIV');
+        node.innerHTML = html.replace(/<.*?>/g, '');
+        website.title = node.innerText;
+    }
 }

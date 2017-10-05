@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var BlobReader = require('utils/blob-reader');
+var MediaLoader = require('utils/media-loader');
 var ImageView = require('media/image-view');
 
 var Database = require('data/database');
@@ -364,7 +364,8 @@ module.exports = React.createClass({
     handleUploadChange: function(evt) {
         var file = evt.target.files[0];
         if (file) {
-            return BlobReader.loadImage(file).then((img) => {
+            var url = URL.createObjectURL(file);
+            return MediaLoader.loadImage(url).then((img) => {
                 var image = {
                     format: _.last(_.split(file.type, '/')),
                     width: img.naturalWidth,
@@ -373,6 +374,8 @@ module.exports = React.createClass({
                     file,
                 };
                 return this.setImage(image);
+            }).finally(() => {
+                URL.revokeObjectURL(url);
             });
         }
     },

@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
-var BlobReader = require('utils/blob-reader');
+var MediaLoader = require('media/media-loader');
 var ImageView = require('media/image-view');
 
 var Database = require('data/database');
@@ -314,8 +314,10 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         var db = this.props.database.use({ schema: 'global', by: this });
         var payloads = this.props.payloads;
         return db.start().then((currentUserId) => {
-            return Promise.mapSeries(files, (file) => {
-                return BlobReader.loadImage(file).then((img) => {
+            var urls = [];
+            return Promise.mapSeries(files, (file, index) => {
+                var url = urls[index] = URL.createObjectURL(file);
+                return MediaLoader.loadImage(url).then((img) => {
                     var res = {
                         format: _.last(_.split(file.type, '/')),
                         width: img.naturalWidth,
@@ -342,6 +344,10 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                     // send the file
                     payloads.send(payloadId);
                     return picture;
+                });
+            }).finally(() => {
+                _.each(urls, (url) => {
+                    URL.revokeObjectURL(url);
                 });
             });
         });
