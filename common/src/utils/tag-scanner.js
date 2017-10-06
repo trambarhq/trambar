@@ -1,6 +1,7 @@
 var _ = require('lodash');
 
 exports.findTags = findTags;
+exports.isTag = isTag;
 
 /**
  * Find @name and #keyword tags
@@ -12,16 +13,22 @@ exports.findTags = findTags;
 function findTags(text) {
     var tags;
     if (typeof(text) === 'string') {
-        tags = text.match(regExp);
+        tags = text.match(findRE);
     } else if(text instanceof Object) {
         tags = _.flatten(_.map(text, (version) => {
-            return String(version).match(regExp);
+            return String(version).match(findRE);
         }));
     }
     return _.map(_.uniq(tags), _.toLower).sort();
 }
 
+function isTag(text) {
+    return checkRE.test(text);
+}
+
 var characters = 'a-zA-Z';
 var digits = '0-9';
+var pattern = `[@#][${characters}][${digits}${characters}]*`;
 
-var regExp = new RegExp(`[@#][${characters}][${digits}${characters}]*`, 'g');
+var findRE = new RegExp(`${pattern}`, 'g');
+var checkRE = new RegExp(`^${pattern}$`);
