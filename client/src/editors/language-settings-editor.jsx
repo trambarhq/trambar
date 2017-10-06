@@ -104,7 +104,6 @@ module.exports = React.createClass({
      */
     handleCountryChange: function(evt) {
         var code = evt.currentTarget.value;
-        console.log(code);
         if (code !== this.getSelectedCountryCode()) {
             var languageCode = this.getSelectedLanguageCode();
             var dialectCode = languageCode + '-' + code;

@@ -24,7 +24,6 @@ function loadProjectStatistics(db, projects) {
             var filters = getRangeFilters(dateRange);
             var criteria = { type: 'daily-activities', filters };
             return db.find({ schema, table: 'statistics', criteria, minimum }).then((dailyActivities) => {
-                console.log(dailyActivities);
                 return summarizeStatistics(dailyActivities, dateRange, project);
             });
         });

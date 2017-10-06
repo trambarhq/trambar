@@ -137,7 +137,6 @@ module.exports = React.createClass({
             payloads: this.props.payloads,
             onChange: this.handleResourcesChange,
         };
-        console.log('renderResources');
         return (
             <MediaEditor {...editorProps}>
                 <div className="message">
@@ -186,7 +185,6 @@ module.exports = React.createClass({
      */
     handleFileSelect: function(evt) {
         var files = evt.target.files;
-        console.log(this.components);
         this.components.mediaEditor.importFiles(files);
         return null;
     },
