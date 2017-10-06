@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var TagScanner = require('utils/tag-scanner');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -265,12 +266,17 @@ module.exports = React.createClass({
                 story.details.markdown = true;
             }
         }
+
         // automatically set story type to task list
         if (!story.type) {
             if (StoryText.hasLists(story)) {
                 story.type = 'task-list';
             }
         }
+
+        // look for tags
+        story.tags = TagScanner.findTags(story.details.text);
+
         this.triggerChangeEvent(story, path);
     },
 });
