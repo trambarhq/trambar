@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Chartist = require('widgets/chartist');
 var Moment = require('moment');
 var DateTracker = require('utils/date-tracker');
+var Memoize = require('utils/memoize');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -58,6 +59,7 @@ module.exports = React.createClass({
 
         var dates = getDateStrings(startDate, today);
         var series = getActivitySeries(this.props.statistics.daily, dates);
+        var upperRange = getUpperRange(series, true);
         var labels = getDateStrings(startDate, endDate);
         var chartProps = {
             type: 'bar',
@@ -70,7 +72,7 @@ module.exports = React.createClass({
                     right: 30
                 },
                 stackBars: true,
-                high: 20,
+                high: upperRange,
                 low: 0,
                 axisX: {
                     labelInterpolationFnc: function(date) {
@@ -148,15 +150,15 @@ module.exports = React.createClass({
     },
 });
 
-function getDateStrings(startDate, endDate) {
+var getDateStrings = Memoize(function(startDate, endDate) {
     var dates = [];
     for (var d = startDate.clone(); d <= endDate; d.add(1, 'day')) {
         dates.push(d.format('YYYY-MM-DD'));
     }
     return dates;
-}
+});
 
-function getDateLabels(startDate, endDate) {
+var getDateLabels = Memoize(function(startDate, endDate) {
     var labels = [];
     for (var d = startDate.clone(); d <= endDate; d.add(1, 'month')) {
         labels.push(d.format('ll'));
@@ -167,9 +169,9 @@ function getDateLabels(startDate, endDate) {
         }
     }
     return labels;
-};
+});
 
-function getActivitySeries(activities, dates) {
+var getActivitySeries = Memoize(function(activities, dates) {
     return _.map(StoryTypes, (type) => {
         // don't include series that are completely empty
         var empty = true;
@@ -182,7 +184,36 @@ function getActivitySeries(activities, dates) {
         });
         return (empty) ? [] : series;
     });
-};
+});
+
+var getUpperRange = Memoize(function(series, additive) {
+    var highest = 0;
+    if (additive) {
+        var sums = [];
+        _.each(series, (values) => {
+            _.each(values, (value, index) => {
+                sums[index] = (sums[index]) ? sums[index] + value : value;
+            });
+        });
+        if (!_.isEmpty(sums)) {
+            highest = _.max(sums);
+        }
+    } else {
+        _.each(series, (values) => {
+            var max = _.max(values);
+            if (max > highest) {
+                highest = max;
+            }
+        });
+    }
+    if (highest <= 20) {
+        return 20;
+    } else if (highest <= 50) {
+        return 50;
+    } else {
+        return Math.ceil(highest / 100) * 100;
+    }
+});
 
 function getDay(date) {
     return parseInt(date.substr(8));

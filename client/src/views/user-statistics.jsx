@@ -165,6 +165,7 @@ module.exports = React.createClass({
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
         var series = getActivitySeries(details, dates);
+        var upperRange = getUpperRange(series, true);
         var labels = getDateLabel(dates, this.props.locale.languageCode);
         var chartProps = {
             type: 'bar',
@@ -176,7 +177,7 @@ module.exports = React.createClass({
                         return value;
                     }
                 },
-                high: 20,
+                high: upperRange,
                 low: 0,
             }
         };
@@ -192,6 +193,7 @@ module.exports = React.createClass({
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
         var series = getActivitySeries(details, dates);
+        var upperRange = getUpperRange(series, false);
         var labels = getDateLabel(dates, this.props.locale.languageCode);
         var chartProps = {
             type: 'line',
@@ -202,7 +204,7 @@ module.exports = React.createClass({
                     right: 10
                 },
                 showPoint: false,
-                high: 20,
+                high: upperRange,
                 low: 0,
             }
         };
@@ -341,6 +343,35 @@ var getActivitySeries = Memoize(function(activities, dates) {
         });
         return (empty) ? [] : series;
     });
+});
+
+var getUpperRange = Memoize(function(series, additive) {
+    var highest = 0;
+    if (additive) {
+        var sums = [];
+        _.each(series, (values) => {
+            _.each(values, (value, index) => {
+                sums[index] = (sums[index]) ? sums[index] + value : value;
+            });
+        });
+        if (!_.isEmpty(sums)) {
+            highest = _.max(sums);
+        }
+    } else {
+        _.each(series, (values) => {
+            var max = _.max(values);
+            if (max > highest) {
+                highest = max;
+            }
+        });
+    }
+    if (highest <= 20) {
+        return 20;
+    } else if (highest <= 50) {
+        return 50;
+    } else {
+        return Math.ceil(highest / 100) * 100;
+    }
 });
 
 var getDateLabel = Memoize(function(dates, languageCode) {

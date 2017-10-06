@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('utils/media-loader');
+var MediaLoader = require('media/media-loader');
 var ImageView = require('media/image-view');
 
 var Database = require('data/database');

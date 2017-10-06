@@ -107,7 +107,7 @@ module.exports = React.createClass({
     },
 
     renderRecentActivities: function() {
-        var stories = this.props.stories;
+        var stories = _.slice(this.props.stories).reverse();
         // TODO: remove this once listing can be limited in length
         stories = _.slice(stories, 0, 5);
         return (
