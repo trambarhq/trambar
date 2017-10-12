@@ -54,7 +54,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            userAnswers: {},
+            userAnswers: StoryText.getDefaultAnswers(this.props.story, this.props.locale),
             voteSubmitted: false,
             selectedComponent: null,
             showingComponentDialog: false,
@@ -65,7 +65,9 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.story !== nextProps.story) {
             if (this.props.story.type === 'task-list') {
-                this.setState({ userAnswer: {} });
+                this.setState({
+                    userAnswers: StoryText.getDefaultAnswers(nextProps.story, nextProps.locale),
+                });
             }
         }
     },

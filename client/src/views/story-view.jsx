@@ -225,21 +225,26 @@ module.exports = React.createClass({
         return <StoryViewOptions {...props} />;
     },
 
+    /**
+     * Save a story after a delay
+     *
+     * @param  {Story} story
+     * @param  {Number} delay
+     */
     autosaveStory: function(story, delay) {
-        if (delay) {
-            this.cancelAutosave();
-            this.autosaveTimeout = setTimeout(() => {
-                this.saveStory(story);
-            }, delay);
-            this.autosaveUnloadHandler = () => {
-                this.saveStory(story);
-            };
-            window.addEventListener('beforeunload', this.autosaveUnloadHandler);
-        } else {
+        this.cancelAutosave();
+        this.autosaveTimeout = setTimeout(() => {
             this.saveStory(story);
-        }
+        }, delay);
+        this.autosaveUnloadHandler = () => {
+            this.saveStory(story);
+        };
+        window.addEventListener('beforeunload', this.autosaveUnloadHandler);
     },
 
+    /**
+     * Cancel any scheduled autosave operation
+     */
     cancelAutosave: function() {
         if (this.autosaveTimeout) {
             clearTimeout(this.autosaveTimeout);
@@ -327,6 +332,14 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Send bookmarks to list of users
+     *
+     * @param  {Story} story
+     * @param  {Array<Number>} recipientIds
+     *
+     * @return {Promise<Array<Bookmark>>}
+     */
     sendBookmarks: function(story, recipientIds) {
         var bookmarks = this.props.recommendations;
         var newBookmarks = [];
@@ -356,6 +369,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Change options concerning a story
+     *
+     * @param  {Object} options
+     */
     setOptions: function(options) {
         var before = this.state.options;
         this.setState({ options }, () => {

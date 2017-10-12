@@ -6,11 +6,13 @@ var MarkGor = require('mark-gor/react');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-module.exports = StoryText;
-module.exports.hasLists = hasLists;
-module.exports.hasMarkdownFormatting = hasMarkdownFormatting;
-module.exports.addListTemplate = addListTemplate;
-module.exports.updateList = updateList;
+module.exports = exports = StoryText;
+
+exports.hasLists = hasLists;
+exports.hasMarkdownFormatting = hasMarkdownFormatting;
+exports.addListTemplate = addListTemplate;
+exports.updateList = updateList;
+exports.getDefaultAnswers = getDefaultAnswers;
 
 require('./story-text.scss');
 
@@ -280,13 +282,38 @@ function updateList(story, input) {
     var key = parseInt(input.value);
     var clearOthers = (input.type === 'radio');
     var checked = input.checked;
-    var text = _.get(story, 'details.text');
-    var newText = _.mapValues(text, (langText) => {
+    var newText = _.mapValues(story.details.text, (langText) => {
         // make "[ ]" => "[x]" or vice-versa
         return ListParser.update(langText, list, key, checked, clearOthers);
     });
     story.details = _.clone(story.details);
     story.details.text = newText;
+}
+
+/**
+ * Return answers that are set in the story
+ *
+ * @param  {Story} story
+ * @param  {Locale} locale
+ *
+ * @return {Object}
+ */
+function getDefaultAnswers(story, locale) {
+    var answers = {};
+    if (story.type === 'survey') {
+        var p = locale.pick;
+        var langText = p(story.details.text);
+        var tokens = ListParser.extract(langText);
+        _.each(tokens, (list, listIndex) => {
+            var name = `list-${listIndex + 1}`;
+            _.each(list, (item, itemIndex) => {
+                if (item.checked) {
+                    answers[name] = itemIndex + 1;
+                }
+            });
+        });
+    }
+    return answers;
 }
 
 /**
