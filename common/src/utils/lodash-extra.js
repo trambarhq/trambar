@@ -126,35 +126,25 @@ _.mixin({
         });
     },
 
-    obscure: function(object, exceptions) {
-        return obscureRecursive(object, exceptions);
+    obscure: function(object, paths) {
+        var clone = _.clone(object);
+        _.each(paths, (path) => {
+            var value = _.get(clone, path);
+            switch (typeof(value)) {
+                case 'number':
+                    value = 0;
+                    break;
+                case 'string':
+                    value = _.repeat('x', value.length);
+                    break;
+                case 'boolean':
+                    value = false;
+                    break;
+                default:
+                    return;
+            }
+            _.set(clone, path, value);
+        });
+        return clone;
     },
 });
-
-function obscureRecursive(value, exceptions, path) {
-    if (_.includes(exceptions, path)) {
-        return value;
-    }
-    switch (typeof(value)) {
-        case 'number':
-            return 0;
-        case 'string':
-            return _.repeat('x', value.length);
-        case 'boolean':
-            return false;
-        case 'object':
-            if (value instanceof Array) {
-                return _.map(value, (v, key) => {
-                    var cPath = (path) ? path + '.' + key : key;
-                    return obscureRecursive(v, exceptions, cPath)
-                });
-            } else if (value instanceof Object) {
-                return _.mapValues(value, (v, key) => {
-                    var cPath = (path) ? path + '.' + key : key;
-                    return obscureRecursive(v, exceptions, cPath)
-                });
-            } else {
-                return null;
-            }
-    }
-}

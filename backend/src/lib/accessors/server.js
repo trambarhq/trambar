@@ -87,14 +87,47 @@ module.exports = _.create(Data, {
                 object.type = row.type;
                 object.name = row.name;
                 if (credentials.unrestricted) {
-                    object.settings = _.obscure(row.settings, [
-                        'api.url',
-                        'oauth.baseURL',
-                        'oauth.clientID',
-                    ]);
+                    object.settings = _.obscure(row.settings, sensitiveSettings);
                 }
             });
             return objects;
         });
-    }
+    },
+
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials, options) {
+        return Data.import.call(this, db, schema, objects, originals, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                if (object.settings instanceof Object) {
+                    var original = originals[index];
+                    _.each(sensitiveSettings, (path) => {
+                        // restore the original values if these fields are all x's
+                        var value = _.get(object.settings, path);
+                        if (/^x+$/.test(value)) {
+                            var originalValue = _.get(original.settings, path);
+                            _.set(object.settings, path, originalValue);
+                        }
+                    });
+                }
+            })
+            return objects;
+        });
+    },
 });
+
+var sensitiveSettings = [
+    'api.access_token',
+    'api.refresh_token',
+    'oauth.clientSecret',
+];
