@@ -32,7 +32,10 @@ module.exports = React.createClass({
         cacheName: PropTypes.string.isRequired,
         urlPrefix: PropTypes.string,
         retrievalFlags: PropTypes.object,
+        defaultProfileImage: PropTypes.string,
+
         locale: PropTypes.instanceOf(Locale),
+
         onChange: PropTypes.func,
         onAuthorization: PropTypes.func,
         onExpiration: PropTypes.func,
@@ -992,6 +995,7 @@ module.exports = React.createClass({
             var notifierProps = {
                 ref: setters.notifier,
                 locale: this.props.locale,
+                defaultProfileImage: this.props.defaultProfileImage,
                 onNotify: this.handleChangeNotification,
                 onAlertClick: this.props.onAlertClick,
             };

@@ -98,6 +98,10 @@ module.exports = {
                     ]
                 }
             },
+            {
+                test: /\.(jpeg|jpg|png|gif)$/,
+                loader: 'file-loader',
+            },
         ]
     },
     plugins: [

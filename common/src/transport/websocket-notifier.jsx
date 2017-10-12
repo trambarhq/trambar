@@ -11,6 +11,7 @@ module.exports = React.createClass({
     propTypes: {
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
+        defaultProfileImage: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale),
 
@@ -19,9 +20,8 @@ module.exports = React.createClass({
     },
 
     statics: {
-        // TODO
         isAvailable: function() {
-            return true;
+            return (process.env.PLATFORM !== 'mobile');
         }
     },
 
@@ -144,8 +144,16 @@ module.exports = React.createClass({
         return attempt.promise;
     },
 
+    /**
+     * Create a SockJS socket
+     *
+     * @param  {String} protocol
+     * @param  {String} server
+     * @param  {String} token
+     *
+     * @return {Promise<SockJS>}
+     */
     createSocket: function(protocol, server, token) {
-        //console.log('Connecting to ' + server);
         return new Promise((resolve, reject) => {
             var url = `${protocol}//${server}/socket`;
             var socket = new SockJS(url);
@@ -171,6 +179,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Notify parent component that a change event was received
+     *
+     * @param  {Object} changes
+     */
     triggerNotifyEvent: function(changes) {
         if (this.props.onNotify) {
             this.props.onNotify({
@@ -183,6 +196,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Inform parent component that an alert was clicked
+     *
+     * @param  {Object} alert
+     */
     triggerAlertClickEvent: function(alert) {
         if (this.props.onAlertClick) {
             this.props.onAlertClick({
@@ -193,6 +211,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Ask user for permission to show notification on mount
+     */
     componentWillMount: function() {
         requestNotificationPermission().then(() => {
             this.setState({ showingAlert: true })
@@ -200,6 +221,11 @@ module.exports = React.createClass({
         })
     },
 
+    /**
+     * Display an alert popup
+     *
+     * @param  {Object} alert
+     */
     showAlert: function(alert) {
         if (this.state.showingAlert) {
             var options = {};
@@ -207,6 +233,8 @@ module.exports = React.createClass({
             var protocol = this.state.protocol;
             if (alert.profile_image) {
                 options.icon = `${protocol}//${server}${alert.profile_image}`;
+            } else {
+                options.icon = this.props.defaultProfileImage;
             }
             if (alert.message) {
                 options.body = alert.message;
@@ -214,6 +242,7 @@ module.exports = React.createClass({
                 // show attach image only if there's no text
                 options.image = `${protocol}//${server}${alert.attached_image}`;
             }
+            console.log(options);
             options.lang = this.props.locale.languageCode;
             var notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {

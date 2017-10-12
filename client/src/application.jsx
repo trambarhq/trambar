@@ -214,6 +214,8 @@ module.exports = React.createClass({
             ref: setters.remoteDataSource,
             locale: this.state.locale,
             cacheName: 'trambar',
+            defaultProfileImage: require('profile-image-placeholder.png'),
+
             onChange: this.handleDatabaseChange,
             onAuthorization: this.handleAuthorization,
             onExpiration: this.handleExpiration,
