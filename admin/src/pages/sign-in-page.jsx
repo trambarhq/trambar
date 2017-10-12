@@ -194,6 +194,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             key: i,
             className: 'oauth-button',
             name: provider.name,
+            href: provider.url,
             onClick: this.handleOAuthButtonClick,
         };
         return (
