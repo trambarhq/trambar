@@ -114,6 +114,24 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if story can be bumped by current user
+     *
+     * @return {Boolean}
+     */
+    canBumpStory: function() {
+        var story = this.props.story;
+        var userId = this.props.currentUser.id;
+        var userType = this.props.currentUser.type;
+        if (_.includes(story.user_ids, userId) || userType === 'admin') {
+            // allow bumping after a day
+            if (Moment() > Moment(story.btime || story.ptime).add(1, 'day')) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
      * Return true if story can be added to tracker
      *
      * @return {[type]}
@@ -217,6 +235,12 @@ module.exports = React.createClass({
                 selected: options.removePost,
                 onClick: this.handleRemovePostClick,
             };
+            var bumpPostProps = {
+                label: t('option-bump-post'),
+                hidden: !this.canBumpStory(),
+                selected: options.bumpPost,
+                onClick: this.handleBumpPostClick,
+            };
             return (
                 <div className={section}>
                     <OptionButton {...bookmarkProps} />
@@ -225,6 +249,7 @@ module.exports = React.createClass({
                     <OptionButton {...hidePostProps} />
                     <OptionButton {...editPostProps} />
                     <OptionButton {...removePostProps} />
+                    <OptionButton {...bumpPostProps} />
                     {this.renderUserSelectionDialogBox()}
                 </div>
             );
@@ -358,6 +383,17 @@ module.exports = React.createClass({
     handleRemovePostClick: function(evt) {
         var options = _.clone(this.props.options);
         options.removePost = true;
+        this.triggerChangeEvent(options);
+    },
+
+    /**
+     * Called when user clicks on bump post button
+     *
+     * @param  {Event} evt
+     */
+    handleBumpPostClick: function(evt) {
+        var options = _.clone(this.props.options);
+        options.bumpPost = true;
         this.triggerChangeEvent(options);
     },
 

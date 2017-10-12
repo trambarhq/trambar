@@ -400,13 +400,18 @@ module.exports = React.createClass({
             if (options.removePost && !before.removePost) {
                 this.removeStory(this.props.story);
             }
-            if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
-                this.sendBookmarks(this.props.story, options.bookmarkRecipients);
+            if (options.bumpPost && !before.bumpPost) {
+                var story = _.clone(this.props.story);
+                story.bump = true;
+                this.saveStory(story);
             }
             if (options.hidePost !== before.hidePost) {
                 var story = _.clone(this.props.story);
                 story.public = !options.hidePost;
                 this.saveStory(story);
+            }
+            if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
+                this.sendBookmarks(this.props.story, options.bookmarkRecipients);
             }
         });
     },

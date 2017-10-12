@@ -339,8 +339,12 @@ var sortStories = Memoize(function(stories, pendingStories) {
             }
         });
     }
-    return _.orderBy(stories, [ 'ptime' ], [ 'desc' ]);
+    return _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
 });
+
+var getStoryTime = function(story) {
+    return story.btime || story.ptime;
+};
 
 var sortStoryDrafts = Memoize(function(stories, currentUser) {
     // current user's own stories are listed first

@@ -134,6 +134,7 @@ module.exports = function(languageCode) {
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
         'option-bookmark-story': 'Bookmark story',
+        'option-bump-post': 'Bump post',
         'option-edit-post': 'Edit post',
         'option-hide-post': 'Hide from non-team members',
         'option-remove-post': 'Remove post',

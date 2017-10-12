@@ -197,7 +197,10 @@ module.exports = _.create(Data, {
                 if (row.ready === false) {
                     object.ready = false;
                 }
-                if (!object.published) {
+                if (row.btime) {
+                    object.btime = row.btime;
+                }
+                if (!row.published) {
                     // don't send text when object isn't published and
                     // the user isn't the owner
                     if (!_.includes(object.user_ids, credentials.user.id)) {
@@ -387,7 +390,6 @@ module.exports = _.create(Data, {
             AND user_ids && $1
             AND id = story_role_ids.story_id
         `;
-        console.log(sql);
         return db.execute(sql, [ userIds ]);
     },
 });
