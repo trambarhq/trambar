@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -23,6 +24,7 @@ module.exports = React.createClass({
         currentUser: PropTypes.object.isRequired,
         repo: PropTypes.object,
 
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
@@ -60,7 +62,15 @@ module.exports = React.createClass({
             theme: this.props.theme,
             size: 'small'
         };
-        return <ProfileImage {...props} />;
+        if (this.props.respondent) {
+            var route = this.props.route;
+            var url = require('pages/person-page').getUrl({
+                server: route.parameters.server,
+                schema: route.parameters.schema,
+                user: this.props.respondent.id,
+            });
+        }
+        return <a href={url}><ProfileImage {...props} /></a>;
     },
 
     /**

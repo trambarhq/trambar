@@ -134,6 +134,7 @@ module.exports = React.createClass({
             repo: this.props.repo,
             beingEdited: !!tempCopy,
             currentUser: this.props.currentUser,
+            route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
             key: reaction.id,

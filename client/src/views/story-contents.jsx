@@ -129,12 +129,21 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderProfileImage: function() {
+        var leadAuthor = _.get(this.props.authors, 0);
         var props = {
-            user: _.get(this.props.authors, 0),
+            user: leadAuthor,
             theme: this.props.theme,
             size: 'medium',
         };
-        return <ProfileImage {...props} />;
+        if (leadAuthor) {
+            var route = this.props.route;
+            var url = require('pages/person-page').getUrl({
+                server: route.parameters.server,
+                schema: route.parameters.schema,
+                user: leadAuthor.id,
+            });
+        }
+        return <a href={url}><ProfileImage {...props} /></a>;
     },
 
     /**
