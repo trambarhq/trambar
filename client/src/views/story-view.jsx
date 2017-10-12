@@ -276,6 +276,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove story from remote database
+     *
+     * @param  {Story} story
+     *
+     * @return {Promise<Story>}
+     */
+    removeStory: function(story) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.removeOne({ table: 'story' }, story);
+    },
+
+    /**
      * Save reaction to remote database
      *
      * @param  {Reaction} reaction
@@ -381,6 +396,9 @@ module.exports = React.createClass({
                 var tempCopy = _.omit(this.props.story, 'id', 'published', 'ptime');
                 tempCopy.published_version_id = this.props.story.id;
                 this.saveStory(tempCopy);
+            }
+            if (options.removePost && !before.removePost) {
+                this.removeStory(this.props.story);
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
                 this.sendBookmarks(this.props.story, options.bookmarkRecipients);

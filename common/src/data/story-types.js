@@ -1,4 +1,4 @@
-module.exports = [
+module.exports = exports = [
     'push',
     'merge',
     'issue',
@@ -11,7 +11,7 @@ module.exports = [
     'task-list',
 ];
 
-module.exports.icons = {
+exports.icons = {
     'push': require('octicons/build/svg/repo-push.svg'),
     'merge': require('octicons/build/svg/git-merge.svg'),
     'issue': require('octicons/build/svg/issue-opened.svg'),
@@ -26,3 +26,13 @@ module.exports.icons = {
     'survey': require('octicons/build/svg/list-unordered.svg'),
     'task-list': require('octicons/build/svg/list-ordered.svg'),
 };
+
+exports.editable = [
+    'story',
+    'task-list',
+    'survey',
+];
+
+exports.trackable = [
+    'story',
+];

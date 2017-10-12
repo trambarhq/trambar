@@ -136,6 +136,7 @@ module.exports = function(languageCode) {
         'option-bookmark-story': 'Bookmark story',
         'option-edit-post': 'Edit post',
         'option-hide-post': 'Hide from non-team members',
+        'option-remove-post': 'Remove post',
         'option-send-bookmarks': 'Send bookmarks to other users',
         'option-send-bookmarks-to-$count-users': (count) => {
             var users = (count === 1) ? `${count} user` : `${count} users`;

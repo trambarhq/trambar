@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
+var StoryTypes = require('data/story-types');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -82,7 +83,7 @@ module.exports = React.createClass({
      */
     canEditStory: function() {
         var story = this.props.story;
-        if (_.includes(editableStoryTypes, story.type)) {
+        if (_.includes(StoryTypes.editable, story.type)) {
             var userId = this.props.currentUser.id;
             if (_.includes(story.user_ids, userId)) {
                 // allow editing for 3 days
@@ -95,13 +96,31 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if story can be removed by current user
+     *
+     * @return {Boolean}
+     */
+    canRemoveStory: function() {
+        var story = this.props.story;
+        var userId = this.props.currentUser.id;
+        var userType = this.props.currentUser.type;
+        if (_.includes(story.user_ids, userId) || userType === 'admin') {
+            // allow remove for 3 days
+            if (Moment() < Moment(story.ptime).add(3, 'day')) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
      * Return true if story can be added to tracker
      *
      * @return {[type]}
      */
     canAddIssue: function() {
         var story = this.props.story;
-        if (_.includes(trackableStoryTypes, story.type)) {
+        if (_.includes(StoryTypes.trackable, story.type)) {
             var userType = this.props.currentUser.type;
             if (userType === 'member' || userType === 'admin') {
                 return true;
@@ -192,6 +211,12 @@ module.exports = React.createClass({
                 selected: options.editPost,
                 onClick: this.handleEditPostClick,
             };
+            var removePostProps = {
+                label: t('option-remove-post'),
+                hidden: !this.canRemoveStory(),
+                selected: options.removePost,
+                onClick: this.handleRemovePostClick,
+            };
             return (
                 <div className={section}>
                     <OptionButton {...bookmarkProps} />
@@ -199,6 +224,7 @@ module.exports = React.createClass({
                     <OptionButton {...addIssueProps} />
                     <OptionButton {...hidePostProps} />
                     <OptionButton {...editPostProps} />
+                    <OptionButton {...removePostProps} />
                     {this.renderUserSelectionDialogBox()}
                 </div>
             );
@@ -325,6 +351,17 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user clicks on remove post button
+     *
+     * @param  {Event} evt
+     */
+    handleRemovePostClick: function(evt) {
+        var options = _.clone(this.props.options);
+        options.removePost = true;
+        this.triggerChangeEvent(options);
+    },
+
+    /**
      * Called when user finishes selecting user
      *
      * @param  {Object} evt
@@ -345,13 +382,3 @@ module.exports = React.createClass({
         this.closeSelectionDialogBox();
     },
 });
-
-var editableStoryTypes = [
-    'story',
-    'task-list',
-    'survey',
-];
-
-var trackableStoryTypes = [
-    'story',
-];
