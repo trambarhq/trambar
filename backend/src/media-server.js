@@ -201,7 +201,6 @@ function handleWebsiteScreenshot(req, res) {
                         var url = `/media/images/${hash}`;
                         var width = metadata.width;
                         var height = metadata.height;
-                        var clip = ImageManager.getDefaultClippingRect(width, height, 'top');
                         var details = { poster_url: url, title, width, height };
                         return saveTaskOutcome(schema, taskId, details);
                     }).then(() => {
@@ -241,8 +240,7 @@ function handleImageUpload(req, res) {
                 var format = metadata.format;
                 var width = metadata.width;
                 var height = metadata.height;
-                var clip = ImageManager.getDefaultClippingRect(width, height, 'center');
-                var details = { url, format, width, height, clip };
+                var details = { url, format, width, height };
                 return saveTaskOutcome(schema, taskId, details);
             });
             return { url };
@@ -272,8 +270,7 @@ function handleImageImport(req, res) {
             var format = metadata.format;
             var width = metadata.width;
             var height = metadata.height;
-            var clip = ImageManager.getDefaultClippingRect(width, height, 'center');
-            return { url, format, width, height, clip };
+            return { url, format, width, height };
         });
     }).then((results) => {
         sendJson(res, results);
@@ -358,12 +355,10 @@ function handleMediaUpload(req, res, type) {
             if (poster) {
                 var posterUrl = `/media/images/${poster.hash}`;
                 ImageManager.getImageMetadata(poster.path).then((metadata) => {
-                    var clip = ImageManager.getDefaultClippingRect(width, height, 'center');
                     var details = {
                         poster_url: url,
                         width: metadata.width,
                         height: metadata.height,
-                        clip,
                     };
                     return saveTaskProgress(schema, taskId, details);
                 });
