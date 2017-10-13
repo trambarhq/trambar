@@ -36,3 +36,13 @@ exports.editable = [
 exports.trackable = [
     'story',
 ];
+
+exports.git = [
+    'push',
+    'merge',
+    'issue',
+    'milestone',
+    'wiki',
+    'member',
+    'repo',
+];

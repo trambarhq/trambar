@@ -205,23 +205,25 @@ module.exports = React.createClass({
 
     renderGraphic: function() {
         var type = this.props.story.type;
+        var className = 'graphic';
+        if (_.includes(StoryTypes.git, type)) {
+            className += ' git';
+        } else {
+            return null;
+        }
         var Icon = StoryTypes.icons[type];
         if (type === 'issue') {
             var state = this.props.story.details.state;
             Icon = StoryTypes.icons[type + '.' + state];
         }
-        if (type === 'story') {
-            Icon = null;
-        }
-        if (Icon) {
-            return (
-                <div className="graphic">
-                    <Icon className={type} />
-                </div>
-            );
-        } else {
+        if (!Icon) {
             return null;
         }
+        return (
+            <div className={className}>
+                <Icon className={type} />
+            </div>
+        );
     },
 
     /**
