@@ -320,8 +320,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     renderForm: function() {
         var t = this.props.locale.translate;
         var readOnly = !this.isEditing();
-        var projectOriginal = this.props.project;
         var project = this.getProject();
+        var projectOriginal = this.props.project || emptyProject;
         var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var problems = this.state.problems;
         var titleProps = {
@@ -365,14 +365,12 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             readOnly,
         };
         var sc = findSettings(project);
-        var sp = findSettings(this.props.project);
+        var sp = findSettings(projectOriginal);
         var membershipOptionProps = [
             {
                 name: 'manual',
-                selected: !sc.membership.accept_team_member_automatically
-                       && !sc.membership.accept_approved_users_automaticlly,
-                previous: !sp.membership.accept_team_member_automatically
-                       && !sp.membership.accept_approved_users_automaticlly,
+                selected: !_.some(_.omit(sc.membership, 'allow_request')),
+                previous: (projectOriginal.id) ? !_.some(_.omit(sp.membership, 'allow_request')) : undefined,
                 children: t('project-summary-new-members-manual'),
             },
             {
@@ -397,12 +395,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var accessControlOptionProps = [
             {
                 name: 'members_only',
-                selected: !sc.access_control.grant_team_members_read_only
-                       && !sc.access_control.grant_approved_users_read_only
-                       && !sc.access_control.grant_unapproved_users_read_only,
-                previous: !sp.access_control.grant_team_members_read_only
-                       && !sp.access_control.grant_approved_users_read_only
-                       && !sp.access_control.grant_unapproved_users_read_only,
+                selected: !_.some(sc.access_control),
+                previous: (projectOriginal.id) ? !_.some(sp.access_control) : undefined,
                 children: t('project-summary-access-control-member-only')
             },
             {
