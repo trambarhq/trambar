@@ -14,8 +14,8 @@ exports.retrievePush = retrievePush;
  *
  * @return {Promise}
  */
-function retrievePush(server, repo, ref, headId, tailId, count) {
-    var push = new Push(ref, headId, tailId, count);
+function retrievePush(server, repo, ref, headId, tailId, knownIds, count) {
+    var push = new Push(ref, headId, tailId, knownIds, count);
     // get the basic info of all commit
     return retrieveCommit(server, repo, push, headId).then((commit) => {
         push.head = commit;
@@ -54,7 +54,23 @@ function retrieveCommit(server, repo, push, id) {
         commit.lines.added = info.stats.additions;
         commit.lines.deleted = info.stats.deletions;
         var parentIds = _.filter(info.parent_ids, (id) => {
-            return id !== push.tailId;
+            if (id !== push.tailId) {
+                if (push.knownIds.length === push.count) {
+                    // we know exactly which commits are in this push
+                    if (_.includes(push.knownIds, id)) {
+                        return true;
+                    } else {
+                        // remember that the id was skipped
+                        if (!_.includes(push.skippedIds, id)) {
+                            push.skippedIds.push(id);
+                        }
+                    }
+                } else {
+                    // Gitlab has truncated the list--we can't tell if the
+                    // parent was part of the push
+                    return true;
+                }
+            }
         });
         return Promise.map(parentIds, (parentId) => {
             return retrieveCommit(server, repo, push, parentId);
@@ -207,11 +223,13 @@ function mergeCommits(push) {
     });
 };
 
-function Push(ref, headId, tailId, count) {
+function Push(ref, headId, tailId, knownIds, count) {
     this.ref = ref;
     this.headId = headId;
     this.head = null;
     this.tailId = tailId;
+    this.knownIds = knownIds;
+    this.skippedIds = [];
     this.count = count;
     this.commits = {};
     this.lines = {

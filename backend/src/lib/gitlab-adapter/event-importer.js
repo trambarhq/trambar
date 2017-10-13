@@ -307,8 +307,9 @@ function importPushEvent(db, server, repo, event, author, project) {
     var ref = event.data.ref;
     var headId = event.data.after;
     var tailId = event.data.before;
+    var knownIds = _.map(event.data.commits, 'id');
     var count = event.data.total_commits_count;
-    return PushRetriever.retrievePush(server, repo, ref, headId, tailId, count).then((push) => {
+    return PushRetriever.retrievePush(server, repo, ref, headId, tailId, knownIds, count).then((push) => {
         // look for component descriptions
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
             var commitIds = _.keys(push.commits);
@@ -321,9 +322,16 @@ function importPushEvent(db, server, repo, event, author, project) {
             return Story.find(db, project.name, criteria, `DISTINCT details->>'branch' AS branch`).then((rows) => {
                 return _.pull(_.map(rows, 'branch'), branch);
             }).then((sourceBranches) => {
+                var commitBefore = push.tailId;
+                if (/^0+$/.test(commitBefore)) {
+                    if (push.skippedIds.length === 1) {
+                        // the one that was skipped was the branching point
+                        commitBefore = push.skippedIds[0];
+                    }
+                }
                 var details = {
                     commit_ids: commitIds,
-                    commit_id_before: push.tailId,
+                    commit_id_before: commitBefore,
                     commit_id_after: push.headId,
                     lines: push.lines,
                     files: _.transform(push.files, (counts, list, op) => {

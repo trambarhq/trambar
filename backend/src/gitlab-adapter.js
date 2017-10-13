@@ -208,7 +208,6 @@ function handleDatabaseEvent(event) {
 
 function handleDatabaseSyncRequest(event) {
     var db = database;
-    console.log('handleDatabaseSyncRequest', event);
     var table = event.table;
     var criteria = event.criteria;
     if (table === 'project') {
@@ -266,7 +265,7 @@ function handleHookCallback(req, res) {
     var repoId = req.params.repoId;
     var projectId = req.params.projectId;
     var event = req.body;
-    console.log('Incoming: ', event);
+    //console.log('Incoming: ', event);
     var db = database;
     return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
         return Project.findOne(db, 'global', { id: projectId }, '*').then((project) => {
