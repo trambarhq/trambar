@@ -372,6 +372,36 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 ],
             };
         });
+        var userOptionListProps = {
+            onOptionClick: this.handleUserOptionClick,
+            readOnly,
+        };
+        var userOptionProps = [
+            {
+                name: 'no-creation',
+                selected: !_.get(server, 'settings.user.type'),
+                previous: (serverOriginal.id) ? !_.get(serverOriginal, 'settings.user.type') : undefined,
+                children: t('server-summary-new-user-no-creation'),
+            },
+            {
+                name: 'create-guest',
+                selected: _.get(server, 'settings.user.type') === 'guest',
+                previous: _.get(serverOriginal, 'settings.user.type') === 'guest',
+                children: t('server-summary-new-user-guest'),
+            },
+            {
+                name: 'create-member',
+                selected: _.get(server, 'settings.user.type') === 'member',
+                previous: _.get(serverOriginal, 'settings.user.type') === 'member',
+                children: t('server-summary-new-user-member'),
+            },
+            {
+                name: 'auto-approve',
+                selected: !!_.get(server, 'settings.user.automatic_approval'),
+                previous: !!_.get(serverOriginal, 'settings.user.automatic_approval'),
+                children: t('server-summary-new-user-automatic-approval'),
+            }
+        ];
         var apiAccess;
         if (hasIntegration(server)) {
             if (_.get(server.settings, 'api.access_token')) {
@@ -423,6 +453,12 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                         <InputError>{t(problems.type)}</InputError>
                     </label>
                     {_.map(typeOptionProps, renderOption)}
+                </OptionList>
+                <OptionList {...userOptionListProps}>
+                    <label>
+                        {t('server-summary-new-user')}
+                    </label>
+                    {_.map(userOptionProps, renderOption)}
                 </OptionList>
                 <CollapsibleContainer open={needOAuthUrl}>
                     <TextField {...oauthUrlProps}>
@@ -568,6 +604,30 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleOAuthSecretChange: function(evt) {
         this.setServerProperty(`settings.oauth.clientSecret`, evt.target.value);
+    },
+
+    /**
+     * Called when user clicks one of the user options
+     *
+     * @param  {Object} evt
+     */
+    handleUserOptionClick: function(evt) {
+        switch (evt.name) {
+            case 'no-creation':
+                this.setServerProperty(`settings.user.type`, undefined);
+                break;
+            case 'create-guest':
+                this.setServerProperty(`settings.user.type`, 'guest');
+                break;
+            case 'create-member':
+                this.setServerProperty(`settings.user.type`, 'member');
+                break;
+            case 'auto-approve':
+                var server = this.getServer();
+                var newValue = !_.get(server, 'settings.user.automatic_approval');
+                this.setServerProperty(`settings.user.automatic_approval`, newValue);
+                break;
+        }
     },
 
     /**

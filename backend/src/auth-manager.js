@@ -570,11 +570,9 @@ function findMatchingUser(db, server, account) {
 function createNewUser(db, server, account) {
     var profile = account.profile;
     var preferredUsername = proposeUsername(profile);
-    // TODO: add server settings
-    var acceptingUser = true;
-    var autoApprove = false;
-    var userType = 'guest';
-    if (!acceptingUser) {
+    var autoApprove = _.get(server.settings, 'user.automatic_approval', false);
+    var userType = _.get(server.settings, 'user.type');
+    if (!userType) {
         throw new HttpError(403);
     }
     return retrieveProfileImage(profile).then((image) => {

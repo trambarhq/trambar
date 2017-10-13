@@ -231,6 +231,11 @@ module.exports = function(languageCode) {
             return `Server: ${name}`;
         },
         'server-summary-name': 'Identifier',
+        'server-summary-new-user': 'New users',
+        'server-summary-new-user-no-creation': 'Do not create new users',
+        'server-summary-new-user-guest': 'Create new users as guests',
+        'server-summary-new-user-member': 'Create new users as team members',
+        'server-summary-new-user-automatic-approval': 'Approve new users automatically',
         'server-summary-oauth-id': 'OAuth client ID',
         'server-summary-oauth-secret': 'OAuth client secret',
         'server-summary-oauth-url': 'OAuth URL',
