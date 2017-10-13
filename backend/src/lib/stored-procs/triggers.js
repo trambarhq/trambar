@@ -74,44 +74,31 @@ exports.notifyLiveDataChange.ret = 'trigger';
  * with matching payload id
  */
 exports.updateResource = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    // find rows in target table
-    var payloadId = NEW.id;
-    var details = NEW.details;
     var table = TG_ARGV[0];
     var readyColumn = TG_ARGV[1];
-    var sql = `SELECT * FROM "${TG_TABLE_SCHEMA}"."${table}" WHERE "payloadIds"(details) @> $1`;
-    var rows = plv8.execute(sql, [ [ payloadId ] ]);
-    var ready = true;
-    for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        var resources = row.details.resources;
-        var changed = false;
-        for (var j = 0; j < resources.length; j++) {
-            var res = resources[j];
-            if (res.payload_id === payloadId) {
-                for (var name in details) {
-                    if (res[name] == null) {
-                        res[name] = details[name];
-                        changed = true;
-                    }
-                }
-                if (NEW.completion === 100) {
-                    res.payload_id = undefined;
-                }
-            }
-            if (res.payload_id) {
-                ready = false;
-            }
-        }
-        if (changed) {
-            var assignments = [ `details = $1` ];
-            if (readyColumn && ready) {
-                assignments.push(`${readyColumn} = true`);
-            }
-            var sql = `UPDATE "${TG_TABLE_SCHEMA}"."${table}" SET ${assignments.join(', ')} WHERE id = $2`;
-            plv8.execute(sql, [ row.details, row.id ]);
-        }
+    var publishedColumn = TG_ARGV[2];
+
+    var payload = {
+        id: NEW.id,
+        details: NEW.details,
+        completion: NEW.completion,
+    };
+    var params = [];
+    var payloadId = `$${params.push([ payload.id ])}`;
+    var payloadDetails = `$${params.push(payload)}`;
+    var clear = publishedColumn || 'true';
+    var newDetails = `"updatePayload"(details, ${payloadDetails}, ${clear})`;
+    var assignments = [ `details = ${newDetails}` ];
+    if (readyColumn) {
+        // set ready column to true if there are no more payload ids
+        assignments.push(`${readyColumn} = "payloadIds"(${newDetails}) IS NULL`);
     }
+    var sql = `
+        UPDATE "${TG_TABLE_SCHEMA}"."${table}"
+        SET ${assignments.join(', ')}
+        WHERE "payloadIds"(details) @> ${payloadId}
+    `;
+    plv8.execute(sql, params);
 };
 exports.updateResource.args = '';
 exports.updateResource.ret = 'trigger';
@@ -122,30 +109,26 @@ exports.updateResource.flags = 'SECURITY DEFINER';
  * with matching payload id
  */
 exports.updateAlbum = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    var payloadId = NEW.id;
-    var details = NEW.details;
     var table = TG_ARGV[0];
-    var sql = `SELECT * FROM "${TG_TABLE_SCHEMA}"."${table}" WHERE (details->>'payload_id')::int = $1`;
-    var rows = plv8.execute(sql, [ [ payloadId ] ]);
-    var changed = false;
-    for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        var res = row.details;
-        for (var name in details) {
-            if (res[name] == null) {
-                res[name] = details[name];
-                changed = true;
-            }
-        }
-        if (NEW.completion === 100) {
-            res.payload_id = undefined;
-            changed = true;
-        }
-    }
-    if (changed) {
-        var sql = `UPDATE "${TG_TABLE_SCHEMA}"."${TG_ARGV[0]}" SET details = $1 WHERE id = $2`;
-        plv8.execute(sql, [ row.details, row.id ]);
-    }
+
+    var params = [];
+    var payload = {
+        id: NEW.id,
+        details: NEW.details,
+        completion: NEW.completion,
+    };
+    var payloadId = `$${params.push([ payload.id ])}`;
+    var payloadDetails = `$${params.push(payload)}`;
+    var newDetails = `"updatePayload"(details, ${payloadDetails}, true)`;
+    var assignments = [ `details = ${newDetails}` ];
+    var sql = `
+        UPDATE "${TG_TABLE_SCHEMA}"."${table}"
+        SET ${assignments.join(', ')}
+        WHERE (details->>'payload_id')::int = ${payloadId}
+    `;
+    plv8.elog(NOTICE, sql);
+    plv8.execute(sql, params);
+
 };
 exports.updateAlbum.args = '';
 exports.updateAlbum.ret = 'trigger';

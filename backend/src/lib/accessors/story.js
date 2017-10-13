@@ -102,7 +102,7 @@ module.exports = _.create(Data, {
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
             var Task = require('accessors/task');
-            return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table, 'ready' ]);
+            return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table, 'ready', 'published' ]);
         });
     },
 
@@ -236,7 +236,7 @@ module.exports = _.create(Data, {
                     storyReceived.ptime = new String('NOW()');
                 }
 
-                // the story is ready if there're no outstanding media tasks
+                // the story is ready if there're no outstanding media tasks                
                 var payloadIds = getPayloadIds(storyReceived);
                 storyReceived.ready = _.isEmpty(payloadIds);
 

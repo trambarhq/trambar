@@ -307,8 +307,10 @@ Database.prototype.updateJavaScriptRuntime = function() {
             var module = require('stored-procs/runtime');
             var code = FS.readFileSync(`${__dirname}/stored-procs/runtime.js`, 'utf8');
             var sql = `
-                CREATE OR REPLACE FUNCTION plv8_init() RETURNS void
-                AS $$\n${code}\n$$
+                CREATE OR REPLACE FUNCTION plv8_init() RETURNS void AS
+                $BODY$
+                ${code}
+                $BODY$
                 LANGUAGE plv8;
             `;
             return this.execute(sql);
@@ -342,8 +344,10 @@ Database.prototype.updateJavaScriptFunctions = function(f) {
                 throw new Error(`${name}() does not have ret attached`);
             }
             var sql = `
-                CREATE OR REPLACE FUNCTION "${name}"(${args}) RETURNS ${ret}
-                AS $$\n${code}\n$$
+                CREATE OR REPLACE FUNCTION "${name}"(${args}) RETURNS ${ret} AS
+                $BODY$
+                ${code}
+                $BODY$
                 LANGUAGE plv8 ${flags};
             `;
             return this.execute(sql);

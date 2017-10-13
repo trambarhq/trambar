@@ -140,6 +140,44 @@ describe('Triggers', function() {
             Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
             expect(stmts).to.be.empty;
         })
-
+    })
+    describe('#updateResource()', function() {
+        it('should try updating target table on update', function() {
+            var stmts = initPLV8();
+            var mtime = new Date('2017');
+            var OLD = { id: 1, gn: 1, mtime: mtime, details: {} };
+            var NEW = { id: 1, gn: 2, mtime: mtime, details: { url: 'image.jpg' } };
+            var TG_ARGV = [ 'system' ];
+            Triggers.updateResource(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(stmts[0])
+                .to.contain('UPDATE')
+                .to.contain('system')
+                .to.contain('updatePayload');
+        })
+        it('should update ready column of target table', function() {
+            var stmts = initPLV8();
+            var mtime = new Date('2017');
+            var OLD = { id: 1, gn: 1, mtime: mtime, details: {} };
+            var NEW = { id: 1, gn: 2, mtime: mtime, details: { url: 'image.jpg' } };
+            var TG_ARGV = [ 'story', 'ready', 'published' ];
+            Triggers.updateResource(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(stmts[0])
+                .to.contain('ready')
+                .to.contain('published');
+        })
+    })
+    describe('#updateAlbum()', function() {
+        it('should try updating target table on update', function() {
+            var stmts = initPLV8();
+            var mtime = new Date('2017');
+            var OLD = { id: 1, gn: 1, mtime: mtime, details: {} };
+            var NEW = { id: 1, gn: 2, mtime: mtime, details: { url: 'image.jpg' } };
+            var TG_ARGV = [ 'picture' ];
+            Triggers.updateResource(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(stmts[0])
+                .to.contain('UPDATE')
+                .to.contain('picture')
+                .to.contain('updatePayload');
+        })
     })
 })

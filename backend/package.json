@@ -6,8 +6,8 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -- src/**/test/*.js",
-    "test:start": "./node_modules/mocha/bin/mocha --watch -- src/**/test/*.js",
+    "test": "./node_modules/mocha/bin/mocha -- src/lib/**/test/*.js",
+    "test:start": "./node_modules/mocha/bin/mocha --watch -- src/lib/**/test/*.js",
     "test:docker:start": "docker-compose -p test -f test.yml up -d",
     "test:docker:logs": "docker-compose -p test -f test.yml logs -f",
     "test:docker:stop": "docker-compose -p test -f test.yml down"
