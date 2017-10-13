@@ -104,6 +104,8 @@ exports.matchObject = function(filters, object) {
                     return false;
                 }
                 break;
+            case 'tz_offset':
+                break;
             default:
                 if (!matchScalars(filters[name], object[name])) {
                     return false;
