@@ -118,7 +118,7 @@ module.exports = React.createClass({
     attachListTemplate: function(story) {
         if (story.type === 'task-list' || story.type === 'survey') {
             if (!StoryText.hasLists(story)) {
-                StoryText.addListTemplate(story, this.props.languageCode, this.props.locale);
+                StoryText.addListTemplate(story, this.props.locale);
             }
         }
     },

@@ -247,11 +247,10 @@ function ListItemCount(props) {
  * Create list template
  *
  * @param  {Story} story
- * @param  {String} languageCode
  * @param  {Locale} locale
  */
-function addListTemplate(story, languageCode, locale) {
-    var lang = languageCode.substr(0, 2);
+function addListTemplate(story, locale) {
+    var lang = locale.lang;
     var text = _.get(story, 'details.text');
     text = _.clone(text) || {};
     var langText = _.get(text, lang, '');
