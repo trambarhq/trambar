@@ -11,7 +11,7 @@ function fromTitle(title) {
         name = String(title[lang]);
         name = latinize(name);
         name = name.replace(/\s+/g, '-');
-        name = name.replace(/[^a-z\-]/g, '');
+        name = name.replace(/[^0-9a-z\-]/g, '');
         if (/^\-+$/.test(name)) {
             name = '';
         }

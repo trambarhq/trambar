@@ -84,7 +84,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
-            this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+            return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
                 var Task = require('accessors/task');
                 return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
             });
@@ -317,21 +317,7 @@ module.exports = _.create(Data, {
         }
         if (access === 'know' || access === 'read') {
             // see if people can know about the project's existence
-            if (user.type === 'member') {
-                if (!ms.allow_request_from_team_members) {
-                    return false;
-                }
-            } else if (user.type === 'guest') {
-                if (user.approved) {
-                    if (!ms.allow_request_from_approved_guests) {
-                        return false;
-                    }
-                } else {
-                    if (!ms.allow_request_from_unapproved_guests) {
-                        return false;
-                    }
-                }
-            } else {
+            if (!ms.allow_request) {
                 return false;
             }
             if (access == 'know') {

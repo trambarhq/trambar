@@ -775,7 +775,7 @@ module.exports = {
             FOR EACH ROW
             EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
         `;
-        return db.execute(sql.join('\n')).return(true);
+        return db.execute(sql).return(true);
     },
 };
 

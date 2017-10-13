@@ -65,7 +65,7 @@ module.exports = _.create(Data, {
             CREATE TRIGGER "${triggerName}"
             AFTER UPDATE ON ${table}
             FOR EACH ROW
-            EXECUTE PROCEDURE "${method}"(${argument.join(', ')});
+            EXECUTE PROCEDURE "${method}"(${arguments.join(', ')});
         `;
         return db.execute(sql).return(true);
     },
