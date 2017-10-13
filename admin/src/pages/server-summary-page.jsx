@@ -388,7 +388,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             readOnly: true
         };
-        var showApiSection = (server.type === 'gitlab');
         var needOAuthUrl = (server.type === 'gitlab');
         var oauthUrlProps = {
             id: 'oauth_token',
@@ -409,13 +408,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             value: _.get(server, 'settings.oauth.clientSecret', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthSecretChange,
-            readOnly: readOnly,
-        };
-        var apiUrlProps = {
-            id: 'api_url',
-            value: _.get(server, 'settings.api.url', ''),
-            locale: this.props.locale,
-            onChange: this.handleApiUrlChange,
             readOnly: readOnly,
         };
         return (
@@ -447,9 +439,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                     <InputError>{t(problems.clientSecret)}</InputError>
                 </TextField>
                 <TextField {...apiAccessProps}>{t('server-summary-api-access')}</TextField>
-                <CollapsibleContainer open={showApiSection}>
-                    <TextField {...apiUrlProps}>{t('server-summary-api-url')}</TextField>
-                </CollapsibleContainer>
             </div>
         );
     },
@@ -543,15 +532,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleTypeOptionClick: function(evt) {
         this.setServerProperty(`type`, evt.name);
-    },
-
-    /**
-     * Called when user changes API URL
-     *
-     * @param  {Event} evt
-     */
-    handleApiUrlChange: function(evt) {
-        this.setServerProperty(`settings.api.url`, evt.target.value);
     },
 
     /**

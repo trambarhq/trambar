@@ -225,7 +225,6 @@ module.exports = function(languageCode) {
         'server-summary-api-access-acquired': 'Administrative access acquired',
         'server-summary-api-access-not-applicable': 'Not applicable',
         'server-summary-api-access-pending': 'Waiting for user action',
-        'server-summary-api-url': 'API URL (override)',
         'server-summary-cancel': 'Cancel',
         'server-summary-edit': 'Edit server',
         'server-summary-member-$name': (name) => {
