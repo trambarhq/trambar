@@ -1,6 +1,10 @@
 var Chai = require('chai'), expect = Chai.expect;
 
 var Functions = require('../functions');
+var Runtime = require('../runtime');
+for(var name in Runtime) {
+    global[name] = Runtime[name];
+}
 
 describe('Functions', function() {
     describe('#payloadIds()', function() {
@@ -32,6 +36,12 @@ describe('Functions', function() {
             };
             expect(Functions.payloadIds(details)).to.equal(null);
         })
+        it('should return id when it is stored in the details object itself', function() {
+            var details = {
+                payload_id: 3
+            };
+            expect(Functions.payloadIds(details)).to.deep.equal([ 3 ]);
+        })
     })
     describe('#updatePayload()', function() {
         it('should copy properties from payload into matching resource', function() {
@@ -56,7 +66,7 @@ describe('Functions', function() {
                     }
                 ]
             };
-            var newDetails = Functions.updatePayload(details, payload, true);
+            var newDetails = Functions.updatePayload(details, payload);
             var res0 = newDetails.resources[0];
             expect(res0).to.have.property('url', 'image.jpg');
             expect(res0).to.have.property('width', 400);
@@ -87,7 +97,7 @@ describe('Functions', function() {
                     }
                 ]
             };
-            var newDetails = Functions.updatePayload(details, payload, true);
+            var newDetails = Functions.updatePayload(details, payload);
             var res0 = newDetails.resources[0];
             expect(res0).to.have.property('width', 400);
             expect(res0).to.have.property('height', 314);
@@ -114,7 +124,7 @@ describe('Functions', function() {
                     }
                 ]
             };
-            var newDetails = Functions.updatePayload(details, payload, true);
+            var newDetails = Functions.updatePayload(details, payload);
             var res0 = newDetails.resources[0];
             expect(res0).to.have.property('ready', true);
         })
@@ -140,11 +150,11 @@ describe('Functions', function() {
                     }
                 ]
             };
-            var newDetails = Functions.updatePayload(details, payload, true);
+            var newDetails = Functions.updatePayload(details, payload);
             var res0 = newDetails.resources[0];
             expect(res0).to.have.property('ready', false);
         })
-        it('should remove payload ids and ready flags when everything is ready', function() {
+        it('should copy properties into the details object itself when there payload id is there', function() {
             var payload = {
                 id: 3,
                 details: {
@@ -152,49 +162,18 @@ describe('Functions', function() {
                     width: 400,
                     height: 300,
                 },
-                completion: 100
+                completion: 90
             };
             var details = {
-                resources: [
-                    {
-                        type: 'image',
-                        payload_id: 3,
-                    },
-                    {
-                        type: 'video',
-                        payload_id: 4,
-                        ready: true
-                    }
-                ]
+                type: 'image',
+                payload_id: 3,
             };
             var newDetails = Functions.updatePayload(details, payload, true);
-            var res0 = newDetails.resources[0];
-            expect(res0).to.not.have.property('payload_id');
-            expect(res0).to.not.have.property('ready');
-            var res1 = newDetails.resources[1];
-            expect(res1).to.not.have.property('payload_id');
-            expect(res1).to.not.have.property('ready');
+            expect(newDetails).to.have.property('url');
+            expect(newDetails).to.have.property('width');
+            expect(newDetails).to.have.property('height');
+            expect(newDetails).to.have.property('payload_id');
+            expect(newDetails).to.have.property('ready', false);
         })
-    })
-    it('should copy properties into the details object itself when there payload id is there', function() {
-        var payload = {
-            id: 3,
-            details: {
-                url: '/somewhere/image.jpg',
-                width: 400,
-                height: 300,
-            },
-            completion: 90
-        };
-        var details = {
-            type: 'image',
-            payload_id: 3,
-        };
-        var newDetails = Functions.updatePayload(details, payload, true);
-        expect(newDetails).to.have.property('url');
-        expect(newDetails).to.have.property('width');
-        expect(newDetails).to.have.property('height');
-        expect(newDetails).to.have.property('payload_id');
-        expect(newDetails).to.have.property('ready', false);
     })
 })

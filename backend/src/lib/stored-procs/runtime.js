@@ -115,6 +115,15 @@ exports.matchObject = function(filters, object) {
     return true;
 };
 
+exports.transferProps = function(src, dst) {
+    for (var name in src) {
+        // copy property unless it's set already
+        if (dst[name] == null) {
+            dst[name] = src[name];
+        }
+    }
+};
+
 function matchTimeRanges(a, b) {
     // check if start-time or end-time of B is inside A
     var ar = parseRange(a), as = ar[0], ae = ar[1];

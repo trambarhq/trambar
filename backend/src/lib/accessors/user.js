@@ -98,8 +98,10 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
-            var Task = require('accessors/task');
-            return Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
+            this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+                var Task = require('accessors/task');
+                return Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
+            });
         });
     },
 

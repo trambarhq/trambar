@@ -2,6 +2,9 @@ var Chai = require('chai'), expect = Chai.expect;
 
 var Triggers = require('../triggers');
 var Runtime = require('../runtime');
+for(var name in Runtime) {
+    global[name] = Runtime[name];
+}
 
 function initPLV8() {
     var stmts = [];
@@ -144,9 +147,8 @@ describe('Triggers', function() {
     describe('#updateResource()', function() {
         it('should try updating target table on update', function() {
             var stmts = initPLV8();
-            var mtime = new Date('2017');
-            var OLD = { id: 1, gn: 1, mtime: mtime, details: {} };
-            var NEW = { id: 1, gn: 2, mtime: mtime, details: { url: 'image.jpg' } };
+            var OLD = { id: 1, gn: 1, details: {} };
+            var NEW = { id: 1, gn: 2, details: { url: 'image.jpg' } };
             var TG_ARGV = [ 'system' ];
             Triggers.updateResource(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
             expect(stmts[0])
@@ -154,30 +156,106 @@ describe('Triggers', function() {
                 .to.contain('system')
                 .to.contain('updatePayload');
         })
-        it('should update ready column of target table', function() {
-            var stmts = initPLV8();
-            var mtime = new Date('2017');
-            var OLD = { id: 1, gn: 1, mtime: mtime, details: {} };
-            var NEW = { id: 1, gn: 2, mtime: mtime, details: { url: 'image.jpg' } };
-            var TG_ARGV = [ 'story', 'ready', 'published' ];
-            Triggers.updateResource(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
-            expect(stmts[0])
-                .to.contain('ready')
-                .to.contain('published');
-        })
     })
-    describe('#updateAlbum()', function() {
-        it('should try updating target table on update', function() {
-            var stmts = initPLV8();
-            var mtime = new Date('2017');
-            var OLD = { id: 1, gn: 1, mtime: mtime, details: {} };
-            var NEW = { id: 1, gn: 2, mtime: mtime, details: { url: 'image.jpg' } };
-            var TG_ARGV = [ 'picture' ];
-            Triggers.updateResource(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
-            expect(stmts[0])
-                .to.contain('UPDATE')
-                .to.contain('picture')
-                .to.contain('updatePayload');
+    describe('#coalesceResources()', function() {
+        it('should copy missing properties from OLD to NEW', function() {
+            var OLD = {
+                details: {
+                    resources: [
+                        {
+                            type: 'image',
+                            payload_id: 3,
+                            width: 400,
+                            height: 300,
+                            ready: true
+                        },
+                        {
+                            type: 'video',
+                            payload_id: 4,
+                        }
+                    ]
+                }
+            };
+            var NEW = {
+                details: {
+                    resources: [
+                        {
+                            type: 'image',
+                            payload_id: 3,
+                        },
+                        {
+                            type: 'video',
+                            payload_id: 4,
+                        }
+                    ]
+                }
+            };
+            var TG_ARGV = [ 'ready', 'published' ];
+            Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(NEW).to.have.deep.property('details.resources[0].width', 400);
+            expect(NEW).to.have.deep.property('details.resources[0].height', 300);
+        })
+        it('should clear payload ids and ready flags when everything is ready', function() {
+            var OLD = {
+                details: {
+                    resources: [
+                        {
+                            type: 'image',
+                            payload_id: 3,
+                            width: 400,
+                            height: 300,
+                            ready: true,
+                        },
+                        {
+                            type: 'video',
+                            payload_id: 4,
+                            ready: true,
+                        }
+                    ]
+                },
+                published: false,
+                ready: false,
+            };
+            var NEW = {
+                details: {
+                    resources: [
+                        {
+                            type: 'image',
+                            payload_id: 3,
+                        },
+                        {
+                            type: 'video',
+                            payload_id: 4,
+                        }
+                    ]
+                },
+                published: true,
+                ready: false,
+            };
+            var TG_ARGV = [ 'ready', 'published' ];
+            Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(NEW).to.not.have.deep.property('details.resources[0].ready');
+            expect(NEW).to.not.have.deep.property('details.resources[0].payload_id');
+            expect(NEW).to.have.property('ready', true);
+        })
+        it('should clear payload ids when they are stored in the details object itself', function() {
+            var OLD = {
+                details: {
+                    payload_id: 3,
+                    width: 400,
+                    height: 300,
+                    ready: true,
+                }
+            };
+            var NEW = {
+                details: {
+                    payload_id: 3,
+                }
+            };
+            var TG_ARGV = [];
+            Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(NEW).to.not.have.deep.property('details.ready');
+            expect(NEW).to.not.have.deep.property('details.payload_id');
         })
     })
 })

@@ -76,7 +76,7 @@ module.exports = _.create(Data, {
                 repo_id int,
                 external_id int,
                 published boolean NOT NULL DEFAULT false,
-                ready boolean NOT NULL DEFAULT true,
+                ready boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 btime timestamp,
                 public boolean NOT NULL DEFAULT false,
@@ -101,8 +101,10 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
-            var Task = require('accessors/task');
-            return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table, 'ready', 'published' ]);
+            this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
+                var Task = require('accessors/task');
+                return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]).then(() => {});
+            });
         });
     },
 
@@ -235,10 +237,6 @@ module.exports = _.create(Data, {
                 if (storyReceived.published && !storyReceived.ptime) {
                     storyReceived.ptime = new String('NOW()');
                 }
-
-                // the story is ready if there're no outstanding media tasks                
-                var payloadIds = getPayloadIds(storyReceived);
-                storyReceived.ready = _.isEmpty(payloadIds);
 
                 // update btime if user wants to bump story
                 if (storyReceived.bump) {
@@ -393,22 +391,3 @@ module.exports = _.create(Data, {
         return db.execute(sql, [ userIds ]);
     },
 });
-
-/**
- * Return task ids in the object
- *
- * @param  {Object} object
- *
- * @return {Array<Number>}
- */
-function getPayloadIds(object) {
-    var payloadIds = [];
-    if (object && object.details) {
-        _.each(object.details.resources, (res) => {
-            if (res.payload_id) {
-                payloadIds.push(res.payload_id);
-            }
-        });
-    }
-    return payloadIds;
-}

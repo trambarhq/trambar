@@ -74,29 +74,16 @@ exports.notifyLiveDataChange.ret = 'trigger';
  * with matching payload id
  */
 exports.updateResource = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    var table = TG_ARGV[0];
-    var readyColumn = TG_ARGV[1];
-    var publishedColumn = TG_ARGV[2];
-
     var payload = {
         id: NEW.id,
         details: NEW.details,
         completion: NEW.completion,
     };
     var params = [];
-    var payloadId = `$${params.push([ payload.id ])}`;
-    var payloadDetails = `$${params.push(payload)}`;
-    var clear = publishedColumn || 'true';
-    var newDetails = `"updatePayload"(details, ${payloadDetails}, ${clear})`;
-    var assignments = [ `details = ${newDetails}` ];
-    if (readyColumn) {
-        // set ready column to true if there are no more payload ids
-        assignments.push(`${readyColumn} = "payloadIds"(${newDetails}) IS NULL`);
-    }
     var sql = `
-        UPDATE "${TG_TABLE_SCHEMA}"."${table}"
-        SET ${assignments.join(', ')}
-        WHERE "payloadIds"(details) @> ${payloadId}
+        UPDATE "${TG_TABLE_SCHEMA}"."${TG_ARGV[0]}"
+        SET details = "updatePayload"(details, $${params.push(payload)})
+        WHERE "payloadIds"(details) @> $${params.push([ payload.id ])}
     `;
     plv8.execute(sql, params);
 };
@@ -105,31 +92,61 @@ exports.updateResource.ret = 'trigger';
 exports.updateResource.flags = 'SECURITY DEFINER';
 
 /**
- * Take results from Task table and move them into details of row
- * with matching payload id
+ * Ensure that information inserted on into details.resources by updateResource()
+ * doesn't get overridden by stale data
  */
-exports.updateAlbum = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    var table = TG_ARGV[0];
+exports.coalesceResources = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
+    var oldResources = OLD.details.resources;
+    var newResources = NEW.details.resources;
+    if (!oldResources && !newResources) {
+        if (NEW.details.payload_id) {
+            oldResources = [ OLD.details ];
+            newResources = [ NEW.details ];
+        }
+    }
+    if (newResources) {
+        for (var i = 0; i < newResources.length; i++) {
+            var newRes = newResources[i];
+            if (newRes.payload_id) {
+                for (var j = 0; j < oldResources.length; j++) {
+                    var oldRes = oldResources[j];
+                    if (newRes.payload_id === oldRes.payload_id) {
+                        transferProps(oldRes, newRes);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
-    var params = [];
-    var payload = {
-        id: NEW.id,
-        details: NEW.details,
-        completion: NEW.completion,
-    };
-    var payloadId = `$${params.push([ payload.id ])}`;
-    var payloadDetails = `$${params.push(payload)}`;
-    var newDetails = `"updatePayload"(details, ${payloadDetails}, true)`;
-    var assignments = [ `details = ${newDetails}` ];
-    var sql = `
-        UPDATE "${TG_TABLE_SCHEMA}"."${table}"
-        SET ${assignments.join(', ')}
-        WHERE (details->>'payload_id')::int = ${payloadId}
-    `;
-    plv8.elog(NOTICE, sql);
-    plv8.execute(sql, params);
-
-};
-exports.updateAlbum.args = '';
-exports.updateAlbum.ret = 'trigger';
-exports.updateAlbum.flags = 'SECURITY DEFINER';
+    var readyColumn = TG_ARGV[0];
+    var publishedColumn = TG_ARGV[1];
+    var allReady = true;
+    if (newResources) {
+        for (var i = 0; i < newResources.length; i++) {
+            var newRes = newResources[i];
+            if (newRes.payload_id) {
+                if (newRes.ready !== true) {
+                    allReady = false;
+                    break;
+                }
+            }
+        }
+        if (allReady) {
+            if (!publishedColumn || NEW[publishedColumn]) {
+                for (var i = 0; i < newResources.length; i++) {
+                    var newRes = newResources[i];
+                    delete newRes.ready;
+                    delete newRes.payload_id;
+                }
+            }
+        }
+    }
+    if (readyColumn) {
+        NEW[readyColumn] = allReady;
+    }
+    return NEW;
+}
+exports.coalesceResources.args = '';
+exports.coalesceResources.ret = 'trigger';
+exports.coalesceResources.flags = 'SECURITY DEFINER';

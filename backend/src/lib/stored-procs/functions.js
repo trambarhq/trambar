@@ -45,6 +45,10 @@ exports.payloadIds = function(details) {
                 payloadIds.push(res.payload_id);
             }
         }
+    } else {
+        if (details.payload_id) {
+            payloadIds.push(details.payload_id);
+        }
     }
     return (payloadIds.length > 0) ? payloadIds : null;
 };
@@ -57,67 +61,30 @@ exports.payloadIds.flags = 'IMMUTABLE';
  *
  * @param  {Object} details
  * @param  {Number} payload
- * @param  {Boolean} clear
  *
  * @return {Object}
  */
-exports.updatePayload = function(details, payload, clear) {
+exports.updatePayload = function(details, payload) {
     var resources = details.resources;
     if (resources) {
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
             if (res.payload_id === payload.id) {
-                for (var name in payload.details) {
-                    // copy property unless it's set already
-                    if (res[name] == null) {
-                        res[name] = payload.details[name];
-                    }
-                }
+                transferProps(payload.details, res);
                 res.ready = (payload.completion === 100);
-            }
-        }
-
-        if (clear) {
-            // remove payload ids and ready flag when everything is ready
-            var allReady = true;
-            for (var i = 0; i < resources.length; i++) {
-                var res = resources[i];
-                if (res.ready !== true) {
-                    allReady = false;
-                    break;
-                }
-            }
-            if (allReady) {
-                for (var i = 0; i < resources.length; i++) {
-                    var res = resources[i];
-                    delete res.payload_id;
-                    delete res.ready;
-                }
             }
         }
     } else {
         // info is perhaps stored in the details object itself
         var res = details;
         if (res.payload_id === payload.id) {
-            for (var name in payload.details) {
-                // copy property unless it's set already
-                if (res[name] == null) {
-                    res[name] = payload.details[name];
-                }
-            }
+            transferProps(payload.details, res);
             res.ready = (payload.completion === 100);
-
-            if (clear) {
-                if (res.ready) {
-                    delete res.payload_id;
-                    delete res.ready;
-                }
-            }
         }
     }
     return details;
 };
-exports.updatePayload.args = 'details jsonb, payload jsonb, clear boolean';
+exports.updatePayload.args = 'details jsonb, payload jsonb';
 exports.updatePayload.ret = 'jsonb';
 exports.updatePayload.flags = 'IMMUTABLE';
 

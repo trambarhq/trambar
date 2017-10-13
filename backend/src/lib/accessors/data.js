@@ -755,6 +755,28 @@ module.exports = {
             });
         });
     },
+
+    /**
+     * Create a trigger that reconcile locally-made changes to details.resources
+     * with data sent from remote client
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<String>}
+     *
+     * @return {Promise}
+     */
+    createResourceCoalescenceTrigger: function(db, schema, arguments) {
+        var table = this.getTableName(schema);
+        // trigger name needs to be smaller than "indicateDataChange" so it runs first
+        var sql = `
+            CREATE TRIGGER "coalesceResourcesOnUpdate"
+            BEFORE UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
+        `;
+        return db.execute(sql.join('\n')).return(true);
+    },
 };
 
 var searchLanguagesPromises = {};

@@ -69,7 +69,7 @@ module.exports = _.create(Data, {
                 user_id int NOT NULL DEFAULT 0,
                 target_user_ids int[] NOT NULL,
                 published boolean NOT NULL DEFAULT false,
-                ready boolean NOT NULL DEFAULT true,
+                ready boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 repo_id int,
@@ -93,8 +93,10 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return Data.watch.call(this, db, schema).then(() => {
-            var Task = require('accessors/task');
-            return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
+            this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
+                var Task = require('accessors/task');
+                return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
+            });
         });
     },
 
@@ -177,10 +179,6 @@ module.exports = _.create(Data, {
                 if (reactionReceived.published && !reactionReceived.ptime) {
                     reactionReceived.ptime = new String('NOW()');
                 }
-
-                // the story is ready if there're no outstanding media tasks
-                var payloadIds = getPayloadIds(reactionReceived);
-                reactionReceived.ready = _.isEmpty(payloadIds);
             });
             return objects;
         });
@@ -365,23 +363,4 @@ function applyClippingRectangle(url, clip, width, height, quality) {
     filters.push(`re${width}-${height}`);
     filters.push(`qu${quality}`)
     return `${url}/${filters.join('+')}`;
-}
-
-/**
- * Return task ids in the object
- *
- * @param  {Object} object
- *
- * @return {Array<Number>}
- */
-function getPayloadIds(object) {
-    var payloadIds = [];
-    if (object && object.details) {
-        _.each(object.details.resources, (res) => {
-            if (res.payload_id) {
-                payloadIds.push(res.payload_id);
-            }
-        });
-    }
-    return payloadIds;
 }
