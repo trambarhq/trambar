@@ -186,18 +186,14 @@ module.exports = {
             criteria.limit = criteria.limit;
         }
         if (typeof(criteria.order) === 'string') {
-            if (criteria.order) {
-                var parts = _.split(/\s+/, criteria.order);
-                var column = parts[0];
-                var dir = _.toLower(parts[1]);
-                if (this.columns.hasOwnProperty(column)) {
-                    query.order = column;
-                    if (dir === 'asc' || dir === 'desc') {
-                        query.order += ' ' + dir;
-                    }
+            var parts = _.split(/\s+/, criteria.order);
+            var column = parts[0];
+            var dir = _.toLower(parts[1]);
+            if (this.columns.hasOwnProperty(column)) {
+                query.order = column;
+                if (dir === 'asc' || dir === 'desc') {
+                    query.order += ' ' + dir;
                 }
-            } else {
-                query.order = undefined;
             }
         }
     },
@@ -217,10 +213,8 @@ module.exports = {
         var query = {
             conditions: [],
             parameters: [],
-            order: 'id DESC',
             columns: columns,
             table: table,
-            limit: 50000
         };
         if (this.apply.length === 4) {
             // the four-argument form of the function works asynchronously

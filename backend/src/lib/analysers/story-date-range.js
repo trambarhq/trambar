@@ -30,7 +30,6 @@ module.exports = {
         var criteria = _.clone(this.fixedFilters.story);
         // then apply per-row filters
         _.assign(criteria, filters);
-        criteria.order = '';
         var columns = 'MIN(ptime), MAX(ptime), COUNT(ptime)';
         return Story.findOne(db, schema, criteria, columns).then((row) => {
             return {

@@ -316,7 +316,6 @@ function importPushEvent(db, server, repo, event, author, project) {
             // see if the commits from a branch
             var criteria = {
                 commit_ids: commitIds,
-                order: '',
                 deleted: false,
             };
             return Story.find(db, project.name, criteria, `DISTINCT details->>'branch' AS branch`).then((rows) => {
@@ -466,7 +465,6 @@ function findLastEventTime(db, project, repo) {
     var criteria = {
         repo_id: repo.id,
         ready: true,
-        order: '',
     };
     return Story.findOne(db, schema, criteria, 'MAX(ptime) AS time').then((row) => {
         return (row && row.time) ? Moment(row.time) : null;

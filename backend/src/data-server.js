@@ -120,6 +120,8 @@ function handleDiscovery(req, res) {
                         throw new HttpError(400);
                     }
                 });
+            } else {
+                criteria.order = 'id DESC';
             }
             if (criteria.limit) {
                 criteria.limit = parseInt(criteria.limit);
@@ -197,7 +199,11 @@ function handleRetrieval(req, res) {
 
             // look up the rows by id
             var accessor = getAccessor(schema, table);
-            return accessor.find(db, schema, { id: ids }, '*').then((rows) => {
+            var criteria = {
+                id: ids,
+                order: 'id DESC',
+            };
+            return accessor.find(db, schema, criteria, '*').then((rows) => {
                 // remove objects that user has no access to
                 return accessor.filter(db, schema, rows, credentials).then((rows) => {
                     // export the row, trimming out sensitive data
