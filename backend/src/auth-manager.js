@@ -398,14 +398,14 @@ function handleOAuthActivationRequest(req, res, done) {
  * @param  {Number} serverId
  * @param  {Object} details
  *
- * @return {Authorization}
+ * @return {Promise<Authorization>}
  */
 function authorizeUser(db, user, authentication, authType, serverId, details) {
     if (!user) {
-        throw new HttpError(401);
+        return Promise.resolve(new HttpError(401));
     }
     if (authentication.area === 'admin' && user.type !== 'admin') {
-        throw new HttpError(403);
+        return Promise.resolve(new HttpError(403));
     }
     // update Authentication record
     authentication.type = authType;
@@ -494,15 +494,20 @@ function authenticateThruPassport(req, res, server, params, scope) {
         }
         // create strategy object, resolving promise when we have the profile
         var Strategy = require(plugins[server.type]);
-        var strategy = new Strategy(credentials, (accessToken, refreshToken, profile) => {
+        var strategy = new Strategy(credentials, (accessToken, refreshToken, profile, done) => {
+            // just resolve the promise--no need to call done() since we're not
+            // using Passport as an Express middleware
             resolve({ accessToken, refreshToken, profile });
         });
         // trigger Passport middleware manually
         Passport.use(strategy);
-        var auth = Passport.authenticate(server.type, options);
-        auth(req, res, () => {
-            reject(new HttpError(403));
+        var auth = Passport.authenticate(server.type, options, (err, user, info) => {
+            // if this callback is called, then authentication has failed, since
+            // the callback passed to Strategy() resolves the promise and does
+            // not invoke done()
+            reject(err);
         });
+        auth(req, res);
     });
 }
 
