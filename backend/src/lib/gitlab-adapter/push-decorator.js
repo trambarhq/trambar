@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Request = require('request');
+var Ignore = require('ignore');
 var HttpError = require('errors/http-error');
 var Async = require('async-do-while');
 
@@ -21,7 +22,12 @@ exports.retrieveDescriptions = retrieveDescriptions;
  */
 function retrieveDescriptions(server, repo, push) {
     // list of files affect, whether they were add, modified or deleted
-    var paths = _.flattenDeep(_.values(push.files));
+    var paths = _.concat(
+        push.files.added,
+        push.files.removed,
+        push.files.modified,
+        _.map(push.files.renamed, 'before')
+    );
     clearAffectedCacheEntries(server, repo, paths);
     var commitId = push.headId;
     var components = [];
@@ -60,6 +66,7 @@ function loadTrambarFolder(server, repo, commitId, parentPath) {
         return promise;
     }
     var trambarFolderPath = (parentPath) ? `${parentPath}/.trambar` : `.trambar`;
+    console.log(`Scanning ${trambarFolderPath}`);
     promise = scanFolder(server, repo, commitId, trambarFolderPath).then((records) => {
         var fileRecords = _.filter(records, { type: 'blob' });
         // group the contents based on the names of the files
@@ -176,6 +183,7 @@ function clearAffectedCacheEntries(server, repo, paths) {
         if (m) {
             var targetFolder = m[2] || '';
             if (tfCache[targetFolder]) {
+                console.log(`Invalidating ${targetFolder}/.trambar`);
                 tfCache[targetFolder] = undefined;
             }
         }
@@ -362,7 +370,7 @@ function getBaseName(path) {
  * @return {String|null}
  */
 function getFolderPath(path) {
-    var slashIndex = _.indexOf(path, '/');
+    var slashIndex = _.lastIndexOf(path, '/');
     if (slashIndex !== -1) {
         return path.substr(0, slashIndex);
     } else {

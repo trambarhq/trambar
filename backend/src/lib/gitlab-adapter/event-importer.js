@@ -46,8 +46,8 @@ function importEvents(db, server, repo, project) {
                         return Moment(event.created_at) > lastEventTime;
                     });
                 }
-                console.log('Events: ' + _.size(events));
-                return Promise.each(events, (event) => {
+                return Promise.each(events, (event, index) => {
+                    console.log(`Importing event ${event.action_name} (${index + 1}/${_.size(events)})`)
                     return importEvent(db, server, repo, event, project).then((story) => {
                         if (story) {
                             stories.push(story);

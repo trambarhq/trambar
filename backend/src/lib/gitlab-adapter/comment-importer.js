@@ -45,6 +45,7 @@ function importComments(db, server, repo, event, project) {
  * @return {Promise}
  */
 function importCommitComments(db, server, repo, commit, project) {
+    console.log(`Importing comments for ${commit.id}`);
     var schema = project.name;
     var criteria = {
         commit_ids: commit.id,

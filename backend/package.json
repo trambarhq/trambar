@@ -19,6 +19,7 @@
     "body-parser": "^1.17.2",
     "express": "^4.15.2",
     "htpasswd-auth": "^2.0.0",
+    "ignore": "^3.3.5",
     "jsDAV": "^0.3.4",
     "jsdav-promise": "0.0.2",
     "lodash": "^4.17.4",

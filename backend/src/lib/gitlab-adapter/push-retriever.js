@@ -46,6 +46,7 @@ function retrieveCommit(server, repo, push, id) {
         return Promise.resolve(commit);
     }
     commit = push.commits[id] = new Commit(id);
+    console.log(`Retriving commit ${id}`);
 
     var url = `/projects/${repo.external_id}/repository/commits/${id}`;
     return Transport.fetch(server, url).then((info) => {
@@ -92,6 +93,7 @@ function retrieveCommit(server, repo, push, id) {
  * @return {Promise}
  */
 function retrieveDiff(server, repo, commit) {
+    console.log(`Retrieving diff of ${commit.id}`);
     var url = `/projects/${repo.external_id}/repository/commits/${commit.id}/diff`;
     return Transport.fetch(server, url).then((info) => {
         var cf = commit.files;
@@ -209,7 +211,7 @@ function mergeCommits(push) {
             } else {
                 // if the file was renamed previously within this push,
                 // don't count the previous action
-                _.pullBy(pf.renamed, { after: path.before });
+                _.remove(pf.renamed, { after: path.before });
                 pf.renamed.push(path);
             }
         });
