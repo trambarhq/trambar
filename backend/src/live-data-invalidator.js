@@ -25,12 +25,14 @@ function start() {
     return Database.open(true).then((db) => {
         database = db;
         return db.need('global').then(() => {
-            // get list of tables that the analyers make use of
-            // listings, meanwhile, are derived from story and statistics
-            var tables = _.reduce(analysers, (list, analyser) => {
-                return _.union(list, analyser.sourceTables);
-            }, [ 'story', 'statistics' ]);
-            return db.listen(tables, 'change', handleDatabaseChanges);
+            // get list of tables that the analyers make use of and listen
+            // for changes in them
+            var tables = _.uniq(_.map(analysers, 'analyser.sourceTables'));
+            return db.listen(tables, 'change', handleDatabaseChangesAffectingStatistics).then(() => {
+                // listings, meanwhile, are derived from story and statistics
+                var tables = [ 'story', 'statistics' ];
+                return db.listen(tables, 'change', handleDatabaseChangesAffectingListings);
+            });
         });
     });
 }
@@ -42,7 +44,7 @@ function stop() {
     return Promise.resolve();
 };
 
-function handleDatabaseChanges(events) {
+function handleDatabaseChangesAffectingStatistics(events) {
     // filter out events from other tests
     if (process.env.DOCKER_MOCHA) {
         events = _.filter(events, (event) => {
@@ -55,10 +57,24 @@ function handleDatabaseChanges(events) {
     var schemas = _.keys(eventGroups);
     return Promise.each(schemas, (schema) => {
         var schemaEvents = eventGroups[schema];
-        return Promise.all([
-            invalidateListings(db, schema, schemaEvents),
-            invalidateStatistics(db, schema, schemaEvents),
-        ]);
+        return invalidateStatistics(db, schema, schemaEvents);
+    });
+}
+
+function handleDatabaseChangesAffectingListings(events) {
+    // filter out events from other tests
+    if (process.env.DOCKER_MOCHA) {
+        events = _.filter(events, (event) => {
+            return (event.schema === 'test:LiveDataInvalidator');
+        });
+    }
+    // process the events for each schema separately
+    var db = this;
+    var eventGroups = _.groupBy(events, 'schema');
+    var schemas = _.keys(eventGroups);
+    return Promise.each(schemas, (schema) => {
+        var schemaEvents = eventGroups[schema];
+        return invalidateListings(db, schema, schemaEvents);
     });
 }
 
@@ -158,7 +174,7 @@ function invalidateListings(db, schema, events) {
 function findListingsImpactedByStoryChanges(db, schema, events) {
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
-            if (event.diff.ptime) {
+            if (event.diff.published || event.diff.ready) {
                 return true;
             }
         }

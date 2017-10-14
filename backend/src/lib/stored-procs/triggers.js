@@ -96,11 +96,11 @@ exports.updateResource.flags = 'SECURITY DEFINER';
  * doesn't get overridden by stale data
  */
 exports.coalesceResources = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    var oldResources = OLD.details.resources;
+    var oldResources = (OLD) ? OLD.details.resources : [];
     var newResources = NEW.details.resources;
     if (!oldResources && !newResources) {
         if (NEW.details.payload_id) {
-            oldResources = [ OLD.details ];
+            oldResources = (OLD) ? [ OLD.details ] : [];
             newResources = [ NEW.details ];
         }
     }

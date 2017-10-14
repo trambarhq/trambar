@@ -257,5 +257,31 @@ describe('Triggers', function() {
             expect(NEW).to.not.have.deep.property('details.ready');
             expect(NEW).to.not.have.deep.property('details.payload_id');
         })
+        it('should set ready to true where there are no resources', function() {
+            var OLD = {
+                details: {
+                    text: { en: 'Hello world' }
+                }
+            };
+            var NEW = {
+                details: {
+                    text: { en: 'Hello world!' }
+                }
+            };
+            var TG_ARGV = [ 'ready', 'published' ];
+            Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(NEW).to.have.property('ready', true);
+        })
+        it('should handle an insert operation', function() {
+            var OLD = null;
+            var NEW = {
+                details: {
+                    text: { en: 'Hello world!' }
+                }
+            };
+            var TG_ARGV = [ 'ready', 'published' ];
+            Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
+            expect(NEW).to.have.property('ready', true);
+        })
     })
 })

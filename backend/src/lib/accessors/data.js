@@ -763,13 +763,21 @@ module.exports = {
     createResourceCoalescenceTrigger: function(db, schema, arguments) {
         var table = this.getTableName(schema);
         // trigger name needs to be smaller than "indicateDataChange" so it runs first
-        var sql = `
-            CREATE TRIGGER "coalesceResourcesOnUpdate"
-            BEFORE UPDATE ON ${table}
-            FOR EACH ROW
-            EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
-        `;
-        return db.execute(sql).return(true);
+        var sql = [
+            `
+                CREATE TRIGGER "coalesceResourcesOnInsert"
+                BEFORE INSERT ON ${table}
+                FOR EACH ROW
+                EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
+            `,
+            `
+                CREATE TRIGGER "coalesceResourcesOnUpdate"
+                BEFORE UPDATE ON ${table}
+                FOR EACH ROW
+                EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
+            `
+        ];
+        return db.execute(sql.join('\n')).return(true);
     },
 };
 
