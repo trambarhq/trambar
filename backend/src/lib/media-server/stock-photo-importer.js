@@ -5,6 +5,9 @@ var Database = require('database');
 
 var Picture = require('accessors/picture');
 
+var CacheFolders = require('media-server/cache-folders');
+var ImageManager = require('media-server/image-manager');
+
 exports.importPhotos = importPhotos;
 
 function importPhotos() {
@@ -32,7 +35,7 @@ function importPhotos() {
                             var picture = { purpose, details };
                             return Picture.insertOne(db, 'global', picture);
                         }).then((picture) => {
-                            var dstPath = `${imageCacheFolder}/${file}`;
+                            var dstPath = `${CacheFolders.image}/${file}`;
                             return FS.statAsync(dstPath).then((stat) => {
                                 return true;
                             }).catch((err) => {

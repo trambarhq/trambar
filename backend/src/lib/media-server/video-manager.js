@@ -4,6 +4,8 @@ var FS = Promise.promisifyAll(require('fs'));
 var ChildProcess = require('child_process');
 var Crypto = require('crypto');
 
+var CacheFolders = require('media-server/cache-folders');
+
 exports.createJobId = createJobId;
 
 /**
@@ -47,6 +49,7 @@ function startTranscodingJob(srcPath, type, jobId) {
         jobId,
         type,
         streaming: !srcPath,
+        destination: CacheFolders[type],
     };
     if (type === 'video') {
         job.profiles = {
@@ -61,7 +64,6 @@ function startTranscodingJob(srcPath, type, jobId) {
                 format: 'mp4',
             },
         };
-        job.destination = videoCacheFolder;
     } else if (type === 'audio') {
         job.profiles = {
             '128kbps': {
@@ -69,7 +71,6 @@ function startTranscodingJob(srcPath, type, jobId) {
                 format: 'mp3',
             },
         };
-        job.destination = audioCacheFolder;
     }
 
     // launch instances of FFmpeg to create files for various profiles
