@@ -353,7 +353,7 @@ function importPushEvent(db, server, repo, event, author, project) {
                     public: true,
                     ptime: getPublicationTime(event),
                 };
-                if (sourceBranches) {
+                if (_.size(sourceBranches) > 0) {
                     details.source_branches = sourceBranches;
                     story.type = 'merge';
                 }
