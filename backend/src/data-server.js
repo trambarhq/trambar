@@ -135,7 +135,17 @@ function handleDiscovery(req, res) {
                 criteria.deleted = false;
             }
             var accessor = getAccessor(schema, table);
-            return accessor.find(db, schema, criteria, 'id, gn').then((rows) => {
+            return accessor.find(db, schema, criteria, 'id, gn').catch((err) => {
+                if (err.code === '42P01' && schema !== 'global') {
+                    // maybe the project schema hasn't been created yet
+                    return db.need(schema).then(() => {
+                        // try again
+                        return accessor.find(db, schema, criteria, 'id, gn');
+                    });
+                } else {
+                    throw err;
+                }
+            }).then((rows) => {
                 // remove objects that user has no access to
                 return accessor.filter(db, schema, rows, credentials).then((rows) => {
                     // return only the ids and generation numbers
