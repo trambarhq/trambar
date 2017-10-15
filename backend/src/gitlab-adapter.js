@@ -167,7 +167,7 @@ function handleDatabaseEvent(event) {
                             }
                             return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
                                 // make sure the project-specific schema exists
-                                return db.need(project.name, 5000).then(() => {
+                                return db.need(project.name).then(() => {
                                     return EventImporter.importEvents(db, server, repo, project);
                                 });
                             });

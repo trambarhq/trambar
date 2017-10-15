@@ -172,32 +172,41 @@ Database.prototype.listen = function(tables, event, callback, delay) {
  *
  * @param  {String} schema
  * @param  {Number} wait
- *
- * @return {Promise<Boolean>}
  */
 Database.prototype.need = function(schema, wait) {
     var found;
     var startTime;
+    var lastError;
+    if (wait == undefined) {
+        wait = 10000;
+    }
     Async.begin(() => {
         found = false;
         startTime = new Date;
     });
     Async.while(() => {
         // keep looking until the schema is found or if we're out of time
-        var now = new Date;
-        if ((now - startTime) > wait) {
+        return this.schemaExists(schema).catch((err) => {
+            lastError = err;
             return false;
-        }
-        return this.schemaExists(schema).then((exists) => {
+        }).then((exists) => {
             found = exists;
             return !found;
         });
     });
     Async.do(() => {
         // pause for half a second
-        return Promise.delay(500);
+        return Promise.delay(500).then(() => {
+            var now = new Date;
+            if ((now - startTime) > wait) {
+                if (lastError) {
+                    throw lastError;
+                } else {
+                    throw new Error(`Schema does not exist: ${schema}`);
+                }
+            }
+        });
     });
-    Async.return(() => { return found })
     return Async.end();
 }
 
