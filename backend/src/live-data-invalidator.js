@@ -27,7 +27,7 @@ function start() {
         return db.need('global').then(() => {
             // get list of tables that the analyers make use of and listen
             // for changes in them
-            var tables = _.uniq(_.map(analysers, 'analyser.sourceTables'));
+            var tables = _.uniq(_.flatten(_.map(analysers, 'sourceTables')));
             return db.listen(tables, 'change', handleDatabaseChangesAffectingStatistics).then(() => {
                 // listings, meanwhile, are derived from story and statistics
                 var tables = [ 'story', 'statistics' ];
@@ -147,9 +147,10 @@ function invalidateStatistics(db, schema, events) {
                 return Statistics.find(db, schema, statsCriteria, 'id, sample_count');
             }).then((rows) => {
                 // invalidate those stats with fewer data points first
-                var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ])
+                var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
                 var ids = _.map(orderedRows, 'id');
                 var chunks = _.chunk(ids, 10);
+                console.log(`Invalidating statistics: ${ids.join(', ')}`)
                 return Promise.each(chunks, (ids) => {
                     return Statistics.invalidate(db, schema, ids);
                 });
@@ -165,6 +166,7 @@ function invalidateListings(db, schema, events) {
     ]).then((idLists) => {
         var ids = _.flatten(idLists);
         var chunks = _.chunk(ids, 10);
+        console.log(`Invalidating story listings: ${ids.join(', ')}`)
         return Promise.each(chunks, (ids) => {
             return Listing.invalidate(db, schema, ids);
         });
