@@ -8,7 +8,6 @@ module.exports = React.createClass({
     propTypes: {
         pages: PropTypes.array.isRequired,
         database: PropTypes.instanceOf(Database),
-        baseUrls: PropTypes.arrayOf(PropTypes.string).isRequired,
         onChange: PropTypes.func,
         onRedirectionRequest: PropTypes.func,
     },
@@ -30,24 +29,17 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return the base URL by matching the current URL to a list of candidates
+     * Return the base URL as indicated in a base element in the HTML file
      *
      * @return {String}
      */
     getBaseUrl: function() {
-        var path = window.location.pathname;
-        var baseUrl = _.find(this.props.baseUrls, (url) => {
-            if (/\/$/.test(url)) {
-                throw new Error('Base URL should not end a slash');
-            }
-            if (path.substr(0, url.length) === url) {
-                return true;
-            }
-        });
-        if (baseUrl === undefined) {
-            console.error(`Page is not hosted at one of the expected base URLs (${this.props.baseUrls})`)
+        var base = document.getElementsByTagName('BASE')[0];
+        if (base) {
+            var url = base.getAttribute('href');
+            return _.replace(url, /\/+$/, '');
         }
-        return baseUrl;
+        return '';
     },
 
     /**
@@ -105,14 +97,12 @@ module.exports = React.createClass({
      */
     goTo: function(location, replacing) {
         var baseUrl = this.state.baseUrl;
-        if (baseUrl !== undefined) {
-            var url = getLocationUrl(window.location);
-            if (url.substr(0, baseUrl.length) === baseUrl && url.charAt(baseUrl.length) === '/') {
-                url = url.substr(baseUrl.length);
-                return this.change(url, replacing);
-            }
+        var url = getLocationUrl(window.location);
+        if (url.substr(0, baseUrl.length) === baseUrl && url.charAt(baseUrl.length) === '/') {
+            url = url.substr(baseUrl.length);
+            return this.change(url, replacing);
         }
-        return Promise.reject(new Error('Cannot route to location not at the base URL'));
+        return Promise.reject(new Error(`Cannot route to location not at the base URL: ${baseUrl}`));
     },
 
     /**

@@ -189,7 +189,6 @@ module.exports = React.createClass({
         };
         var routeManagerProps = {
             ref: setters.routeManager,
-            baseUrls: [ '/admin', '/trambar/admin' ],
             pages: pageClasses,
             database: this.state.database,
             onChange: this.handleRouteChange,
