@@ -93,7 +93,7 @@ function updateUser(db, server, user) {
         return retrieveProfileImage(glUser).then((image) => {
             var userBefore = _.cloneDeep(user);
             copyUserDetails(user, glUser, image);
-            if (_.isEqual(user, userBefore)) {
+            if (!_.isEqual(user, userBefore)) {
                 return User.updateOne(db, 'global', user);
             }
         });
