@@ -5,6 +5,7 @@ var Express = require('express');
 var BodyParser = require('body-parser');
 var Multer  = require('multer');
 var Moment = require('moment');
+var DNSCache = require('dnscache');
 
 var Database = require('database');
 var Task = require('accessors/task');
@@ -19,6 +20,7 @@ var StockPhotoImporter = require('media-server/stock-photo-importer');
 
 var server;
 
+DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
 function start() {
     return new Promise((resolve, reject) => {

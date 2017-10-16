@@ -36,6 +36,7 @@ TaskQueue.prototype.next = function() {
         try {
             var promise = task.func();
         } catch(err) {
+            console.log(`Error encountered performing task: ${task.name}`);
             console.error(err);
         }
         if (promise) {
