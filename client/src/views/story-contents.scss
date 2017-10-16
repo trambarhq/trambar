@@ -64,19 +64,19 @@
                 padding: 0;
 
                 .added {
-                    color: #99ff66;
+                    color: #99ee66;
                 }
 
                 .removed {
-                    color: #ff3333;
+                    color: #ee3333;
                 }
 
                 .modified {
-                    color: #6666ff;
+                    color: #66aaff;
                 }
 
                 .renamed {
-                    color: #ffff66;
+                    color: #eeee66;
                 }
             }
 
@@ -101,7 +101,7 @@
         .impact {
             .scrollable {
                 margin-top: -0.25em;
-                max-height: 24em;
+                max-height: 15em;
             }
         }
     }
