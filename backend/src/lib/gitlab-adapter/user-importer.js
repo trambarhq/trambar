@@ -130,18 +130,19 @@ function copyUserDetails(user, glUser, profileImage) {
 
     // attach profile image
     if (profileImage) {
+        var res = _.extend({ type: 'image' }, profileImage);
         var resources = user.details.resources;
         var existing = _.find(resources, { type: 'image' });
         if (existing) {
             if (existing.from_gitlab) {
                 var index = _.indexOf(resources, existing);
-                resources[index] = profileImage;
+                resources[index] = res;
             }
         } else {
             if (!resources) {
                 resources = user.details.resources = [];
             }
-            resources.push(profileImage);
+            resources.push(res);
         }
     }
 }
