@@ -92,6 +92,8 @@ module.exports = React.createClass({
         Async.do(() => {
             return this.createSocket(protocol, server, token).then((socket) => {
                 if (attempt === this.connectionAttempt) {
+                    this.connectionAttempt = null;
+
                     // send authorization token and locale
                     var locale = _.get(this.props.locale, 'languageCode', 'en');
                     var payload = {
@@ -114,7 +116,10 @@ module.exports = React.createClass({
                             // we're still supposed to be connected
                             // try to reestablish connection
                             this.setState({ socket: null, server: '' }, () => {
-                                this.connect(protocol, server, token);
+                                console.log('Reestablishing web-socket connection...');
+                                this.connect(protocol, server, token).then(() => {
+                                    console.log('Connection reestablished');
+                                });
                             });
                         }
                     };
