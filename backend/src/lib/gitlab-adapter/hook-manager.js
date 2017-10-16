@@ -47,16 +47,15 @@ function installProjectHook(server, repo, project) {
     return retrieveHooks(server, repo).then((hooks) => {
         var installed = _.find(hooks, { url: hook.url });
         if (installed) {
-            var different = _.some(installed, (value, name) => {
-                if (name !== 'id') {
-                    if (value !== hook[name]) {
-                        return true;
-                    }
+            // remove the installed hook if it's different from what we expect
+            var different = _.some(_.omit(hook, 'id'), (value, name) => {
+                if (value !== installed[name]) {
+                    return true;
                 }
             });
             if (different) {
-                console.log('Different: ', installed, hook)
-                return removeHook(server, repo, hook).then(() => {
+                console.log(`Removing existing hook: ${installed.url}`);
+                return removeHook(server, repo, installed).then(() => {
                     return false;
                 });
             }
@@ -104,8 +103,8 @@ function removeHook(server, repo, hook) {
 }
 
 function Hook() {
-    this.id = null;
-    this.url = null;
+    this.id = undefined;
+    this.url = undefined;
     this.push_events = true;
     this.issues_events = true;
     this.merge_requests_events = true;

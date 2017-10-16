@@ -236,6 +236,7 @@ function retrieveProfileImage(glUser) {
     if (!url) {
         return Promise.resolve(null);
     }
+    console.log(`Retrieving profile image: ${url}`);
     var options = {
         json: true,
         url: 'http://media_server/internal/import',

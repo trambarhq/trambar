@@ -304,11 +304,20 @@ function importRepoEvent(db, server, repo, event, author, project) {
  */
 function importPushEvent(db, server, repo, event, author, project) {
     var schema = project.name;
-    var ref = event.data.ref;
-    var headId = event.data.after;
-    var tailId = event.data.before;
-    var knownIds = _.map(event.data.commits, 'id');
-    var count = event.data.total_commits_count;
+    var ref, headId, tailId, knownIds, count;
+    if (event.push_data) {
+        ref = event.push_data.ref;
+        headId = event.push_data.commit_to;
+        tailId = event.push_data.commit_from || '0000000000000000000000000000000000000000';
+        knownIds = [];
+        count = event.push_data.commit_count;
+    } else if (event.data) {
+        ref = event.data.ref;
+        headId = event.data.after;
+        tailId = event.data.before;
+        knownIds = _.map(event.data.commits, 'id');
+        count = event.data.total_commits_count;
+    }
     return PushRetriever.retrievePush(server, repo, ref, headId, tailId, knownIds, count).then((push) => {
         // look for component descriptions
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {

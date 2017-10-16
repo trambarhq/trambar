@@ -66,7 +66,6 @@ function loadTrambarFolder(server, repo, commitId, parentPath) {
         return promise;
     }
     var trambarFolderPath = (parentPath) ? `${parentPath}/.trambar` : `.trambar`;
-    console.log(`Scanning ${trambarFolderPath}`);
     promise = scanFolder(server, repo, commitId, trambarFolderPath).then((records) => {
         var fileRecords = _.filter(records, { type: 'blob' });
         // group the contents based on the names of the files
@@ -266,12 +265,20 @@ function findMatchingComponents(folder, path) {
  * @return {Promise<Array<Object>>}
  */
 function scanFolder(server, repo, commitId, folderPath) {
+    console.log(`Scanning ${folderPath}`);
     var url = `projects/${repo.external_id}/repository/tree`;
     var query = {
         path: folderPath,
         ref: commitId,
     };
-    return Transport.fetchAll(server, url, query);
+    return Transport.fetchAll(server, url, query).catch((err) => {
+        if (err instanceof HttpError) {
+            if (err.statusCode === 404) {
+                return [];
+            }
+        }
+        throw err;
+    });
 }
 
 /**
@@ -288,7 +295,8 @@ function retrieveFile(server, repo, commitId, fileRecord) {
     if (!fileRecord) {
         return Promise.resolve(null);
     }
-    var url = `/projects/${repo.external_id}/repository/files/${encodeURI(fileRecord.path)}`;
+    console.log(`Retrieving file: ${fileRecord.path}`);
+    var url = `/projects/${repo.external_id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
     var query = {
         ref: commitId,
     };
