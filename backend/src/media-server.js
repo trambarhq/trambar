@@ -1,11 +1,13 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var FS = require('fs');
+var FS = Promise.promisifyAll(require('fs'));
+var Path = require('path');
 var Express = require('express');
 var BodyParser = require('body-parser');
 var Multer  = require('multer');
 var Moment = require('moment');
 var DNSCache = require('dnscache');
+var FileType = require('file-type');
 
 var Database = require('database');
 var Task = require('accessors/task');
@@ -19,6 +21,11 @@ var WebsiteCapturer = require('media-server/website-capturer');
 var StockPhotoImporter = require('media-server/stock-photo-importer');
 
 var server;
+var cacheControl = {
+    image: 'max-age=2592000, immutable',
+    video: 'max-age=86400',
+    audio: 'max-age=86400',
+};
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
@@ -84,10 +91,38 @@ function sendJson(res, result) {
  *
  * @param  {Response} res
  * @param  {Buffer} buffer
- * @param  {String} type
+ * @param  {String} mimeType
+ * @param  {String|undefined} cc
  */
-function sendFile(res, buffer, type) {
-    res.type(type).send(buffer);
+function sendFile(res, buffer, mimeType, cc) {
+    res.type(mimeType)
+    if (cc) {
+        res.set('Cache-Control', cc);
+    }
+    res.send(buffer);
+}
+
+/**
+ * Offload serving of a static file to Nginx
+ *
+ * @param  {Response} res
+ * @param  {String} path
+ * @param  {String|undefined} cc
+ * @param  {String|undefined} filename
+ */
+function sendInternalRedirect(res, path, cc, filename) {
+    getFileType(path).then((info) => {
+        res.type(info.mime);
+        if (cc) {
+            res.set('Cache-Control', cc);
+        }
+        if (filename) {
+            res.set('Content-disposition', `attachment; filename=${filename}`);
+        }
+        var relPath = path.substr(CacheFolders.root.length + 1);
+        var uri = `/static_media/${relPath}`;
+        res.set('X-Accel-Redirect', uri).end();
+    });
 }
 
 /**
@@ -131,7 +166,7 @@ function handleImageFiltersRequest(req, res) {
     }
     var path = `${CacheFolders.image}/${hash}`;
     return ImageManager.applyFilters(path, filters, format).then((buffer) => {
-        sendFile(res, buffer, format);
+        sendFile(res, buffer, format, cacheControl.image);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -144,11 +179,8 @@ function handleImageFiltersRequest(req, res) {
  * @param  {Response} res
  */
 function handleImageOriginalRequest(req, res) {
-    var filename = req.params.filename;
-    var path = `${CacheFolders.image}/${filename}`;
-    ImageManager.getImageMetadata(path).then((metadata) => {
-        res.type(metadata.format).sendFile(path);
-    });
+    var path = `${CacheFolders.image}/${req.params.filename}`;
+    sendInternalRedirect(res, path, cacheControl.image);
 }
 
 /**
@@ -158,9 +190,8 @@ function handleImageOriginalRequest(req, res) {
  * @param  {Response} res
  */
 function handleVideoRequest(req, res) {
-    var filename = req.params.filename;
-    var path = `${CacheFolders.video}/${filename}`;
-    res.sendFile(path);
+    var path = `${CacheFolders.video}/${req.params.filename}`;
+    sendInternalRedirect(res, path, cacheControl.video);
 }
 
 /**
@@ -170,9 +201,8 @@ function handleVideoRequest(req, res) {
  * @param  {Response} res
  */
 function handleAudioRequest(req, res) {
-    var filename = req.params.filename;
-    var path = `${CacheFolders.audio}/${filename}`;
-    res.sendFile(path);
+    var path = `${CacheFolders.audio}/${req.params.filename}`;
+    sendInternalRedirect(res, path, cacheControl.audio);
 }
 
 /**
@@ -480,6 +510,30 @@ function saveTaskProgress(schema, taskId, details, completion) {
  */
 function saveTaskOutcome(schema, taskId, details) {
     return saveTaskProgress(schema, taskId, details, 100);
+}
+
+/**
+ * Return the file extension and mime type
+ *
+ * @param  {String} path
+ *
+ * @return {Promise<Object>}
+ */
+function getFileType(path) {
+    var len = 1024;
+    var buffer = Buffer.alloc(len);
+    return FS.openAsync(path, 'r').then((fd) => {
+        return FS.readAsync(fd, buffer, 0, len, 0).then(() => {
+            var info = FileType(buffer);
+            if (!info) {
+                info = {
+                    ext: undefined,
+                    mime: 'application/octet-stream'
+                };
+            }
+            return info;
+        });
+    });
 }
 
 exports.start = start;
