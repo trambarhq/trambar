@@ -39,9 +39,15 @@ function installHooks(db) {
 }
 
 function installProjectHook(server, repo, project) {
-    // TODO: use env vars
-    var protocol = 'http';
-    var domain = '172.19.0.1';
+    console.log(`Installing web-hook for project on repo: ${project.name}/${repo.name}`);
+    var protocol = process.env.WEB_SERVER_PROTOCOL;
+    var domain = process.env.HOST_DOMAIN_NAME;
+    if (!protocol) {
+        return Promise.reject(new Error('Environment variable HOST_DOMAIN_NAME IS NOT defined'))
+    }
+    if (!domain || !protocol) {
+        return Promise.reject(new Error('Environment variable WEB_SERVER_PROTOCOL IS NOT defined'))
+    }
     var hook = new Hook;
     hook.url = `${protocol}://${domain}/gitlab/hook/${repo.id}/${project.id}`;
     return retrieveHooks(server, repo).then((hooks) => {
@@ -60,7 +66,11 @@ function installProjectHook(server, repo, project) {
                 });
             }
         }
-        return !!installed;
+        // remove extra ones
+        var extraHooks = _.filter(_.without(hooks, installed), { url: hook.url });
+        return Promise.each(extraHooks, (extraHook, index) => {
+            return removeHook(server, repo, extraHook);
+        }).return(!!installed);
     }).then((installed) => {
         var url = `/projects/${repo.external_id}/hooks`;
         return Transport.post(server, url, hook);

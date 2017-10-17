@@ -37,7 +37,7 @@ function start() {
                 app.set('json spaces', 2);
                 app.post('/gitlab/hook/:repoId/:projectId', handleHookCallback);
                 server = app.listen(80, () => {
-                    console.log('Listening...')
+
                     resolve();
                 });
             });
