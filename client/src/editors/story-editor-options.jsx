@@ -234,24 +234,40 @@ module.exports = React.createClass({
 
     /**
      * Open dialog box for selecting user
+     *
+     * @param  {Event} evt
      */
-    openSelectionDialogBox: function() {
-        this.setState({
-            selectingRecipients: true,
-            renderingDialogBox: true
-        });
+    openSelectionDialogBox: function(evt) {
+        if (!this.state.selectingRecipients) {
+            this.setState({
+                selectingRecipients: true,
+                renderingDialogBox: true
+            });
+
+            // stop menu from closing, as otherwise this component would be
+            // unmounted
+            evt.stopPropagation();
+            this.sendBookmakTarget = evt.target;
+        }
     },
 
     /**
      * Close dialog box
      */
     closeSelectionDialogBox: function() {
-        this.setState({ selectingRecipients: false });
-        setTimeout(() => {
-            if (!this.state.selectingRecipients) {
-                this.setState({ renderingDialogBox: false });
+        if (this.state.selectingRecipients) {
+            this.setState({ selectingRecipients: false });
+            setTimeout(() => {
+                if (!this.state.selectingRecipients) {
+                    this.setState({ renderingDialogBox: false });
+                }
+            }, 1000);
+
+            // fire click event to close menu
+            if (this.sendBookmakTarget) {
+                this.sendBookmakTarget.click();
             }
-        }, 1000);
+        }
     },
 
     /**
@@ -276,7 +292,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleSendBookmarkClick: function(evt) {
-        this.openSelectionDialogBox();
+        this.openSelectionDialogBox(evt);
     },
 
     /**
@@ -310,7 +326,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
-        this.openSelectionDialogBox();
+        this.closeSelectionDialogBox();
     },
 
     /**
@@ -319,7 +335,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleRecipientsCancel: function(evt) {
-        this.openSelectionDialogBox();
+        this.closeSelectionDialogBox();
     },
 
     /**
