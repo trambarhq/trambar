@@ -71,6 +71,26 @@ module.exports = _.create(Data, {
         return db.execute(sql).return(true);
     },
 
+    /**
+     * Delete unused objects created before given time
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {String} time
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    prune: function(db, schema, time) {
+        var table = this.getTableName(schema);
+        var sql = `
+            DELETE FROM ${table}
+            WHERE user_id IS NULL
+            AND ctime < $1
+            RETURNING *
+        `;
+        return db.query(sql, [ time ]);
+    },
+
     import: null,
     export: null,
 });

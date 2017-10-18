@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var Moment = require('moment');
 
 var HttpRequest = require('transport/http-request');
 var HttpError = require('errors/http-error');
@@ -673,9 +674,11 @@ module.exports = React.createClass({
                 clearSession(location.server);
                 this.cleanCachedObjects(location);
                 this.triggerExpirationEvent(location.server);
+                this.triggerChangeEvent();
             } else if (err.statusCode == 403) {
                 this.cleanCachedObjects(location);
                 this.triggerViolationEvent(location.server, location.schema);
+                this.triggerChangeEvent();
             }
             throw err;
         });
@@ -876,6 +879,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Creation interval function to check for session expiration
+     */
+    componentWillMount: function() {
+        this.sessionCheckTimeout = setInterval(() => {
+            var expiredSessions = getExpiredSessions();
+            if (!_.isEmpty(expiredSessions)) {
+                _.forIn(expiredSessions, (session, server) => {
+                    clearSession(server);
+                });
+                this.triggerChangeEvent();
+            }
+        }, 5 * 60 * 1000);
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -927,6 +945,13 @@ module.exports = React.createClass({
      */
     componentDidMount: function() {
         this.triggerChangeEvent();
+    },
+
+    /**
+     * Clear session check interval function
+     */
+    componentWillUnmount: function() {
+        clearInterval(this.sessionExpirationCheckInterval);
     },
 
     /**
@@ -1159,6 +1184,22 @@ function getSession(server) {
         session = sessions[server] = {};
     }
     return session;
+}
+
+/**
+ * Return sessions that hasn't been granted authorization and have expired
+ *
+ * @return {Object}
+ */
+function getExpiredSessions() {
+    var now = Moment().toISOString();
+    return _.pickBy(sessions, (session) => {
+        if (!session.authorization) {
+            if (session.authentication && session.authentication.expire < now) {
+                return true;
+            }
+        }
+    });
 }
 
 /**

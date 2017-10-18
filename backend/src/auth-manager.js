@@ -20,6 +20,8 @@ var System = require('accessors/system');
 var User = require('accessors/user');
 
 var server;
+var authenticationLifetime = 2; // hours
+var cleanUpInterval;
 
 function start() {
     var app = Express();
@@ -33,9 +35,13 @@ function start() {
     app.get('/auth/:provider', handleOAuthActivationRequest, handleOAuthRequest);
     app.get('/auth/:provider/:callback', handleOAuthActivationRequest, handleOAuthRequest);
     server = app.listen(80);
+
+    cleanUpInterval = setInterval(removeUnusedAuthorizationObjects, 60 * 60 * 1000);
 }
 
 function stop() {
+    clearInterval(cleanUpInterval);
+
     return new Promise((resolve, reject) => {
         if (server) {
             server.close();
@@ -132,7 +138,10 @@ function handleSessionStart(req, res) {
                     }
                     return {
                         system: _.pick(system, 'details'),
-                        authentication: _.pick(authentication, 'token'),
+                        authentication: {
+                            token: authentication.token,
+                            expire: Moment(authentication.ctime).add(authenticationLifetime, 'hour').toISOString(),
+                        },
                         providers,
                     };
                 });
@@ -713,6 +722,18 @@ function retrieveProfileImage(profile) {
                 resolve(null);
             }
         });
+    });
+}
+
+/**
+ * Remove old unused authentication objects
+ *
+ * @return {Promise<Array>}
+ */
+function removeUnusedAuthorizationObjects() {
+    return Database.open().then((db) => {
+        var before = Moment().subtract(authenticationLifetime * 2, 'hour').toISOString();
+        return Authentication.prune(db, 'global', before);
     });
 }
 
