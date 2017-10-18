@@ -5,12 +5,22 @@ require('./corner-pop-up.scss');
 module.exports = React.createClass({
     displayName: 'CornerPopUp',
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             open: false,
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <span ref="container" className="corner-pop-up">
@@ -20,6 +30,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render button for opening the menu
+     *
+     * @return {ReactElement}
+     */
     renderIcon: function() {
         var iconclassNames = [ 'fa' ];
         if (this.state.open) {
@@ -28,39 +43,76 @@ module.exports = React.createClass({
             iconclassNames.push('fa-chevron-circle-down');
         }
         return (
-            <span className="button" onClick={this.handleClick}>
+            <span className="button" onClick={this.handleButtonClick}>
                 <i className={iconclassNames.join(' ')}  />
             </span>
         );
     },
 
+    /**
+     * Render the menu if it's open
+     *
+     * @return {ReactElement}
+     */
     renderMenu: function() {
         if (!this.state.open) {
             return null;
         }
         return (
-            <div className="menu">
-                {this.props.children}
+            <div className="container">
+                <div className="menu" onClick={this.handleMenuClick}>
+                    {this.props.children}
+                </div>
             </div>
         );
     },
 
+    /**
+     * Add/remove document-level mousedown handler when menu opens and closes
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
     componentDidUpdate: function(prevProps, prevState) {
+        var appContainer = document.getElementById('app-container');
         if (!prevState.open && this.state.open) {
-            document.body.addEventListener('mousedown', this.handleBodyMouseDown);
+            appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
         } else if (prevState.open && !this.state.open) {
-            document.body.removeEventListener('mousedown', this.handleBodyMouseDown);
+            appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
         }
     },
 
+    /**
+     * Remove mousedown handler on unmount
+     */
     componentWillUnmount: function() {
-        document.body.removeEventListener('mousedown', this.handleBodyMouseDown);
+        var appContainer = document.getElementById('app-container');
+        appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
     },
 
-    handleClick: function(evt) {
+    /**
+     * Called when user clicks the corner button
+     *
+     * @param  {Event} evt
+     */
+    handleButtonClick: function(evt) {
         this.setState({ open: !this.state.open });
     },
 
+    /**
+     * Called when user clicks on an item in the menu
+     *
+     * @param  {Event} evt
+     */
+    handleMenuClick: function(evt) {
+        this.setState({ open: false });
+    },
+
+    /**
+     * Called when user clicks on the page somewhere
+     *
+     * @param  {Event} evt
+     */
     handleBodyMouseDown: function(evt) {
         var containerNode = this.refs.container;
         var insideMenu = false;

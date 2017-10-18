@@ -1,17 +1,18 @@
 .option-button {
-    display: block;
-    cursor: pointer;
+    display: table;
+    width: 100%;
     color: #666666;
     margin-bottom: 0.2em;
+    cursor: pointer;
 
     &:link, &:visited {
         text-decoration: none;
     }
 
     .fa {
+        display: table-cell;
         width: 1em;
-        margin-right: 0.2em;
-        vertical-align: middle;
+        padding-right: 0.25em;
     }
 
     &.selected, &:hover {
@@ -19,8 +20,8 @@
     }
 
     .label {
+        display: table-cell;
         font-size: 0.9em;
-        vertical-align: middle;
     }
 }
 
