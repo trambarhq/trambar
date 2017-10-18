@@ -49,7 +49,7 @@ module.exports = React.createClass({
      */
     getImageUrl: function(image, params) {
         var server = this.state.server;
-        var protocol = (server === 'localhost') ? 'http' : 'http';
+        var protocol = (server === 'localhost') ? 'http' : 'https';
         var filters = [];
         var baseUrl;
         var noClipping = (params) ? params.noClipping : undefined;
