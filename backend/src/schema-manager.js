@@ -81,6 +81,7 @@ function stop() {
     clearInterval(messageQueueInterval);
     if (database) {
         database.close();
+        database = null;
     }
     return Promise.resolve();
 };
@@ -410,8 +411,7 @@ function createMessageQueue(db) {
 function cleanMessageQueue(db) {
     var lifetime = '1 hour';
     var sql = `DELETE FROM "message_queue" WHERE ctime + CAST($1 AS INTERVAL) < NOW()`;
-    return db.execute(sql, [ lifetime ]).then((result) => {
-    });
+    return db.execute(sql, [ lifetime ]);
 }
 
 exports.start = start;
@@ -423,3 +423,15 @@ exports.renameSchema = renameSchema;
 if (process.argv[1] === __filename) {
     start();
 }
+
+_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
+    process.on(sig, function() {
+        stop().then(() => {
+            process.exit(0);
+        });
+    });
+});
+
+process.on('uncaughtException', function(err) {
+    console.error(err);
+});

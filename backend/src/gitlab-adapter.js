@@ -90,15 +90,22 @@ function start() {
 }
 
 function stop() {
-    return new Promise((resolve, reject) => {
-        if (server) {
-            server.close();
-            server.on('close', () => {
+    if (!database) {
+        return Promise.resolve();
+    }
+    return HookManager.removeHooks(database).then(() => {
+        database.close();
+        database = null;
+        return new Promise((resolve, reject) => {
+            if (server) {
+                server.close();
+                server.on('close', () => {
+                    resolve();
+                });
+            } else {
                 resolve();
-            });
-        } else {
-            resolve();
-        }
+            }
+        });
     });
 }
 
@@ -302,3 +309,15 @@ exports.stop = stop;
 if (process.argv[1] === __filename) {
     start();
 }
+
+_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
+    process.on(sig, function() {
+        stop().then(() => {
+            process.exit(0);
+        });
+    });
+});
+
+process.on('uncaughtException', function(err) {
+    console.error(err);
+});

@@ -40,6 +40,7 @@ function start() {
 function stop() {
     if (database) {
         database.close();
+        database = null;
     }
     return Promise.resolve();
 };
@@ -236,3 +237,15 @@ exports.stop = stop;
 if (process.argv[1] === __filename) {
     start();
 }
+
+_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
+    process.on(sig, function() {
+        stop().then(() => {
+            process.exit(0);
+        });
+    });
+});
+
+process.on('uncaughtException', function(err) {
+    console.error(err);
+});
