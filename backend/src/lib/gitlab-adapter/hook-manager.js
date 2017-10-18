@@ -10,8 +10,41 @@ var Repo = require('accessors/repo');
 var Server = require('accessors/server');
 
 exports.installHooks = installHooks;
+exports.installProjectHook = installProjectHook;
+exports.removeHooks = removeHooks;
+exports.removeProjectHook = removeProjectHook;
 
+/**
+ * Re-install all project hooks
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise}
+ */
 function installHooks(db) {
+    return forEachProject(db, installProjectHook);
+}
+
+/**
+ * Remove all project hooks
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise}
+ */
+function removeHooks(db) {
+    return forEachProject(db, removeProjectHook);
+}
+
+/**
+ * Call function on every project in the database
+ *
+ * @param  {Database} db
+ * @param  {Function} f
+ *
+ * @return {Promise}
+ */
+function forEachProject(db, f) {
     // load projects
     var criteria = {
         deleted: false
@@ -32,25 +65,25 @@ function installHooks(db) {
                 if (!server) {
                     return;
                 }
-                return installProjectHook(server, repo, project);
+                return f(server, repo, project);
             });
         });
     });
 }
 
+/**
+ * Install project hook on Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ *
+ * @return {Promise}
+ */
 function installProjectHook(server, repo, project) {
-    console.log(`Installing web-hook for project on repo: ${project.name}/${repo.name}`);
-    var protocol = process.env.WEB_SERVER_PROTOCOL;
-    var domain = process.env.HOST_DOMAIN_NAME;
-    if (!protocol) {
-        return Promise.reject(new Error('Environment variable HOST_DOMAIN_NAME IS NOT defined'))
-    }
-    if (!domain || !protocol) {
-        return Promise.reject(new Error('Environment variable WEB_SERVER_PROTOCOL IS NOT defined'))
-    }
-    var hook = new Hook;
-    hook.url = `${protocol}://${domain}/gitlab/hook/${repo.id}/${project.id}`;
+    console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     return retrieveHooks(server, repo).then((hooks) => {
+        var hook = new Hook(server, repo, project);
         var installed = _.find(hooks, { url: hook.url });
         if (installed) {
             // remove the installed hook if it's different from what we expect
@@ -61,24 +94,37 @@ function installProjectHook(server, repo, project) {
             });
             if (different) {
                 console.log(`Removing existing hook: ${installed.url}`);
-                return removeHook(server, repo, installed).then(() => {
-                    return false;
-                });
+                destroyHook(server, repo, installed);
+                installed = null;
             }
         }
-        // remove extra ones
-        var extraHooks = _.filter(_.without(hooks, installed), { url: hook.url });
-        return Promise.each(extraHooks, (extraHook, index) => {
-            return removeHook(server, repo, extraHook);
-        }).return(!!installed);
-    }).then((installed) => {
-        var url = `/projects/${repo.external_id}/hooks`;
-        return Transport.post(server, url, hook);
+        if (!installed) {
+            return createHook(server, repo, hook);
+        }
     });
 }
 
 /**
- * Retrieve hooks installed for project
+ * Remove project hook from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ *
+ * @return {Promise}
+ */
+function removeProjectHook(server, repo, project) {
+    console.log(`Removing web-hook on repo for project: ${repo.name} -> ${project.name}`);
+    return retrieveHooks(server, repo).each((existingHook) => {
+        var hook = new Hook(server, repo, project);
+        if (existingHook.url === hook.url) {
+            return destroyHook(server, repo, existingHook);
+        }
+    });
+}
+
+/**
+ * Retrieve all hooks installed on repo
  *
  * @param  {Server} server
  * @param  {Repo} repo
@@ -99,7 +145,7 @@ function retrieveHooks(server, repo) {
 }
 
 /**
- * Remove a hook from the Gitlab server
+ * Install a hook from Gitlab server
  *
  * @param  {Server} server
  * @param  {Repo} repo
@@ -107,14 +153,40 @@ function retrieveHooks(server, repo) {
  *
  * @return {Promise}
  */
-function removeHook(server, repo, hook) {
+function createHook(server, repo, hook) {
+    var url = `/projects/${repo.external_id}/hooks`;
+    return Transport.post(server, url, _.omit(hook, 'id'));
+}
+
+/**
+ * Remove a hook from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Hook} hook
+ *
+ * @return {Promise}
+ */
+function destroyHook(server, repo, hook) {
     var url = `/projects/${repo.external_id}/hooks/${hook.id}`;
     return Transport.remove(server, url);
 }
 
-function Hook() {
+function Hook(server, repo, project) {
+    if (server && repo && project) {
+        var protocol = process.env.WEB_SERVER_PROTOCOL;
+        var domain = process.env.HOST_DOMAIN_NAME;
+        if (!protocol) {
+            throw new Error('Environment variable HOST_DOMAIN_NAME IS NOT defined');
+        }
+        if (!domain || !protocol) {
+            throw new Error('Environment variable WEB_SERVER_PROTOCOL IS NOT defined');
+        }
+        this.url = `${protocol}://${domain}/gitlab/hook/${repo.id}/${project.id}`;
+    } else {
+        this.url = undefined;
+    }
     this.id = undefined;
-    this.url = undefined;
     this.push_events = true;
     this.issues_events = true;
     this.merge_requests_events = true;
