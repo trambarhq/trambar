@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var DeviceManager = require('media/device-manager');
 var ComponentRefs = require('utils/component-refs');
+var TagScanner = require('utils/tag-scanner');
 var Markdown = require('utils/markdown');
 
 var Database = require('data/database');
@@ -403,6 +404,9 @@ module.exports = React.createClass({
             }
         }
 
+        // look for tags
+        draft.tags = TagScanner.findTags(draft.details.text);
+
         return this.changeDraft(draft).then(() => {
             this.autosaveReaction(draft, AUTOSAVE_DURATION);
             return null;
@@ -516,7 +520,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called hwne user clicks the Markdown button
+     * Called when user clicks the Markdown button
      *
      * @param  {Event} evt
      *
