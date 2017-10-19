@@ -1,0 +1,18 @@
+.comment-view-options {
+    .button {
+        color: #666666;
+        padding-left: 0.5em;
+
+        &:hover {
+            color: #eeeeee;
+        }
+
+        &.disabled {
+            opacity: 0.25;
+        }
+    }
+
+    .container {
+        top: 1.25em;
+    }
+}

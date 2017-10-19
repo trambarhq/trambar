@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -11,6 +12,7 @@ var UpdateCheck = require('mixins/update-check');
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var Time = require('widgets/time');
+var CommentViewOptions = require('views/comment-view-options');
 
 require('./comment-view.scss');
 
@@ -24,9 +26,52 @@ module.exports = React.createClass({
         currentUser: PropTypes.object.isRequired,
         repo: PropTypes.object,
 
+        database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        var nextState = {
+            options: defaultOptions
+        };
+        this.updateOptions(nextState, this.props);
+        return nextState;
+    },
+
+    /**
+     * Update options when new data arrives from server
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        var nextState = _.clone(this.state);
+        if (this.props.reaction !== nextProps.reaction) {
+            this.updateOptions(nextState, nextProps);
+        }
+        var changes = _.pickBy(nextState, (value, name) => {
+            return this.state[name] !== value;
+        });
+        if (!_.isEmpty(changes)) {
+            this.setState(changes);
+        }
+    },
+
+    /**
+     * Update state.options based on props
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
+    updateOptions: function(nextState, nextProps) {
+        var options = nextState.options = _.clone(nextState.options);
+        options.hideReaction = !nextProps.reaction.public;
     },
 
     /**
@@ -42,6 +87,7 @@ module.exports = React.createClass({
                 </div>
                 <div className="contents-column">
                     <div className="text">
+                        {this.renderOptionButton()}
                         {this.renderTime()}
                         {this.renderText()}
                     </div>
@@ -162,6 +208,24 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render option button
+     *
+     * @return {ReactElement}
+     */
+    renderOptionButton: function() {
+        var props = {
+            currentUser: this.props.currentUser,
+            reaction: this.props.reaction,
+            story: this.props.story,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            options: this.state.options,
+            onChange: this.handleOptionsChange,
+        };
+        return <CommentViewOptions {...props} />;
+    },
+
+    /**
      * Render the publication time
      *
      * @return {ReactElement}
@@ -191,4 +255,75 @@ module.exports = React.createClass({
         };
         return <div className="media"><MediaView {...props} /></div>;
     },
+
+    /**
+     * Save reaction to remote database
+     *
+     * @param  {Reaction} reaction
+     *
+     * @return {Promise<Reaction>}
+     */
+    saveReaction: function(reaction) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'reaction' }, reaction);
+        });
+    },
+
+    /**
+     * Remove reaction from remote database
+     *
+     * @param  {Reaction} reaction
+     *
+     * @return {Promise<Reaction>}
+     */
+    removeReaction: function(reaction) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        return db.removeOne({ table: 'reaction' }, reaction);
+    },
+
+    /**
+     * Change options concerning a story
+     *
+     * @param  {Object} options
+     */
+    setOptions: function(options) {
+        var before = this.state.options;
+        this.setState({ options }, () => {
+            if (options.editReaction && !before.editReaction) {
+                var reaction = _.clone(this.props.reaction);
+                reaction.published = false;
+                this.saveReaction(reaction);
+            }
+            if (options.removeReaction && !before.removeReaction) {
+                this.removeReaction(this.props.reaction);
+            }
+            if (options.hideReaction !== before.hideReaction) {
+                var reaction = _.clone(this.props.reaction);
+                reaction.public = !options.hideReaction;
+                this.saveReaction(reaction);
+            }
+        });
+    },
+
+    /**
+     * Called when options are changed
+     *
+     * @param  {Object} evt
+     */
+    handleOptionsChange: function(evt) {
+        this.setOptions(evt.options);
+    },
 });
+
+var defaultOptions = {
+    hideReaction: false,
+    editReaction: false,
+    removeReaction: false,
+};

@@ -61,10 +61,18 @@ module.exports = React.createClass({
         return nextState;
     },
 
+    /**
+     * Monitor connection of video or audio recordign devices
+     */
     componentWillMount: function() {
         DeviceManager.addEventListener('change', this.handleDeviceChange);
     },
 
+    /**
+     * Update draft upon receiving data from server
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.reaction !== nextProps.reaction) {

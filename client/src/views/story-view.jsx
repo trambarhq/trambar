@@ -63,7 +63,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Update draft when new data arrives from server
+     * Update options when new data arrives from server
      *
      * @param  {Object} nextProps
      */
@@ -448,5 +448,7 @@ var defaultOptions = {
     addIssue: false,
     hidePost: false,
     editPost: false,
+    removePost: false,
+    bumpPost: false,
     bookmarkRecipients: [],
 };

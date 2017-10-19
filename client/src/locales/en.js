@@ -135,8 +135,11 @@ module.exports = function(languageCode) {
         'option-add-issue': 'Add post to issue tracker',
         'option-bookmark-story': 'Bookmark story',
         'option-bump-post': 'Bump post',
+        'option-edit-comment': 'Edit comment',
         'option-edit-post': 'Edit post',
+        'option-hide-comment': 'Hide comment from non-team members',
         'option-hide-post': 'Hide from non-team members',
+        'option-remove-comment': 'Remove comment',
         'option-remove-post': 'Remove post',
         'option-send-bookmarks': 'Send bookmarks to other users',
         'option-send-bookmarks-to-$count-users': (count) => {

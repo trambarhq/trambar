@@ -63,13 +63,12 @@ module.exports = React.createClass({
      */
     canHideStory: function() {
         var story = this.props.story;
-        var userType = this.props.currentUser.type;
-        if (userType !== 'guest') {
-            if (userType === 'admin') {
+        var user = this.props.currentUser;
+        if (user.type !== 'guest') {
+            if (user.type === 'admin') {
                 return true;
             }
-            var userId = this.props.currentUser.id;
-            if (_.includes(story.user_ids, userId)) {
+            if (_.includes(story.user_ids, user.id)) {
                 return true;
             }
         }
@@ -83,9 +82,9 @@ module.exports = React.createClass({
      */
     canEditStory: function() {
         var story = this.props.story;
+        var user = this.props.currentUser;
         if (_.includes(StoryTypes.editable, story.type)) {
-            var userId = this.props.currentUser.id;
-            if (_.includes(story.user_ids, userId)) {
+            if (_.includes(story.user_ids, user.id)) {
                 // allow editing for 3 days
                 if (Moment() < Moment(story.ptime).add(3, 'day')) {
                     return true;
@@ -102,13 +101,15 @@ module.exports = React.createClass({
      */
     canRemoveStory: function() {
         var story = this.props.story;
-        var userId = this.props.currentUser.id;
-        var userType = this.props.currentUser.type;
-        if (_.includes(story.user_ids, userId) || userType === 'admin') {
-            // allow remove for 3 days
+        var user = this.props.currentUser;
+        if (_.includes(story.user_ids, user.id)) {
+            // allow removal for 3 days
             if (Moment() < Moment(story.ptime).add(3, 'day')) {
                 return true;
             }
+        }
+        if (user.type === 'admin') {
+            return true;
         }
         return false;
     },
@@ -120,9 +121,8 @@ module.exports = React.createClass({
      */
     canBumpStory: function() {
         var story = this.props.story;
-        var userId = this.props.currentUser.id;
-        var userType = this.props.currentUser.type;
-        if (_.includes(story.user_ids, userId) || userType === 'admin') {
+        var user = this.props.currentUser;
+        if (_.includes(story.user_ids, user.id) || user.type === 'admin') {
             // allow bumping after a day
             if (Moment() > Moment(story.btime || story.ptime).add(1, 'day')) {
                 return true;
@@ -138,9 +138,9 @@ module.exports = React.createClass({
      */
     canAddIssue: function() {
         var story = this.props.story;
+        var user = this.props.currentUser;
         if (_.includes(StoryTypes.trackable, story.type)) {
-            var userType = this.props.currentUser.type;
-            if (userType === 'member' || userType === 'admin') {
+            if (user.type === 'member' || user.type === 'admin') {
                 return true;
             }
         }
@@ -217,39 +217,39 @@ module.exports = React.createClass({
                 selected: options.addIssue,
                 onClick: this.handleAddIssueClick,
             };
-            var hidePostProps = {
+            var hideProps = {
                 label: t('option-hide-post'),
                 hidden: !this.canHideStory(),
                 selected: options.hidePost,
-                onClick: this.handleHidePostClick,
+                onClick: this.handleHideClick,
             };
-            var editPostProps = {
+            var editProps = {
                 label: t('option-edit-post'),
                 hidden: !this.canEditStory(),
                 selected: options.editPost,
-                onClick: this.handleEditPostClick,
+                onClick: this.handleEditClick,
             };
-            var removePostProps = {
+            var removeProps = {
                 label: t('option-remove-post'),
                 hidden: !this.canRemoveStory(),
                 selected: options.removePost,
-                onClick: this.handleRemovePostClick,
+                onClick: this.handleRemoveClick,
             };
-            var bumpPostProps = {
+            var bumpProps = {
                 label: t('option-bump-post'),
                 hidden: !this.canBumpStory(),
                 selected: options.bumpPost,
-                onClick: this.handleBumpPostClick,
+                onClick: this.handleBumpClick,
             };
             return (
                 <div className={section}>
                     <OptionButton {...bookmarkProps} />
                     <OptionButton {...sendBookmarkProps} />
                     <OptionButton {...addIssueProps} />
-                    <OptionButton {...hidePostProps} />
-                    <OptionButton {...editPostProps} />
-                    <OptionButton {...removePostProps} />
-                    <OptionButton {...bumpPostProps} />
+                    <OptionButton {...hideProps} />
+                    <OptionButton {...editProps} />
+                    <OptionButton {...removeProps} />
+                    <OptionButton {...bumpProps} />
                     {this.renderUserSelectionDialogBox()}
                 </div>
             );
@@ -358,7 +358,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleHidePostClick: function(evt) {
+    handleHideClick: function(evt) {
         var options = _.clone(this.props.options);
         options.hidePost = !options.hidePost;
         this.triggerChangeEvent(options);
@@ -369,7 +369,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleEditPostClick: function(evt) {
+    handleEditClick: function(evt) {
         var options = _.clone(this.props.options);
         options.editPost = true;
         this.triggerChangeEvent(options);
@@ -380,7 +380,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleRemovePostClick: function(evt) {
+    handleRemoveClick: function(evt) {
         var options = _.clone(this.props.options);
         options.removePost = true;
         this.triggerChangeEvent(options);
@@ -391,7 +391,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleBumpPostClick: function(evt) {
+    handleBumpClick: function(evt) {
         var options = _.clone(this.props.options);
         options.bumpPost = true;
         this.triggerChangeEvent(options);

@@ -1,36 +1,16 @@
 .corner-pop-up {
-    position: relative;
     float: right;
 
     .button {
         color: #666666;
-        cursor: pointer;
 
         &:hover {
             color: #eeeeee;
         }
-
-        .label {
-            font-size: 0.9em;
-            margin-left: 0.3em;
-        }
     }
 
     .container {
-        position: absolute;
-        width: 50vw;
-        right: 0.4em;
+        right: 0.3em;
         top: 1.5em;
-        z-index: 1000;
-        text-align: right;
-
-        .menu {
-            display: inline-block;
-            border: 1px solid black;
-            padding: 0.5em 0.5em 0.5em 0.5em;
-            background-color: #fff;
-            box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.75);
-            text-align: left;
-        }
     }
 }

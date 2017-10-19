@@ -1,0 +1,29 @@
+.pop-up-menu {
+    position: relative;
+
+    .button {
+        cursor: pointer;
+
+        &.disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    .container {
+        position: absolute;
+        width: 50vw;
+        right: 0;
+        top: 1em;
+        z-index: 1000;
+        text-align: right;
+
+        .menu {
+            display: inline-block;
+            border: 1px solid black;
+            padding: 0.5em 0.5em 0.5em 0.5em;
+            background-color: #eeeeee;
+            box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.75);
+            text-align: left;
+        }
+    }
+}

@@ -36,12 +36,16 @@
             }
         }
 
+        .comment-view-options {
+            float: right;
+        }
+
         .time {
             display: block;
             float: right;
             color: #666666;
             font-size: 0.9em;
-            margin: 0 0 0.5em 1em;
+            margin-bottom: 0.5em;
         }
 
         .media {
