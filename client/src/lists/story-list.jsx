@@ -86,6 +86,11 @@ module.exports = Relaks.createClass({
             };
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
+            // reattach blobs to unpublished reactions (lost when saved)
+            var unpunishedReactions = _.filter(reactions, { ptime: null });
+            _.each(unpunishedReactions, (reaction) => {
+                props.payloads.reattach(reaction);
+            });
             props.reactions = reactions;
             meanwhile.show(<StoryListSync {...props} />);
         }).then(() => {
