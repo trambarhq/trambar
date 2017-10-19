@@ -55,16 +55,17 @@ function detect(text, resources, theme) {
 }
 
 /**
- * Parse Markdown text
+ * Parse Markdown text, adding resources that are referenced to given array
  *
  * @param  {String} text
  * @param  {Array<Object>} resources
  * @param  {Theme} theme
+ * @param  {Array<Object>} resourcesReferenced
  *
  * @return {Array<ReactElement>}
  */
-function parse(text, resources, theme) {
-    var parser = createParser(resources, theme);
+function parse(text, resources, theme, resourcesReferenced) {
+    var parser = createParser(resources, theme, resourcesReferenced);
     var renderer = createRenderer(resources, theme);
     var bTokens = parser.parse(text);
     var paragraphs = renderer.render(bTokens);
@@ -76,16 +77,18 @@ function parse(text, resources, theme) {
  *
  * @param  {Array<Object>} resources
  * @param  {Theme} theme
+ * @param  {Array<Object>} resourcesReferenced
  *
  * @return {Parser}
  */
-function createParser(resources, theme) {
+function createParser(resources, theme, resourcesReferenced) {
     var blockLexer = new MarkGor.BlockLexer();
     var inlineLexer = new MarkGor.InlineLexer({
         links: blockLexer.links,
         findRefLink: findMarkdownRefLink,
         resources,
         theme,
+        resourcesReferenced,
     });
     var parser = new MarkGor.Parser({ blockLexer, inlineLexer });
     return parser;
@@ -121,6 +124,9 @@ function findMarkdownRefLink(name, forImage) {
     }
     var res = findResource(this.resources, name);
     if (res) {
+        if (this.resourcesReferenced instanceof Array) {
+            this.resourcesReferenced.push(res);
+        }
         return getResourceLink(res, this.theme, forImage);
     } else {
         return null;
@@ -147,8 +153,6 @@ function findResource(resources, name) {
         var res = _.get(_.filter(resources, { type }), index);
         if (res) {
             return res;
-        } else {
-            return { type };
         }
     }
     return null;

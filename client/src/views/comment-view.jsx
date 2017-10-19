@@ -81,6 +81,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var resourcesReferenced = [];
         return (
             <div className="comment-view">
                 <div className="profile-image-column">
@@ -90,9 +91,9 @@ module.exports = React.createClass({
                     <div className="text">
                         {this.renderOptionButton()}
                         {this.renderTime()}
-                        {this.renderText()}
+                        {this.renderText(resourcesReferenced)}
                     </div>
-                    {this.renderMedia()}
+                    {this.renderMedia(resourcesReferenced)}
                 </div>
             </div>
         );
@@ -121,11 +122,14 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render user name and text
+     * Render user name and text, capturing the resources that are referenced
+     * by Markdown
+     *
+     * @param  {Array<Object>} resourcesReferenced
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText: function(resourcesReferenced) {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var reaction = this.props.reaction;
@@ -147,7 +151,7 @@ module.exports = React.createClass({
                         // (resources and theme are used to resolve references)
                         var resources = _.get(reaction, 'details.resources');
                         var theme = this.props.theme;
-                        var paragraphs = Markdown.parse(p(text), resources, theme);
+                        var paragraphs = Markdown.parse(p(text), resources, theme, resourcesReferenced);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
@@ -262,10 +266,15 @@ module.exports = React.createClass({
     /**
      * Render attached media
      *
+     * @param  {Array<Object>}
+     *
      * @return {ReactElement}
      */
-    renderMedia: function() {
+    renderMedia: function(resourcesReferenced) {
         var resources = _.get(this.props.reaction, 'details.resources');
+        if (!_.isEmpty(resourcesReferenced)) {
+            resources = _.difference(resources, resourcesReferenced);
+        }
         if (_.isEmpty(resources)) {
             return null;
         }
