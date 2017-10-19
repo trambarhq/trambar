@@ -20,6 +20,15 @@
         .text {
             padding: 0.25em 0 0.25em 0;
 
+            .comment {
+                &.markdown {
+                    IMG {
+                        height: 1.5em;
+                        vertical-align: middle;
+                    }
+                }
+            }
+
             .note, .issue-assignment {
                 &:link, &:visited {
                     color: #cccccc;

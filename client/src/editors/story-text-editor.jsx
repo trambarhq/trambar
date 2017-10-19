@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var TagScanner = require('utils/tag-scanner');
+var Markdown = require('utils/markdown');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -262,7 +263,7 @@ module.exports = React.createClass({
 
         // automatically enable Markdown formatting
         if (story.details.markdown === undefined) {
-            if (StoryText.hasMarkdownFormatting(story)) {
+            if (Markdown.detect(langText)) {
                 story.details.markdown = true;
             }
         }

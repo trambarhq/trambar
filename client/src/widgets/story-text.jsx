@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ListParser = require('utils/list-parser');
-var MarkGor = require('mark-gor/react');
+var Markdown = require('utils/markdown');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -9,7 +9,6 @@ var Theme = require('theme/theme');
 module.exports = exports = StoryText;
 
 exports.hasLists = hasLists;
-exports.hasMarkdownFormatting = hasMarkdownFormatting;
 exports.addListTemplate = addListTemplate;
 exports.updateList = updateList;
 exports.getDefaultAnswers = getDefaultAnswers;
@@ -47,7 +46,10 @@ function StoryText(props) {
             onItemChange: props.onItemChange,
         });
     } else if (markdown) {
-        contents = MarkGor.parse(contents);
+        // resources and theme are needed to handle media references
+        var resources = _.get(props.story, 'details.resources');
+        contents = Markdown.parse(contents, resources, props.theme);
+        classNames.push('markdown');
     }
 
     var containerProps = _.omit(props, _.keys(StoryText.propTypes));
@@ -92,7 +94,8 @@ function renderLists(props) {
     var listTokens = ListParser.extract(props.text);
     if (props.markdown) {
         // process the text fully at block level, so ref links are captured
-        var parser = createMarkdownParser(props.story, props.theme);
+        var resources = _.get(props.story, 'details.resources');
+        var parser = Markdown.createParser(resources, props.theme);
         var blockTokenLists = _.map(listTokens, (listToken, index) => {
             var blockTokens;
             if (listToken instanceof Array) {
@@ -116,7 +119,7 @@ function renderLists(props) {
             }
         });
         // render tokens
-        var renderer = createMarkdownRenderer(props.story, props.theme);
+        var renderer = Markdown.createRenderer(resources, props.theme);
         var markdownTexts = _.map(listTokens, (listToken, index) => {
             var blockTokens = blockTokenLists[index];
             if (listToken instanceof Array) {
@@ -332,211 +335,4 @@ function hasLists(story) {
             return token instanceof Array;
         });
     });
-}
-
-/**
- * Check if given story contains Markdown formatting
- *
- * @param  {Story} story
- *
- * @return {Boolean}
- */
-function hasMarkdownFormatting(story) {
-    var text = _.get(story, 'details.text');
-    // check text of each language
-    return _.some(text, (langText) => {
-        // process the text fully at block level, so ref links are captured
-        var parser = createMarkdownParser();
-        var tokens = parser.extractBlocks(langText);
-        return _.some(tokens, (token) => {
-            switch (token.type) {
-                case 'space':
-                    return false;
-                case 'paragraph':
-                case 'text_block':
-                    // scan for inline markup
-                    var iToken;
-                    var inlineLexer = parser.inlineLexer;
-                    inlineLexer.start(token.markdown);
-                    while (iToken = inlineLexer.captureToken()) {
-                        switch (iToken.type) {
-                            case 'url':
-                            case 'text':
-                            case 'autolink':
-                            case 'br':
-                                // ignore these, as they can occur in plain text
-                                break;
-                            default:
-                                return true;
-                        }
-                    }
-                    break;
-                default:
-                    return true;
-            }
-        });
-    });
-}
-
-/**
- * Create a Markdown parser that can reference resources in story
- *
- * @param  {Story} story
- * @param  {Theme} theme
- *
- * @return {Parser}
- */
-function createMarkdownParser(story, theme) {
-    var blockLexer = new MarkGor.BlockLexer();
-    var inlineLexer = new MarkGor.InlineLexer({
-        links: blockLexer.links,
-        findRefLink: findMarkdownRefLink,
-        story,
-        theme,
-    });
-    var parser = new MarkGor.Parser({ blockLexer, inlineLexer });
-    return parser;
-}
-
-/**
- * Create a Markdown renderer that render image tag in a custom manner
- *
- * @param  {Story} story
- * @param  {Theme} theme
- *
- * @return {Renderer}
- */
-function createMarkdownRenderer(story, theme) {
-    var renderer = new MarkGor.Renderer({
-        renderImage: renderMarkdownImage
-    });
-    return renderer;
-}
-
-/**
- * Override Mark-Gor's default ref-link lookup mechanism
- *
- * @param  {String} name
- * @param  {Boolean} forImage
- *
- * @return {Object}
- */
-function findMarkdownRefLink(name, forImage) {
-    var link = this.links[name];
-    if (link) {
-        return link;
-    }
-    var res = findResource(this.story, name);
-    if (res) {
-        return getResourceLink(res, this.theme, forImage);
-    } else {
-        return null;
-    }
-}
-
-/**
- * Look for an attached resource
- *
- * @param  {Story} story
- * @param  {String} name
- *
- * @return {Object|null}
- */
-function findResource(story, name) {
-    var match = /^(picture|image|video|audio|website)-(\d+)$/.exec(name);
-    if (match) {
-        var type = match[1];
-        if (type === 'picture') {
-            type = 'image';
-        }
-        var number = parseInt(match[2]);
-        var index = number -1 ;
-        var resources = _.get(story, 'details.resources');
-        var res = _.get(_.filter(resources, { type }), index);
-        if (res) {
-            return res;
-        } else {
-            return { type };
-        }
-    }
-    return null;
-}
-
-/**
- * Get a link object for a resource
- *
- * @param  {Object} res
- * @param  {Theme} theme
- * @param  {Boolean} forImage
- *
- * @return {Object}
- */
-function getResourceLink(res, theme, forImage) {
-    var url, title;
-    if (forImage) {
-        switch (res.type) {
-            case 'image':
-                url = theme.getImageUrl(res);
-                break;
-            case 'video':
-                url = theme.getPosterUrl(res);
-                break;
-            case 'website':
-                url = theme.getPosterUrl(res);
-                break;
-            case 'audio':
-                // TODO: should return something
-                return;
-        }
-        if (!url) {
-            // TODO
-        }
-    } else {
-        switch (res.type) {
-            case 'image':
-                url = theme.getImageUrl(res);
-                break;
-            case 'video':
-                url = theme.getVideoUrl(res);
-                break;
-            case 'website':
-                url = res.url;
-                break;
-            case 'audio':
-                url = theme.getAudioUrl(res);
-                return;
-        }
-        if (!url) {
-            // TODO
-        }
-    }
-    return {
-        href: url,
-        title: title
-    };
-}
-
-function getFileUrl(url, file) {
-    if (url) {
-        return url;
-    }
-    if (file) {
-        return URL.createObjectUrl(file);
-    }
-    return '';
-}
-
-/**
- * Override Mark-Gor's default render function for images
- *
- * @param  {Object} token
- *
- * @return {ReactElement}
- */
-function renderMarkdownImage(token) {
-    var href = token.href;
-    var title = token.title;
-    var text = token.text;
-    var name = token.ref;
-    return <img src={href} title={title} alt={text} />
 }

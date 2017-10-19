@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var DeviceManager = require('media/device-manager');
 var ComponentRefs = require('utils/component-refs');
+var Markdown = require('utils/markdown');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -392,6 +393,15 @@ module.exports = React.createClass({
         var lang = languageCode.substr(0, 2);
         var path = `details.text.${lang}`;
         var draft = _.decoupleSet(this.state.draft, path, langText);
+
+        // automatically enable Markdown formatting
+        if (draft.details.markdown === undefined) {
+            var resources = _.get(draft, 'details.resources');
+            var theme = this.props.theme;
+            if (Markdown.detect(langText, resources, theme)) {
+                draft.details.markdown = true;
+            }
+        }
 
         return this.changeDraft(draft).then(() => {
             this.autosaveReaction(draft, AUTOSAVE_DURATION);

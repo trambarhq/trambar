@@ -1,5 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
-var MarkGor = require('mark-gor/react');
+var Markdown = require('utils/markdown');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -144,13 +144,16 @@ module.exports = React.createClass({
                     var markdown = _.get(reaction, 'details.markdown', false);
                     if (markdown) {
                         // parse the Markdown text
-                        var paragraphs = MarkGor.parse(p(text));
+                        // (resources and theme are used to resolve references)
+                        var resources = _.get(reaction, 'details.resources');
+                        var theme = this.props.theme;
+                        var paragraphs = Markdown.parse(p(text), resources, theme);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
                         }
                         return (
-                            <span className="comment">
+                            <span className="comment markdown">
                                 {name}: {paragraphs}
                             </span>
                         );
