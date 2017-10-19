@@ -506,6 +506,23 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called hwne user clicks the Markdown button
+     *
+     * @param  {Event} evt
+     *
+     * @return {Promise}
+     */
+    handleMarkdownClick: function(evt) {
+        var path = `details.markdown`;
+        var markdown = !_.get(this.state.draft, path, false);
+        var draft = _.decoupleSet(this.state.draft, path, markdown);
+        return this.changeDraft(draft).then((draft) => {
+            this.autosaveReaction(draft, AUTOSAVE_DURATION);
+            return null;
+        });
+    },
+
+    /**
      * Called when the list of media devices changes
      *
      * @param  {Object} evt

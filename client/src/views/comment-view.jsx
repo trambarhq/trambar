@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var MarkGor = require('mark-gor/react');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -140,11 +141,26 @@ module.exports = React.createClass({
                     );
                 case 'comment':
                     var text = _.get(reaction, 'details.text');
-                    return (
-                        <span className="comment">
-                            {name}: {p(text)}
-                        </span>
-                    );
+                    var markdown = _.get(reaction, 'details.markdown', false);
+                    if (markdown) {
+                        // parse the Markdown text
+                        var paragraphs = MarkGor.parse(p(text));
+                        // if there first paragraph is a P tag, turn it into a SPAN
+                        if (paragraphs[0].type === 'p') {
+                            paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
+                        }
+                        return (
+                            <span className="comment">
+                                {name}: {paragraphs}
+                            </span>
+                        );
+                    } else {
+                        return (
+                            <span className="comment">
+                                {name}: {p(text)}
+                            </span>
+                        );
+                    }
                 case 'vote':
                     return (
                         <span className="vote">
