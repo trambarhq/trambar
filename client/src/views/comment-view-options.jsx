@@ -111,7 +111,7 @@ module.exports = React.createClass({
                   || this.canHideReaction();
         var props = {
             className: 'comment-view-options',
-            disable: !active,
+            disabled: !active,
             popOut: true,
             onOpen: this.handleOpen,
             onClose: this.handleClose,

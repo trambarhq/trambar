@@ -71,8 +71,8 @@ module.exports = React.createClass({
      */
     renderButton: function() {
         var className = 'button';
-        if (this.props.disabled) {
-            className += ' disabled';
+        if (!this.props.disabled) {
+            className += ' active';
         }
         return (
             <span className={className} onClick={this.handleButtonClick}>

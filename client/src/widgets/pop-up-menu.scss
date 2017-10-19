@@ -2,10 +2,8 @@
     position: relative;
 
     .button {
-        cursor: pointer;
-
-        &.disabled {
-            cursor: not-allowed;
+        &.active {
+            cursor: pointer;
         }
     }
 

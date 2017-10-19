@@ -425,16 +425,25 @@ module.exports = React.createClass({
      * @return {Promise<Reaction>}
      */
     handleCancelClick: function(evt) {
-        var reaction = this.state.draft;
-        var draft = createBlankComment(this.props.currentUser);
-        return this.changeDraft(draft).then(() => {
+        return Promise.try(() => {
+            this.cancelAutosave();
+            var reaction = this.props.reaction;
             if (reaction.id) {
-                return this.removeReaction(reaction);
+                if (reaction.ptime) {
+                    // reaction was published before--publish it again
+                    reaction = _.clone(reaction);
+                    reaction.published = true;
+                    return this.saveReaction(reaction);
+                } else {
+                    // delete saved unpublished reaction
+                    return this.removeReaction(reaction);
+                }
             } else {
                 return reaction;
             }
-        }).then(() => {
+        }).then((reaction) => {
             this.triggerFinishEvent();
+            return reaction;
         });
     },
 

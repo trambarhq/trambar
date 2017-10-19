@@ -2,17 +2,20 @@
     .button {
         color: #666666;
         padding-left: 0.5em;
+        padding-right: 0.5em;
+        opacity: 0.2;
 
-        &:hover {
-            color: #eeeeee;
-        }
+        &.active {
+            opacity: 1;
 
-        &.disabled {
-            opacity: 0.25;
+            &:hover {
+                color: #eeeeee;
+            }
         }
     }
 
     .container {
+        right: 0.5em;
         top: 1.25em;
     }
 }

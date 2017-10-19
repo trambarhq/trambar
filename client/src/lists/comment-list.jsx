@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var ReactDOM = require('react-dom');
 var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
 
@@ -105,15 +106,20 @@ module.exports = React.createClass({
      */
     renderReaction: function(reaction, index, list) {
         var isUserDraft = false;
+        var isNewComment = false;
         if (!reaction) {
             isUserDraft = true;
+            isNewComment = true;
         } else if (!reaction.published) {
             if (reaction.user_id === this.props.currentUser.id) {
                 isUserDraft = true;
+                if (!reaction.ptime) {
+                    isNewComment = true;
+                }
             }
         }
         if (isUserDraft) {
-            return this.renderEditor(reaction, index === 0);
+            return this.renderEditor(reaction, isNewComment);
         } else {
             return this.renderView(reaction);
         }
@@ -126,13 +132,11 @@ module.exports = React.createClass({
      */
     renderView: function(reaction) {
         var respondent = findRespondent(this.props.respondents, reaction);
-        var tempCopy = findTemporaryCopy(this.props.reactions, reaction);
         var props = {
             reaction,
             respondent,
             story: this.props.story,
             repo: this.props.repo,
-            beingEdited: !!tempCopy,
             currentUser: this.props.currentUser,
             database: this.props.database,
             route: this.props.route,
@@ -147,12 +151,15 @@ module.exports = React.createClass({
      * Render coment editor
      *
      * @param  {Reaction} reaction
-     * @param  {Boolean} last
+     * @param  {Boolean} isNewComment
      *
      * @return {ReactElement|null}
      */
-    renderEditor: function(reaction, last) {
-        var tempCopy = findTemporaryCopy(this.props.reactions, reaction);
+    renderEditor: function(reaction, isNewComment) {
+        // always use 0 as the key for new comment by current user, so
+        // the keyboard focus isn't taken away when autosave occurs
+        // (and the comment gains an id)
+        var key = (isNewComment) ? 0 : reaction.id;
         var props = {
             reaction,
             story: this.props.story,
@@ -162,43 +169,41 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: (last) ? 0 : reaction.id,
-            ref: (last) ? 'last' : undefined,
+            key: key,
             onFinish: this.props.onFinish,
         };
         return <CommentEditor {...props} />
     },
 
     /**
-     * Set keyboard focus on last editor
+     * Direct keyboard focus to newly created textarea
      *
-     * @return {[type]}
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
      */
-    focus: function() {
-        var component = this.refs.last;
-        if (component) {
-            component.focus();
+    componentDidUpdate: function(prevProps, prevState) {
+        var node = ReactDOM.findDOMNode(this);
+        var textAreas = node.getElementsByTagName('TEXTAREA');
+        textAreas = _.filter(textAreas, { readOnly: false });
+        var newTextArea = _.first(_.difference(textAreas, this.textAreas));
+        if (newTextArea) {
+            newTextArea.focus();
         }
+        this.textAreas = textAreas;
     },
 });
 
 var sortReactions = Memoize(function(reactions, currentUser) {
-    // move published comment of current user to bottom
-    var ownByUser = (r) => {
-        return r.user_id === currentUser;
-    };
-    return _.orderBy(reactions,
-        [ 'published', 'ptime', ownByUser, 'id' ],
-        [ 'asc',       'desc',  'desc',    'desc' ]
-    );
-});
-
-var findTemporaryCopy = Memoize(function(reactions, reaction) {
-    if (reaction) {
-        return _.find(reactions, { published_version_id: reaction.id });
-    } else {
-        return null;
-    }
+    // reactions are positioned from bottom up
+    // place reactions with later ptime at towards the front of the list
+    var sortedReactions = _.orderBy(reactions, [ 'ptime', 'id' ], [ 'desc', 'desc' ]);
+    var ownUnpublished = _.remove(sortedReactions, { user_id: currentUser, ptime: null });
+    // move unpublished comment of current user to beginning, so it shows up
+    // at the bottom
+    _.each(ownUnpublished, (reaction) => {
+        sortedReactions.unshift(reaction);
+    });
+    return sortedReactions;
 });
 
 var findRespondent = Memoize(function(users, reaction) {

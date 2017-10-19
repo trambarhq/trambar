@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: row;
     padding: 0.1em 0.1em 0.1em 0.1em;
+    margin-right: -0.5em;   // negate padding on CommentViewOptions
 
     .profile-image-column {
         flex-grow: 0;

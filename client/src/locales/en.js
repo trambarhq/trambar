@@ -71,7 +71,10 @@ module.exports = function(languageCode) {
         'comment-$user-is-assigned-to-issue': (user) => {
             return `${user} was assigned to this issue`;
         },
-        'comment-$user-is-typing': (user) => {
+        'comment-$user-is-editing': (user) => {
+            return `${user} is editing a comment...`;
+        },
+        'comment-$user-is-writing': (user) => {
             return `${user} is writing a comment...`;
         },
         'comment-$user-likes-this': (user) => {

@@ -127,9 +127,11 @@ module.exports = React.createClass({
     renderText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var reaction = this.props.reaction;
+        var story = this.props.story;
         var name = p(_.get(this.props.respondent, 'details.name'));
-        if (this.props.reaction.published) {
-            switch (this.props.reaction.type) {
+        if (reaction.published) {
+            switch (reaction.type) {
                 case 'like':
                     return (
                         <span className="like">
@@ -137,7 +139,7 @@ module.exports = React.createClass({
                         </span>
                     );
                 case 'comment':
-                    var text = _.get(this.props.reaction, 'details.text');
+                    var text = _.get(reaction, 'details.text');
                     return (
                         <span className="comment">
                             {name}: {p(text)}
@@ -157,12 +159,11 @@ module.exports = React.createClass({
                         </span>
                     );
                 case 'note':
-                    var storyType = this.props.story.type;
                     var baseUrl = _.get(this.props.repo, 'details.web_url');
                     var url;
                     if (baseUrl) {
-                        var noteId = this.props.reaction.external_id;
-                        switch (storyType) {
+                        var noteId = reaction.external_id;
+                        switch (story.type) {
                             case 'push':
                             case 'merge':
                                 // there's no mechanism for retrieving the note id of
@@ -182,7 +183,7 @@ module.exports = React.createClass({
                     }
                     return (
                         <a className="note" href={url} target="_blank">
-                            {t(`comment-$user-commented-on-${storyType}`, name)}
+                            {t(`comment-$user-commented-on-${story.type}`, name)}
                         </a>
                     );
                 case 'assignment':
@@ -199,9 +200,10 @@ module.exports = React.createClass({
                     );
             }
         } else {
+            var action = (reaction.ptime) ? 'editing' : 'writing';
             return (
                 <span className="in-progress">
-                    {t('comment-$user-is-typing', name)}
+                    {t(`comment-$user-is-${action}`, name)}
                 </span>
             );
         }

@@ -134,7 +134,6 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             onFinish: this.handleCommentFinish,
-            ref: 'list'
         };
         return <CommentList {...listProps} />
     },
@@ -153,6 +152,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user click on like button
+     *
+     * @param  {Event} evt
+     */
     handleLikeClick: function(evt) {
         var route = this.props.route;
         var server = route.parameters.server;
@@ -168,26 +172,35 @@ module.exports = React.createClass({
                 user_id: _.get(this.props.currentUser, 'id'),
                 target_user_ids: _.get(this.props.story, 'user_ids'),
                 published: true,
+                public: true,
             };
             db.saveOne({ table: 'reaction' }, like);
         }
     },
 
+    /**
+     * Called when user click on comment button
+     *
+     * @param  {Event} evt
+     */
     handleCommentClick: function(evt) {
-        this.setState({ expanded: true, editing: true }, () => {
-            var list = this.refs.list;
-            if (list) {
-                setTimeout(() => {
-                    list.focus();
-                }, 50);
-            }
-        });
+        this.setState({ expanded: true, editing: true });
     },
 
+    /**
+     * Called when user click on show button
+     *
+     * @param  {Event} evt
+     */
     handleShowClick: function(evt) {
         this.setState({ expanded: true });
     },
 
+    /**
+     * Called when comment editing has ended
+     *
+     * @param  {Object} evt
+     */
     handleCommentFinish: function(evt) {
         var hasDraft = _.some(this.props.reactions, (r) => {
             if (!r.published) {
