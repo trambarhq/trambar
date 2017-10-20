@@ -568,7 +568,7 @@ module.exports = React.createClass({
         var commits = _.get(this.props.story, 'details.commit_ids.length');
         var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
         var branch = story.details.branch;
-        var fileChangeTypes = [ 'added', 'removed', 'modified', 'renamed' ];
+        var fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
         var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
             var count = files[type];
             if (count > 0) {
@@ -579,7 +579,7 @@ module.exports = React.createClass({
                 );
             }
         }, []);
-        var lineChangeTypes = [ 'added', 'removed' ];
+        var lineChangeTypes = [ 'added', 'deleted' ];
         var lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
             var count = lines[type];
             if (count > 0) {

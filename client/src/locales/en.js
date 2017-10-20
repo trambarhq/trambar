@@ -243,6 +243,12 @@ module.exports = function(languageCode) {
         'story-push-added-$count-lines': (count) => {
             return `${count} lines added`;
         },
+        'story-push-deleted-$count-files': (count) => {
+            return `${count} files removed`;
+        },
+        'story-push-deleted-$count-lines': (count) => {
+            return `${count} lines removed`;
+        },
         'story-push-modified-$count-files': (count) => {
             return `${count} files modified`;
         },
@@ -265,12 +271,6 @@ module.exports = function(languageCode) {
                 text += ` of project “${repo}”`;
             }
             return text;
-        },
-        'story-push-removed-$count-files': (count) => {
-            return `${count} files removed`;
-        },
-        'story-push-removed-$count-lines': (count) => {
-            return `${count} lines removed`;
         },
         'story-push-renamed-$count-files': (count) => {
             return `${count} files renamed`;
