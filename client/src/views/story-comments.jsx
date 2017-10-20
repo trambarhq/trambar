@@ -33,6 +33,11 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             expanded: this.shouldExpandAutomatically(this.props),
@@ -43,6 +48,13 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Return true if comment should be expanded automatically
+     *
+     * @param  {Object} props
+     *
+     * @return {Boolean|undefined}
+     */
     shouldExpandAutomatically: function(props) {
         if (!props.reactions || !props.respondents) {
             return;
@@ -59,10 +71,15 @@ module.exports = React.createClass({
         return false;
     },
 
+    /**
+     * See if we have enough props to determine whether reactions
+     * should be shown initially
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.state.expanded === undefined) {
-            // see if we have enough props to determine whether reactions
-            // should be shown initially
+            //
             var expanded = this.shouldExpandAutomatically(nextProps);
             if (expanded !== undefined) {
                 this.setState({ expanded });
@@ -70,6 +87,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <StorySection className="comments">
@@ -83,6 +105,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render buttons on title bar
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         var likeButtonProps = {
@@ -117,8 +144,16 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render reactions to story
+     *
+     * @return {ReactElement|null}
+     */
     renderReactions: function() {
         if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
+            return null;
+        }
+        if (_.isEmpty(this.props.reactions)) {
             return null;
         }
         var listProps = {
@@ -138,6 +173,11 @@ module.exports = React.createClass({
         return <CommentList {...listProps} />
     },
 
+    /**
+     * Return a 'like' reaction by the current user
+     *
+     * @return {Object|null}
+     */
     getCurrentUserLike: function() {
         return _.find(this.props.reactions, {
             type: 'like',
@@ -145,6 +185,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Return comments by current user
+     *
+     * @return {Array<Object>}
+     */
     getCurrentUserComments: function() {
         return _.filter(this.props.reactions, {
             type: 'comment',
