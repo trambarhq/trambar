@@ -1,6 +1,9 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
+var ListParser = require('utils/list-parser');
+var Markdown = require('utils/markdown');
+var PlainText = require('utils/plain-text');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -14,7 +17,6 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StorySection = require('widgets/story-section');
-var StoryText = require('widgets/story-text');
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MultipleUserNames = require('widgets/multiple-user-names');
@@ -53,21 +55,57 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        return {
-            userAnswers: StoryText.getDefaultAnswers(this.props.story, this.props.locale),
+        var nextState = {
             voteSubmitted: false,
             selectedComponent: null,
             showingComponentDialog: false,
             renderingComponentDialog: false,
         };
+        this.updateUserAnswers({}, nextState);
+        return nextState;
     },
 
+    /**
+     * Update state when props changes
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
+        var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
-            if (this.props.story.type === 'task-list') {
-                this.setState({
-                    userAnswers: StoryText.getDefaultAnswers(nextProps.story, nextProps.locale),
+            this.updateUserAnswers(nextState, nextProps);
+        }
+        var changes = _.shallowDiff(nextState, this.state);
+        if (!_.isEmpty(changes)) {
+            this.setState(changes);
+        }
+    },
+
+    /**
+     * Update the default answers of survey question
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
+    updateUserAnswers: function(nextState, nextProps) {
+        if (nextProps.story) {
+            if (nextProps.story.type === 'survey') {
+                var p = nextProps.locale.pick;
+                var langText = p(nextProps.story.details.text);
+                var tokens = ListParser.extract(langText);
+                var answers = nextState.userAnswers;
+                _.each(tokens, (list, listIndex) => {
+                    _.each(list, (item, itemIndex) => {
+                        if (item.checked) {
+                            if (!answers || answers[item.list] === undefined) {
+                                answers = _.decoupleSet(answers, [ item.list ], item.key);
+                            }
+                        }
+                    });
                 });
+                nextState.userAnswers = answers;
+            } else if (nextProps.story.type === 'task-list') {
+                nextState.userAnswers = null;
             }
         }
     },
@@ -247,9 +285,14 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
+        this.resourcesReferenced = {};
         switch (this.props.story.type) {
+            case 'story':
+                return this.renderStoryText();
+            case 'task-list':
+                return this.renderTaskListText();
+            case 'survey':
+                return this.renderSurveyText();
             case 'repo':
                 return this.renderRepoText();
             case 'member':
@@ -263,8 +306,6 @@ module.exports = React.createClass({
                 return this.renderMilestoneText();
             case 'wiki':
                 return this.renderWikiText();
-            default:
-                return this.renderStoryText();
         }
     },
 
@@ -274,20 +315,81 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderStoryText: function() {
-        var textProps = {
-            story: this.props.story,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            answers: this.state.userAnswers,
-            readOnly: !this.isCurrentUserAuthor(),
-            onItemChange: this.handleItemChange,
-        };
-        if (this.props.story.type === 'survey') {
-            if (this.hasUserVoted()) {
-                textProps.voteCounts = countVotes(this.props.reactions);
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var text = p(story.details.text);
+        if (story.details.markdown) {
+            var contents = Markdown.parse(text, this.handleReference);
+            return (
+                <div className="story markdown" onClick={this.handleMarkdownClick}>
+                    {contents}
+                </div>
+            );
+        } else {
+            return <div className="story plain-text"><p>{text}</p></div>;
+        }
+    },
+
+    /**
+     * Render task list
+     *
+     * @return {ReactElement}
+     */
+    renderTaskListText: function() {
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var text = p(story.details.text);
+        var answers = this.state.userAnswers;
+        if (story.details.markdown) {
+            var list = Markdown.parseTaskList(text, answers, this.handleTaskListItemChange, this.handleReference);
+            return (
+                <div className="task-list markdown" onClick={this.handleMarkdownClick}>
+                    {list}
+                </div>
+            );
+        } else {
+            var list = PlainText.parseTaskList(text, answers, this.handleTaskListItemChange);
+            return <div className="task-list plain-text"><p>{list}</p></div>;
+        }
+    },
+
+    /**
+     * Render survey choices or results depending whether user has voted
+     *
+     * @return {ReactElement}
+     */
+    renderSurveyText: function() {
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var text = p(story.details.text);
+        var contents;
+        if (!this.hasUserVoted()) {
+            var answers = this.state.userAnswers;
+            if (story.details.markdown) {
+                var survey = Markdown.parseSurvey(text, answers, this.handleSurveyItemChange, this.handleReference);
+                return (
+                    <div className="survey markdown" onClick={this.handleMarkdownClick}>
+                        {survey}
+                    </div>
+                );
+            } else {
+                var survey = PlainText.parseSurvey(text, answers, this.handleSurveyItemChange);
+                return <div className="survey plain-text"><p>{survey}</p></div>;
+            }
+        } else {
+            var voteCounts = countVotes(this.props.reactions);
+            if (story.details.markdown) {
+                var results = Markdown.parseSurveyResults(text, voteCounts, this.handleReference);
+                return (
+                    <div className="survey markdown" onClick={this.handleMarkdownClick}>
+                        {results}
+                    </div>
+                );
+            } else {
+                var results = PlainText.parseSurveyResults(text, voteCounts);
+                return <div className="survey plain-text"><p>{results}</p></div>;
             }
         }
-        return <StoryText {...textProps} />;
     },
 
     /**
@@ -552,6 +654,10 @@ module.exports = React.createClass({
      */
     renderMedia: function() {
         var resources = _.get(this.props.story, 'details.resources');
+        if (!_.isEmpty(this.resourcesReferenced)) {
+            // exclude the ones that are shown in Markdown
+            resources = _.difference(resources, _.values(this.resourcesReferenced));
+        }
         if (_.isEmpty(resources)) {
             return null;
         }
@@ -645,34 +751,84 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on a checkbox or radio button
+     * Called when Markdown text references a resource
      *
      * @param  {Object} evt
      */
-    handleItemChange: function(evt) {
-        var target = evt.currentTarget;
-        if (this.props.story.type === 'task-list') {
-            if (!this.isCurrentUserAuthor()) {
-                return false;
+    handleReference: function(evt) {
+        var resources = this.props.story.details.resources;
+        var res = Markdown.findReferencedResource(resources, evt.name);
+        if (res) {
+            var url;
+            if (evt.forImage)  {
+                // images are style at height = 1.5em
+                url = this.props.theme.getImageUrl(res, { height: 24 });;
+            } else {
+                url = this.props.theme.getUrl(res);
             }
-
-            // save the answer in state for immediately UI response
-            var list = target.name;
-            var item = target.value;
-            var selected = target.checked;
-            var userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
-            this.setState({ userAnswers });
-
-            // update the text of the story
-            var story = _.clone(this.props.story);
-            StoryText.updateList(story, target);
-            this.triggerChangeEvent(story);
-        } else if (this.props.story.type === 'survey') {
-            var list = target.name;
-            var value = parseInt(target.value);
-            var userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], value);
-            this.setState({ userAnswers });
+            // remember the resource and the url
+            this.resourcesReferenced[url] = res;
+            return {
+                href: url,
+                title: undefined
+            };
         }
+    },
+
+    /**
+     * Called when user clicks on the text contents
+     *
+     * @param  {Event} evt
+     */
+     handleMarkdownClick: function(evt) {
+        var target = evt.target;
+        if (target.tagName === 'IMG') {
+            var src = target.getAttribute('src');
+            var res = this.resourcesReferenced[src];
+            console.log(src, res);
+        }
+    },
+
+    /**
+     * Called when user clicks on a checkbox in a task list
+     *
+     * @param  {Event} evt
+     */
+    handleTaskListItemChange: function(evt) {
+        var target = evt.currentTarget;
+        var list = target.name;
+        var item = target.value;
+        var selected = target.checked;
+
+        if (!this.isCurrentUserAuthor()) {
+            return false;
+        }
+
+        // save the answer in state for immediately UI response
+        var userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
+        this.setState({ userAnswers });
+
+        // update the text of the story
+        var story = this.props.story;
+        var newText = _.mapValues(story.details.text, (langText) => {
+            return ListParser.update(langText, list, item, selected, false);
+        });
+        story = _.decoupleSet(story, 'details.text', newText);
+
+        this.triggerChangeEvent(story);
+    },
+
+    /**
+     * Called when user clicks on a radio button in a survey
+     *
+     * @param  {Event} evt
+     */
+    handleSurveyItemChange: function(evt) {
+        var target = evt.currentTarget;
+        var list = target.name;
+        var item = target.value;
+        var userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], item);
+        this.setState({ userAnswers });
     },
 
     /**

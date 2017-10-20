@@ -81,7 +81,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var resourcesReferenced = [];
         return (
             <div className="comment-view">
                 <div className="profile-image-column">
@@ -91,9 +90,9 @@ module.exports = React.createClass({
                     <div className="text">
                         {this.renderOptionButton()}
                         {this.renderTime()}
-                        {this.renderText(resourcesReferenced)}
+                        {this.renderText()}
                     </div>
-                    {this.renderMedia(resourcesReferenced)}
+                    {this.renderMedia()}
                 </div>
             </div>
         );
@@ -122,19 +121,17 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render user name and text, capturing the resources that are referenced
-     * by Markdown
-     *
-     * @param  {Array<Object>} resourcesReferenced
+     * Render user name and text
      *
      * @return {ReactElement}
      */
-    renderText: function(resourcesReferenced) {
+    renderText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var reaction = this.props.reaction;
         var story = this.props.story;
         var name = p(_.get(this.props.respondent, 'details.name'));
+        this.resourcesReferenced = {};
         if (reaction.published) {
             switch (reaction.type) {
                 case 'like':
@@ -148,10 +145,7 @@ module.exports = React.createClass({
                     var markdown = _.get(reaction, 'details.markdown', false);
                     if (markdown) {
                         // parse the Markdown text
-                        // (resources and theme are used to resolve references)
-                        var resources = _.get(reaction, 'details.resources');
-                        var theme = this.props.theme;
-                        var paragraphs = Markdown.parse(p(text), resources, theme, resourcesReferenced);
+                        var paragraphs = Markdown.parse(p(text), this.handleReference);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
@@ -266,14 +260,12 @@ module.exports = React.createClass({
     /**
      * Render attached media
      *
-     * @param  {Array<Object>}
-     *
      * @return {ReactElement}
      */
-    renderMedia: function(resourcesReferenced) {
+    renderMedia: function() {
         var resources = _.get(this.props.reaction, 'details.resources');
-        if (!_.isEmpty(resourcesReferenced)) {
-            resources = _.difference(resources, resourcesReferenced);
+        if (!_.isEmpty(this.resourcesReferenced)) {
+            resources = _.difference(resources, _.values(this.resourcesReferenced));
         }
         if (_.isEmpty(resources)) {
             return null;
@@ -340,6 +332,29 @@ module.exports = React.createClass({
                 this.saveReaction(reaction);
             }
         });
+    },
+
+    /**
+     * Called when a resource is referenced by Markdown
+     */
+    handleReference: function(evt) {
+        var resources = this.props.reaction.details.resources;
+        var res = Markdown.findReferencedResource(resources, evt.name);
+        if (res) {
+            var url;
+            if (evt.forImage)  {
+                // images are style at height = 1.5em
+                url = this.props.theme.getImageUrl(res, { height: 24 });;
+            } else {
+                url = this.props.theme.getUrl(res);
+            }
+            // remember the resource and the url
+            this.resourcesReferenced[url] = res;
+            return {
+                href: url,
+                title: undefined
+            };
+        }
     },
 
     /**

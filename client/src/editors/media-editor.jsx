@@ -139,34 +139,25 @@ module.exports = React.createClass({
      */
     getResourceImageUrl: function(res) {
         var theme = this.props.theme;
-        var url, file;
-        switch (res.type) {
-            case 'image':
-                // get absolute URL of unclipped image
-                url = theme.getImageUrl(_.omit(res, 'clip'));
-                file = res.file;
-                break;
-            case 'video':
-            case 'audio':
-            case 'website':
-                url = theme.getPosterUrl(_.omit(res, 'clip'));
-                file = res.poster_file;
-            break;
-        }
-        if (url) {
-            // convert relative URL to absolute URL
-        }
-        // don't download files that we'd earlier uploaded
-        if (file) {
+        var file = this.getImageFile(res);
+        if (this.imageBlob) {
             if (file === this.imageBlob) {
-                url = this.imageBlobUrl;
+                return this.imageBlobUrl;
             } else {
-                if (this.imageBlobUrl) {
-                    URL.revokeObjectURL(this.imageBlobUrl);
-                }
-                url = this.imageBlobUrl = URL.createObjectURL(file);
-                this.imageBlob = file;
+                URL.revokeObjectURL(this.imageBlobUrl);
+                this.imageBlob = null;
+                this.imageBlobUrl = null;
             }
+        }
+        var url;
+        if (file) {
+            // don't download files that we'd earlier uploaded
+            url = URL.createObjectURL(file);
+            this.imageBlob = file;
+            this.imageBlobUrl = url;
+        } else {
+            // download the original file
+            url = theme.getImageUrl(res, { noClipping: true });
         }
         return url;
     },

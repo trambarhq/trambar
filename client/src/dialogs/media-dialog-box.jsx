@@ -193,15 +193,8 @@ module.exports = React.createClass({
         var theme = this.props.theme;
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
-            var url;
-            var size = { width: 28, height: 28 };
-            if (res.type === 'image') {
-                url = theme.getImageUrl(res, size);
-            } else {
-                url = theme.getPosterUrl(res, size);
-            }
             var props = {
-                url,
+                url: this.props.theme.getImageUrl(res, { width: 28, height: 28 }),
                 selected: (index === selectedIndex),
                 id: index,
                 key: index,

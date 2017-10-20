@@ -1,4 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var ListParser = require('utils/list-parser');
+var Markdown = require('utils/markdown');
+var PlainText = require('utils/plain-text');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -11,7 +14,6 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
-var StoryText = require('widgets/story-text');
 
 require('./story-text-preview.scss');
 
@@ -39,7 +41,7 @@ module.exports = React.createClass({
 
     render: function() {
         return (
-            <StorySection className="text-preview">
+            <StorySection className="contents text-preview">
                 <header>
                     {this.renderButtons()}
                 </header>
@@ -52,24 +54,23 @@ module.exports = React.createClass({
 
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var storyType = _.get(this.props.story, 'type');
-        var markdown = _.get(this.props.story, 'details.markdown', false);
+        var story = this.props.story;
         var markdownProps = {
             label: t('story-markdown'),
             icon: 'pencil-square',
-            highlighted: markdown,
+            highlighted: story.details.markdown,
             onClick: this.handleMarkdownClick,
         };
         var taskListProps = {
             label: t('story-task-list'),
             icon: 'list-ol',
-            highlighted: (storyType === 'task-list'),
+            highlighted: (story.type === 'task-list'),
             onClick: this.handleTaskListClick,
         };
         var surveyProps = {
             label: t('story-survey'),
             icon: 'list-ul',
-            highlighted: (storyType === 'survey'),
+            highlighted: (story.type === 'survey'),
             onClick: this.handleSurveyClick,
         };
         return (
@@ -83,14 +84,77 @@ module.exports = React.createClass({
     },
 
     renderText: function() {
-        var textProps = {
-            story: this.props.story,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            options: this.props.options,
-            onItemChange: this.handleItemChange,
-        };
-        return <StoryText {...textProps}/>
+        switch (this.props.story.type) {
+            case undefined:
+            case '':
+            case 'story':
+                return this.renderStoryText();
+            case 'task-list':
+                return this.renderTaskListText();
+            case 'survey':
+                return this.renderSurveyText();
+        }
+    },
+
+    /**
+     * Render text for regular post, task list, and survey
+     *
+     * @return {ReactElement}
+     */
+    renderStoryText: function() {
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var text = p(story.details.text);
+        if (story.details.markdown) {
+            var resources = story.details.resources;
+            var theme = this.props.theme;
+            var contents = Markdown.parse(text, resources, theme, this.handleReference);
+            return <div className="story markdown">{contents}</div>;
+        } else {
+            return <div className="story plain-text"><p>{text}</p></div>;
+        }
+    },
+
+    /**
+     * Render task list
+     *
+     * @return {ReactElement}
+     */
+    renderTaskListText: function() {
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var text = p(story.details.text);
+        if (story.details.markdown) {
+            var resources = story.details.resources;
+            var theme = this.props.theme;
+            // answers are written to the text itself, so there's no need to
+            // provide user answers to Markdown.parseTaskList()
+            var list = Markdown.parseTaskList(text, resources, theme, null, this.handleItemChange, this.handleReference);
+            return <div className="task-list markdown">{list}</div>;
+        } else {
+            var list = PlainText.parseTaskList(text, null, this.handleItemChange);
+            return <div className="task-list plain-text"><p>{list}</p></div>;
+        }
+    },
+
+    /**
+     * Render survey choices or results depending whether user has voted
+     *
+     * @return {ReactElement}
+     */
+    renderSurveyText: function() {
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var text = p(story.details.text);
+        if (story.details.markdown) {
+            var resources = story.details.resources;
+            var theme = this.props.theme;
+            var survey = Markdown.parseSurvey(text, resources, theme, null, this.handleItemChange);
+            return <div className="survey markdown">{survey}</div>;
+        } else {
+            var survey = PlainText.parseSurvey(text, null, this.handleItemChange);
+            return <div className="survey plain-text"><p>{survey}</p></div>;
+        }
     },
 
     /**
@@ -117,18 +181,40 @@ module.exports = React.createClass({
      */
     attachListTemplate: function(story) {
         if (story.type === 'task-list' || story.type === 'survey') {
-            if (!StoryText.hasLists(story)) {
-                StoryText.addListTemplate(story, this.props.locale);
+            var text = story.details.text || {};
+            if (!ListParser.detect(text)) {
+                var t = this.props.locale.translate;
+                var lang = this.props.locale.lang;
+                var langText = text[lang] || '';
+                if (_.trimEnd(langText)) {
+                    langText = _.trimEnd(langText) + '\n\n';
+                }
+                var items = _.map(_.range(1, 4), (number) => {
+                    var label = t(`${story.type}-item-$number`, number);
+                    return `[ ] ${label}`;
+                });
+                langText += items.join('\n');
+                story.details = _.decoupleSet(story.details, [ 'text', lang ], langText);
             }
         }
     },
 
+    /**
+     * Called when user click the Markdown button
+     *
+     * @param  {Event} evt
+     */
     handleMarkdownClick: function(evt) {
         var story = _.decouple(this.props.story, 'details');
         story.details.markdown = !story.details.markdown;
         this.triggerChangeEvent(story, 'story.details.markdown');
     },
 
+    /**
+     * Called when user click the task list button
+     *
+     * @param  {Event} evt
+     */
     handleTaskListClick: function(evt) {
         var story = _.clone(this.props.story);
         story.type = (story.type !== 'task-list') ? 'task-list' : 'story';
@@ -136,6 +222,11 @@ module.exports = React.createClass({
         this.triggerChangeEvent(story, 'story.details.markdown');
     },
 
+    /**
+     * Called when user click the survey button
+     *
+     * @param  {Event} evt
+     */
     handleSurveyClick: function(evt) {
         var story = _.clone(this.props.story);
         story.type = (story.type !== 'survey') ? 'survey' : 'story';
@@ -143,10 +234,22 @@ module.exports = React.createClass({
         this.triggerChangeEvent(story, 'story.type');
     },
 
+    /**
+     * Called when user click a checkbox or radio button in the preview
+     *
+     * @param  {Event} evt
+     */
     handleItemChange: function(evt) {
-        var input = evt.target;
-        var story = _.clone(this.props.story);
-        StoryText.updateList(story, input);
+        // update the text of the story to reflect the selection
+        var target = evt.currentTarget;
+        var list = target.name;
+        var item = target.value;
+        var selected = target.checked;
+        var story = _.decouple(this.props.story, 'details');
+        var clearOthers = (story.type === 'survey');
+        story.details.text = _.mapValues(story.details.text, (langText) => {
+            return ListParser.update(langText, list, item, selected, clearOthers);
+        });
         this.triggerChangeEvent(story, 'story.details.text');
     },
 });

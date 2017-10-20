@@ -21,7 +21,12 @@ module.exports = React.createClass({
             devicePixelRatio: window.devicePixelRatio,
             details: null,
             server: window.location.hostname,
+            protocol: window.location.protocol,
         };
+    },
+
+    getBaseUrl: function() {
+        return `${this.state.protocol}//${this.state.server}`;
     },
 
     getMode: function() {
@@ -40,93 +45,124 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return URL of resized image
+     * Return URL of image file
      *
-     * @param  {String|Object} image
+     * @param  {Object} res
      * @param  {Object} params
      *
      * @return {String|undefined}
      */
-    getImageUrl: function(image, params) {
-        var server = this.state.server;
-        var protocol = (server === 'localhost') ? 'http' : 'https';
+    getImageUrl: function(res, params) {
+        if (!params) {
+            params = {};
+        }
+        var resUrl;
+        switch(res.type) {
+            case 'video':
+            case 'audio':
+            case 'website':
+                resUrl = res.poster_url;
+                break;
+            default:
+                resUrl = res.url;
+        }
+        if (!resUrl) {
+            return;
+        }
+
         var filters = [];
-        var baseUrl;
-        var noClipping = (params) ? params.noClipping : undefined;
-        var width = (params) ? params.width : undefined;
-        var height = (params) ? params.height : undefined;
-        var quality = (params) ? params.quality : undefined;
-        if (typeof(image) === 'object') {
-            baseUrl = image.url;
-            if (image.clip && !noClipping) {
-                var rect = [
-                    image.clip.left,
-                    image.clip.top,
-                    image.clip.width,
-                    image.clip.height,
-                ];
-                filters.push(`cr${rect.join('-')}`)
-            }
-        } else if (typeof(image) === 'string') {
-            baseUrl = image;
-        } else {
-            return;
+        // apply clipping rect
+        if (res.clip && !params.noClipping) {
+            var rect = [
+                res.clip.left,
+                res.clip.top,
+                res.clip.width,
+                res.clip.height,
+            ];
+            filters.push(`cr${rect.join('-')}`)
         }
-        if (!baseUrl) {
-            return;
-        }
-        if (typeof(width) === 'string') {
-            width = decodeLength(width);
-        }
-        if (typeof(height) === 'string') {
-            height = decodeLength(height);
-        }
+        // resize image (if dimensions are specified)
+        var width = decodeLength(params.width);
+        var height = decodeLength(params.height);
         if (this.state.devicePixelRatio !== 1) {
+            // request higher resolution image when pixel density is higher
             width = Math.round(width * this.state.devicePixelRatio);
             height = Math.round(height * this.state.devicePixelRatio);
         }
-        if (width !== undefined && height !== undefined) {
+        if (width && height) {
             filters.push(`re${width}-${height}`);
-        } else if (width === undefined && height !== undefined) {
+        } else if (!width && height) {
             filters.push(`h${height}`);
-        } else if (height === undefined && width !== undefined) {
+        } else if (height && !width) {
             filters.push(`w${width}`);
         }
-        if (quality !== undefined) {
-            filters.push(`q${quality}`);
+        // set quality
+        if (params.quality !== undefined) {
+            filters.push(`q${params.quality}`);
         }
+
         var path = '';
         if (filters.length > 0) {
             path = `/${filters.join('+')}`;
         }
-        return `${protocol}://${server}${baseUrl}${path}`;
+        var baseUrl = this.getBaseUrl();
+        return `${baseUrl}${resUrl}${path}`;
     },
 
-    getVideoUrl: function(video, bandwidth) {
-        var server = this.state.server;
-        var protocol = (server === 'localhost') ? 'http' : 'http';
-        var filters = [];
-        var baseUrl;
-        if (typeof(video) === 'object') {
-            baseUrl = video.url;
-        } else if (typeof(video) === 'string') {
-            baseUrl = video;
-        } else {
-            return;
+    getImageFile: function() {
+        switch(res.type) {
+            case 'video':
+            case 'audio':
+            case 'website':
+                return res.poster_file;
+                break;
+            default:
+                return res.file;
         }
+    },
+
+    getVideoUrl: function(res, options) {
+        // TODO: select video based on bandwidth/resolution
+        var baseUrl = this.getBaseUrl();
+        var filters = [];
+        var baseUrl = video.url;
         var path = '';
         return `${protocol}://${server}${baseUrl}${path}`;
     },
 
-    getPosterUrl: function(video, width, height) {
-        var image = {
-            url: video.poster_url,
-            width: video.width,
-            height: video.height,
-            clip: video.clip,
-        };
-        return this.getImageUrl(image, width, height);
+    getAudioUrl: function(res, options) {
+        // TODO: select video based on bandwidth/resolution
+        var baseUrl = this.getBaseUrl();
+        var filters = [];
+        var baseUrl = video.url;
+        var path = '';
+        return `${protocol}://${server}${baseUrl}${path}`;
     },
+
+    /**
+     * Get URL of resource
+     *
+     * @param  {Object} res
+     *
+     * @return {Object}
+     */
+    getUrl(res) {
+        switch (res.type) {
+            case 'image':
+                url = this.getImageUrl(res, options);
+                break;
+            case 'video':
+                url = this.getVideoUrl(res, options);
+                break;
+            case 'website':
+                url = res.url;
+                break;
+            case 'audio':
+                url = theme.getAudioUrl(res, options);
+                return;
+        }
+    },
+
 
     /**
      * Return a mode suitable for the current viewport width
@@ -243,11 +279,17 @@ var defaultTheme = {};
 
 function decodeLength(s) {
     var m;
-    if (m = /^(\d+)\s*vw/.exec(s)) {
+    if (typeof(s) === 'number') {
+        return s;
+    } else if (m = /^(\d+)\s*vw/.exec(s)) {
         var n = parseInt(m[1]);
         return Math.round(n * document.body.offsetWidth / 100);
     } else if (m = /^(\d+)\s*vh/.exec(s)) {
         var n = parseInt(m[1]);
         return Math.round(n * document.body.offsetHeight / 100);
     }
+}
+
+function getProtocol(server) {
+    return (server === 'localhost') ? 'http' : 'http'
 }

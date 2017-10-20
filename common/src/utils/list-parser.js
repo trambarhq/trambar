@@ -1,9 +1,11 @@
 var _ = require('lodash');
 
 exports.extract = extract;
+exports.detect = detect;
 exports.update = update;
 
-var regExp = /^([ \t]*)\[([ x]{0,3})\]([ \t]*)(.*?)([ \t]*?)$/mig;
+// look for in Latin x, Cyrillic х, and Greek χ
+var regExp = /^([ \t]*)\[([ xхχ]{0,3})\]([ \t]*)(.*?)([ \t]*?)$/mig;
 
 /**
  * Extract "[ ] label..." item lists from text
@@ -13,6 +15,8 @@ var regExp = /^([ \t]*)\[([ x]{0,3})\]([ \t]*)(.*?)([ \t]*?)$/mig;
  * @return {Array}
  */
 function extract(text) {
+    text = (text) ? text : '';
+
     var tokens = [];
     var si = 0;
     var m;
@@ -61,11 +65,29 @@ function extract(text) {
 }
 
 /**
+ * Detect whether text contains a list
+ *
+ * @param  {String|Object} text
+ *
+ * @return {Boolean}
+ */
+function detect(text) {
+    if (typeof(text) === 'object') {
+        return _.some(text, detect);
+    }
+    var tokens = extract(text);
+    return _.some(tokens, (token) => {
+        // lists are arrays
+        return token instanceof Array;
+    });
+}
+
+/**
  * Check or uncheck item
  *
  * @param  {String} text
- * @param  {Number} list
- * @param  {Number} key
+ * @param  {Number|String} list
+ * @param  {Number|String} key
  * @param  {Boolean} checked
  * @param  {Boolean} clearOthers
  *
@@ -73,6 +95,12 @@ function extract(text) {
  */
 function update(text, list, key, checked, clearOthers) {
     // find the items on the list
+    if (typeof(list) !== 'number') {
+        list = Number(list);
+    }
+    if (typeof(key) !== 'number') {
+        key = Number(key);
+    }
     var tokens = extract(text);
     tokens = _.flattenDeep(tokens);
     var items = _.filter(tokens, { list });
@@ -80,11 +108,11 @@ function update(text, list, key, checked, clearOthers) {
     _.each(items, (item) => {
         if (item.key === key) {
             item.checked = checked;
-            updateAnswerText(item);
+            updateAnswerText(item, text);
         } else {
             if (checked && clearOthers) {
                 item.checked = false;
-                updateAnswerText(item);
+                updateAnswerText(item, text);
             }
         }
     });
@@ -98,13 +126,21 @@ function update(text, list, key, checked, clearOthers) {
     }, '');
 }
 
-function updateAnswerText(item) {
+function updateAnswerText(item, text) {
     if (item.checked) {
+        var x;
+        if (/[\u0x0400-\u0x04ff]/.test(text)) {
+            x = 'х';
+        } else if (/[\u0x0370-\u0x03ff]/.test(text)) {
+            x = 'χ';
+        } else {
+            x = 'x';
+        }
         switch (item.answer.length) {
             case 0:
             case 1:
-            case 2: item.answer = 'x'; break;
-            case 3: item.answer = ' x '; break;
+            case 2: item.answer = x; break;
+            case 3: item.answer = ' ' + x + ' '; break;
         }
     } else {
         switch (item.answer.length) {

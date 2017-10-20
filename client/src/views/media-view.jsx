@@ -182,7 +182,7 @@ module.exports = React.createClass({
     renderVideo: function(res) {
         return (
             <div className="video" onClick={this.handleVideoClick}>
-                {this.renderImageElement(res, 'poster')}
+                {this.renderImageElement(res)}
                 <i className="fa fa-play-circle-o icon" />
             </div>
         );
@@ -210,7 +210,7 @@ module.exports = React.createClass({
         return (
             <div className="website">
                 <a href={res.url} target="_blank">
-                    {this.renderImageElement(res, 'poster')}
+                    {this.renderImageElement(res)}
                     <i className="fa fa-external-link icon" />
                 </a>
             </div>
@@ -221,28 +221,21 @@ module.exports = React.createClass({
         var clip = res.clip;
         var width = 512;
         var height;
+        var theme = this.props.theme;
         if (clip) {
             height = Math.round(width * clip.height / clip.width);
         } else {
             height = Math.round(width * res.height / res.width)
         }
-        var url, file;
-        if (type === 'poster') {
-            if (res.poster_url) {
-                url = this.props.theme.getPosterUrl(res, { width, height });
-            } else if (res.poster_file) {
-                file = res.poster_file;
-            }
-        } else {
-            if (res.url) {
-                url = this.props.theme.getImageUrl(res, { width, height });
-            } else if (res.file) {
-                file = res.file;
-            }
-        }
+        var url = theme.getImageUrl(res, { width, height });
+        var file = theme.getImageFile(res);
         if (url) {
+            // TODO: implement preloading
             return <img src={url} width={width} height={height} />;
-        } else if (file instanceof Blob) {
+        }
+
+        // image isn't done uploading yet
+        if (file instanceof Blob) {
             // use ImageView, which handles orientation
             url = URL.createObjectURL(file);
             return <ImageView url={url} clippingRect={clip} />;

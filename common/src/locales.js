@@ -2,7 +2,7 @@ module.exports = [
     {
         name: 'Čeština',
         code: 'cz',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             cz: 'Česko',
             pl: 'Polsko',
@@ -13,7 +13,7 @@ module.exports = [
     {
         name: 'Dansk',
         code: 'da',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             dk: 'Danmark',
             fo: 'Færøerne',
@@ -25,7 +25,7 @@ module.exports = [
     {
         name: 'Deutsch',
         code: 'de',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             at: 'Österreich',
             be: 'Belgien',
@@ -38,7 +38,7 @@ module.exports = [
     {
         name: 'Ελληνικά',
         code: 'el',
-        direction: 'ltr',
+        script: 'greek',
         countries: {
             gr: 'Ελλάδα',
             cy: 'Κύπρος',
@@ -48,7 +48,7 @@ module.exports = [
     {
         name: 'English',
         code: 'en',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             au: 'Australia',
             ca: 'Canada',
@@ -67,7 +67,7 @@ module.exports = [
     {
         name: 'Español',
         code: 'es',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             ar: 'Argentina',
             bo: 'Bolivia',
@@ -96,7 +96,7 @@ module.exports = [
     {
         name: 'Français',
         code: 'fr',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             be: 'Belgique',
             bj: 'Bénin',
@@ -130,7 +130,7 @@ module.exports = [
     {
         name: '한국어',
         code: 'ko',
-        direction: 'ltr',
+        script: 'hangul',
         countries: {
             kr: '한국',
             cn: '중국',
@@ -140,7 +140,7 @@ module.exports = [
     {
         name: 'Hrvatski',
         code: 'hr',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             ba: 'Bosna i Hercegovina',
             hr: 'Hrvatska',
@@ -151,7 +151,7 @@ module.exports = [
     {
         name: 'Italiano',
         code: 'it',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             it: 'Italia',
             ch: 'Svizzera',
@@ -163,6 +163,7 @@ module.exports = [
     {
         name: 'Magyar',
         code: 'hu',
+        script: 'latin',
         countries: {
             hr: 'Magyarország',
             ro: 'Románia',
@@ -172,6 +173,7 @@ module.exports = [
     {
         name: 'Nederlands',
         code: 'nl',
+        script: 'latin',
         countries: {
             be: 'België',
             nl: 'Nederland',
@@ -182,7 +184,7 @@ module.exports = [
     {
         name: '日本語',
         code: 'jp',
-        direction: 'ltr',
+        script: 'hiragana',
         countries: {
             jp: '日本',
         },
@@ -191,7 +193,7 @@ module.exports = [
     {
         name: 'Norsk',
         code: 'no',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             no: 'Norge',
         },
@@ -204,7 +206,7 @@ module.exports = [
     {
         name: 'Polski',
         code: 'pl',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             by: 'Białoruś',
             lt: 'Litwa',
@@ -220,7 +222,7 @@ module.exports = [
     {
         name: 'Português',
         code: 'pt',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             ao: 'Angola',
             br: 'Brasil',
@@ -236,7 +238,7 @@ module.exports = [
     {
         name: 'Русский',
         code: 'ru',
-        direction: 'ltr',
+        script: 'cyrillic',
         countries: {
             am: 'Армения',
             by: 'Беларусь',
@@ -260,7 +262,7 @@ module.exports = [
     {
         name: 'Srpski',
         code: 'sr',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             rs: 'Srbija',
             hr: 'Hrvatska',
@@ -271,7 +273,7 @@ module.exports = [
     {
         name: 'Suomi',
         code: 'fi',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             fi: 'Suomi',
             se: 'Ruotsi',
@@ -285,6 +287,7 @@ module.exports = [
     {
         name: 'Slovenčina',
         code: 'sk',
+        script: 'latin',
         countries: {
             cz: 'Česko',
             sk: 'Slovensko',
@@ -294,7 +297,7 @@ module.exports = [
     {
         name: 'Svenska',
         code: 'sv',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             fi: 'Finland',
             se: 'Sverige',
@@ -304,7 +307,7 @@ module.exports = [
     {
         name: 'Tiếng Việt',
         code: 'vi',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             vn: 'Việt Nam',
         },
@@ -313,7 +316,7 @@ module.exports = [
     {
         name: 'Türkçe',
         code: 'tr',
-        direction: 'ltr',
+        script: 'latin',
         countries: {
             cy: 'Kıbrıs',
             tr: 'Türkiye',
@@ -323,7 +326,7 @@ module.exports = [
     {
         name: '中文',
         code: 'zh',
-        direction: 'ltr',
+        script: 'hanzi',
         countries: {
             cn: '中国',
             hk: '香港',

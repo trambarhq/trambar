@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var TagScanner = require('utils/tag-scanner');
+var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 
 var Database = require('data/database');
@@ -18,7 +19,6 @@ var PushButton = require('widgets/push-button');
 var ProfileImage = require('widgets/profile-image');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 var AutosizeTextArea = require('widgets/autosize-text-area');
-var StoryText = require('widgets/story-text');
 
 require('./story-text-editor.scss');
 
@@ -270,7 +270,7 @@ module.exports = React.createClass({
 
         // automatically set story type to task list
         if (!story.type) {
-            if (StoryText.hasLists(story)) {
+            if (ListParser.detect(story.details.text)) {
                 story.type = 'task-list';
             }
         }
