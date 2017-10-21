@@ -97,9 +97,6 @@ module.exports = function(languageCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
-        'notification-$user-commented-on-your-commit': (user) => {
-            return `${user} commented on your commit`;
-        },
         'notification-$user-commented-on-your-merge': (user) => {
             return `${user} commented on your merge`;
         },
@@ -115,8 +112,8 @@ module.exports = function(languageCode) {
         'notification-$user-completed-task': (user) => {
             return `${user} completed a task on your list`;
         },
-        'notification-$user-likes-your-commit': (user) => {
-            return `${user} likes your commit`;
+        'notification-$user-likes-your-push': (user) => {
+            return `${user} likes your push`;
         },
         'notification-$user-likes-your-merge': (user) => {
             return `${user} likes your merge`;
@@ -206,7 +203,7 @@ module.exports = function(languageCode) {
         'story-drop-files-here': 'Drag and drop files here',
         'story-file': 'File',
         'story-issue-current-status': 'Current status:',
-        'story-issue-opened-$number-$title': (number, title) => {
+        'story-issue-$user-opened-$number-$title': (user, number, title) => {
             return `Opened issue ${number}: ${title}`;
         },
         'story-issue-status-closed': 'Closed',
@@ -238,16 +235,20 @@ module.exports = function(languageCode) {
         'story-photo': 'Photo',
         'story-post': 'Post',
         'story-push-added-$count-files': (count) => {
-            return `${count} files added`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} added`;
         },
         'story-push-added-$count-lines': (count) => {
-            return `${count} lines added`;
+            var lines = (count === 1) ? `1 line` : `${count} lines`;
+            return `${lines} added`;
         },
         'story-push-deleted-$count-files': (count) => {
-            return `${count} files removed`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} removed`;
         },
         'story-push-deleted-$count-lines': (count) => {
-            return `${count} lines removed`;
+            var lines = (count === 1) ? `1 line` : `${count} lines`;
+            return `${lines} removed`;
         },
         'story-push-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
             var sources = branches.map((branch) => {
@@ -263,7 +264,8 @@ module.exports = function(languageCode) {
             return text;
         },
         'story-push-modified-$count-files': (count) => {
-            return `${count} files modified`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} modified`;
         },
         'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
             var text = `Pushed changes to branch “${branch}”`;
@@ -273,7 +275,8 @@ module.exports = function(languageCode) {
             return text;
         },
         'story-push-renamed-$count-files': (count) => {
-            return `${count} files renamed`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} renamed`;
         },
         'story-repo-created-$name': (name) => {
             var text = `Created project`;
