@@ -446,11 +446,14 @@ module.exports = React.createClass({
     renderIssueText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var n = this.props.locale.name;
         var story = this.props.story;
         var number = story.details.number;
         var title = story.details.title;
         var state = story.details.state;
         var repo = this.props.repo;
+        var author = _.first(this.props.authors);
+        var name = (author) ? n(author.details.name, author.details.gender) ? '';
         var tags = _.map(story.details.labels, (label, i) => {
             var style;
             if (repo) {
@@ -475,7 +478,7 @@ module.exports = React.createClass({
             <div className="issue">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-issue-opened-$number-$title`, number, p(title))}
+                        {t(`story-issue-$user-opened-$number-$title`, user, number, p(title))}
                     </a>
                 </p>
                 <p className={`status-${state}`}>

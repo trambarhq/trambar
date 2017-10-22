@@ -8,7 +8,7 @@ module.exports = function(languageCode) {
         'action-contact-by-twitter': 'Contact by Twitter',
         'action-view-github-page': 'View Github page',
         'action-view-gitlab-page': 'View Gitlab page',
-        'action-view-linkedin-page': 'View linkedin page',
+        'action-view-linkedin-page': 'View LinkedIn page',
         'action-view-stackoverflow-page': 'View Stack Overflow Page',
 
         'app-name': 'Trambar',
@@ -56,14 +56,14 @@ module.exports = function(languageCode) {
         'comment-$user-commented-on-issue': (user) => {
             return `${user} commented on this issue`;
         },
+        'comment-$user-commented-on-merge': (user) => {
+            return `${user} commented on a merge`;
+        },
         'comment-$user-commented-on-merge-request': (user) => {
             return `${user} commented on this merge request`;
         },
         'comment-$user-commented-on-push': (user) => {
             return `${user} commented on a commit`;
-        },
-        'comment-$user-commented-on-merge': (user) => {
-            return `${user} commented on a merge`;
         },
         'comment-$user-completed-a-task': (user) => {
             return `${user} completed a task`;
@@ -97,9 +97,6 @@ module.exports = function(languageCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
-        'notification-$user-commented-on-your-commit': (user) => {
-            return `${user} commented on your commit`;
-        },
         'notification-$user-commented-on-your-merge': (user) => {
             return `${user} commented on your merge`;
         },
@@ -115,8 +112,8 @@ module.exports = function(languageCode) {
         'notification-$user-completed-task': (user) => {
             return `${user} completed a task on your list`;
         },
-        'notification-$user-likes-your-commit': (user) => {
-            return `${user} likes your commit`;
+        'notification-$user-likes-your-push': (user) => {
+            return `${user} likes your push`;
         },
         'notification-$user-likes-your-merge': (user) => {
             return `${user} likes your merge`;
@@ -166,8 +163,8 @@ module.exports = function(languageCode) {
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',
-        'server-type-gitlab': 'GitLab',
         'server-type-github': 'GitHub',
+        'server-type-gitlab': 'GitLab',
         'server-type-google': 'Google',
 
         'settings-language': 'Language',
@@ -206,7 +203,7 @@ module.exports = function(languageCode) {
         'story-drop-files-here': 'Drag and drop files here',
         'story-file': 'File',
         'story-issue-current-status': 'Current status:',
-        'story-issue-opened-$number-$title': (number, title) => {
+        'story-issue-$user-opened-$number-$title': (user, number, title) => {
             return `Opened issue ${number}: ${title}`;
         },
         'story-issue-status-closed': 'Closed',
@@ -238,26 +235,20 @@ module.exports = function(languageCode) {
         'story-photo': 'Photo',
         'story-post': 'Post',
         'story-push-added-$count-files': (count) => {
-            return `${count} files added`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} added`;
         },
         'story-push-added-$count-lines': (count) => {
-            return `${count} lines added`;
+            var lines = (count === 1) ? `1 line` : `${count} lines`;
+            return `${lines} added`;
         },
         'story-push-deleted-$count-files': (count) => {
-            return `${count} files removed`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} removed`;
         },
         'story-push-deleted-$count-lines': (count) => {
-            return `${count} lines removed`;
-        },
-        'story-push-modified-$count-files': (count) => {
-            return `${count} files modified`;
-        },
-        'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
-            var text = `Pushed changes to branch “${branch}”`;
-            if (repo) {
-                text += ` of project “${repo}”`;
-            }
-            return text;
+            var lines = (count === 1) ? `1 line` : `${count} lines`;
+            return `${lines} removed`;
         },
         'story-push-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
             var sources = branches.map((branch) => {
@@ -272,8 +263,20 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'story-push-modified-$count-files': (count) => {
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} modified`;
+        },
+        'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
+            var text = `Pushed changes to branch “${branch}”`;
+            if (repo) {
+                text += ` of project “${repo}”`;
+            }
+            return text;
+        },
         'story-push-renamed-$count-files': (count) => {
-            return `${count} files renamed`;
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `${files} renamed`;
         },
         'story-repo-created-$name': (name) => {
             var text = `Created project`;
@@ -308,9 +311,9 @@ module.exports = function(languageCode) {
         'user-actions': 'Actions',
 
         'user-statistics-legend-issue': 'Issues',
+        'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-milestone': 'Milestones',
         'user-statistics-legend-push': 'Code pushes',
-        'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-story': 'Posts',
         'user-statistics-legend-survey': 'Surveys',
         'user-statistics-legend-task-list': 'Task lists',
@@ -322,11 +325,11 @@ module.exports = function(languageCode) {
         'user-summary-$name-joined-repo': 'Joined a git project',
         'user-summary-$name-left-repo': 'Left a git project',
         'user-summary-$name-merged-code': 'Performed a code merge',
+        'user-summary-$name-opened-an-issue': 'Opened an issue',
         'user-summary-$name-posted-a-link': 'Post a link to a website',
         'user-summary-$name-posted-a-picture': 'Posted a picture',
         'user-summary-$name-posted-a-video-clip': 'Posted a video clip',
         'user-summary-$name-posted-an-audio-clip': 'Posted an audio clip',
-        'user-summary-$name-opened-an-issue': 'Opened an issue',
         'user-summary-$name-pushed-code': 'Pushed code to repo',
         'user-summary-$name-started-survey': 'Started a survey',
         'user-summary-$name-started-task-list': 'Started a task list',
