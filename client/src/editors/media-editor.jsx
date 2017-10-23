@@ -27,6 +27,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         resources: PropTypes.arrayOf(PropTypes.object),
+        initialResourceIndex: PropTypes.number,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -43,7 +44,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             capturing: null,
-            selectedResourceIndex: 0,
+            selectedResourceIndex: this.props.initialResourceIndex || 0,
         };
     },
 

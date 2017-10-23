@@ -32,6 +32,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onChange: PropTypes.func,
+        onResourceClick: PropTypes.func,
     },
 
     getInitialState: function() {
@@ -83,7 +84,13 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render the actual text
+     *
+     * @return {ReactElement}
+     */
     renderText: function() {
+        this.resourcesReferenced = {};
         switch (this.props.story.type) {
             case undefined:
             case '':
@@ -106,12 +113,14 @@ module.exports = React.createClass({
         var story = this.props.story;
         var text = p(story.details.text);
         if (story.details.markdown) {
-            var resources = story.details.resources;
-            var theme = this.props.theme;
-            var contents = Markdown.parse(text, resources, theme, this.handleReference);
-            return <div className="story markdown">{contents}</div>;
+            var contents = Markdown.parse(text, this.handleReference);
+            return (
+                <div className="text story markdown" onClick={this.handleMarkdownClick}>
+                    {contents}
+                </div>
+            );
         } else {
-            return <div className="story plain-text"><p>{text}</p></div>;
+            return <div className="text story plain-text"><p>{text}</p></div>;
         }
     },
 
@@ -125,15 +134,17 @@ module.exports = React.createClass({
         var story = this.props.story;
         var text = p(story.details.text);
         if (story.details.markdown) {
-            var resources = story.details.resources;
-            var theme = this.props.theme;
             // answers are written to the text itself, so there's no need to
             // provide user answers to Markdown.parseTaskList()
-            var list = Markdown.parseTaskList(text, resources, theme, null, this.handleItemChange, this.handleReference);
-            return <div className="task-list markdown">{list}</div>;
+            var list = Markdown.parseTaskList(text, null, this.handleItemChange, this.handleReference);
+            return (
+                <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
+                    {list}
+                </div>
+            );
         } else {
             var list = PlainText.parseTaskList(text, null, this.handleItemChange);
-            return <div className="task-list plain-text"><p>{list}</p></div>;
+            return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
     },
 
@@ -149,11 +160,15 @@ module.exports = React.createClass({
         if (story.details.markdown) {
             var resources = story.details.resources;
             var theme = this.props.theme;
-            var survey = Markdown.parseSurvey(text, resources, theme, null, this.handleItemChange);
-            return <div className="survey markdown">{survey}</div>;
+            var survey = Markdown.parseSurvey(text, null, this.handleItemChange, this.handleReference);
+            return (
+                <div className="text survey markdown" onClick={this.handleMarkdownClick}>
+                    {survey}
+                </div>
+            );
         } else {
             var survey = PlainText.parseSurvey(text, null, this.handleItemChange);
-            return <div className="survey plain-text"><p>{survey}</p></div>;
+            return <div className="text survey plain-text"><p>{survey}</p></div>;
         }
     },
 
@@ -211,6 +226,31 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when Markdown text references a resource
+     *
+     * @param  {Object} evt
+     */
+    handleReference: function(evt) {
+        var resources = this.props.story.details.resources;
+        var res = Markdown.findReferencedResource(resources, evt.name);
+        if (res) {
+            var url;
+            if (evt.forImage)  {
+                // images are style at height = 1.5em
+                url = this.props.theme.getImageUrl(res, { height: 24 });;
+            } else {
+                url = this.props.theme.getUrl(res);
+            }
+            // remember the resource and the url
+            this.resourcesReferenced[url] = res;
+            return {
+                href: url,
+                title: undefined
+            };
+        }
+    },
+
+    /**
      * Called when user click the task list button
      *
      * @param  {Event} evt
@@ -232,6 +272,28 @@ module.exports = React.createClass({
         story.type = (story.type !== 'survey') ? 'survey' : 'story';
         this.attachListTemplate(story);
         this.triggerChangeEvent(story, 'story.type');
+    },
+
+    /**
+     * Called when user clicks on the text contents
+     *
+     * @param  {Event} evt
+     */
+     handleMarkdownClick: function(evt) {
+        var target = evt.target;
+        if (target.tagName === 'IMG') {
+            var src = target.getAttribute('src');
+            var res = this.resourcesReferenced[src];
+            if (res) {
+                if (this.props.onResourceClick) {
+                    this.props.onResourceClick({
+                        type: 'resourceclick',
+                        target: this,
+                        resource: res,
+                    });
+                }
+            }
+        }
     },
 
     /**

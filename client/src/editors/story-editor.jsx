@@ -49,6 +49,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         var nextState = {
             options: defaultOptions,
+            selectedResourceIndex: undefined,
             draft: null,
         };
         this.updateDraft(nextState, this.props);
@@ -278,6 +279,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
 
             onChange: this.handleChange,
+            onResourceClick: this.handleResourceClick,
         };
         return <StoryTextPreview {...props} />
     },
@@ -291,6 +293,7 @@ module.exports = React.createClass({
         var props = {
             story: this.state.draft,
             cornerPopUp: this.renderPopUpMenu('supplemental'),
+            selectedResourceIndex: this.state.selectedResourceIndex,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -620,6 +623,20 @@ module.exports = React.createClass({
     handleOptionsChange: function(evt) {
         return this.changeOptions(evt.options);
     },
+
+    /**
+     * Called when user clicks on an image referenced by Markdown
+     *
+     * @param  {Object} evt
+     *
+     * @return {[type]}
+     */
+    handleResourceClick: function(evt) {
+        var resources = this.state.draft.details.resources;
+        var selectedResourceIndex = _.indexOf(resources, evt.resource);
+        var options = _.decoupleSet(this.state.options, 'supplementalEditor', 'media');
+        this.setState({ selectedResourceIndex, options });
+    }
 });
 
 var defaultOptions = {

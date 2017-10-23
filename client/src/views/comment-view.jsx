@@ -1,5 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -12,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
+var MediaDialogBox = require('dialogs/media-dialog-box');
 var Time = require('widgets/time');
 var CommentViewOptions = require('views/comment-view-options');
 
@@ -40,7 +42,10 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         var nextState = {
-            options: defaultOptions
+            options: defaultOptions,
+            selectedResourceUrl: null,
+            showingReferencedMediaDialog: false,
+            renderingReferencedMediaDialog: false,
         };
         this.updateOptions(nextState, this.props);
         return nextState;
@@ -91,6 +96,7 @@ module.exports = React.createClass({
                         {this.renderOptionButton()}
                         {this.renderTime()}
                         {this.renderText()}
+                        {this.renderReferencedMediaDialog()}
                     </div>
                     {this.renderMedia()}
                 </div>
@@ -151,7 +157,7 @@ module.exports = React.createClass({
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
                         }
                         return (
-                            <span className="comment markdown">
+                            <span className="comment markdown" onClick={this.handleMarkdownClick}>
                                 {name}: {paragraphs}
                             </span>
                         );
@@ -279,6 +285,34 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render dialog box showing referenced image at full size
+     *
+     * @return {ReactElement|null}
+     */
+    renderReferencedMediaDialog: function() {
+        if (!this.state.renderingReferencedMediaDialog) {
+            return null;
+        }
+        var selectedResource = this.resourcesReferenced[this.state.selectedResourceUrl];
+        var zoomableResources = getZoomableResources(this.resourcesReferenced);
+        var zoomableIndex = _.indexOf(zoomableResources, selectedResource);
+        if (zoomableIndex === -1) {
+            return null;
+        }
+        var dialogProps = {
+            show: this.state.showingReferencedMediaDialog,
+            resources: zoomableResources,
+            selectedIndex: zoomableIndex,
+
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onClose: this.handleReferencedMediaDialogClose,
+        };
+        return <MediaDialogBox {...dialogProps} />;
+    },
+
+    /**
      * Save reaction to remote database
      *
      * @param  {Reaction} reaction
@@ -358,6 +392,57 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user clicks on the text contents
+     *
+     * @param  {Event} evt
+     */
+     handleMarkdownClick: function(evt) {
+        var target = evt.target;
+        if (target.tagName === 'IMG') {
+            var src = target.getAttribute('src');
+            var res = this.resourcesReferenced[src];
+            if (res) {
+                if (res.type === 'image' || res.type === 'video') {
+                    this.setState({
+                        selectedResourceUrl: src,
+                        renderingReferencedMediaDialog: true,
+                        showingReferencedMediaDialog: true,
+                    });
+                } else if (res.type === 'website') {
+                    window.open(res.url);
+                } else if (res.type === 'audio') {
+                    // TODO
+                }
+            } else {
+                var targetRect = target.getBoundingClientRect();
+                var width = target.naturalWidth + 50;
+                var height = target.naturalHeight + 50;
+                var left = targetRect.left + window.screenLeft;
+                var top = targetRect.top + window.screenTop;
+                window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
+            }
+        }
+    },
+
+    /**
+     * Called when user closes referenced media dialog
+     *
+     * @param  {Object} evt
+     */
+    handleReferencedMediaDialogClose: function(evt) {
+        this.setState({ showingReferencedMediaDialog: false }, () => {
+            setTimeout(() => {
+                if (!this.state.showingReferencedMediaDialog) {
+                    this.setState({
+                        renderingReferencedMediaDialog: false,
+                        selectedResourceUrl: null
+                    });
+                }
+            }, 500);
+        })
+    },
+
+    /**
      * Called when options are changed
      *
      * @param  {Object} evt
@@ -372,3 +457,13 @@ var defaultOptions = {
     editReaction: false,
     removeReaction: false,
 };
+
+var getZoomableResources = Memoize(function(resources) {
+    return _.filter(resources, (res) => {
+        switch (res.type) {
+            case 'image':
+            case 'video':
+                return true;
+        }
+    })
+});

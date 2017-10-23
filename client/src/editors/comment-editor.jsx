@@ -397,9 +397,7 @@ module.exports = React.createClass({
 
         // automatically enable Markdown formatting
         if (draft.details.markdown === undefined) {
-            var resources = _.get(draft, 'details.resources');
-            var theme = this.props.theme;
-            if (Markdown.detect(langText, resources, theme)) {
+            if (Markdown.detect(langText, this.handleReference)) {
                 draft.details.markdown = true;
             }
         }
@@ -534,6 +532,29 @@ module.exports = React.createClass({
             this.autosaveReaction(draft, AUTOSAVE_DURATION);
             return null;
         });
+    },
+
+    /**
+     * Called when Markdown text references a resource
+     *
+     * @param  {Object} evt
+     */
+    handleReference: function(evt) {
+        var resources = this.state.draft.details.resources;
+        var res = Markdown.findReferencedResource(resources, evt.name);
+        if (res) {
+            var url;
+            if (evt.forImage)  {
+                // images are style at height = 1.5em
+                url = this.props.theme.getImageUrl(res, { height: 24 });;
+            } else {
+                url = this.props.theme.getUrl(res);
+            }
+            return {
+                href: url,
+                title: undefined
+            };
+        }
     },
 
     /**

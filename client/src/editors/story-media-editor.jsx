@@ -27,6 +27,7 @@ module.exports = React.createClass({
     propTypes: {
         story: PropTypes.object.isRequired,
         cornerPopUp: PropTypes.element,
+        selectedResourceIndex: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -134,6 +135,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
+            initialResourceIndex: this.props.selectedResourceIndex,
             onChange: this.handleResourcesChange,
         };
         return (
@@ -147,6 +149,9 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Remove handlers on unmount
+     */
     componentWillUnmount: function() {
         document.removeEventListener('paste', this.handlePaste);
         DeviceManager.removeEventListener('change', this.handleDeviceChange);
