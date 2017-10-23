@@ -298,10 +298,10 @@ function findMarkdownRefLink(name, forImage) {
 }
 
 function findReferencedResource(resources, name) {
-    var match = /^(picture|image|video|audio|website)(-(\d+))?$/.exec(name);
+    var match = /^(picture|image|photo|video|audio|website)(-(\d+))?$/.exec(name);
     if (match) {
         var type = match[1];
-        if (type === 'picture') {
+        if (type === 'picture' || type === 'photo') {
             type = 'image';
         }
         var matchingResources = _.filter(resources, { type });

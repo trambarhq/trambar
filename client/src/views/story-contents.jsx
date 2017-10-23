@@ -19,6 +19,7 @@ var UpdateCheck = require('mixins/update-check');
 var StorySection = require('widgets/story-section');
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
+var MediaDialogBox = require('dialogs/media-dialog-box');
 var MultipleUserNames = require('widgets/multiple-user-names');
 var AppComponent = require('views/app-component');
 var AppComponentDialogBox = require('dialogs/app-component-dialog-box');
@@ -60,6 +61,9 @@ module.exports = React.createClass({
             selectedComponent: null,
             showingComponentDialog: false,
             renderingComponentDialog: false,
+            selectedResourceUrl: null,
+            showingReferencedMediaDialog: false,
+            renderingReferencedMediaDialog: false,
         };
         this.updateUserAnswers({}, nextState);
         return nextState;
@@ -154,6 +158,7 @@ module.exports = React.createClass({
                 <body>
                     {this.renderText()}
                     {this.renderMedia()}
+                    {this.renderReferencedMediaDialog()}
                     {this.renderAppComponents()}
                 </body>
                 <footer>
@@ -673,6 +678,34 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render dialog box showing referenced image at full size
+     *
+     * @return {ReactElement|null}
+     */
+    renderReferencedMediaDialog: function() {
+        if (!this.state.renderingReferencedMediaDialog) {
+            return null;
+        }
+        var selectedResource = this.resourcesReferenced[this.state.selectedResourceUrl];
+        var zoomableResources = getZoomableResources(this.resourcesReferenced);
+        var zoomableIndex = _.indexOf(zoomableResources, selectedResource);
+        if (zoomableIndex === -1) {
+            return null;
+        }
+        var dialogProps = {
+            show: this.state.showingReferencedMediaDialog,
+            resources: zoomableResources,
+            selectedIndex: zoomableIndex,
+
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onClose: this.handleReferencedMediaDialogClose,
+        };
+        return <MediaDialogBox {...dialogProps} />;
+    },
+
+    /**
      * Render affected app components
      *
      * @return {ReactElement}
@@ -710,6 +743,11 @@ module.exports = React.createClass({
         return <AppComponent {...componentProps} />
     },
 
+    /**
+     * Render dialog showing full description of component
+     *
+     * @return {ReactElement}
+     */
     renderAppComponentDialog: function() {
         if (!this.state.renderingComponentDialog) {
             return null;
@@ -789,7 +827,26 @@ module.exports = React.createClass({
         if (target.tagName === 'IMG') {
             var src = target.getAttribute('src');
             var res = this.resourcesReferenced[src];
-            console.log(src, res);
+            if (res) {
+                if (res.type === 'image' || res.type === 'video') {
+                    this.setState({
+                        selectedResourceUrl: src,
+                        renderingReferencedMediaDialog: true,
+                        showingReferencedMediaDialog: true,
+                    });
+                } else if (res.type === 'website') {
+                    window.open(res.url);
+                } else if (res.type === 'audio') {
+                    // TODO
+                }
+            } else {
+                var targetRect = target.getBoundingClientRect();
+                var width = target.naturalWidth + 50;
+                var height = target.naturalHeight + 50;
+                var left = targetRect.left + window.screenLeft;
+                var top = targetRect.top + window.screenTop;
+                window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
+            }
         }
     },
 
@@ -884,6 +941,24 @@ module.exports = React.createClass({
                     });
                 }
             }, 500);
+        });
+    },
+
+    /**
+     * Called when user closes referenced media dialog
+     *
+     * @param  {Object} evt
+     */
+    handleReferencedMediaDialogClose: function(evt) {
+        this.setState({ showingReferencedMediaDialog: false }, () => {
+            setTimeout(() => {
+                if (!this.state.showingReferencedMediaDialog) {
+                    this.setState({
+                        renderingReferencedMediaDialog: false,
+                        selectedResourceUrl: null
+                    });
+                }
+            }, 500);
         })
     },
 });
@@ -920,3 +995,13 @@ function formatDate(date) {
         return m.format('ll');
     }
 }
+
+var getZoomableResources = Memoize(function(resources) {
+    return _.filter(resources, (res) => {
+        switch (res.type) {
+            case 'image':
+            case 'video':
+                return true;
+        }
+    })
+});

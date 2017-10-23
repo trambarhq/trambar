@@ -62,10 +62,16 @@
 
             &.survey, &.task-list {
                 .list-item, .vote-count {
+                    margin-bottom: 0.2em;
+
                     // take out margin when it's in a list-item
                     H1, H2, H3, H4, H5, H6 {
                         display: inline-block;
                         margin-top: 0;
+                        margin-bottom: 0;
+                    }
+
+                    &:last-child {
                         margin-bottom: 0;
                     }
                 }
