@@ -216,16 +216,17 @@ module.exports = React.createClass({
         if (count === 0) {
             return null;
         }
-        var shiftProps = {
-            label: 'Shift',
-            icon: 'chevron-left',
-            disabled: !(index > 0),
-            onClick: this.handleShiftClick,
-        };
         var removeProps = {
             label: 'Remove',
             icon: 'remove',
             onClick: this.handleRemoveClick,
+        };
+        var shiftProps = {
+            label: 'Shift',
+            icon: 'chevron-left',
+            hidden: !(count > 1),
+            disabled: !(index > 0),
+            onClick: this.handleShiftClick,
         };
         var directionProps = {
             index,
@@ -237,8 +238,8 @@ module.exports = React.createClass({
         return (
             <div className="navigation">
                 <div className="left">
-                    <MediaButton {...shiftProps} />
                     <MediaButton {...removeProps} />
+                    <MediaButton {...shiftProps} />
                 </div>
                 <div className="right">
                     <MediaButton.Direction {...directionProps} />
