@@ -256,7 +256,14 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleBarChartClick: function(evt) {
-        this.setState({ chartType: 'bar', showingContents: true });
+        var show = true;
+        if (this.props.theme.mode === 'columns-1') {
+            // allow toggling in single-column mode
+            if (this.state.chartType === 'bar') {
+                show = !this.state.showingContents;
+            }
+        }
+        this.setState({ chartType: 'bar', showingContents: show });
     },
 
     /**
@@ -265,7 +272,13 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleLineChartClick: function(evt) {
-        this.setState({ chartType: 'line', showingContents: true });
+        var show = true;
+        if (this.props.theme.mode === 'columns-1') {
+            if (this.state.chartType === 'line') {
+                show = !this.state.showingContents;
+            }
+        }
+        this.setState({ chartType: 'line', showingContents: show });
     },
 
     /**
@@ -274,7 +287,13 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePieChartClick: function(evt) {
-        this.setState({ chartType: 'pie', showingContents: true });
+        var show = true;
+        if (this.props.theme.mode === 'columns-1') {
+            if (this.state.chartType === 'pie') {
+                show = !this.state.showingContents;
+            }
+        }
+        this.setState({ chartType: 'pie', showingContents: show });
     },
 
     /**
