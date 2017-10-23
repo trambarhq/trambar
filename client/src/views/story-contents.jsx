@@ -149,10 +149,12 @@ module.exports = React.createClass({
                 </header>
                 <subheader>
                     {this.renderTime()}
-                    {this.renderGraphic()}
+                    {this.renderEmblem()}
                 </subheader>
                 <body>
-                    {this.renderContents()}
+                    {this.renderText()}
+                    {this.renderMedia()}
+                    {this.renderAppComponents()}
                 </body>
                 <footer>
                     {this.renderButtons()}
@@ -241,7 +243,12 @@ module.exports = React.createClass({
         return <Time {...props} />
     },
 
-    renderGraphic: function() {
+    /**
+     * Render emblem
+     *
+     * @return {[type]}
+     */
+    renderEmblem: function() {
         var type = this.props.story.type;
         var className = 'graphic';
         if (_.includes(StoryTypes.git, type)) {
@@ -262,21 +269,6 @@ module.exports = React.createClass({
                 <Icon className={type} />
             </div>
         );
-    },
-
-    /**
-     * Render the story's contents
-     *
-     * @return {ReactElement}
-     */
-    renderContents: function() {
-        return (
-            <div>
-                {this.renderText()}
-                {this.renderMedia()}
-                {this.renderAppComponents()}
-            </div>
-        )
     },
 
     /**
@@ -312,21 +304,24 @@ module.exports = React.createClass({
     /**
      * Render text for regular post, task list, and survey
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderStoryText: function() {
         var p = this.props.locale.pick;
         var story = this.props.story;
-        var text = p(story.details.text);
+        var text = _.trimEnd(p(story.details.text));
+        if (!text) {
+            return null;
+        }
         if (story.details.markdown) {
             var contents = Markdown.parse(text, this.handleReference);
             return (
-                <div className="story markdown" onClick={this.handleMarkdownClick}>
+                <div className="text story markdown" onClick={this.handleMarkdownClick}>
                     {contents}
                 </div>
             );
         } else {
-            return <div className="story plain-text"><p>{text}</p></div>;
+            return <div className="text story plain-text"><p>{text}</p></div>;
         }
     },
 
@@ -338,56 +333,61 @@ module.exports = React.createClass({
     renderTaskListText: function() {
         var p = this.props.locale.pick;
         var story = this.props.story;
-        var text = p(story.details.text);
+        var text = _.trimEnd(p(story.details.text));
+        if (!text) {
+            return null;
+        }
         var answers = this.state.userAnswers;
         if (story.details.markdown) {
             var list = Markdown.parseTaskList(text, answers, this.handleTaskListItemChange, this.handleReference);
             return (
-                <div className="task-list markdown" onClick={this.handleMarkdownClick}>
+                <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
                     {list}
                 </div>
             );
         } else {
             var list = PlainText.parseTaskList(text, answers, this.handleTaskListItemChange);
-            return <div className="task-list plain-text"><p>{list}</p></div>;
+            return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
     },
 
     /**
      * Render survey choices or results depending whether user has voted
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderSurveyText: function() {
         var p = this.props.locale.pick;
         var story = this.props.story;
-        var text = p(story.details.text);
-        var contents;
+        var text = _.trimEnd(p(story.details.text));
+        if (!text) {
+            return null;
+        }
         if (!this.hasUserVoted()) {
             var answers = this.state.userAnswers;
             if (story.details.markdown) {
                 var survey = Markdown.parseSurvey(text, answers, this.handleSurveyItemChange, this.handleReference);
                 return (
-                    <div className="survey markdown" onClick={this.handleMarkdownClick}>
+                    <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {survey}
                     </div>
                 );
             } else {
                 var survey = PlainText.parseSurvey(text, answers, this.handleSurveyItemChange);
-                return <div className="survey plain-text"><p>{survey}</p></div>;
+                return <div className="text survey plain-text"><p>{survey}</p></div>;
             }
         } else {
             var voteCounts = countVotes(this.props.reactions);
             if (story.details.markdown) {
                 var results = Markdown.parseSurveyResults(text, voteCounts, this.handleReference);
                 return (
-                    <div className="survey markdown" onClick={this.handleMarkdownClick}>
+                    <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {results}
                     </div>
                 );
             } else {
                 var results = PlainText.parseSurveyResults(text, voteCounts);
-                return <div className="survey plain-text"><p>{results}</p></div>;
+                return <div className="text survey plain-text"><p>{results}</p></div>;
             }
         }
     },
@@ -405,7 +405,7 @@ module.exports = React.createClass({
         var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
         var url = _.get(this.props.repo, 'details.web_url');
         return (
-            <div className="repo">
+            <div className="text repo">
                 <p>
                     <a href={url} target="_blank">
                         {t(`story-repo-${action}-$name`, repoName)}
@@ -428,7 +428,7 @@ module.exports = React.createClass({
         var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
         var url = _.get(this.props.repo, 'details.web_url');
         return (
-            <div className="member">
+            <div className="text member">
                 <p>
                     <a href={url} target="_blank">
                         {t(`story-member-${action}-$repo`, repoName)}
@@ -453,7 +453,7 @@ module.exports = React.createClass({
         var state = story.details.state;
         var repo = this.props.repo;
         var author = _.first(this.props.authors);
-        var name = (author) ? n(author.details.name, author.details.gender) ? '';
+        var user = (author) ? n(author.details.name, author.details.gender) : '';
         var tags = _.map(story.details.labels, (label, i) => {
             var style;
             if (repo) {
@@ -475,7 +475,7 @@ module.exports = React.createClass({
             url = `${baseUrl}/issues/${issueId}`;
         }
         return (
-            <div className="issue">
+            <div className="text issue">
                 <p>
                     <a href={url} target="_blank">
                         {t(`story-issue-$user-opened-$number-$title`, user, number, p(title))}
@@ -511,7 +511,7 @@ module.exports = React.createClass({
             url = `${baseUrl}/milestones/${milestoneId}`;
         }
         return (
-            <div className="milestone">
+            <div className="text milestone">
                 <p>
                     <a href={url} target="_blank">
                         {t(`story-milestone-created-$name`, p(title))}
@@ -546,7 +546,7 @@ module.exports = React.createClass({
             url = undefined;
         }
         return (
-            <div className="wiki">
+            <div className="text wiki">
                 <p>
                     <a href={url} target="_blank">
                         {t(`story-wiki-${action}-page-with-$title`, title)}
@@ -612,7 +612,7 @@ module.exports = React.createClass({
             text = t(`story-push-merged-$branches-into-$branch-of-$repo`, sourceBranches, branch, repoName);
         }
         return (
-            <div className="push">
+            <div className="text push">
                 <p>
                     <a href={url} target="_blank">{text}</a>
                 </p>
@@ -678,13 +678,14 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderAppComponents: function() {
+        var t = this.props.locale.translate;
         var components = _.get(this.props.story, 'details.components');
         if (_.isEmpty(components)) {
             return null;
         }
         return (
             <div className="impact">
-                <p>The following components were impacted:</p>
+                <p className="message">{t('story-push-components-changed')}</p>
                 <Scrollable>
                     {_.map(components, this.renderAppComponent)}
                 </Scrollable>

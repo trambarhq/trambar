@@ -72,9 +72,7 @@ module.exports = React.createClass({
                     {this.renderButtons()}
                 </header>
                 <body>
-                    <DropZone onDrop={this.handleDrop}>
-                        {this.renderResources()}
-                    </DropZone>
+                    {this.renderResources()}
                 </body>
             </StorySection>
         );
@@ -128,6 +126,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderResources: function() {
+        var resources = _.get(this.props.story, 'details.resources');
         var t = this.props.locale.translate;
         var editorProps = {
             ref: this.components.setters.mediaEditor,
@@ -138,11 +137,13 @@ module.exports = React.createClass({
             onChange: this.handleResourcesChange,
         };
         return (
-            <MediaEditor {...editorProps}>
-                <div className="message">
-                    {t('story-drop-files-here')}
-                </div>
-            </MediaEditor>
+            <DropZone onDrop={this.handleDrop}>
+                <MediaEditor {...editorProps}>
+                    <div className="message">
+                        {t('story-drop-files-here')}
+                    </div>
+                </MediaEditor>
+            </DropZone>
         );
     },
 

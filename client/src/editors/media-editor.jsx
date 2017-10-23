@@ -139,7 +139,7 @@ module.exports = React.createClass({
      */
     getResourceImageUrl: function(res) {
         var theme = this.props.theme;
-        var file = this.getImageFile(res);
+        var file = theme.getImageFile(res);
         if (this.imageBlob) {
             if (file === this.imageBlob) {
                 return this.imageBlobUrl;

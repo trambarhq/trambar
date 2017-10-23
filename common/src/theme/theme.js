@@ -23,8 +23,8 @@ function Theme(themeManager) {
         return themeManager.getImageUrl(res, params);
     };
 
-    this.getImageFile = function(res, params) {
-        return themeManager.getImageUrl(res);
+    this.getImageFile = function(res) {
+        return themeManager.getImageFile(res);
     };
 
     this.getVideoUrl = function(res, params) {

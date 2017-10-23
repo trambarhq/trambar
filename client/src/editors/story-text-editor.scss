@@ -28,6 +28,9 @@
 
     .body {
         .autosize-text-area {
+            margin-left: calc(0.3em - 1px);
+            margin-right: calc(0.3em - 1px);
+
             TEXTAREA {
                 font-size: 1em;
                 min-height: 5em;
@@ -40,5 +43,15 @@
 
     .footer {
         text-align: right;
+    }
+}
+
+.columns-1 .story-section.text-editor {
+    .body {
+        .autosize-text-area {
+            TEXTAREA {
+                min-height: 1.2em;
+            }
+        }
     }
 }

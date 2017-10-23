@@ -109,7 +109,7 @@ module.exports = React.createClass({
         return `${baseUrl}${resUrl}${path}`;
     },
 
-    getImageFile: function() {
+    getImageFile: function(res) {
         switch(res.type) {
             case 'video':
             case 'audio':

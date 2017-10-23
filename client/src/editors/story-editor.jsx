@@ -41,6 +41,11 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         var nextState = {
             options: defaultOptions,
@@ -52,6 +57,11 @@ module.exports = React.createClass({
         return nextState;
     },
 
+    /**
+     * Update state when certain props change
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
@@ -240,7 +250,7 @@ module.exports = React.createClass({
     /**
      * Render one of the supplemental editors
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderSupplementalEditor: function() {
         if (this.state.options.supplementalEditor === 'preview') {
@@ -368,6 +378,12 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Save story to remote database after specified delay
+     *
+     * @param  {Story} story
+     * @param  {Number} delay
+     */
     autosaveStory: function(story, delay) {
         if (delay) {
             this.cancelAutosave();
@@ -383,6 +399,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Cancel any auto-save operation
+     */
     cancelAutosave: function() {
         if (this.autosaveTimeout) {
             clearTimeout(this.autosaveTimeout);
@@ -476,6 +495,14 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Send bookmarks to recipients
+     *
+     * @param  {Story} story
+     * @param  {Array<Number>} recipientIds
+     *
+     * @return {Promise<Array<Bookmark>>}
+     */
     sendBookmarks: function(story, recipientIds) {
         var bookmarks = this.props.recommendations;
         var newBookmarks = [];

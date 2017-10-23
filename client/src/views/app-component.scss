@@ -2,9 +2,14 @@
     display: flex;
     flex-direction: row;
     border: 1px solid #211a1a;
-    margin: 0 0.25em 0.5em 0.25em;
+    margin-top: 0.3em;
+    margin-right: 0.1em;
     background-color: #cccccc;
     cursor: pointer;
+
+    &:first-child {
+        margin-top: 0;
+    }
 
     .picture {
         flex-grow: 0;
@@ -39,7 +44,7 @@
         font-size: 1em;
         margin: 0.25em 0.25em 0 0.40em;
         overflow: hidden;
-        height: calc(3em + 8px);
+        height: calc(3em + 10px);
 
         .text-contents {
             width: calc(100% - 1em);

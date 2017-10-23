@@ -18,14 +18,24 @@
 
         .drop-zone {
             width: 100%;
+
+            .message {
+                border: 2px dashed #666666;
+                padding: 2em;
+                color: #666666;
+                margin: 0 2em 0 2em;
+                text-align: center;
+            }
         }
     }
+}
 
-    .message {
-        border: 2px dashed #666666;
-        padding: 2em;
-        color: #666666;
-        margin: 0 2em 0 2em;
-        text-align: center;
+.columns-1 .story-section.media-editor {
+    .body {
+        padding: 0;
+
+        .message {
+            display: none;
+        }
     }
 }

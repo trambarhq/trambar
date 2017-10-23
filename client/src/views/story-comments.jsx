@@ -130,9 +130,11 @@ module.exports = React.createClass({
             label: t('story-$count-user-reacted-to-story', _.size(this.props.respondents)),
             onClick: this.handleShowClick,
         };
-        if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
-            if (!_.isEmpty(this.props.reactions)) {
-                showButtonProps.hidden = false;
+        if (this.props.theme.mode === 'columns-1') {
+            if (!this.state.expanded) {
+                if (!_.isEmpty(this.props.reactions)) {
+                    showButtonProps.hidden = false;
+                }
             }
         }
         return (
@@ -150,8 +152,10 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderReactions: function() {
-        if (this.props.theme.mode === 'columns-1' && !this.state.expanded) {
-            return null;
+        if (this.props.theme.mode === 'columns-1') {
+            if (!this.state.expanded) {
+                return null;
+            }
         }
         if (_.isEmpty(this.props.reactions)) {
             return null;

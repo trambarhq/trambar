@@ -41,12 +41,22 @@ module.exports = React.createClass({
         onCancel: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             selectingCoauthor: false,
         };
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <StorySection className="text-editor">
@@ -69,6 +79,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render profile image
+     *
+     * @return {ReactElement}
+     */
     renderProfileImage: function() {
         var props = {
             user: _.get(this.props.authors, 0),
@@ -141,6 +156,11 @@ module.exports = React.createClass({
         )
     },
 
+    /**
+     * Render dialog box for selecting co-authors
+     *
+     * @return {ReactElement}
+     */
     renderUserSelectionDialogBox: function() {
         var props = {
             show: this.state.selectingCoauthor,
@@ -158,6 +178,11 @@ module.exports = React.createClass({
         return <UserSelectionDialogBox {...props} />;
     },
 
+    /**
+     * Render the control for text entry
+     *
+     * @return {ReactElement}
+     */
     renderTextArea: function() {
         var languageCode = this.props.options.languageCode;
         var lang = languageCode.substr(0, 2);
@@ -170,6 +195,11 @@ module.exports = React.createClass({
         return <AutosizeTextArea {...props} />;
     },
 
+    /**
+     * Render cancel and post buttons
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         var noText = _.isEmpty(_.get(this.props.story, 'details.text'));

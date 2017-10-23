@@ -242,6 +242,7 @@ module.exports = function(languageCode) {
             var lines = (count === 1) ? `1 line` : `${count} lines`;
             return `${lines} added`;
         },
+        'story-push-components-changed': 'The following parts were changed:',
         'story-push-deleted-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} removed`;
