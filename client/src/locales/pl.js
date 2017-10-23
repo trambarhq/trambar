@@ -261,7 +261,7 @@ module.exports = function(languageCode) {
             } else if (plural(count)) {
                 files = `${count} płiki`;
             } else {
-                files `${count} płików`
+                files = `${count} płików`
             }
             return `${files} dodano`;
         },
@@ -272,7 +272,7 @@ module.exports = function(languageCode) {
             } else if (plural(count)) {
                 lines = `${count} linie`;
             } else {
-                lines `${count} liń`
+                lines = `${count} liń`
             }
             return `${lines} dodano`;
         },
@@ -283,7 +283,7 @@ module.exports = function(languageCode) {
             } else if (plural(count)) {
                 files = `${count} płiki`;
             } else {
-                files `${count} płików`
+                files = `${count} płików`
             }
             return `${files} usunięto`;
         },
@@ -294,7 +294,7 @@ module.exports = function(languageCode) {
             } else if (plural(count)) {
                 lines = `${count} linie`;
             } else {
-                lines `${count} liń`
+                lines = `${count} liń`
             }
             return `${lines} usunięto`;
         },
@@ -305,7 +305,7 @@ module.exports = function(languageCode) {
             } else if (plural(count)) {
                 files = `${count} płiki`;
             } else {
-                files `${count} płików`
+                files = `${count} płików`
             }
             return `${files} zmodyfikowano`;
         },
@@ -316,7 +316,7 @@ module.exports = function(languageCode) {
             } else if (plural(count)) {
                 files = `${count} płiki`;
             } else {
-                files `${count} płików`
+                files = `${count} płików`
             }
             return `${files} przemianowano`;
         },
