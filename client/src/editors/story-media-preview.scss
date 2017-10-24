@@ -1,0 +1,82 @@
+.story-section.media-preview {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .header {
+        flex-grow: 0;
+        flex-shrink: 1;
+    }
+
+    .body {
+        flex-grow: 1;
+        flex-shrink: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        position: relative;
+
+        .drop-zone {
+            position: relative;
+            width: 100%;
+            flex: 1 1 auto;
+            text-align: center;
+
+            .media-editor {
+                &.inactive {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+
+                    .placeholder {
+                        position: absolute;
+                        left: 1em;
+                        top: 1em;
+                        right: 1em;
+                        bottom: 1em;
+                        border: 2px dashed rgba(127, 127, 127, 0.15);
+
+                        .message {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            right: 0;
+                            bottom: 0;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            color: #666666;
+                            margin: auto;
+                            user-select: none;
+                            cursor: default;
+                            opacity: 0;
+                            animation: fadeInAndOut 30s normal forwards;
+
+                            @keyframes fadeInAndOut {
+                              0%   { opacity:0; }
+                              15%  { opacity:1; }
+                              30%  { opacity:0; }
+                              100% { opacity:0; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.columns-1 .story-section.media-editor {
+    .body {
+        padding: 0;
+
+        .placeholder {
+            display: none;
+        }
+    }
+}

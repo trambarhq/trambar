@@ -169,8 +169,13 @@ module.exports = React.createClass({
      * @return {ReactELement}
      */
     render: function() {
+        var className = 'media-editor';
+        var index = this.getSelectedResourceIndex();
+        if (index === -1) {
+            className += ' inactive';
+        }
         return (
-            <div className="media-editor">
+            <div className={className}>
                 {this.renderResource()}
                 {this.renderNavigation()}
                 {this.renderPhotoDialog()}
@@ -187,11 +192,11 @@ module.exports = React.createClass({
      */
     renderResource: function(res) {
         var index = this.getSelectedResourceIndex();
-        var res = _.get(this.props.resources, index);
-        if (!res) {
+        if (index === -1) {
             // render placeholder
             return this.props.children;
         }
+        var res = this.props.resources[index];
         switch (res.type) {
             case 'image':
             case 'video':

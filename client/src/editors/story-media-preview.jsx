@@ -19,10 +19,10 @@ var HeaderButton = require('widgets/header-button');
 var DropZone = require('widgets/drop-zone');
 var MediaEditor = require('editors/media-editor');
 
-require('./story-media-editor.scss');
+require('./story-media-preview.scss');
 
 module.exports = React.createClass({
-    displayName: 'StoryMediaEditor',
+    displayName: 'StoryMediaPreview',
     mixins: [ UpdateCheck ],
     propTypes: {
         story: PropTypes.object.isRequired,
@@ -68,7 +68,7 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <StorySection className="media-editor">
+            <StorySection className="media-preview">
                 <header>
                     {this.renderButtons()}
                 </header>
@@ -128,7 +128,6 @@ module.exports = React.createClass({
      */
     renderResources: function() {
         var resources = _.get(this.props.story, 'details.resources');
-        var t = this.props.locale.translate;
         var editorProps = {
             ref: this.components.setters.mediaEditor,
             resources: _.get(this.props.story, 'details.resources'),
@@ -141,11 +140,35 @@ module.exports = React.createClass({
         return (
             <DropZone onDrop={this.handleDrop}>
                 <MediaEditor {...editorProps}>
-                    <div className="message">
-                        {t('story-drop-files-here')}
-                    </div>
+                    {this.renderPlaceholder()}
                 </MediaEditor>
             </DropZone>
+        );
+    },
+
+    /**
+     * Render a placeholder, with messages fading in and out
+     *
+     * @return {ReactElement}
+     */
+    renderPlaceholder: function() {
+        var t = this.props.locale.translate;
+        var phraseIds = [
+            'story-drop-files-here',
+            'story-paste-image-here',
+        ];
+        var messages = _.map(phraseIds, (phraseId, index) => {
+            var delay = 10 * index;
+            return (
+                <div className="message" style={{ animationDelay: `${delay}s`}}>
+                    {t(phraseId)}
+                </div>
+            )
+        });
+        return (
+            <div className="placeholder">
+                {messages}
+            </div>
         );
     },
 

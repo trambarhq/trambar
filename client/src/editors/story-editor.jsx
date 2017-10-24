@@ -15,7 +15,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryTextEditor = require('editors/story-text-editor');
-var StoryMediaEditor = require('editors/story-media-editor');
+var StoryMediaPreview = require('editors/story-media-preview');
 var StoryTextPreview = require('editors/story-text-preview');
 var StoryEditorOptions = require('editors/story-editor-options');
 var CornerPopUp = require('widgets/corner-pop-up');
@@ -134,8 +134,8 @@ module.exports = React.createClass({
         options = nextState.options = _.clone(options);
         options.hidePost = !nextState.draft.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
-        if (!options.supplementalEditor) {
-            options.supplementalEditor = this.chooseSupplementalEditor(nextState.draft);
+        if (!options.preview) {
+            options.preview = this.choosePreview(nextState.draft);
         }
         if (!options.languageCode) {
             options.languageCode = this.chooseLanguage(nextState.draft, nextProps.locale);
@@ -143,19 +143,19 @@ module.exports = React.createClass({
     },
 
     /**
-     * Choose supplmental view based on story contents
+     * Choose preview type based on story contents
      *
      * @param  {Story} story
      *
      * @return {String}
      */
-    chooseSupplementalEditor: function(story) {
+    choosePreview: function(story) {
         // show preview when text is formatted
         if (story.type === 'survey' || story.type === 'task-list') {
-            return 'preview';
+            return 'text';
         }
         if (_.get(story, 'details.markdown', false)) {
-            return 'preview';
+            return 'text';
         }
         // default to media until we know more
         return '';
@@ -254,10 +254,10 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderSupplementalEditor: function() {
-        if (this.state.options.supplementalEditor === 'preview') {
+        if (this.state.options.preview === 'text') {
             return this.renderTextPreview();
         } else {
-            return this.renderMediaEditor();
+            return this.renderMediaPreview();
         }
     },
 
@@ -285,11 +285,11 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render editor for adding images and videos
+     * Render preview of images and videos
      *
      * @return {ReactElement}
      */
-    renderMediaEditor: function() {
+    renderMediaPreview: function() {
         var props = {
             story: this.state.draft,
             cornerPopUp: this.renderPopUpMenu('supplemental'),
@@ -303,7 +303,7 @@ module.exports = React.createClass({
 
             onChange: this.handleChange,
         };
-        return <StoryMediaEditor {...props} />
+        return <StoryMediaPreview {...props} />
     },
 
     /**
@@ -354,10 +354,10 @@ module.exports = React.createClass({
     changeDraft: function(draft) {
         return new Promise((resolve, reject) => {
             var options = this.state.options;
-            if (!options.supplementalEditor) {
-                var editor = this.chooseSupplementalEditor(draft);
-                if (editor) {
-                    options = _.decoupleSet(options, 'supplementalEditor', editor);
+            if (!options.preview) {
+                var preview = this.choosePreview(draft);
+                if (preview) {
+                    options = _.decoupleSet(options, 'preview', preview);
                 }
             }
             this.setState({ draft, options }, () => {
@@ -634,7 +634,7 @@ module.exports = React.createClass({
     handleResourceClick: function(evt) {
         var resources = this.state.draft.details.resources;
         var selectedResourceIndex = _.indexOf(resources, evt.resource);
-        var options = _.decoupleSet(this.state.options, 'supplementalEditor', 'media');
+        var options = _.decoupleSet(this.state.options, 'preview', 'media');
         this.setState({ selectedResourceIndex, options });
     }
 });
@@ -644,7 +644,7 @@ var defaultOptions = {
     addIssue: false,
     hidePost: false,
     bookmarkRecipients: [],
-    supplementalEditor: '',
+    preview: '',
 };
 
 /**

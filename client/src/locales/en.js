@@ -146,8 +146,8 @@ module.exports = function(languageCode) {
             var users = (count === 1) ? `${count} user` : `${count} users`;
             return `Send bookmarks to ${users}`;
         },
-        'option-show-media': 'Show attached media',
-        'option-show-preview': 'Show text preview',
+        'option-show-media-preview': 'Show attached media',
+        'option-show-text-preview': 'Show text preview',
 
         'photo-capture-accept': 'Accept',
         'photo-capture-cancel': 'Cancel',
@@ -200,7 +200,7 @@ module.exports = function(languageCode) {
         'story-cancel': 'Cancel',
         'story-coauthors': 'Coauthors',
         'story-comment': 'Comment',
-        'story-drop-files-here': 'Drag and drop files here',
+        'story-drop-files-here': 'Drag and drop media files here',
         'story-file': 'File',
         'story-issue-current-status': 'Current status:',
         'story-issue-$user-opened-$number-$title': (user, number, title) => {
@@ -231,6 +231,7 @@ module.exports = function(languageCode) {
         'story-milestone-due-date': 'Due date:',
         'story-milestone-start-date': 'Start date:',
         'story-options': 'Options',
+        'story-paste-image-here': 'An image pasted into the text editor will also end up here',
         'story-pending': 'Pending...',
         'story-photo': 'Photo',
         'story-post': 'Post',

@@ -1,6 +1,12 @@
 .media-editor {
+    display: flex;
     position: relative;
-    width: 100%;
+    vertical-align: top;
+    max-width: 600px;
+
+    &.inactive {
+        max-width: none;
+    }
 
     .navigation {
         position: absolute;
@@ -24,7 +30,6 @@
     }
 
     .image-cropper {
-        max-width: 600px;
         width: 100%;
     }
 
