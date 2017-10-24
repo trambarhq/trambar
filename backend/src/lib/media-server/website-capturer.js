@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Promise = require('bluebird');
 var Phantom = require('phantom');
 var Moment = require('moment');

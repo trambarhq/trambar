@@ -221,7 +221,7 @@ function handleWebsiteScreenshot(req, res) {
         if (!url) {
             throw new HttpError(400);
         }
-        var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.jpeg');
+        var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.png');
         WebsiteCapturer.createScreenshot(url, tempPath).then((title) => {
             // rename it to its MD5 hash once we have the data
             return FileManager.hashFile(tempPath).then((hash) => {
@@ -241,7 +241,7 @@ function handleWebsiteScreenshot(req, res) {
         });
         // got nothing to return
         return {};
-    }).then((resutls) => {
+    }).then((results) => {
         sendJson(res, results);
     }).catch((err) => {
         sendError(res, err);
