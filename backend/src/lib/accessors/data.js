@@ -175,13 +175,6 @@ module.exports = {
             }
         });
 
-        if (criteria.fn !== undefined) {
-            if (criteria.fn === null) {
-                conds.push(`details->>'fn' IS NULL`);
-            } else {
-                conds.push(`details->>'fn' = $${params.push(criteria.fn)}`);
-            }
-        }
         if (typeof(criteria.limit) === 'number') {
             criteria.limit = criteria.limit;
         }

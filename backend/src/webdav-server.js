@@ -113,10 +113,21 @@ function start() {
             createFileAsync: function(name, data, type) {
                 var text = data.toString();
                 var object = (text) ? JSON.parse(text) : {};
-                _.set(object, 'details.fn', name);
-                return this.accessor.findOne(db, this.schema, { fn: name, deleted: false }, `id`).then((row) => {
+                var m = /^(\d+)\.json$/.exec(name);
+                if (!m) {
+                    return Promise.reject(new JsDAVPromise.Conflict);
+                }
+                var id = parseInt(m[1]);
+                if (object.id) {
+                    if (object.id !== id) {
+                        return Promise.reject(new JsDAVPromise.Conflict);
+                    }
+                } else {
+                    object.id = id;
+                }
+                return this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`).then((row) => {
                     if (row) {
-                        throw new JsDAVPromise.Conflict;
+                        return Promise.reject(new JsDAVPromise.Conflict);
                     }
                     return this.accessor.insertOne(db, this.schema, object).then((row) => {
                         return true;
@@ -125,19 +136,14 @@ function start() {
             },
 
             getChildAsync: function(name) {
-                return this.accessor.findOne(db, this.schema, { fn: name, deleted: false }, `id, details->>'fn' AS fn`).then((row) => {
+                var id = parseInt(name);
+                if (id !== id) {
+                    // NaN
+                    return Promise.resolve(null);
+                }
+                return this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`).then((row) => {
                     if (row) {
-                        return row;
-                    }
-                    var id = parseInt(name);
-                    if (id !== id) {
-                        // NaN
-                        return null;
-                    }
-                    return this.accessor.findOne(db, this.schema, { id: id, fn: null, deleted: false }, `id, details->>'fn' AS fn`);
-                }).then((row) => {
-                    if (row) {
-                        var filename = row.fn || row.id + '.json';
+                        var filename = row.id + '.json';
                         return RowFile.new(this.schema, this.table, row.id, filename);
                     } else {
                         return null;
@@ -146,8 +152,8 @@ function start() {
             },
 
             getChildrenAsync: function() {
-                return this.accessor.find(db, this.schema, { deleted: false }, `id, details->>'fn' AS fn`).map((row) => {
-                    var filename = row.fn || row.id + '.json';
+                return this.accessor.find(db, this.schema, { deleted: false }, `id`).map((row) => {
+                    var filename = row.id + '.json';
                     return RowFile.new(this.schema, this.table, row.id, filename);
                 });
             },
@@ -168,7 +174,6 @@ function start() {
             getAsync: function() {
                 return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, '*').then((row) => {
                     row = _.omit(row, 'ctime', 'mtime', 'gn', 'deleted');
-                    row.details = _.omit(row.details, 'fn');
                     var text = JSON.stringify(row, undefined, 2);
                     return new Buffer(text);
                 });
@@ -180,9 +185,6 @@ function start() {
                     var row = JSON.parse(text);
                     if (row.id !== this.id) {
                         throw new Error('Cannot change id');
-                    }
-                    if (this.name !== this.id + '.json') {
-                        _.set(row, 'details.fn', this.name);
                     }
                     return this.accessor.updateOne(db, this.schema, row).then((row) => {
                         return !!row;
@@ -211,17 +213,6 @@ function start() {
             getLastModifiedAsync: function() {
                 return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'mtime').then((row) => {
                     return row.mtime;
-                });
-            },
-
-            setNameAsync: function(name) {
-                return this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'id, details').then((row) => {
-                    if (row) {
-                        _.set(row, 'details.fn', name);
-                        return this.accessor.updateOne(db, this.schema, row).then((row) => {
-                            return true;
-                        });
-                    }
                 });
             },
         });

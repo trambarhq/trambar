@@ -273,7 +273,7 @@ module.exports = _.create(Data, {
                     // update the original row with properties from the temp copy
                     var updates = {};
                     updates.id = publishedVersion.id;
-                    updates.details = _.omit(tempCopy.details, 'fn');
+                    updates.details = tempCopy.details;
                     updates.type = tempCopy.type;
                     updates.user_ids = tempCopy.user_ids;
                     updates.role_ids  = tempCopy.role_ids;
@@ -281,7 +281,7 @@ module.exports = _.create(Data, {
 
                     // stick contents of the original row into the temp copy
                     // so we can retrieve them later potentially
-                    tempCopy.details = _.omit(publishedVersion.details, 'fn');
+                    tempCopy.details = publishedVersion.details;
                     tempCopy.type = publishedVersion.type;
                     tempCopy.user_ids = publishedVersion.user_ids;
                     tempCopy.role_ids  = publishedVersion.role_ids;
