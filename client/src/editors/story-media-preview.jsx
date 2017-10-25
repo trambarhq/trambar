@@ -160,7 +160,7 @@ module.exports = React.createClass({
         var messages = _.map(phraseIds, (phraseId, index) => {
             var delay = 10 * index;
             return (
-                <div className="message" style={{ animationDelay: `${delay}s`}}>
+                <div key={index} className="message" style={{ animationDelay: `${delay}s`}}>
                     {t(phraseId)}
                 </div>
             )

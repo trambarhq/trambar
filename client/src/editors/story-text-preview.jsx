@@ -35,11 +35,11 @@ module.exports = React.createClass({
         onResourceClick: PropTypes.func,
     },
 
-    getInitialState: function() {
-        return {
-        };
-    },
-
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <StorySection className="contents text-preview">
@@ -53,6 +53,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render buttons in title bar
+     *
+     * @return {ReactElement}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         var story = this.props.story;
@@ -85,7 +90,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render the actual text
+     * Render the text as it would appear
      *
      * @return {ReactElement}
      */
@@ -95,7 +100,7 @@ module.exports = React.createClass({
             case undefined:
             case '':
             case 'story':
-                return this.renderStoryText();
+                return this.renderRegularPost();
             case 'task-list':
                 return this.renderTaskListText();
             case 'survey':
@@ -104,11 +109,11 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render text for regular post, task list, and survey
+     * Render text for regular post
      *
      * @return {ReactElement}
      */
-    renderStoryText: function() {
+    renderRegularPost: function() {
         var p = this.props.locale.pick;
         var story = this.props.story;
         var text = p(story.details.text);
