@@ -95,8 +95,6 @@ module.exports = function(languageCode) {
         'nav-projects': 'Projects',
         'nav-project-new': 'New project',
         'nav-repositories': 'Repositories',
-        'nav-robots': 'Robots',
-        'nav-robot-new': 'New robot',
         'nav-roles': 'Roles',
         'nav-role-new': 'New role',
         'nav-servers': 'Servers',
@@ -174,23 +172,6 @@ module.exports = function(languageCode) {
         'repository-tooltip-$count': (count) => {
             return (count === 1) ? `1 repository` : `${count} repositories`;
         },
-
-        'robot-list-new': 'New robot',
-        'robot-list-title': 'Robots',
-
-        'robot-summary-$title': (title) => {
-            var text = `Robot`;
-            if (title) {
-                text += `: ${title}`;
-            }
-            return text;
-        },
-        'robot-summary-cancel': 'Cancel',
-        'robot-summary-description': 'Description',
-        'robot-summary-edit': 'Edit robot',
-        'robot-summary-name': 'Identifier',
-        'robot-summary-save': 'Save robot',
-        'robot-summary-title': 'Name',
 
         'role-list-new': 'New Role',
         'role-list-title': 'Roles',

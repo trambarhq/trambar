@@ -32,7 +32,6 @@ module.exports = Relaks.createClass({
             user: null,
             role: null,
             repo: null,
-            robot: null,
             server: null,
 
             disabled: this.props.disabled,
@@ -49,12 +48,6 @@ module.exports = Relaks.createClass({
             return Promise.each(objectTypes, (table) => {
                 var id = parseInt(params[table + 'Id']);
                 var schema = 'global';
-                if (table === 'robot') {
-                    if (!props.project) {
-                        return;
-                    }
-                    schema = props.project.name;
-                }
                 if (id) {
                     var criteria = { id };
                     return db.findOne({ schema, table, criteria }).then((object) => {
@@ -84,7 +77,6 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         user: PropTypes.object,
         role: PropTypes.object,
         repo: PropTypes.object,
-        robot: PropTypes.object,
         server: PropTypes.object,
 
         route: PropTypes.instanceOf(Route).isRequired,
@@ -107,7 +99,6 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             user: this.props.user || emptyObject,
             role: this.props.role || emptyObject,
             repo: this.props.repo || emptyObject,
-            robot: this.props.robot || emptyObject,
             server: this.props.server || emptyObject,
         };
     },
@@ -267,7 +258,6 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var children = [
             this.getMemberListNode(),
             this.getRepoListNode(),
-            this.getRobotListNode(),
         ];
         return { label, url, children, showChildren: (projectId !== 'new') };
     },
@@ -342,42 +332,6 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var label = p(repo.details.title) || repo.name || '-';
         var url = (projectId && repoId)
                 ? require('pages/repo-summary-page').getUrl({ projectId, repoId })
-                : null;
-        return { label, url };
-    },
-
-    /**
-     * Return nav node pointing to project robot list
-     *
-     * @return {Object}
-     */
-    getRobotListNode: function() {
-        var t = this.props.locale.translate;
-        var projectId = this.props.route.parameters.projectId;
-        var label = t('nav-robots');
-        var url = require('pages/robot-list-page').getUrl({ projectId });
-        var children = [
-            this.getRobotNode(),
-        ];
-        return { label, url, children };
-    },
-
-    /**
-     * Return nav node pointing to a robot
-     *
-     * @return {Object}
-     */
-    getRobotNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var robot = this.state.robot;
-        var robotId = this.props.route.parameters.robotId;
-        var projectId = this.props.route.parameters.projectId;
-        var label = (robotId === 'new')
-                  ? <i>{t('nav-robot-new')}</i>
-                  : p(robot.details.title) || robot.name || '-';
-        var url = (projectId && robotId)
-                ? require('pages/robot-summary-page').getUrl({ projectId, robotId })
                 : null;
         return { label, url };
     },

@@ -40,8 +40,6 @@ module.exports = function(languageCode) {
         'nav-projects': '項目',
         'nav-project-new': '新項目',
         'nav-repositories': '儲存庫',
-        'nav-robots': '機器人',
-        'nav-robot-new': '新機器人',
         'nav-roles': '角色',
         'nav-role-new': '新角色',
         'nav-servers': '服務器',

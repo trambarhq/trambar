@@ -25,8 +25,6 @@ var RoleListPage = require('pages/role-list-page');
 var RolePage = require('pages/role-summary-page');
 var RepoListPage = require('pages/repo-list-page');
 var RepoSummaryPage = require('pages/repo-summary-page');
-var RobotListPage = require('pages/robot-list-page');
-var RobotSummaryPage = require('pages/robot-summary-page');
 var ServerListPage = require('pages/server-list-page');
 var ServerSummaryPage = require('pages/server-summary-page');
 var SettingsPage = require('pages/settings-page');
@@ -46,8 +44,6 @@ var pageClasses = [
     RolePage,
     RepoListPage,
     RepoSummaryPage,
-    RobotListPage,
-    RobotSummaryPage,
     ServerListPage,
     ServerSummaryPage,
     SettingsPage,

@@ -50,8 +50,6 @@ module.exports = function(languageCode) {
         'nav-projects': 'Projekty',
         'nav-project-new': 'Nowy projekt',
         'nav-repositories': 'Katalogi',
-        'nav-robots': 'Roboty',
-        'nav-robot-new': 'Nowy robot',
         'nav-roles': 'Role',
         'nav-role-new': 'Nowa rola',
         'nav-servers': 'Serwery',
@@ -84,23 +82,6 @@ module.exports = function(languageCode) {
         'repo-list-issue-tracker-enabled-true': 'Włączony',
         'repo-list-save': 'Zapisz listę katalogów',
         'repo-list-title': 'Katalogi',
-
-        'robot-list-new': 'Nowy robot',
-        'robot-list-title': 'Roboty',
-
-        'robot-summary-$title': (title) => {
-            var text = `Robot`;
-            if (title) {
-                text += `: ${title}`;
-            }
-            return text;
-        },
-        'robot-summary-cancel': 'Anuluj',
-        'robot-summary-description': 'Opis',
-        'robot-summary-edit': 'Zmień robota',
-        'robot-summary-name': 'URL Slug',
-        'robot-summary-save': 'Zapisz robota',
-        'robot-summary-title': 'Nazwa',
 
         'role-list-new': 'Nowa rola',
         'role-list-title': 'Role',
