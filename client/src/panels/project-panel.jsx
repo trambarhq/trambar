@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var Relaks = require('relaks');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -14,10 +15,32 @@ var UpdateCheck = require('mixins/update-check');
 var SettingsSection = require('widgets/settings-section');
 var PushButton = require('widgets/push-button');
 
-require('./project-settings-editor.scss');
+require('./project-panel.scss');
 
-module.exports = React.createClass({
-    displayName: 'ProjectSettingsEditor',
+module.exports = Relaks.createClass({
+    displayName: 'ProjectPanel',
+    propTypes: {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    renderAsync: function(meanwhile) {
+        var props = {
+            projects: null,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <ProjectPanelSync {...props} />;
+    },
+});
+
+var ProjectPanelSync = module.exports.Sync = React.createClass({
+    displayName: 'ProjectPanel.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
         projects: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -31,7 +54,7 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection>
+            <SettingsSection className="project">
                 <header>
                     <i className="fa fa-database" /> {t('settings-projects')}
                 </header>
