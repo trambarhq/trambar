@@ -564,7 +564,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             this.props.onOAuthEnd({
                 type: 'oauthended',
                 target: this,
-            })
+            });
         }
     },
 
