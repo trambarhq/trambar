@@ -251,11 +251,20 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleTitleChange,
             readOnly,
         };
-        var domainNameProps = {
-            id: 'name',
-            value: system.domain_name,
+        var addressProps = {
+            id: 'address',
+            value: system.settings.address,
             locale: this.props.locale,
-            onChange: this.handleDomainNameChange,
+            placeholder: 'https://',
+            onChange: this.handleAddressChange,
+            readOnly,
+        };
+        var relayProps = {
+            id: 'relay',
+            value: system.settings.push_relay,
+            locale: this.props.locale,
+            placeholder: 'https://',
+            onChange: this.handlePushRelayChange,
             readOnly,
         };
         var descriptionProps = {
@@ -298,8 +307,9 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 <MultilingualTextField {...titleProps}>{t('settings-site-title')}</MultilingualTextField>
-                <TextField {...domainNameProps}>{t('settings-site-domain-name')}</TextField>
                 <MultilingualTextField {...descriptionProps}>{t('settings-site-description')}</MultilingualTextField>
+                <TextField {...addressProps}>{t('settings-site-address')}</TextField>
+                <TextField {...relayProps}>{t('settings-push-relay')}</TextField>
                 <ImageSelector {...backgroundImageProps}>{t('settings-background-image')}</ImageSelector>
                 <OptionList {...languageListProps}>
                     <label>{t('settings-input-languages')}</label>
@@ -388,12 +398,21 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user changes the domain name
+     * Called when user changes the system address
      *
      * @param  {Event} evt
      */
-    handleDomainNameChange: function(evt) {
-        this.setSystemProperty(`domain_name`, evt.target.value);
+    handleAddressChange: function(evt) {
+        this.setSystemProperty(`settings.address`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes the system address
+     *
+     * @param  {Event} evt
+     */
+    handlePushRelayChange: function(evt) {
+        this.setSystemProperty(`settings.push_relay`, evt.target.value);
     },
 
     /**
@@ -432,9 +451,20 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     },
 });
 
+// use timezone to determine default relay
+var defaultRelay;
+var tzOffset = (new Date()).getTimezoneOffset() / 60;
+if (-5 <= tzOffset && tzOffset <= 0) {
+    defaultRelay = 'eu-west-1.push.trambar.io';
+} else {
+    defaultRelay = 'us-east-1.push.trambar.io';
+}
+
 var emptySystem = {
     details: {},
-    settings: {},
+    settings: {
+        push_relay: defaultRelay,
+    },
 };
 
 function renderOption(props, i) {

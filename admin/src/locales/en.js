@@ -234,10 +234,11 @@ module.exports = function(languageCode) {
         'settings-cancel': 'Cancel',
         'settings-edit': 'Edit settings',
         'settings-input-languages': 'Input languages',
+        'settings-push-relay': 'Push relay',
         'settings-save': 'Save settings',
         'settings-site-title': 'Site name',
         'settings-site-description': 'Description',
-        'settings-site-domain-name': 'Domain name',
+        'settings-site-address': 'Address',
         'settings-title': 'Settings',
 
         'sign-in-$title': (title) => {
