@@ -39,9 +39,9 @@ module.exports = Relaks.createClass({
 
         getUrl: function(params) {
             var server = params.server;
-            var url = '/start/';
+            var url = `/start/`;
             if (server) {
-                url = '//${server}' + url;
+                url = `//${server}${url}`;
             }
             return url;
         },

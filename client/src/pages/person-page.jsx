@@ -45,7 +45,7 @@ module.exports = Relaks.createClass({
             var storyId = params.storyId;
             var url = `/${schema}/people/${role}/${user}/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             if (date) {
                 url += `${date}/`

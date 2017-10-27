@@ -34,7 +34,7 @@ module.exports = Relaks.createClass({
             var schema = params.schema;
             var url = `/${schema}/settings/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             return url;
         },

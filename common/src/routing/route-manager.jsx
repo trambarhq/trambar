@@ -171,11 +171,16 @@ module.exports = React.createClass({
         if (route) {
             this.setState(route, () => {
                 // set the browser location
-                var fullUrl = this.state.baseUrl + route.url;
-                if (replacing) {
-                    history.replaceState({}, '', fullUrl);
-                } else {
-                    history.pushState({}, '', fullUrl);
+                var protocol = window.location.protocol;
+                var host = window.location.host;
+                var baseUrl = this.state.baseUrl;
+                var fullUrl = `${protocol}//${host}${baseUrl}${route.url}`;
+                if (window.location.href !== fullUrl) {
+                    if (replacing) {
+                        history.replaceState({}, '', fullUrl);
+                    } else {
+                        history.pushState({}, '', fullUrl);
+                    }
                 }
                 this.triggerChangeEvent();
             });

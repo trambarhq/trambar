@@ -123,7 +123,14 @@ module.exports = {
     ],
     devServer: {
         inline: true,
-        historyApiFallback: true
+        historyApiFallback: {
+            rewrites: [
+                {
+                    from: /.*/,
+                    to: '/index.html' 
+                }
+            ]
+        }
     }
 };
 
