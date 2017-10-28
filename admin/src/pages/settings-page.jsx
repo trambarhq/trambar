@@ -118,7 +118,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     getSystem: function() {
         if (this.isEditing()) {
-            return this.state.newSystem || this.props.system || emptySystem;
+            return this.state.newSystem || this.props.system || defaultSystem;
         } else {
             return this.props.system || emptySystem;
         }
@@ -455,16 +455,22 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
 var defaultRelay;
 var tzOffset = (new Date()).getTimezoneOffset() / 60;
 if (-5 <= tzOffset && tzOffset <= 0) {
-    defaultRelay = 'eu-west-1.push.trambar.io';
+    defaultRelay = 'https://eu-west-1.push.trambar.io';
 } else {
-    defaultRelay = 'us-east-1.push.trambar.io';
+    defaultRelay = 'https://us-east-1.push.trambar.io';
 }
+
+var defaultSystem = {
+    details: {},
+    settings: {
+        address: window.location.protocol + '//' + window.location.host,
+        push_relay: defaultRelay,
+    }
+};
 
 var emptySystem = {
     details: {},
-    settings: {
-        push_relay: defaultRelay,
-    },
+    settings: {},
 };
 
 function renderOption(props, i) {
