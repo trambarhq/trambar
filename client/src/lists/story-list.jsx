@@ -369,9 +369,10 @@ var findReactions = Memoize(function(reactions, story) {
 
 var findAuthors = Memoize(function(users, story) {
     if (story) {
-        return _.map(story.user_ids, (userId) => {
-            return _.find(users, { id: userId });
-        });
+        var hash = _.keyBy(users, 'id');
+        return _.filter(_.map(story.user_ids, (userId) => {
+            return hash[userId];
+        }));
     } else {
         return [];
     }
@@ -379,9 +380,10 @@ var findAuthors = Memoize(function(users, story) {
 
 var findRespondents = Memoize(function(users, reactions) {
     var respondentIds = _.uniq(_.map(reactions, 'user_id'));
-    return _.map(respondentIds, (userId) => {
-        return _.find(users, { id: userId });
-    });
+    var hash = _.keyBy(users, 'id');
+    return _.filter(_.map(respondentIds, (userId) => {
+        return hash[userId];
+    }));
 });
 
 var findRecommendations = Memoize(function(recommendations, story) {

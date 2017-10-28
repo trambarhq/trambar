@@ -209,7 +209,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             if (userType === 'member') {
                 return ac.grant_team_members_read_only;
             } else if (userType === 'guest') {
-                if (currentUser.approved) {
+                if (this.props.currentUser.approved) {
                     return ac.grant_approved_guest_read_only;
                 } else {
                     return ac.grant_unapproved_guest_read_only;
