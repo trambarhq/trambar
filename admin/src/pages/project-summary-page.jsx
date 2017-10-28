@@ -169,6 +169,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 newProject.name = autoNameAfter;
             }
         }
+        if(_.size(newProject.name) > 128) {
+            newProject.name = newProject.name.substr(0, 128);
+        }
         var hasChanges = true;
         if (_.isEqual(newProject, this.props.project)) {
             newProject = null;

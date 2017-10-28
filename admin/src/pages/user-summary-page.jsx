@@ -213,6 +213,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 newUser.username = autoNameAfter;
             }
         }
+        if(_.size(newUser.username) > 128) {
+            newUser.username = newUser.username.substr(0, 128);
+        }
         var hasChanges = true;
         if (_.isEqual(newUser, this.props.user)) {
             newUser = null;

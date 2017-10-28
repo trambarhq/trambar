@@ -162,6 +162,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 newServer.name = autoNameAfter;
             }
         }
+        if(_.size(newServer.name) > 128) {
+            newServer.name = newServer.name.substr(0, 128);
+        }
         var hasChanges = true;
         if (_.isEqual(newServer, this.props.server)) {
             newServer = null;

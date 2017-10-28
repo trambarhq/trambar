@@ -151,6 +151,9 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 newRole.name = autoNameAfter;
             }
         }
+        if(_.size(newRole.name) > 128) {
+            newRole.name = newRole.name.substr(0, 128);
+        }
         var hasChanges = true;
         if (_.isEqual(newRole, this.props.role)) {
             newRole = null;
