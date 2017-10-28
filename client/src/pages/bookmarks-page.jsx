@@ -37,7 +37,7 @@ module.exports = Relaks.createClass({
             var roles = params.roles
             var url = `/${schema}/bookmarks/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             if (roles instanceof Array) {
                 roles = roles.join('+');

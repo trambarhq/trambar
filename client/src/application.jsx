@@ -347,7 +347,7 @@ module.exports = React.createClass({
     handleAuthorization: function(evt) {
         this.saveCredentialsToCache(evt.server, evt.credentials);
 
-        var server = this.state.route.server || window.location.hostname;
+        var server = this.state.route.parameters.server || window.location.hostname;
         if (server === evt.server) {
             // it's possible to access the server now
             // assume we can access the schema too
@@ -366,7 +366,7 @@ module.exports = React.createClass({
     handleExpiration: function(evt) {
         this.removeCredentialsFromCache(evt.server);
 
-        var server = this.state.route.server || window.location.hostname;
+        var server = this.state.route.parameters.server || window.location.hostname;
         if (evt.server === server) {
             this.setState({
                 canAccessServer: false,
@@ -381,7 +381,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleViolation: function(evt) {
-        var server = this.state.route.server || window.location.hostname;
+        var server = this.state.route.parameters.server || window.location.hostname;
         var schema = this.state.route.parameters.schema;
         if (evt.server === server && evt.schema === schema) {
             this.setState({

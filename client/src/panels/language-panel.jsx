@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var Relaks = require('relaks');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -14,10 +15,30 @@ var UpdateCheck = require('mixins/update-check');
 var SettingsSection = require('widgets/settings-section');
 var OptionButton = require('widgets/option-button');
 
-require('./language-settings-editor.scss');
+require('./language-panel.scss');
 
-module.exports = React.createClass({
-    displayName: 'LanguageSettingsEditor',
+module.exports = Relaks.createClass({
+    displayName: 'LanguagePanel',
+    propTypes: {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    renderAsync: function(meanwhile) {
+        var props = {
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <LanguagePanelSync {...props} />;
+    },
+});
+
+var LanguagePanelSync = module.exports.Sync = React.createClass({
+    displayName: 'LanguagePanel.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
@@ -39,7 +60,7 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="language-settings-editor">
+            <SettingsSection className="language">
                 <header>
                     <i className="fa fa-language" /> {t('settings-language')}
                 </header>

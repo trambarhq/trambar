@@ -37,7 +37,7 @@ module.exports = Relaks.createClass({
             var search = params.search;
             var url = `/${schema}/people/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             if (roles instanceof Array) {
                 roles = roles.join('+');

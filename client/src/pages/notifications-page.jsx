@@ -37,7 +37,7 @@ module.exports = Relaks.createClass({
             var search = params.search;
             var url = `/${schema}/notifications/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             if (date) {
                 url += `${date}/`;

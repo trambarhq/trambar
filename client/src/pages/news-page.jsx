@@ -46,7 +46,7 @@ module.exports = Relaks.createClass({
             var storyId = params.storyId;
             var url = `/${schema}/news/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             if (roles instanceof Array) {
                 roles = roles.join('+');

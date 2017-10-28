@@ -149,9 +149,12 @@ module.exports = React.createClass({
     /**
      * Render a placeholder, with messages fading in and out
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderPlaceholder: function() {
+        if (this.props.theme.mode === 'columns-1') {
+            return null;
+        }
         var t = this.props.locale.translate;
         var phraseIds = [
             'story-drop-files-here',

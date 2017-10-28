@@ -1,20 +1,20 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
+var Masonry = require('react-masonry-component');
 
 var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var ProjectSettingsEditor = require('editors/project-settings-editor');
-var UserProfileEditor = require('editors/user-profile-editor');
-var NotificationPreferencesEditor = require('editors/notification-preferences-editor');
-var LanguageSettingsEditor = require('editors/language-settings-editor');
+var ProjectPanel = require('panels/project-panel');
+var UserPanel = require('panels/user-panel');
+var NotificationPanel = require('panels/notification-panel');
+var LanguagePanel = require('panels/language-panel');
 
 require('./settings-page.scss');
 
-module.exports = Relaks.createClass({
+module.exports = React.createClass({
     displayName: 'SettingsPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
@@ -34,7 +34,7 @@ module.exports = Relaks.createClass({
             var schema = params.schema;
             var url = `/${schema}/settings/`;
             if (server) {
-                url = `//${server}` + url;
+                url = `//${server}${url}`;
             }
             return url;
         },
@@ -47,45 +47,19 @@ module.exports = Relaks.createClass({
         },
     },
 
-    renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
-        var props = {
-            project: null,
-            currentUser: null,
-            stories: null,
-            reactions: null,
-            users: null,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        meanwhile.show(<SettingsPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            return <SettingsPageSync {...props} />;
-        });
-    }
-});
-
-var SettingsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'SettingsPage.Sync',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
     render: function() {
+        var props = this.props;
+        var masonryOptions = {
+            transitionDuration: 0
+        };
         return (
             <div className="settings-page">
-                {this.renderProjects()}
-                {this.renderUserProfile()}
-                {this.renderNotificationPreferences()}
-                {this.renderLanguages()}
+                <Masonry options={masonryOptions}>
+                    <ProjectPanel {...props} />
+                    <UserPanel {...props} />
+                    <NotificationPanel {...props} />
+                    <LanguagePanel {...props} />
+                </Masonry>
             </div>
         );
     },
