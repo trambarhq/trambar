@@ -31,15 +31,15 @@ module.exports = {
         // allow non-alphanumeric schema name during testing
         if (!process.env.DOCKER_MOCHA) {
             if (!/^[\w\-]+$/.test(schema)) {
-                throw new Error('Invalid name: ' + schema);
+                throw new Error(`Invalid name: "${schema}"`);
             }
         }
         if (this.schema !== 'both') {
             if (this.schema === 'global' && schema !== 'global') {
-                throw new Error('Referencing global table in project-specific schema: ' + this.table);
+                throw new Error(`Referencing global table "${this.table}" in project-specific schema "${schema}"`);
             }
             if (this.schema === 'project' && schema === 'global') {
-                throw new Error('Referencing project-specific table in global schema: ' + this.table);
+                throw new Error(`Referencing project-specific "${this.table}" table in global schema`);
             }
         }
         return `"${schema}"."${this.table}"`;
@@ -87,6 +87,18 @@ module.exports = {
     },
 
     /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return Promise.resolve(false);
+    },
+
+    /**
      * Attach a trigger to the table that increment the gn (generation number)
      * when a row is updated. Also add triggers that send notification messages.
      *
@@ -95,35 +107,64 @@ module.exports = {
      *
      * @return {Promise<Boolean>}
      */
-    watch: function(db, schema) {
+    createChangeTrigger: function(db, schema) {
         var table = this.getTableName(schema);
-        var sql = [
-            `
-                CREATE TRIGGER "indicateDataChangeOnUpdate"
-                BEFORE UPDATE ON ${table}
-                FOR EACH ROW
-                EXECUTE PROCEDURE "indicateDataChange"();
-            `,
-            `
-                CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
-                AFTER INSERT ON ${table} INITIALLY DEFERRED
-                FOR EACH ROW
-                EXECUTE PROCEDURE "notifyDataChange"();
-            `,
-            `
-                CREATE CONSTRAINT TRIGGER "notifyDataChangeOnUpdate"
-                AFTER UPDATE ON ${table} INITIALLY DEFERRED
-                FOR EACH ROW
-                EXECUTE PROCEDURE "notifyDataChange"();
-            `,
-            `
-                CREATE CONSTRAINT TRIGGER "notifyDataChangeOnDelete"
-                AFTER DELETE ON ${table} INITIALLY DEFERRED
-                FOR EACH ROW
-                EXECUTE PROCEDURE "notifyDataChange"();
-            `,
-        ];
-        return db.execute(sql.join('\n')).return(true);
+        var sql = `
+            CREATE TRIGGER "indicateDataChangeOnUpdate"
+            BEFORE UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "indicateDataChange"();
+        `;
+        return db.execute(sql).return(true);
+    },
+
+    /**
+     * Add triggers that send notification messages, bundled with values of
+     * the specified properties.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<String>} propNames
+     *
+     * @return {Promise<Boolean>}
+     */
+    createNotificationTriggers: function(db, schema, propNames) {
+        var table = this.getTableName(schema);
+        var args = _.map(propNames, (propName) => {
+            // use quotes just in case the name is mixed case
+            return `"${propName}"`;
+        }).join(', ');
+        var sql = `
+            CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
+            AFTER INSERT ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyDataChange"(${args});
+            CREATE CONSTRAINT TRIGGER "notifyDataChangeOnUpdate"
+            AFTER UPDATE ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyDataChange"(${args});
+            CREATE CONSTRAINT TRIGGER "notifyDataChangeOnDelete"
+            AFTER DELETE ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyDataChange"(${args});
+        `;
+        return db.execute(sql).return(true);
+    },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (subscription.schema === '*' || subscription.schema === event.schema) {
+            return true;
+        }
+        return false;
     },
 
     /**
@@ -483,7 +524,7 @@ module.exports = {
      *
      * @return {Promise<Array>}
      */
-     filter: function(db, schema, rows, credentials) {
+    filter: function(db, schema, rows, credentials) {
         return Promise.resolve(rows);
     },
 
@@ -771,6 +812,49 @@ module.exports = {
             `
         ];
         return db.execute(sql.join('\n')).return(true);
+    },
+
+    /**
+     * Find matching rows, retrieving from earlier searches if possible
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     * @param  {String} columns
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    findCached: function(db, schema, criteria, columns) {
+        var matchingSearch = _.find(this.cachedSearches, { schema, criteria, columns });
+        if (matchingSearch) {
+            // remove old ones
+            var time = new Date;
+            _.remove(this.cachedSearches, (search) => {
+                var elapsed = time - search.time;
+                if (elapsed > 5 * 60 * 1000) {
+                    return true;
+                }
+            });
+            return Promise.resolve(matchingSearch.results);
+        } else {
+            return this.find(db, schema, criteria, columns).then((results) => {
+                var time = new Date;
+                if (!this.cachedSearches) {
+                    this.cachedSearches = [];
+                }
+                this.cachedSearches.push({ schema, criteria, columns, time, results });
+                return results;
+            });
+        }
+    },
+
+    /**
+     * Clear cache in response to change events
+     *
+     * @param  {Array<Object>} events
+     */
+    clearCache: function(events) {
+        this.cachedSearches = null;
     },
 };
 

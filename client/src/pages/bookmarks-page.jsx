@@ -24,34 +24,23 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('/:schema/bookmarks/?', url)
-                || Route.match('/:schema/bookmarks/:roles/?', url)
-                || Route.match('//:server/:schema/bookmarks/?', url)
-                || Route.match('//:server/:schema/bookmarks/:roles/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/:schema/bookmarks/?',
+            ], (params) => {
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var schema = params.schema;
-            var roles = params.roles
-            var url = `/${schema}/bookmarks/`;
-            if (server) {
-                url = `//${server}${url}`;
-            }
-            if (roles instanceof Array) {
-                roles = roles.join('+');
-            }
-            if (roles && roles !== 'all') {
-                url += `${roles}/`;
-            }
-            return url;
+            var path = `/${params.schema}/bookmarks/`, query, hash;
+            return { path, query, hash };
         },
 
         navigation: {
             top: {
                 dateSelection: false,
-                roleSelection: true,
+                roleSelection: false,
                 textSearch: false,
             },
             bottom: {
@@ -68,11 +57,8 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             bookmarks: null,
             currentUserId: null,
@@ -89,13 +75,14 @@ module.exports = Relaks.createClass({
             var criteria = {};
             criteria.id = userId;
             return db.findOne({ schema: 'global', table: 'user', criteria });
-        }).then((currentUser) => {
-            props.currentUser = currentUser;
+        }).then((user) => {
+            props.currentUser = user;
             meanwhile.check();
         }).then(() => {
             // load boomarks
-            var criteria = {};
-            criteria.target_user_id = _.get(props.currentUser, 'id', 0);
+            var criteria = {
+                target_user_id: props.currentUser.id
+            };
             return db.find({ table: 'bookmark', criteria });
         }).then((bookmarks) => {
             props.bookmarks = bookmarks;

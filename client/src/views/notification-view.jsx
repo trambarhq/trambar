@@ -37,8 +37,7 @@ module.exports = React.createClass({
     render: function() {
         var props = {
             className: `notification-view ${this.props.theme.mode}`,
-            url: require('pages/news-page').getUrl({
-                server: this.props.route.parameters.server,
+            url: this.props.route.find(require('pages/news-page'), {
                 schema: this.props.route.parameters.schema,
                 storyId: this.props.reaction.story_id
             }),

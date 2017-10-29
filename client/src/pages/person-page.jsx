@@ -28,36 +28,35 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('//:server/:schema/people/:role/:user/?', url)
-                || Route.match('//:server/:schema/people/:role/:user/:date/?', url)
-                || Route.match('/:schema/people/:role/:user/?', url)
-                || Route.match('/:schema/people/:role/:user/:date/?', url)
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/:schema/people/:role/:user/:date/?',
+                '/:schema/people/:role/:user/?',
+            ], (params) => {
+                params.user = parseInt(params.user);
+                params.story = (hash) ? parseInt(_.replace(hash, /\D/g, '')) : undefined
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var schema = params.schema;
-            var role = params.role || 'all';
-            var user = params.user;
-            var date = params.date;
-            var search = params.search;
-            var storyId = params.storyId;
-            var url = `/${schema}/people/${role}/${user}/`;
-            if (server) {
-                url = `//${server}${url}`;
+            var path = `/${params.schema}/people/`, query, hash;
+            if (!_.isEmpty(params.roles)) {
+                path += `${params.roles.join('+')}/`;
+            } else {
+                path += `all/`;
             }
-            if (date) {
-                url += `${date}/`
+            path += `${params.user}/`;
+            if (params.date) {
+                path += `${params.date}/`
             }
-            if (search) {
-                search = _.replace(encodeURIComponent(search), /%20/g, '+');
-                url += `?search=${search}`;
+            if (params.search) {
+                query = { search: params.search };
             }
-            if (storyId) {
-                url += `#story-${storyId}`;
+            if (params.story) {
+                hash = `#story-${params.story}`;
             }
-            return url;
+            return { path, query, hash };
         },
 
         navigation: {
@@ -73,13 +72,8 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var date = route.parameters.date;
-        var userId = parseInt(route.parameters.user);
-        var searchString = route.query.search;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             stories: null,
             currentUser: null,
@@ -93,30 +87,29 @@ module.exports = Relaks.createClass({
         meanwhile.show(<PersonPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
-            var criteria = {};
-            criteria.id = userId;
+            var criteria = { id: userId };
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.currentUser = user;
             meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
-            if (date || searchString) {
+            if (params.date || params.search) {
                 // load story matching filters
                 var criteria = {
-                    user_ids: [ userId ],
+                    user_ids: [ params.user ],
                 };
-                if (date) {
-                    var s = Moment(date);
+                if (params.date) {
+                    var s = Moment(params.date);
                     var e = s.clone().endOf('day');
                     var rangeStart = s.toISOString();
                     var rangeEnd = e.toISOString();
                     var range = `[${rangeStart},${rangeEnd}]`;
                     criteria.time_range = range;
                 }
-                if (searchString) {
+                if (params.search) {
                     criteria.search = {
                         lang: this.props.locale.lang,
-                        text: searchString,
+                        text: params.search,
                     };
                     criteria.limit = 100;
                 } else {
@@ -129,7 +122,7 @@ module.exports = Relaks.createClass({
                     type: 'news',
                     target_user_id: props.currentUser.id,
                     filters: {
-                        user_ids: [ userId ]
+                        user_ids: [ params.user ]
                     },
                 };
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
@@ -140,25 +133,20 @@ module.exports = Relaks.createClass({
                     criteria.id = listing.story_ids;
                     return db.find({ table: 'story', criteria });
                 }).then((stories) => {
-                    var storyId = parseInt(_.replace(this.props.route.hash, /\D/g, ''));
-                    if (storyId) {
+                    if (params.story) {
                         // see if the story is in the list
-                        if (!_.find(stories, { id: storyId })) {
+                        if (!_.find(stories, { id: params.story })) {
                             // redirect to page showing stories on the date
                             // of the story; to do that, we need the object
                             // itself
-                            var criteria = { id: storyId };
+                            var criteria = { id: params.story };
                             return db.findOne({ table: 'story', criteria }).then((story) => {
                                 if (story) {
-                                    var date = Moment(story.ptime).format('YYYY-MM-DD');
-                                    var url = require('pages/person-page').getUrl({
-                                        server,
-                                        schema,
-                                        user: userId,
-                                        date,
-                                        storyId
-                                    });
-                                    return this.props.route.change(url, true).return([]);
+                                    return this.props.route.redirect(require('pages/person-page'), {
+                                        date: Moment(story.ptime).format('YYYY-MM-DD'),
+                                        user: params.user,
+                                        story: params.story
+                                    }).return([]);
                                 }
                                 return stories;
                             });

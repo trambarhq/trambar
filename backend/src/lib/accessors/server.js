@@ -41,7 +41,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                name varchar(64) NOT NULL DEFAULT '',
+                name varchar(128) NOT NULL DEFAULT '',
                 type varchar(64),
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
@@ -66,6 +66,25 @@ module.exports = _.create(Data, {
             GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
         `;
         return db.execute(sql).return(true);
+    },
+
+    /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'type' ];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                // completion of tasks will automatically update details->resources
+                var Task = require('accessors/task');
+                return Task.createUpdateTrigger(db, schema, 'updateServer', 'updateResource', [ this.table ]);
+            });
+        });
     },
 
     /**

@@ -34,12 +34,22 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/servers/:serverId/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/servers/:server/?'
+            ], (params) => {
+                if (params.server !== 'new') {
+                    params.server = parseInt(params.server);
+                }
+                params.edit = !!query.edit;
+                return params;
+            });
         },
 
         /**
@@ -47,14 +57,14 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url = `/servers/${params.serverId}/`;
+            var path = `/servers/${params.server}/`, query, hash;
             if (params.edit) {
-                url += `?edit=1`;
+                query = { edit: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -66,6 +76,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
@@ -77,16 +88,16 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
         }).then((system) => {
             props.system = system;
         }).then(() => {
-            var criteria = {
-                id: parseInt(this.props.route.parameters.serverId)
-            };
-            return db.findOne({ table: 'server', criteria });
+            if (params.server !== 'new') {
+                var criteria = { id: params.server };
+                return db.findOne({ table: 'server', criteria });
+            }
         }).then((server) => {
             props.server = server;
             return <ServerSummaryPageSync {...props} />;
@@ -204,16 +215,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return problems;
     },
 
-
-    /**
-     * Return server id specified in URL
-     *
-     * @return {Number}
-     */
-    getServerId: function() {
-        return parseInt(this.props.route.parameters.serverId);
-    },
-
     /**
      * Return true when the URL indicate we're creating a new user
      *
@@ -223,7 +224,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isCreating: function(props) {
         props = props || this.props;
-        return (props.route.parameters.serverId === 'new');
+        return (props.route.parameters.server === 'new');
     },
 
     /**
@@ -235,7 +236,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return this.isCreating(props) || !!parseInt(props.route.query.edit);
+        return this.isCreating(props) || props.route.query.edit;
     },
 
     /**
@@ -247,12 +248,19 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit, newServer) {
-        var serverId = (newServer) ? newServer.id : this.getServerId();
-        var url = (serverId)
-                ? require('pages/server-summary-page').getUrl({ serverId, edit })
-                : require('pages/server-list-page').getUrl();
-        var replace = (serverId) ? true : false;
-        return this.props.route.change(url, replace);
+        var route = this.props.route;
+        if (this.isCreating() && !edit && !newServer) {
+            // return to list when cancelling server creation
+            return route.push(require('pages/server-list-page'));
+        } else {
+            var params = _.clone(route.parameters);
+            params.edit = edit;
+            if (newServer) {
+                // use id of newly created server
+                params.server = newServer.id;
+            }
+            return route.replace(module.exports, params);
+        }
     },
 
     /**

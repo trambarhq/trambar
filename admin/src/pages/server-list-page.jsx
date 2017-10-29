@@ -30,12 +30,18 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/servers/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/servers/?'
+            ], (params) => {
+                return params;
+            });
         },
 
         /**
@@ -43,10 +49,11 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            return `/servers/`;
+            var path = `/servers/`, query, hash;
+            return { path, query, hash };
         },
     },
 
@@ -69,7 +76,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<ServerListPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load all servers
             var criteria = {};
             return db.find({ table: 'server', criteria });
@@ -239,9 +246,9 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(server.details.title) || t(`server-type-${server.type}`);
-            var url = require('pages/server-summary-page').getUrl({
-                serverId: server.id
-            });
+            var route = this.props.route;
+            var params = { server: server.id };
+            var url = route.find(require('pages/server-summary-page'), params);
             var icon = getServerIcon(server.type);
             return (
                 <td>
@@ -376,10 +383,10 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleAddClick: function(evt) {
-        var url = require('pages/server-summary-page').getUrl({
-            serverId: 'new'
+        var route = this.props.route;
+        return route.push(require('pages/server-summary-page'), {
+            server: 'new'
         });
-        return this.props.route.change(url);
     },
 });
 

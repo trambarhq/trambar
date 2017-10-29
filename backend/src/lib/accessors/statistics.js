@@ -63,6 +63,21 @@ module.exports = _.create(LiveData, {
     },
 
     /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'dirty', 'type' ];
+            return this.createNotificationTriggers(db, schema, propNames);
+        });
+    },
+
+    /**
      * Add conditions to SQL query based on criteria object
      *
      * @param  {Object} criteria

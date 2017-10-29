@@ -88,8 +88,7 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Attach triggers to this table, also add trigger on task so details
-     * are updated when tasks complete
+     * Attach triggers to the table.
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -97,10 +96,13 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     watch: function(db, schema) {
-        return Data.watch.call(this, db, schema).then(() => {
-            this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'approved' ];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+                    var Task = require('accessors/task');
+                    return Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
+                });
             });
         });
     },

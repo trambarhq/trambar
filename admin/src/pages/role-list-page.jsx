@@ -29,12 +29,18 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/roles/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/roles/?',
+            ], (params) => {
+                return params;
+            });
         },
 
         /**
@@ -45,7 +51,8 @@ module.exports = Relaks.createClass({
          * @return {String}
          */
         getUrl: function(params) {
-            return `/roles/`;
+            var path = `/roles/`, query, hash;
+            return { path, query, hash };
         },
     },
 
@@ -68,7 +75,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RoleListPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load all roles
             var criteria = {};
             return db.find({ table: 'role', criteria });
@@ -231,10 +238,9 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(role.details.title) || '-';
-            var url = require('pages/role-summary-page').getUrl({
-                projectId: this.props.route.parameters.projectId,
-                roleId: role.id
-            });
+            var route = this.props.route;
+            var params = { role: role.id };
+            var url = route.find(require('pages/role-summary-page'), params);
             return (
                 <td>
                     <a href={url}>
@@ -310,12 +316,10 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleAddClick: function(evt) {
-        var url = require('pages/role-summary-page').getUrl({
-            roleId: 'new'
-        });
-        return this.props.route.change(url);
+        var route = this.props.route;
+        var params = { role: 'new' };
+        return route.push(require('pages/role-summary-page'), params);
     },
-
 });
 
 var sortRoles = Memoize(function(roles, users, locale, columns, directions) {

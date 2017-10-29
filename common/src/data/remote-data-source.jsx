@@ -6,36 +6,14 @@ var Moment = require('moment');
 var HttpRequest = require('transport/http-request');
 var HttpError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
-var Locale = require('locale/locale');
-
-var IndexedDBCache = require('data/indexed-db-cache');
-var SQLiteCache = require('data/sqlite-cache');
-var LocalStorageCache = require('data/local-storage-cache');
-var LocalCache;
-if (IndexedDBCache.isAvailable()) {
-    LocalCache = IndexedDBCache;
-} else if (SQLiteCache.isAvailable()) {
-    LocalCache = SQLiteCache;
-} else if (LocalStorageCache.isAvailable()) {
-    LocalCache = LocalStorageCache;
-}
-
-var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
-var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;
-var Notifier = WebsocketNotifier || PushNotifier;
-
-var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     propTypes: {
         refreshInterval: PropTypes.number,
-        cacheName: PropTypes.string.isRequired,
-        urlPrefix: PropTypes.string,
+        basePath: PropTypes.string,
         retrievalFlags: PropTypes.object,
-        defaultProfileImage: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale),
+        cache: PropTypes.object,
 
         onChange: PropTypes.func,
         onAuthorization: PropTypes.func,
@@ -43,10 +21,6 @@ module.exports = React.createClass({
         onViolation: PropTypes.func,
         onAlertClick: PropTypes.func,
     },
-    components: ComponentRefs({
-        cache: LocalCache,
-        notifier: Notifier,
-    }),
 
     /**
      * Return default props
@@ -56,7 +30,7 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             refreshInterval: 15 * 60,   // 15 minutes
-            urlPrefix: '',
+            basePath: '',
         };
     },
 
@@ -73,6 +47,10 @@ module.exports = React.createClass({
         };
     },
 
+    getServerAddress: function(location) {
+        return location.address;
+    },
+
     /**
      * Create a login session and retrieve information about the remote server,
      * including a list of OAuth providers
@@ -83,11 +61,10 @@ module.exports = React.createClass({
      * @return {Promise<Object>}
      */
     beginAuthorization: function(location, area) {
-        var session = getSession(location.server);
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
         if (!session.authorizationPromise) {
-            var server = location.server;
-            var protocol = location.protocol;
-            var url = `${protocol}//${server}/auth/session`;
+            var url = `${address}/auth/session`;
             var options = { responseType: 'json', contentType: 'json' };
             session.authorizationPromise = HttpRequest.fetch('POST', url, { area }, options).then((res) => {
                 session.authentication = res.authentication;
@@ -114,17 +91,19 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     checkAuthorizationStatus: function(location) {
-        var session = getSession(location.server);
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
+        if (!session.authentication) {
+            return Promise.resolve(false);
+        }
         var token = session.authentication.token;
-        var server = location.server;
-        var protocol = location.protocol;
-        var url = `${protocol}//${server}/auth/session/${token}`;
+        var url = `${address}/auth/session/${token}`;
         var options = { responseType: 'json' };
         return HttpRequest.fetch('GET', url, {}, options).then((res) => {
             var authorization = res.authorization;
             if (authorization) {
                 session.authorization = authorization;
-                this.triggerAuthorizationEvent(server, authorization);
+                this.triggerAuthorizationEvent(address, authorization);
                 return true;
             } else {
                 return false;
@@ -146,18 +125,20 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     submitPassword: function(location, username, password) {
-        var session = getSession(location.server);
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
+        if (!session.authentication) {
+            return Promise.resolve(false);
+        }
         var token = session.authentication.token;
-        var server = location.server;
-        var protocol = location.protocol;
-        var url = `${protocol}//${server}/auth/htpasswd`;
+        var url = `${address}/auth/htpasswd`;
         var payload = { token, username, password };
         var options = { responseType: 'json', contentType: 'json' };
         return HttpRequest.fetch('POST', url, payload, options).then((res) => {
             var authorization = res.authorization;
             if (authorization) {
                 session.authorization = authorization;
-                this.triggerAuthorizationEvent(server, authorization);
+                this.triggerAuthorizationEvent(address, authorization);
                 return true;
             } else {
                 return false;
@@ -177,18 +158,20 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     endAuthorization: function(location) {
-        var session = getSession(location.server);
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
+        if (!session.authorization) {
+            return Promise.resolve(false);
+        }
         var token = session.authorization.token;
-        var server = location.server;
-        var protocol = location.protocol;
-        var url = `${protocol}//${server}/auth/session/${token}/end`;
+        var url = `${address}/auth/session/${token}/end`;
         var options = { responseType: 'json', contentType: 'json' };
         return HttpRequest.fetch('POST', url, {}, options).then(() => {
             session.authentication = null;
             session.authorizationPromise = null;
             session.authorization = null;
             this.cleanCachedObjects(location);
-            this.triggerExpirationEvent(server);
+            this.triggerExpirationEvent(address);
             return true;
         });
     },
@@ -202,24 +185,27 @@ module.exports = React.createClass({
      * @return {String}
      */
     getActivationUrl: function(location, oauthServer) {
-        var session = getSession(location.server);
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
+        if (!session.authorization) {
+            return '';
+        }
         var token = session.authorization.token;
-        var server = location.server;
-        var protocol = location.protocol;
         var query = `activation=1&sid=${oauthServer.id}&token=${token}`;
-        var url = `${protocol}//${server}/auth/${oauthServer.type}?${query}`;
+        var url = `${address}/auth/${oauthServer.type}?${query}`;
         return url;
     },
 
     /**
      * Return true if the current user has access to the specified server
      *
-     * @param  {String} server
+     * @param  {Object} location
      *
      * @return {Boolean}
      */
-    hasAuthorization: function(server) {
-        var session = getSession(server);
+    hasAuthorization: function(location) {
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
         if (session.authorization) {
             return true;
         } else {
@@ -230,11 +216,12 @@ module.exports = React.createClass({
     /**
      * Add authorization info that was retrieved earlier
      *
-     * @param  {String} server
+     * @param  {Object} location
      * @param  {Object} authorization
      */
-    addAuthorization: function(server, authorization) {
-        var session = getSession(server);
+    addAuthorization: function(location, authorization) {
+        var address = this.getServerAddress(location);
+        var session = getSession(address);
         session.authorization = authorization;
     },
 
@@ -252,17 +239,9 @@ module.exports = React.createClass({
             if (location.schema === 'local') {
                 return 0;
             }
-            var session = getSession(location.server);
+            var address = this.getServerAddress(location);
+            var session = getSession(address);
             if (session.authorization) {
-                var notifier = this.components.notifier;
-                if (notifier) {
-                    var protocol = location.protocol;
-                    var server = location.server;
-                    var token = session.authorization.token;
-                    notifier.connect(protocol, server, token).catch((err) => {
-                        console.error(`Unable to establish WebSocket connection: ${server}`);
-                    });
-                }
                 return session.authorization.user_id;
             } else {
                 throw new HttpError(401);
@@ -453,6 +432,58 @@ module.exports = React.createClass({
     },
 
     /**
+     * Invalidate queries based on changes
+     *
+     * @param  {String} address
+     * @param  {Object} changes
+     *
+     * @return {Boolean}
+     */
+    invalidate: function(address, changes) {
+        var changed = false;
+        _.forIn(changes, (idList, name) => {
+            var parts = _.split(name, '.');
+            var location = {
+                address: address,
+                schema: parts[0],
+                table: parts[1]
+            };
+            var relevantSearches = this.getRelevantRecentSearches(location);
+            _.each(relevantSearches, (search) => {
+                var dirty = false;
+                var expectedCount = getExpectedObjectCount(search);
+                if (expectedCount === search.results.length) {
+                    // see if the ids show up in the results
+                    _.each(idList, (id) => {
+                        var index = _.sortedIndexBy(search.results, { id }, 'id');
+                        var object = search.results[index];
+                        if (object && object.id === id) {
+                            dirty = true;
+                            return false;
+                        }
+                    });
+                } else {
+                    // we can't tell if new objects won't suddenly show up
+                    // in the search results
+                    dirty = true;
+                }
+                if (dirty) {
+                    search.dirty = true;
+                    changed = true;
+                }
+            });
+        });
+        if (changed) {
+            // tell data consuming components to rerun their queries
+            // initially, they'd all get the data they had before
+            // another change event will occur if new objects are
+            // actually retrieved from the remote server
+            this.triggerChangeEvent();
+        }
+        return changed;
+    },
+
+    /**
      * Inform parent component that database queries could yield new results
      */
     triggerChangeEvent: function() {
@@ -467,15 +498,15 @@ module.exports = React.createClass({
     /**
      * Trigger the onAuthorization handler so user credentials can be saved
      *
-     * @param  {String} server
+     * @param  {String} address
      * @param  {Object} credentials
      */
-    triggerAuthorizationEvent: function(server, credentials) {
+    triggerAuthorizationEvent: function(address, credentials) {
         if (this.props.onAuthorization) {
             return this.props.onAuthorization({
                 type: 'authorization',
                 target: this,
-                server,
+                address,
                 credentials,
             });
         }
@@ -484,14 +515,14 @@ module.exports = React.createClass({
     /**
      * Inform parent component that saved credentials are no longer valid
      *
-     * @param  {String} server
+     * @param  {String} address
      */
-    triggerExpirationEvent: function(server) {
+    triggerExpirationEvent: function(address) {
         if (this.props.onExpiration) {
             return this.props.onExpiration({
                 type: 'expiration',
                 target: this,
-                server,
+                address,
             });
         }
     },
@@ -499,15 +530,15 @@ module.exports = React.createClass({
     /**
      * Inform parent component that an access violation has occurred
      *
-     * @param  {String} server
+     * @param  {String} address
      * @param  {String} schema
      */
-    triggerViolationEvent: function(server, schema) {
+    triggerViolationEvent: function(address, schema) {
         if (this.props.onViolation) {
             return this.props.onViolation({
                 type: 'violation',
                 target: this,
-                server,
+                address,
                 schema,
             });
         }
@@ -651,15 +682,22 @@ module.exports = React.createClass({
      * @return {Prmise}
      */
     performRemoteAction: function(location, action, payload) {
-        var server = location.server;
-        var protocol = location.protocol;
-        var prefix = this.props.urlPrefix;
+        var address = this.getServerAddress(location);
+        var prefix = this.props.basePath;
         var schema = location.schema;
         var table = location.table;
-        var url = `${protocol}//${server}${prefix}/data/${action}/${schema}/${table}/`;
-        var session = getSession(location.server);
-        payload = _.clone(payload);
-        payload.token = session.authorization.token;
+        if (!schema) {
+            return Promise.reject(new Error('No schema specified'));
+        }
+        if (!table) {
+            return Promise.reject(new Error('No table specified'));
+        }
+        var url = `${address}${prefix}/data/${action}/${schema}/${table}/`;
+        var session = getSession(address);
+        payload = _.clone(payload) || {};
+        if (session.authorization) {
+            payload.token = session.authorization.token;
+        }
         if (action === 'retrieval' || action === 'storage') {
             _.assign(payload, this.props.retrievalFlags);
         }
@@ -671,13 +709,13 @@ module.exports = React.createClass({
             return result;
         }).catch((err) => {
             if (err.statusCode === 401) {
-                clearSession(location.server);
+                clearSession(address);
                 this.cleanCachedObjects(location);
-                this.triggerExpirationEvent(location.server);
+                this.triggerExpirationEvent(address);
                 this.triggerChangeEvent();
             } else if (err.statusCode == 403) {
                 this.cleanCachedObjects(location);
-                this.triggerViolationEvent(location.server, location.schema);
+                this.triggerViolationEvent(address, schema);
                 this.triggerChangeEvent();
             }
             throw err;
@@ -693,9 +731,9 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     storeLocalObjects: function(location, objects) {
-        var cache = this.components.cache;
+        var cache = this.props.cache;
         if (!cache) {
-            throw new Error('No local cache');
+            return Promise.reject(new Error('No local cache'));
         }
         return cache.save(location, objects);
     },
@@ -709,22 +747,22 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     removeLocalObjects: function(location, objects) {
-        var cache = this.components.cache;
+        var cache = this.props.cache;
         if (!cache) {
-            throw new Error('No local cache');
+            return Promise.reject(new Error('No local cache'))
         }
         return cache.remove(location, objects);
     },
 
     /**
-     * Search locale cache
+     * Search local cache
      *
      * @param  {Object} search
      *
      * @return {Promise<Array<Object>>}
      */
     searchLocalCache: function(search) {
-        var cache = this.components.cache;
+        var cache = this.props.cache;
         if (!cache) {
             return false;
         }
@@ -747,7 +785,7 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     updateCachedObjects: function(location, objects) {
-        var cache = this.components.cache;
+        var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(false);
         }
@@ -768,7 +806,7 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     removeCachedObjects: function(location, objects) {
-        var cache = this.components.cache;
+        var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(false);
         }
@@ -788,11 +826,11 @@ module.exports = React.createClass({
      * @return {Promise<Number>}
      */
     cleanCachedObjects: function(location) {
-        var cache = this.components.cache;
+        var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(0);
         }
-        return cache.clean({ server: location.server });
+        return cache.clean({ address: location.address });
     },
 
     /**
@@ -885,8 +923,8 @@ module.exports = React.createClass({
         this.sessionCheckTimeout = setInterval(() => {
             var expiredSessions = getExpiredSessions();
             if (!_.isEmpty(expiredSessions)) {
-                _.forIn(expiredSessions, (session, server) => {
-                    clearSession(server);
+                _.forIn(expiredSessions, (session, address) => {
+                    clearSession(address);
                 });
                 this.triggerChangeEvent();
             }
@@ -899,45 +937,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        return (
-            <div>
-                {this.renderLocalCache()}
-                {this.renderNotifier()}
-            </div>
-        );
-    },
-
-    /**
-     * Render local cache
-     *
-     * @return {ReactElement}
-     */
-    renderLocalCache: function() {
-        var setters = this.components.setters;
-        var cacheProps = {
-            ref: setters.cache,
-            databaseName: this.props.cacheName,
-        };
-        return <LocalCache {...cacheProps} />;
-    },
-
-    /**
-     * Render notifier
-     *
-     * @return {ReactElement}
-     */
-    renderNotifier: function() {
-        var setters = this.components.setters;
-        if (Notifier.isAvailable()) {
-            var notifierProps = {
-                ref: setters.notifier,
-                locale: this.props.locale,
-                defaultProfileImage: this.props.defaultProfileImage,
-                onNotify: this.handleChangeNotification,
-                onAlertClick: this.props.onAlertClick,
-            };
-            return <Notifier {...notifierProps} />;
-        }
+        return <div />
     },
 
     /**
@@ -952,57 +952,6 @@ module.exports = React.createClass({
      */
     componentWillUnmount: function() {
         clearInterval(this.sessionExpirationCheckInterval);
-    },
-
-    /**
-     * Called upon the arrival of a notification message, delivered through
-     * websocket or push
-     *
-     * @param  {Object} evt
-     */
-    handleChangeNotification: function(evt) {
-        var changed = false;
-        _.forIn(evt.changes, (idList, name) => {
-            var parts = _.split(name, '.');
-            var location = {
-                protocol: evt.protocol,
-                server: evt.server,
-                schema: parts[0],
-                table: parts[1]
-            };
-            console.log('Change notification: ', location.table, idList);
-            var relevantSearches = this.getRelevantRecentSearches(location);
-            _.each(relevantSearches, (search) => {
-                var dirty = false;
-                var expectedCount = getExpectedObjectCount(search);
-                if (expectedCount === search.results.length) {
-                    // see if the ids show up in the results
-                    _.each(idList, (id) => {
-                        var index = _.sortedIndexBy(search.results, { id }, 'id');
-                        var object = search.results[index];
-                        if (object && object.id === id) {
-                            dirty = true;
-                            return false;
-                        }
-                    });
-                } else {
-                    // we can't tell if new objects won't suddenly show up
-                    // in the search results
-                    dirty = true;
-                }
-                if (dirty) {
-                    search.dirty = true;
-                    changed = true;
-                }
-            });
-        });
-        if (changed) {
-            // tell data consuming components to rerun their queries
-            // initially, they'd all get the data they had before
-            // another change event will occur if new objects are
-            // actually retrieved from the remote server
-            this.triggerChangeEvent();
-        }
     },
 });
 
@@ -1155,7 +1104,7 @@ function getTimeElapsed(start, end) {
  * @return {Object}
  */
 function getSearchLocation(search) {
-    return _.pick(search, 'protocol', 'server', 'schema', 'table');
+    return _.pick(search, 'address', 'schema', 'table');
 }
 
 /**
@@ -1166,7 +1115,7 @@ function getSearchLocation(search) {
  * @return {Object}
  */
 function getSearchQuery(search) {
-    return _.pick(search, 'protocol', 'server', 'schema', 'table', 'criteria', 'minimum');
+    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum');
 }
 
 var sessions = {};
@@ -1174,14 +1123,14 @@ var sessions = {};
 /**
  * Obtain object where authorization info for a server is stored
  *
- * @param  {String} server
+ * @param  {String} address
  *
  * @return {Object}
  */
-function getSession(server) {
-    var session = sessions[server];
+function getSession(address) {
+    var session = sessions[address];
     if (!session) {
-        session = sessions[server] = {};
+        session = sessions[address] = {};
     }
     return session;
 }
@@ -1205,10 +1154,10 @@ function getExpiredSessions() {
 /**
  * Remove authorization to a server
  *
- * @param  {String} server
+ * @param  {String} address
  */
-function clearSession(server) {
-    sessions[server] = null;
+function clearSession(address) {
+    sessions[address] = null;
 }
 
 /**

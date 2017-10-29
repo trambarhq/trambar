@@ -34,12 +34,19 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/settings/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/settings/?'
+            ], (params) => {
+                params.edit = !!query.edit;
+                return params;
+            });
         },
 
         /**
@@ -47,14 +54,14 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url = `/settings/`;
+            var path = `/settings/`, query, hash;
             if (params && params.edit) {
-                url += '?edit=1';
+                query = { edit: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -66,6 +73,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
@@ -77,7 +85,7 @@ module.exports = Relaks.createClass({
             payloads: this.props.payloads,
         };
         meanwhile.show(<SettingsPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
         }).then((system) => {
@@ -150,7 +158,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return !!parseInt(props.route.query.edit);
+        return props.route.parameters.edit;
     },
 
     /**
@@ -161,9 +169,10 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit) {
-        var url = require('pages/settings-page').getUrl({ edit });
-        var replace = true;
-        return this.props.route.change(url, replace);
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.edit = edit;
+        return route.replace(module.exports, params);
     },
 
     /**
@@ -369,7 +378,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             var system = this.getSystem();
             var payloads = this.props.payloads;
             return payloads.prepare(system).then(() => {
-                return db.start().then((currentUserId) => {
+                return db.start().then((userId) => {
                     return db.saveOne({ table: 'system' }, system).then((system) => {
                         // reattach blob, if any
                         payloads.reattach(system);

@@ -9,12 +9,15 @@ var Locale = require('locale/locale');
 module.exports = React.createClass({
     displayName: 'WebsocketNotifier',
     propTypes: {
+        serverAddress: PropTypes.string,
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         defaultProfileImage: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale),
 
+        onConnect: PropTypes.func,
+        onDisconnect: PropTypes.func,
         onNotify: PropTypes.func,
         onAlertClick: PropTypes.func,
     },
@@ -44,44 +47,64 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            protocol: '',
-            server: '',
             socket: null,
-            showingAlert: false,
+            notificationPermitted: false,
         };
     },
 
-    /**
-     * Connection to server
-     *
-     * @param  {String} protocol
-     * @param  {String} server
-     * @param  {String} token
-     *
-     * @return {Promise<Boolean>}
-     */
-    connect: function(protocol, server, token) {
-        if (this.state.protocol === protocol && this.state.server === server) {
-            return Promise.resolve(true);
-        }
-        // close previous socket
-        if (this.state.socket) {
-            // store socket in variable as state might change in meantime
-            var socket = this.state.socket;
-            this.setState({ socket: null, protocol: '', server: '' }, () => {
-                socket.close();
-            });
-        }
+     /**
+      * Ask user for permission to show notification on mount
+      */
+     componentWillMount: function() {
+         requestNotificationPermission().then(() => {
+             this.setState({ notificationPermitted: true })
+         }).catch((err) => {
+         })
 
-        // create an object to track the connection attempt
+         // connect on mount if we somehow have the info (unlikely)
+         this.updateConnection(this.props);
+     },
+
+    /**
+     * Change the connect when server or schema changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.serverAddress !== nextProps.serverAddress) {
+             this.updateConnection(nextProps);
+        }
+    },
+
+    /**
+     * Update the connection to reflect new props
+     *
+     * @param  {Object} nextProps
+     */
+    updateConnection: function(nextProps) {
+        this.disconnect();
+        if (nextProps.serverAddress) {
+            this.connect(nextProps.serverAddress)
+        }
+    },
+
+    /**
+     * Connect to server
+     *
+     * @param  {String} serverAddress
+     *
+     * @return {Boolean}
+     */
+    connect: function(serverAddress) {
+        // track connection attempt with an object
         var attempt = this.connectionAttempt;
         if (attempt) {
-            if (attempt.server === server) {
+            if (attempt.serverAddress === serverAddress) {
                 // already connecting to server
                 return attempt.promise;
             }
         }
-        attempt = this.connectionAttempt = { server };
+        attempt = this.connectionAttempt = { serverAddress };
 
         var connected = false;
         var delay = this.props.initialReconnectionDelay;
@@ -90,24 +113,17 @@ module.exports = React.createClass({
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
         Async.do(() => {
-            return this.createSocket(protocol, server, token).then((socket) => {
+            return this.createSocket(serverAddress).then((socket) => {
                 if (attempt === this.connectionAttempt) {
-                    this.connectionAttempt = null;
-
-                    // send authorization token and locale
-                    var locale = _.get(this.props.locale, 'languageCode', 'en');
-                    var payload = {
-                        authorization: { token, locale },
-                    };
-                    socket.send(JSON.stringify(payload));
-
                     socket.onmessage = (evt) => {
                         if (this.state.socket === socket) {
                             var object = parseJSON(evt.data);
                             if (object.changes) {
-                                this.triggerNotifyEvent(object.changes);
+                                this.triggerNotifyEvent(serverAddress, object.changes);
                             } else if (object.alert) {
-                                this.showAlert(object.alert);
+                                this.showAlert(serverAddress, object.alert);
+                            } else if (object.socket) {
+                                this.triggerConnectEvent(serverAddress, object.socket);
                             }
                         }
                     };
@@ -117,13 +133,16 @@ module.exports = React.createClass({
                             // try to reestablish connection
                             this.setState({ socket: null, server: '' }, () => {
                                 console.log('Reestablishing web-socket connection...');
-                                this.connect(protocol, server, token).then(() => {
-                                    console.log('Connection reestablished');
+                                this.connect(serverAddress).then((connected) => {
+                                    if (connected) {
+                                        console.log('Connection reestablished');
+                                    }
                                 });
                             });
                         }
+                        this.triggerDisconnectEvent(serverAddress);
                     };
-                    this.setState({ socket, protocol, server });
+                    this.setState({ socket, connected: true });
                 }
                 connected = true;
             }).catch((err) => {
@@ -131,7 +150,7 @@ module.exports = React.createClass({
                 if (delay > maximumDelay) {
                     delay = maximumDelay;
                 }
-                //console.log(`Connection attempt in ${delay}ms: ${server}`)
+                console.log(`Connection attempt in ${delay}ms: ${serverAddress}`);
                 return Promise.delay(delay);
             });
         });
@@ -143,6 +162,7 @@ module.exports = React.createClass({
             }
         });
         Async.return(() => {
+            this.connectionAttempt = null;
             return connected;
         });
         attempt.promise = Async.end();
@@ -150,17 +170,28 @@ module.exports = React.createClass({
     },
 
     /**
+     * Close web-socket connection
+     */
+    disconnect: function() {
+        var socket = this.state.socket;
+        if (socket) {
+            // set state.socket to null first, to stop reconnection attempt
+            this.setState({ socket: null, connected: false }, () => {
+                socket.close();
+            });
+        }
+    },
+
+    /**
      * Create a SockJS socket
      *
-     * @param  {String} protocol
-     * @param  {String} server
-     * @param  {String} token
+     * @param  {String} serverAddress
      *
      * @return {Promise<SockJS>}
      */
-    createSocket: function(protocol, server, token) {
+    createSocket: function(serverAddress) {
         return new Promise((resolve, reject) => {
-            var url = `${protocol}//${server}/socket`;
+            var url = `${serverAddress}/socket`;
             var socket = new SockJS(url);
             var isFulfilled = false;
             socket.onopen = (evt) => {
@@ -187,16 +218,48 @@ module.exports = React.createClass({
     /**
      * Notify parent component that a change event was received
      *
+     * @param  {String} address
      * @param  {Object} changes
      */
-    triggerNotifyEvent: function(changes) {
+    triggerNotifyEvent: function(address, changes) {
         if (this.props.onNotify) {
             this.props.onNotify({
                 type: 'notify',
                 target: this,
-                protocol: this.state.protocol,
-                server: this.state.server,
-                changes: changes
+                address,
+                changes,
+            });
+        }
+    },
+
+    /**
+     * Notify parent component that a connection was established
+     *
+     * @param  {String} address
+     * @param  {String} token
+     */
+    triggerConnectEvent: function(address, token) {
+        if (this.props.onConnect) {
+            this.props.onConnect({
+                type: 'connect',
+                target: this,
+                address,
+                token,
+            });
+        }
+    },
+
+    /**
+     * Notify parent component that a connection was lost
+     *
+     * @param  {String} address
+     */
+    triggerDisconnectEvent: function(address) {
+        if (this.props.onDisconnect) {
+            this.props.onDisconnect({
+                type: 'disconnect',
+                target: this,
+                address,
             });
         }
     },
@@ -204,40 +267,31 @@ module.exports = React.createClass({
     /**
      * Inform parent component that an alert was clicked
      *
+     * @param  {String} address
      * @param  {Object} alert
      */
-    triggerAlertClickEvent: function(alert) {
+    triggerAlertClickEvent: function(address, alert) {
         if (this.props.onAlertClick) {
             this.props.onAlertClick({
                 type: 'alertclick',
                 target: this,
+                address,
                 alert,
             })
         }
     },
 
     /**
-     * Ask user for permission to show notification on mount
-     */
-    componentWillMount: function() {
-        requestNotificationPermission().then(() => {
-            this.setState({ showingAlert: true })
-        }).catch((err) => {
-        })
-    },
-
-    /**
      * Display an alert popup
      *
+     * @param  {String} serverAddress
      * @param  {Object} alert
      */
-    showAlert: function(alert) {
-        if (this.state.showingAlert) {
+    showAlert: function(serverAddress, alert) {
+        if (this.state.notificationPermitted) {
             var options = {};
-            var server = this.state.server;
-            var protocol = this.state.protocol;
             if (alert.profile_image) {
-                options.icon = `${protocol}//${server}${alert.profile_image}`;
+                options.icon = `${serverAddress}${alert.profile_image}`;
             } else {
                 options.icon = this.props.defaultProfileImage;
             }
@@ -245,13 +299,12 @@ module.exports = React.createClass({
                 options.body = alert.message;
             } else if (alert.attached_image) {
                 // show attach image only if there's no text
-                options.image = `${protocol}//${server}${alert.attached_image}`;
+                options.image = `${serverAddress}${alert.attached_image}`;
             }
-            console.log(options);
             options.lang = this.props.locale.languageCode;
             var notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
-                this.triggerAlertClickEvent(alert);
+                this.triggerAlertClickEvent(address, alert);
                 notification.close();
             });
         }

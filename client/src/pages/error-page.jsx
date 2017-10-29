@@ -17,18 +17,23 @@ module.exports = React.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('/error/:errorCode/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/:schema/error/:code',
+                '/global/error/:code',
+            ], (params) => {
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var errorCode = params.errorCode;
-            return `/error/${errorCode}/`;
+            var path = `/${params.schema || 'global'}/error/${params.code}`, query, hash;
+            return { path, query, hash };
         },
     },
 
     render: function() {
-        var errorCode = this.props.route.parameters.errorCode;
-        return <div>{errorCode}</div>;
+        var params = this.props.route.parameters;
+        return <div>{params.code}</div>;
     }
 });

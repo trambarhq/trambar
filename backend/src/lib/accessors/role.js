@@ -44,7 +44,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                name varchar(64) NOT NULL DEFAULT '',
+                name varchar(128) NOT NULL DEFAULT '',
                 server_id int,
                 external_id int,
                 hidden boolean NOT NULL DEFAULT false,
@@ -52,6 +52,25 @@ module.exports = _.create(Data, {
             );
         `;
         return db.execute(sql);
+    },
+
+    /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                // completion of tasks will automatically update details->resources
+                var Task = require('accessors/task');
+                return Task.createUpdateTrigger(db, schema, 'updateRole', 'updateResource', [ this.table ]);
+            });
+        });
     },
 
     /**
@@ -95,5 +114,5 @@ module.exports = _.create(Data, {
      */
     sync: function(db, schema, criteria) {
         this.sendSyncNotification(db, schema, criteria);
-    },    
+    },
 });

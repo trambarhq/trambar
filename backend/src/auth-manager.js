@@ -501,6 +501,7 @@ function authenticateThruPassport(req, res, server, params, scope) {
                 'verified'
             ];
         }
+        console.log('credentials: ', credentials);
         // create strategy object, resolving promise when we have the profile
         var Strategy = require(plugins[server.type]);
         var strategy = new Strategy(credentials, (accessToken, refreshToken, profile, done) => {

@@ -94,41 +94,42 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var location = _.pick(this.props.route.parameters, 'server', 'schema');
-        var section = _.get(this.props.route.component, 'navigation.bottom.section');
+        var route = this.props.route;
+        var params = _.pick(route.parameters, 'schema');
+        var section = _.get(route.component, 'navigation.bottom.section');
         var newsButtonProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
-            url: NewsPage.getUrl(location),
+            url: route.find(NewsPage, params),
             onClick: this.handleButtonClick,
         };
         var notificationsButtonProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
-            url: NotificationsPage.getUrl(location),
+            url: route.find(NotificationsPage, params),
             onClick: this.handleButtonClick,
         };
         var bookmarksButtonProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
-            url: BookmarksPage.getUrl(location),
+            url: route.find(BookmarksPage, params),
             onClick: this.handleButtonClick,
         };
         var peopleButtonProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
-            url: PeoplePage.getUrl(location),
+            url: route.find(PeoplePage, params),
             onClick: this.handleButtonClick,
         };
         var settingsButtonProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
-            url: SettingsPage.getUrl(location),
+            url: route.find(SettingsPage, params),
             onClick: this.handleButtonClick,
         };
         return (

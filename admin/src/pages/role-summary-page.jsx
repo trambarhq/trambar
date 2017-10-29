@@ -33,12 +33,22 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/roles/:roleId/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/roles/:role/?'
+            ], (params) => {
+                if (params.role !== 'new') {
+                    params.role = parseInt(params.role);
+                }
+                params.edit = !!query.edit;
+                return params;
+            });
         },
 
         /**
@@ -46,14 +56,14 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url = `/roles/${params.roleId}/`;
+            var path = `/roles/${params.role}/`, query, hash;
             if (params.edit) {
-                url += '?edit=1';
+                query = { edit: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -65,6 +75,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
@@ -76,17 +87,14 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
         }).then((system) => {
             props.system = system;
         }).then(() => {
-            var roleId = parseInt(this.props.route.parameters.roleId);
-            if (roleId) {
-                var criteria = {
-                    id: roleId
-                };
+            if (params.role !== 'new') {
+                var criteria = { id: params.role };
                 return db.findOne({ table: 'role', criteria });
             }
         }).then((role) => {
@@ -177,15 +185,6 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Return role id specified in URL
-     *
-     * @return {Number}
-     */
-    getRoleId: function() {
-        return parseInt(this.props.route.parameters.roleId);
-    },
-
-    /**
      * Return true when the URL indicate we're creating a new user
      *
      * @param  {Object|null} props
@@ -194,7 +193,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isCreating: function(props) {
         props = props || this.props;
-        return (props.route.parameters.roleId === 'new');
+        return (props.route.parameters.role === 'new');
     },
 
     /**
@@ -206,7 +205,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return this.isCreating(props) || !!parseInt(props.route.query.edit);
+        return this.isCreating(props) || props.route.parameters.edit;
     },
 
     /**
@@ -218,12 +217,18 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit, newRole) {
-        var roleId = (newRole) ? newRole.id : this.getRoleId();
-        var url = (roleId)
-                ? require('pages/role-summary-page').getUrl({ roleId, edit })
-                : require('pages/role-list-page').getUrl();
-        var replace = (roleId) ? true : false;
-        return this.props.route.change(url, replace);
+        var route = this.props.route;
+        if (this.isCreating() && !edit && !newRole) {
+            return route.push(require('pages/role-list-page'));
+        } else {
+            var params = _.clone(route.parameters);
+            params.edit = edit;
+            if (newRole) {
+                // use id of newly created role
+                params.role = newRole.id;
+            }
+            return route.replace(module.exports, params);
+        }
     },
 
     /**
@@ -394,7 +399,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         this.setState({ saving: true, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
             var role = this.getRole();
-            return db.start().then((currentUserId) => {
+            return db.start().then((userId) => {
                 return db.saveOne({ table: 'role' }, role).then((role) => {
                     this.setState({ hasChanges: false }, () => {
                         return this.setEditability(false, role);

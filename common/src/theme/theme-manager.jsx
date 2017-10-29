@@ -2,16 +2,13 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
-var Route = require('routing/route');
 
 module.exports = React.createClass({
     displayName: 'ThemeManager',
     propTypes: {
         modes: PropTypes.object,
-
+        serverAddress: PropTypes.string,
         database: PropTypes.instanceOf(Database),
-        route: PropTypes.instanceOf(Route),
-
         onChange: PropTypes.func,
     },
 
@@ -20,13 +17,7 @@ module.exports = React.createClass({
             mode: this.selectMode(),
             devicePixelRatio: window.devicePixelRatio,
             details: null,
-            server: window.location.hostname,
-            protocol: window.location.protocol,
         };
-    },
-
-    getBaseUrl: function() {
-        return `${this.state.protocol}//${this.state.server}`;
     },
 
     getMode: function() {
@@ -101,12 +92,11 @@ module.exports = React.createClass({
             filters.push(`q${params.quality}`);
         }
 
-        var path = '';
+        var versionPath = '';
         if (filters.length > 0) {
-            path = `/${filters.join('+')}`;
+            versionPath = `/${filters.join('+')}`;
         }
-        var baseUrl = this.getBaseUrl();
-        return `${baseUrl}${resUrl}${path}`;
+        return `${this.props.serverAddress}${resUrl}${versionPath}`;
     },
 
     getImageFile: function(res) {
@@ -123,20 +113,14 @@ module.exports = React.createClass({
 
     getVideoUrl: function(res, options) {
         // TODO: select video based on bandwidth/resolution
-        var baseUrl = this.getBaseUrl();
-        var filters = [];
-        var baseUrl = video.url;
-        var path = '';
-        return `${protocol}://${server}${baseUrl}${path}`;
+        var versionPath = '';
+        return `${this.props.serverAddress}${res.url}${versionPath}`;
     },
 
     getAudioUrl: function(res, options) {
-        // TODO: select video based on bandwidth/resolution
-        var baseUrl = this.getBaseUrl();
-        var filters = [];
-        var baseUrl = video.url;
-        var path = '';
-        return `${protocol}://${server}${baseUrl}${path}`;
+        // TODO: select audio based on bandwidth
+        var versionPath = '';
+        return `${this.props.serverAddress}${res.url}${versionPath}`;
     },
 
     /**
@@ -191,26 +175,6 @@ module.exports = React.createClass({
         return Promise.resolve(true);
     },
 
-    /**
-     * Update the server name if it's different
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route) {
-            var serverBefore = _.get(this.props.route, 'parameters.server');
-            var serverAfter = _.get(nextProps.route, 'parameters.server');
-            if (serverAfter === '~') {
-                serverAfter = window.location.hostname;
-            }
-            if (serverBefore !== serverAfter) {
-                this.setState({ server: serverAfter }, () => {
-                    this.triggerChangeEvent();
-                });
-            }
-        }
-    },
-
     componentWillMount: function() {
         window.addEventListener('resize', this.handleWindowResize);
     },
@@ -231,7 +195,7 @@ module.exports = React.createClass({
      */
     componentDidUpdate: function(prevProps, prevState) {
         if (!prevProps.database && this.props.database) {
-            var db = this.props.database.use({ by: this, schema: 'local' });
+            var db = this.props.database.use({ schema: 'local', by: this,  });
             db.start().then(() => {
                 return db.findOne({
                     table: 'settings',

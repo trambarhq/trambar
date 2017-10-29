@@ -16,6 +16,7 @@ module.exports = _.create(Data, {
         details: Object,
         type: String,       // post, commit, merge, deployment, issue, task-start, task-end, survey
         tags: Array(String),
+        language_codes: Array(String),
         published_version_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
@@ -32,6 +33,7 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         type: String,
         tags: Array(String),
+        language_codes: Array(String),
         published_version_id: Number,
         user_ids: Array(Number),
         role_ids: Array(Number),
@@ -69,7 +71,8 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                tags varchar(32)[] NOT NULL DEFAULT '{}'::text[],
+                tags varchar(64)[] NOT NULL DEFAULT '{}'::text[],
+                language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
                 published_version_id int,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
@@ -91,8 +94,7 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Attach triggers to this table, also add trigger on task so details
-     * are updated when tasks complete
+     * Attach triggers to the table.
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -100,10 +102,13 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     watch: function(db, schema) {
-        return Data.watch.call(this, db, schema).then(() => {
-            return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]).then(() => {});
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'type', 'tags', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public' ];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
+                    var Task = require('accessors/task');
+                    return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]).then(() => {});
+                });
             });
         });
     },
@@ -232,6 +237,11 @@ module.exports = _.create(Data, {
                 // make sure current user has permission to modify the object
                 var storyBefore = originals[index];
                 this.checkWritePermission(storyReceived, storyBefore, credentials);
+
+                // set language_codes
+                if (storyReceived.details) {
+                    storyReceived.language_codes = _.filter(_.keys(storyReceived.details.text), { length: 2 });
+                }
 
                 // set the ptime if published is set
                 if (storyReceived.published && !storyReceived.ptime) {

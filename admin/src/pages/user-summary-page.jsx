@@ -40,13 +40,26 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/users/:userId/', url)
-                || Route.match('/projects/:projectId/members/:userId/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/users/:user/',
+                '/projects/:project/members/:user/?',
+            ], (params) => {
+                if (params.user !== 'new') {
+                    params.user = parseInt(params.user);
+                }
+                if (params.project) {
+                    params.project = parseInt(params.project);
+                }
+                params.edit = !!query.edit;
+                return params;
+            });
         },
 
         /**
@@ -54,19 +67,19 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url;
-            if (params.projectId) {
-                url = `/projects/${params.projectId}/members/${params.userId}/`;
+            var path, query, hash;
+            if (params.project) {
+                path = `/projects/${params.project}/members/${params.user}/`;
             } else {
-                url = `/users/${params.userId}/`;
+                path = `/users/${params.user}/`;
             }
-            if (params && params.edit) {
-                url += `?edit=1`;
+            if (params.edit) {
+                query = { edit: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -78,6 +91,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
@@ -94,18 +108,15 @@ module.exports = Relaks.createClass({
             payloads: this.props.payloads,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
         }).then((system) => {
             props.system = system;
         }).then(() => {
             // load selected user
-            var userId = parseInt(this.props.route.parameters.userId);
-            if (userId) {
-                var criteria = {
-                    id: userId
-                };
+            if (params.user !== 'new') {
+                var criteria = { id: params.user };
                 return db.findOne({ table: 'user', criteria });
             }
         }).then((user) => {
@@ -120,11 +131,8 @@ module.exports = Relaks.createClass({
             meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
             // load project if project id is provider (i.e. member summary)
-            var projectId = parseInt(this.props.route.parameters.projectId);
-            if (projectId) {
-                var criteria = {
-                    id: projectId
-                };
+            if (params.project) {
+                var criteria = { id: params.project };
                 return db.findOne({ table: 'project', criteria });
             }
         }).then((project) => {
@@ -251,26 +259,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Return project id specified in URL
-     *
-     * @return {Number|undefined}
-     */
-    getProjectId: function() {
-        if (this.props.route.parameters.projectId) {
-            return parseInt(this.props.route.parameters.projectId);
-        }
-    },
-
-    /**
-     * Return user id specified in URL
-     *
-     * @return {Number}
-     */
-    getUserId: function() {
-        return parseInt(this.props.route.parameters.userId);
-    },
-
-    /**
      * Return true when the URL indicate we're creating a new user
      *
      * @param  {Object|null} props
@@ -278,7 +266,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Boolean}
      */
     isCreating: function(props) {
-        return (this.props.route.parameters.userId === 'new');
+        return (this.props.route.parameters.user === 'new');
     },
 
     /**
@@ -290,7 +278,19 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return this.isCreating() || !!parseInt(props.route.query.edit);
+        return this.isCreating() || props.route.query.edit;
+    },
+
+    /**
+     * Return true when the URL includes project id
+     *
+     * @param  {Object|null} props
+     *
+     * @return {Boolean}
+     */
+    isProjectMember: function(props) {
+        props = props || this.props;
+        return !!props.route.parameters.project;
     },
 
     /**
@@ -302,15 +302,24 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit, newUser) {
-        var projectId = this.getProjectId();
-        var userId = (newUser) ? newUser.id : this.getUserId();
-        var url = (userId)
-                ? require('pages/user-summary-page').getUrl({ projectId, userId, edit })
-                : (projectId)
-                ? require('pages/member-list-page').getUrl({ projectId })
-                : require('pages/user-list-page').getUrl();
-        var replace = (projectId) ? true : false;
-        return this.props.route.change(url, replace);
+        var route = this.props.route;
+        if (this.isCreating() && !edit && !newUser) {
+            // return to list when cancelling user creation
+            if (route.parameters.project) {
+                var params = { project: route.parameters.project };
+                return route.push(require('pages/member-list-page'), params);
+            } else {
+                return route.push(require('pages/user-list-page'));
+            }
+        } else {
+            var params = _.clone(route.parameters);
+            params.edit = edit;
+            if (newUser) {
+                // use id of newly created user
+                params.user = newUser.id;
+            }
+            return route.replace(module.exports, params);
+        }
     },
 
     /**
@@ -339,7 +348,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var member = !!this.props.route.parameters.projectId;
+        var member = this.isProjectMember();
         var user = this.getUser();
         var name = p(user.details.name);
         return (
@@ -362,7 +371,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var member = !!this.getProjectId();
+        var member = this.isProjectMember();
         if (this.isEditing()) {
             return (
                 <div className="buttons">
@@ -700,7 +709,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderChart: function() {
-        if (!this.getProjectId()) {
+        if (!this.isProjectMember()) {
             return null;
         }
         if (this.isCreating()) {
@@ -758,10 +767,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             var user = this.getUser();
             var payloads = this.props.payloads;
             return payloads.prepare(user).then(() => {
-                return db.start().then((currentUserId) => {
+                return db.start().then((userId) => {
                     if (!user.id) {
                         // creating a new user
-                        var projectId = this.getProjectId();
+                        var projectId = this.props.route.parameters.project;
                         if (projectId) {
                             // add user to project--on approval, the user id
                             // will get added to user_ids of project on backend

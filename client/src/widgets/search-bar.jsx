@@ -75,8 +75,7 @@ module.exports = React.createClass({
         var route = this.props.route;
         var params = _.clone(route.parameters);
         params.search = normalize(this.state.keywords);
-        var url = route.component.getUrl(params);
-        route.change(url, true);
+        route.redirect(route.component, params, true);
     },
 
     /**

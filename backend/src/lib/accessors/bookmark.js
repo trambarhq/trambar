@@ -53,6 +53,21 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'story_id', 'user_ids', 'target_user_id', 'public' ];
+            return this.createNotificationTriggers(db, schema, propNames);
+        });
+    },
+
+    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *

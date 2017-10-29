@@ -74,6 +74,18 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema);
+    },
+
+    /**
      * Check if authorization token is valid
      *
      * @param  {Database} db

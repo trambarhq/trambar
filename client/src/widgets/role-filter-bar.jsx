@@ -173,8 +173,7 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         var params = _.clone(route.parameters);
         params.roles = roleIds;
-        var url = route.component.getUrl(params);
-        route.change(url, true);
+        route.redirect(route.component, params, true);
     },
 });
 

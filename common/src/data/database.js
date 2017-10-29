@@ -4,6 +4,9 @@ var Promise = require('bluebird');
 module.exports = Database;
 
 function Database(remoteDataSource, context) {
+    if (!context) {
+        context = {};
+    }
     this.context = context;
 
     var self = this;
@@ -104,16 +107,6 @@ function Database(remoteDataSource, context) {
         _.each(varSets, (varSet) => {
             _.assign(newContext, varSet);
         });
-        if (newContext.schema !== 'local') {
-            if (!newContext.server) {
-                // set server automatically to the current host and protocol
-                newContext.server = window.location.hostname;
-                newContext.protocol = window.location.protocol;
-            } else {
-                // default to https
-                newContext.protocol = 'https:';
-            }
-        }
         return new Database(remoteDataSource, newContext);
     };
 
@@ -153,6 +146,24 @@ function Database(remoteDataSource, context) {
     };
 
     /**
+     * Return true if the current user has access to the remote database
+     *
+     * @return {Boolean}
+     */
+    this.hasAuthorization = function() {
+        return remoteDataSource.hasAuthorization(context);
+    };
+
+    /**
+     * Add authorization info that was retrieved earlier
+     *
+     * @param  {Object} authorization
+     */
+    this.addAuthorization = function(authorization) {
+        remoteDataSource.addAuthorization(context, authorization);
+    },
+
+    /**
      * Authenticate user through username and password
      *
      * @param  {Object} location
@@ -187,8 +198,5 @@ function Database(remoteDataSource, context) {
 }
 
 function merge(context, query) {
-    if (!context) {
-        return query;
-    }
     return _.assign({}, context, query);
 }

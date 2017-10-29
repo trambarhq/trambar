@@ -22,7 +22,7 @@ module.exports = Relaks.createClass({
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var criteria = {
                 id: currentUserId,
             };

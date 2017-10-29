@@ -32,7 +32,7 @@ module.exports = React.createClass({
             selectedControl = 'search';
         } else if (route.parameters.date) {
             selectedControl = 'calendar';
-        } else if (route.parameters.roles && route.parameters.roles !== 'all') {
+        } else if (!_.isEmpty(route.parameters.roles)) {
             selectedControl = 'filter';
         }
         return {
@@ -219,8 +219,7 @@ module.exports = React.createClass({
     clearRouteParameters: function() {
         var route = this.props.route;
         var params = _.omit(route.parameters, 'date', 'roleIds');
-        var url = route.component.getUrl(params);
-        route.change(url, true);
+        route.redirect(route.component, params, true);
     },
 
     handleCalendarClick: function(evt) {

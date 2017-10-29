@@ -41,12 +41,18 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/projects/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/projects/?'
+            ], (params) => {
+                return params;
+            });
         },
 
         /**
@@ -54,10 +60,11 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            return `/projects/`;
+            var path = `/projects/`, query, hash;
+            return { path, query, hash };
         },
     },
 
@@ -82,7 +89,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<ProjectListPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load all projects
             var criteria = {};
             return db.find({ table: 'project', criteria });
@@ -274,7 +281,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(project.details.title);
-            var url = require('pages/project-summary-page').getUrl({ projectId: project.id });
+            var route = this.props.route;
+            var params = { project: project.id };
+            var url = route.find(require('pages/project-summary-page'), params);
             return (
                 <td>
                     <a href={url}>
@@ -473,10 +482,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleAddClick: function(evt) {
-        var url = require('pages/project-summary-page').getUrl({
-            projectId: 'new'
+        var route = this.props.route;
+        return route.push(require('pages/project-summary-page'), {
+            project: 'new'
         });
-        return this.props.route.change(url);
     },
 });
 

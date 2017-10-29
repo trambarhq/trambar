@@ -78,7 +78,7 @@ module.exports = Relaks.createClass({
             onCancel: this.props.onCancel,
         };
         //meanwhile.show(<ImageAlbumDialogBoxSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load pictures for given purpose if we're showing the dialog box
             if (this.props.show || this.state.shown) {
                 var criteria = {
@@ -313,7 +313,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         });
         var db = this.props.database.use({ schema: 'global', by: this });
         var payloads = this.props.payloads;
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var urls = [];
             return Promise.mapSeries(files, (file, index) => {
                 var url = urls[index] = URL.createObjectURL(file);
@@ -369,7 +369,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
             return;
         }
         var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             return db.remove({ table: 'picture' }, pictures);
         });
     },

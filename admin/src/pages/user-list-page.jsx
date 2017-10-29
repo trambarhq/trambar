@@ -9,8 +9,6 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var UserSummaryPage = require('pages/user-summary-page');
-
 // widgets
 var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
@@ -35,12 +33,19 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/users/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/users/?'
+            ], (params) => {
+                params.approve = !!query.approve;
+                return params;
+            });
         },
 
         /**
@@ -48,14 +53,14 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url = `/users/`;
+            var path = `/users/`, query, hash;
             if (params && params.approve) {
-                url += '?approve=1';
+                query = { approve: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -67,6 +72,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             users: null,
@@ -78,7 +84,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<UserListPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load all users
             var criteria = {};
             return db.find({ table: 'user', criteria });
@@ -142,8 +148,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(approve) {
-        var url = require('pages/user-list-page').getUrl({ approve });
-        return this.props.route.change(url, true);
+        var route = this.props.route;
+        var params = { approve };
+        return route.replace(module.exports, params);
     },
 
     /**
@@ -155,7 +162,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      */
     isApproving: function(props) {
         props = props || this.props;
-        return !!parseInt(props.route.query.approve);
+        return props.route.parameters.approve;
     },
 
     componentWillReceiveProps: function(nextProps) {
@@ -362,7 +369,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 }
             } else {
                 // don't create the link when we're editing the list
-                url = UserSummaryPage.getUrl({ userId: user.id });
+                var route = this.props.route;
+                var params = { user: user.id }
+                url = route.find(require('pages/user-summary-page'), params);
             }
             return (
                 <td>
@@ -518,10 +527,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleAddClick: function(evt) {
-        var url = require('pages/user-summary-page').getUrl({
-            userId: 'new'
-        });
-        return this.props.route.change(url);
+        var route = this.props.route;
+        var params = { user: 'new' };
+        return route.push(require('pages/user-summary-page'), params);
     },
 
     /**
@@ -549,7 +557,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      */
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var users = _.map(this.state.selectedUserIds, (userId) => {
                 return {
                     id: userId,

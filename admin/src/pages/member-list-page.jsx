@@ -35,12 +35,20 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/projects/:projectId/members/?', url);;
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/projects/:project/members/?'
+            ], (params) => {
+                params.project = parseInt(params.project);
+                params.edit = !!query.edit;
+                return params;
+            });
         },
 
         /**
@@ -48,14 +56,14 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url = `/projects/${params.projectId}/members/`;
+            var path = `/projects/${params.project}/members/`, query, hash;
             if (params.edit) {
-                url += '?edit=1';
+                query = { edit: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -67,6 +75,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             project: null,
@@ -79,19 +88,15 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<MemberListPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load project
-            var criteria = {
-                id: parseInt(this.props.route.parameters.projectId)
-            };
+            var criteria = { id: params.project };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
         }).then(() => {
             // load all approved users
-            var criteria = {
-                approved: true
-            };
+            var criteria = { approved: true };
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
@@ -146,15 +151,6 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Return project id specified in URL
-     *
-     * @return {Number}
-     */
-    getProjectId: function() {
-        return parseInt(this.props.route.parameters.projectId);
-    },
-
-    /**
      * Return true when the URL indicate edit mode
      *
      * @param  {Object|null} props
@@ -163,7 +159,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return !!parseInt(props.route.query.edit);
+        return props.route.parameters.edit;
     },
 
     /**
@@ -174,9 +170,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit) {
-        var projectId = this.getProjectId();
-        var url = require('pages/member-list-page').getUrl({ projectId, edit });
-        return this.props.route.change(url, true);
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.edit = edit;
+        return this.props.route.replace(module.exports, params);
     },
 
     componentWillReceiveProps: function(nextProps) {
@@ -410,9 +407,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                     badge = <i className="fa fa-user-plus badge add" />;
                 }
                 // don't create the link when we're editing the list
-                url = require('pages/user-summary-page').getUrl({
-                    userId: user.id,
-                    projectId: this.props.project.id,
+                url = this.props.route.find(require('pages/user-summary-page'), {
+                    user: user.id,
+                    project: this.props.project.id,
                 });
             }
             return (
@@ -643,7 +640,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
 
     handleSaveClick: function() {
         var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var columns = {
                 id: this.props.project.id,
                 user_ids: this.state.selectedUserIds
@@ -657,9 +654,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     },
 
     handleAddClick: function(evt) {
-        var projectId = this.getProjectId();
-        var url = require('pages/user-summary-page').getUrl({ projectId, userId: 'new' });
-        this.props.route.change(url);
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.user = 'new';
+        return route.push(require('pages/user-summary-page'), params);
     },
 
     handleRowClick: function(evt) {

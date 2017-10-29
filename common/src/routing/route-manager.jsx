@@ -8,6 +8,7 @@ module.exports = React.createClass({
     propTypes: {
         pages: PropTypes.array.isRequired,
         database: PropTypes.instanceOf(Database),
+        rewrite: PropTypes.func,
         onChange: PropTypes.func,
         onRedirectionRequest: PropTypes.func,
     },
@@ -19,7 +20,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            baseUrl: this.getBaseUrl(),
+            basePath: this.getBasePath(),
             url: null,
             component: null,
             parameters: null,
@@ -33,7 +34,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getBaseUrl: function() {
+    getBasePath: function() {
         var base = document.getElementsByTagName('BASE')[0];
         if (base) {
             var url = base.getAttribute('href');
@@ -96,61 +97,84 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     goTo: function(location, replacing) {
-        var baseUrl = this.state.baseUrl;
-        var url = getLocationUrl(window.location);
-        if (url.substr(0, baseUrl.length) === baseUrl && url.charAt(baseUrl.length) === '/') {
-            url = url.substr(baseUrl.length);
-            return this.change(url, replacing);
-        }
-        return Promise.reject(new Error(`Cannot route to location not at the base URL: ${baseUrl}`));
+        var url = getLocationUrl(location);
+        return this.change(url, replacing);
     },
 
     /**
-     * Find a route
+     * Get URL to a page
+     *
+     */
+    find: function(page, params) {
+        params = _.clone(params) || {};
+        var urlParts = page.getUrl(params);
+        var basePath = this.state.basePath;
+        if (basePath) {
+            urlParts.path = basePath + urlParts.path;
+        }
+        if (this.props.rewrite) {
+            this.props.rewrite(urlParts, params, 'find');
+        }
+        var url = urlParts.path;
+        if (!_.isEmpty(urlParts.query)) {
+            var qs = '';
+            _.forIn(urlParts.query, (value, name) => {
+                qs += (qs) ? '&' : '?';
+                qs += name + '=' + encodeURIComponent(value).replace(/%20/g, '+');
+            });
+            url += qs;
+        }
+        if (urlParts.hash) {
+            url += '#' + urlParts.hash;
+        }
+        return url;
+    },
+
+    /**
+     * Look up a URL
      *
      * @param  {String} url
      *
-     * @return {Object}
+     * @return {Object|null}
      */
-    find: function(url) {
-        var path = url;
-        var hash = '';
-        var hashIndex = path.indexOf('#');
-        if (hashIndex !== -1) {
-            hash = path.substr(hashIndex + 1);
-            path = path.substr(0, hashIndex);
+    parse: function(url) {
+        var urlParts = parseUrl(url);
+        var rewriteParams = {};
+        if (this.props.rewrite) {
+            this.props.rewrite(urlParts, rewriteParams, 'parse');
         }
-        var query = {};
-        var queryIndex = path.indexOf('?');
-        if (queryIndex !== -1) {
-            query = parseQueryString(path.substr(queryIndex + 1));
-            path = path.substr(0, queryIndex);
+        var basePath = this.state.basePath;
+        if (basePath) {
+            if (_.startsWith(urlParts.path, basePath)) {
+                urlParts.path = urlParts.path.substr(basePath.length);
+            } else {
+                return null;
+            }
         }
-        var routes = [];
+        var route;
+        var matchLength = 0;
         _.each(this.props.pages, (page) => {
             if (typeof(page.parseUrl) !== 'function') {
                 var pageName = _.get(page, 'displayName', 'Page')
                 throw new Error(`${pageName} does not implement the static function parseUrl()`);
             }
-            var params = page.parseUrl(path);
+            var params = page.parseUrl(urlParts.path, urlParts.query, urlParts.hash);
             if (params) {
-                var canonicalUrl = page.getUrl(_.assign({}, params, query));
-                if (hash) {
-                    canonicalUrl += `#${hash}`;
+                // use the one with the longest match
+                if (params.match.length > matchLength) {
+                    var routeParams = _.assign(_.omit(params, 'match'), rewriteParams);
+                    var canonicalUrl = this.find(page, routeParams);
+                    route = {
+                        url: canonicalUrl,
+                        component: page,
+                        parameters: routeParams,
+                        query: urlParts.query,
+                        hash: urlParts.hash,
+                    };
+                    matchLength = params.match.length;
                 }
-                route = {
-                    url: canonicalUrl,
-                    component: page,
-                    parameters: params,
-                    query: query,
-                    hash: hash,
-                };
-                routes.push(route);
             }
         });
-        // pick the one with longest match
-        routes = _.sortBy(routes, 'route.parameters.match.length');
-        var route = _.last(routes) || null;
         return route;
     },
 
@@ -167,14 +191,13 @@ module.exports = React.createClass({
         if (this.state.url === url) {
             return Promise.resolve();
         }
-        var route = this.find(url);
+        var route = this.parse(url);
         if (route) {
             this.setState(route, () => {
                 // set the browser location
                 var protocol = window.location.protocol;
                 var host = window.location.host;
-                var baseUrl = this.state.baseUrl;
-                var fullUrl = `${protocol}//${host}${baseUrl}${route.url}`;
+                var fullUrl = `${protocol}//${host}${route.url}`;
                 if (window.location.href !== fullUrl) {
                     if (replacing) {
                         history.replaceState({}, '', fullUrl);
@@ -277,7 +300,7 @@ module.exports = React.createClass({
      */
     handlePopState: function(evt) {
         var url = getLocationUrl(window.location);
-        var route = this.find(url);
+        var route = this.parse(url);
         if (route) {
             this.setState(route, () => {
                 this.triggerChangeEvent();
@@ -285,6 +308,23 @@ module.exports = React.createClass({
         }
     },
 });
+
+function parseUrl(url) {
+    var path = url;
+    var hash = '';
+    var hashIndex = path.indexOf('#');
+    if (hashIndex !== -1) {
+        hash = path.substr(hashIndex + 1);
+        path = path.substr(0, hashIndex);
+    }
+    var query = {};
+    var queryIndex = path.indexOf('?');
+    if (queryIndex !== -1) {
+        query = parseQueryString(path.substr(queryIndex + 1));
+        path = path.substr(0, queryIndex);
+    }
+    return { path, query, hash };
+}
 
 function parseQueryString(queryString) {
     var values = {};

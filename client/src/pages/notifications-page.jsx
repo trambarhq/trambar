@@ -23,30 +23,25 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('//:server/:schema/notifications/:date/?', url)
-                || Route.match('//:server/:schema/notifications/?', url)
-                || Route.match('/:schema/notifications/:date/?', url)
-                || Route.match('/:schema/notifications/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/:schema/notifications/:date/?',
+                '/:schema/notifications/?'
+            ], (params) => {
+                params.search = query.search;
+                return params;
+            })
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var schema = params.schema;
-            var date = params.date;
-            var search = params.search;
-            var url = `/${schema}/notifications/`;
-            if (server) {
-                url = `//${server}${url}`;
+            var path = `/${params.schema}/notifications/`, query, hash;
+            if (params.date) {
+                url += `${params.date}/`;
             }
-            if (date) {
-                url += `${date}/`;
+            if (params.search) {
+                query = { search: params.search };
             }
-            if (search) {
-                search = _.replace(encodeURIComponent(search), /%20/g, '+');
-                url += `?search=${search}`;
-            }
-            return url;
+            return { path, query, hash };
         },
 
         navigation: {
@@ -62,12 +57,8 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var date = route.parameters.date;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var searchString = route.query.search;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             currentUser: null,
             reactions: null,
@@ -80,8 +71,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<NotificationsPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
-            var criteria = {};
-            criteria.id = userId;
+            var criteria = { id: userId };
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.currentUser = user;
@@ -90,18 +80,18 @@ module.exports = Relaks.createClass({
             // load reactions
             var criteria = {};
             criteria.target_user_ids = [ props.currentUser.id ];
-            if (date) {
-                var s = Moment(date);
+            if (params.date) {
+                var s = Moment(params.date);
                 var e = s.clone().endOf('day');
                 var rangeStart = s.toISOString();
                 var rangeEnd = e.toISOString();
                 var range = `[${rangeStart},${rangeEnd}]`;
                 criteria.time_range = range;
             }
-            if (searchString) {
+            if (params.search) {
                 criteria.search = {
                     lang: this.props.locale.lang,
-                    text: searchString,
+                    text: params.search,
                 };
                 criteria.limit = 100;
             } else {

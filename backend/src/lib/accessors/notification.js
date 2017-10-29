@@ -1,11 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var HttpError = require('errors/http-error');
+var Moment = require('moment');
 var Data = require('accessors/data');
+var HttpError = require('errors/http-error');
 
 module.exports = _.create(Data, {
-    schema: 'global',
-    table: 'picture',
+    schema: 'both',
+    table: 'notification',
     columns: {
         id: Number,
         gn: Number,
@@ -13,15 +14,23 @@ module.exports = _.create(Data, {
         ctime: String,
         mtime: String,
         details: Object,
-        purpose: String,
+        type: String,
+        story_id: Number,
+        reaction_id: Number,
         user_id: Number,
+        target_user_id: Number,
     },
     criteria: {
-        id: Number,
         deleted: Boolean,
-        purpose: String,
+        type: String,
+        story_id: Number,
+        reaction_id: Number,
         user_id: Number,
-        url: String,
+        target_user_id: Number,
+        time_range: String,
+        newer_than: String,
+        older_than: String,
+        search: Object,
     },
 
     /**
@@ -42,11 +51,13 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                purpose varchar(64) NOT NULL,
+                type varchar(32) NOT NULL DEFAULT '',
+                story_id int NOT NULL DEFAULT 0,
+                reaction_id int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
+                target_user_id int NOT NULL DEFAULT 0,
                 PRIMARY KEY (id)
             );
-            CREATE INDEX ON ${table} ((details->'url'));
         `;
         return db.execute(sql);
     },
@@ -61,61 +72,46 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'purpose', 'user_id' ];
+            var propNames = [ 'type', 'story_id', 'reaction_id', 'user_id', 'target_user_id' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
 
     /**
-     * Attach triggers to this table, also add trigger on task so details
-     * are updated when tasks complete
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     *
-     * @return {Promise<Boolean>}
-     */
-    watch: function(db, schema) {
-        return Data.watch.call(this, db, schema).then(() => {
-            return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
-            });
-        });
-    },
-
-    /**
-     * Grant privileges to table to appropriate Postgres users
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     *
-     * @return {Promise<Boolean>}
-     */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO client_role;
-        `;
-        return db.execute(sql).return(true);
-    },
-
-    /**
      * Add conditions to SQL query based on criteria object
      *
+     * @param  {Database} db
+     * @param  {String} schema
      * @param  {Object} criteria
      * @param  {Object} query
+     *
+     * @return {Promise}
      */
-    apply: function(criteria, query) {
-        var special = [ 'url' ];
+    apply: function(db, schema, criteria, query) {
+        var special = [
+            'time_range',
+            'newer_than',
+            'older_than',
+            'search',
+        ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
         var conds = query.conditions;
-        if (criteria.url !== undefined) {
-            conds.push(`details->>'url' = $${params.push(criteria.url)}`);
+        if (criteria.time_range !== undefined) {
+            conds.push(`ctime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
+        if (criteria.newer_than !== undefined) {
+            conds.push(`ctime > $${params.push(criteria.newer_than)}`);
+        }
+        if (criteria.older_than !== undefined) {
+            conds.push(`ctime < $${params.push(criteria.older_than)}`);
+        }
+        if (criteria.search) {
+            // TODO
+            //return this.applyTextSearch(db, schema, criteria.search, query);
+        }
+        return Promise.resolve();
     },
 
     /**
@@ -134,10 +130,21 @@ module.exports = _.create(Data, {
         return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
-                object.purpose = row.purpose;
-                object.user_id = row.user_id;
+                object.ctime = row.ctime;
+                object.type = row.type;
+                object.details = row.details;
+                if (row.story_id) {
+                    object.story_id = row.story_id;
+                }
+                if (row.reaction_id) {
+                    object.reaction_id = row.reaction_id;
+                }
+                if (row.user_id) {
+                    object.user_id;
+                }
+                object.target_user_id = row.target_user_id;
             });
             return objects;
         });
-    },
+    }
 });

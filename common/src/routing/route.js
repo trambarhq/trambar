@@ -35,6 +35,44 @@ function Route(routeManager) {
     };
 
     /**
+     * Find the URL of a page component
+     *
+     * @param  {ReactComponent} component
+     * @param  {Object|undefined} parameters
+     *
+     * @return {String}
+     */
+    this.find = function(component, parameters) {
+        return routeManager.find(component, parameters);
+    };
+
+    /**
+     * Go to the page component, adding to history
+     *
+     * @param  {ReactComponent} component
+     * @param  {Object|undefined} parameters
+     *
+     * @return {Promise}
+     */
+    this.push = function(component, parameters) {
+        var url = routeManager.find(component, parameters);
+        return this.change(url, false);
+    };
+
+    /**
+     * Go to the page component, replacing current page in history
+     *
+     * @param  {ReactComponent} component
+     * @param  {Object|undefined} parameters
+     *
+     * @return {Promise}
+     */
+    this.replace = function(component, parameters) {
+        var url = routeManager.find(component, parameters);
+        return this.change(url, true);
+    };
+
+    /**
      * Check if the route can be changed
      *
      * @param  {Boolean} interactive
@@ -86,24 +124,43 @@ function Route(routeManager) {
     };
 }
 
-Route.match = function(route, url) {
-    var names = [];
-    var pattern = route.replace(/(:\w+)/g, (name) => {
-        names.push(name);
-        return '([^\\/]+)';
-    });
-    var regExp = new RegExp('^' + pattern);
-    var m = regExp.exec(url);
-    if (m) {
-        var params = {};
-        _.each(names, (name, index) => {
-            params[name.substr(1)] = m[index + 1];
-        });
-        params.match = m[0];
-        return params;
+Route.match = function(url, patterns, f) {
+    for (var i = 0; i < patterns.length; i++) {
+        var regExp = parseURLPattern(patterns[i]);
+        var m = regExp.exec(url);
+        if (m) {
+            var params = {};
+            _.each(regExp.names, (name, index) => {
+                params[name.substr(1)] = m[index + 1];
+            });
+            if (f) {
+                params = f(params);
+                if (typeof(params) !== 'object') {
+                    throw new Error(`Callback for route "${patterns[i]}" does not return an object`);
+                }
+            }
+            params.match = m[0];
+            return params;
+        }
     }
 };
 
 Route.prototype.toString = function() {
     return this.url;
 };
+
+var regExpCache = {};
+
+function parseURLPattern(pattern) {
+    var regExp = regExpCache[pattern];
+    if (!regExp) {
+        var names = [];
+        var regExpPattern = pattern.replace(/(:\w+)/g, (name) => {
+            names.push(name);
+            return '([^\\/]+)';
+        });
+        regExp = regExpCache[pattern] = new RegExp('^' + regExpPattern);
+        regExp.names = names;
+    }
+    return regExp;
+}

@@ -32,26 +32,22 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('//:server/start/?', url)
-                || Route.match('/start/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/start/?'
+            ], (params) => {
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var url = `/start/`;
-            if (server) {
-                url = `//${server}${url}`;
-            }
-            return url;
+            var path = `/start/`, query, hash;
+            return { path, query, hash };
         },
     },
 
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = 'global';
-        var db = this.props.database.use({ server, schema, by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             currentUser: null,
             system: null,
@@ -85,10 +81,10 @@ module.exports = Relaks.createClass({
             // keep showing what was there before until we've retrieved the
             // system object
             meanwhile.show(<StartPageSync {...props} />);
-            var userId;
-            return db.start().then((currentUserId) => {
+            var currentUserId;
+            return db.start().then((userId) => {
                 // load the current user later
-                userId = currentUserId;
+                currentUserId = userId;
 
                 // load system info
                 var criteria = {};
@@ -106,7 +102,7 @@ module.exports = Relaks.createClass({
             }).then(() => {
                 // load current user
                 var criteria = {
-                    id: userId
+                    id: currentUserId
                 };
                 return db.findOne({ table: 'user', criteria });
             }).then((user) => {
@@ -120,9 +116,7 @@ module.exports = Relaks.createClass({
      * Retrieve authorization object from server
      */
     handleOAuthEnd: function() {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var db = this.props.database.use({ by: this });
         db.checkAuthorizationStatus();
     },
 });
@@ -383,10 +377,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         };
         if (this.hasReadAccess(project)) {
             // link to the project's news page
-            props.href = require('pages/news-page').getUrl({
-                server: this.props.route.parameters.server,
-                schema: project.name,
-            });
+            props.href = this.props.route.find(require('pages/news-page'), { schema: project.name });
         } else {
             // add handler for requesting access
             // (or just show the project info if user has joined already)
@@ -609,8 +600,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             requested_project_ids: _.union(projectIds, [ projectId ])
         };
         var route = this.props.route;
-        var server = route.parameters.server;
-        var db = this.props.database.use({ server, by: this });
+        var db = this.props.database.use({ by: this });
         return db.saveOne({ schema: 'global', table: 'user' }, newUserProps).then(() => {
             // remember that we have just joined this project
             var newProjectNames = _.union(this.state.newProjectNames, [ project.name ]);
@@ -640,11 +630,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
 
         var projectId = this.state.selectedProjectId;
         var project = _.find(this.props.projects, { id: projectId });
-        var url = require('pages/news-page').getUrl({
-            server: this.props.route.parameters.server,
-            schema: project.name,
-        });
-        this.props.route.change(url);
+        this.props.route.redirect(require('pages/news-page'), { schema: project.name });
     },
 });
 

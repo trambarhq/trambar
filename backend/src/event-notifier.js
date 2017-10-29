@@ -1,191 +1,132 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Http = require('http');
-var SockJS = require('sockjs');
 var Moment = require('moment');
 var Database = require('database');
 var HttpError = require('errors/http-error');
 
-// accessors
-var Authorization = require('accessors/authorization');
+var ListenerManager = require('event-notifier/listener-manager');
+var NotificationGenerator = require('event-notifier/notification-generator');
+var AlertComposer = require('event-notifier/alert-composer');
+
+// global accessors
+var Picture = require('accessors/picture');
+var Project = require('accessors/project');
+var Repo = require('accessors/repo');
+var Role = require('accessors/role');
+var Server = require('accessors/server');
+var Subscription = require('accessors/subscription');
+var System = require('accessors/system');
 var User = require('accessors/user');
+
+// project accessors
+var Bookmark = require('accessors/bookmark');
+var Listing = require('accessors/listing');
 var Reaction = require('accessors/reaction');
+var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 
-var server;
-var sockets = [];
+// appear in both
+var Notification = require('accessors/notification');
+var Task = require('accessors/task');
+
+var accessors = [
+    Picture,
+    Project,
+    Repo,
+    Role,
+    Server,
+    System,
+    Task,
+    User,
+
+    Bookmark,
+    Listing,
+    Notification,
+    Reaction,
+    Statistics,
+    Story,
+
+    Notification,
+    Task,
+];
+var database;
 
 function start() {
     return Database.open(true).then((db) => {
-        var tables = [
-            'picture',
-            'project',
-            'server',
-            'system',
-            'user',
-
-            'bookmark',
-            'listing',
-            'reaction',
-            'repo',
-            'robot',
-            'role',
-            'statistics',
-            'story',
-        ];
-        return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
-            var sockJS = SockJS.createServer({
-                sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js'
-            });
-            sockJS.on('connection', (socket) => {
-                socket.on('data', (message) => {
-                    var object = parseJSON(message);
-                    if (object && object.authorization) {
-                        var token = object.authorization.token;
-                        var locale = object.authorization.locale;
-                        return checkAuthorization(db, token).then((userId) => {
-                            return fetchCredentials(db, userId).then((credentials) => {
-                                socket.credentials = credentials;
-                                socket.locale = locale;
-                                sockets.push(socket);
-                            });
-                        });
-                    }
-                });
-                socket.on('close', () => {
-                    _.pull(sockets, socket);
-                });
-
-                // close the socket after five second if we fail to obtain user
-                // credentials for it
-                setTimeout(() => {
-                    if (!socket.credentials) {
-                        socket.close();
-                    }
-                }, 5000)
-            });
-
-            server = Http.createServer();
-            sockJS.installHandlers(server, { prefix:'/socket' });
-            server.listen(80, '0.0.0.0');
+        database = db;
+        return ListenerManager.listen(db).then(() => {
+            var tables = _.map(accessors, 'table');
+            return db.listen(tables, 'change', handleDatabaseChanges, 100);
         });
     });
 }
 
 function stop() {
-    return new Promise((resolve, reject) => {
-        if (server) {
-            server.close();
-            server.on('close', () => {
-                resolve();
-            });
-        } else {
-            resolve();
-        }
-    });
-}
-
-function checkAuthorization(db, token) {
-    return Authorization.check(db, token, null).then((userId) => {
-        if (!userId) {
-            throw new HttpError(401);
-        }
-        return userId;
-    });
-}
-
-function fetchCredentials(db, userId) {
-    var credentials = {};
-    return User.findOne(db, 'global', { id: userId, deleted: false }, '*').then((user) => {
-        if (!user) {
-            throw new HttpError(403);
-        }
-        credentials.user = user;
-    }).then(() => {
-        return credentials;
+    return ListenerManager.shutdown().then(() => {
+        database.close();
+        database = null;
     });
 }
 
 function handleDatabaseChanges(events) {
     var db = this;
-    _.each(sockets, (socket) => {
-        var changes = {};
-        _.each(events, (event) => {
-            if (canUserSeeEvent(event, socket.credentials)) {
-                var table = `${event.schema}.${event.table}`;
-                var idList = changes[table];
-                if (!idList) {
-                    idList = changes[table] = [];
+    // invalidate cache
+    var eventsByTable = _.groupBy(events, 'table');
+    _.forIn(eventsByTable, (events, table) => {
+        if (table === 'user') {
+            User.clearCache(events);
+        } else if (table === 'subscription') {
+            Subscription.clearCache(events);
+        }
+    });
+
+    // see who's listening
+    ListenerManager.find(db).then((listeners) => {
+        var messages = [];
+        // send change messages (silent) first
+        _.each(listeners, (listener) => {
+            var changes = {};
+            _.each(events, (event) => {
+                var accessor = _.find(accessors, { table: event.table });
+                if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
+                    var table = `${event.schema}.${event.table}`;
+                    var idList = changes[table];
+                    if (!idList) {
+                        idList = changes[table] = [ event.id ];
+                    } else {
+                        if (!_.includes(idList, event.id)) {
+                            idList.push(event.id);
+                        }
+                    }
                 }
-                if (!_.includes(idList, event.id)) {
-                    idList.push(event.id);
-                }
+            });
+            if (!_.isEmpty(changes)) {
+                messages.push(new Message('change', listener, { changes }));
             }
         });
-        if (!_.isEmpty(changes)) {
-            var payload = { changes: changes };
-            socket.write(JSON.stringify(payload));
-        }
-    });
+        ListenerManager.send(db, messages);
 
-    var reactionInsertions = _.filter(events, { table: 'reaction' });
-    Promise.each(reactionInsertions, (event) => {
-        var schema = event.schema;
-        var published = _.get(event.diff, [ 'published', 1, ]);
-        if (published) {
-            return Reaction.findOne(db, schema, { id: event.id }, '*').then((reaction) => {
-                var elapsed = getTimeElapsed(reaction.ptime, new Date);
-                if (elapsed > 5 * 60 * 1000) {
-                    return;
-                }
-                return User.findOne(db, 'global', { id: reaction.user_id }, '*').then((sender) => {
-                    return Story.findOne(db, schema, { id: reaction.story_id }, '*').then((story) => {
-                        if (!sender || !story) {
-                            return;
-                        }
-                        return Promise.each(reaction.target_user_ids, (userId) => {
-                            // TODO: employ user preference
-                            var socket = _.find(sockets, (s) => {
-                                return s.credentials.user.id === userId;
-                            });
-                            if (socket) {
-                                var alert = Reaction.createAlert(schema, reaction, story, sender, socket.locale)
-                                var payload = { alert };
-                                console.log(alert);
-                                socket.write(JSON.stringify(payload));
-                            }
-                        });
-                    });
+        // generate new Notification objects
+        return NotificationGenerator.generate(db, events).then((notifications) => {
+            // send them to users who're currently listening
+            var messages = [];
+            _.each(notifications, (notification) => {
+                _.each(listeners, (listener) => {
+                    if (listener.user.id === notification.target_user_id) {
+                        var alert = AlertComposer.format(db, notification, listener);
+                        messages.push(new Message('alert', listener, { alert }));
+                    }
                 });
             });
-        }
+            ListenerManager.send(db, messages);
+        });
     });
 }
 
-function canUserSeeEvent(event, credentials) {
-    // TODO
-    if (event.schema === 'global') {
-    }
-    return true;
-}
-
-function parseJSON(text) {
-    try {
-        return JSON.parse(text);
-    } catch (err) {
-    }
-}
-
-function getTimeElapsed(start, end) {
-    if (!start) {
-        return Infinity;
-    }
-    if (!end) {
-        return 0;
-    }
-    var s = (typeof(start) === 'string') ? new Date(start) : start;
-    var e = (typeof(end) === 'string') ? new Date(end) : end;
-    return (e - s);
+function Message(type, listener, body) {
+    this.type = type;
+    this.listener = listener;
+    this.body = body;
 }
 
 exports.start = start;

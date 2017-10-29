@@ -116,10 +116,8 @@ module.exports = React.createClass({
             size: 'small'
         };
         if (this.props.respondent) {
-            var route = this.props.route;
-            var url = require('pages/person-page').getUrl({
-                server: route.parameters.server,
-                schema: route.parameters.schema,
+            var url = this.props.route.find(require('pages/person-page'), {
+                schema: this.props.route.parameters.schema,
                 user: this.props.respondent.id,
             });
         }

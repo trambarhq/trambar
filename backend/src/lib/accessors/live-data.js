@@ -51,42 +51,54 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Attach modified triggers that accounts for atime, utime, and dirty
+     * Attach a modified trigger that accounts for atime, utime, and dirty.
      *
      * @param  {Database} db
      * @param  {String} schema
      *
      * @return {Promise<Boolean>}
      */
-    watch: function(db, schema) {
+    createChangeTrigger: function(db, schema) {
         var table = this.getTableName(schema);
-        var sql = [
-            `
-                CREATE TRIGGER "indicateLiveDataChangeOnUpdate"
-                BEFORE UPDATE ON ${table}
-                FOR EACH ROW
-                EXECUTE PROCEDURE "indicateLiveDataChange"();
-            `,
-            `
-                CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnInsert"
-                AFTER INSERT ON ${table} INITIALLY DEFERRED
-                FOR EACH ROW
-                EXECUTE PROCEDURE "notifyLiveDataChange"();
-            `,
-            `
-                CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnUpdate"
-                AFTER UPDATE ON ${table} INITIALLY DEFERRED
-                FOR EACH ROW
-                EXECUTE PROCEDURE "notifyLiveDataChange"();
-            `,
-            `
-                CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnDelete"
-                AFTER DELETE ON ${table} INITIALLY DEFERRED
-                FOR EACH ROW
-                EXECUTE PROCEDURE "notifyLiveDataChange"();
-            `,
-        ];
-        return db.execute(sql.join('\n')).return(true);
+        var sql = `
+            CREATE TRIGGER "indicateLiveDataChangeOnUpdate"
+            BEFORE UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "indicateLiveDataChange"();
+        `;
+        return db.execute(sql).return(true);
+    },
+
+    /**
+     * Attach modified triggers that accounts for atime, utime, and dirty.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<String>} propNames
+     *
+     * @return {Promise<Boolean>}
+     */
+    createNotificationTriggers: function(db, schema, propNames) {
+        var table = this.getTableName(schema);
+        var args = _.map(propNames, (propName) => {
+            // use quotes just in case the name is mixed case
+            return `"${propName}"`;
+        }).join(', ');
+        var sql = `
+            CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnInsert"
+            AFTER INSERT ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyLiveDataChange"(${args});
+            CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnUpdate"
+            AFTER UPDATE ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyLiveDataChange"(${args});
+            CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnDelete"
+            AFTER DELETE ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyLiveDataChange"(${args});
+        `;
+        return db.execute(sql).return(true);
     },
 
     /**

@@ -19,6 +19,7 @@ var Reaction = require('accessors/reaction');
 var Repo = require('accessors/repo');
 var Server = require('accessors/server');
 var Story = require('accessors/story');
+var System = require('accessors/system');
 var User = require('accessors/user');
 
 var server;
@@ -43,7 +44,9 @@ function start() {
             });
         }).then(() => {
             // install hooks
-            return HookManager.installHooks(db);
+            return getServerAddress(db).then((host) => {
+                return HookManager.installHooks(db, host);
+            });
         }).then(() => {
             // listen for database change events
             var tables = [
@@ -51,6 +54,7 @@ function start() {
                 'reaction',
                 'server',
                 'story',
+                'system',
             ];
             return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
                 var tables = [
@@ -93,7 +97,11 @@ function stop() {
     if (!database) {
         return Promise.resolve();
     }
-    return HookManager.removeHooks(database).then(() => {
+    return getServerAddress(database).then((host) => {
+        return HookManager.removeHooks(database, host);
+    }).catch((err) => {
+        console.error(err);
+    }).then(() => {
         database.close();
         database = null;
         return new Promise((resolve, reject) => {
@@ -111,163 +119,287 @@ function stop() {
 
 var taskQueue = new TaskQueue;
 
+/**
+ * Called when changes occurs in the database
+ *
+ * @param  {Array<Object>} events
+ */
 function handleDatabaseChanges(events) {
-    _.each(events, (event) => {
-        handleDatabaseEvent(event);
-    });
-}
-
-function handleDatabaseSyncRequests(events) {
-    _.each(events, (event) => {
-        handleDatabaseSyncRequest(event);
-    });
-}
-
-function handleDatabaseEvent(event) {
-    if (event.action === 'DELETE') {
-        return;
-    }
     var db = database;
-    var schema = event.schema;
-    var table = event.table;
-    var diff = event.diff;
-    if (table === 'server') {
-        // import roles, and repos from server when API access is gained
-        if (diff.settings) {
-            var criteria = {
-                id: event.id,
-                type: 'gitlab',
-                deleted: false,
-            };
-            return Server.findOne(db, 'global', criteria, '*').then((server) => {
-                if (!server) {
-                    return;
-                }
-                if (!server.settings.api || !server.settings.oauth) {
-                    return;
-                }
-                if (!server.settings.api.access_token || !server.settings.oauth.baseURL) {
-                    return;
-                }
-                return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                    return RepoImporter.importRepositories(db, server);
-                });
-            });
+    Promise.each(events, (event) => {
+        if (event.action === 'DELETE') {
+            return;
         }
-    } else if (table === 'project') {
-        // import events from repository when it's added to project
-        if (diff.repo_ids) {
-            var repoIdsBefore = diff.repo_ids[0];
-            var repoIdsAfter = diff.repo_ids[1];
-            var newRepoIds = _.difference(repoIdsAfter, repoIdsBefore);
-            if (_.isEmpty(newRepoIds)) {
+        switch (event.table) {
+            case 'server': return handleServerChangeEvent(db, event);
+            case 'project': return handleProjectChangeEvent(db, event);
+            case 'story': return handleStoryChangeEvent(db, event);
+            case 'reaction': return handleReactionChangeEvent(db, event);
+            case 'system': return handleSystemChangeEvent(db, event);
+        }
+    });
+}
+
+/**
+ * Import repos from server when API access is gained
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise|undefined}
+ */
+function handleServerChangeEvent(db, event) {
+    if (event.diff.settings) {
+        var criteria = {
+            id: event.id,
+            type: 'gitlab',
+            deleted: false,
+        };
+        return Server.findOne(db, 'global', criteria, '*').then((server) => {
+            var accessToken = _.get(server, 'settings.api.access_token');
+            var oauthBaseUrl = _.get(server, 'settings.api.baseURL');
+            if (!accessToken|| !oauthBaseUrl) {
                 return;
             }
-            return Project.findOne(db, 'global', { id: event.id }, '*').then((project) => {
-                if (!project) {
-                    return;
-                }
-                return Repo.find(db, 'global', { id: newRepoIds }, '*').then((repos) => {
-                    var serverIds = _.uniq(_.map(repos, 'server_id'));
-                    return Server.find(db, 'global', { id: serverIds }, '*').then((servers) => {
-                        _.each(repos, (repo) => {
-                            var server = _.find(servers, { id: repo.server_id });
-                            if (!server) {
-                                return;
-                            }
-                            return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
-                                // make sure the project-specific schema exists
-                                return db.need(project.name).then(() => {
-                                    return EventImporter.importEvents(db, server, repo, project);
-                                });
-                            });
+            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                return RepoImporter.importRepositories(db, server);
+            });
+        });
+    }
+}
+
+/**
+ * Import events from repository when it's added to project and install
+ * web hooks on Gitlab server
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise|undefined}
+ */
+function handleProjectChangeEvent(db, event) {
+    if (event.diff.repo_ids) {
+        var repoIdsBefore = event.previous.repo_ids;
+        var repoIdsAfter = event.current.repo_ids;
+        var newRepoIds = _.difference(repoIdsAfter, repoIdsBefore);
+        var missingRepoIds = _.difference(repoIdsBefore, repoIdsAfter);
+        return Project.findOne(db, 'global', { id: event.id }, '*').then((project) => {
+            return connectRepositories(db, project, newRepoIds).then(() => {
+                return disconnectRepositories(db, project, missingRepoIds);
+            });
+        });
+    }
+}
+
+/**
+ * Establish connectio between project and repo, start importing events from
+ * the latter
+ *
+ * @param {Database} db
+ * @param {Project} project
+ * @param {Array<Number} repoIds
+ *
+ * @return {Promise}
+ */
+function connectRepositories(db, project, repoIds) {
+    if (!project || _.isEmpty(repoIds)) {
+        return Promise.resolve();
+    }
+    return getServerAddress(db).then((host) => {
+        // load the repos in question
+        var criteria = { id: repoIds, deleted: false };
+        return Repo.find(db, 'global', criteria, '*').then((repos) => {
+            // load their server records
+            var serverIds = _.uniq(_.map(repos, 'server_id'));
+            return Server.find(db, 'global', { id: serverIds }, '*').each((server) => {
+                var reposOnServer = _.filter(repos, { server_id: server.id });
+                return Promise.each(reposOnServer, (repo) => {
+                    // schedule event import
+                    taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                        // make sure the project-specific schema exists
+                        return db.need(project.name).then(() => {
+                            return EventImporter.importEvents(db, server, repo, project);
                         });
                     });
+
+                    // install hook on repo
+                    return HookManager.installProjectHook(host, server, repo, project);
                 });
             });
-        }
-    } else if (event.table === 'story') {
-        // copy contents from story to issue tracker
-        Story.findOne(db, schema, { id: event.id }, '*').then((story) => {
-            /*
-            if (story.details.issue_tracking && story.repo_id) {
-                return taskQueue.schedule(`export_story:${story.id}`, () => {
-                    return StoryExporter.exportStory(db, story);
-                });
-            }
-            */
         });
-    } else if (event.table === 'reaction') {
-        // add comments to issue tracker
-        Reaction.findOne(db, schema, { id: event.id }, '*').then((reaction) => {
-            if (!reaction || !reaction.ptime || reaction.type !== 'comment') {
-                return;
-            }
-            return Story.findOne(db, schema, { id: reaction.story_id }, '*').then((story) => {
-                /*
-                if (story.details.issue_tracking && story.repo_id) {
-                    return taskQueue.schedule(`export_reaction:${reaction.id}`() => {
-                        return CommentExporter.exportComment(db, reaction, story);
-                    });
-                }
-                */
+    });
+}
+
+/**
+ * Remove connection between project and repo
+ *
+ * @param  {Database} db
+ * @param  {Project} project
+ * @param  {Array<Number>} repoIds
+ *
+ * @return {Promise}
+ */
+function disconnectRepositories(db, project, repoIds) {
+    if (!project || _.isEmpty(repoIds)) {
+        return Promise.resolve();
+    }
+    return getServerAddress(db).then((host) => {
+        // load the repos in question
+        var criteria = { id: repoIds, deleted: false };
+        return Repo.find(db, 'global', criteria, '*').then((repos) => {
+            // load their server records
+            var serverIds = _.uniq(_.map(repos, 'server_id'));
+            return Server.find(db, 'global', { id: serverIds }, '*').each((server) => {
+                var reposOnServer = _.filter(repos, { server_id: server.id });
+                return Promise.each(reposOnServer, (repo) => {
+                    // remove hook on repo
+                    return HookManager.removeProjectHook(host, server, repo, project);
+                });
+            });
+        });
+    });
+}
+
+/**
+ * copy contents from story to issue tracker
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise|undefined}
+ */
+function handleStoryChangeEvent(db, event) {
+    if (event.current.published && event.current.ready) {
+        if (event.current.type === 'issue') {
+            Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
+                // TODO
+            });
+        }
+    }
+}
+
+/**
+ * Import comment to issue tracker
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise|undefined}
+ */
+function handleReactionChangeEvent(db, event) {
+    if (event.current.published && event.current.ready) {
+        Reaction.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
+            // TODO
+        });
+    }
+}
+
+/**
+ * Adjust web-hooks when server address changes
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise|undefined}
+ */
+function handleSystemChangeEvent(db, event) {
+    if (event.diff.settings) {
+        var hostBefore = event.previous.settings.address;
+        var hostAfter = event.current.settings.address;
+        return HookManager.removeHooks(db, hostBefore).then(() => {
+            return HookManager.installHooks(db, hostAfter);
+        });
+    }
+}
+
+/**
+ * Called when another process posts synchronization requests
+ *
+ * @param  {Array<Object>} events
+ */
+function handleDatabaseSyncRequests(events) {
+    var db = database;
+    Promise.each(events, (event) => {
+        switch (event.table) {
+            case 'project': return handleProjectSyncEvent(db, event);
+            case 'repo': return handleRepoSyncEvent(db, event);
+            case 'user': return handleUserSyncEvent(db, event);
+        }
+    });
+}
+
+/**
+ * Make sure member lists are in sync
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise}
+ */
+function handleProjectSyncEvent(db, event) {
+    var criteria = event.criteria;
+    return Project.find(db, 'global', criteria, '*').each((project) => {
+        return taskQueue.schedule(`import_project_member:${project.id}`, () => {
+            return UserImporter.importProjectMembers(db, project);
+        });
+    });
+}
+
+/**
+ * Make sure information about repos is in sync
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise}
+ */
+function handleRepoSyncEvent(db, event) {
+    if (!event.criteria.hasOwnProperty('id')) {
+        // an open-ended search was performed--see if there're new repos on Gitlab
+        var criteria = { type: 'gitlab', deleted: false };
+        return Server.find(db, 'global', criteria, '*').each((server) => {
+            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                return RepoImporter.importRepositories(db, server);
+            });
+        });
+    } else {
+        return Repo.find(db, 'global', event.criteria, '*').each((repo) => {
+            var criteria = { id: repo.server_id, type: 'gitlab' };
+            return Server.find(db, 'global', criteria, '*').each((server) => {
+                return taskQueue.schedule(`update_repo:${repo.id}`, () => {
+                    return RepoImporter.updateRepository(db, server, repo);
+                });
             });
         });
     }
 }
 
-function handleDatabaseSyncRequest(event) {
-    var db = database;
-    var table = event.table;
-    var criteria = event.criteria;
-    if (table === 'project') {
+/**
+ * Make sure information about imported users are in sync
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise}
+ */
+function handleUserSyncEvent(db, event) {
+    if (!event.criteria.hasOwnProperty('id')) {
+        // an open-ended search was performed--see if there're new project members
+        var criteria = { deleted: false };
         return Project.find(db, 'global', criteria, '*').each((project) => {
-            return taskQueue.schedule(`import_project_member:${project.id}`, () => {
+            return taskQueue.schedule(`import_project_member:$(project.id)`, () => {
                 return UserImporter.importProjectMembers(db, project);
             });
         });
-    } else if(table === 'repo') {
-        if (!criteria.hasOwnProperty('id')) {
-            // an open-ended search was performed--see if there're new ones
-            var serverCriteria = {
-                type: 'gitlab',
-                deleted: false,
-            };
-            return Server.find(db, 'global', serverCriteria, '*').each((server) => {
-                return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                    return RepoImporter.importRepositories(db, server);
+    } else {
+        return User.find(db, 'global', event.criteria, '*').each((user) => {
+            var criteria = { id: user.server_id, type: 'gitlab' };
+            return Server.find(db, 'global', criteria, '*').each((server) => {
+                return taskQueue.schedule(`update_user:${user.id}`, () => {
+                    return UserImporter.updateUser(db, server, user);
                 });
             });
-        } else {
-            return Repo.find(db, 'global', criteria, '*').each((repo) => {
-                var serverCriteria = {
-                    id: repo.server_id,
-                    type: 'gitlab'
-                };
-                return Server.find(db, 'global', serverCriteria, '*').each((server) => {
-                    return taskQueue.schedule(`update_repo:${repo.id}`, () => {
-                        return RepoImporter.updateRepository(db, server, repo);
-                    });
-                });
-            });
-        }
-    } else if (table === 'user') {
-        if (!criteria.hasOwnProperty('id')) {
-            // an open-ended search was performed--see if there're new project members
-            return Project.find(db, 'global', { deleted: false }, '*').each((project) => {
-                return taskQueue.schedule(`import_project_member:$(project.id)`, () => {
-                    return UserImporter.importProjectMembers(db, project);
-                });
-            });
-        } else {
-            return User.find(db, 'global', criteria, '*').each((user) => {
-                return Server.find(db, 'global', { id: user.server_id, type: 'gitlab' }, '*').each((server) => {
-                    return taskQueue.schedule(`update_user:${user.id}`, () => {
-                        return UserImporter.updateUser(db, server, user);
-                    });
-                });
-            });
-        }
+        });
     }
 }
 
@@ -300,6 +432,21 @@ function handleHookCallback(req, res) {
         });
     }).finally(() => {
         res.end();
+    });
+}
+
+/**
+ * Return the server location
+ *
+ * @param  {Database}
+ *
+ * @return {Promise<String>}
+ */
+function getServerAddress(db) {
+    var criteria = { deleted: false };
+    return System.findOne(db, 'global', criteria, 'settings').then((system) => {
+        var address = _.get(system, 'settings.address');
+        return _.trimEnd(address, ' /');
     });
 }
 

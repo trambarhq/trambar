@@ -56,8 +56,24 @@ exports.isEqual = function(before, after) {
 };
 var isEqual = exports.isEqual;
 
-exports.sendChangeNotification = function(op, schema, table, id, gn, diff) {
-    var info = { op, schema, table, id, gn, diff };
+exports.sendChangeNotification = function(op, schema, table, before, after, changes, propNames) {
+    var id = (after) ? after.id : before.id;
+    var gn = (after) ? after.gn : before.gn;
+    var diff = {}, previous = {}, current = {};
+    // indicate which property is different
+    for (var name in changes) {
+        diff[name] = true;
+    }
+    for (var i = 0; i < propNames.length; i++) {
+        var name = propNames[i];
+        current[name] = after[name];
+        if (diff[name]) {
+            if (before) {
+                previous[name] = before[name];
+            }
+        }
+    }
+    var info = { op, schema, table, id, gn, diff, previous, current };
     var channel = table + '_change';
     try {
         var msg = JSON.stringify(info);

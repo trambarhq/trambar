@@ -16,6 +16,7 @@ module.exports = _.create(Data, {
         details: Object,
         type: String,
         tags: Array(String),
+        language_codes: Array(String),
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
@@ -31,6 +32,7 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         type: String,
         tags: Array(String),
+        language_codes: Array(String),
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
@@ -64,7 +66,8 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                tags varchar(32)[] NOT NULL DEFAULT '{}'::text[],
+                tags varchar(64)[] NOT NULL DEFAULT '{}'::text[],
+                language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
                 story_id int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
                 target_user_ids int[] NOT NULL,
@@ -83,8 +86,7 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Attach triggers to this table, also add trigger on task so details
-     * are updated when tasks complete
+     * Attach triggers to the table.
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -92,10 +94,17 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     watch: function(db, schema) {
-        return Data.watch.call(this, db, schema).then(() => {
-            return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'target_user_ids', 'published', 'ready', 'ptime', 'public' ];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                // merge changes to details->resources to avoid race between
+                // client-side changes and server-side changes
+                return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
+                    // completion of tasks will automatically update
+                    // details->resources and ready
+                    var Task = require('accessors/task');
+                    return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
+                });
             });
         });
     },
@@ -175,6 +184,11 @@ module.exports = _.create(Data, {
                     }
                 }
 
+                // set language_codes
+                if (reactionReceived.details) {
+                    reactionReceived.language_codes = _.filter(_.keys(reactionReceived.details.text), { length: 2 });
+                }
+
                 // set the ptime if published is set
                 if (reactionReceived.published && !reactionReceived.ptime) {
                     reactionReceived.ptime = new String('NOW()');
@@ -227,140 +241,4 @@ module.exports = _.create(Data, {
             return objects;
         });
     },
-
-    createAlert(schema, reaction, story, sender, languageCode) {
-        var senderName = sender.details.name;
-        var title, message;
-        switch (reaction.type) {
-            // TODO: perform proper localization and handle other reaction types
-            case 'like':
-                title = `${senderName} likes your story`;
-                break;
-            case 'comment':
-                title = `${senderName} commented on your story`;
-                message = getReactionText(reaction, languageCode);
-                break;
-        }
-        if (message && message.length > 200) {
-            message = message.substr(0, 200);
-        }
-        return alert = {
-            schema,
-            title,
-            message,
-            profile_image: getProfileImageUrl(sender),
-            attached_image: getReactionImageUrl(reaction),
-            type: reaction.type,
-            user_id: sender.id,
-            reaction_id: reaction.id,
-            story_id: story.id,
-        };
-    }
 });
-
-/**
- * Return text of a comment
- *
- * @param  {Reaction} reaction
- * @param  {String} languageCode
- *
- * @return {String}
- */
-function getReactionText(reaction, languageCode) {
-    var languageVersions = reaction.details.text || {};
-    var currentLanguageCode = languageCode.substr(0, 2);
-    var matchingPhrase = '';
-    var firstNonEmptyPhrase = '';
-    var defaultLanguageCode = 'en';
-    var defaultLanguagePhrase = '';
-    for (var key in languageVersions) {
-        var phrase = _.trim(languageVersions[key]);
-        var languageCode = _.toLower(key);
-        if (languageCode === currentLanguageCode) {
-            matchingPhrase = phrase;
-        }
-        if (!firstNonEmptyPhrase) {
-            firstNonEmptyPhrase = phrase;
-        }
-        if (languageCode === defaultLanguageCode) {
-            defaultLanguagePhrase = phrase;
-        }
-    }
-    if (matchingPhrase) {
-        return matchingPhrase;
-    } else if (defaultLanguagePhrase) {
-        return defaultLanguagePhrase;
-    } else {
-        return firstNonEmptyPhrase;
-    }
-}
-
-/**
- * Return URL to profile image
- *
- * @param  {User} user
- *
- * @return {String|undefined}
- */
-function getProfileImageUrl(user) {
-    var image = _.find(user.details.resources, { type: 'image' });
-    var imageUrl;
-    if (image && image.url) {
-        // form the URL
-        return applyClippingRectangle(image.url, image.clip, 192, 192, 75);
-    }
-}
-
-/**
- * Return URL to an image for an attached resource
- *
- * @param  {Reaction} reaction
- *
- * @return {String|undefined}
- */
-function getReactionImageUrl(reaction) {
-    var res = _.first(reaction.details.resources);
-    if (res) {
-        var url;
-        switch (res.type) {
-            case 'image':
-                url = res.url;
-                break;
-            case 'video':
-            case 'audio':
-            case 'website':
-                url = res.poster_url;
-                break;
-        }
-        if (url) {
-            return applyClippingRectangle(url, res.clip, 512, 512, 75);
-        }
-    }
-}
-
-/**
- * Return URL to image, with clipping rectangle and dimension filters applied
- *
- * @param  {String} url
- * @param  {Object|undefined} clip
- * @param  {Number} width
- * @param  {Number} height
- * @param  {Number} quality
- *
- * @return {String}
- */
-function applyClippingRectangle(url, clip, width, height, quality) {
-    var filters = [];
-    if (clip) {
-        var rect = [
-            clip.left,
-            clip.top,
-            clip.width,
-            clip.height,
-        ];
-        filters.push(`cr${rect.join('-')}`)
-    }
-    filters.push(`re${width}-${height}`);
-    filters.push(`qu${quality}`)
-    return `${url}/${filters.join('+')}`;
-}

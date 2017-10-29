@@ -59,6 +59,32 @@ module.exports = _.create(Data, {
         return db.execute(sql);
     },
 
+    /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [];
+            return this.createNotificationTriggers(db, schema, propNames);
+        });
+    },
+
+    /**
+     * Create a trigger on this table that updates another table
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {String} triggerName
+     * @param  {String} method
+     * @param  {Array<String>} arguments
+     *
+     * @return {Promise<Boolean>}
+     */
     createUpdateTrigger: function(db, schema, triggerName, method, arguments) {
         var table = this.getTableName(schema);
         var sql = `

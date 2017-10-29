@@ -32,14 +32,9 @@ module.exports = React.createClass({
     },
 
     getUrl: function(story) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var user = this.props.user;
-        var url = require('pages/person-page').getUrl({
-            server,
-            schema,
-            user: user.id,
+        var url = this.props.route.find(require('pages/person-page'), {
+            schema: this.props.route.parameters.schema,
+            user: this.props.user.id,
             storyId: (story) ? story.id : 0,
         });
         return url;

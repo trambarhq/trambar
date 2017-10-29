@@ -5,6 +5,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
 var AnchorFinder = require('utils/anchor-finder');
+var CorsRewriter = require('routing/cors-rewriter');
 
 // non-visual components
 var RemoteDataSource = require('data/remote-data-source');
@@ -31,6 +32,24 @@ var ErrorPage = require('pages/error-page');
 // widgets
 var TopNavigation = require('widgets/top-navigation');
 var BottomNavigation = require('widgets/bottom-navigation');
+
+// cache
+var IndexedDBCache = require('data/indexed-db-cache');
+var SQLiteCache = require('data/sqlite-cache');
+var LocalStorageCache = require('data/local-storage-cache');
+var LocalCache;
+if (IndexedDBCache.isAvailable()) {
+    LocalCache = IndexedDBCache;
+} else if (SQLiteCache.isAvailable()) {
+    LocalCache = SQLiteCache;
+} else if (LocalStorageCache.isAvailable()) {
+    LocalCache = LocalStorageCache;
+}
+
+// notifier
+var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
+var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;
+var Notifier = WebsocketNotifier || PushNotifier;
 
 var pageClasses = [
     StartPage,
@@ -62,6 +81,8 @@ module.exports = React.createClass({
             localeManager: LocaleManager,
             themeManager: ThemeManager,
             uploadManager: PayloadManager,
+            cache: LocalCache,
+            notifier: Notifier,
         });
         return {
             database: null,
@@ -72,6 +93,9 @@ module.exports = React.createClass({
 
             canAccessServer: false,
             canAccessSchema: false,
+            subscriptionId: null,
+            connectionId: null,
+            pushRelay: (Notifier == PushNotifier) ? null : undefined,
             renderingStartPage: false,
         };
     },
@@ -210,17 +234,16 @@ module.exports = React.createClass({
      */
     renderConfiguration: function() {
         var setters = this.components.setters;
+        var route = this.state.route;
+        var serverAddress = (route) ? route.parameters.address : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             locale: this.state.locale,
-            cacheName: 'trambar',
-            defaultProfileImage: require('profile-image-placeholder.png'),
 
             onChange: this.handleDatabaseChange,
             onAuthorization: this.handleAuthorization,
             onExpiration: this.handleExpiration,
             onViolation: this.handleViolation,
-            onAlertClick: this.handleAlertClick,
         };
         var uploadManagerProps = {
             ref: setters.uploadManager,
@@ -232,6 +255,7 @@ module.exports = React.createClass({
             ref: setters.routeManager,
             pages: pageClasses,
             database: this.state.database,
+            rewrite: this.rewriteUrl,
             onChange: this.handleRouteChange,
             onRedirectionRequest: this.handleRedirectionRequest,
         };
@@ -250,12 +274,38 @@ module.exports = React.createClass({
                 'columns-2': 700,
                 'columns-3': 1300,
             },
-            route: this.state.route,
+            serverAddress: serverAddress,
             onChange: this.handleThemeChange,
         };
+        var cacheProps = {
+            ref: setters.cache,
+            databaseName: 'trambar',
+        };
+        var notifierProps = {
+            ref: setters.notifier,
+            serverAddress: serverAddress,
+            onConnect: this.handleConnection,
+            onDisconnect: this.handleDisconnection,
+            onNotify: this.handleChangeNotification,
+            onAlertClick: this.handleAlertClick,
+        };
+        if (Notifier === WebsocketNotifier) {
+            _.assign(notifierProps, {
+                locale: this.props.locale,
+                defaultProfileImage: require('profile-image-placeholder.png'),
+            })
+        } else if (Notifier === PushNotifier) {
+            if (typeof(this.state.pushRelay) === 'string') {
+                _.assign(notifierProps, {
+                    relayAddress: this.state.pushRelay
+                });
+            }
+        }
         return (
             <div>
-                <RemoteDataSource {...remoteDataSourceProps} />
+                <LocalCache {...cacheProps} />
+                <Notifier {...notifierProps} />
+                <RemoteDataSource {...remoteDataSourceProps} cache={this.components.cache} />
                 <PayloadManager {...uploadManagerProps} />
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
@@ -265,9 +315,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called after application has rerendered
+     * Check state variables after update
      */
     componentDidUpdate: function(prevProps, prevState) {
+        if (!this.state.subscriptionId) {
+            if (this.state.canAccessServer) {
+                if (this.state.connectionId) {
+                    this.createSubscription();
+                } else {
+                    if (Notifier === PushNotifier) {
+                        // PushNotifier needs the address to the relay
+                        if (this.state.pushRelay === null) {
+                            this.discoverPushRelay();
+                        }
+                    }
+                }
+            }
+        } else if (!(this.state.subscriptionId instanceof Error)) {
+            var schemaBefore = prevState.route.parameters.schema || 'global';
+            var schemaAfter = this.state.route.parameters.schema || 'global';
+            if (schemaBefore !== schemaAfter && this.state.locale !== prevState.locale) {
+                this.updateSubscription();
+            }
+        }
+
         // hide the splash screen once app is ready
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
@@ -286,31 +357,120 @@ module.exports = React.createClass({
     },
 
     /**
+     * Create a subscription to data monitoring service
+     */
+    createSubscription: function() {
+        if (this.creatingSubscription) {
+            return;
+        }
+        this.creatingSubscription = true;
+
+        var db = this.state.database.use({ schema: 'global', by: this });
+        db.start().then((userId) => {
+            var address;
+            if (Notifier === WebsocketNotifier) {
+                address = 'websocket';
+            } else if (Notifier === PushNotifier) {
+                address = this.state.pushRelay;
+            }
+            var subscription = {
+                user_id: userId,
+                address: address,
+                token: this.state.connectionId,
+                schema: this.state.route.parameters.schema || 'global',
+                area: 'client',
+                locale: this.state.locale.languageCode,
+                details: {
+                    user_agent: navigator.userAgent
+                }
+            };
+            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
+                this.setState({ subscriptionId: subscription.id })
+            });
+        }).catch((err) => {
+            this.setState({ subscriptionId: err });
+        }).finally(() => {
+            this.creatingSubscription = false;
+        });
+    },
+
+    /**
+     * Update subscription
+     */
+    updateSubscription: function() {
+        if (this.updatingSubscription) {
+            return;
+        }
+        this.updatingSubscription = true;
+
+        var db = this.state.database.use({ schema: 'global', by: this });
+        db.start().then((userId) => {
+            var subscription = {
+                id: this.state.subscriptionId,
+                schema: this.state.route.parameters.schema || 'global',
+                locale: this.state.locale.languageCode,
+            };
+            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
+                this.setState({ subscriptionId: subscription.id })
+            });
+        }).catch((err) => {
+            this.setState({ subscriptionId: err });
+        }).finally(() => {
+            this.updatingSubscription = false;
+        });
+    },
+
+    /**
+     * Ask remote server for the
+     *
+     * @return {[type]}
+     */
+    discoverPushRelay: function() {
+        if (this.discoveringPushRelay) {
+            return;
+        }
+        this.discoveringPushRelay = true;
+
+        var db = this.state.database.use({ schema: 'global', by: this });
+        db.start().then((userId) => {
+            return db.findOne({ table: 'system' }).then((system) => {
+                var address = _.get(system, 'settings.push_relay', '');
+                this.setState({ pushRelay: address });
+                return null;
+            });
+        }).catch((err) => {
+            this.setState({ pushRelay: err });
+        }).finally(() => {
+            this.discoveringPushRelay = false;
+        });
+    },
+
+    /**
      * Load user credentials (authorization token, user_id, etc.) from local cache
      *
-     * @param  {String} server
+     * @param  {String} address
      *
      * @return {Promise<Object|null>}
      */
-    loadCredentialsFromCache: function(server) {
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server };
+    loadCredentialsFromCache: function(address) {
+        var db = this.state.database.use({ schema: 'local', by: this });
+        var criteria = { address };
         return db.findOne({ table: 'user_credentials', criteria });
     },
 
     /**
      * Save user credentials to local cache
      *
-     * @param  {String} server
+     * @param  {String} address
      * @param  {Object} credentials
      *
      * @return {Promise<Object>}
      */
-    saveCredentialsToCache: function(server, credentials) {
+    saveCredentialsToCache: function(address, credentials) {
         // save the credentials
-        var db = this.state.database.use({ by: this, schema: 'local' });
+        var db = this.state.database.use({ schema: 'local', by: this });
         var record = _.extend({
-            key: server,
+            key: address,
         }, credentials);
         return db.saveOne({ table: 'user_credentials' }, record);
     },
@@ -318,15 +478,33 @@ module.exports = React.createClass({
     /**
      * Remove user credentials from local cache
      *
-     * @param  {String} server
+     * @param  {String} address
      *
      * @return {Promise<Object>}
      */
-    removeCredentialsFromCache: function(server) {
+    removeCredentialsFromCache: function(address) {
         // save the credentials
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var record = { key: server };
+        var db = this.state.database.use({ schema: 'local', by: this });
+        var record = { key: address };
         return db.removeOne({ table: 'user_credentials' }, record);
+    },
+
+    /**
+     * Rewrite the URL that, either extracting the server address or inserting it
+     *
+     * @param  {Object} urlParts
+     * @param  {Object} params
+     * @param  {String} op
+     */
+    rewriteUrl: function(urlParts, params, op) {
+        if (op === 'parse') {
+            CorsRewriter.extract(urlParts, params);
+        } else {
+            if (this.state.route) {
+                params = _.defaults(params, this.state.route.parameters);
+            }
+            CorsRewriter.insert(urlParts, params);
+        }
     },
 
     /**
@@ -335,7 +513,14 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDatabaseChange: function(evt) {
-        var database = new Database(evt.target);
+        var context;
+        if (this.state.route) {
+            context = {
+                address: this.state.route.parameters.address,
+                schema: this.state.route.parameters.schema,
+            };
+        }
+        var database = new Database(evt.target, context);
         this.setState({ database });
     },
 
@@ -345,10 +530,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleAuthorization: function(evt) {
-        this.saveCredentialsToCache(evt.server, evt.credentials);
+        this.saveCredentialsToCache(evt.address, evt.credentials);
 
-        var server = this.state.route.parameters.server || window.location.hostname;
-        if (server === evt.server) {
+        var address = this.state.route.parameters.address;
+        if (evt.address === address) {
             // it's possible to access the server now
             // assume we can access the schema too
             this.setState({
@@ -364,10 +549,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeCredentialsFromCache(evt.server);
+        this.removeCredentialsFromCache(evt.address);
 
-        var server = this.state.route.parameters.server || window.location.hostname;
-        if (evt.server === server) {
+        var address = this.state.route.parameters.address;
+        if (evt.address === address) {
             this.setState({
                 canAccessServer: false,
                 canAccessSchema: false,
@@ -381,9 +566,9 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleViolation: function(evt) {
-        var server = this.state.route.parameters.server || window.location.hostname;
+        var address = this.state.route.parameters.address;
         var schema = this.state.route.parameters.schema;
-        if (evt.server === server && evt.schema === schema) {
+        if (evt.address === address && evt.schema === schema) {
             this.setState({
                 canAccessSchema: false,
             });
@@ -446,25 +631,31 @@ module.exports = React.createClass({
      */
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
-        var dataSource = this.components.remoteDataSource;
-        var server = route.parameters.server || location.hostname;
-        if (dataSource.hasAuthorization(server)) {
+        var address = route.parameters.address;
+        var database = this.state.database;
+        if (address != this.state.database.context.address) {
+            var dataSource = this.components.remoteDataSource;
+            database = new Database(dataSource, { address })
+        }
+        if (database.hasAuthorization()) {
             // route is accessible
             this.setState({
                 route,
+                database,
                 canAccessServer: true,
                 canAccessSchema: true,
             });
         } else {
             // see if user credentials are stored locally
-            this.loadCredentialsFromCache(server).then((authorization) => {
+            this.loadCredentialsFromCache(address).then((authorization) => {
                 if (authorization) {
-                    dataSource.addAuthorization(server, authorization);
+                    database.addAuthorization(authorization);
                 }
-                if (dataSource.hasAuthorization(server)) {
+                if (database.hasAuthorization(address)) {
                     // route is now accessible
                     this.setState({
                         route,
+                        database,
                         canAccessServer: true,
                         canAccessSchema: true,
                     });
@@ -472,6 +663,7 @@ module.exports = React.createClass({
                     // show start page, where user can log in or choose another project
                     this.setState({
                         route,
+                        database,
                         canAccessServer: false,
                         canAccessSchema: false,
                     });
@@ -520,19 +712,21 @@ module.exports = React.createClass({
      * @return {Promise<String>}
      */
     handleRedirectionRequest: function(evt) {
+        var routeManager = evt.target;
         return Promise.try(() => {
             if (evt.url === '/') {
                 // go to either StartPage or NewsPage
-                var db = this.state.database.use({ by: this, schema: 'local' });
+                var db = this.state.database.use({ schema: 'local', by: this });
                 return db.find({ table: 'project_link' }).then((links) => {
                     var recent = _.last(_.sortBy(links, 'atime'));
+                    var url;
                     if (recent) {
-                        return NewsPage.getUrl({
-                            server: recent.server,
+                        url = routeManager.find(NewsPage, {
+                            address: recent.address,
                             schema: recent.schema,
                         });
                     } else {
-                        return StartPage.getUrl({});
+                        url = routeManager.find(StartPage);
                     }
                     return url;
                 });
@@ -540,9 +734,10 @@ module.exports = React.createClass({
                 throw new HttpError(404);
             }
         }).catch((err) => {
-            var errorCode = err.statusCode || 500;
+            var code = err.statusCode || 500;
             console.error(err);
-            return ErrorPage.getUrl({ errorCode });
+            var url = routeManager.find(ErrorPage, { code });
+            return url;
         });
     },
 
@@ -581,6 +776,39 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when notifier has made a connection
+     *
+     * @param  {Object} evt
+     */
+    handleConnection: function(evt) {
+        this.setState({ connectionId: evt.token });
+    },
+
+    /**
+     * Called when notifier reports a lost of connection
+     *
+     * @param  {Object} evt
+     */
+    handleDisconnection: function(evt) {
+        this.setState({ connectionId: null });
+    },
+
+    /**
+     * Called upon the arrival of a notification message, delivered through
+     * websocket or push
+     *
+     * @param  {Object} evt
+     */
+    handleChangeNotification: function(evt) {
+        var dataSource = this.components.remoteDataSource;
+        dataSource.invalidate(evt.address, evt.changes);
+
+        _.forIn(evt.changes, (idList, name) => {
+             console.log('Change notification: ', name, idList);
+        });
+    },
+
+    /**
      * Called when user clicks on alert message
      *
      * @param  {Object} evt
@@ -588,13 +816,10 @@ module.exports = React.createClass({
     handleAlertClick: function(evt) {
         var alert = evt.alert;
         // redirect to news page
-        var route = this.state.route;
-        var url = require('pages/news-page').getUrl({
-            server: route.parameters.server,
+        this.state.route.redirect(require('pages/news-page'), {
             schema: alert.schema,
-            storyId: alert.story_id,
+            story: alert.story_id,
         });
-        route.change(url);
 
         // this is needed in Chrome
         window.focus();

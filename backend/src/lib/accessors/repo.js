@@ -45,7 +45,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(64) NOT NULL,
-                name varchar(64) NOT NULL,
+                name varchar(128) NOT NULL,
                 server_id int NOT NULL,
                 external_id int NOT NULL,
                 PRIMARY KEY (id)
@@ -69,6 +69,25 @@ module.exports = _.create(Data, {
             GRANT SELECT ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
+    },
+
+    /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                // completion of tasks will automatically update details->resources
+                var Task = require('accessors/task');
+                return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table ]);
+            });
+        });
     },
 
     /**

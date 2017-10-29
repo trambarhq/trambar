@@ -28,45 +28,36 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('//:server/:schema/news/:roles/:date/?', url)
-                || Route.match('//:server/:schema/news/:roles/?', url)
-                || Route.match('//:server/:schema/news/?', url)
-                || Route.match('/:schema/news/:roles/:date/?', url)
-                || Route.match('/:schema/news/:roles/?', url)
-                || Route.match('/:schema/news/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/:schema/news/:roles/:date/?',
+                '/:schema/news/:roles/?',
+                '/:schema/news/?',
+            ], (params) => {
+                params.roles = _.filter(_.map(_.split(params.roles, '+'), parseInt));
+                params.search = query.search;
+                params.story = hash ? parseInt(_.replace(hash, /\D/g, '')) : undefined;
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var schema = params.schema;
-            var roles = params.roles;
-            var date = params.date;
-            var search = params.search;
-            var storyId = params.storyId;
-            var url = `/${schema}/news/`;
-            if (server) {
-                url = `//${server}${url}`;
+            var path = `/${params.schema}/news/`, query, hash;
+            if (!_.isEmpty(params.roles)) {
+                path += `${params.roles.join('+')}/`;
+            } else if (params.date) {
+                path += `all/`;
             }
-            if (roles instanceof Array) {
-                roles = roles.join('+');
+            if (params.date) {
+                path += `${params.date}/`
             }
-            if (roles && roles !== 'all') {
-                url += `${roles}/`;
-            } else if (date) {
-                url += `all/`;
+            if (params.search) {
+                query = { search: params.search };
             }
-            if (date) {
-                url += `${date}/`
+            if (params.story) {
+                hash = `#story-${params.story}`;
             }
-            if (search) {
-                search = _.replace(encodeURIComponent(search), /%20/g, '+');
-                url += `?search=${search}`;
-            }
-            if (storyId) {
-                url += `#story-${storyId}`;
-            }
-            return url;
+            return { path, query, hash };
         },
 
         navigation: {
@@ -82,14 +73,9 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var date = route.parameters.date;
-        var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
-        var searchString = route.query.search;
-        var searching = !!(date || !_.isEmpty(roleIds) || searchString);
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             stories: null,
             draftStories: null,
@@ -116,21 +102,21 @@ module.exports = Relaks.createClass({
             if (searching) {
                 // load story matching filters
                 var criteria = {};
-                if (date) {
-                    var s = Moment(date);
+                if (params.date) {
+                    var s = Moment(params.date);
                     var e = s.clone().endOf('day');
                     var rangeStart = s.toISOString();
                     var rangeEnd = e.toISOString();
                     var range = `[${rangeStart},${rangeEnd}]`;
                     criteria.time_range = range;
                 }
-                if (!_.isEmpty(roleIds)) {
-                    criteria.role_ids = roleIds;
+                if (!_.isEmpty(params.roles)) {
+                    criteria.role_ids = params.roles;
                 }
-                if (searchString) {
+                if (params.search) {
                     criteria.search = {
                         lang: this.props.locale.lang,
-                        text: searchString,
+                        text: params.search,
                     };
                     criteria.limit = 100;
                 } else {
@@ -144,8 +130,8 @@ module.exports = Relaks.createClass({
                     target_user_id: props.currentUser.id,
                     filters: {},
                 };
-                if (!_.isEmpty(roleIds)) {
-                    criteria.filters.role_ids = roleIds;
+                if (!_.isEmpty(params.roles)) {
+                    criteria.filters.role_ids = params.roles;
                 }
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
                     if (!listing) {
@@ -155,24 +141,19 @@ module.exports = Relaks.createClass({
                     criteria.id = listing.story_ids;
                     return db.find({ table: 'story', criteria });
                 }).then((stories) => {
-                    var storyId = parseInt(_.replace(this.props.route.hash, /\D/g, ''));
-                    if (storyId) {
+                    if (params.story) {
                         // see if the story is in the list
-                        if (!_.find(stories, { id: storyId })) {
+                        if (!_.find(stories, { id: params.story })) {
                             // redirect to page showing stories on the date
                             // of the story; to do that, we need the object
                             // itself
-                            var criteria = { id: storyId };
+                            var criteria = { id: params.story };
                             return db.findOne({ table: 'story', criteria }).then((story) => {
                                 if (story) {
-                                    var date = Moment(story.ptime).format('YYYY-MM-DD');
-                                    var url = require('pages/news-page').getUrl({
-                                        server,
-                                        schema,
-                                        date,
-                                        storyId
-                                    });
-                                    return this.props.route.change(url, true).return([]);
+                                    return this.props.route.redirect(require('pages/news-page'), {
+                                        date: Moment(story.ptime).format('YYYY-MM-DD'),
+                                        story: params.story,
+                                    }).return([]);
                                 }
                                 return stories;
                             });

@@ -44,7 +44,7 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                name varchar(64) NOT NULL DEFAULT '',
+                name varchar(128) NOT NULL DEFAULT '',
                 repo_ids int[] NOT NULL DEFAULT '{}'::int[],
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 settings jsonb NOT NULL DEFAULT '{}',
@@ -74,8 +74,7 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Attach triggers to this table, also add trigger on task so details
-     * are updated when tasks complete
+     * Attach triggers to the table.
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -83,8 +82,10 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     watch: function(db, schema) {
-        return Data.watch.call(this, db, schema).then(() => {
-            return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'name', 'repo_ids', 'user_ids' ];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                // completion of tasks will automatically update details->resources
                 var Task = require('accessors/task');
                 return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
             });

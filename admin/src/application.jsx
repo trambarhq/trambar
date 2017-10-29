@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
+var CorsRewriter = require('routing/cors-rewriter');
 
 // non-visual components
 var RemoteDataSource = require('data/remote-data-source');
@@ -35,6 +36,19 @@ var SignInPage = require('pages/sign-in-page');
 
 // widgets
 var SideNavigation = require('widgets/side-navigation');
+
+// cache
+var IndexedDBCache = require('data/indexed-db-cache');
+var LocalStorageCache = require('data/local-storage-cache');
+var LocalCache;
+if (IndexedDBCache.isAvailable()) {
+    LocalCache = IndexedDBCache;
+} else if (LocalStorageCache.isAvailable()) {
+    LocalCache = LocalStorageCache;
+}
+
+// notifier
+var WebsocketNotifier = require('transport/websocket-notifier');
 
 var pageClasses = [
     ProjectListPage,
@@ -71,6 +85,8 @@ module.exports = React.createClass({
             localeManager: LocaleManager,
             themeManager: ThemeManager,
             payloadManager: PayloadManager,
+            cache: LocalCache,
+            notifier: WebsocketNotifier,
         });
         return {
             database: null,
@@ -80,6 +96,8 @@ module.exports = React.createClass({
             theme: null,
 
             canAccessServer: false,
+            subscriptionId: null,
+            connectionId: null,
         };
     },
 
@@ -164,11 +182,11 @@ module.exports = React.createClass({
      */
     renderConfiguration: function() {
         var setters = this.components.setters;
+        var route = this.state.route;
+        var serverAddress = (route) ? route.parameters.address : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
-            locale: this.state.locale,
-            cacheName: 'trambar-admin',
-            urlPrefix: '/admin',
+            basePath: '/admin',
             retrievalFlags: {
                 include_ctime: true,
                 include_mtime: true,
@@ -186,7 +204,9 @@ module.exports = React.createClass({
         var routeManagerProps = {
             ref: setters.routeManager,
             pages: pageClasses,
+            basePath: '/admin',
             database: this.state.database,
+            rewrite: this.rewriteUrl,
             onChange: this.handleRouteChange,
             onRedirectionRequest: this.handleRedirectionRequest,
         };
@@ -207,12 +227,26 @@ module.exports = React.createClass({
                 'wide': 1400,
                 'ultra-wide': 1700,
             },
-            route: this.state.route,
+            serverAddress: serverAddress,
             onChange: this.handleThemeChange,
+        };
+        var cacheProps = {
+            ref: setters.cache,
+            databaseName: 'trambar-admin',
+        };
+        var notifierProps = {
+            ref: setters.notifier,
+            serverAddress: serverAddress,
+            locale: this.props.locale,
+            onNotify: this.handleChangeNotification,
+            onConnect: this.handleConnection,
+            onDisconnect: this.handleDisconnection,
         };
         return (
             <div>
-                <RemoteDataSource {...remoteDataSourceProps} />
+                <LocalCache {...cacheProps} />
+                <WebsocketNotifier {...notifierProps} />
+                <RemoteDataSource {...remoteDataSourceProps} cache={this.components.cache} />
                 <PayloadManager {...payloadManagerProps} />
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
@@ -222,9 +256,20 @@ module.exports = React.createClass({
     },
 
     /**
-     * Hide the splash screen once app is ready
+     * Check state variables after update
      */
-    componentDidUpdate: function() {
+    componentDidUpdate: function(prevProps, prevState) {
+        if (!this.state.subscriptionId) {
+            if (this.state.canAccessServer && this.state.connectionId) {
+                this.createSubscription();
+            }
+        } else {
+            if (this.state.locale !== prevState.locale) {
+                this.updateSubscription();
+            }
+        }
+
+        // Hide the splash screen once app is ready
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
             setTimeout(() => {
@@ -234,31 +279,84 @@ module.exports = React.createClass({
     },
 
     /**
+     * Create a subscription to data monitoring service
+     */
+    createSubscription: function() {
+        if (this.creatingSubscription) {
+            return;
+        }
+        this.creatingSubscription = true;
+
+        var db = this.state.database.use({ schema: 'global', by: this });
+        db.start().then((userId) => {
+            var subscription = {
+                user_id: userId,
+                address: 'websocket',
+                token: this.state.connectionId,
+                schema: '*',
+                area: 'admin',
+                locale: this.state.locale.languageCode,
+                details: {
+                    user_agent: navigator.userAgent
+                }
+            };
+            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
+                this.setState({ subscriptionId: subscription.id })
+            });
+        }).finally(() => {
+            this.creatingSubscription = false;
+        });
+    },
+
+    /**
+     * Update subscription
+     */
+    updateSubscription: function() {
+        if (this.updatingSubscription) {
+            return;
+        }
+        this.updatingSubscription = true;
+
+        var db = this.state.database.use({ schema: 'global', by: this });
+        db.start().then((userId) => {
+            var subscription = {
+                id: this.state.subscriptionId,
+                locale: this.state.locale.languageCode,
+            };
+            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
+                this.setState({ subscriptionId: subscription.id })
+            });
+        }).finally(() => {
+            this.updatingSubscription = false;
+        });
+    },
+
+    /**
      * Load user credentials (authorization token, user_id, etc.) from local cache
      *
-     * @param  {String} server
+     * @param  {String} address
      *
      * @return {Promise<Object|null>}
      */
-    loadCredentialsFromCache: function(server) {
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var criteria = { server };
+    loadCredentialsFromCache: function(address) {
+        var db = this.state.database.use({ schema: 'local', by: this });
+        var criteria = { address };
         return db.findOne({ table: 'user_credentials', criteria });
     },
 
     /**
      * Save user credentials to local cache
      *
-     * @param  {String} server
+     * @param  {String} address
      * @param  {Object} credentials
      *
      * @return {Promise<Object>}
      */
-    saveCredentialsToCache: function(server, credentials) {
+    saveCredentialsToCache: function(address, credentials) {
         // save the credentials
-        var db = this.state.database.use({ by: this, schema: 'local' });
+        var db = this.state.database.use({ schema: 'local', by: this });
         var record = _.extend({
-            key: server,
+            key: address,
         }, credentials);
         return db.saveOne({ table: 'user_credentials' }, record);
     },
@@ -266,15 +364,33 @@ module.exports = React.createClass({
     /**
      * Remove user credentials from local cache
      *
-     * @param  {String} server
+     * @param  {String} address
      *
      * @return {Promise<Object>}
      */
-    removeCredentialsFromCache: function(server) {
+    removeCredentialsFromCache: function(address) {
         // save the credentials
-        var db = this.state.database.use({ by: this, schema: 'local' });
-        var record = { key: server };
+        var db = this.state.database.use({ schema: 'local', by: this });
+        var record = { key: address };
         return db.removeOne({ table: 'user_credentials' }, record);
+    },
+
+    /**
+     * Rewrite the URL that, either extracting the server address or inserting it
+     *
+     * @param  {Object} urlParts
+     * @param  {Object} params
+     * @param  {String} op
+     */
+    rewriteUrl: function(urlParts, params, op) {
+        if (op === 'parse') {
+            CorsRewriter.extract(urlParts, params);
+        } else {
+            if (this.state.route) {
+                params = _.defaults(params, this.state.route.parameters);
+            }
+            CorsRewriter.insert(urlParts, params);
+        }
     },
 
     /**
@@ -283,7 +399,14 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDatabaseChange: function(evt) {
-        var database = new Database(evt.target);
+        var context;
+        if (this.state.route) {
+            context = {
+                address: this.state.route.parameters.address,
+                schema: this.state.route.parameters.schema,
+            };
+        }
+        var database = new Database(evt.target, context);
         this.setState({ database });
     },
 
@@ -293,10 +416,9 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleAuthorization: function(evt) {
-        this.saveCredentialsToCache(evt.server, evt.credentials);
-
-        var server = window.location.hostname;
-        if (evt.server === server) {
+        this.saveCredentialsToCache(evt.address, evt.credentials);
+        var address = this.state.route.parameters.address;
+        if (evt.address === address) {
             this.setState({
                 canAccessServer: true
             });
@@ -309,10 +431,9 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeCredentialsFromCache(evt.server);
-
-        var server = window.location.hostname;
-        if (evt.server === server) {
+        this.removeCredentialsFromCache(evt.address);
+        var address = this.state.route.parameters.address;
+        if (evt.address === address) {
             this.setState({
                 canAccessServer: false
             });
@@ -375,30 +496,37 @@ module.exports = React.createClass({
      */
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
-        var dataSource = this.components.remoteDataSource;
-        var server = route.parameters.server || location.hostname;
-        if (dataSource.hasAuthorization(server)) {
+        var address = route.parameters.address;
+        var database = this.state.database;
+        if (address != this.state.database.context.address) {
+            var dataSource = this.components.remoteDataSource;
+            database = new Database(dataSource, { address })
+        }
+        if (database.hasAuthorization()) {
             // route is accessible
             this.setState({
                 route,
+                database,
                 canAccessServer: true,
             });
         } else {
             // see if user credentials are stored locally
-            this.loadCredentialsFromCache(server).then((authorization) => {
+            this.loadCredentialsFromCache(address).then((authorization) => {
                 if (authorization) {
-                    dataSource.addAuthorization(server, authorization);
+                    database.addAuthorization(authorization);
                 }
-                if (dataSource.hasAuthorization(server)) {
+                if (database.hasAuthorization()) {
                     // route is now accessible
                     this.setState({
                         route,
+                        database,
                         canAccessServer: true,
                     });
                 } else {
                     // show login page
                     this.setState({
                         route,
+                        database,
                         canAccessServer: false,
                     });
                 }
@@ -414,16 +542,17 @@ module.exports = React.createClass({
      * @return {Promise<String>}
      */
     handleRedirectionRequest: function(evt) {
+        var routeManager = evt.target;
         return Promise.try(() => {
             if (evt.url === '/') {
-                return ProjectListPage.getUrl({});
+                return routeManager.find(ProjectListPage);
             } else {
                 throw new HttpError(404);
             }
         }).catch((err) => {
-            var errorCode = err.statusCode || 500;
+            var code = err.statusCode || 500;
             console.error(err);
-            return ErrorPage.getUrl({ errorCode });
+            return routeManager.find(ErrorPage, { code });
         });
     },
 
@@ -456,6 +585,39 @@ module.exports = React.createClass({
     handleThemeChange: function(evt) {
         var theme = new Theme(evt.target);
         this.setState({ theme });
+    },
+
+    /**
+     * Called when notifier has made a connection
+     *
+     * @param  {Object} evt
+     */
+    handleConnection: function(evt) {
+        this.setState({ connectionId: evt.token });
+    },
+
+    /**
+     * Called when notifier reports a lost of connection
+     *
+     * @param  {Object} evt
+     */
+    handleDisconnection: function(evt) {
+        this.setState({ connectionId: null });
+    },
+
+    /**
+     * Called upon the arrival of a notification message, delivered through
+     * websocket or push
+     *
+     * @param  {Object} evt
+     */
+    handleChangeNotification: function(evt) {
+        var dataSource = this.components.remoteDataSource;
+        dataSource.invalidate(evt.address, evt.changes);
+
+        _.forIn(evt.changes, (idList, name) => {
+             console.log('Change notification: ', name, idList);
+        });
     },
 
     /**

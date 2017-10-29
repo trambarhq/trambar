@@ -23,33 +23,26 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('//:server/:schema/people/:roles/?', url)
-                || Route.match('//:server/:schema/people/?', url)
-                || Route.match('/:schema/people/:roles/?', url)
-                || Route.match('/:schema/people/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/:schema/people/:roles/?',
+                '/:schema/people/?',
+            ], (params) => {
+                params.roles = _.filter(_.map(_.split(params.roles, '+'), parseInt));
+                params.search = query.search;
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var schema = params.schema;
-            var roles = params.roles;
-            var search = params.search;
-            var url = `/${schema}/people/`;
-            if (server) {
-                url = `//${server}${url}`;
+            var path = `/${params.schema}/people/`, query, hash;
+            if (!_.isEmpty(params.roles)) {
+                url += `${params.roles.join('+')}/`;
             }
-            if (roles instanceof Array) {
-                roles = roles.join('+');
+            if (params.search) {
+                query = { search: params.search };
             }
-            if (roles && roles !== 'all') {
-                url += `${roles}/`;
-            }
-            if (search) {
-                search = _.replace(encodeURIComponent(search), /%20/g, '+');
-                url += `?search=${search}`;
-            }
-            return url;
+            return { path, query, hash };
         },
 
         navigation: {
@@ -65,11 +58,8 @@ module.exports = Relaks.createClass({
     },
 
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var searchString = route.query.search;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             stories: null,
             currentUserId: null,
@@ -85,21 +75,20 @@ module.exports = Relaks.createClass({
             var criteria = {};
             criteria.id = userId;
             return db.findOne({ schema: 'global', table: 'user', criteria });
-        }).then((currentUser) => {
-            props.currentUser = currentUser;
+        }).then((user) => {
+            props.currentUser = user;
             meanwhile.check();
         }).then(() => {
-            var roleIds = _.filter(_.map(_.split(route.parameters.roles, '+'), Number));
             var criteria = {
                 hidden: false
             };
-            if (!_.isEmpty(roleIds)) {
-                criteria.role_ids = roleIds;
+            if (!_.isEmpty(params.roles)) {
+                criteria.role_ids = params.roles;
             }
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
-            if (searchString) {
-                users = findMatchingUsers(users, searchString);
+            if (params.search) {
+                users = findMatchingUsers(users, params.search);
             }
             props.users = users;
             return <PeoplePageSync {...props} />;

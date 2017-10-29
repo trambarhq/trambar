@@ -72,6 +72,18 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Attach triggers to the table.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    watch: function(db, schema) {
+        return this.createChangeTrigger(db, schema);
+    },
+
+    /**
      * Delete unused objects created before given time
      *
      * @param  {Database} db

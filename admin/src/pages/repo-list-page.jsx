@@ -33,12 +33,20 @@ module.exports = Relaks.createClass({
         /**
          * Match current URL against the page's
          *
-         * @param  {String} url
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseUrl: function(url) {
-            return Route.match('/projects/:projectId/repos/?', url);
+        parseUrl: function(path, query, hash) {
+            return Route.match(path, [
+                '/projects/:project/repos/?'
+            ], (params) => {
+                params.project = parseInt(params.project);
+                params.edit = !!query.edit;
+                return params;
+            });
         },
 
         /**
@@ -46,14 +54,14 @@ module.exports = Relaks.createClass({
          *
          * @param  {Object} params
          *
-         * @return {String}
+         * @return {Object}
          */
         getUrl: function(params) {
-            var url = `/projects/${params.projectId}/repos/`;
+            var path = `/projects/${params.project}/repos/`, query, hash;
             if (params.edit) {
-                url += '?edit=1';
+                query = { edit: 1 };
             }
-            return url;
+            return { path, query, hash };
         },
     },
 
@@ -65,6 +73,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             project: null,
@@ -78,11 +87,9 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RepoListPageSync {...props} />, 250);
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             // load project
-            var criteria = {
-                id: parseInt(this.props.route.parameters.projectId)
-            };
+            var criteria = { id: params.project };
             return db.findOne({ table: 'project', criteria });
         }).then((project) => {
             props.project = project;
@@ -143,15 +150,6 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Return project id specified in URL
-     *
-     * @return {Number}
-     */
-    getProjectId: function() {
-        return parseInt(this.props.route.parameters.projectId);
-    },
-
-    /**
      * Return true when the URL indicate edit mode
      *
      * @param  {Object|null} props
@@ -160,7 +158,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return !!parseInt(props.route.query.edit);
+        return props.route.parameters.edit;
     },
 
     /**
@@ -171,9 +169,10 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit) {
-        var projectId = this.getProjectId();
-        var url = require('pages/repo-list-page').getUrl({ projectId, edit });
-        return this.props.route.change(url, true);
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.edit = edit;
+        return this.props.route.replace(module.exports, params);
     },
 
     componentWillReceiveProps: function(nextProps) {
@@ -406,10 +405,10 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 }
             } else {
                 // don't create the link when we're editing the list
-                url = require('pages/repo-summary-page').getUrl({
-                    projectId: this.getProjectId(),
-                    repoId: repo.id
-                });
+                var route = this.props.route;
+                var params = _.clone(route.parameters);
+                params.repo = repo.id;
+                url = route.find(require('pages/repo-summary-page'), params);
             }
             return (
                 <td>
@@ -439,9 +438,9 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             var contents;
             if (server) {
                 var title = p(server.details.title) || t(`server-type-${server.type}`);
-                var url = require('pages/server-summary-page').getUrl({
-                    serverId: server.id
-                });
+                var route = this.props.route;
+                var params = { server: server.id };
+                var url = route.find(require('pages/server-summary-page'), params);
                 contents =(
                     <a href={url}>
                         <i className={`fa fa-${server.type} fa-fw`} />
@@ -632,7 +631,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      */
     handleSaveClick: function(evt) {
         var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserId) => {
+        return db.start().then((userId) => {
             var project = {
                 id: this.props.project.id,
                 repo_ids: this.state.selectedRepoIds

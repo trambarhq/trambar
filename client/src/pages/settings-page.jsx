@@ -24,19 +24,18 @@ module.exports = React.createClass({
     },
 
     statics: {
-        parseUrl: function(url) {
-            return Route.match('/:schema/settings/?', url)
-                || Route.match('//:server/:schema/settings/?', url);
+        parseUrl: function(path, query, url) {
+            return Route.match(path, [
+                '/global/settings/?',
+                '/:schema/settings/?',
+            ], (params) => {
+                return params;
+            });
         },
 
         getUrl: function(params) {
-            var server = params.server;
-            var schema = params.schema;
-            var url = `/${schema}/settings/`;
-            if (server) {
-                url = `//${server}${url}`;
-            }
-            return url;
+            var path = `/${params.schema || 'global'}/settings/`, query, hash;
+            return { path, query, hash };
         },
 
         navigation: {
@@ -62,45 +61,5 @@ module.exports = React.createClass({
                 </Masonry>
             </div>
         );
-    },
-
-    renderProjects: function() {
-        var props = {
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <ProjectSettingsEditor {...props} />;
-    },
-
-    renderUserProfile: function() {
-        var props = {
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <UserProfileEditor {...props} />;
-    },
-
-    renderNotificationPreferences: function() {
-        var props = {
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <NotificationPreferencesEditor {...props} />;
-    },
-
-    renderLanguages: function() {
-        var props = {
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <LanguageSettingsEditor {...props} />;
     },
 });
