@@ -45,7 +45,7 @@ function remove(server, uri) {
     return request(server, uri, 'delete');
 }
 
-function request(server, uri, method, query, payload) {
+var request = function(server, uri, method, query, payload) {
     // TODO: handle token refreshing
     var baseUrl = _.trimEnd(server.settings.oauth.baseURL, '/') + '/api/v4';
     var token = server.settings.api.access_token;
@@ -116,63 +116,64 @@ function attempt(options) {
     });
 }
 
-function fetchCached(server, uri, query) {
-    if (query && query.hasOwnProperty('page')) {
-        return fetch(server, uri, query);
-    }
-    var cacheFilePath = getCachePath(server, uri, query);
-    return FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
-        var data = JSON.parse(json);
-        return data;
-    }).catch((err) => {
-        return fetch(server, uri, query).then((data) => {
-            var json = JSON.stringify(data, undefined, 2);
-            var folderPath = Path.dirname(cacheFilePath);
-            return createFolder(folderPath).then(() => {
-                return FS.writeFileAsync(cacheFilePath, json).then(() => {
-                    return data;
+var CACHE_FOLDER = process.env.CACHE_FOLDER;
+if (CACHE_FOLDER) {
+    var requestUncached = request;
+    request = function(server, uri, method, query, payload) {
+        if (method !== 'get') {
+            return requestUncached(server, uri, method, query, payload);
+        }
+        var cacheFilePath = getCachePath(server, uri, query);
+        return FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
+            var data = JSON.parse(json);
+            return data;
+        }).catch((err) => {
+            return requestUncached(server, uri, method, query).then((data) => {
+                var json = JSON.stringify(data, undefined, 2);
+                var folderPath = Path.dirname(cacheFilePath);
+                return createFolder(folderPath).then(() => {
+                    return FS.writeFileAsync(cacheFilePath, json).then(() => {
+                        return data;
+                    });
                 });
             });
         });
-    });
-}
-
-function createFolder(folderPath) {
-    return FS.statAsync(folderPath).catch((err) => {
-        var parentPath = Path.dirname(folderPath);
-        if (parentPath === folderPath) {
-            throw err;
-        }
-        return createFolder(parentPath).then(() => {
-            return FS.mkdirAsync(folderPath);
-        });
-    });
-}
-
-var CACHE_FOLDER = process.env.CACHE_FOLDER;
-
-function getCachePath(server, uri, query) {
-    var address = _.trimEnd(server.settings.oauth.baseURL, '/');
-    var domain = address.replace(/^https?:\/\//, '').replace(/:\d+/, '');
-    var path = _.trimEnd(uri, '/');
-    if (_.isEmpty(query)) {
-        path += '.json';
-    } else {
-        var filename = '';
-        _.forIn(query, (value, name) => {
-            if (filename) {
-                filename += '&';
-            }
-            filename += name;
-            filename += '=';
-            filename += encodeURIComponent(value);
-        });
-        filename += '.json';
-        path += '/' + filename;
     }
-    return `${CACHE_FOLDER}/${domain}${path}`;
-}
 
-if (CACHE_FOLDER) {
-    exports.fetch = fetchCached;
+    function createFolder(folderPath) {
+        return FS.statAsync(folderPath).catch((err) => {
+            var parentPath = Path.dirname(folderPath);
+            if (parentPath === folderPath) {
+                throw err;
+            }
+            return createFolder(parentPath).then(() => {
+                return FS.mkdirAsync(folderPath);
+            });
+        });
+    }
+
+    function getCachePath(server, uri, query) {
+        var address = _.trimEnd(server.settings.oauth.baseURL, '/');
+        var domain = address.replace(/^https?:\/\//, '').replace(/:\d+/, '');
+        var path = _.trimEnd(uri, '/');
+        if (!_.startsWith(path, '/')) {
+            path = '/' + path;
+        }
+        if (_.isEmpty(query)) {
+            path += '.json';
+        } else {
+            var filename = '';
+            _.forIn(query, (value, name) => {
+                if (filename) {
+                    filename += '&';
+                }
+                filename += name;
+                filename += '=';
+                filename += encodeURIComponent(value);
+            });
+            filename += '.json';
+            path += '/' + filename;
+        }
+        return `${CACHE_FOLDER}/${domain}${path}`;
+    }
 }
