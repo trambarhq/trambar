@@ -54,10 +54,7 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
                 requestCleaning = true;
             }
             if (requestCleaning) {
-                var id = NEW.id;
-                var atime = NEW.atime;
-                var sampleCount = NEW.sample_count || 0;
-                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, id, atime, sampleCount);
+                sendCleanNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, NEW);
             }
         }
     }
@@ -92,15 +89,15 @@ exports.updateResource.flags = 'SECURITY DEFINER';
  * doesn't get overridden by stale data
  */
 exports.coalesceResources = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    var oldResources = (OLD) ? OLD.details.resources || [] : [];
+    var oldResources = (OLD) ? OLD.details.resources : undefined;
     var newResources = NEW.details.resources;
     if (!oldResources && !newResources) {
         if (NEW.details.payload_id) {
-            oldResources = (OLD) ? [ OLD.details ] : [];
+            oldResources = (OLD) ? [ OLD.details ] : undefined;
             newResources = [ NEW.details ];
         }
     }
-    if (newResources) {
+    if (newResources && oldResources) {
         for (var i = 0; i < newResources.length; i++) {
             var newRes = newResources[i];
             if (newRes.payload_id) {

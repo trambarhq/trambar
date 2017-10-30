@@ -86,14 +86,14 @@ describe('Runtime', function() {
         it('should send notification message containg diff', function() {
             var stmts = initPLV8();
             var diff = { a: [ 'dingo', 'bingo' ] };
-            Runtime.sendChangeNotification('INSERT', 'schema', 'table', 5, diff);
+            Runtime.sendChangeNotification('INSERT', 'schema', 'table', { id: 5 }, { id: 5 }, diff, []);
             expect(stmts[0]).to.contain('NOTIFY');
         })
         it('should insert notification into message_queue when diff is large', function() {
             var stmts = initPLV8();
             var bigArray = Array(1000);
             var diff = { a: [ bigArray, bigArray.slice(1) ] };
-            Runtime.sendChangeNotification('INSERT', 'schema', 'table', 5, diff);
+            Runtime.sendChangeNotification('INSERT', 'schema', 'table', { id: 5, a: bigArray }, { id: 5, a: bigArray.slice(1) }, diff, [ 'a' ]);
             expect(stmts[0]).to.contain('INSERT').to.contain('message_queue');
             expect(stmts[1]).to.contain('NOTIFY').to.contain('1234');
         })
@@ -101,7 +101,7 @@ describe('Runtime', function() {
     describe('#sendCleanNotification()', function() {
         it('should send clean notification message', function() {
             var stmts = initPLV8();
-            Runtime.sendCleanNotification('UPDATE', 'schema', 'table', 5);
+            Runtime.sendCleanNotification('UPDATE', 'schema', 'table', { id: 5 });
             expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
         })
     })

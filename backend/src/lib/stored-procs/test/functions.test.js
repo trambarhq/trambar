@@ -176,4 +176,70 @@ describe('Functions', function() {
             expect(newDetails).to.have.property('ready', false);
         })
     })
+    describe('#serverIds()', function() {
+        it('should return a list of server ids from an array of objects', function() {
+            var external = [
+                {
+                    type: 'gitlab',
+                    server_id: 2,
+                    user: {
+                        id: 1,
+                    }
+                },
+                {
+                    type: 'facebook',
+                    server_id: 3,
+                    user: {
+                        id: '0123456789001234567890',
+                    }
+                }
+            ];
+            var list = Functions.serverIds(external);
+            expect(list).to.deep.equal([ 2, 3 ]);
+        })
+    })
+    describe('#intUserIds()', function() {
+        it('should return a list of user ids that are presumably numbers', function() {
+            var external = [
+                {
+                    type: 'gitlab',
+                    server_id: 2,
+                    user: {
+                        id: 1,
+                    }
+                },
+                {
+                    type: 'facebook',
+                    server_id: 3,
+                    user: {
+                        id: '0123456789001234567890',
+                    }
+                }
+            ];
+            var list = Functions.intUserIds(external, 'gitlab');
+            expect(list).to.deep.equal([ 1 ]);
+        })
+    })
+    describe('#stringUserIds()', function() {
+        it('should return a list of user ids that are presumably strings', function() {
+            var external = [
+                {
+                    type: 'gitlab',
+                    server_id: 2,
+                    user: {
+                        id: 1,
+                    }
+                },
+                {
+                    type: 'facebook',
+                    server_id: 3,
+                    user: {
+                        id: '0123456789001234567890',
+                    }
+                }
+            ];
+            var list = Functions.intUserIds(external, 'facebook');
+            expect(list).to.deep.equal([ '0123456789001234567890' ]);
+        })
+    })
 })

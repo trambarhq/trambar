@@ -67,22 +67,29 @@ describe('Triggers', function() {
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 2, mtime: mtime, details: { a: 'bingo' } };
-            Triggers.notifyDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('{"a":"dingo"},{"a":"bingo"}');
+            Triggers.notifyDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', [ 'details' ]);
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('{"a":"dingo"}')
+                .to.contain('{"a":"bingo"}');
         })
         it('should send change notification on insert', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var NEW = { id: 1, gn: 1, mtime: mtime, details: { a: 'bingo' } };
-            Triggers.notifyDataChange(null, NEW, 'INSERT', 'schema', 'table');
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('null,{"a":"bingo"}');
+            Triggers.notifyDataChange(null, NEW, 'INSERT', 'schema', 'table', [ 'details']);
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('{"a":"bingo"}');
         })
         it('should send change notification on delete', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime: mtime, details: { a: 'dingo' } };
-            Triggers.notifyDataChange(OLD, null, 'DELETE', 'schema', 'table');
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('{"a":"dingo"},null');
+            Triggers.notifyDataChange(OLD, null, 'DELETE', 'schema', 'table', [ 'details' ]);
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('{"a":"dingo"}');
         })
     })
     describe('#notifyLiveDataChange()', function() {
@@ -91,17 +98,22 @@ describe('Triggers', function() {
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'bingo' } };
-            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('{"a":"dingo"},{"a":"bingo"}');
+            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', [ 'details' ]);
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('{"a":"dingo"}')
+                .to.contain('{"a":"bingo"}');
         })
         it('should send clean notification when dirty becomes true', function() {
             var stmts = initPLV8();
             var mtime = new Date('2017');
             var OLD = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: false, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: true, details: { a: 'dingo' } };
-            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
+            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', []);
             expect(stmts).to.be.lengthOf(1);
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('clean');
         })
         it('should send clean notification on atime change', function() {
             var stmts = initPLV8();
@@ -109,8 +121,10 @@ describe('Triggers', function() {
             var atime = new Date('2017-06-04');
             var OLD = { id: 1, gn: 1, mtime, ltime: null, atime: null, dirty: true, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime, ltime: null, atime, dirty: true, details: { a: 'dingo' } };
-            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('clean');
+            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', []);
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('clean');
         })
         it('should not send clean notification when ltime is set', function() {
             var stmts = initPLV8();
@@ -119,7 +133,7 @@ describe('Triggers', function() {
             var atime = new Date('2017-06-04');
             var OLD = { id: 1, gn: 1, mtime, ltime, atime: null, dirty: true, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime, ltime, atime, dirty: true, details: { a: 'dingo' } };
-            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
+            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', []);
             expect(stmts).to.be.empty;
         })
         it('should send change notification after row is updated', function() {
@@ -130,8 +144,10 @@ describe('Triggers', function() {
             var mtimeNew = new Date('2017-07');
             var OLD = { id: 1, gn: 1, mtime, ltime, atime, dirty: true, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 2, mtime: mtimeNew, ltime: null, atime, dirty: false, details: { a: 'bingo' } };
-            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
-            expect(stmts[0]).to.contain('NOTIFY').to.contain('change');
+            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', []);
+            expect(stmts[0])
+                .to.contain('NOTIFY')
+                .to.contain('change');
         })
         it('should do nothing when an update results in no change', function() {
             var stmts = initPLV8();
@@ -140,7 +156,7 @@ describe('Triggers', function() {
             var atime = new Date('2017-06-04');
             var OLD = { id: 1, gn: 1, mtime, ltime, atime, dirty: true, details: { a: 'dingo' } };
             var NEW = { id: 1, gn: 1, mtime, ltime: null, atime, dirty: false, details: { a: 'dingo' } };
-            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table');
+            Triggers.notifyLiveDataChange(OLD, NEW, 'UPDATE', 'schema', 'table', []);
             expect(stmts).to.be.empty;
         })
     })
@@ -242,14 +258,15 @@ describe('Triggers', function() {
             var OLD = {
                 details: {
                     payload_id: 3,
-                    width: 400,
-                    height: 300,
-                    ready: true,
+                    ready: false,
                 }
             };
             var NEW = {
                 details: {
                     payload_id: 3,
+                    width: 400,
+                    height: 300,
+                    ready: true,
                 }
             };
             var TG_ARGV = [];

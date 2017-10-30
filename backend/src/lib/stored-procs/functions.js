@@ -130,3 +130,76 @@ exports.extendAuthorization = function(token, expire) {
 exports.extendAuthorization.args = 'token text, expire date';
 exports.extendAuthorization.ret = 'void';
 exports.extendAuthorization.flags = 'SECURITY DEFINER';
+
+/**
+ * Return a list of server ids connected to object
+ *
+ * @param  {Array<Object>} external
+ *
+ * @return {Array<Number>|null}
+ */
+exports.serverIds = function(external) {
+    var ids = [];
+    if (external) {
+        for (var i = 0; i < external.length; i++) {
+            var rec = external[i];
+            ids.push(rec.server_id);
+        }
+    }
+    return (ids.length > 0) ? ids : null;
+};
+exports.serverIds.args = 'external jsonb[]';
+exports.serverIds.ret = 'int[]';
+exports.serverIds.flags = 'IMMUTABLE';
+
+/**
+ * Return a list of external user id as integers
+ *
+ * @param  {Array<Object>} external
+ * @param  {String} type
+ *
+ * @return {Array<Number>|null}
+ */
+exports.intUserIds = function(external, type) {
+    var ids = [];
+    if (external) {
+        for (var i = 0; i < external.length; i++) {
+            var rec = external[i];
+            if (rec.type === type) {
+                if (rec.user && rec.user.id) {
+                    ids.push(rec.user.id);
+                }
+            }
+        }
+    }
+    return (ids.length > 0) ? ids : null;
+};
+exports.intUserIds.args = 'external jsonb[]';
+exports.intUserIds.ret = 'int[]';
+exports.intUserIds.flags = 'IMMUTABLE';
+
+/**
+ * Return a list of external user id as integers
+ *
+ * @param  {Array<Object>} external
+ * @param  {String} type
+ *
+ * @return {Array<Number>|null}
+ */
+exports.stringUserIds = function(external, type) {
+    var ids = [];
+    if (external) {
+        for (var i = 0; i < external.length; i++) {
+            var rec = external[i];
+            if (rec.type === type) {
+                if (rec.user && rec.user.id) {
+                    ids.push(rec.user.id);
+                }
+            }
+        }
+    }
+    return (ids.length > 0) ? ids : null;
+};
+exports.stringUserIds.args = 'external jsonb[]';
+exports.stringUserIds.ret = 'text[]';
+exports.stringUserIds.flags = 'IMMUTABLE';
