@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Request = require('request');
+var FS = Promise.promisifyAll(require('fs'));
+var Path = require('path');
 var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
 
@@ -21,7 +23,7 @@ function fetchAll(server, uri, params) {
     }, params);
     var done = false;
     Async.do(() => {
-        return fetch(server, uri, query).then((objects) => {
+        return request(server, uri, 'get', query).then((objects) => {
             objectLists.push(objects);
             if (objects.length === query.per_page && query.page < 100) {
                 query.page++;
@@ -112,4 +114,65 @@ function attempt(options) {
             }
         });
     });
+}
+
+function fetchCached(server, uri, query) {
+    if (query && query.hasOwnProperty('page')) {
+        return fetch(server, uri, query);
+    }
+    var cacheFilePath = getCachePath(server, uri, query);
+    return FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
+        var data = JSON.parse(json);
+        return data;
+    }).catch((err) => {
+        return fetch(server, uri, query).then((data) => {
+            var json = JSON.stringify(data, undefined, 2);
+            var folderPath = Path.dirname(cacheFilePath);
+            return createFolder(folderPath).then(() => {
+                return FS.writeFileAsync(cacheFilePath, json).then(() => {
+                    return data;
+                });
+            });
+        });
+    });
+}
+
+function createFolder(folderPath) {
+    return FS.statAsync(folderPath).catch((err) => {
+        var parentPath = Path.dirname(folderPath);
+        if (parentPath === folderPath) {
+            throw err;
+        }
+        return createFolder(parentPath).then(() => {
+            return FS.mkdirAsync(folderPath);
+        });
+    });
+}
+
+var CACHE_FOLDER = process.env.CACHE_FOLDER;
+
+function getCachePath(server, uri, query) {
+    var address = _.trimEnd(server.settings.oauth.baseURL, '/');
+    var domain = address.replace(/^https?:\/\//, '').replace(/:\d+/, '');
+    var path = _.trimEnd(uri, '/');
+    if (_.isEmpty(query)) {
+        path += '.json';
+    } else {
+        var filename = '';
+        _.forIn(query, (value, name) => {
+            if (filename) {
+                filename += '&';
+            }
+            filename += name;
+            filename += '=';
+            filename += encodeURIComponent(value);
+        });
+        filename += '.json';
+        path += '/' + filename;
+    }
+    return `${CACHE_FOLDER}/${domain}${path}`;
+}
+
+if (CACHE_FOLDER) {
+    exports.fetch = fetchCached;
 }
