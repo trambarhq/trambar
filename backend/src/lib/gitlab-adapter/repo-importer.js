@@ -19,6 +19,7 @@ exports.updateRepository = updateRepository;
  */
 function importRepositories(db, server) {
     // get list of repos from Gitlab
+    console.log(`Importing repositories from ${server.name}`);
     return retrieveRepos(server).then((glRepos) => {
         var criteria = {
             server_id: server.id,

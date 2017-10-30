@@ -157,7 +157,7 @@ function handleServerChangeEvent(db, event) {
         };
         return Server.findOne(db, 'global', criteria, '*').then((server) => {
             var accessToken = _.get(server, 'settings.api.access_token');
-            var oauthBaseUrl = _.get(server, 'settings.api.baseURL');
+            var oauthBaseUrl = _.get(server, 'settings.oauth.baseURL');
             if (!accessToken|| !oauthBaseUrl) {
                 return;
             }
@@ -210,8 +210,8 @@ function connectRepositories(db, project, repoIds) {
         var criteria = { id: repoIds, deleted: false };
         return Repo.find(db, 'global', criteria, '*').then((repos) => {
             // load their server records
-            var serverIds = _.uniq(_.map(repos, 'server_id'));
-            return Server.find(db, 'global', { id: serverIds }, '*').each((server) => {
+            var criteria = { id: _.uniq(_.map(repos, 'server_id')) };
+            return Server.find(db, 'global', criteria, '*').each((server) => {
                 var reposOnServer = _.filter(repos, { server_id: server.id });
                 return Promise.each(reposOnServer, (repo) => {
                     // schedule event import
@@ -304,7 +304,7 @@ function handleReactionChangeEvent(db, event) {
  */
 function handleSystemChangeEvent(db, event) {
     if (event.diff.settings) {
-        var hostBefore = event.previous.settings.address;
+        var hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
         var hostAfter = event.current.settings.address;
         return HookManager.removeHooks(db, hostBefore).then(() => {
             return HookManager.installHooks(db, hostAfter);
@@ -407,7 +407,6 @@ function handleHookCallback(req, res) {
     var repoId = req.params.repoId;
     var projectId = req.params.projectId;
     var event = req.body;
-    //console.log('Incoming: ', event);
     var db = database;
     return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
         return Project.findOne(db, 'global', { id: projectId }, '*').then((project) => {
