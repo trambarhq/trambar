@@ -93,7 +93,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'target_user_ids', 'published', 'ready', 'ptime', 'public' ];
+            var propNames = [ 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'target_user_ids', 'published', 'ready', 'ptime', 'public', 'external' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // merge changes to details->resources to avoid race between
                 // client-side changes and server-side changes
