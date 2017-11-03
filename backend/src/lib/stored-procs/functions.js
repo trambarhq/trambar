@@ -131,75 +131,56 @@ exports.extendAuthorization.args = 'token text, expire date';
 exports.extendAuthorization.ret = 'void';
 exports.extendAuthorization.flags = 'SECURITY DEFINER';
 
-/**
- * Return a list of server ids connected to object
- *
- * @param  {Array<Object>} external
- *
- * @return {Array<Number>|null}
- */
-exports.serverIds = function(external) {
-    var ids = [];
+exports.externalIdStrings = function(external, type, names) {
+    var strings = [];
     if (external) {
         for (var i = 0; i < external.length; i++) {
-            var rec = external[i];
-            ids.push(rec.server_id);
-        }
-    }
-    return (ids.length > 0) ? ids : null;
-};
-exports.serverIds.args = 'external jsonb[]';
-exports.serverIds.ret = 'int[]';
-exports.serverIds.flags = 'IMMUTABLE';
-
-/**
- * Return a list of external user id as integers
- *
- * @param  {Array<Object>} external
- * @param  {String} type
- *
- * @return {Array<Number>|null}
- */
-exports.intUserIds = function(external, type) {
-    var ids = [];
-    if (external) {
-        for (var i = 0; i < external.length; i++) {
-            var rec = external[i];
-            if (rec.type === type) {
-                if (rec.user && rec.user.id) {
-                    ids.push(rec.user.id);
+            var link = external[i];
+            if (link.type === type || !type) {
+                var valid = true;
+                var idLists = [];
+                if (type) {
+                    idLists.push([ link.server_id ]);
+                } else {
+                    idLists.push([]);
+                }
+                for (var j = 0; j < names.length; j++) {
+                    var name = names[j];
+                    var object = link[name];
+                    if (!object) {
+                        valid = false;
+                        break;
+                    }
+                    if (object.ids instanceof Array) {
+                        // multiple the lists
+                        var ids = object.ids;
+                        var newIdLists = [];
+                        for (var k = 0; k < idLists.length; k++) {
+                            var idList = idLists[k];
+                            for (var m = 0; m < ids.length; m++) {
+                                newIdLists.push(idList.concat(ids[m]));
+                            }
+                        }
+                        idLists = newIdLists;
+                    } else {
+                        // add id to each list
+                        for (var k = 0; k < idLists.length; k++) {
+                            var idList = idLists[k];
+                            idList.push(object.id);
+                        }
+                    }
+                }
+                if (valid) {
+                    for (var k = 0; k < idLists.length; k++) {
+                        var idList = idLists[k];
+                        strings.push(idList.join(','));
+                    }
                 }
             }
         }
     }
-    return (ids.length > 0) ? ids : null;
+    return (strings.length > 0) ? strings : null;
 };
-exports.intUserIds.args = 'external jsonb[]';
-exports.intUserIds.ret = 'int[]';
-exports.intUserIds.flags = 'IMMUTABLE';
-
-/**
- * Return a list of external user id as integers
- *
- * @param  {Array<Object>} external
- * @param  {String} type
- *
- * @return {Array<Number>|null}
- */
-exports.stringUserIds = function(external, type) {
-    var ids = [];
-    if (external) {
-        for (var i = 0; i < external.length; i++) {
-            var rec = external[i];
-            if (rec.type === type) {
-                if (rec.user && rec.user.id) {
-                    ids.push(rec.user.id);
-                }
-            }
-        }
-    }
-    return (ids.length > 0) ? ids : null;
-};
-exports.stringUserIds.args = 'external jsonb[]';
-exports.stringUserIds.ret = 'text[]';
-exports.stringUserIds.flags = 'IMMUTABLE';
+exports.externalIdStrings.args = 'external jsonb[], type text, names text[]';
+exports.externalIdStrings.ret = 'text[]';
+exports.externalIdStrings.flags = 'IMMUTABLE';

@@ -533,7 +533,8 @@ function authenticateThruPassport(req, res, server, params, scope) {
 function findMatchingUser(db, server, account) {
     // look for a user with the external id
     var criteria = {
-        external_id: parseInt(account.profile.id),
+        external_user_id: account.profile.id,
+        external_user_type: server.type,
         server_id: server.id,
         deleted: false,
     };
@@ -541,25 +542,20 @@ function findMatchingUser(db, server, account) {
         if (user) {
             return user;
         }
-        // look for a user that isn't bound to an external account yet
-        var criteria = {
-            external_id: null,
-            deleted: false,
-        };
-        return User.find(db, 'global', criteria, '*').then((users) => {
-            // match e-mail address
-            var emails = _.map(account.profile.emails, 'value');
-            var matching = _.find(users, (user) => {
-                // if server match the provider specified or if "any"
-                // provider was selected
-                if (user.server_id === server.id && user.server_id === 0) {
-                    return _.includes(emails, user.details.email);
-                }
-            });
+        // find a user with the email address
+        return Promise.reduce(account.profile.emails, (matching, email) => {
             if (matching) {
-                matching.server_id = server.id;
-                matching.external_id = externalId;
-                return User.updateOne(db, 'global', matching);
+                return matching;
+            }
+            var criteria = { email, deleted: false };
+            return User.findOne(db, 'global', criteria, 'id, type, external');
+        }).then((user) => {
+            if (user) {
+                user.external.push({
+                    type: server.type,
+                    user: { id: account.profile.id }
+                });
+                return User.updateOne(db, 'global', user);
             } else {
                 // create the user
                 return createNewUser(db, server, account);
@@ -587,12 +583,16 @@ function createNewUser(db, server, account) {
     }
     return retrieveProfileImage(profile).then((image) => {
         var user = {
-            external_id: parseInt(account.profile.id),
-            server_id: server.id,
             username: preferredUsername,
             type: userType,
             details: extractUserDetails(server.type, profile._json),
             approved: autoApprove,
+            external: [
+                {
+                    type: server.type,
+                    user: { id: account.profile.id }
+                }
+            ]
         };
         if (image) {
             image[`from_${server.type}`] = true;

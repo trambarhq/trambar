@@ -4,8 +4,6 @@ var Database = require('database');
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
-    schema: 'global',
-    table: 'live_data',
     columns: {
         id: Number,
         gn: Number,
@@ -25,6 +23,8 @@ module.exports = _.create(Data, {
 
     /**
      * Create table in schema
+     * 
+     * (for reference purpose only)
      *
      * @param  {Database} db
      * @param  {String} schema

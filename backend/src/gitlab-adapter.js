@@ -38,7 +38,6 @@ function start() {
                 app.set('json spaces', 2);
                 app.post('/gitlab/hook/:repoId/:projectId', handleHookCallback);
                 server = app.listen(80, () => {
-
                     resolve();
                 });
             });
@@ -78,8 +77,9 @@ function start() {
                     deleted: false,
                 };
                 return Repo.find(db, 'global', criteria, '*').each((repo) => {
+                    var repoLinks = _.filter(repo.external, { type: 'gitlab' });
                     var criteria = {
-                        id: repo.server_id,
+                        id: _.map(repoLinks, 'server_id'),
                         deleted: false,
                     };
                     return Server.find(db, 'global', criteria, '*').each((server) => {
@@ -207,24 +207,27 @@ function connectRepositories(db, project, repoIds) {
     }
     return getServerAddress(db).then((host) => {
         // load the repos in question
-        var criteria = { id: repoIds, deleted: false };
-        return Repo.find(db, 'global', criteria, '*').then((repos) => {
-            // load their server records
-            var criteria = { id: _.uniq(_.map(repos, 'server_id')) };
+        var criteria = {
+            id: repoIds,
+            type: 'gitlab',
+            deleted: false
+        };
+        return Repo.find(db, 'global', criteria, '*').each((repo) => {
+            var repoLinks = _.filter(repo.external, { type: 'gitlab' });
+            var criteria = {
+                id: _.map(repoLinks, 'server_id'),
+                deleted: false
+            };
             return Server.find(db, 'global', criteria, '*').each((server) => {
-                var reposOnServer = _.filter(repos, { server_id: server.id });
-                return Promise.each(reposOnServer, (repo) => {
-                    // schedule event import
-                    taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
-                        // make sure the project-specific schema exists
-                        return db.need(project.name).then(() => {
-                            return EventImporter.importEvents(db, server, repo, project);
-                        });
+                // schedule event import
+                taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                    // make sure the project-specific schema exists
+                    return db.need(project.name).then(() => {
+                        return EventImporter.importEvents(db, server, repo, project);
                     });
-
-                    // install hook on repo
-                    return HookManager.installProjectHook(host, server, repo, project);
                 });
+                // install hook on repo
+                return HookManager.installProjectHook(host, server, repo, project);
             });
         });
     });
@@ -245,16 +248,20 @@ function disconnectRepositories(db, project, repoIds) {
     }
     return getServerAddress(db).then((host) => {
         // load the repos in question
-        var criteria = { id: repoIds, deleted: false };
-        return Repo.find(db, 'global', criteria, '*').then((repos) => {
-            // load their server records
-            var serverIds = _.uniq(_.map(repos, 'server_id'));
-            return Server.find(db, 'global', { id: serverIds }, '*').each((server) => {
-                var reposOnServer = _.filter(repos, { server_id: server.id });
-                return Promise.each(reposOnServer, (repo) => {
-                    // remove hook on repo
-                    return HookManager.removeProjectHook(host, server, repo, project);
-                });
+        var criteria = {
+            id: repoIds,
+            type: 'gitlab',
+            deleted: false
+        };
+        return Repo.find(db, 'global', criteria, '*').each((repo) => {
+            var repoLinks = _.filter(repo.external, { type: 'gitlab' });
+            var criteria = {
+                id: _.map(repoLinks, 'server_id'),
+                deleted: false
+            };
+            return Server.findONe(db, 'global', criteria, '*').each((server) => {
+                // remove hook on repo
+                return HookManager.removeProjectHook(host, server, repo, project);
             });
         });
     });
@@ -269,13 +276,15 @@ function disconnectRepositories(db, project, repoIds) {
  * @return {Promise|undefined}
  */
 function handleStoryChangeEvent(db, event) {
+    /*
     if (event.current.published && event.current.ready) {
         if (event.current.type === 'issue') {
-            Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
+            return Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
                 // TODO
             });
         }
     }
+    */
 }
 
 /**
@@ -288,9 +297,11 @@ function handleStoryChangeEvent(db, event) {
  */
 function handleReactionChangeEvent(db, event) {
     if (event.current.published && event.current.ready) {
-        Reaction.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
-            // TODO
+        // TODO
+        /*
+        return Reaction.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
         });
+        */
     }
 }
 
@@ -318,6 +329,8 @@ function handleSystemChangeEvent(db, event) {
  * @param  {Array<Object>} events
  */
 function handleDatabaseSyncRequests(events) {
+    // TODO
+    return;
     var db = database;
     Promise.each(events, (event) => {
         switch (event.table) {
@@ -413,7 +426,8 @@ function handleHookCallback(req, res) {
             if (!repo || !project || !_.includes(project.repo_ids, repo.id)) {
                 return;
             }
-            return Server.findOne(db, 'global', { id: repo.server_id }, '*').then((server) => {
+            var repoLink = _.find(repo.external, { type: 'gitlab' });
+            return Server.findOne(db, 'global', { id: repoLink.server_id }, '*').then((server) => {
                 if (event.object_kind === 'note') {
                     return taskQueue.schedule(null, () => {
                         return CommentImporter.importComments(db, server, repo, event, project)

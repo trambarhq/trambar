@@ -1,16 +1,15 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var Moment = require('moment');
+
+var Transport = require('gitlab-adapter/transport');
+var Import = require('gitlab-adapter/import');
+var UserImporter = require('gitlab-adapter/user-importer');
 
 var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
 
-var Transport = require('gitlab-adapter/transport');
-var UserImporter = require('gitlab-adapter/user-importer');
-
 exports.importComments = importComments;
-exports.importCommitComments = importCommitComments;
-exports.importIssueComments = importIssueComments;
-exports.importMergeRequestComments = importMergeRequestComments;
 
 /**
  * Import comments
@@ -18,70 +17,56 @@ exports.importMergeRequestComments = importMergeRequestComments;
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {Object} event
  * @param  {Project} project
+ * @param  {Story} story
  *
  * @return {Promise}
  */
-function importComments(db, server, repo, event, project) {
-    if (event.commit) {
-        return importCommitComments(db, server, repo, event.commit, project);
-    } else if (msg.issue) {
-        return importIssueComments(db, server, repo, event.issue, project);
-    } else if (msg.merge_request) {
-        return importMergeRequestComments(db, server, repo, event.merge_request, project);
+function importComments(db, server, project, story) {
+    switch (story.type) {
+        case 'issue':
+            return importIssueComments(db, server, project, story);
+        case 'merge_request':
+            return importMergeRequestComments(db, server, project, story);
+        case 'push':
+        case 'merge':
+        case 'branch':
+            return importPushComments(db, server, project, story);
     }
 }
 
 /**
- * Import comments attached to commit
+ * Import comments attached to a merge request
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Object} commit
  * @param  {Project} project
+ * @param  {Story} story
  *
- * @return {Promise}
+ * @return {Promise<Array<Object>>}
  */
-function importCommitComments(db, server, repo, commit, project) {
-    console.log(`Importing comments for ${commit.id}`);
+function importIssueComments(db, server, project, story) {
     var schema = project.name;
+    var storyLink = Import.Link.find(story, server);
+    var issueLink = Import.Link.pick(storyLink, 'issue');
     var criteria = {
-        commit_ids: commit.id,
+        type: 'note',
+        story_id: story.id,
+        external_object: issueLink
     };
-    return Story.findOne(db, schema, criteria, '*').then((story) => {
-        if (!story) {
-            return;
-        }
-        var url = `/projects/${repo.external_id}/repository/commits/${commit.id}/comments`;
-        var extra = { commit_id: commit.id };
-        return importStoryComments(db, server, url, project, story, extra);
-    });
-}
-
-/**
- * Import comments attached to an issue
- *
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Object} issue
- * @param  {Project} project
- *
- * @return {Promise}
- */
-function importIssueComments(db, server, repo, issue, project) {
-    var schema = project.name;
-    var criteria = {
-        external_id: issue.id,
-    };
-    return Story.findOne(db, schema, criteria, '*').then((story) => {
-        if (!story) {
-            return;
-        }
-        var url = `/projects/${repo.external_id}/issues/${issue.iid}/notes`;
-        return importStoryComments(db, server, url, project, story);
+    return Reaction.find(db, schema, criteria, '*').then((reactions) => {
+        return fetchIssueNotes(server, storyLink.project.id, storyLink.issue.id).mapSeries((glNote) => {
+            var noteLink = Import.Link.create(server, { note: { id: glNote.id } });
+            var reaction = _.find(reactions, noteLink);
+            if (reaction) {
+                return reaction;
+            }
+            return UserImporter.importUser(db, server, glNote.author).then((author) => {
+                var link = Import.Link.merge(noteLink, storyLink);
+                var reactioNew = copyNoteProperties(reaction, story, author, glNote, link);
+                return Reaction.insertOne(db, schema, reactioNew);
+            });
+        });
     });
 }
 
@@ -90,81 +75,148 @@ function importIssueComments(db, server, repo, issue, project) {
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Object} mergeRequest
  * @param  {Project} project
+ * @param  {Story} story
  *
- * @return {Promise}
+ * @return {Promise<Array<Object>>}
  */
-function importMergeRequestComments(db, server, repo, mergeRequest, project) {
+function importMergeRequestComments(db, server, project, story) {
     var schema = project.name;
+    var storyLink = Import.Link.find(story, server);
+    var mergeRequestLink = Import.Link.pick(storyLink, 'merge_request');
     var criteria = {
-        external_id: mergeRequest.id,
-    };
-    return Story.findOne(db, schema, criteria, '*').then((story) => {
-        if (!story) {
-            return;
-        }
-        var url = `/projects/${repo.external_id}/merge_requests/${mergeRequest.iid}/notes`;
-        return importStoryComments(db, server, url, project, story);
-    });
-
-}
-
-function importStoryComments(db, server, url, project, story, extra) {
-    var schema = project.name;
-    var criteria = {
+        type: 'note',
         story_id: story.id,
-        repo_id: story.repo_id,
+        external_object: mergeRequestLink
     };
     return Reaction.find(db, schema, criteria, '*').then((reactions) => {
-        return Transport.fetchAll(server, url).then((notes) => {
-            var changes = [];
-            var nonSystemNotes = _.filter(notes, (note) => {
-                return !note.system;
-            });
-            var authors = _.map(nonSystemNotes, 'author');
-            return UserImporter.importUsers(db, server, authors).then((users) => {
-                _.each(nonSystemNotes, (note, index) => {
-                    var reaction;
-                    if (note.id) {
-                        reaction = _.find(reactions, { external_id: note.id });
-                    } else {
-                        // commit comments don't have ids for some reason
-                        reaction = reactions[index];
-                    }
-                    var author = _.find(users, { external_id: note.author.id });
-                    if (reaction || !author) {
-                        return;
-                    }
-                    reaction = {
-                        type: 'note',
-                        story_id: story.id,
-                        repo_id: story.repo_id,
-                        external_id: note.id,
-                        user_id: author.id,
-                        target_user_ids: story.user_ids,
-                        details: extra || {},
-                        published: true,
-                        ptime: getPublicationTime(note),
-                    };
-                    changes.push(reaction);
-                });
-            }).then(() => {
-                changes = _.orderBy(changes, [ 'ptime' ], [ 'asc' ]);
-                return Reaction.save(db, schema, changes);
+        return fetchMergeRequestNotes(server, storyLink.project.id, storyLink.merge_request.id).mapSeries((glNote) => {
+            var noteLink = Import.Link.create(server, { note: { id: glNote.id } });
+            var reaction = _.find(reactions, noteLink);
+            if (reaction) {
+                return reaction;
+            }
+            return UserImporter.importUser(db, server, glNote.author).then((author) => {
+                var link = Import.Link.merge(noteLink, storyLink);
+                var reactioNew = copyNoteProperties(reaction, story, author, glNote, link);
+                return Reaction.insertOne(db, schema, reactioNew);
             });
         });
     });
 }
 
 /**
- * Return time at which event occurred
+ * Import comments attached to a merge request
  *
- * @param  {Object} event
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Project} project
+ * @param  {Story} story
  *
- * @return {String}
+ * @return {Promise<Array<Object>>}
  */
-function getPublicationTime(event) {
-    return Moment(event.created_at).toISOString();
+function importPushComments(db, server, project, story) {
+    var schema = project.name;
+    var storyLink = Import.Link.find(story, server);
+    var commitsLink = Import.Link.pick(storyLink, 'commit');
+    var criteria = {
+        type: 'note',
+        story_id: story.id,
+        external_object: commitsLink
+    };
+    return Reaction.find(db, schema, criteria, '*').then((reactions) => {
+        return Promise.mapSeries(storyLink.commit.ids, (commitId) => {
+            return fetchCommitNotes(server, storyLink.project.id, commitId).mapSeries((glNote) => {
+                // Gitlab doesn't no note id in commit notes for some reason
+                var noteLink = Import.Link.create(server, { note: { id: glNote.created_at } });
+                var reaction = _.find(reactions, noteLink);
+                if (reaction) {
+                    return reaction;
+                }
+                return UserImporter.importUser(db, server, glNote.author).then((author) => {
+                    var link = Import.Link.merge(noteLink, storyLink);
+                    link.commit = { id: commitId };
+                    var reactioNew = copyNoteProperties(reaction, story, author, glNote, link);
+                    return Reaction.insertOne(db, schema, reactioNew);
+                });
+            });
+        });
+    });
+}
+
+/**
+ * Copy certain properties of note into reaction
+ *
+ * @param  {Reaction|null} reaction
+ * @param  {Story} story
+ * @param  {User} author
+ * @param  {Object} glNote
+ * @param  {Object} link
+ *
+ * @return {Reaction|null}
+ */
+function copyNoteProperties(reaction, story, author, glNote, link) {
+    var reactionAfter = _.cloneDeep(reaction) || {};
+    Import.join(reactionAfter, link);
+    _.set(reactionAfter, 'type', 'note');
+    _.set(reactionAfter, 'story_id', story.id);
+    _.set(reactionAfter, 'user_id', author.id);
+    _.set(reactionAfter, 'target_user_ids', story.user_ids);
+    _.set(reactionAfter, 'public', story.public);
+    _.set(reactionAfter, 'published', true);
+    _.set(reactionAfter, 'ptime', Moment(glNote.created_at).toISOString());
+    if (_.isEqual(reaction, reactionAfter)) {
+        return null;
+    }
+    return reactionAfter;
+}
+
+/**
+ * Retrieve issue notes from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glIssueId
+ * @param  {String} glObjectType
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function fetchIssueNotes(server, glProjectId, glIssueId) {
+    var url = `/projects/${glProjectId}/issues/${glIssueId}/notes`;
+    return Transport.fetchAll(server, url).filter((note) => {
+        // filter out system notes
+        return !note.system;
+    });
+}
+
+/**
+ * Retrieve merge request notes from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glMergeRequestId
+ * @param  {String} glObjectType
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function fetchMergeRequestNotes(server, glProjectId, glMergeRequestId) {
+    var url = `/projects/${glProjectId}/merge_requests/${glMergeRequestId}/notes`;
+    return Transport.fetchAll(server, url).filter((note) => {
+        return !note.system;
+    });
+}
+
+/**
+ * Retrieve merge request notes from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {String} glCommitId
+ * @param  {String} glObjectType
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function fetchCommitNotes(server, glProjectId, glCommitId) {
+    var url = `/projects/${glProjectId}/repository/commits/${glCommitId}/comments`;
+    return Transport.fetchAll(server, url);
 }

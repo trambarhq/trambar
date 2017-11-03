@@ -90,24 +90,23 @@ function installProjectHook(host, server, repo, project) {
         return Promise.resolve();
     }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    return retrieveHooks(server, repo).then((hooks) => {
-        var hook = new Hook(host, server, repo, project);
-        var installed = _.find(hooks, { url: hook.url });
+    var repoLink = _.find(repo.external, {
+        type: 'gitlab',
+        server_id: server.id,
+    });
+    return fetchHooks(server, repoLink.project.id).then((glHooks) => {
+        var url = getHookEndpoint(host, server, repo, project);
+        var hookProps = getHookProps(url);
+        var installed = _.find(glHooks, { url });
         if (installed) {
-            // remove the installed hook if it's different from what we expect
-            var different = _.some(_.omit(hook, 'id'), (value, name) => {
-                if (value !== installed[name]) {
-                    return true;
-                }
-            });
-            if (different) {
+            if (!_.isMatch(installed, hookProps)) {
                 console.log(`Removing existing hook: ${installed.url}`);
-                destroyHook(server, repo, installed);
+                destroyHook(server, link.project.id, installed);
                 installed = null;
             }
         }
         if (!installed) {
-            return createHook(server, repo, hook);
+            return createHook(server, repoLink.project.id, hookProps);
         }
     });
 }
@@ -127,10 +126,14 @@ function removeProjectHook(host, server, repo, project) {
         return Promise.resolve();
     }
     console.log(`Removing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    return retrieveHooks(server, repo).each((existingHook) => {
-        var hook = new Hook(host, server, repo, project);
-        if (existingHook.url === hook.url) {
-            return destroyHook(server, repo, existingHook);
+    var repoLink = _.find(repo.external, {
+        type: 'gitlab',
+        server_id: server.id,
+    });
+    return fetchHooks(server, repoLink.project.id).each((glHook) => {
+        var url = getHookEndpoint(host, server, repo, project);
+        if (glHook.url === url) {
+            return destroyHook(server, repoLink.project.id, glHook);
         }
     });
 }
@@ -139,65 +142,58 @@ function removeProjectHook(host, server, repo, project) {
  * Retrieve all hooks installed on repo
  *
  * @param  {Server} server
- * @param  {Repo} repo
+ * @param  {Number} glProjectId
  *
- * @return {Array<Hook>}
+ * @return {Array<Object>}
  */
-function retrieveHooks(server, repo) {
-    var url = `/projects/${repo.external_id}/hooks`;
-    return Transport.fetchAll(server, url).map((info) => {
-        var hook = new Hook;
-        _.forIn(info, (value, name) => {
-            if (hook.hasOwnProperty(name)) {
-                hook[name] = value;
-            }
-        });
-        return hook;
-    });
+function fetchHooks(server, glProjectId) {
+    var url = `/projects/${glProjectId}/hooks`;
+    return Transport.fetchAll(server, url);
 }
 
 /**
  * Install a hook from Gitlab server
  *
  * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Hook} hook
+ * @param  {Number} glProjectId
+ * @param  {Object} glHook
  *
  * @return {Promise}
  */
-function createHook(server, repo, hook) {
-    var url = `/projects/${repo.external_id}/hooks`;
-    return Transport.post(server, url, _.omit(hook, 'id'));
+function createHook(server, glProjectId, glHook) {
+    var url = `/projects/${glProjectId}/hooks`;
+    return Transport.post(server, url, glHook);
 }
 
 /**
  * Remove a hook from Gitlab server
  *
  * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Hook} hook
+ * @param  {Number} glProjectId
+ * @param  {Object} glHook
  *
  * @return {Promise}
  */
-function destroyHook(server, repo, hook) {
-    var url = `/projects/${repo.external_id}/hooks/${hook.id}`;
+function destroyHook(server, glProjectId, glHook) {
+    var url = `/projects/${glProjectId}/hooks/${glHook.id}`;
     return Transport.remove(server, url);
 }
 
-function Hook(host, server, repo, project) {
-    if (host && server && repo && project) {
-        this.url = `${host}/gitlab/hook/${repo.id}/${project.id}`;
-    } else {
-        this.url = undefined;
-    }
-    this.id = undefined;
-    this.push_events = true;
-    this.issues_events = true;
-    this.merge_requests_events = true;
-    this.tag_push_events = true;
-    this.note_events = true;
-    this.job_events = true;
-    this.pipeline_events = true;
-    this.wiki_page_events = true;
-    this.enable_ssl_verification = false;
+function getHookProps(url) {
+    return {
+        url,
+        push_events: true,
+        issues_events: true,
+        merge_requests_events: true,
+        tag_push_events: true,
+        note_events: true,
+        job_events: true,
+        pipeline_events: true,
+        wiki_page_events: true,
+        enable_ssl_verification: false,
+    };
+}
+
+function getHookEndpoint(host, server, repo, project) {
+    return `${host}/gitlab/hook/${repo.id}/${project.id}`;
 }

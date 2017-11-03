@@ -266,7 +266,8 @@ function findMatchingComponents(folder, path) {
  */
 function scanFolder(server, repo, commitId, folderPath) {
     console.log(`Scanning ${folderPath}`);
-    var url = `projects/${repo.external_id}/repository/tree`;
+    var link = _.find(repo.external, { type: 'gitlab' });
+    var url = `projects/${link.project.id}/repository/tree`;
     var query = {
         path: folderPath,
         ref: commitId,
@@ -296,7 +297,8 @@ function retrieveFile(server, repo, commitId, fileRecord) {
         return Promise.resolve(null);
     }
     console.log(`Retrieving file: ${fileRecord.path}`);
-    var url = `/projects/${repo.external_id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
+    var link = _.find(repo.external, { type: 'gitlab' });
+    var url = `/projects/${link.project.id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
     var query = {
         ref: commitId,
     };

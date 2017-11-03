@@ -1,9 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var HttpError = require('errors/http-error');
-var Data = require('accessors/data');
+var ExternalData = require('accessors/external-data');
 
-module.exports = _.create(Data, {
+module.exports = _.create(ExternalData, {
     schema: 'global',
     table: 'user',
     columns: {
@@ -15,23 +15,23 @@ module.exports = _.create(Data, {
         type: String,
         username: String,
         role_ids: Array(Number),
-        server_id: Number,
-        external_id: Number,
         requested_project_ids: Array(Number),
         approved: Boolean,
         hidden: Boolean,
         settings: Object,
+        external: Array(Object),
     },
     criteria: {
         id: Number,
         type: String,
         username: String,
         role_ids: Array(Number),
-        server_id: Number,
-        external_id: Number,
         requested_project_ids: Array(Number),
         approved: Boolean,
         hidden: Boolean,
+
+        external_object: Object,
+        server_id: Number,
     },
 
     /**
@@ -55,12 +55,11 @@ module.exports = _.create(Data, {
                 type varchar(32) NOT NULL DEFAULT '',
                 username varchar(128),
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
-                server_id int,
-                external_id bigint,
                 requested_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
                 approved boolean NOT NULL DEFAULT true,
                 settings jsonb NOT NULL DEFAULT '{}',
+                external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} ((details->>'email')) WHERE details ? 'email';
@@ -114,8 +113,10 @@ module.exports = _.create(Data, {
      * @param  {Object} query
      */
     apply: function(criteria, query) {
-        var special = [ 'email' ];
-        Data.apply.call(this, _.omit(criteria, special), query);
+        var special = [
+            'email',
+        ];
+        ExternalData.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
         var conds = query.conditions;
@@ -137,7 +138,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
                 object.type = row.type;
@@ -145,8 +146,6 @@ module.exports = _.create(Data, {
                 object.role_ids = row.role_ids;
 
                 if (credentials.unrestricted) {
-                    object.server_id = row.server_id;
-                    object.external_id = row.external_id;
                     object.approved = row.approved;
                     object.hidden = row.hidden;
                     object.requested_project_ids = row.requested_project_ids;
@@ -183,7 +182,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
+        return ExternalData.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
             _.each(objects, (userReceived, index) => {
                 var userBefore = originals[index];
                 this.checkWritePermission(userReceived, userBefore, credentials);

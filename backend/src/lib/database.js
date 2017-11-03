@@ -108,17 +108,28 @@ Database.prototype.query = function(sql, parameters) {
     });
 };
 
+var programmingErrors = {
+    42: 'A syntax error or rule violation was encountered',
+    22: 'A data conversion error was encountered',
+};
+
 Database.prototype.execute = function(sql, parameters) {
     if (!this.client) {
         return Promise.reject('Connection was closed: ' + sql.substr(0, 20) + '...');
     }
     // convert promise to Bluebird variety
     return Promise.resolve(this.client.query(sql, parameters)).catch((err) => {
-        if (err.code.substr(0, 2) === '42') {
+        var errorClass = err.code.substr(0, 2);
+        var programmingError = programmingErrors[errorClass];
+        if (programmingError) {
             // syntax error
-            console.log('A syntax error or rule violation was encountered running the following statement:');
+            console.log(programmingError);
+            console.log('SQL statement:');
             console.log(sql);
+            console.log('----------------------------------------');
+            console.log('Parameters:');
             console.log(parameters);
+            console.log('----------------------------------------');
         }
         throw err;
     });

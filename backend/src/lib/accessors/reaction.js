@@ -1,10 +1,10 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var Data = require('accessors/data');
 var HttpError = require('errors/http-error');
+var ExternalData = require('accessors/external-data');
 
-module.exports = _.create(Data, {
+module.exports = _.create(ExternalData, {
     schema: 'project',
     table: 'reaction',
     columns: {
@@ -20,12 +20,11 @@ module.exports = _.create(Data, {
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
-        repo_id: Number,
-        external_id: Number,
         published: Boolean,
         ready: Boolean,
         ptime: String,
         public: Boolean,
+        external: Array(Object),
     },
     criteria: {
         id: Number,
@@ -36,11 +35,12 @@ module.exports = _.create(Data, {
         story_id: Number,
         user_id: Number,
         target_user_ids: Array(Number),
-        repo_id: Number,
-        external_id: Number,
         published: Boolean,
         ready: Boolean,
         public: Boolean,
+
+        server_id: Number,
+        external_object: Object,
         time_range: String,
         newer_than: String,
         older_than: String,
@@ -75,11 +75,9 @@ module.exports = _.create(Data, {
                 ready boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
-                repo_id int,
-                external_id int,
+                external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
-            CREATE INDEX ON ${table} (repo_id, external_id) WHERE repo_id IS NOT NULL AND external_id IS NOT NULL;
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
         `;
         return db.execute(sql);
@@ -126,7 +124,7 @@ module.exports = _.create(Data, {
             'older_than',
             'search',
         ];
-        Data.apply.call(this, _.omit(criteria, special), query);
+        ExternalData.apply.call(this, _.omit(criteria, special), query);
 
         var params = query.parameters;
         var conds = query.conditions;
@@ -157,7 +155,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
+        return ExternalData.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
             _.each(objects, (reactionReceived, index) => {
                 var reactionBefore = originals[index];
                 if (reactionBefore) {
@@ -211,7 +209,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
                 object.type = row.type;
@@ -221,12 +219,6 @@ module.exports = _.create(Data, {
                 object.ptime = row.ptime;
                 object.public = row.public;
                 object.published = row.published;
-                if (row.repo_id) {
-                    object.repo_id = row.repo_id;
-                }
-                if (row.external_id) {
-                    object.external_id = row.external_id;
-                }
                 if (row.ready === false) {
                     object.ready = false;
                 }

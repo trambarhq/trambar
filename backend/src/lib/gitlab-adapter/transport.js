@@ -8,6 +8,7 @@ var HttpError = require('errors/http-error');
 
 exports.fetch = fetch;
 exports.fetchAll = fetchAll;
+exports.fetchEach = fetchEach;
 exports.post = post;
 exports.remove = remove;
 
@@ -24,9 +25,13 @@ function fetchAll(server, uri, params) {
     var done = false;
     Async.do(() => {
         return request(server, uri, 'get', query).then((objects) => {
-            objectLists.push(objects);
-            if (objects.length === query.per_page && query.page < 100) {
-                query.page++;
+            if (objects instanceof Array) {
+                objectLists.push(objects);
+                if (objects.length === query.per_page && query.page < 100) {
+                    query.page++;
+                } else {
+                    done = true;
+                }
             } else {
                 done = true;
             }
@@ -34,6 +39,34 @@ function fetchAll(server, uri, params) {
     });
     Async.while(() => { return !done });
     Async.return(() => { return _.flatten(objectLists) });
+    return Async.end();
+}
+
+function fetchEach(server, uri, params, callback) {
+    var query = _.extend({
+        page: 1,
+        per_page: 100
+    }, params);
+    var done = false;
+    var total = undefined;
+    var index = 0;
+    Async.do(() => {
+        return fetch(server, uri, query).then((objects) => {
+            if (objects.length < query.per_page) {
+                total = index + objects.length;
+            }
+            return Promise.each(objects, (object) => {
+                return callback(object, index++, total);
+            }).then(() => {
+                if (objects.length === query.per_page) {
+                    query.page++;
+                } else {
+                    done = true;
+                }
+            });
+        });
+    });
+    Async.while(() => { return !done });
     return Async.end();
 }
 

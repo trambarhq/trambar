@@ -176,8 +176,8 @@ describe('Functions', function() {
             expect(newDetails).to.have.property('ready', false);
         })
     })
-    describe('#serverIds()', function() {
-        it('should return a list of server ids from an array of objects', function() {
+    describe('#externalIdStrings()', function() {
+        it('should return an array of concatenated id string', function() {
             var external = [
                 {
                     type: 'gitlab',
@@ -187,41 +187,80 @@ describe('Functions', function() {
                     }
                 },
                 {
-                    type: 'facebook',
+                    type: 'gitlab',
                     server_id: 3,
                     user: {
-                        id: '0123456789001234567890',
+                        id: 2,
                     }
                 }
             ];
-            var list = Functions.serverIds(external);
-            expect(list).to.deep.equal([ 2, 3 ]);
+            var list = Functions.externalIdStrings(external, 'gitlab', [ 'user' ]);
+            expect(list).to.deep.equal([ '2,1', '3,2' ]);
         })
-    })
-    describe('#intUserIds()', function() {
-        it('should return a list of user ids that are presumably numbers', function() {
+        it('should ignore entries where object is missing', function() {
             var external = [
                 {
-                    type: 'gitlab',
-                    server_id: 2,
+                    type: 'facebook',
+                    server_id: 5,
                     user: {
-                        id: 1,
+                        id: '0123456789001234567890',
                     }
                 },
                 {
                     type: 'facebook',
-                    server_id: 3,
-                    user: {
-                        id: '0123456789001234567890',
-                    }
+                    server_id: 6
                 }
             ];
-            var list = Functions.intUserIds(external, 'gitlab');
-            expect(list).to.deep.equal([ 1 ]);
+            var list = Functions.externalIdStrings(external, 'facebook', [ 'user' ]);
+            expect(list).to.deep.equal([ '5,0123456789001234567890' ]);
         })
-    })
-    describe('#stringUserIds()', function() {
-        it('should return a list of user ids that are presumably strings', function() {
+        it('should not include server id when server type is not specified', function() {
+            var external = [
+                {
+                    type: 'gitlab',
+                    server_id: 2,
+                    commit: {
+                        id: '012345',
+                    }
+                },
+                {
+                    type: 'github',
+                    server_id: 3,
+                    commit: {
+                        id: '234567',
+                    }
+                }
+            ];
+            var list = Functions.externalIdStrings(external, null, [ 'commit' ]);
+            expect(list).to.deep.equal([ '012345', '234567' ]);
+        })
+        it('should generate multiple strings per entry when object has an id list instead of just a single id', function() {
+            var external = [
+                {
+                    type: 'gitlab',
+                    server_id: 2,
+                    project: {
+                        id: 1,
+                    },
+                    commit: {
+                        ids: [ '012345', '123456' ],
+                    }
+                },
+                {
+                    type: 'gitlab',
+                    server_id: 3,
+                    project: {
+                        id: 7,
+                    },
+                    commit: {
+                        ids: [ '234567' ],
+                    }
+                }
+            ];
+            var list = Functions.externalIdStrings(external, 'gitlab', [ 'project', 'commit' ]);
+            expect(list).to.deep.equal([ '2,1,012345', '2,1,123456', '3,7,234567' ]);
+        })
+        it('should just the server ids when no names are specified', function() {
             var external = [
                 {
                     type: 'gitlab',
@@ -231,15 +270,15 @@ describe('Functions', function() {
                     }
                 },
                 {
-                    type: 'facebook',
+                    type: 'gitlab',
                     server_id: 3,
                     user: {
-                        id: '0123456789001234567890',
+                        id: 2,
                     }
                 }
             ];
-            var list = Functions.intUserIds(external, 'facebook');
-            expect(list).to.deep.equal([ '0123456789001234567890' ]);
+            var list = Functions.externalIdStrings(external, 'gitlab', []);
+            expect(list).to.deep.equal([ '2', '3' ]);
         })
     })
 })

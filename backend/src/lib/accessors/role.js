@@ -1,8 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Data = require('accessors/data');
+var ExternalData = require('accessors/external-data');
 
-module.exports = _.create(Data, {
+module.exports = _.create(ExternalData, {
     schema: 'global',
     table: 'role',
     columns: {
@@ -13,17 +13,17 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         name: String,
-        server_id: Number,
-        external_id: Number,
         hidden: Boolean,
+        external: Array(Object),
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         name: String,
-        server_id: Number,
-        external_id: Number,
         hidden: Boolean,
+
+        server_id: Number,
+        external_object: Object,
     },
 
     /**
@@ -45,9 +45,8 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 name varchar(128) NOT NULL DEFAULT '',
-                server_id int,
-                external_id int,
                 hidden boolean NOT NULL DEFAULT false,
+                external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
         `;
@@ -86,14 +85,12 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
                 object.name = row.name;
 
                 if (credentials.unrestricted) {
-                    object.server_id = row.server_id;
-                    object.external_id = row.external_id;
                     object.hidden = row.hidden;
                 } else {
                     if (row.hidden) {

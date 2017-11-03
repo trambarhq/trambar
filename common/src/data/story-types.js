@@ -1,6 +1,7 @@
 module.exports = exports = [
     'push',
     'merge',
+    'branch',
     'issue',
     'milestone',
     'wiki',
@@ -40,6 +41,7 @@ exports.trackable = [
 exports.git = [
     'push',
     'merge',
+    'branch',
     'issue',
     'milestone',
     'wiki',

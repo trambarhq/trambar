@@ -1,20 +1,78 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var Request = require('request');
 var HttpError = require('errors/http-error');
 
 var Transport = require('gitlab-adapter/transport');
+var Import = require('gitlab-adapter/import');
 
 // accessors
 var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Server = require('accessors/server');
+var Story = require('accessors/story');
 var User = require('accessors/user');
 
+exports.importEvent = importEvent;
 exports.importUsers = importUsers;
 exports.importUser = importUser;
 exports.importProjectMembers = importProjectMembers;
 exports.updateUser = updateUser;
+
+/**
+ * Import an activity log entry about someone joining or leaving the project
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ * @param  {User} author
+ * @param  {Object} glEvent
+ *
+ * @return {Promise}
+ */
+function importEvent(db, server, repo, project, author, glEvent) {
+    var schema = project.name;
+    var repoLink = _.find(repo.external, {
+        type: 'gitlab',
+        server_id: server.id,
+    });
+    var userLink = {
+        type: 'gitlab',
+        server_id: server.id,
+        user: { id: glEvent.author_id }
+    };
+    var link = _.merge({}, repoLink, userLink);
+    var storyNew = copyEventProperties(null, author, glEvent, link);
+    return Story.insertOne(db, schema, storyNew);
+}
+
+/**
+ * Copy properties of event
+ *
+ * @param  {Story|null} story
+ * @param  {User} author
+ * @param  {Object} glEvent
+ * @param  {Object} link
+ *
+ * @return {Object}
+ */
+function copyEventProperties(story, author, glEvent, link) {
+    var storyAfter = _.cloneDeep(story) || {};
+    Import.join(storyAfter, link);
+    _.set(storyAfter, 'type', 'member');
+    _.set(storyAfter, 'user_ids', [ author.id ]);
+    _.set(storyAfter, 'role_ids', author.role_ids);
+    _.set(storyAfter, 'details.action', glEvent.action_name);
+    _.set(storyAfter, 'published', true);
+    _.set(storyAfter, 'public', true);
+    _.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    if (_.isEqual(story, storyAfter)) {
+        return null;
+    }
+    return storyAfter;
+}
 
 /**
  * Import multiple Gitlab users
@@ -26,40 +84,41 @@ exports.updateUser = updateUser;
  * @return {Promise<User>}
  */
 function importUsers(db, server, glUsers) {
+    glUsers = _.uniqBy(glUsers, 'id');
     var criteria = {
-        server_id: server.id,
-        external_id: _.map(glUsers, 'id'),
+        external_object: {
+            type: 'gitlab',
+            server_id: server.id,
+            user: {
+                id: _.map(glUsers, 'id')
+            }
+        }
     };
     return User.find(db, 'global', criteria, '*').then((users) => {
         return Promise.map(glUsers, (glUser) => {
-            var user = _.find(users, { external_id: glUser.id });
-            if (!user) {
-                // retrieve the full profile
-                return retrieveUser(server, glUser.id).then((glUser) => {
-                    return retrieveProfileImage(glUser).then((image) => {
-                        // find user with the username
-                        var criteria = {
-                            username: glUser.username,
-                            deleted: false,
-                        };
-                        return User.findOne(db, 'global', criteria, '*').then((user) => {
-                            if (!user) {
-                                user = {
-                                    details: {},
-                                };
-                            }
-                            if (!user.server_id) {
-                                user.server_id = server.id;
-                                user.external_id = glUser.id;
-                            }
-                            copyUserDetails(user, glUser, image);
-                            return User.saveOne(db, 'global', user);
-                        });
-                    });
-                });
-            } else {
+            var link = {
+                type: 'gitlab',
+                server_id: server.id,
+                user: { id: glUser.id }
+            };
+            var user = _.find(users, (user) => {
+                return _.some(user.external, link);
+            });
+            if (user) {
+                // already imported
                 return user;
             }
+            // retrieve the full profile
+            return fetchUser(server, glUser.id).then((glUser) => {
+                return importProfileImage(glUser).then((image) => {
+                    // find user by email
+                    var criteria = { email: glUser.email, deleted: false };
+                    return User.findOne(db, 'global', criteria, '*').then((user) => {
+                        var userNew = copyUserProperties(null, image, glUser, link);
+                        return User.saveOne(db, 'global', userNew);
+                    });
+                });
+            });
         });
     });
 }
@@ -74,6 +133,9 @@ function importUsers(db, server, glUsers) {
  * @return {Promise<User>}
  */
 function importUser(db, server, glUser) {
+    if (!glUser) {
+        return Promise.resolve(null);
+    }
     return importUsers(db, server, [ glUser ]).then((users) => {
         return users[0] || null;
     });
@@ -89,12 +151,17 @@ function importUser(db, server, glUser) {
  * @return {Promise<User>}
  */
 function updateUser(db, server, user) {
-    return retrieveUser(server, user.external_id).then((glUser) => {
-        return retrieveProfileImage(glUser).then((image) => {
-            var userBefore = _.cloneDeep(user);
-            copyUserDetails(user, glUser, image);
-            if (!_.isEqual(user, userBefore)) {
+    var link = _.find(user.external, {
+        type: 'gitlab',
+        server_id: server.id,
+    });
+    return fetchUser(server, link.user.id).then((glUser) => {
+        return importProfileImage(glUser).then((image) => {
+            var userAfter = copyUserProperties(user, glUser, image, link);
+            if (userAfter) {
                 return User.updateOne(db, 'global', user);
+            } else {
+                return user;
             }
         });
     });
@@ -103,48 +170,29 @@ function updateUser(db, server, user) {
 /**
  * Copy details from Gitlab user object
  *
- * @param  {User} user
+ * @param  {User|null} user
  * @param  {Object} glUser
  * @param  {Object} profileImage
+ * @param  {Object} link
+ *
+ * @return {Object|null}
  */
-function copyUserDetails(user, glUser, profileImage) {
-    user.username = glUser.username;
-    user.details.name = glUser.name;
-    var nameParts = _.split(glUser.name, /\s+/);
-    user.details.first_name = (nameParts.length >= 2) ? _.first(nameParts) : undefined;
-    user.details.last_name = (nameParts.length >= 2) ? _.last(nameParts) : undefined;
-    user.details.gitlab_url = glUser.web_url;
-    user.details.skype_username = glUser.skype || undefined;
-    user.details.twitter_username = glUser.twitter || undefined;
-    user.details.linkedin_username = glUser.linkedin_name || undefined;
-    user.details.email = glUser.email;
-
-    // set user type
-    if (!user.type) {
-        if (glUser.is_admin) {
-            user.type = 'admin';
-        } else {
-            user.type = 'member';
-        }
+function copyUserProperties(user, profileImage, glUser, link) {
+    var userAfter = _.cloneDeep(user) || {};
+    var imported = Import.reacquire(userAfter, link);
+    Import.set(userAfter, imported, 'type', (glUser.is_admin) ? 'admin' : 'member');
+    Import.set(userAfter, imported, 'username', glUser.username);
+    Import.set(userAfter, imported, 'details.name', glUser.name);
+    Import.set(userAfter, imported, 'details.gitlab_url', glUser.web_url);
+    Import.set(userAfter, imported, 'details.skype_username', glUser.skype || undefined);
+    Import.set(userAfter, imported, 'details.twitter_username', glUser.twitter || undefined);
+    Import.set(userAfter, imported, 'details.linkedin_username', glUser.linkedin_name || undefined);
+    Import.set(userAfter, imported, 'details.email', glUser.email);
+    Import.attach(userAfter, imported, 'image', profileImage);
+    if (_.isEqual(user, userAfter)) {
+        return null;
     }
-
-    // attach profile image
-    if (profileImage) {
-        var res = _.extend({ type: 'image' }, profileImage);
-        var resources = user.details.resources;
-        var existing = _.find(resources, { type: 'image' });
-        if (existing) {
-            if (existing.from_gitlab) {
-                var index = _.indexOf(resources, existing);
-                resources[index] = res;
-            }
-        } else {
-            if (!resources) {
-                resources = user.details.resources = [];
-            }
-            resources.push(res);
-        }
-    }
+    return userAfter;
 }
 
 /**
@@ -185,12 +233,13 @@ function importProjectRepoMembers(db, project) {
         deleted: false,
     };
     return Repo.find(db, 'global', criteria, '*').map((repo) => {
+        var link = _.find(repo.external, { type: 'gitlab' });
         var criteria = {
-            id: repo.server_id,
+            id: link.server_id,
             deleted: false,
         };
         return Server.findOne(db, 'global', criteria, '*').then((server) => {
-            return retrieveRepoMembers(server, repo.external_id).then((glUsers) => {
+            return fetchRepoMembers(server, link.project.id).then((glUsers) => {
                 return importUsers(db, server, glUsers);
             });
         });
@@ -207,7 +256,7 @@ function importProjectRepoMembers(db, project) {
  *
  * @return {Promise<Array<Object>>}
  */
-function retrieveRepoMembers(server, glRepoId) {
+function fetchRepoMembers(server, glRepoId) {
     var url = `/projects/${glRepoId}/members`;
     return Transport.fetchAll(server, url);
 }
@@ -220,7 +269,7 @@ function retrieveRepoMembers(server, glRepoId) {
  *
  * @return {Promise<Object>}
  */
-function retrieveUser(server, glUserId) {
+function fetchUser(server, glUserId) {
     var url = `/users/${glUserId}`;
     return Transport.fetch(server, url);
 }
@@ -232,7 +281,7 @@ function retrieveUser(server, glUserId) {
  *
  * @return {Promise<Object>}
  */
-function retrieveProfileImage(glUser) {
+function importProfileImage(glUser) {
     var url = glUser.avatar_url;
     if (!url) {
         return Promise.resolve(null);

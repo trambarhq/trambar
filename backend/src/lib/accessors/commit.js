@@ -4,7 +4,7 @@ var ExternalData = require('accessors/external-data');
 
 module.exports = _.create(ExternalData, {
     schema: 'global',
-    table: 'repo',
+    table: 'commit',
     columns: {
         id: Number,
         gn: Number,
@@ -12,17 +12,13 @@ module.exports = _.create(ExternalData, {
         ctime: String,
         mtime: String,
         details: Object,
-        type: String,
-        name: String,
+        initial_branch: String,
         external: Array(Object),
     },
     criteria: {
         id: Number,
         deleted: Boolean,
-        type: String,
-        name: String,
 
-        server_id: Number,
         external_object: Object,
     },
 
@@ -44,8 +40,7 @@ module.exports = _.create(ExternalData, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                type varchar(64) NOT NULL,
-                name varchar(128) NOT NULL,
+                initial_branch varchar(256) NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
@@ -81,45 +76,7 @@ module.exports = _.create(ExternalData, {
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
             var propNames = [];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                // completion of tasks will automatically update details->resources
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table ]);
-            });
+            return this.createNotificationTriggers(db, schema, propNames);
         });
-    },
-
-    /**
-     * Export database row to client-side code, omitting sensitive or
-     * unnecessary information
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Array<Object>} rows
-     * @param  {Object} credentials
-     * @param  {Object} options
-     *
-     * @return {Promise<Object>}
-     */
-    export: function(db, schema, rows, credentials, options) {
-        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.type = row.type;
-                object.name = row.name;
-            });
-            return objects;
-        });
-    },
-
-    /**
-     * Synchronize table with data sources
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sync: function(db, schema, criteria) {
-        this.sendSyncNotification(db, schema, criteria);
     },
 });

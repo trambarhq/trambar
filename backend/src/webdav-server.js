@@ -10,6 +10,7 @@ var Database = require('database');
 
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
+var Commit = require('accessors/commit');
 var Picture = require('accessors/picture');
 var Project = require('accessors/project');
 var Repo = require('accessors/repo');
@@ -31,6 +32,7 @@ var Task = require('accessors/task');
 var globalAccessors = [
     Authentication,
     Authorization,
+    Commit,
     Notification,
     Picture,
     Project,

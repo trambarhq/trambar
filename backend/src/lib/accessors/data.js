@@ -4,8 +4,8 @@ var HttpError = require('errors/http-error');
 var TagScanner = require('utils/tag-scanner');
 
 module.exports = {
-    schema: 'global',
-    table: 'data',
+    schema: '?',
+    table: '?',
     columns: {
         id: Number,
         gn: Number,
@@ -47,6 +47,8 @@ module.exports = {
 
     /**
      * Create table in schema
+     * 
+     * (for reference purpose only)
      *
      * @param  {Database} db
      * @param  {String} schema
