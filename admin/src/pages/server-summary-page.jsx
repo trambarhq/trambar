@@ -206,9 +206,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             if (!oauth.client_id && oauth.client_secret) {
                 problems.client_id = 'validation-required';
             }
-            if ((oauth.client_id || oauth.client_secret) && !oauth.baseURL) {
+            if ((oauth.client_id || oauth.client_secret) && !oauth.base_url) {
                 if (server.type === 'gitlab') {
-                    problems.baseURL = 'validation-required';
+                    problems.base_url = 'validation-required';
                 }
             }
         }
@@ -432,7 +432,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var needOAuthUrl = (server.type === 'gitlab');
         var oauthUrlProps = {
             id: 'oauth_token',
-            value: _.get(server, 'settings.oauth.baseURL', ''),
+            value: _.get(server, 'settings.oauth.base_url', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthUrlChange,
             readOnly: readOnly,
@@ -474,7 +474,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <CollapsibleContainer open={needOAuthUrl}>
                     <TextField {...oauthUrlProps}>
                         {t('server-summary-oauth-url')}
-                        <InputError>{t(problems.baseURL)}</InputError>
+                        <InputError>{t(problems.base_url)}</InputError>
                     </TextField>
                 </CollapsibleContainer>
                 <TextField {...oauthIdProps}>
@@ -596,7 +596,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthUrlChange: function(evt) {
-        this.setServerProperty(`settings.oauth.baseURL`, evt.target.value);
+        this.setServerProperty(`settings.oauth.base_url`, evt.target.value);
     },
 
     /**
