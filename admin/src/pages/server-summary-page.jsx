@@ -200,13 +200,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         }
         var oauth = server.settings.oauth;
         if (oauth) {
-            if (oauth.clientID && !oauth.clientSecret) {
-                problems.clientSecret = 'validation-required';
+            if (oauth.client_id && !oauth.client_secret) {
+                problems.client_secret = 'validation-required';
             }
-            if (!oauth.clientID && oauth.clientSecret) {
-                problems.clientID = 'validation-required';
+            if (!oauth.client_id && oauth.client_secret) {
+                problems.client_id = 'validation-required';
             }
-            if ((oauth.clientID || oauth.clientSecret) && !oauth.baseURL) {
+            if ((oauth.client_id || oauth.client_secret) && !oauth.baseURL) {
                 if (server.type === 'gitlab') {
                     problems.baseURL = 'validation-required';
                 }
@@ -439,14 +439,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var oauthIdProps = {
             id: 'oauth_id',
-            value: _.get(server, 'settings.oauth.clientID', ''),
+            value: _.get(server, 'settings.oauth.client_id', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthIdChange,
             readOnly: readOnly,
         };
         var oauthSecretProps = {
             id: 'oauth_secret',
-            value: _.get(server, 'settings.oauth.clientSecret', ''),
+            value: _.get(server, 'settings.oauth.client_secret', ''),
             locale: this.props.locale,
             onChange: this.handleOAuthSecretChange,
             readOnly: readOnly,
@@ -479,11 +479,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 </CollapsibleContainer>
                 <TextField {...oauthIdProps}>
                     {t('server-summary-oauth-id')}
-                    <InputError>{t(problems.clientID)}</InputError>
+                    <InputError>{t(problems.client_id)}</InputError>
                 </TextField>
                 <TextField {...oauthSecretProps}>
                     {t('server-summary-oauth-secret')}
-                    <InputError>{t(problems.clientSecret)}</InputError>
+                    <InputError>{t(problems.client_secret)}</InputError>
                 </TextField>
                 <TextField {...apiAccessProps}>{t('server-summary-api-access')}</TextField>
             </div>
@@ -605,7 +605,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthIdChange: function(evt) {
-        this.setServerProperty(`settings.oauth.clientID`, evt.target.value);
+        this.setServerProperty(`settings.oauth.client_id`, evt.target.value);
     },
 
     /**
@@ -614,7 +614,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthSecretChange: function(evt) {
-        this.setServerProperty(`settings.oauth.clientSecret`, evt.target.value);
+        this.setServerProperty(`settings.oauth.client_secret`, evt.target.value);
     },
 
     /**

@@ -445,7 +445,7 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
  */
 function canProvideAccess(server, area) {
     if (server.settings.oauth) {
-        if (server.settings.oauth.clientID && server.settings.oauth.clientSecret) {
+        if (server.settings.oauth.client_id && server.settings.oauth.client_secret) {
             if (area === 'admin') {
                 switch (server.type) {
                     case 'gitlab':
@@ -484,13 +484,16 @@ function authenticateThruPassport(req, res, server, params, scope) {
             query += name + '=' + value;
             return query;
         }, '');
-        var url = `${protocol}://${host}/auth/${provider}/callback?${query}`;
-        // add callback URL to server's OAuth credentials
-        var credentials = _.extend({}, server.settings.oauth, { callbackURL: url });
+        var params = {
+            clientID: server.settings.oauth.client_id,
+            clientSecret: server.settings.oauth.client_secret,
+            baseURL: server.settings.oauth.base_url,
+            callbackURL: `${protocol}://${host}/auth/${provider}/callback?${query}`,
+        };
         var options = { session: false, scope };
         if (provider === 'facebook') {
             // ask Facebook to return these fields
-            credentials.profileFields = [
+            params.profileFields = [
                 'id',
                 'email',
                 'gender',
@@ -501,10 +504,9 @@ function authenticateThruPassport(req, res, server, params, scope) {
                 'verified'
             ];
         }
-        console.log('credentials: ', credentials);
         // create strategy object, resolving promise when we have the profile
         var Strategy = require(plugins[server.type]);
-        var strategy = new Strategy(credentials, (accessToken, refreshToken, profile, done) => {
+        var strategy = new Strategy(params, (accessToken, refreshToken, profile, done) => {
             // just resolve the promise--no need to call done() since we're not
             // using Passport as an Express middleware
             resolve({ accessToken, refreshToken, profile });

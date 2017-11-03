@@ -426,7 +426,7 @@ function getServerIcon(type) {
 function hasOAuthCredentials(server) {
     var oauth = server.settings.oauth;
     if (oauth) {
-        if (oauth.clientID && oauth.clientSecret) {
+        if (oauth.client_id && oauth.client_secret) {
             return true;
         }
     }
