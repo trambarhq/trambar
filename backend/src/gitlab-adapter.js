@@ -14,6 +14,7 @@ var CommentExporter = require('gitlab-adapter/comment-exporter');
 var EventImporter = require('gitlab-adapter/event-importer');
 var RepoImporter = require('gitlab-adapter/repo-importer');
 var UserImporter = require('gitlab-adapter/user-importer');
+var IssueExporter = require('gitlab-adapter/issue-exporter');
 
 // accessors
 var Project = require('accessors/project');
@@ -296,7 +297,9 @@ function handleStoryChangeEvent(db, event) {
     }
     if (exporting) {
         return Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
-            return IssueExporter.exportStory(db, story);
+            return Project.findOne(db, 'global', { name: event.schema }, '*').then((project) => {
+                return IssueExporter.exportStory(db, project, story);
+            });
         });
     }
 }

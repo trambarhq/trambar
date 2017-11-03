@@ -70,18 +70,67 @@ function fetchEach(server, uri, params, callback) {
     return Async.end();
 }
 
-function post(server, uri, payload, asUserId) {
-    return request(server, uri, 'post', undefined, payload);
+function post(server, uri, payload, userId) {
+    if (userId) {
+        return impersonate(server, userId).then((token) => {
+            return request(server, uri, 'post', undefined, payload, token);
+        });
+    } else {
+        return request(server, uri, 'post', undefined, payload);
+    }
 }
 
-function remove(server, uri, asUserId) {
-    return request(server, uri, 'delete');
+function remove(server, uri, userId) {
+    if (userId) {
+        return impersonate(server, userId).then((token) => {
+            return request(server, uri, 'delete', null, null, token);
+        });
+    } else {
+        return request(server, uri, 'delete', null, null);
+    }
 }
 
-var request = function(server, uri, method, query, payload) {
+var userImpersonations = {};
+
+function impersonate(server, userId) {
+    var ui = userImpersonations[userId];
+    if (ui) {
+        return Promise.resolve(ui.token);
+    }
+    return getImpersonations(server, userId).then((impersonations) => {
+        var matching = _.find(impersonations, { name: 'trambar', active: true });
+        if (matching) {
+            userImpersonations[userId] = matching;
+            return matching.token;
+        }
+        var impersonationProps = {
+            user_id: userId,
+            name: 'trambar',
+            scopes: [ 'api' ],
+        };
+        return createImpersonation(server, impersonationProps).then((impersonation) => {
+            userImpersonations[userId] = impersonation;
+            return impersonation.token;
+        });
+    });
+}
+
+function getImpersonations(server, userId) {
+    var url = `/users/${userId}/impersonation_tokens`;
+    return fetch(server, url);
+}
+
+function createImpersonation(server, impersonation) {
+    var url = `/users/${impersonation.user_id}/impersonation_tokens`;
+    return post(server, url, impersonation);
+}
+
+var request = function(server, uri, method, query, payload, token) {
     // TODO: handle token refreshing
     var baseUrl = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
-    var token = server.settings.api.access_token;
+    if (!token) {
+        token = server.settings.api.access_token;
+    }
     var options = {
         json: true,
         headers: {
@@ -152,9 +201,9 @@ function attempt(options) {
 var CACHE_FOLDER = process.env.CACHE_FOLDER;
 if (CACHE_FOLDER) {
     var requestUncached = request;
-    request = function(server, uri, method, query, payload) {
+    request = function(server, uri, method, query, payload, token) {
         if (method !== 'get') {
-            return requestUncached(server, uri, method, query, payload);
+            return requestUncached(server, uri, method, query, payload, token);
         }
         var cacheFilePath = getCachePath(server, uri, query);
         return FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
