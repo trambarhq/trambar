@@ -6,6 +6,7 @@ var HttpError = require('errors/http-error');
 var Async = require('async-do-while');
 
 var Transport = require('gitlab-adapter/transport');
+var Import = require('gitlab-adapter/import');
 
 var languageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
 

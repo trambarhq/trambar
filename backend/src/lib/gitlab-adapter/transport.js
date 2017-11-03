@@ -80,7 +80,7 @@ function remove(server, uri, asUserId) {
 
 var request = function(server, uri, method, query, payload) {
     // TODO: handle token refreshing
-    var baseUrl = _.trimEnd(server.settings.oauth.baseURL, '/') + '/api/v4';
+    var baseUrl = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
     var token = server.settings.api.access_token;
     var options = {
         json: true,
@@ -186,7 +186,7 @@ if (CACHE_FOLDER) {
     }
 
     function getCachePath(server, uri, query) {
-        var address = _.trimEnd(server.settings.oauth.baseURL, '/');
+        var address = _.trimEnd(server.settings.oauth.base_url, '/');
         var domain = address.replace(/^https?:\/\//, '').replace(/:\d+/, '');
         var path = _.trimEnd(uri, '/');
         if (!_.startsWith(path, '/')) {

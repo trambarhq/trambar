@@ -159,7 +159,7 @@ function handleServerChangeEvent(db, event) {
         };
         return Server.findOne(db, 'global', criteria, '*').then((server) => {
             var accessToken = _.get(server, 'settings.api.access_token');
-            var oauthBaseUrl = _.get(server, 'settings.oauth.baseURL');
+            var oauthBaseUrl = _.get(server, 'settings.oauth.base_url');
             if (!accessToken|| !oauthBaseUrl) {
                 return;
             }

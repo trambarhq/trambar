@@ -56,7 +56,7 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
                     }
                 });
                 // commits are also linked to the Gitlab project
-                var link = Import.merge(commitLink, repoLink);
+                var link = Import.Link.merge(commitLink, repoLink);
                 var commitNew = copyCommitProperties(null, glCommit, glDiff, glBranch, link);
                 return Commit.insertOne(db, 'global', commitNew);
             });

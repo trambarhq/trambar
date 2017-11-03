@@ -292,9 +292,7 @@ function importProfileImage(glUser) {
                 err = new HttpError(resp.statusCode);
             }
             if (!err) {
-                var image = body;
-                image.from_gitlab = true;
-                resolve(image);
+                resolve(body);
             } else {
                 console.log('Unable to retrieve profile image: ' + url);
                 resolve(null);

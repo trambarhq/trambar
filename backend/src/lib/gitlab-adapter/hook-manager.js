@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Database = require('database');
 
 var Transport = require('gitlab-adapter/transport');
+var Import = require('gitlab-adapter/import');
 
 // accessors
 var Project = require('accessors/project');
