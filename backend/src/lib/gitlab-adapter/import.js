@@ -124,6 +124,14 @@ function multilingual(langText) {
 
 var lang = (process.env.LANG || 'en-US').substr(0, 2);
 
+/**
+ * Find a link by server
+ *
+ * @param  {ExternalData} object
+ * @param  {Server} server
+ *
+ * @return {Object}
+ */
 function find(object, server) {
     return _.find(object.external, {
         type: 'gitlab',
@@ -131,25 +139,63 @@ function find(object, server) {
     });
 }
 
+/**
+ * Create a link to a server and an object there
+ *
+ * @param  {Server} server
+ * @param  {Object} props
+ *
+ * @return {Object}
+ */
 function create(server, props) {
-    return _.merge(props, {
+    return _.merge({}, {
         type: 'gitlab',
         server_id: server.id
-    });
+    }, props);
 }
 
+/**
+ * Pick a particular link from a record that links to multiple external objects
+ *
+ * @param  {Object} link
+ * @param  {String} objectName
+ *
+ * @return {Object}
+ */
 function pick(link, objectName) {
     return _.pick(link, 'type', 'server_id', objectName);
 }
 
-function merge(link, parentLink) {
+/**
+ * Create a link by merging multiple links
+ *
+ * @param  {Object} link
+ * @param  {Object...} parentLinks
+ *
+ * @return {Object}
+ */
+function merge(link, ...parentLinks) {
     link = _.clone(link);
-    _.forIn(parentLink, (value, name) => {
-        if (value.id) {
-            link[name] = { id: value.id };
-        } else if (value.ids) {
-            link[name] = { ids: value.ids };
+    if (!link.type) {
+        throw new Error('Merging a link with missing type');
+    }
+    if (!link.server_id) {
+        throw new Error('Merging a link with missing server_id');
+    }
+    _.each(parentLinks, (parentLink) => {
+        if (parentLink.type !== link.type) {
+            throw new Error('Cannot merge links of different types');
         }
+        if (parentLink.server_id !== link.server_id) {
+            throw new Error('Cannot merge links to different servers');
+        }
+        _.forIn(parentLink, (value, name) => {
+            if (value.id) {
+                link[name] = { id: value.id };
+            } else if (value.ids) {
+                link[name] = { ids: value.ids };
+            }
+        });
     });
     return link;
 }

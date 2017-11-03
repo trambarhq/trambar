@@ -49,19 +49,11 @@ function importEvent(db, server, repo, project, author, glEvent) {
     return PushReconstructor.reconstructPush(db, server, repo, branch, headId, tailId, count).then((push) => {
         // look for component descriptions
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
-            var repoLink = _.find(repo.external, {
-                type: 'gitlab',
-                server_id: server.id,
+            var repoLink = Import.Link.find(repo, server);
+            var commitLink = Import.Link.create(server, {
+                commit: { ids: push.commitIds }
             });
-
-            var commitLink = {
-                type: 'gitlab',
-                server_id: server.id,
-                commit: {
-                    ids: push.commitIds
-                }
-            };
-            var link = _.merge({}, repoLink, commitLink);
+            var link = Import.Link.merge(commitLink, repoLink);
             var storyNew = copyPushProperties(null, author, push, components, glEvent, link);
             return Story.insertOne(db, schema, storyNew).then((story) => {
                 return CommentImporter.importComments(db, server, project, story).return(story);

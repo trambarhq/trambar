@@ -416,10 +416,16 @@ function handleUserSyncEvent(db, event) {
     }
 }
 
+/**
+ * Called when Gitlab sends a notification
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
 function handleHookCallback(req, res) {
     var repoId = req.params.repoId;
     var projectId = req.params.projectId;
-    var event = req.body;
+    var glEvent = req.body;
     var db = database;
     return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
         return Project.findOne(db, 'global', { id: projectId }, '*').then((project) => {
@@ -428,15 +434,18 @@ function handleHookCallback(req, res) {
             }
             var repoLink = _.find(repo.external, { type: 'gitlab' });
             return Server.findOne(db, 'global', { id: repoLink.server_id }, '*').then((server) => {
-                if (event.object_kind === 'note') {
+                if (glEvent.object_kind === 'note') {
+                    // scan for new comments
                     return taskQueue.schedule(null, () => {
-                        return CommentImporter.importComments(db, server, repo, event, project)
+                        return CommentImporter.importCommentEvent(db, server, repo, project, glEvent)
                     });
-                } else if (event.object_kind === 'wiki_page') {
+                } else if (glEvent.object_kind === 'wiki_page') {
+                    // import Wiki edits
                     return taskQueue.schedule(null, () => {
-                        return EventImporter.importWikiEvent(db, server, repo, event, project);
+                        return EventImporter.importWikiEvent(db, server, repo, project, glEvent);
                     });
                 } else {
+                    // scan activity log for events
                     return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
                         return EventImporter.importEvents(db, server, repo, project);
                     });

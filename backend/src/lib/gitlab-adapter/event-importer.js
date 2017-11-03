@@ -28,8 +28,8 @@ exports.importEvents = importEvents;
  */
 function importEvents(db, server, repo, project) {
     return findLastEventTime(db, project, server, repo).then((lastEventTime) => {
-        var link = _.find(repo.external, { type: 'gitlab' });
-        var url = `/projects/${link.project.id}/events`;
+        var repoLink = Import.Link.find(repo, server);
+        var url = `/projects/${repoLink.project.id}/events`;
         var params = { sort: 'asc' };
         if (lastEventTime) {
             // after only supports a date for some reason
@@ -131,10 +131,7 @@ function getImporter(glEvent) {
  */
 function findLastEventTime(db, project, server, repo) {
     var schema = project.name;
-    var repoLink = _.find(repo.external, {
-        type: 'gitlab',
-        server_id: server.id,
-    });
+    var repoLink = Import.Link.find(repo, server);
     var criteria = {
         external_object: repoLink,
         published: true,

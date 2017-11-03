@@ -36,14 +36,11 @@ function importEvent(db, server, repo, project, glEvent) {
             return null;
         }
         // see if there's story about this page recently
-        var repoLink = _.find(repo.external, { type: 'gitlab' });
-        var pageLink = {
-            type: 'gitlab',
-            wiki: {
-                id: glEvent.object_attributes.slug
-            }
+        var repoLink = Import.Link.find(repo, server);
+        var pageLink = Import.Link.create(server, {
+            wiki: { id: glEvent.object_attributes.slug }
         };
-        var link = _.merge({}, repoLink, pageLink);
+        var link = Import.Link.merge(pageLink, repoLink);
         var criteria = {
             type: 'wiki',
             newer_than: Moment().subtract(1, 'day').toISOString(),

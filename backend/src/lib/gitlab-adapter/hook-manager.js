@@ -90,10 +90,7 @@ function installProjectHook(host, server, repo, project) {
         return Promise.resolve();
     }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    var repoLink = _.find(repo.external, {
-        type: 'gitlab',
-        server_id: server.id,
-    });
+    var repoLink = Import.Link.find(repo, server);
     return fetchHooks(server, repoLink.project.id).then((glHooks) => {
         var url = getHookEndpoint(host, server, repo, project);
         var hookProps = getHookProps(url);
@@ -126,10 +123,7 @@ function removeProjectHook(host, server, repo, project) {
         return Promise.resolve();
     }
     console.log(`Removing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    var repoLink = _.find(repo.external, {
-        type: 'gitlab',
-        server_id: server.id,
-    });
+    var repoLink = Import.Link.find(repo, server);
     return fetchHooks(server, repoLink.project.id).each((glHook) => {
         var url = getHookEndpoint(host, server, repo, project);
         if (glHook.url === url) {

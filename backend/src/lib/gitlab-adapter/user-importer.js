@@ -34,16 +34,11 @@ exports.updateUser = updateUser;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = _.find(repo.external, {
-        type: 'gitlab',
-        server_id: server.id,
-    });
-    var userLink = {
-        type: 'gitlab',
-        server_id: server.id,
+    var repoLink = Import.Link.find(repo, server);
+    var userLink = Import.Link.create(server, {
         user: { id: glEvent.author_id }
-    };
-    var link = _.merge({}, repoLink, userLink);
+    });
+    var link = Import.Link.merge(userLink, repoLink);
     var storyNew = copyEventProperties(null, author, glEvent, link);
     return Story.insertOne(db, schema, storyNew);
 }
@@ -86,23 +81,19 @@ function copyEventProperties(story, author, glEvent, link) {
 function importUsers(db, server, glUsers) {
     glUsers = _.uniqBy(glUsers, 'id');
     var criteria = {
-        external_object: {
-            type: 'gitlab',
-            server_id: server.id,
+        external_object: Import.Link.create(server, {
             user: {
                 id: _.map(glUsers, 'id')
             }
-        }
+        })
     };
     return User.find(db, 'global', criteria, '*').then((users) => {
         return Promise.map(glUsers, (glUser) => {
-            var link = {
-                type: 'gitlab',
-                server_id: server.id,
-                user: { id: glUser.id }
-            };
             var user = _.find(users, (user) => {
-                return _.some(user.external, link);
+                var userLink = Import.Link.find(user, server);
+                if (userLink.user.id === glUser.id) {
+                    return true;
+                }
             });
             if (user) {
                 // already imported
@@ -110,12 +101,16 @@ function importUsers(db, server, glUsers) {
             }
             // retrieve the full profile
             return fetchUser(server, glUser.id).then((glUser) => {
+                // import profile image
                 return importProfileImage(glUser).then((image) => {
                     // find user by email
                     var criteria = { email: glUser.email, deleted: false };
                     return User.findOne(db, 'global', criteria, '*').then((user) => {
-                        var userNew = copyUserProperties(null, image, glUser, link);
-                        return User.saveOne(db, 'global', userNew);
+                        var link = Import.Link.create(server, {
+                            user: { id: glUser.id }
+                        });
+                        var userAfter = copyUserProperties(user, image, glUser, link);
+                        return User.saveOne(db, 'global', userAfter);
                     });
                 });
             });
@@ -151,10 +146,7 @@ function importUser(db, server, glUser) {
  * @return {Promise<User>}
  */
 function updateUser(db, server, user) {
-    var link = _.find(user.external, {
-        type: 'gitlab',
-        server_id: server.id,
-    });
+    var link = Import.Link.find(user, server);
     return fetchUser(server, link.user.id).then((glUser) => {
         return importProfileImage(glUser).then((image) => {
             var userAfter = copyUserProperties(user, glUser, image, link);
@@ -233,12 +225,12 @@ function importProjectRepoMembers(db, project) {
         deleted: false,
     };
     return Repo.find(db, 'global', criteria, '*').map((repo) => {
-        var link = _.find(repo.external, { type: 'gitlab' });
+        var links = _.filter(repo.external, { type: 'gitlab' });
         var criteria = {
-            id: link.server_id,
+            id: _.map(links, 'server_id'),
             deleted: false,
         };
-        return Server.findOne(db, 'global', criteria, '*').then((server) => {
+        return Server.find(db, 'global', criteria, '*').each((server) => {
             return fetchRepoMembers(server, link.project.id).then((glUsers) => {
                 return importUsers(db, server, glUsers);
             });

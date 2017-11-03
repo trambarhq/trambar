@@ -30,23 +30,15 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
         }
     };
     return Commit.findOne(db, 'global', criteria, '*').then((commit) => {
-        var repoLink = _.find(repo.external, {
-            type: 'gitlab',
-            server_id: server.id,
-        });
+        var repoLink = Import.Link.find(repo, server);
         if (commit) {
-            // make sure the commit is linked properly
-            var existingCommitLink = _.find(commit.external, {
-                commit: { id: glCommitId }
-            });
-            // the commit originated from a different server--add the link
-            // to this server
-            var commitLink = {
-                type: 'gitlab',
-                server_id: server.id,
+            // make sure the commit is linked properly, in case the commit
+            // originated from a different server
+            var existingCommitLink = _.find(commit.external, criteria.external_object);
+            var commitLink = Import.Link.create(server, {
                 commit: existingCommitLink.commit
-            };
-            var link = _.merge({}, repoLink, commitLink);
+            });
+            var link = Import.Link.merge(commitLink, repoLink);
             var commitAfter = _.cloneDeep(commit);
             Import.join(commitAfter, link);
             if (!_.isEqual(commit, commitAfter)) {
@@ -57,14 +49,14 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
         console.log(`Retriving commit ${glCommitId}`);
         return fetchCommit(server, repoLink.project.id, glCommitId).then((glCommit) => {
             return fetchDiff(server, repoLink.project.id, glCommit.id).then((glDiff) => {
-                var commitLink = {
-                    type: 'gitlab',
+                var commitLink = Import.Link.create(server, {
                     commit: {
                         id: glCommit.id,
                         parent_ids: glCommit.parent_ids
                     }
-                };
-                var link = _.merge({}, repoLink, commitLink);
+                });
+                // commits are also linked to the Gitlab project
+                var link = Import.merge(commitLink, repoLink);
                 var commitNew = copyCommitProperties(null, glCommit, glDiff, glBranch, link);
                 return Commit.insertOne(db, 'global', commitNew);
             });

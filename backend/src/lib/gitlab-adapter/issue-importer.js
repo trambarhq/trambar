@@ -28,7 +28,7 @@ exports.importEvent = importEvent;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = _.find(repo.external, { type: 'gitlab' });
+    var repoLink = Import.Link.find(repo, server);
     return fetchIssue(server, repoLink.project.id, glEvent.target_id).then((glIssue) => {
         // the story is linked to both the issue and the repo
         var issueLink = {
@@ -50,16 +50,27 @@ function importEvent(db, server, repo, project, author, glEvent) {
     });
 }
 
+/**
+ * Update an issue story with latest information from Gitlab
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Story} story
+ *
+ * @return {Promise<Story>}
+ */
 function updateStory(db, server, story) {
     var schema = project.name;
-    var link = _.find(story.external, { type: 'gitlab' });
-    return fetchIssue(server, link.project.id, link.issue.id).then((issue) => {
-        var storyAfter = copyIssueProperties(story, issue, null, link);
-        if (storyAfter) {
-            return Story.updateOne(db, schema, storyAfter);
-        } else {
-            return story;
-        }
+    var link = Import.Link.find(story, server);
+    return fetchIssue(server, link.project.id, link.issue.id).then((glIssue) => {
+        return UserImport.importUser(db, server, glIssue.author).then((author) => {
+            var storyAfter = copyIssueProperties(story, author, glIssue, link);
+            if (storyAfter) {
+                return Story.updateOne(db, schema, storyAfter);
+            } else {
+                return story;
+            }
+        });
     });
 }
 

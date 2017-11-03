@@ -25,7 +25,7 @@ exports.importEvent = importEvent;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = _.find(repo.external, { type: 'gitlab' });
+    var repoLink = Import.Link.find(repo, server);
     return fetchMilestone(server, repoLink.project.id, glEvent.target_id).then((glMilestone) => {
         // the story is linked to both the issue and the repo
         var milestoneLink = {

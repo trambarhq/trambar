@@ -9,18 +9,33 @@ var UserImporter = require('gitlab-adapter/user-importer');
 var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
 
+exports.importCommentEvent = importCommentEvent;
 exports.importComments = importComments;
+
+/**
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ * @param  {Object} glEvent
+ *
+ * @return {Promise}
+ */
+function importCommentEvent(db, server, repo, project, glEvent) {
+    console.log('importCommentEvent');
+    console.log(glEvent);
+    return Promise.resolve();
+}
 
 /**
  * Import comments
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {Repo} repo
  * @param  {Project} project
  * @param  {Story} story
  *
- * @return {Promise}
+ * @return {Promise<Array<Reaction>>}
  */
 function importComments(db, server, project, story) {
     switch (story.type) {
@@ -78,7 +93,7 @@ function importIssueComments(db, server, project, story) {
  * @param  {Project} project
  * @param  {Story} story
  *
- * @return {Promise<Array<Object>>}
+ * @return {Promise<Array<Reaction>>}
  */
 function importMergeRequestComments(db, server, project, story) {
     var schema = project.name;
@@ -113,7 +128,7 @@ function importMergeRequestComments(db, server, project, story) {
  * @param  {Project} project
  * @param  {Story} story
  *
- * @return {Promise<Array<Object>>}
+ * @return {Promise<Array<Reaction>>}
  */
 function importPushComments(db, server, project, story) {
     var schema = project.name;
