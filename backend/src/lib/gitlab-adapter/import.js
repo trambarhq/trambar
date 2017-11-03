@@ -128,15 +128,21 @@ var lang = (process.env.LANG || 'en-US').substr(0, 2);
  * Find a link by server
  *
  * @param  {ExternalData} object
- * @param  {Server} server
+ * @param  {Server|null} server
  *
- * @return {Object}
+ * @return {Object|undefined}
  */
 function find(object, server) {
-    return _.find(object.external, {
-        type: 'gitlab',
-        server_id: server.id
-    });
+    if (server) {
+        return _.find(object.external, {
+            type: 'gitlab',
+            server_id: server.id
+        });
+    } else {
+        return _.find(object.external, {
+            type: 'gitlab',
+        });
+    }
 }
 
 /**
@@ -160,10 +166,17 @@ function create(server, props) {
  * @param  {Object} link
  * @param  {String} objectName
  *
- * @return {Object}
+ * @return {Object|null}
  */
 function pick(link, objectName) {
-    return _.pick(link, 'type', 'server_id', objectName);
+    if (link && link[objectName]) {
+        var partial = {
+            type: link.type,
+            server_id: link.server_id,
+        };
+        partial[objectName] = link[objectName];
+        return partial;
+    }
 }
 
 /**

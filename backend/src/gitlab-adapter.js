@@ -5,7 +5,9 @@ var BodyParser = require('body-parser');
 var DNSCache = require('dnscache');
 var Database = require('database');
 var TaskQueue = require('utils/task-queue');
+var StoryTypes = require('data/story-types');
 
+var Import = require('gitlab-adapter/import');
 var HookManager = require('gitlab-adapter/hook-manager');
 var CommentImporter = require('gitlab-adapter/comment-importer');
 var CommentExporter = require('gitlab-adapter/comment-exporter');
@@ -276,15 +278,27 @@ function disconnectRepositories(db, project, repoIds) {
  * @return {Promise|undefined}
  */
 function handleStoryChangeEvent(db, event) {
-    /*
-    if (event.current.published && event.current.ready) {
-        if (event.current.type === 'issue') {
-            return Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
-                // TODO
-            });
+    var exporting = false;
+    if (_.includes(StoryTypes.trackable, event.current.type)) {
+        var storyLink = Import.Link.find(event.current);
+        var issueLink = Import.Link.pick(storyLink, 'issue');
+        if (event.current.published && event.current.ready) {
+            if (issueLink) {
+                if (!issueLink.id) {
+                    exporting = true;
+                } else {
+                    if (event.diff.details) {
+                        exporting = true;
+                    }
+                }
+            }
         }
     }
-    */
+    if (exporting) {
+        return Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
+            return IssueExporter.exportStory(db, story);
+        });
+    }
 }
 
 /**
@@ -296,13 +310,6 @@ function handleStoryChangeEvent(db, event) {
  * @return {Promise|undefined}
  */
 function handleReactionChangeEvent(db, event) {
-    if (event.current.published && event.current.ready) {
-        // TODO
-        /*
-        return Reaction.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
-        });
-        */
-    }
 }
 
 /**

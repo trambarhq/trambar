@@ -70,11 +70,11 @@ function fetchEach(server, uri, params, callback) {
     return Async.end();
 }
 
-function post(server, uri, payload) {
+function post(server, uri, payload, asUserId) {
     return request(server, uri, 'post', undefined, payload);
 }
 
-function remove(server, uri) {
+function remove(server, uri, asUserId) {
     return request(server, uri, 'delete');
 }
 
