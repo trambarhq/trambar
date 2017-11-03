@@ -253,13 +253,14 @@ module.exports = function(languageCode) {
             return `${lines} removed`;
         },
         'story-push-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
-            var sources = branches.map((branch) => {
-                return `“${branch}”`;
-            });
-            for (var i = 0; i < branches.length; i++) {
-                sources.push
+            var text = `Merged code`;
+            if (branches && branches.length > 0) {
+                var sources = branches.map((branch) => {
+                    return `“${branch}”`;
+                });
+                text += ` from ${sources.join(', ')}`;
             }
-            var text = `Merged code from ${sources.join(', ')} into branch “${branch}”`;
+            text += ` into branch “${branch}”`;
             if (repo) {
                 text += ` of project “${repo}”`;
             }

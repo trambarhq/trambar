@@ -80,6 +80,7 @@ function sendError(res, err) {
     }
     var statusCode = err.statusCode;
     var message = err.message;
+    console.error(err);
     if (!statusCode) {
         // not an expected error
         console.error(err);
@@ -484,7 +485,7 @@ function authenticateThruPassport(req, res, server, params, scope) {
             query += name + '=' + value;
             return query;
         }, '');
-        var params = {
+        var settings = {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
             baseURL: server.settings.oauth.base_url,
@@ -506,7 +507,7 @@ function authenticateThruPassport(req, res, server, params, scope) {
         }
         // create strategy object, resolving promise when we have the profile
         var Strategy = require(plugins[server.type]);
-        var strategy = new Strategy(params, (accessToken, refreshToken, profile, done) => {
+        var strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
             // just resolve the promise--no need to call done() since we're not
             // using Passport as an Express middleware
             resolve({ accessToken, refreshToken, profile });
@@ -535,9 +536,11 @@ function authenticateThruPassport(req, res, server, params, scope) {
 function findMatchingUser(db, server, account) {
     // look for a user with the external id
     var criteria = {
-        external_user_id: account.profile.id,
-        external_user_type: server.type,
-        server_id: server.id,
+        external_object: {
+            type: server.type,
+            server_id: server.id,
+            user: { id: account.profile.id },
+        },
         deleted: false,
     };
     return User.findOne(db, 'global', criteria, 'id, type').then((user) => {

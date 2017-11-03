@@ -107,7 +107,6 @@ module.exports = _.create(Data, {
             return Promise.each(objects, (object) => {
                 if (object.hasOwnProperty('area')) {
                     if (object.area !== credentials.area) {
-                        console.log(`${object.area} !== ${credentials.area}`)
                         throw new HttpError(400);
                     }
                 }
@@ -125,7 +124,6 @@ module.exports = _.create(Data, {
                     };
                     return Project.findOne(db, schema, criteria, '*').then((project) => {
                         if (!Project.checkAccess(project, credentials.user, 'read')) {
-                            console.log(schema, project, credentials.user);
                             throw new HttpError(400);
                         }
                     });
