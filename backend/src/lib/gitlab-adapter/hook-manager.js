@@ -61,8 +61,9 @@ function forEachProject(db, f, host) {
         };
         return Repo.find(db, 'global', criteria, '*').each((repo) => {
             // load server record
+            var repoLink = _.find(repo.external, { type: 'gitlab' });
             var criteria = {
-                id: repo.server_id,
+                id: repoLink.server_id,
                 deleted: false,
             };
             return Server.findOne(db, 'global', criteria, '*').then((server) => {
@@ -95,17 +96,26 @@ function installProjectHook(host, server, repo, project) {
     return fetchHooks(server, repoLink.project.id).then((glHooks) => {
         var url = getHookEndpoint(host, server, repo, project);
         var hookProps = getHookProps(url);
-        var installed = _.find(glHooks, { url });
-        if (installed) {
-            if (!_.isMatch(installed, hookProps)) {
-                console.log(`Removing existing hook: ${installed.url}`);
-                destroyHook(server, link.project.id, installed);
-                installed = null;
+        var installed = false;
+        _.each(glHooks, (glHook) => {
+            if (glHook.url === url) {
+                var remove = true;
+                if (!installed) {
+                    if (_.isMatch(glHook, hookProps)) {
+                        installed = true;
+                        remove = false;
+                    }
+                }
+                if (remove) {
+                    console.log(`Removing existing hook: ${installed.url}`);
+                    destroyHook(server, link.project.id, glHook);
+                }
             }
+        });
+        if (installed) {
+            return null;
         }
-        if (!installed) {
-            return createHook(server, repoLink.project.id, hookProps);
-        }
+        return createHook(server, repoLink.project.id, hookProps);
     });
 }
 
