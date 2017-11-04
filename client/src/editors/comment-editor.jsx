@@ -583,7 +583,6 @@ var createBlankComment = Memoize(function(story, currentUser) {
         type: 'comment',
         story_id: story.id,
         user_id: (currentUser) ? currentUser.id : null,
-        target_user_ids: story.user_ids,
         details: {},
     };
 });

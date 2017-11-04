@@ -45,7 +45,6 @@ describe('LiveDataUpdater', function() {
             type: 'like',
             story_id: 999,
             user_id: 1,
-            target_user_ids: [ 2 ],
             published: true,
             ptime: '2017-05-01T00:00:00.000Z',
         },
@@ -53,7 +52,6 @@ describe('LiveDataUpdater', function() {
             type: 'comment',
             story_id: 999,
             user_id: 1,
-            target_user_ids: [ 2 ],
             published: true,
             ptime: '2017-05-02T00:00:00.000Z',
         }

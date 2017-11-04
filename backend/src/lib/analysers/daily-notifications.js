@@ -4,15 +4,15 @@ var Moment = require('moment-timezone');
 var Reaction = require('accessors/reaction');
 
 module.exports = {
-    type: 'daily-reactions',
+    type: 'daily-notifications',
     // tables from which the stats are derived
-    sourceTables: [ 'reaction' ],
+    sourceTables: [ 'notification' ],
     // filters and the columns they act on--determine which objects are
     // included in the statistics;
     filteredColumns: {
         story: {
-            target_user_ids: 'target_user_ids',
-            time_range: 'ptime',
+            target_user_id: 'target_user_id',
+            time_range: 'ctime',
         },
     },
     // additional criteria that objects must also meet to be included
@@ -27,7 +27,7 @@ module.exports = {
     depedentColumns: {
         story: [
             'type',
-            'ptime',
+            'ctime',
         ],
     },
 
@@ -39,7 +39,7 @@ module.exports = {
 
         // load the stories
         console.log(criteria)
-        return Reaction.find(db, schema, criteria, 'type, ptime').then((rows) => {
+        return Reaction.find(db, schema, criteria, 'type, ctime').then((rows) => {
             console.log('Rows: ' + rows.length)
             var timezone = _.get(filters, 'timezone', 'GMT');
 

@@ -901,7 +901,6 @@ module.exports = React.createClass({
             type: 'vote',
             story_id: story.id,
             user_id: this.props.currentUser.id,
-            target_user_ids: story.user_ids,
             published: true,
             details: {
                 answers: this.state.userAnswers

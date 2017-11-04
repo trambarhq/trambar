@@ -217,9 +217,8 @@ module.exports = React.createClass({
         } else {
             like = {
                 type: 'like',
-                story_id: _.get(this.props.story, 'id'),
-                user_id: _.get(this.props.currentUser, 'id'),
-                target_user_ids: _.get(this.props.story, 'user_ids'),
+                story_id: this.props.story.id,
+                user_id: this.props.currentUser.id,
                 published: true,
                 public: true,
             };

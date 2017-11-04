@@ -38,8 +38,8 @@ function importEvent(db, server, repo, project, author, glEvent) {
         var link = _.merge({}, repoLink, issueLink);
         var storyNew = copyIssueProperties(null, author, glIssue, link);
         return Story.insertOne(db, schema, storyNew).then((story) => {
-            return UserImporter.importUsers(db, server, glIssue.assignees).then((assignees) => {
-                var reactionNew = copyAssignmentProperties(null, story, author, assignees, glIssue, link);
+            return UserImporter.importUsers(db, server, glIssue.assignees).each((assignee) => {
+                var reactionNew = copyAssignmentProperties(null, story, assignee, glIssue, link);
                 return Reaction.saveOne(db, schema, reactionNew);
             }).then(() => {
                 if (glIssue.user_notes_count > 0) {
@@ -116,20 +116,18 @@ function copyIssueProperties(story, author, glIssue, link) {
  *
  * @param  {Reaction|null} reaction
  * @param  {Story} story
- * @param  {User} author
- * @param  {Array<User>} assignees
+ * @param  {User} assignee
  * @param  {Object} glIssue
  * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyAssignmentProperties(reaction, story, author, assignees, glIssue, link) {
+function copyAssignmentProperties(reaction, story, assignee, glIssue, link) {
     var reactionAfter = _.cloneDeep(reaction) || {};
     Import.join(reactionAfter, link);
     _.set(reactionAfter, 'type', 'assignment');
     _.set(reactionAfter, 'story_id', story.id);
-    _.set(reactionAfter, 'user_id', author.id);
-    _.set(reactionAfter, 'target_user_ids', _.map(assignees, 'id'));
+    _.set(reactionAfter, 'user_id', assignee.id);
     _.set(reactionAfter, 'published', true);
     _.set(reactionAfter, 'ptime', Moment(glIssue.updated_at).toISOString());
     if (_.isEqual(reaction, reactionAfter)) {

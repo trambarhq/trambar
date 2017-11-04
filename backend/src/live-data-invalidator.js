@@ -9,13 +9,13 @@ var Story = require('accessors/story');
 
 // analysers
 var DailyActivities = require('analysers/daily-activities');
-var DailyReactions = require('analysers/daily-reactions');
+var DailyNotifications = require('analysers/daily-notifications');
 var ProjectDateRange = require('analysers/story-date-range');
 var StoryPopularity = require('analysers/story-popularity');
 
 var analysers = [
     DailyActivities,
-    DailyReactions,
+    DailyNotifications,
     ProjectDateRange,
     StoryPopularity,
 ];

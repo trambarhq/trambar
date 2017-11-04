@@ -176,7 +176,6 @@ function copyNoteProperties(reaction, story, author, glNote, link) {
     _.set(reactionAfter, 'type', 'note');
     _.set(reactionAfter, 'story_id', story.id);
     _.set(reactionAfter, 'user_id', author.id);
-    _.set(reactionAfter, 'target_user_ids', story.user_ids);
     _.set(reactionAfter, 'public', story.public);
     _.set(reactionAfter, 'published', true);
     _.set(reactionAfter, 'ptime', Moment(glNote.created_at).toISOString());

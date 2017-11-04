@@ -79,7 +79,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load reactions
             var criteria = {};
-            criteria.target_user_ids = [ props.currentUser.id ];
+            criteria.target_user_id = props.currentUser.id;
             if (params.date) {
                 var s = Moment(params.date);
                 var e = s.clone().endOf('day');
@@ -97,7 +97,7 @@ module.exports = Relaks.createClass({
             } else {
                 criteria.limit = 500;
             }
-            return db.find({ table: 'reaction', criteria });
+            return db.find({ table: 'notification', criteria });
         }).then((reactions) => {
             props.reactions = reactions;
             return <NotificationsPageSync {...props} />;

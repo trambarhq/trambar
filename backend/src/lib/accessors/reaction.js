@@ -19,7 +19,6 @@ module.exports = _.create(ExternalData, {
         language_codes: Array(String),
         story_id: Number,
         user_id: Number,
-        target_user_ids: Array(Number),
         published: Boolean,
         ready: Boolean,
         ptime: String,
@@ -34,7 +33,6 @@ module.exports = _.create(ExternalData, {
         language_codes: Array(String),
         story_id: Number,
         user_id: Number,
-        target_user_ids: Array(Number),
         published: Boolean,
         ready: Boolean,
         public: Boolean,
@@ -70,7 +68,6 @@ module.exports = _.create(ExternalData, {
                 language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
                 story_id int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
-                target_user_ids int[] NOT NULL,
                 published boolean NOT NULL DEFAULT false,
                 ready boolean NOT NULL DEFAULT false,
                 ptime timestamp,
@@ -93,7 +90,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'target_user_ids', 'published', 'ready', 'ptime', 'public', 'external' ];
+            var propNames = [ 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'published', 'ready', 'ptime', 'public', 'external' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // merge changes to details->resources to avoid race between
                 // client-side changes and server-side changes
@@ -215,7 +212,6 @@ module.exports = _.create(ExternalData, {
                 object.type = row.type;
                 object.story_id = row.story_id;
                 object.user_id = row.user_id;
-                object.target_user_ids = row.target_user_ids;
                 object.ptime = row.ptime;
                 object.public = row.public;
                 object.published = row.published;

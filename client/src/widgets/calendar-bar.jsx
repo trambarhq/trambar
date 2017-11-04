@@ -79,10 +79,10 @@ module.exports = Relaks.createClass({
                         };
                     });
                 } else if (route.component === NotificationsPage) {
-                    criteria.type = 'daily-reactions';
+                    criteria.type = 'daily-notifications';
                     criteria.filters = _.map(timeRanges, (timeRange) => {
                         return {
-                            target_user_ids: [ currentUserId ],
+                            target_user_id: currentUserId,
                             time_range: timeRange
                         };
                     });
