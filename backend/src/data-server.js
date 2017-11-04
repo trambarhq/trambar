@@ -22,6 +22,7 @@ var User = require('accessors/user');
 // project-specific accessors
 var Bookmark = require('accessors/bookmark');
 var Listing = require('accessors/listing');
+var Notification = require('accessors/notification');
 var Reaction = require('accessors/reaction');
 var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
@@ -374,6 +375,7 @@ var globalAccessors = [
 var projectAccessors = [
     Bookmark,
     Listing,
+    Notification,
     Reaction,
     Statistics,
     Story,
