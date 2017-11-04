@@ -190,7 +190,7 @@ module.exports = Relaks.createClass({
                 var userStoryIds = _.map(props.stories, 'id');
                 var criteria = {
                     published: true,
-                    exclude_ids: userStoryIds,
+                    exclude: userStoryIds,
                     user_ids: [ props.currentUser.id ],
                 };
                 return db.find({ table: 'story', criteria });

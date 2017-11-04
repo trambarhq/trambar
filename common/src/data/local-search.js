@@ -40,7 +40,7 @@ exports.match = function(table, object, criteria) {
                         matching = false;
                     }
                 }
-            } else if (name === 'exclude_ids') {
+            } else if (name === 'exclude') {
                 if (_.includes(desiredValue, object.id)) {
                     matching = false;
                 }

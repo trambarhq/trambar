@@ -121,7 +121,6 @@ module.exports = _.create(ExternalData, {
      */
     apply: function(db, schema, criteria, query) {
         var special = [
-            'exclude',
             'time_range',
             'newer_than',
             'older_than',
@@ -133,9 +132,6 @@ module.exports = _.create(ExternalData, {
 
         var params = query.parameters;
         var conds = query.conditions;
-        if (criteria.exclude) {
-            conds.push(`NOT (id = ANY($${params.push(criteria.exclude)}))`);
-        }
         if (criteria.time_range !== undefined) {
             conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
         }

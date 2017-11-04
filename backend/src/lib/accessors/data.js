@@ -47,7 +47,7 @@ module.exports = {
 
     /**
      * Create table in schema
-     * 
+     *
      * (for reference purpose only)
      *
      * @param  {Database} db
@@ -193,27 +193,32 @@ module.exports = {
         var conds = query.conditions;
         _.forIn(this.criteria, (type, name) => {
             if (criteria.hasOwnProperty(name)) {
-                // assume that none of the column names requires double quotes
-                var value = criteria[name];
-                if (type === Array || type instanceof Array) {
-                    if (value instanceof Array) {
-                        // overlaps
-                        conds.push(`${name} && $${params.push(value)}`);
-                    } else {
-                        // contains
-                        conds.push(`${name} @> $${params.push(value)}`);
+                if (name === 'exclude') {
+                    if (criteria.exclude) {
+                        conds.push(`NOT (id = ANY($${params.push(criteria.exclude)}))`);
                     }
                 } else {
-                    if (value instanceof Array) {
-                        // equals any
-                        conds.push(`${name} = ANY($${params.push(value)})`);
-                    } else if (value === null) {
-                        conds.push(`${name} IS NULL`);
+                    // assume that none of the column names requires double quotes
+                    var value = criteria[name];
+                    if (type === Array || type instanceof Array) {
+                        if (value instanceof Array) {
+                            // overlaps
+                            conds.push(`${name} && $${params.push(value)}`);
+                        } else {
+                            // contains
+                            conds.push(`${name} @> $${params.push(value)}`);
+                        }
                     } else {
-                        // equals
-                        conds.push(`${name} = $${params.push(value)}`);
+                        if (value instanceof Array) {
+                            // equals any
+                            conds.push(`${name} = ANY($${params.push(value)})`);
+                        } else if (value === null) {
+                            conds.push(`${name} IS NULL`);
+                        } else {
+                            // equals
+                            conds.push(`${name} = $${params.push(value)}`);
+                        }
                     }
-
                 }
             }
         });
