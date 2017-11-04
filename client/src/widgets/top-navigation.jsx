@@ -219,7 +219,7 @@ module.exports = React.createClass({
     clearRouteParameters: function() {
         var route = this.props.route;
         var params = _.omit(route.parameters, 'date', 'roleIds');
-        route.redirect(route.component, params, true);
+        route.replace(route.component, params);
     },
 
     handleCalendarClick: function(evt) {

@@ -816,7 +816,7 @@ module.exports = React.createClass({
     handleAlertClick: function(evt) {
         var alert = evt.alert;
         // redirect to news page
-        this.state.route.redirect(require('pages/news-page'), {
+        this.state.route.push(require('pages/news-page'), {
             schema: alert.schema,
             story: alert.story_id,
         });

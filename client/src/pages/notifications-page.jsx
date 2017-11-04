@@ -36,7 +36,7 @@ module.exports = Relaks.createClass({
         getUrl: function(params) {
             var path = `/${params.schema}/notifications/`, query, hash;
             if (params.date) {
-                url += `${params.date}/`;
+                path += `${params.date}/`;
             }
             if (params.search) {
                 query = { search: params.search };

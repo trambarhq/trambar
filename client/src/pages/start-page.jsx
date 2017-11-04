@@ -630,7 +630,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
 
         var projectId = this.state.selectedProjectId;
         var project = _.find(this.props.projects, { id: projectId });
-        this.props.route.redirect(require('pages/news-page'), { schema: project.name });
+        this.props.route.push(require('pages/news-page'), { schema: project.name });
     },
 });
 

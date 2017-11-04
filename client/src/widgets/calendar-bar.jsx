@@ -187,6 +187,6 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         var params = _.clone(route.parameters);
         params.date = evt.date;
-        route.redirect(route.component, params, true);
+        route.replace(route.component, params);
     },
 })
