@@ -50,7 +50,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  */
 function copyMilestoneProperties(story, author, glMilestone, link) {
     var storyAfter = _.cloneDeep(story) || {};
-    var imported = Import.reacquire(storyAfter, link);
+    var imported = Import.reacquire(storyAfter, link, 'milestone');
     _.set(storyAfter, 'type', 'milestone');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);

@@ -37,14 +37,19 @@ function join(object, link) {
  *
  * @param  {ExternalData} object
  * @param  {Object} link
+ * @param  {String} objectName
  *
  * @return {Object}
  */
-function reacquire(object, link) {
+function reacquire(object, link, objectName) {
     var attachedLink = join(object, link);
-    var imported = attachedLink.imported;
+    var object = link[objectName];
+    if (!object) {
+        throw new Error(`Link does not contain ${objectName}`);
+    }
+    var imported = object.imported;
     if (!imported) {
-        imported = attachedLink.imported = {};
+        imported = object.imported = {};
     }
     return imported;
 }

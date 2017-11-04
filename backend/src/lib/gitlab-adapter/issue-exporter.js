@@ -88,5 +88,5 @@ function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
     if (glIssueNumber) {
         url += `/${glIssueNumber}`;
     }
-    return Transport.post(server, url, glIssue);
+    return Transport.post(server, url, glIssue, glUserId);
 }

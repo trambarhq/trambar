@@ -171,7 +171,7 @@ function updateUser(db, server, user) {
  */
 function copyUserProperties(user, profileImage, glUser, link) {
     var userAfter = _.cloneDeep(user) || {};
-    var imported = Import.reacquire(userAfter, link);
+    var imported = Import.reacquire(userAfter, link, 'user');
     Import.set(userAfter, imported, 'type', (glUser.is_admin) ? 'admin' : 'member');
     Import.set(userAfter, imported, 'username', glUser.username);
     Import.set(userAfter, imported, 'details.name', glUser.name);

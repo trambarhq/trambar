@@ -91,7 +91,7 @@ function updateStory(db, server, story) {
  */
 function copyIssueProperties(story, author, glIssue, link) {
     var storyAfter = _.cloneDeep(story) || {};
-    var imported = Import.reacquire(storyAfter, link);
+    var imported = Import.reacquire(storyAfter, link, 'issue');
     _.set(storyAfter, 'type', 'issue');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
