@@ -99,7 +99,7 @@ function importRepositories(db, server) {
 function deleteMissingRepos(db, server, repos, glRepos) {
     // filter out repos that we want to keep
     return Promise.filter(repos, (repo) => {
-        var repoLink = Import.find(repo, server);
+        var repoLink = Import.Link.find(repo, server);
         return _.some(glRepos, { id: repoLink.project.id });
     }).mapSeries((repo) => {
         return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
@@ -120,7 +120,7 @@ function addNewRepos(db, server, repos, glRepos) {
     // filter out Gitlab records that have been imported already
     return Promise.filter(glRepos, (glRepo) => {
         return !_.some(repos, (repo) => {
-            var repoLink = Import.Link.find(server);
+            var repoLink = Import.Link.find(repo, server);
             if (repoLink.project.id === glRepo.id) {
                 return true;
             }

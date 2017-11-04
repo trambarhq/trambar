@@ -5,6 +5,8 @@ var FS = Promise.promisifyAll(require('fs'));
 var Path = require('path');
 var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
+var Database = require('database');
+var Server = require('accessors/server');
 
 exports.fetch = fetch;
 exports.fetchAll = fetchAll;
@@ -12,23 +14,41 @@ exports.fetchEach = fetchEach;
 exports.post = post;
 exports.remove = remove;
 
+/**
+ * Fetch data from Gitlab server
+ *
+ * @param  {Server} server
+ * @param  {String} uri
+ * @param  {Object|undefined} query
+ *
+ * @return {Promise<Object>}
+ */
 function fetch(server, uri, query) {
     return request(server, uri, 'get', query);
 }
 
-function fetchAll(server, uri, params) {
+/**
+ * Fetch list of objects, returned potentially in multiple chunks
+ *
+ * @param  {Server} server
+ * @param  {String} uri
+ * @param  {Object|undefined} query
+ *
+ * @return {Promise<Object>}
+ */
+function fetchAll(server, uri, query) {
     var objectLists = [];
-    var query = _.extend({
+    var pageQuery = _.extend({
         page: 1,
         per_page: 100
-    }, params);
+    }, query);
     var done = false;
     Async.do(() => {
-        return request(server, uri, 'get', query).then((objects) => {
+        return fetch(server, uri, pageQuery).then((objects) => {
             if (objects instanceof Array) {
                 objectLists.push(objects);
-                if (objects.length === query.per_page && query.page < 100) {
-                    query.page++;
+                if (objects.length === pageQuery.per_page && pageQuery.page < 100) {
+                    pageQuery.page++;
                 } else {
                     done = true;
                 }
@@ -42,24 +62,37 @@ function fetchAll(server, uri, params) {
     return Async.end();
 }
 
-function fetchEach(server, uri, params, callback) {
-    var query = _.extend({
+/**
+ * Fetch list of objects, invoking callback function for each of them
+ *
+ * Promise is fulfilled when all objects have been processed
+ *
+ * @param  {Server} server
+ * @param  {String} uri
+ * @param  {Object|undefined} query
+ * @param  {Function} callback
+ *
+ * @return {Promise}
+ */
+function fetchEach(server, uri, query, callback) {
+    var pageQuery = _.extend({
         page: 1,
         per_page: 100
-    }, params);
+    }, query);
     var done = false;
     var total = undefined;
     var index = 0;
     Async.do(() => {
-        return fetch(server, uri, query).then((objects) => {
-            if (objects.length < query.per_page) {
+        return fetch(server, uri, pageQuery).then((objects) => {
+            if (objects.length < pageQuery.per_page) {
+                // we know the total at the last page
                 total = index + objects.length;
             }
             return Promise.each(objects, (object) => {
                 return callback(object, index++, total);
             }).then(() => {
-                if (objects.length === query.per_page) {
-                    query.page++;
+                if (objects.length === pageQuery.per_page) {
+                    pageQuery.page++;
                 } else {
                     done = true;
                 }
@@ -70,6 +103,17 @@ function fetchEach(server, uri, params, callback) {
     return Async.end();
 }
 
+/**
+ * Perform an action at Gitlab server using a POST request, possibly as a
+ * specific user
+ *
+ * @param  {Server} server
+ * @param  {String} uri
+ * @param  {Object} payload
+ * @param  {Number|undefined} userId
+ *
+ * @return {Promise<Object>}
+ */
 function post(server, uri, payload, userId) {
     if (userId) {
         return impersonate(server, userId).then((token) => {
@@ -80,18 +124,28 @@ function post(server, uri, payload, userId) {
     }
 }
 
+/**
+ * Remove something at Gitlab server using a DELETE request
+ *
+ * @param  {Server} server
+ * @param  {String} uri
+ *
+ * @return {Promise}
+ */
 function remove(server, uri, userId) {
-    if (userId) {
-        return impersonate(server, userId).then((token) => {
-            return request(server, uri, 'delete', null, null, token);
-        });
-    } else {
-        return request(server, uri, 'delete', null, null);
-    }
+    return request(server, uri, 'delete');
 }
 
 var userImpersonations = {};
 
+/**
+ * Obtain impersonation token for give user
+ *
+ * @param  {Server} server
+ * @param  {String} userId
+ *
+ * @return {Promise<String>}
+ */
 function impersonate(server, userId) {
     var ui = userImpersonations[userId];
     if (ui) {
@@ -115,21 +169,110 @@ function impersonate(server, userId) {
     });
 }
 
+/**
+ * Get a list of impersonation tokens
+ *
+ * @param  {Server} server
+ * @param  {Number} userId
+ *
+ * @return {Promise<Array<Object>>}
+ */
 function getImpersonations(server, userId) {
     var url = `/users/${userId}/impersonation_tokens`;
     return fetch(server, url);
 }
 
-function createImpersonation(server, impersonation) {
-    var url = `/users/${impersonation.user_id}/impersonation_tokens`;
-    return post(server, url, impersonation);
+/**
+ * Create an impersonation token for given user
+ *
+ * @param  {Server} server
+ * @param  {Number} userId
+ * @param  {Object} props
+ *
+ * @return {Promise<Object>}
+ */
+function createImpersonation(server, userId, props) {
+    var url = `/users/${userId}/impersonation_tokens`;
+    return post(server, url, props);
 }
 
-var request = function(server, uri, method, query, payload, token) {
-    // TODO: handle token refreshing
+/**
+ * Obtain new OAuth acess token using refresh token
+ *
+ * @param  {Server} server
+ *
+ * @return {Promise<server>}
+ */
+function refresh(server) {
+    var payload = {
+        grant_type: 'refresh_token',
+        refresh_token: server.settings.api.refresh_token,
+        client_id: server.settings.oauth.client_id,
+        client_secret: server.settings.oauth.client_secret,
+    };
+    var options = {
+        json: true,
+        body: payload,
+        baseUrl: server.settings.oauth.base_url,
+        uri: '/oauth/token',
+        method: 'post',
+    };
+    return attempt(options).then((response) => {
+        return updateAccessTokens(server, response);
+    }).catch((err) => {
+        if (err instanceof HttpError) {
+            if (err.statusCode === 401) {
+                // TODO: reactivate this after more testing
+                //return updateAccessTokens(server, {}).throw(err);
+            }
+        }
+        throw err;
+    });
+}
+
+/**
+ * Save new OAuth tokens to server record in database
+ *
+ * @param  {Server} server
+ * @param  {Object} response
+ *
+ * @return {Promise<Server>}
+ */
+function updateAccessTokens(server, response) {
+    // modifying server so any code reusing the object would have the updated
+    // avalues
+    server.settings.api.access_token = response.access_token;
+    server.settings.api.refresh_token = response.refresh_token;
+    return Database.open().then((db) => {
+        return Server.updateOne(db, 'global', server).return(server);
+    });
+}
+
+/**
+ * Perform a HTTP request, using either a user impersonation token or the OAuth
+ * access token stored in the server object to assert authorization
+ *
+ * When an error is encountered, try again unless the error is access violation
+ *
+ * @param  {Server} server
+ * @param  {String} uri
+ * @param  {String} method
+ * @param  {Object|undefined} query
+ * @param  {Object|undefined} payload
+ * @param  {String} userToken
+ *
+ * @return {Promise<Object>}
+ */
+function request(server, uri, method, query, payload, userToken) {
     var baseUrl = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
-    if (!token) {
+    var token;
+    if (userToken) {
+        token = userToken;
+    } else {
         token = server.settings.api.access_token;
+    }
+    if (!token) {
+        return Promise.reject(new HttpError(401));
     }
     var options = {
         json: true,
@@ -142,17 +285,21 @@ var request = function(server, uri, method, query, payload, token) {
         uri,
         method,
     };
-
     var succeeded = false;
     var attempts = 0;
     var result = null;
     var delayInterval = 500;
+    var lastError;
     Async.do(() => {
         return attempt(options).then((body) => {
+            if (Math.random() > 0.9) {
+                throw new HttpError(401);
+            }
             result = body;
             succeeded = true;
         }).catch((err) => {
             // throw the error if it's HTTP 4xx
+            lastError = err;
             if (err instanceof HttpError) {
                 if (err.statusCode >= 400 || err.statusCode <= 499) {
                     throw err;
@@ -170,28 +317,46 @@ var request = function(server, uri, method, query, payload, token) {
                     delayInterval *= 2;
                     return true;
                 });
+            } else {
+                throw lastError;
             }
         }
     });
     Async.return(() => {
         return result;
     });
-    return Async.end();
+    return Async.end().catch((err) => {
+        if (err instanceof HttpError) {
+            if (err.statusCode === 401 || err.statusCode === 467) {
+                if (!userToken) {
+                    // refresh access token
+                    return refresh(server, err).then((serverAfter) => {
+                        // then try the request again
+                        return request(serverAfter, uri, method, query, payload);
+                    });
+                }
+            }
+        }
+        throw err;
+    });
 }
 
+/**
+ * Perform a HTTP request
+ *
+ * @param  {Object} options
+ *
+ * @return {Promise<Object>}
+ */
 function attempt(options) {
     return new Promise((resolve, reject) => {
         Request(options, (err, resp, body) => {
             if (!err && resp && resp.statusCode >= 400) {
                 err = new HttpError(resp.statusCode);
             }
-            if (resp) {
-                resp.destroy();
-            }
             if (!err) {
                 resolve(body);
             } else {
-                console.log(`Error retrieving: `, options);
                 reject(err);
             }
         });
@@ -200,24 +365,25 @@ function attempt(options) {
 
 var CACHE_FOLDER = process.env.CACHE_FOLDER;
 if (CACHE_FOLDER) {
-    var requestUncached = request;
-    request = function(server, uri, method, query, payload, token) {
-        if (method !== 'get') {
-            return requestUncached(server, uri, method, query, payload, token);
+    Request = function(options, callback) {
+        var Request = require('request');
+        if (options.method !== 'get') {
+            return Request(options, callback);
         }
-        var cacheFilePath = getCachePath(server, uri, query);
-        return FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
+        var cacheFilePath = getCachePath(options.baseUrl, options.uri, options.qs);
+        FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
             var data = JSON.parse(json);
-            return data;
+            callback(null, null, data);
         }).catch((err) => {
-            return requestUncached(server, uri, method, query).then((data) => {
-                var json = JSON.stringify(data, undefined, 2);
-                var folderPath = Path.dirname(cacheFilePath);
-                return createFolder(folderPath).then(() => {
-                    return FS.writeFileAsync(cacheFilePath, json).then(() => {
-                        return data;
+            Request(options, (err, resp, data) => {
+                if (!err) {
+                    var json = JSON.stringify(data, undefined, 2);
+                    var folderPath = Path.dirname(cacheFilePath);
+                    createFolder(folderPath).then(() => {
+                        return FS.writeFileAsync(cacheFilePath, json);
                     });
-                });
+                }
+                callback(err, resp, data);
             });
         });
     }
@@ -234,9 +400,9 @@ if (CACHE_FOLDER) {
         });
     }
 
-    function getCachePath(server, uri, query) {
-        var address = _.trimEnd(server.settings.oauth.base_url, '/');
-        var domain = address.replace(/^https?:\/\//, '').replace(/:\d+/, '');
+    function getCachePath(baseUrl, uri, query) {
+        var m = /^https?:\/\/([^\/:]+)/.exec(baseUrl);
+        var domain = m[1];
         var path = _.trimEnd(uri, '/');
         if (!_.startsWith(path, '/')) {
             path = '/' + path;
