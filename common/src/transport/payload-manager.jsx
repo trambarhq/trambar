@@ -30,43 +30,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return base URL of server where files will be uploaded,
-     * based on the current route
-     *
-     * @return {String}
-     */
-    getBaseUrl: function() {
-        // use logic for data server selection
-        var db = this.getDatabase();
-        var server = db.context.server;
-        var protocol = db.context.protocol;
-        return `${protocol}//${server}`;
-    },
-
-    /**
-     * Return a database object with server info attached
-     *
-     * @return {Database}
-     */
-    getDatabase: function() {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema || 'global';
-        var db = this.props.database.use({ server, schema, by: this });
-        return db;
-    },
-
-    /**
-     * Return the current database schema as indicated by the route
-     *
-     * @return {String}
-     */
-    getSchema: function() {
-        var db = this.getDatabase();
-        return db.context.schema;
-    },
-
-    /**
      * Create a payload of files needed by a res
      *
      * @param  {Object} res
@@ -167,7 +130,8 @@ module.exports = React.createClass({
      * @return {Promise<Task>}
      */
     createTask: function(action, options) {
-        var db = this.getDatabase();
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then((userId) => {
             var task = {
                 action: action,
@@ -257,8 +221,9 @@ module.exports = React.createClass({
      * @return {String}
      */
     getUrl: function(payload) {
-        var schema = this.getSchema();
-        var url = this.getBaseUrl();
+        var params = this.props.route.parameters;
+        var schema = params.schema;
+        var url = params.address;
         var id = payload.payload_id;
         switch (payload.action) {
             case 'upload image':
@@ -289,14 +254,15 @@ module.exports = React.createClass({
      * @param  {BlobStream} stream
      */
     stream: function(stream) {
-        var url = this.getBaseUrl();
+        var params = this.props.route.parameters;
         var attempts = 1;
         var failureCount = 0;
         var done = false;
+        var chunk = 1;
         Async.do(() => {
             // get the next unsent part and send it
             return stream.pull().then((blob) => {
-                url += `/media/stream`;
+                var url = `${params.address}/media/stream`;
                 if (stream.id) {
                     // append to existing stream
                     url += `/${stream.id}`;
@@ -310,6 +276,7 @@ module.exports = React.createClass({
                     done = true;
                 }
                 var options = { responseType: 'json' };
+                console.log(`Sending chunk ${chunk++}`);
                 return HttpRequest.fetch('POST', url, payload, options).then((response) => {
                     if (!stream.id) {
                         stream.id = response.id;

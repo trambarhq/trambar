@@ -5,8 +5,14 @@ var ChildProcess = require('child_process');
 var Crypto = require('crypto');
 
 var CacheFolders = require('media-server/cache-folders');
+var FileManager = require('media-server/file-manager');
 
 exports.createJobId = createJobId;
+exports.startTranscodingJob = startTranscodingJob;
+exports.findTranscodingJob = findTranscodingJob;
+exports.transcodeSegment = transcodeSegment;
+exports.endTranscodingJob = endTranscodingJob;
+exports.awaitTranscodingJob = awaitTranscodingJob;
 
 /**
  * Create a random job id
@@ -130,7 +136,7 @@ function startTranscodingJob(srcPath, type, jobId) {
                 var srcFiles = _.concat(job.originalFile, _.values(job.outputFiles));
                 var dstFiles = _.concat(originalFile, _.values(outputFiles));
                 return Promise.map(srcFiles, (srcFile, index) => {
-                    return moveFile(srcFile, dstFiles[index]);
+                    return FileManager.moveFile(srcFile, dstFiles[index]);
                 }).then(() => {
                     job.originalFile = originalFile;
                     job.outputFiles = outputFiles;
