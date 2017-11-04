@@ -154,15 +154,15 @@ function impersonate(server, userId) {
     return getImpersonations(server, userId).then((impersonations) => {
         var matching = _.find(impersonations, { name: 'trambar', active: true });
         if (matching) {
+            console.log(userId + ' =>', matching);
             userImpersonations[userId] = matching;
             return matching.token;
         }
         var impersonationProps = {
-            user_id: userId,
             name: 'trambar',
             scopes: [ 'api' ],
         };
-        return createImpersonation(server, impersonationProps).then((impersonation) => {
+        return createImpersonation(server, userId, impersonationProps).then((impersonation) => {
             userImpersonations[userId] = impersonation;
             return impersonation.token;
         });
@@ -179,7 +179,8 @@ function impersonate(server, userId) {
  */
 function getImpersonations(server, userId) {
     var url = `/users/${userId}/impersonation_tokens`;
-    return fetch(server, url);
+    var query = { state: 'active' };
+    return fetch(server, url, query);
 }
 
 /**
@@ -292,9 +293,6 @@ function request(server, uri, method, query, payload, userToken) {
     var lastError;
     Async.do(() => {
         return attempt(options).then((body) => {
-            if (Math.random() > 0.9) {
-                throw new HttpError(401);
-            }
             result = body;
             succeeded = true;
         }).catch((err) => {
@@ -365,9 +363,19 @@ function attempt(options) {
 
 var CACHE_FOLDER = process.env.CACHE_FOLDER;
 if (CACHE_FOLDER) {
+    var dynamicUrls = [
+        /\/projects\/\d+\/hooks/,
+    ];
+
     Request = function(options, callback) {
         var Request = require('request');
+        var cacheable = true;
         if (options.method !== 'get') {
+            cacheable = false
+        } else if (_.some(dynamicUrls, (re) => { return re.test(options.uri) })) {
+            cacheable = false;
+        }
+        if (!cacheable) {
             return Request(options, callback);
         }
         var cacheFilePath = getCachePath(options.baseUrl, options.uri, options.qs);
