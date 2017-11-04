@@ -381,7 +381,7 @@ function handleMediaUpload(req, res, type) {
                 var posterUrl = `/media/images/${poster.hash}`;
                 ImageManager.getImageMetadata(poster.path).then((metadata) => {
                     var details = {
-                        poster_url: url,
+                        poster_url: posterUrl,
                         width: metadata.width,
                         height: metadata.height,
                     };
