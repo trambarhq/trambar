@@ -53,11 +53,14 @@ module.exports = function(languageCode) {
         'comment-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;
         },
+        'comment-$user-commented-on-branch': (user) => {
+            return `${user} commented on a commit`;
+        },
         'comment-$user-commented-on-issue': (user) => {
             return `${user} commented on this issue`;
         },
         'comment-$user-commented-on-merge': (user) => {
-            return `${user} commented on a merge`;
+            return `${user} commented on a commit`;
         },
         'comment-$user-commented-on-merge-request': (user) => {
             return `${user} commented on this merge request`;
@@ -242,6 +245,9 @@ module.exports = function(languageCode) {
         'story-push-added-$count-lines': (count) => {
             var lines = (count === 1) ? `1 line` : `${count} lines`;
             return `${lines} added`;
+        },
+        'story-push-created-$branch-in-$repo': (branch, repo) => {
+            return `Created branch “${branch}” in project “${repo}”`;
         },
         'story-push-components-changed': 'The following parts were changed:',
         'story-push-deleted-$count-files': (count) => {

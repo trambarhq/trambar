@@ -39,6 +39,7 @@ if (!isNodeJs) {
     exports.icons = {
         'push': require('octicons/build/svg/repo-push.svg'),
         'merge': require('octicons/build/svg/git-merge.svg'),
+        'branch': require('octicons/build/svg/git-branch.svg'),
         'issue': require('octicons/build/svg/issue-opened.svg'),
         'issue.opened': require('octicons/build/svg/issue-opened.svg'),
         'issue.closed': require('octicons/build/svg/issue-closed.svg'),

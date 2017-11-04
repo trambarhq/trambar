@@ -294,6 +294,7 @@ module.exports = React.createClass({
                 return this.renderMemberText();
             case 'push':
             case 'merge':
+            case 'branch':
                 return this.renderPushText();
             case 'issue':
                 return this.renderIssueText();
@@ -613,6 +614,8 @@ module.exports = React.createClass({
         } else if (story.type === 'merge') {
             var sourceBranches = story.details.source_branches;
             text = t(`story-push-merged-$branches-into-$branch-of-$repo`, sourceBranches, branch, repoName);
+        } else if (story.type === 'branch') {
+            text = t(`story-push-created-$branch-in-$repo`, branch, repoName);
         }
         return (
             <div className="text push">

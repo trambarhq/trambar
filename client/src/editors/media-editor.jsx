@@ -475,7 +475,7 @@ module.exports = React.createClass({
     handlePhotoCapture: function(evt) {
         var res = _.clone(evt.image);
         res.type = 'image';
-        res.clip = getDefaultClippingRect(image.width, image.height);
+        res.clip = getDefaultClippingRect(res.width, res.height);
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
@@ -488,7 +488,7 @@ module.exports = React.createClass({
     handleVideoCapture: function(evt) {
         var res = _.clone(evt.video);
         res.type = 'video';
-        res.clip = getDefaultClippingRect(video.width, video.height);
+        res.clip = getDefaultClippingRect(res.width, res.height);
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
