@@ -346,6 +346,7 @@ module.exports = React.createClass({
             this.setState({
                 mediaRecorder: recorder
             });
+            return null;
         });
     },
 

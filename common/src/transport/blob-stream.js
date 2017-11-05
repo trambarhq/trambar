@@ -147,6 +147,26 @@ BlobStream.prototype.wait = function() {
     return this.waitResult.promise;
 };
 
+/**
+ * Send contents of file through stream
+ *
+ * @param  {File} file
+ * @param  {Number} chunkSize
+ */
+BlobStream.prototype.pipe = function(file, chunkSize) {
+    if (!chunkSize) {
+        chunkSize = 1 * 1024 * 1024;
+    }
+    var total = file.size;
+    var type = file.type;
+    console.log(file.type)
+    for (var offset = 0; offset < total; offset += chunkSize) {
+        var byteCount = Math.min(chunkSize, total - offset);
+        var chunk = file.slice(offset, offset + byteCount, type);
+        this.push(chunk);
+    }
+    this.close();
+}
 
 /**
  * Return an object containing a promise and its resolve/reject functions

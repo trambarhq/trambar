@@ -348,6 +348,9 @@ function handleMediaUpload(req, res, type) {
         if (streamId) {
             // handle streaming upload
             var job = VideoManager.findTranscodingJob(streamId);
+            if (!job) {
+                throw new HttpError(404);
+            }
             VideoManager.awaitTranscodingJob(job).then((job) => {
                 var details = {
                     url: `/media/${job.type}s/${job.originalHash}`,

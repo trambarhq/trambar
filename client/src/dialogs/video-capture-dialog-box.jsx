@@ -474,6 +474,7 @@ module.exports = React.createClass({
                 capturedImage: image,
                 mediaRecorder: recorder
             });
+            return null;
         });
     },
 

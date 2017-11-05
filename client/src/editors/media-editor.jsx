@@ -5,6 +5,7 @@ var MediaLoader = require('media/media-loader');
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
 var FrameGrabber = require('media/frame-grabber');
+var BlobStream = require('transport/blob-stream');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -426,10 +427,17 @@ module.exports = React.createClass({
             } else if (/^video\//.test(file.type)) {
                 return MediaLoader.loadVideo(url).then((video) => {
                     return FrameGrabber.capture(video).then((poster) => {
+                        var stream;
+                        if (file.size > 2 * 1024 * 1024) {
+                            // upload large files in smaller chunks
+                            stream = new BlobStream;
+                            stream.pipe(file);
+                        }
                         return {
                             type: 'video',
                             format: format,
                             file: file,
+                            stream: stream,
                             width: video.videoWidth,
                             height: video.videoHeight,
                             clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
@@ -439,10 +447,16 @@ module.exports = React.createClass({
                 });
             } else if (/^audio\//.test(file.type)) {
                 return Media.loadAudio(url).then((audio) => {
+                    var stream;
+                    if (file.size > 2 * 1024 * 1024) {
+                        stream = new BlobStream;
+                       stream.pipe(file);
+                    }
                     return {
                         type: 'audio',
                         format: format,
                         file: file,
+                        stream: stream,
                         duration: audio.duration,
                     };
                 });

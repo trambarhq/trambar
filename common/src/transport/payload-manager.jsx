@@ -79,9 +79,6 @@ module.exports = React.createClass({
                     if (res.file instanceof Blob) {
                         // a local file
                         return 'upload image';
-                    } else if (res.stream) {
-                        // a file stream in earlier
-                        return 'copy image';
                     } else if (res.external_url) {
                         // a file at cloud-storage provider
                         return 'copy image';
@@ -90,22 +87,22 @@ module.exports = React.createClass({
                 break;
             case 'audio':
                 if (!res.url) {
-                    if (res.file instanceof Blob) {
+                    if (res.stream) {
+                        return 'copy and transcode audio';
+                    } else if (res.file instanceof Blob) {
                         return 'upload and transcode audio';
                     } else if (res.external_url) {
-                        return 'copy and transcode audio';
-                    } else if (res.stream) {
                         return 'copy and transcode audio';
                     }
                 }
             break;
             case 'video':
                 if (!res.url) {
-                    if (res.file instanceof Blob) {
+                    if (res.stream) {
+                        return 'copy and transcode video';
+                    } else if (res.file instanceof Blob) {
                         return 'upload and transcode video';
                     } else if (res.external_url) {
-                        return 'copy and transcode video';
-                    } else if (res.stream) {
                         return 'copy and transcode video';
                     }
                 }
@@ -183,12 +180,12 @@ module.exports = React.createClass({
                 });
             },
         };
-        var formData = this.getFormData(payload);
-        var url = this.getUrl(payload);
-        //console.log('Uploading to ' + url);
-        var promise = HttpRequest.fetch('POST', url, formData, options).then((response) => {
-            var state = _.assign({ done: true }, response);
-            this.updatePayloadStatus(payloadId, state);
+        var promise = this.createFormData(payload).then((formData) => {
+            var url = this.getUrl(payload);
+            return HttpRequest.fetch('POST', url, formData, options).then((response) => {
+                var state = _.assign({ done: true }, response);
+                this.updatePayloadStatus(payloadId, state);
+            });
         });
         payload.promise = promise;
         return;
@@ -199,18 +196,34 @@ module.exports = React.createClass({
      *
      * @param  {Object} payload
      *
-     * @return {FormData}
+     * @return {Promise<FormData>}
      */
-    getFormData: function(payload) {
-        var formData = new FormData;
-        var params = _.pick(payload, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
-        _.forIn(params, (value, name) => {
-            if (value instanceof BlobStream) {
-                value = value.id;
-            }
-            formData.append(name, value);
+    createFormData: function(payload) {
+        var props = {};
+        // main contents
+        if (payload.stream) {
+            // start the stream before we send the form data
+            payload.stream = this.stream(payload.stream);
+        } else if (payload.file) {
+            props.file = payload.file;
+        } else if (payload.external_url) {
+            props.external_url = payload.external_url;
+        }
+        // poster
+        if (payload.poster_file) {
+            props.poster_file = payload.poster_file;
+        } else if (payload.external_poster_url) {
+            props.external_poster_url = payload.external_poster_url;
+        }
+        // URL of website
+        if (payload.url) {
+            props.url = payload.url;
+        }
+        return Promise.props(props).then((props) => {
+            return _.transform(props, (formData, value, name) => {
+                formData.append(name, value);
+            }, new FormData);
         });
-        return formData;
     },
 
     /**
@@ -252,51 +265,64 @@ module.exports = React.createClass({
      * Send blobs to server as they're added into a BlobStream
      *
      * @param  {BlobStream} stream
+     *
+     * @return {Promise<Number>}
      */
     stream: function(stream) {
         var params = this.props.route.parameters;
-        var attempts = 1;
-        var failureCount = 0;
-        var done = false;
-        var chunk = 1;
-        Async.do(() => {
-            // get the next unsent part and send it
-            return stream.pull().then((blob) => {
-                var url = `${params.address}/media/stream`;
-                if (stream.id) {
-                    // append to existing stream
-                    url += `/${stream.id}`;
-                }
-                var payload = new FormData;
-                if (blob) {
-                    payload.append('file', blob);
-                } else {
-                    // the server recognize that an empty payload means we've
-                    // reached the end of the stream
-                    done = true;
-                }
-                var options = { responseType: 'json' };
-                console.log(`Sending chunk ${chunk++}`);
-                return HttpRequest.fetch('POST', url, payload, options).then((response) => {
-                    if (!stream.id) {
-                        stream.id = response.id;
+        if (stream.id) {
+            // already started
+            return Promise.resolve(stream.id);
+        }
+        return new Promise((resolve, reject) => {
+            var attempts = 1;
+            var failureCount = 0;
+            var done = false;
+            var chunk = 1;
+            Async.do(() => {
+                // get the next unsent part and send it
+                return stream.pull().then((blob) => {
+                    var url = `${params.address}/media/stream`;
+                    if (stream.id) {
+                        // append to existing stream
+                        url += `/${stream.id}`;
                     }
+                    var payload = new FormData;
                     if (blob) {
-                        stream.finalize(blob);
+                        payload.append('file', blob);
+                    } else {
+                        // the server recognize that an empty payload means we've
+                        // reached the end of the stream
+                        done = true;
+                    }
+                    var options = { responseType: 'json' };
+                    console.log(`Sending chunk ${chunk++}`);
+                    return HttpRequest.fetch('POST', url, payload, options).then((response) => {
+                        if (!stream.id) {
+                            stream.id = response.id;
+                            // resolve promise when stream is obtained
+                            resolve(stream.id);
+                        }
+                        if (blob) {
+                            stream.finalize(blob);
+                        }
+                    });
+                }).catch((err) => {
+                    if (++failureCount < attempts) {
+                        // wait five seconds then try again
+                        return Promise.delay(5000);
+                    } else {
+                        if (!stream.id) {
+                            reject(err);
+                        }
+                        throw err;
                     }
                 });
-            }).catch((err) => {
-                if (++failureCount < attempts) {
-                    // wait five seconds then try again
-                    return Promise.delay(5000);
-                } else {
-                    throw err;
-                }
             });
-        });
-        Async.while(() => { return !done });
-        Async.end().catch((err) => {
-            stream.abandon(err);
+            Async.while(() => { return !done });
+            Async.end().catch((err) => {
+                stream.abandon(err);
+            });
         });
     },
 
