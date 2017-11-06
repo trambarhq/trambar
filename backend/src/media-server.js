@@ -132,6 +132,9 @@ function sendInternalRedirect(res, path, cc, filename) {
  * @param  {Object} err
  */
 function sendError(res, err) {
+    if (!err) {
+        err = new Error('Missing error object');
+    }
     var statusCode = err.statusCode;
     var message = err.message;
     if (!statusCode || process.env.NODE_ENV !== 'production') {

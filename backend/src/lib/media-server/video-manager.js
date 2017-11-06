@@ -59,14 +59,16 @@ function startTranscodingJob(srcPath, type, jobId) {
     };
     if (type === 'video') {
         job.profiles = {
-            '2500kbps': {
-                videoBitrate: 2500 * 1000,
-                audioBitrate: 128 * 1000,
-                audioChannels: 2,
+            '320x240': {
+                videoBitrate: 250 * 1000,
+                videoScaling: `'if(gt(a,4/3),320,-1)':'if(gt(a,4/3),-1,240)'`,
+                audioBitrate: 64 * 1000,
+                audioChannels: 1,
                 format: 'mp4',
             },
-            '1000kbps': {
+            '640x480': {
                 videoBitrate: 1000 * 1000,
+                videoScaling: `'if(gt(a,4/3),640,-1)':'if(gt(a,4/3),-1,480)'`,
                 audioBitrate: 128 * 1000,
                 audioChannels: 2,
                 format: 'mp4',
@@ -260,8 +262,12 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
     if (profile.audioChannels) {
         output('-ac', profile.audioChannels);
     }
+    if (profile.videoScaling) {
+        output('-vf', `scale=${profile.videoScaling}`);
+    }
     output(dstPath);
 
     var args = _.concat(inputArgs, outputArgs);
+    console.log(args.join(' '));
     return ChildProcess.spawn(cmd, args, options);
 }
