@@ -8,13 +8,17 @@ describe('Route', function() {
     describe('#match', function() {
         it('should extract parameters from a matching URL', function() {
             var url = '/forum/123/msg/4/';
-            var params = Route.match('/forum/:forumId/msg/:msgId/', url);
+            var params = Route.match(url, [ '/forum/:forumId/msg/:msgId/' ], (params) => {
+                return params;
+            });
             expect(params).to.have.property('forumId', '123');
             expect(params).to.have.property('msgId', '4');
         })
         it('should return undefined when the URL does not match', function() {
             var url = '/home';
-            var params = Route.match('/forum/:forumId/msg/:msgId/', url);
+            var params = Route.match(url, [ '/forum/:forumId/msg/:msgId/' ], (params) => {
+                return params;
+            });
             expect(params).to.be.undefined;
         })
     })
