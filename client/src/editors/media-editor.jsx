@@ -427,7 +427,6 @@ module.exports = React.createClass({
                 });
             } else if (/^video\//.test(file.type)) {
                 return QuickStart.process(file).then((blob) => {
-                    console.log(blob);
                     if (!blob) {
                         // if video wasn't processed, use the original file
                         blob = file;

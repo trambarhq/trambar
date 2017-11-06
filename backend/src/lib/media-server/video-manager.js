@@ -61,14 +61,20 @@ function startTranscodingJob(srcPath, type, jobId) {
         job.profiles = {
             '320x240': {
                 videoBitrate: 250 * 1000,
-                videoScaling: `'if(gt(a,4/3),320,-1)':'if(gt(a,4/3),-1,240)'`,
+                videoScaling: {
+                    width: 320,
+                    height: 240
+                },
                 audioBitrate: 64 * 1000,
                 audioChannels: 1,
                 format: 'mp4',
             },
             '640x480': {
                 videoBitrate: 1000 * 1000,
-                videoScaling: `'if(gt(a,4/3),640,-1)':'if(gt(a,4/3),-1,480)'`,
+                videoScaling: {
+                    width: 640,
+                    height: 480,
+                },
                 audioBitrate: 128 * 1000,
                 audioChannels: 2,
                 format: 'mp4',
@@ -130,7 +136,7 @@ function startTranscodingJob(srcPath, type, jobId) {
             });
         });
 
-        job.promise.then(() => {
+        job.promise = job.promise.then(() => {
             // rename the files once we have the MD5 hash
             return Promise.join(hashPromise, filePromise, (hash) => {
                 var originalFile = _.replace(job.originalFile, job.jobId, hash);
@@ -263,7 +269,14 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
         output('-ac', profile.audioChannels);
     }
     if (profile.videoScaling) {
-        output('-vf', `scale=${profile.videoScaling}`);
+        var w = profile.videoScaling.width;
+        var h = profile.videoScaling.height;
+        // if actual aspect ratio is great than w/h, scale = width:-2
+        // if actual aspect ratio is less than w/h, scale = -2:height
+        //
+        // -2 ensures the automatic dimension is divisible by 2
+        var scale = `'if(gt(a,${w}/${h}),${w},-2)':'if(gt(a,${w}/${h}),-2,${h})'`;
+        output('-vf', `scale=${scale}`);
     }
     output(dstPath);
 

@@ -203,7 +203,7 @@ module.exports = React.createClass({
         // main contents
         if (payload.stream) {
             // start the stream before we send the form data
-            payload.stream = this.stream(payload.stream);
+            props.stream = this.stream(payload.stream);
         } else if (payload.file) {
             props.file = payload.file;
         } else if (payload.external_url) {

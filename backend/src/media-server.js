@@ -132,13 +132,10 @@ function sendInternalRedirect(res, path, cc, filename) {
  * @param  {Object} err
  */
 function sendError(res, err) {
-    if (!err) {
-        err = new Error('Missing error object');
-    }
     var statusCode = err.statusCode;
     var message = err.message;
-    if (!statusCode || process.env.NODE_ENV !== 'production') {
-        console.error(err.stack);
+    if (process.env.NODE_ENV !== 'production') {
+        console.error(err);
     }
     if (!statusCode) {
         // not an expected error
@@ -367,7 +364,7 @@ function handleMediaUpload(req, res, type) {
             var dstFolder = CacheFolders[type];
             return FileManager.preserveFile(file, url, dstFolder).then((mediaFile) => {
                 if (!mediaFile) {
-                    throw HttpError(400);
+                    throw new HttpError(400);
                 }
                 var url = `/media/${type}s/${srcHash}`;
                 var job = VideoManager.startTranscodingJob(mediaFile.path, type, mediaFile.hash);
@@ -496,10 +493,8 @@ function saveTaskProgress(schema, taskId, details, completion) {
                 if (completion === 100) {
                     task.etime = Object('NOW()');
                 }
-                if (task.details) {
-                    _.assign(task.details, details);
-                }
             }
+            _.assign(task.details, details);
             return Task.updateOne(db, schema, task);
         });
     });
