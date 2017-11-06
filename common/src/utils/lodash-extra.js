@@ -127,24 +127,25 @@ _.mixin({
     },
 
     obscure: function(object, paths) {
-        var clone = _.clone(object);
+        var clone = _.cloneDeep(object);
         _.each(paths, (path) => {
             var value = _.get(clone, path);
-            switch (typeof(value)) {
-                case 'number':
-                    value = 0;
-                    break;
-                case 'string':
-                    value = _.repeat('x', value.length);
-                    break;
-                case 'boolean':
-                    value = false;
-                    break;
-                default:
-                    return;
-            }
-            _.set(clone, path, value);
+            _.set(clone, path, obscureValue(value));
         });
         return clone;
     },
 });
+
+function obscureValue(value) {
+    switch (typeof(value)) {
+        case 'number': return 0;
+        case 'string': return _.repeat('x', value.length);
+        case 'boolean': return false;
+        case 'object':
+            if (value instanceof Array) {
+                return _.map(value, obscureValue);
+            } else {
+                return _.mapValues(value, obscureValue);
+            }
+    }
+}

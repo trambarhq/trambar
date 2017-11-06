@@ -8,18 +8,18 @@ var RouteManager = require('routing/route-manager.jsx');
 var Database = require('data/database');
 
 function MockPage(url, params) {
-    this.url = url;
+    this.path = url;
     this.parameters = params;
 }
 
-MockPage.prototype.parseUrl = function(url) {
-    if (url === this.url) {
-        return this.parameters;
+MockPage.prototype.parseUrl = function(path, query, hash) {
+    if (path === this.path) {
+        return _.extend({ match: this.path }, this.parameters);
     }
 };
 
 MockPage.prototype.getUrl = function(params) {
-    return this.url;
+    return { path: this.path, query: undefined, hash: undefined };
 };
 
 var pages = [
@@ -40,7 +40,6 @@ describe('RouteManager', function() {
     var managerReady = new Promise((resolve, reject) => {
         var props = {
             pages,
-            baseUrls: [ '/test' ],
             database: database,
 
             onChange: (evt) => {
@@ -52,7 +51,7 @@ describe('RouteManager', function() {
             },
             onRedirectionRequest: (evt) => {
                 redirectionCount++;
-                return Promise.resolve(pages[0].url);
+                return Promise.resolve(pages[0].path);
             },
         };
         var wrapper = Enzyme.mount(<RouteManager {...props} />);
@@ -65,11 +64,6 @@ describe('RouteManager', function() {
     it('should call onChange() at some point', function() {
         return managerReady;
     })
-    it('should have detected correctly the base URL', function() {
-        return managerReady.then((manager) => {
-            expect(manager.state).to.have.property('baseUrl', '/test');
-        });
-    })
     it('should have call onRedirectionRequest() since no page maps to /', function() {
         return managerReady.then((manager) => {
             expect(redirectionCount).to.be.above(0);
@@ -78,7 +72,7 @@ describe('RouteManager', function() {
     it('should have redirected to the home page', function() {
         return managerReady.then((manager) => {
             expect(manager.getUrl()).to.equal('/home/');
-            expect(location.pathname).to.equal('/test/home/');
+            expect(location.pathname).to.equal('/home/');
         });
     })
 
@@ -95,9 +89,9 @@ describe('RouteManager', function() {
             return managerReady.then((manager) => {
                 return Promise.each([1, 2, 3], (index) => {
                     var page = pages[index];
-                    return manager.change(page.url).then(() => {
-                        expect(manager.getUrl()).to.equal(page.url);
-                        expect(manager.getParameters()).to.equal(page.parameters);
+                    return manager.change(page.path).then(() => {
+                        expect(manager.getUrl()).to.equal(page.path);
+                        expect(manager.getParameters()).to.deep.equal(page.parameters);
                     });
                 });
             })
