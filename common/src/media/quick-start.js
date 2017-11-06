@@ -69,7 +69,7 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
             case 'stco': // "Chunk Offset Atom"
                 var offsetCount = BE32(bytes, offset + 12);
                 for (var i = 0; i < offsetCount; i++) {
-                    var doOffset = offset + 12 + (i * 4);
+                    var doOffset = offset + 16 + (i * 4);
                     var dataOffset = BE32(bytes, doOffset);
                     if (rangeStart <= dataOffset && dataOffset <= rangeEnd) {
                         // if the offset points to data in front of moov, shift
@@ -85,7 +85,7 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
             case 'co64': // "Chunk Offset Atom, 64-bit"
                 var offsetCount = BE32(bytes, offset + 12);
                 for (var i = 0; i < offsetCount; i++) {
-                    var doOffset = offset + 12 + (i * 8);
+                    var doOffset = offset + 16 + (i * 8);
                     var dataOffset = BE64(bytes, doOffset);
                     if (rangeStart <= dataOffset && dataOffset <= rangeEnd) {
                         dataOffset += shift;

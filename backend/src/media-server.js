@@ -363,7 +363,7 @@ function handleMediaUpload(req, res, type) {
         } else {
             var dstFolder = CacheFolders[type];
             return FileManager.preserveFile(file, url, dstFolder).then((mediaFile) => {
-                if (!saved) {
+                if (!mediaFile) {
                     throw HttpError(400);
                 }
                 var url = `/media/${type}s/${srcHash}`;

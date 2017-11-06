@@ -62,11 +62,13 @@ function startTranscodingJob(srcPath, type, jobId) {
             '2500kbps': {
                 videoBitrate: 2500 * 1000,
                 audioBitrate: 128 * 1000,
+                audioChannels: 2,
                 format: 'mp4',
             },
             '1000kbps': {
                 videoBitrate: 1000 * 1000,
                 audioBitrate: 128 * 1000,
+                audioChannels: 2,
                 format: 'mp4',
             },
         };
@@ -254,6 +256,9 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
     }
     if (profile.frameRate) {
         output('-r', profile.frameRate);
+    }
+    if (profile.audioChannels) {
+        output('-ac', profile.audioChannels);
     }
     output(dstPath);
 

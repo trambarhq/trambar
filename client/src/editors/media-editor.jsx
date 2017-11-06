@@ -5,6 +5,7 @@ var MediaLoader = require('media/media-loader');
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
 var FrameGrabber = require('media/frame-grabber');
+var QuickStart = require('media/quick-start');
 var BlobStream = require('transport/blob-stream');
 
 var Locale = require('locale/locale');
@@ -411,9 +412,9 @@ module.exports = React.createClass({
         files = _.slice(files);
         var urls = [];
         return Promise.map(files, (file, index) => {
-            var url = urls[index] = URL.createObjectURL(file);
             var format = _.last(_.split(file.type, '/'));
             if (/^image\//.test(file.type)) {
+                var url = urls[index] = URL.createObjectURL(file);
                 return MediaLoader.loadImage(url).then((image) => {
                     return {
                         type: 'image',
@@ -425,27 +426,37 @@ module.exports = React.createClass({
                     };
                 });
             } else if (/^video\//.test(file.type)) {
-                return MediaLoader.loadVideo(url).then((video) => {
-                    return FrameGrabber.capture(video).then((poster) => {
-                        var stream;
-                        if (file.size > 2 * 1024 * 1024) {
-                            // upload large files in smaller chunks
-                            stream = new BlobStream;
-                            stream.pipe(file);
-                        }
-                        return {
-                            type: 'video',
-                            format: format,
-                            file: file,
-                            stream: stream,
-                            width: video.videoWidth,
-                            height: video.videoHeight,
-                            clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
-                            duration: video.duration,
-                        };
+                return QuickStart.process(file).then((blob) => {
+                    console.log(blob);
+                    if (!blob) {
+                        // if video wasn't processed, use the original file
+                        blob = file;
+                    }
+                    var url = urls[index] = URL.createObjectURL(blob);
+                    return MediaLoader.loadVideo(url).then((video) => {
+                        return FrameGrabber.capture(video).then((poster) => {
+                            var stream;
+                            if (file.size > 2 * 1024 * 1024) {
+                                // upload large files in smaller chunks
+                                stream = new BlobStream;
+                                stream.pipe(blob);
+                            }
+                            return {
+                                type: 'video',
+                                format: format,
+                                file: blob,
+                                stream: stream,
+                                poster_file: poster,
+                                width: video.videoWidth,
+                                height: video.videoHeight,
+                                clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
+                                duration: video.duration,
+                            };
+                        });
                     });
                 });
             } else if (/^audio\//.test(file.type)) {
+                var url = urls[index] = URL.createObjectURL(file);
                 return Media.loadAudio(url).then((audio) => {
                     var stream;
                     if (file.size > 2 * 1024 * 1024) {
