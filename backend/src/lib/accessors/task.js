@@ -117,6 +117,7 @@ module.exports = _.create(Data, {
                 object.token = row.token;
                 object.user_id = row.user_id;
                 object.options = row.options;
+                object.completion = row.completion;
             });
             return objects;
         });

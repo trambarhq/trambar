@@ -9,6 +9,7 @@ function BlobStream() {
     this.pullResult = null;
     this.waitResult = null;
     this.id = null;
+    this.size = 0;
 }
 
 /**
@@ -52,6 +53,7 @@ BlobStream.prototype.push = function(blob) {
         blob,
         sent: false,
     });
+    this.size += blob.size;
     if (this.pullResult) {
         this.pullResult.resolve(blob);
         this.pullResult = null;
@@ -159,7 +161,6 @@ BlobStream.prototype.pipe = function(file, chunkSize) {
     }
     var total = file.size;
     var type = file.type;
-    console.log(file.type)
     for (var offset = 0; offset < total; offset += chunkSize) {
         var byteCount = Math.min(chunkSize, total - offset);
         var chunk = file.slice(offset, offset + byteCount, type);

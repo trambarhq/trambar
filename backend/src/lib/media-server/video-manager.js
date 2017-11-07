@@ -118,7 +118,12 @@ function startTranscodingJob(srcPath, type, jobId) {
         // add queue and other variables needed for streaming in video
         job.queue = [];
         job.working = false;
-        job.finished = false;
+        job.closed = false;
+        job.progress = 0;
+        job.totalByteCount = 0;
+        job.processedByteCount = 0;
+        job.lastProgressTime = null;
+        job.onProgress = null;
 
         // create write stream to save original
         job.originalFile = `${job.destination}/${jobId}`;
@@ -174,10 +179,12 @@ function awaitTranscodingJob(job) {
  * Add a file to the transcode queue
  *
  * @param  {Object} job
- * @param  {ReadableStream} file
+ * @param  {ReadableStream} inputStream
+ * @param  {Number} segmentSize
  */
-function transcodeSegment(job, inputStream) {
+function transcodeSegment(job, inputStream, segmentSize) {
     job.queue.push(inputStream);
+    job.totalByteCount += segmentSize;
     if (!job.working) {
         processNextStreamSegment(job);
     }
@@ -189,7 +196,8 @@ function transcodeSegment(job, inputStream) {
  * @param  {Object} job
  */
 function endTranscodingJob(job) {
-    job.finished = true;
+    job.closed = true;
+    calculateProgress(job);
     if (!job.working) {
         processNextStreamSegment(job);
     }
@@ -212,13 +220,17 @@ function processNextStreamSegment(job) {
         _.each(job.processes, (childProcess) => {
             inputStream.pipe(childProcess.stdin, { end: false });
         });
+        inputStream.on('data', (chunk) => {
+            job.processedByteCount += chunk.length;
+            calculateProgress(job);
+        });
         inputStream.once('end', () => {
             // done, try processing the next segment
             processNextStreamSegment(job);
         });
     } else {
         job.working = false;
-        if (job.finished) {
+        if (job.closed) {
             // there are no more segments
             job.writeStream.end();
             job.md5Hash.end();
@@ -226,6 +238,37 @@ function processNextStreamSegment(job) {
             _.each(job.processes, (childProcess) => {
                 childProcess.stdin.end();
             });
+            calculateProgress(job);
+        }
+    }
+}
+
+/**
+ * Calculate encoding progress and call onProgress handler
+ *
+ * @param  {Object} job
+ */
+function calculateProgress(job) {
+    if (job.closed) {
+        // uploading is complete--we know the final file size
+        if (job.totalByteCount > 0) {
+            var progress = Math.round(job.processedByteCount / job.totalByteCount * 100);
+            if (progress === 100 && job.working) {
+                // there's still some work to be done
+                progress = 99;
+            }
+            if (job.progress !== progress) {
+                job.progress = progress;
+                if (job.onProgress) {
+                    // don't report that frequently
+                    var now = new Date;
+                    var elapsed = (job.lastProgressTime) ? now - job.lastProgressTime : Infinity;
+                    if (elapsed > 2000 || progress === 100) {
+                        job.onProgress({ type: 'progress', target: job });
+                        job.lastProgressTime = now;
+                    }
+                }
+            }
         }
     }
 }

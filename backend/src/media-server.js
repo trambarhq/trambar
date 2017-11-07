@@ -351,6 +351,11 @@ function handleMediaUpload(req, res, type) {
             if (!job) {
                 throw new HttpError(404);
             }
+            job.onProgress = (evt) => {
+                var progress = evt.target.progress;
+                console.log('Progress: ', progress + '%');
+                saveTaskProgress(schema, taskId, null, progress);
+            };
             VideoManager.awaitTranscodingJob(job).then((job) => {
                 var details = {
                     url: `/media/${job.type}s/${job.originalHash}`,
@@ -419,7 +424,7 @@ function handleStreamCreate(req, res) {
         }
         var inputStream = FS.createReadStream(file.path);
         var job = VideoManager.startTranscodingJob(null, type, jobId);
-        VideoManager.transcodeSegment(job, inputStream);
+        VideoManager.transcodeSegment(job, inputStream, file.size);
         return { id: jobId };
     }).then((results) => {
         sendJson(res, results);
@@ -443,7 +448,7 @@ function handleStreamAppend(req, res) {
         }
         if (file) {
             var inputStream = FS.createReadStream(file.path);
-            return VideoManager.transcodeSegment(job, inputStream);
+            return VideoManager.transcodeSegment(job, inputStream, file.size);
         } else {
             return VideoManager.endTranscodingJob(job);
         }
@@ -494,7 +499,9 @@ function saveTaskProgress(schema, taskId, details, completion) {
                     task.etime = Object('NOW()');
                 }
             }
-            _.assign(task.details, details);
+            if (details) {
+                _.assign(task.details, details);
+            }
             return Task.updateOne(db, schema, task);
         });
     });

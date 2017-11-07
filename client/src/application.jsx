@@ -80,7 +80,7 @@ module.exports = React.createClass({
             routeManager: RouteManager,
             localeManager: LocaleManager,
             themeManager: ThemeManager,
-            uploadManager: PayloadManager,
+            payloadManager: PayloadManager,
             cache: LocalCache,
             notifier: Notifier,
         });
@@ -245,8 +245,8 @@ module.exports = React.createClass({
             onExpiration: this.handleExpiration,
             onViolation: this.handleViolation,
         };
-        var uploadManagerProps = {
-            ref: setters.uploadManager,
+        var payloadManagerProps = {
+            ref: setters.payloadManager,
             database: this.state.database,
             route: this.state.route,
             onChange: this.handlePayloadsChange,
@@ -306,7 +306,7 @@ module.exports = React.createClass({
                 <LocalCache {...cacheProps} />
                 <Notifier {...notifierProps} />
                 <RemoteDataSource {...remoteDataSourceProps} cache={this.components.cache} />
-                <PayloadManager {...uploadManagerProps} />
+                <PayloadManager {...payloadManagerProps} />
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />

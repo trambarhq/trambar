@@ -44,8 +44,6 @@ exports.fetch = function(method, url, payload, options) {
         if (contentType) {
             xhr.setRequestHeader("Content-Type", contentType);
         }
-        xhr.send(payload);
-
         xhr.onload = function(evt) {
             if (xhr.status >= 400) {
                 var error = new HttpError(xhr.status, xhr.response);
@@ -76,6 +74,7 @@ exports.fetch = function(method, url, payload, options) {
                 onUploadProgress(evt);
             }
         };
+        xhr.send(payload);
     });
     promise.cancel = function() {
         xhr.abort();
