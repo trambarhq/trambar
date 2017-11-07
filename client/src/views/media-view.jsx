@@ -11,10 +11,14 @@ var MediaButton = require('widgets/media-button');
 var MediaDialogBox = require('dialogs/media-dialog-box');
 var ImageView = require('media/image-view');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 require('./media-view.scss');
 
 module.exports = React.createClass({
     displayName: 'MediaView',
+    mixins: [ UpdateCheck ],
     propTypes: {
         resources: PropTypes.arrayOf(PropTypes.object).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,

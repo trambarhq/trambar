@@ -319,7 +319,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            pending: _.includes(this.props.pendingStories, story),
             key: story.id,
         };
         var id = `story-${story.id}`;

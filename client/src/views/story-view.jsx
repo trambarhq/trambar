@@ -29,24 +29,12 @@ module.exports = React.createClass({
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         repo: PropTypes.object,
-        pending: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            pending: false,
-        };
     },
 
     /**
@@ -139,14 +127,15 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderContents: function() {
+        var uploadStatus = this.props.payloads.inquire(this.props.story);
         var props = {
             story: this.props.story,
             authors: this.props.authors,
             currentUser: this.props.currentUser,
             reactions: this.props.reactions,
             repo: this.props.repo,
-            pending: this.props.pending,
             cornerPopUp: this.renderPopUpMenu('main'),
+            status: uploadStatus,
 
             database: this.props.database,
             route: this.props.route,

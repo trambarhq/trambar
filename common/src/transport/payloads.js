@@ -3,26 +3,49 @@ var Promise = require('bluebird');
 module.exports = Payloads;
 
 function Payloads(payloadManager) {
-    this.get = function(res) {
-        return payloadManager.get(res);
-    };
-
+    /**
+     * Create a payload of files needed by a res
+     *
+     * @param  {Object} res
+     *
+     * @return {Promise<Number>}
+     */
     this.queue = function(res) {
         return payloadManager.queue(res);
     };
 
+    /**
+     * Look for a payload
+     *
+     * @param  {Object} criteria
+     *
+     * @return {Object}
+     */
     this.find = function(criteria) {
         return payloadManager.find(criteria);
     },
 
+    /**
+     * Begin sending a previously queued payload
+     *
+     * @param  {Number} payloadId
+     */
     this.send = function(payloadId) {
         return payloadManager.send(payloadId);
     };
 
     this.abort = function(payloadId) {
+        // TODO
         return payloadManager.abort(payloadId);
     };
 
+    /**
+     * Send blobs to server as they're added into a BlobStream
+     *
+     * @param  {BlobStream} stream
+     *
+     * @return {Promise<Number>}
+     */
     this.stream = function(stream) {
         return payloadManager.stream(stream);
     };
@@ -87,5 +110,52 @@ function Payloads(payloadManager) {
             this.send(payloadId);
             return null;
         });
+    };
+
+    /**
+     * Scan an object's resource array and calculate the overall progress
+     *
+     * @param  {Object} object
+     *
+     * @return {Object|null}
+     */
+    this.inquire = function(object) {
+        // find the payloads
+        var resources = _.get(object, 'details.resources', []);
+        var payloads = [];
+        _.each(resources, (res) => {
+            if (res.payload_id) {
+                var payload = this.find({ payload_id: res.payload_id });
+                if (payload) {
+                    payloads.push(payload)
+                }
+            }
+        });
+        if (_.isEmpty(payloads)) {
+            return null;
+        }
+        // see if the files are still be uploaded
+        var overallSize = _.sum(_.map(payloads, 'total'));
+        var overallTransferred = _.sum(_.map(payloads, 'transferred'));
+        var progress = Math.round(overallTransferred / overallSize * 100) || 0;
+        var action = 'uploading';
+        if (progress === 100) {
+            // uploading is done--see if transcoding is occurring at the backend
+            var transcodingPayloads = _.filter(payloads, (payload) => {
+                return /transcode/.test(payload.action);
+            });
+            if (_.isEmpty(transcodingPayloads)) {
+                return null;
+            }
+            var transcodingSize = _.sum(_.map(transcodingPayloads, 'total'));
+            var transcodingProgress = _.sum(_.map(transcodingPayloads, (payload) => {
+                // scale the progress based on file size
+                var weight = payload.total / transcodingSize;
+                return payload.backendProgress * weight;
+            }));
+            progress = Math.round(transcodingProgress);
+            action = 'transcoding';
+        }
+        return { action, progress };
     };
 }

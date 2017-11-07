@@ -33,17 +33,16 @@ module.exports = React.createClass({
      * Create a payload of files needed by a res
      *
      * @param  {Object} res
-     * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Number>}
      */
-    queue: function(res, options) {
+    queue: function(res) {
         // see what action need to be perform for the resource
         var action = this.getAction(res);
         if (!action) {
             return Promise.resolve(null);
         }
-
+        var options = {};
         // create a task object on the server-side to track
         // backend processing of the payload
         return this.createTask(action, options).then((task) => {
@@ -190,10 +189,7 @@ module.exports = React.createClass({
         }
         var promise = this.createFormData(payload).then((formData) => {
             var url = this.getUrl(payload);
-            return HttpRequest.fetch('POST', url, formData, options).then((response) => {
-                var state = _.assign({ done: true }, response);
-                this.updatePayloadStatus(payloadId, state);
-            });
+            return HttpRequest.fetch('POST', url, formData, options);
         });
         payload.promise = promise;
         return;

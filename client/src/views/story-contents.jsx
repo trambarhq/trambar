@@ -38,7 +38,7 @@ module.exports = React.createClass({
         currentUser: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         repo: PropTypes.object,
-        pending: PropTypes.bool.isRequired,
+        status: PropTypes.object,
         cornerPopUp: PropTypes.element,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -152,7 +152,7 @@ module.exports = React.createClass({
                     {this.props.cornerPopUp}
                 </header>
                 <subheader>
-                    {this.renderTime()}
+                    {this.renderStatus()}
                     {this.renderEmblem()}
                 </subheader>
                 <body>
@@ -230,20 +230,26 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render the publication time
+     * Render upload status or the publication time
      *
      * @return {ReactElement}
      */
-    renderTime: function() {
-        if (this.props.pending) {
+    renderStatus: function() {
+        var status = this.props.status;
+        if (status) {
             var t = this.props.locale.translate;
-            return <span className="time">{t('story-pending')}</span>;
+            return (
+                <span className="status">
+                    {t(`story-status-${status.action}-$progress`, status.progress)}
+                </span>
+            );
+        } else {
+            var props = {
+                time: this.props.story.ptime,
+                locale: this.props.locale,
+            };
+            return <Time {...props} />
         }
-        var props = {
-            time: this.props.story.ptime,
-            locale: this.props.locale,
-        };
-        return <Time {...props} />
     },
 
     /**

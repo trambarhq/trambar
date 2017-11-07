@@ -294,6 +294,12 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'story-status-transcoding-$progress': (progress) => {
+            return `transcoding (${progress}%)`;
+        },
+        'story-status-uploading-$progress': (progress) => {
+            return `uploading (${progress}%)`;
+        },
         'story-survey': 'Survey',
         'story-task-list': 'Task list',
         'story-video': 'Video',
