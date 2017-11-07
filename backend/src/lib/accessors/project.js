@@ -50,6 +50,7 @@ module.exports = _.create(Data, {
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
+            CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
         `;
         return db.execute(sql);
@@ -168,6 +169,9 @@ module.exports = _.create(Data, {
     import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).map((projectReceived, index) => {
             var projectBefore = originals[index];
+            if (projectReceived.name === 'global' || projectReceived.name === 'admin') {
+                throw new HttpError(409);
+            }
             this.checkWritePermission(projectReceived, projectBefore, credentials);
             return projectReceived;
         });

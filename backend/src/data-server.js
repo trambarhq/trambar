@@ -87,11 +87,19 @@ function sendError(res, err) {
     var statusCode = err.statusCode;
     var message = err.message;
     if (!statusCode) {
-        // not an expected error
-        console.error(err);
-        statusCode = 500;
-        if (process.env.NODE_ENV === 'production') {
-            message = 'Internal server error';
+        switch (err.code) {
+            case '23505': // unique constraint violation
+                statusCode = 409;
+                message = 'An object with that name already exists';
+                break;
+            default:
+                // not an expected error
+                console.error(err);
+                statusCode = 500;
+                if (process.env.NODE_ENV === 'production') {
+                    message = 'Internal server error';
+                }
+                break;
         }
     }
     res.status(statusCode).json({ message });

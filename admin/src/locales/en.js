@@ -369,6 +369,11 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 user` : `${count} users`;
         },
 
+        'validation-duplicate-project-name': 'A project with that identifier already exists',
+        'validation-duplicate-role-name': 'A role with that identifier already exists',
+        'validation-duplicate-server-name': 'A server with that identifier already exists',
+        'validation-duplicate-user-name': 'A user with that name already exists',
+        'validation-illegal-project-name': 'Project identifier cannot be "global" or "admin"',
         'validation-password-for-admin-only': 'Only administrators can sign in using password',
         'validation-required': 'Required',
         'validation-required-for-oauth': 'Required when OAuth is used',

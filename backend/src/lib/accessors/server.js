@@ -46,6 +46,7 @@ module.exports = _.create(Data, {
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
+            CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
         `;
         return db.execute(sql);
     },

@@ -790,8 +790,14 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     });
                 });
             }).catch((err) => {
-                console.error(err);
-                this.setState({ saving: false });
+                var problems = {};
+                if (err.statusCode === 409) {
+                    problems.username = 'validation-duplicate-user-name';
+                } else {
+                    problems.general = err.message;
+                    console.error(err);
+                }
+                this.setState({ problems, saving: false });
             });
         });
     },

@@ -62,6 +62,7 @@ module.exports = _.create(ExternalData, {
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
+            CREATE UNIQUE INDEX ON ${table} (username) WHERE deleted = false;
             CREATE INDEX ON ${table} ((details->>'email')) WHERE details ? 'email';
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
         `;

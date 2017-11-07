@@ -405,6 +405,16 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                         return this.setEditability(false, role);
                     });
                 });
+            }).catch((err) => {
+                this.setState({ saving: false });
+                var problems = {};
+                if (err.statusCode === 409) {
+                    problems.name = 'validation-duplicate-role-name';
+                } else {
+                    problems.general = err.message;
+                    console.error(err);
+                }
+                this.setState({ problems, saving: false });
             });
         });
     },

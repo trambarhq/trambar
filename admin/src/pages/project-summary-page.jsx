@@ -197,8 +197,12 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     findProblems: function() {
         var problems = {};
         var project = this.getProject();
-        if (!project.name) {
+        var name = _.toLower(_.trim(project.name));
+        var reservedNames = [ 'global', 'admin' ];
+        if (!name) {
             problems.name = 'validation-required';
+        } else if (_.includes(reservedNames, name)) {
+            problems.name = 'validation-illegal-project-name';
         }
         return problems;
     },
@@ -571,8 +575,14 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                     });
                 });
             }).catch((err) => {
-                console.error(err);
-                this.setState({ saving: false });
+                var problems = {};
+                if (err.statusCode === 409) {
+                    problems.name = 'validation-duplicate-project-name';
+                } else {
+                    problems.general = err.message;
+                    console.error(err);
+                }
+                this.setState({ problems, saving: false });
             });
         });
     },
