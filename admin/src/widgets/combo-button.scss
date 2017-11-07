@@ -1,0 +1,62 @@
+.combo-button {
+    display: inline-block;
+    position: relative;
+
+    BUTTON {
+        font-size: 1.2em;
+        background-color: #cccccc;
+        border: 2px outset #dddddd;
+        color: #000000;
+
+        &.main {
+            padding: 0.14em 0.5em 0.14em 0.5em;
+            border-right: 0;
+
+            &:active {
+                border-style: inset;
+            }
+        }
+
+        &.side {
+            padding: 0.14em 5px 0.14em 5px;
+            border-left: 1px inset #dddddd;
+
+            &:active {
+                border-left-width: 2px;
+                padding-left: 4px;
+                border-style: inset;
+            }
+        }
+
+        &.emphasis {
+            color: #ffffff;
+            background-color: #007826;
+            border: 2px outset #00ab36;
+        }
+    }
+
+    .container {
+        position: absolute;
+        width: 50vw;
+        right: 0;
+        z-index: 1000;
+        text-align: right;
+
+        .menu {
+            display: inline-block;
+            border: 2px outset #dddddd;
+            padding: 0.5em 0.5em 0.5em 0.5em;
+            background-color: #cccccc;
+            text-align: left;
+
+            .option {
+                cursor: pointer;
+                margin-bottom: 0.5em;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+    }
+}

@@ -13,6 +13,7 @@ var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
@@ -313,6 +314,18 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             return (
                 <div key="view" className="buttons">
+                    <ComboButton>
+                        <option>
+                            {t('project-summary-other-actions')}
+                        </option>
+                        <option name="archive" onClick={this.handleArchiveClick}>
+                            {t('project-summary-archive')}
+                        </option>
+                        <option name="delete" onClick={this.handleArchiveClick}>
+                            {t('project-summary-delete')}
+                        </option>
+                    </ComboButton>
+                    {' '}
                     <PushButton className="edit" onClick={this.handleEditClick}>
                         {t('project-summary-edit')}
                     </PushButton>
@@ -488,6 +501,24 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 </ActivityChart>
             </div>
         );
+    },
+
+    /**
+     * Called when user select delete project
+     *
+     * @param  {Event} evt
+     */
+    handleDeleteClick: function(evt) {
+
+    },
+
+    /**
+     * Called when user select archive project
+     *
+     * @param  {Event} evt
+     */
+    handleArchiveClick: function(evt) {
+
     },
 
     /**
