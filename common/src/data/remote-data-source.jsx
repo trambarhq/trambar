@@ -12,6 +12,7 @@ module.exports = React.createClass({
     propTypes: {
         refreshInterval: PropTypes.number,
         basePath: PropTypes.string,
+        discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
         cache: PropTypes.object,
 
@@ -700,6 +701,8 @@ module.exports = React.createClass({
         }
         if (action === 'retrieval' || action === 'storage') {
             _.assign(payload, this.props.retrievalFlags);
+        } else if (action === 'discovery') {
+            _.assign(payload, this.props.discoveryFlags);
         }
         var options = {
             contentType: 'json',

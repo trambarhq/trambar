@@ -140,7 +140,12 @@ function handleDiscovery(req, res) {
             } else {
                 criteria.limit = 5000;
             }
-            if (criteria.deleted !== true) {
+            if (params.include_deleted) {
+                if (area !== 'admin') {
+                    // only admin can see deleted objects
+                    throw new HttpError(400);
+                }
+            } else {
                 criteria.deleted = false;
             }
             var accessor = getAccessor(schema, table);
@@ -222,6 +227,10 @@ function handleRetrieval(req, res) {
                 id: ids,
                 order: 'id DESC',
             };
+            if (area !== 'admin') {
+                // only admin can retrieve deleted objects
+                criteria.deleted = false;
+            }
             return accessor.find(db, schema, criteria, '*').then((rows) => {
                 // remove objects that user has no access to
                 return accessor.filter(db, schema, rows, credentials).then((rows) => {

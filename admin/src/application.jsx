@@ -191,6 +191,9 @@ module.exports = React.createClass({
                 include_ctime: true,
                 include_mtime: true,
             },
+            discoveryFlags: {
+                include_deleted: true,
+            },
             onChange: this.handleDatabaseChange,
             onAuthorization: this.handleAuthorization,
             onExpiration: this.handleExpiration,
