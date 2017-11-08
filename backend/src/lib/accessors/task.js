@@ -51,7 +51,7 @@ module.exports = _.create(Data, {
                 token varchar(64) NULL,
                 options jsonb NOT NULL DEFAULT '{}',
                 completion int NOT NULL DEFAULT 0,
-                user_id int NOT NULL DEFAULT 0,
+                user_id int,
                 etime timestamp,
                 PRIMARY KEY (id)
             );

@@ -50,7 +50,8 @@ function isEventRelevant(event) {
             return false;
         }
         // see if event is old (created during initial import, for instance)
-        var elapsed = getTimeElapsed(event.current.ptime, new Date);
+        var now = Moment();
+        var elapsed = now - Moment(event.current.ptime);
         if (elapsed > 5 * 60 * 1000) {
             return false;
         }

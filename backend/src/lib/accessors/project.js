@@ -47,6 +47,7 @@ module.exports = _.create(Data, {
                 name varchar(128) NOT NULL DEFAULT '',
                 repo_ids int[] NOT NULL DEFAULT '{}'::int[],
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
+                role_ids int[],
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );

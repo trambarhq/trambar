@@ -34,15 +34,15 @@ function importEvents(db, server, repo, project) {
         if (lastEventTime) {
             // after only supports a date for some reason
             // need to start one day back to ensure all events are fetched
-            var dayBefore = lastEventTime.clone().subtract(1, 'day');
+            var dayBefore = Moment(lastEventTime).subtract(1, 'day');
             params.after = dayBefore.format('YYYY-MM-DD');
         }
         var firstEventAge;
         var now = Moment();
         return Transport.fetchEach(server, url, params, (glEvent, index, total) => {
-            var eventTime = Moment(glEvent.created_at);
+            var eventTime = Moment(glEvent.created_at).toISOString();
             if (lastEventTime) {
-                if (eventTime < lastEventTime) {
+                if (eventTime <= lastEventTime) {
                     return;
                 }
             }
@@ -127,7 +127,7 @@ function getImporter(glEvent) {
  * @param  {Server} server
  * @param  {Repo} repo
  *
- * @return {Promise<Moment>}
+ * @return {Promise<String|null>}
  */
 function findLastEventTime(db, project, server, repo) {
     var schema = project.name;
@@ -137,6 +137,6 @@ function findLastEventTime(db, project, server, repo) {
         published: true,
     };
     return Story.findOne(db, schema, criteria, 'MAX(ptime) AS time').then((row) => {
-        return (row && row.time) ? Moment(row.time) : null;
+        return (row && row.time) ? row.time : null;
     });
 }

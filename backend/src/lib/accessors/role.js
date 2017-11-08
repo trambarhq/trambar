@@ -46,6 +46,7 @@ module.exports = _.create(ExternalData, {
                 details jsonb NOT NULL DEFAULT '{}',
                 name varchar(128) NOT NULL DEFAULT '',
                 hidden boolean NOT NULL DEFAULT false,
+                general boolean NOT NULL DEFAULT true,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );

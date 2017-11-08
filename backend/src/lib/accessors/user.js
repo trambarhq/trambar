@@ -17,6 +17,7 @@ module.exports = _.create(ExternalData, {
         role_ids: Array(Number),
         requested_project_ids: Array(Number),
         approved: Boolean,
+        disabled: Boolean,
         hidden: Boolean,
         settings: Object,
         external: Array(Object),
@@ -28,6 +29,7 @@ module.exports = _.create(ExternalData, {
         role_ids: Array(Number),
         requested_project_ids: Array(Number),
         approved: Boolean,
+        disabled: Boolean,
         hidden: Boolean,
 
         external_object: Object,
@@ -58,6 +60,7 @@ module.exports = _.create(ExternalData, {
                 requested_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
                 approved boolean NOT NULL DEFAULT true,
+                disabled boolean NOT NULL DEFAULT false,
                 settings jsonb NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
