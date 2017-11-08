@@ -14,6 +14,7 @@ var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
@@ -386,9 +387,22 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var preselected
             return (
                 <div className="buttons">
-                    <PushButton className="add" onClick={this.handleEditClick}>
+                    <ComboButton preselected={preselected}>
+                        <option>
+                            {t('combo-button-other-actions')}
+                        </option>
+                        <option name="disable" onClick={this.handleDisableClick}>
+                            {t('user-summary-disable')}
+                        </option>
+                        <option name="delete" onClick={this.handleDeleteClick}>
+                            {t('user-summary-delete')}
+                        </option>
+                    </ComboButton>
+                    {' '}
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t(member ? 'user-summary-member-edit' : 'user-summary-edit')}
                     </PushButton>
                 </div>

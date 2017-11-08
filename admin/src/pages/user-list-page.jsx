@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ProfileImage = require('widgets/profile-image');
 var ProjectTooltip = require('tooltips/project-tooltip');
@@ -231,15 +232,32 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
-            var hasUnapproved = _.some(this.props.users, { approved: false });
+            var userPending = _.some(this.props.users, { approved: false });
+            var preselected;
+            if (userPending) {
+                preselected = 'approve';
+            } else {
+                preselected = 'add';
+            }
             return (
                 <div className="buttons">
-                    <PushButton className="add" onClick={this.handleAddClick}>
-                        {t('user-list-new')}
-                    </PushButton>
+                    <ComboButton preselected={preselected}>
+                        <option name="approve" disabled={!userPending} onClick={this.handleApproveClick}>
+                            {t('user-list-approve-all')}
+                        </option>
+                        <option name="reject" disabled={!userPending} onClick={this.handleRejectClick}>
+                            {t('user-list-reject-all')}
+                        </option>
+                        <option name="select" disabled={!userPending} onClick={this.handleSelectClick}>
+                            {t('user-list-select-approval')}
+                        </option>
+                        <option name="add" separator onClick={this.handleAddClick}>
+                            {t('user-list-add')}
+                        </option>
+                    </ComboButton>
                     {' '}
-                    <PushButton className="edit" disabled={!hasUnapproved} onClick={this.handleApproveClick}>
-                        {t('user-list-approve')}
+                    <PushButton className="edit emphasis" onClick={this.handleEditClick}>
+                        {t('user-list-edit')}
                     </PushButton>
                 </div>
             );

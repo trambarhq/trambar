@@ -9,7 +9,7 @@
         color: #999999;
     }
 
-    &.add, &.edit, &.save, &.submit, &.confirm {
+    &.emphasis {
         color: #ffffff;
         background-color: #006699;
         border: 2px outset #0088cc;
@@ -19,7 +19,7 @@
         }
     }
 
-    &.remove, &.confirm-danger {
+    &.danger {
         color: #ffffff;
         background-color: #cc2929;
         border: 2px outset #ff3333;
@@ -27,12 +27,6 @@
         &:disabled {
             color: #cc7a7a;
         }
-    }
-
-    &.acquire {
-        color: #ffffff;
-        background-color: #007826;
-        border: 2px outset #00ab36;
     }
 
     &:active {

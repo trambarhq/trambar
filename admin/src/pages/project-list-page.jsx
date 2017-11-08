@@ -20,6 +20,7 @@ var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var UserTooltip = require('tooltips/user-tooltip');
 var RepositoryTooltip = require('tooltips/repository-tooltip');
@@ -51,6 +52,7 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/projects/?'
             ], (params) => {
+                params.edit = !!query.edit;
                 return params;
             });
         },
@@ -64,6 +66,9 @@ module.exports = Relaks.createClass({
          */
         getUrl: function(params) {
             var path = `/projects/`, query, hash;
+            if (params.edit) {
+                query = { edit: 1 };
+            }
             return { path, query, hash };
         },
     },
@@ -151,6 +156,18 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return true when the URL indicate edit mode
+     *
+     * @param  {Object|null} props
+     *
+     * @return {Boolean}
+     */
+    isEditing: function(props) {
+        props = props || this.props;
+        return props.route.parameters.edit;
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -173,13 +190,24 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        return (
-            <div className="buttons">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('project-list-new')}
-                </PushButton>
-            </div>
-        );
+        if (this.isEditing()) {
+
+        } else {
+            var preselected;
+            return (
+                <div className="buttons">
+                    <ComboButton preselected={preselected}>
+                        <option name="add" className="separated" onClick={this.handleAddClick}>
+                            {t('project-list-add')}
+                        </option>
+                    </ComboButton>
+                    {' '}
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                        {t('project-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        }
     },
 
     /**
@@ -477,7 +505,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks new button
+     * Called when user clicks add button
      *
      * @param  {Event} evt
      */
@@ -486,6 +514,15 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         return route.push(require('pages/project-summary-page'), {
             project: 'new'
         });
+    },
+
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
+    handleEditClick: function(evt) {
+
     },
 });
 

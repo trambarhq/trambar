@@ -11,6 +11,7 @@ var Theme = require('theme/theme');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var UserTooltip = require('tooltips/user-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
@@ -143,10 +144,17 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var preselected = 'add';
         return (
             <div className="buttons">
-                <PushButton className="add" onClick={this.handleAddClick}>
-                    {t('server-list-new')}
+                <ComboButton preselected={preselected}>
+                    <option name="add" onClick={this.handleAddClick}>
+                        {t('server-list-add')}
+                    </option>
+                </ComboButton>
+                {' '}
+                <PushButton name="edit" className="emphasis" onClick={this.handleEditClick}>
+                    {t('server-list-edit')}
                 </PushButton>
             </div>
         );

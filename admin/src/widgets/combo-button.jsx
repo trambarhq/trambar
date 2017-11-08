@@ -7,6 +7,19 @@ module.exports = React.createClass({
     displayName: 'ComboButton',
     propType: {
         preselected: PropTypes.string,
+        alert: PropTypes.bool,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            preselected: undefined,
+            alert: false,
+        };
     },
 
     /**
@@ -49,8 +62,11 @@ module.exports = React.createClass({
         if (!selectedOption) {
             selectedOption = _.first(options);
         }
-        var props = _.clone(selectedOption.props);
+        var props = _.omit(selectedOption.props, 'separator');
         props.className = props.className ? `main ${props.className}`: 'main';
+        if (this.props.alert) {
+            props.className += ' alert';
+        }
         if (!props.onClick) {
             props.onClick = this.handleSideButtonClick;
         }
@@ -105,10 +121,22 @@ module.exports = React.createClass({
         if (!option.props.name) {
             return null;
         }
-        var linkProps = _.omit(option.props, 'name');
-        var name = option.props.name;
+        var itemProps = {
+            'data-name': option.props.name,
+            className: 'option',
+            onClick: this.handleItemClick,
+        };
+        var linkProps = _.omit(option.props, 'name', 'separator', 'disabled');
+        if (option.props.disabled) {
+            itemProps.className += ' disabled';
+            itemProps.onClick = null;
+            linkProps.onClick = null;
+        }
+        if (option.props.separator) {
+            itemProps.className += ' separator';
+        }
         return (
-            <div key={i} data-name={name} className="option" onClick={this.handleItemClick}>
+            <div key={i} {...itemProps}>
                 <div {...linkProps}>
                     {option.props.children}
                 </div>

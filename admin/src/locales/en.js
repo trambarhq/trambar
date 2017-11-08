@@ -45,6 +45,8 @@ module.exports = function(languageCode) {
         'app-name': 'Trambar',
         'app-title': 'Trambar - Administrative Console',
 
+        'combo-button-other-actions': 'Other actions',
+
         'confirmation-cancel': 'Cancel',
         'confirmation-confirm': 'Confirm',
         'confirmation-data-loss': 'Are you sure you want to abandon changes you have made?',
@@ -84,10 +86,13 @@ module.exports = function(languageCode) {
                 return username;
             }
         },
+        'member-list-approve-all': 'Approve all requests',
         'member-list-cancel': 'Cancel',
         'member-list-edit': 'Edit member List',
-        'member-list-new': 'New member',
+        'member-list-new': 'Add new user',
+        'member-list-reject-all': 'Approve all requests',
         'member-list-save': 'Save member List',
+        'member-list-selective-approve': 'Selectively approve',
         'member-list-title': 'Members',
 
         'nav-member-new': 'New member',
@@ -110,7 +115,8 @@ module.exports = function(languageCode) {
                 return name;
             }
         },
-        'project-list-new': 'New project',
+        'project-list-add': 'Add new project',
+        'project-list-edit': 'Edit project list',
         'project-list-title': 'Projects',
 
         'project-summary-$title': (title) => {
@@ -175,7 +181,8 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 repository` : `${count} repositories`;
         },
 
-        'role-list-new': 'New Role',
+        'role-list-add': 'Add new role',
+        'role-list-edit': 'Edit role list',
         'role-list-title': 'Roles',
 
         'role-summary-$title': (title) => {
@@ -196,9 +203,10 @@ module.exports = function(languageCode) {
             return (count === 1) ? `1 other` : `${count} others`;
         },
 
+        'server-list-edit': 'Edit server list',
         'server-list-api-access-false': '',
         'server-list-api-access-true': 'Acquired',
-        'server-list-new': 'New server',
+        'server-list-add': 'Add new server',
         'server-list-title': 'Servers',
         'server-list-oauth-false': '',
         'server-list-oauth-true': 'Active',
@@ -209,6 +217,7 @@ module.exports = function(languageCode) {
         'server-summary-api-access-not-applicable': 'Not applicable',
         'server-summary-api-access-pending': 'Waiting for user action',
         'server-summary-cancel': 'Cancel',
+        'server-summary-delete': 'Delete server',
         'server-summary-edit': 'Edit server',
         'server-summary-member-$name': (name) => {
             return `Server: ${name}`;
@@ -223,6 +232,8 @@ module.exports = function(languageCode) {
         'server-summary-oauth-secret': 'OAuth client secret',
         'server-summary-oauth-url': 'OAuth URL',
         'server-summary-save': 'Save server',
+        'server-summary-show-api-log': 'Show API log',
+        'server-summary-test-oauth': 'Test OAuth integration',
         'server-summary-title': 'Name',
         'server-summary-type': 'Server type',
 
@@ -293,10 +304,13 @@ module.exports = function(languageCode) {
                 return username;
             }
         },
-        'user-list-approve': 'Approve new users',
+        'user-list-approve-all': 'Approve all requests',
         'user-list-cancel': 'Cancel',
-        'user-list-new': 'New user',
+        'user-list-edit': 'Edit member List',
+        'user-list-add': 'Add new user',
+        'user-list-reject-all': 'Reject all requests',
         'user-list-save': 'Approve selected',
+        'user-list-select-approval': 'Selectively approve',
         'user-list-title': 'Users',
         'user-list-user-$type-$approved': (type, approved) => {
             var text;
@@ -328,6 +342,8 @@ module.exports = function(languageCode) {
         'user-summary-auth-server-any': 'Any',
         'user-summary-auth-server-none': 'None (password only)',
         'user-summary-cancel': 'Cancel',
+        'user-summary-delete': 'Delete user account',
+        'user-summary-disable': 'Disable user account',
         'user-summary-edit': 'Edit user',
         'user-summary-email': 'E-mail',
         'user-summary-member-$name': (name) => {

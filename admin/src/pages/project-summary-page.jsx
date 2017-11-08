@@ -316,21 +316,19 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var preselected;
             return (
                 <div key="view" className="buttons">
-                    <ComboButton>
-                        <option>
-                            {t('project-summary-other-actions')}
-                        </option>
+                    <ComboButton preselected={preselected}>
                         <option name="archive" onClick={this.handleArchiveClick}>
                             {t('project-summary-archive')}
                         </option>
-                        <option name="delete" onClick={this.handleArchiveClick}>
+                        <option name="delete" onClick={this.handleDeleteClick}>
                             {t('project-summary-delete')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="edit" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('project-summary-edit')}
                     </PushButton>
                 </div>

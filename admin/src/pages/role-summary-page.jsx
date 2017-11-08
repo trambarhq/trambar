@@ -11,6 +11,7 @@ var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');

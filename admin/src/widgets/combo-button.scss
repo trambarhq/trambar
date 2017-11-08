@@ -28,10 +28,16 @@
             }
         }
 
-        &.emphasis {
-            color: #ffffff;
-            background-color: #007826;
-            border: 2px outset #00ab36;
+        &.alert {
+            animation:blink normal 2.5s infinite ease-in-out;
+
+            @keyframes blink {
+                50% {
+                    background-color: #e0e0e0;
+                    border-color: #e0e0e0;
+                    color: #101010;
+                }
+            }
         }
     }
 
@@ -52,6 +58,16 @@
             .option {
                 cursor: pointer;
                 margin-bottom: 0.5em;
+
+                &.disabled {
+                    color: #aaaaaa;
+                    cursor: default;
+                }
+
+                &.separator {
+                    border-top: 1px solid #999999;
+                    padding-top: 0.5em;
+                }
 
                 &:last-child {
                     margin-bottom: 0;

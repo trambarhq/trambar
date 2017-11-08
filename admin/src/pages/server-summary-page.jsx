@@ -11,6 +11,7 @@ var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
@@ -324,14 +325,35 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             var server = this.getServer();
-            var canAcquire = hasIntegration(server);
+            var hasIntegration = hasAPIIntegration(server);
+            var hasAccessToken = !!_.get(server.settings, 'api.access_token');
+            var hasOAuthCredentials = !!(_.get(server.settings, 'oauth.client_id') && _.get(server.settings, 'oauth.client_secret'));
+            var preselected;
+            if (hasIntegration && !hasAccessToken) {
+                preselected = 'acquire';
+            } else if (hasOAuthCredentials) {
+                preselected = 'test';
+            } else if (hasIntegration) {
+                preselected = 'log';
+            }
             return (
                 <div key="view" className="buttons">
-                    <PushButton className="acquire" hidden={!canAcquire} onClick={this.handleAcquireClick}>
-                        {t('server-summary-acquire')}
-                    </PushButton>
+                    <ComboButton preselected={preselected}>
+                        <option name="acquire" disabled={!hasIntegration} onClick={this.handleAcquireClick}>
+                            {t('server-summary-acquire')}
+                        </option>
+                        <option name="log" disabled={!hasAccessToken} onClick={this.handleLogClick}>
+                            {t('server-summary-show-api-log')}
+                        </option>
+                        <option name="test" disabled={!hasOAuthCredentials} onClick={this.handleLogClick}>
+                            {t('server-summary-test-oauth')}
+                        </option>
+                        <option name="delete" separator onClick={this.handleDeleteClick}>
+                            {t('server-summary-delete')}
+                        </option>
+                    </ComboButton>
                     {' '}
-                    <PushButton className="add" onClick={this.handleEditClick}>
+                    <PushButton name="edit" className="emphasis" onClick={this.handleEditClick}>
                         {t('server-summary-edit')}
                     </PushButton>
                 </div>
@@ -414,7 +436,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             }
         ];
         var apiAccess;
-        if (hasIntegration(server)) {
+        if (hasAPIIntegration(server)) {
             if (_.get(server.settings, 'api.access_token')) {
                 apiAccess = t('server-summary-api-access-acquired');
             } else {
@@ -711,6 +733,6 @@ function getServerIcon(type) {
     }
 }
 
-function hasIntegration(server) {
+function hasAPIIntegration(server) {
     return _.includes(integratedServerTypes, server.type)
 }

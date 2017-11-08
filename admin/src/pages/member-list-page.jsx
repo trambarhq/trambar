@@ -13,6 +13,7 @@ var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ProfileImage = require('widgets/profile-image');
 var ActivityTooltip = require('tooltips/activity-tooltip');
@@ -244,13 +245,25 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var membersPending = false;
             return (
                 <div key="view" className="buttons">
-                    <PushButton className="add" onClick={this.handleAddClick}>
-                        {t('member-list-new')}
-                    </PushButton>
+                    <ComboButton preselected={membersPending ? 'approve' : null}>
+                        <option name="approve" onClick={this.handleApproveAllClick}>
+                            {t('member-list-approve-all')}
+                        </option>
+                        <option name="reject" onClick={this.handleRejectAllClick}>
+                            {t('member-list-reject-all')}
+                        </option>
+                        <option name="select" onClick={this.handleSelectivelyApproveClick}>
+                            {t('member-list-selective-approval')}
+                        </option>
+                        <option name="add" className="separated" onClick={this.handleAddClick}>
+                            {t('member-list-add')}
+                        </option>
+                    </ComboButton>
                     {' '}
-                    <PushButton className="edit" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('member-list-edit')}
                     </PushButton>
                 </div>
