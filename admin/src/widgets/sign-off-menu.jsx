@@ -24,7 +24,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: 'global', by: this });
         return db.start().then((userId) => {
             var criteria = {
-                id: currentUserId,
+                id: userId,
             };
             return db.findOne({ table: 'user', criteria });
         }).then((user) => {
