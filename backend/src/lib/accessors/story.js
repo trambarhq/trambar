@@ -22,6 +22,7 @@ module.exports = _.create(ExternalData, {
         role_ids: Array(Number),
         published: Boolean,
         ready: Boolean,
+        suppressed: Boolean,
         ptime: String,
         btime: String,
         public: Boolean,
@@ -38,6 +39,7 @@ module.exports = _.create(ExternalData, {
         role_ids: Array(Number),
         published: Boolean,
         ready: Boolean,
+        suppressed: Boolean,
         public: Boolean,
 
         server_id: Number,
@@ -77,6 +79,7 @@ module.exports = _.create(ExternalData, {
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 published boolean NOT NULL DEFAULT false,
                 ready boolean NOT NULL DEFAULT false,
+                suppressed boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 btime timestamp,
                 public boolean NOT NULL DEFAULT false,
@@ -230,6 +233,11 @@ module.exports = _.create(ExternalData, {
                 if (storyReceived.bump) {
                     storyReceived.btime = Object('NOW()');
                     delete storyReceived.bump;
+                }
+
+                // mark story as having been manually deleted
+                if (storyReceived.deleted) {
+                    storyReceived.suppressed = true;
                 }
             });
 

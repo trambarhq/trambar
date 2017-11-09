@@ -21,6 +21,7 @@ module.exports = _.create(ExternalData, {
         user_id: Number,
         published: Boolean,
         ready: Boolean,
+        suppresed: Boolean,
         ptime: String,
         public: Boolean,
         external: Array(Object),
@@ -35,6 +36,7 @@ module.exports = _.create(ExternalData, {
         user_id: Number,
         published: Boolean,
         ready: Boolean,
+        suppresed: Boolean,
         public: Boolean,
 
         server_id: Number,
@@ -70,6 +72,7 @@ module.exports = _.create(ExternalData, {
                 user_id int NOT NULL DEFAULT 0,
                 published boolean NOT NULL DEFAULT false,
                 ready boolean NOT NULL DEFAULT false,
+                suppressed boolean NOT NULL DEFAULT false,
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 external jsonb[] NOT NULL DEFAULT '{}',
@@ -187,6 +190,11 @@ module.exports = _.create(ExternalData, {
                 // set the ptime if published is set
                 if (reactionReceived.published && !reactionReceived.ptime) {
                     reactionReceived.ptime = new String('NOW()');
+                }
+
+                // mark reaction as having been manually deleted
+                if (reactionReceived.deleted) {
+                    reactionReceived.suppressed = true;
                 }
             });
             return objects;
