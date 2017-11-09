@@ -33,7 +33,6 @@ module.exports = _.create(ExternalData, {
         hidden: Boolean,
 
         external_object: Object,
-        server_id: Number,
     },
 
     /**

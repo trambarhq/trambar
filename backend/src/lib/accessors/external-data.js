@@ -82,4 +82,42 @@ module.exports = _.create(Data, {
             conds.push(`"externalIdStrings"(external, '${serverType}', '{${objectNames}}'::text[]) && $${params.push(idStrings)}`);
         }
     },
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Object>}
+     */
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                if (row.external.length > 0) {
+                    object.external = _.map(row.external, (link) => {
+                        return _.mapValues(link, (value, name) => {
+                            if (typeof(value) === 'object') {
+                                // export only the ids
+                                if (value.id) {
+                                    return { id: value.id };
+                                } else if (value.ids) {
+                                    return { ids: value.ids };
+                                }
+                            } else {
+                                return value;
+                            }
+                        });
+                    });
+                }
+            });
+            return objects;
+        });
+    },
+
 });

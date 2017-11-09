@@ -83,8 +83,9 @@ function loadRepoStatistics(db, project, repos) {
     var criteria = {
         type: 'story-date-range',
         filters: _.map(repos, (repo) => {
+            var link = _.find(repo.external, { type: repo.type });
             return {
-                repo_id: repo.id
+                external_object: link
             };
         }),
     };
@@ -94,7 +95,7 @@ function loadRepoStatistics(db, project, repos) {
         var filterLists = _.map(dateRanges, (dateRange) => {
             // attach repo id
             return _.map(getRangeFilters(dateRange), (f) => {
-                f.repo_id = dateRange.filters.repo_id;
+                f.external_object = dateRange.filters.external_object;
                 return f;
             });
         });
@@ -105,11 +106,16 @@ function loadRepoStatistics(db, project, repos) {
         var criteria = { type: 'daily-activities', filters };
         return db.find({ schema, table: 'statistics', criteria }).then((dailyActivitiesAllRepos) => {
             return _.transform(dateRanges, (results, dateRange) => {
-                var repoId = dateRange.filters.repo_id;
+                // find stats associated with data range object
+                var link = dateRange.filters.external_object;
                 var dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
-                    return (d.filters.repo_id === repoId);
+                    return _.isEqual(d.filters.external_object, link);
                 });
-                results[repoId] = summarizeStatistics(dailyActivities, dateRange, project);
+                // find repo with external id
+                var repo = _.find(repos, (repo) => {
+                    return _.some(repo.external, link);
+                });
+                results[repo.id] = summarizeStatistics(dailyActivities, dateRange, project);
             }, {});
         });
     });
