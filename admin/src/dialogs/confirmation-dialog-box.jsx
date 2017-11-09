@@ -51,7 +51,7 @@ module.exports = React.createClass({
             onClick: this.handleCancelClick
         };
         var confirmProps = {
-            className: this.props.dangerous ? 'confirm-danger' : 'confirm',
+            className: this.props.dangerous ? 'danger' : 'emphasis',
             onClick: this.handleConfirmClick
         };
         return (

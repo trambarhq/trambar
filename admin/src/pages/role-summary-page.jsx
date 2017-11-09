@@ -278,11 +278,11 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         if (this.isEditing()) {
             return (
                 <div className="buttons">
-                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                    <PushButton onClick={this.handleCancelClick}>
                         {t('role-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('role-summary-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -291,7 +291,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             return (
                 <div className="buttons">
-                    <PushButton className="edit" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('role-summary-edit')}
                     </PushButton>
                 </div>

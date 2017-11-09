@@ -246,11 +246,11 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         if (this.isEditing()) {
             return (
                 <div key="edit" className="buttons">
-                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                    <PushButton onClick={this.handleCancelClick}>
                         {t('repo-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-summary-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -259,7 +259,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             return (
                 <div key="view" className="buttons">
-                    <PushButton className="add" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('repo-summary-edit')}
                     </PushButton>
                 </div>

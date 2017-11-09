@@ -313,11 +313,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         if (this.isEditing()) {
             return (
                 <div key="edit" className="buttons">
-                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                    <PushButton onClick={this.handleCancelClick}>
                         {t('server-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('server-summary-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -353,7 +353,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton name="edit" className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('server-summary-edit')}
                     </PushButton>
                 </div>

@@ -221,11 +221,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             var hasSelection = !_.isEmpty(this.state.selectedUserIds);
             return (
                 <div className="buttons">
-                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                    <PushButton onClick={this.handleCancelClick}>
                         {t('user-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!hasSelection} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasSelection} onClick={this.handleSaveClick}>
                         {t('user-list-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -256,7 +256,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="edit emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('user-list-edit')}
                     </PushButton>
                 </div>

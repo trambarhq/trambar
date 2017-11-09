@@ -234,11 +234,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                            : false;
             return (
                 <div key="edit" className="buttons">
-                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                    <PushButton onClick={this.handleCancelClick}>
                         {t('member-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="save" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('member-list-save')}
                     </PushButton>
                     <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
