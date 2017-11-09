@@ -738,8 +738,12 @@ function retrieveProfileImage(profile) {
  */
 function removeUnusedAuthorizationObjects() {
     return Database.open().then((db) => {
-        var before = Moment().subtract(authenticationLifetime * 2, 'hour').toISOString();
-        return Authentication.prune(db, 'global', before);
+        var limit = Moment().subtract(authenticationLifetime * 2, 'hour').toISOString();
+        var criteria = {
+            user_id: null,
+            older_than: limit,
+        };
+        return Authentication.removeMatching(db, 'global', criteria);
     });
 }
 

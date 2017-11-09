@@ -257,37 +257,26 @@ module.exports = {
             columns: columns,
             table: table,
         };
+        var select = function() {
+            var sql = `SELECT ${query.columns} FROM ${query.table}`;
+            if (!_.isEmpty(query.conditions)) {
+                sql += ` WHERE ${query.conditions.join(' AND ')}`;
+            }
+            if (query.order !== undefined) {
+                sql += ` ORDER BY ${query.order}`;
+            }
+            if (query.limit !== undefined) {
+                sql += ` LIMIT ${query.limit}`;
+            }
+            return db.query(sql, query.parameters);
+        };
         if (this.apply.length === 4) {
             // the four-argument form of the function works asynchronously
-            return this.apply(db, schema, criteria, query).then(() => {
-                return this.run(db, query);
-            });
+            return this.apply(db, schema, criteria, query).then(select);
         } else {
             this.apply(criteria, query);
-            return this.run(db, query);
+            return select();
         }
-    },
-
-    /**
-     * Run a query
-     *
-     * @param  {Database} db
-     * @param  {Object} query
-     *
-     * @return {Promise<Array>}
-     */
-    run: function(db, query) {
-        var sql = `SELECT ${query.columns} FROM ${query.table}`;
-        if (!_.isEmpty(query.conditions)) {
-            sql += ` WHERE ${query.conditions.join(' AND ')}`;
-        }
-        if (query.order !== undefined) {
-            sql += ` ORDER BY ${query.order}`;
-        }
-        if (query.limit !== undefined) {
-            sql += ` LIMIT ${query.limit}`;
-        }
-        return db.query(sql, query.parameters);
     },
 
     /**
@@ -360,6 +349,56 @@ module.exports = {
         return db.query(sql, parameters).get(0).then((row) => {
             return row || null;
         });
+    },
+
+    /**
+     * Update one row
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     * @param  {Object} values
+     *
+     * @return {Promise<Object>}
+     */
+    updateMatching: function(db, schema, criteria, values) {
+        var table = this.getTableName(schema);
+        var columns = _.keys(this.columns);
+        var assignments = [];
+        var parameters = [];
+        _.each(columns, (name) => {
+            if (values.hasOwnProperty(name)) {
+                var value = values[name];
+                if (value instanceof String) {
+                    // a boxed string--just insert it into the query
+                    assignments.push(`${name} = ${value.valueOf()}`);
+                } else {
+                    assignments.push(`${name} = $${parameters.push(value)}`);
+                }
+            }
+        });
+        var query = {
+            conditions: [],
+            parameters: parameters,
+            columns: '*',
+            table: table,
+        };
+        var update = function() {
+            var sql = `
+                UPDATE ${query.table}
+                SET ${assignments.join(', ')}
+                WHERE ${query.conditions.join(' AND ')}
+                RETURNING *
+            `;
+            return db.query(sql, query.parameters);
+        };
+        if (this.apply.length === 4) {
+            // the four-argument form of the function works asynchronously
+            return this.apply(db, schema, criteria, query).then(update);
+        } else {
+            this.apply(criteria, query);
+            return update();
+        }
     },
 
     /**
@@ -519,6 +558,40 @@ module.exports = {
         return this.remove(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });
+    },
+
+    /**
+     * Remove matching rows
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} criteria
+     *
+     * @return {Promise<Object>}
+     */
+    removeMatching: function(db, schema, criteria) {
+        var table = this.getTableName(schema);
+        var query = {
+            conditions: [],
+            parameters: [],
+            columns: '*',
+            table: table,
+        };
+        var remove = function() {
+            var sql = `
+                DELETE FROM ${query.table}
+                WHERE ${query.conditions.join(' AND ')}
+                RETURNING *
+            `;
+            return db.query(sql, query.parameters);
+        };
+        if (this.apply.length === 4) {
+            // the four-argument form of the function works asynchronously
+            return this.apply(db, schema, criteria, query).then(remove);
+        } else {
+            this.apply(criteria, query);
+            return remove();
+        }
     },
 
     /**
