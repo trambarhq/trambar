@@ -99,7 +99,6 @@ module.exports = Relaks.createClass({
             user: null,
             roles: null,
             project: null,
-            servers: null,
             statistics: null,
 
             database: this.props.database,
@@ -140,13 +139,6 @@ module.exports = Relaks.createClass({
             props.project = project;
             meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
-            // load all servers
-            var criteria = {};
-            return db.find({ table: 'server', criteria });
-        }).then((servers) => {
-            props.servers = servers;
-            meanwhile.show(<UserSummaryPageSync {...props} />);
-        }).then(() => {
             // load statistics if project is specified (unless we're creating a
             // new member)
             if (props.project && props.user) {
@@ -168,7 +160,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
-        servers: PropTypes.arrayOf(PropTypes.object),
         statistics: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -246,15 +237,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         }
         if (!user.type) {
             problems.type = 'validation-required';
-        }
-        if (user.server_id == null) {
-            if (user.type && user.type !== 'admin') {
-                problems.server_id = 'validation-password-for-admin-only';
-            }
-        } else {
-            if (!user.details.email) {
-                problems.email = 'validation-required-for-oauth';
-            }
         }
         return problems;
     },
@@ -424,7 +406,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var userOriginal = this.props.user || emptyUser;
         var userRoles = findRoles(roles, user);
         var userRolesOriginal = findRoles(roles, userOriginal);
-        var servers = this.props.servers;
         var inputLanguages = _.get(this.props.system, 'settings.input_languages');
         var problems = this.state.problems;
         var nameProps = {
@@ -527,31 +508,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t('user-summary-visibility-hidden'),
             }
         ];
-        var authListProps = {
-            onOptionClick: this.handleAuthOptionClick,
-            readOnly,
-        };
-        var authOptionProps = _.concat([
-            {
-                name: 'none',
-                selected: (user.server_id == null),
-                previous: (userOriginal.server_id === null),
-                children: t('user-summary-auth-server-none')
-            },
-            {
-                name: '0',
-                selected: (user.server_id === 0),
-                previous: (userOriginal.server_id === 0),
-                children: t('user-summary-auth-server-any')
-            }
-        ], _.map(servers, (server) => {
-            return {
-                name: String(server.id),
-                selected: (user.server_id === server.id),
-                previous: (userOriginal.server_id === server.id),
-                children: p(server.details.title) || t(`server-type-${server.type}`)
-            }
-        }));
         return (
             <div className="form">
                 <MultilingualTextField {...nameProps}>{t('user-summary-name')}</MultilingualTextField>
@@ -579,13 +535,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 <OptionList {...visibilityListProps}>
                     <label>{t('user-summary-visibility')}</label>
                     {_.map(visibilityOptionProps, renderOption)}
-                </OptionList>
-                <OptionList {...authListProps}>
-                    <label>
-                        {t('user-summary-auth-server')}
-                        <InputError>{t(problems.server_id)}</InputError>
-                    </label>
-                    {_.map(authOptionProps, renderOption)}
                 </OptionList>
             </div>
         );
@@ -900,31 +849,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     handleVisibilityOptionClick: function(evt) {
         var hidden = (evt.name === 'hidden');
         this.setUserProperty('hidden', hidden);
-    },
-
-    /**
-     * Called when user clicks on an OAuth server
-     *
-     * @param  {Object} evt
-     */
-    handleAuthOptionClick: function(evt) {
-        var user = this.getUser();
-        var serverId;
-        if (evt.name === 'none') {
-            serverId = null;
-        } else if (evt.name === 'any') {
-            if (user.server_id === 0) {
-                serverId = null;
-            } else {
-                serverId = 0;
-            }
-        } else {
-            var serverId = parseInt(evt.name);
-            if (user.server_id === serverId) {
-                serverId = null;
-            }
-        }
-        this.setUserProperty('server_id', serverId);
     },
 
     /**

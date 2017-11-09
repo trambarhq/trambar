@@ -306,7 +306,7 @@ module.exports = function(languageCode) {
         },
         'user-list-approve-all': 'Approve all requests',
         'user-list-cancel': 'Cancel',
-        'user-list-edit': 'Edit member List',
+        'user-list-edit': 'Edit user List',
         'user-list-add': 'Add new user',
         'user-list-reject-all': 'Reject all requests',
         'user-list-save': 'Approve selected',
@@ -338,9 +338,6 @@ module.exports = function(languageCode) {
             }
             return text;
         },
-        'user-summary-auth-server': 'Authentication server',
-        'user-summary-auth-server-any': 'Any',
-        'user-summary-auth-server-none': 'None (password only)',
         'user-summary-cancel': 'Cancel',
         'user-summary-delete': 'Delete user account',
         'user-summary-disable': 'Disable user account',
