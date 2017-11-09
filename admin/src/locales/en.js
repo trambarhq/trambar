@@ -1,5 +1,10 @@
 module.exports = function(languageCode) {
     return {
+        'action-badge-archive': 'archive',
+        'action-badge-disable': 'disable',
+        'action-badge-reactivate': 'reactivate',
+        'action-badge-restore': 'restore',
+
         'activity-chart-legend-branch': 'New branches',
         'activity-chart-legend-push': 'Code pushes',
         'activity-chart-legend-issue': 'Issues',
@@ -117,7 +122,18 @@ module.exports = function(languageCode) {
             }
         },
         'project-list-add': 'Add new project',
+        'project-list-cancel': 'Cancel',
+        'project-list-confirm-archive-$count': (count) => {
+            var projects = (count === 1) ? 'the selected project' : `these ${count} projects`;
+            return `Are you sure you want to archive ${projects}?`;
+        },
+        'project-list-confirm-restore-$count': (count) => {
+            var projects = (count === 1) ? 'the selected project' : `these ${count} projects`;
+            return `Are you sure you want to restore ${projects}?`;
+        },
+        'project-list-deleted': 'Deleted',
         'project-list-edit': 'Edit project list',
+        'project-list-save': 'Save project list',
         'project-list-title': 'Projects',
 
         'project-summary-$title': (title) => {
@@ -134,6 +150,8 @@ module.exports = function(languageCode) {
         'project-summary-access-control-pending-user-read-only': 'Pending users can view contents but cannot post',
         'project-summary-archive': 'Archive project',
         'project-summary-cancel': 'Cancel',
+        'project-summary-confirm-archive': 'Are you sure you want to archive this project?',
+        'project-summary-confirm-delete': 'Are you sure you want to delete this project?',
         'project-summary-delete': 'Delete project',
         'project-summary-description': 'Description',
         'project-summary-edit': 'Edit project',

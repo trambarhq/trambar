@@ -65,6 +65,11 @@ module.exports = React.createClass({
         return <ActionConfirmation {...props} />
     },
 
+    /**
+     * Called just before a route change occurs
+     *
+     * @return {Promise<Boolean>}
+     */
     confirmRouteChange: function() {
         var t = this.props.locale.translate;
         var message = t('confirmation-data-loss');

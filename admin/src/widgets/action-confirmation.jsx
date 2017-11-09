@@ -62,10 +62,25 @@ module.exports = React.createClass({
      * Show confirmation dialog with given message
      *
      * @param  {String|ReactElement} message
+     * @param  {Boolean|undefined} bypass
      *
      * @return {Promise<Boolean>}
      */
-    ask: function(message) {
+    ask: function(message, bypass) {
+        if (typeof(bypass) === 'boolean') {
+            // return without user intervention if the result is provided
+            if (this.state.promise) {
+                var promise = this.state.promise;
+                if (bypass) {
+                    this.handleConfirm();
+                } else {
+                    this.handleCancel();
+                }
+                return promise;
+            } else {
+                return Promise.resolve(bypass);
+            }
+        }
         if (this.state.promise) {
             this.setState({ message });
         } else {

@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -21,6 +22,7 @@ var OptionList = require('widgets/option-list');
 var ImageSelector = require('widgets/image-selector');
 var ActivityChart = require('widgets/activity-chart');
 var InputError = require('widgets/input-error');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./project-summary-page.scss');
@@ -101,7 +103,7 @@ module.exports = Relaks.createClass({
         }).then((system) => {
             props.system = system;
         }).then(() => {
-            if (params.project) {
+            if (params.project !== 'new') {
                 var criteria = { id: params.project };
                 return db.findOne({ table: 'project', criteria });
             }
@@ -142,6 +144,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             newProject: null,
             saving: false,
@@ -290,6 +295,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -312,14 +319,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                     <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('project-summary-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
-            var preselected;
             return (
                 <div key="view" className="buttons">
-                    <ComboButton preselected={preselected}>
+                    <ComboButton>
+                        <option>
+                            {t('combo-button-other-actions')}
+                        </option>
                         <option name="archive" onClick={this.handleArchiveClick}>
                             {t('project-summary-archive')}
                         </option>
@@ -511,7 +519,20 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleDeleteClick: function(evt) {
-
+        var t = this.props.locale.translate;
+        var message = t('project-summary-confirm-delete');
+        return this.components.confirmation.ask(message).then((confirmed) => {
+            if (!confirmed) {
+                return;
+            }
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var projectAfter = _.clone(this.props.project);
+            projectAfter.archived = true;
+            return db.saveOne({ table: 'project' }, projectAfter).then(() => {
+                var route = this.props.route;
+                return route.push(require('pages/project-list-page'));
+            });
+        });
     },
 
     /**
@@ -520,7 +541,20 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleArchiveClick: function(evt) {
-
+        var t = this.props.locale.translate;
+        var message = t('project-summary-confirm-archive');
+        return this.components.confirmation.ask(message).then((confirmed) => {
+            if (!confirmed) {
+                return;
+            }
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var projectAfter = _.clone(this.props.project);
+            projectAfter.archived = true;
+            return db.saveOne({ table: 'project' }, projectAfter).then(() => {
+                var route = this.props.route;
+                return route.push(require('pages/project-list-page'));
+            });
+        });
     },
 
     /**

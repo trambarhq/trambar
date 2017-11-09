@@ -10,6 +10,8 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
+var StoryTypes = require('data/story-types');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -26,6 +28,9 @@ var UserTooltip = require('tooltips/user-tooltip');
 var RepositoryTooltip = require('tooltips/repository-tooltip');
 var ActivityTooltip = require('tooltips/activity-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
+var ActionBadge = require('widgets/action-badge');
+var ActionConfirmation = require('widgets/action-confirmation');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./project-list-page.scss');
 
@@ -149,9 +154,16 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
+            restoringProjectIds: [],
+            archivingProjectIds: [],
+            hasChanges: false,
+            renderingFullList: this.isEditing(),
         };
     },
 
@@ -168,6 +180,45 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Change editability of page
+     *
+     * @param  {Boolean} edit
+     *
+     * @return {Promise}
+     */
+    setEditability: function(edit) {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.edit = edit;
+        return this.props.route.replace(module.exports, params);
+    },
+
+    /**
+     * Check if we're switching into edit mode
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
+                // initial list of ids to the current list
+                this.setState({
+                    renderingFullList: true,
+                    restoringProjectIds: [],
+                    archivingProjectIds: [],
+                    hasChanges: false,
+                });
+            } else {
+                setTimeout(() => {
+                    if (!this.isEditing()) {
+                        this.setState({ renderingFullList: false });
+                    }
+                }, 500);
+            }
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -179,6 +230,8 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 {this.renderButtons()}
                 <h2>{t('project-list-title')}</h2>
                 {this.renderTable()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -191,7 +244,17 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isEditing()) {
-
+            return (
+                <div className="buttons">
+                    <PushButton onClick={this.handleCancelClick}>
+                        {t('project-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                        {t('project-list-save')}
+                    </PushButton>
+                </div>
+            );
         } else {
             var preselected;
             return (
@@ -222,6 +285,12 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
+        if (this.state.renderingFullList) {
+            tableProps.expandable = true;
+            tableProps.selectable = true;
+            tableProps.expanded = this.isEditing();
+            tableProps.onClick = this.handleRowClick;
+        }
         return (
             <SortableTable {...tableProps}>
                 <thead>
@@ -260,8 +329,11 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * @return {Array<ReactElement>}
      */
     renderRows: function() {
-        var projects = sortProjects(
-            this.props.projects,
+        var projects = this.props.projects;
+        if (!this.state.renderingFullList) {
+            projects = filterProjects(projects);
+        }
+        projects = sortProjects(projects,
             this.props.users,
             this.props.repos,
             this.props.statistics,
@@ -276,13 +348,27 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * Render a table row
      *
      * @param  {Object} project
-     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderRow: function(project, i) {
+    renderRow: function(project) {
+        var props = {};
+        if (this.state.renderingFullList) {
+            if (project.deleted || project.archived) {
+                if (_.includes(this.state.restoringProjectIds, project.id)) {
+                    props.className = 'selected';
+                }
+            } else {
+                props.className = 'fixed';
+                if (!_.includes(this.state.archivingProjectIds, project.id)) {
+                    props.className += ' selected';
+                }
+            }
+            props.onClick = this.handleRowClick;
+            props['data-project-id'] = project.id;
+        }
         return (
-            <tr key={i}>
+            <tr key={project.id} {...props}>
                 {this.renderTitleColumn(project)}
                 {this.renderUsersColumn(project)}
                 {this.renderRepositoriesColumn(project)}
@@ -309,14 +395,36 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(project.details.title);
-            var route = this.props.route;
-            var params = { project: project.id };
-            var url = route.find(require('pages/project-summary-page'), params);
+            var url;
+            if (this.state.renderingFullList) {
+                // will be added or removed
+                var includedBefore, includedAfter;
+                if (project.deleted || project.archived) {
+                    includedBefore = false;
+                    includedAfter = _.includes(this.state.restoringProjectIds, project.id);
+                } else {
+                    includedBefore = true;
+                    includedAfter = !_.includes(this.state.archivingProjectIds, project.id);
+                }
+                var badge;
+                if (includedBefore !== includedAfter) {
+                    if (includedAfter) {
+                        badge = <ActionBadge type="restore" locale={this.props.locale} />;
+                    } else {
+                        badge = <ActionBadge type="archive" locale={this.props.locale} />;
+                    }
+                }
+            } else {
+                var route = this.props.route;
+                var params = { project: project.id };
+                url = route.find(require('pages/project-summary-page'), params);
+            }
             return (
                 <td>
                     <a href={url}>
                         {t('project-list-$title-with-$name', title, project.name)}
                     </a>
+                    {badge}
                 </td>
             );
         }
@@ -387,13 +495,17 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         if (!project) {
             return <TH id="range">{t('table-heading-date-range')}</TH>
         } else {
-            var start, end;
-            var range = _.get(this.props.statistics, [ project.id, 'range' ]);
-            if (range) {
-                start = Moment(range.start).format('ll');
-                end = Moment(range.end).format('ll');
+            if (!project.deleted) {
+                var start, end;
+                var range = _.get(this.props.statistics, [ project.id, 'range' ]);
+                if (range) {
+                    start = Moment(range.start).format('ll');
+                    end = Moment(range.end).format('ll');
+                }
+                return <td>{t('date-range-$start-$end', start, end)}</td>;
+            } else {
+                return <td>{t('project-list-deleted')}</td>;
             }
-            return <td>{t('date-range-$start-$end', start, end)}</td>;
         }
     },
 
@@ -522,7 +634,89 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleEditClick: function(evt) {
+        this.setEditability(true);
+    },
 
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelClick: function(evt) {
+        this.setEditability(false);
+    },
+
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+        var t = this.props.locale.translate;
+        var archiving = this.state.archivingProjectIds;
+        var message = t('project-list-confirm-archive-$count', archiving.length);
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message, _.isEmpty(archiving) || undefined).then((confirmed) => {
+            if (!confirmed) {
+                return;
+            }
+            var restoring = this.state.restoringProjectIds;
+            var message = t('project-list-confirm-restore-$count', restoring.length);
+            return confirmation.ask(message, _.isEmpty(restoring) || undefined).then((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+                var db = this.props.database.use({ schema: 'global', by: this });
+                return db.start().then((userId) => {
+                    var projectsAfter = [];
+                    _.each(archiving, (projectId) => {
+                        var project = _.find(this.props.projects, { id: projectId });
+                        var projectAfter = _.clone(project);
+                        projectAfter.archived = true;
+                        projectsAfter.push(projectAfter);
+                    });
+                    _.each(restoring, (projectId) => {
+                        var project = _.find(this.props.projects, { id: projectId });
+                        var projectAfter = _.clone(project);
+                        projectAfter.archived = projectAfter.deleted = false;
+                        projectsAfter.push(projectAfter);
+                    });
+                    return db.save({ table: 'project' }, projectsAfter).then((projects) => {
+                        this.setState({ hasChanges: false }, () => {
+                            this.setEditability(false);
+                        });
+                        return null;
+                    });
+                });
+            })
+        });
+    },
+
+    /**
+     * Called when user clicks a row in edit mode
+     *
+     * @param  {Event} evt
+     */
+    handleRowClick: function(evt) {
+        var projectId = parseInt(evt.currentTarget.getAttribute('data-project-id'));
+        var project = _.find(this.props.projects, { id: projectId });
+        var restoringProjectIds = _.slice(this.state.restoringProjectIds);
+        var archivingProjectIds = _.slice(this.state.archivingProjectIds);
+        if (project.deleted || project.archived) {
+            if (_.includes(restoringProjectIds, project.id)) {
+                _.pull(restoringProjectIds, project.id);
+            } else {
+                restoringProjectIds.push(project.id);
+            }
+        } else {
+            if (_.includes(archivingProjectIds, project.id)) {
+                _.pull(archivingProjectIds, project.id);
+            } else {
+                archivingProjectIds.push(project.id);
+            }
+        }
+        var hasChanges = !_.isEmpty(restoringProjectIds) || !_.isEmpty(archivingProjectIds);
+        this.setState({ restoringProjectIds, archivingProjectIds, hasChanges });
     },
 });
 
@@ -576,4 +770,10 @@ var findUsers = Memoize(function(users, project) {
     return _.filter(_.map(project.user_ids, (id) => {
         return hash[id];
     }));
+});
+
+var filterProjects = Memoize(function(projects) {
+    return _.filter(projects, (project) => {
+        return !project.deleted && !project.archived;
+    });
 });

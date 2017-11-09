@@ -1,0 +1,20 @@
+.action-badge {
+    font-size: 0.7em;
+    color: #ffffff;
+    padding: 2px 4px 2px 4px;
+    float: right;
+    margin-right: 0.35em;
+    text-transform: uppercase;
+
+    .fa {
+        margin-right: 2px;
+    }
+
+    &.add {
+        background-color: #009900;
+    }
+
+    &.remove {
+        background-color: #cc0000;
+    }
+}

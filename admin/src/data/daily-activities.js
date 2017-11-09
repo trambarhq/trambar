@@ -9,6 +9,9 @@ exports.loadRepoStatistics = loadRepoStatistics;
 
 function loadProjectStatistics(db, projects) {
     return Promise.map(projects, (project) => {
+        if (project.deleted) {
+            return null;
+        }
         var schema = project.name;
         // load story-date-range statistics
         var criteria = {
