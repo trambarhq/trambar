@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 var Route = require('routing/route');
 var Locale = require('locale/locale');
@@ -9,7 +10,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
+var ActionConfirmation = require('widgets/action-confirmation');
 
 module.exports = React.createClass({
     displayName: 'DataLossWarning',
@@ -22,18 +23,16 @@ module.exports = React.createClass({
         changes: PropTypes.bool,
     },
 
-
     /**
-     * Return initial state
+     * Return initial state of component
      *
      * @return {Object}
      */
     getInitialState: function() {
-        return {
-            showing: false,
-            rendering: false,
-            resolve: null,
-        }
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
+        return {};
     },
 
     /**
@@ -57,72 +56,18 @@ module.exports = React.createClass({
      * @return  {ReactElement|null}
      */
     render: function() {
-        if (!this.state.rendering) {
-            return null;
-        }
-        var t = this.props.locale.translate;
-        var dialogProps = {
-            show: this.state.showing,
-            dangerous: true,
+        var setters = this.components.setters;
+        var props = {
+            ref: setters.confirmation,
             locale: this.props.locale,
             theme: this.props.theme,
-            onConfirm: this.handleConfirm,
-            onCancel: this.handleCancel,
         };
-        return (
-            <ConfirmationDialogBox {...dialogProps}>
-                {t('confirmation-data-loss')}
-            </ConfirmationDialogBox>
-        )
+        return <ActionConfirmation {...props} />
     },
 
     confirmRouteChange: function() {
-        return new Promise((resolve, reject) => {
-            this.setState({
-                showing: true,
-                rendering: true,
-                resolve,
-            });
-        });
-    },
-
-    /**
-     * Called when user confirms the route change
-     *
-     * @param  {Object} evt
-     */
-    handleConfirm: function(evt) {
-        var resolve = this.state.resolve;
-        this.setState({
-            showing: false,
-            rendering: false,
-            resolve: null,
-        }, () => {
-            if (resolve) {
-                resolve(true);
-            }
-        });
-    },
-
-    /**
-     * Called when user cancels the route change
-     *
-     * @param  {Object} evt
-     */
-    handleCancel: function(evt) {
-        var resolve = this.state.resolve;
-        this.setState({
-            showing: false,
-            resolve: null,
-        }, () => {
-            if (resolve) {
-                resolve(false);
-            }
-            setTimeout(() => {
-                if (!this.state.showing) {
-                    this.setState({ rendering: false });
-                }
-            })
-        });
+        var t = this.props.locale.translate;
+        var message = t('confirmation-data-loss');
+        return this.components.confirmation.ask(message);
     },
 });
