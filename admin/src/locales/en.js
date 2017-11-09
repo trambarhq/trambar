@@ -1,5 +1,6 @@
 module.exports = function(languageCode) {
     return {
+        'activity-chart-legend-branch': 'New branches',
         'activity-chart-legend-push': 'Code pushes',
         'activity-chart-legend-issue': 'Issues',
         'activity-chart-legend-member': 'Membership changes',
