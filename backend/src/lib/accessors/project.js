@@ -311,7 +311,7 @@ module.exports = _.create(Data, {
      * @return {Boolean}
      */
     checkAccess: function(project, user, access) {
-        if (!project || project.deleted) {
+        if (!project) {
             return false;
         }
         // project member and admins have full access

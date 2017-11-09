@@ -119,7 +119,7 @@ function handleDiscovery(req, res) {
         return checkAuthorization(db, params.token).then((userId) => {
             return fetchCredentials(db, userId, schema, 'read');
         }).then((credentials) => {
-            var criteria = _.omit(params, 'token');
+            var criteria = _.omit(params, 'token', 'include_deleted');
             if (criteria.order) {
                 // check clause for potential SQL injection
                 var clauses = _.split(criteria.order, /\s,\s/);
