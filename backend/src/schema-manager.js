@@ -109,6 +109,15 @@ function handleDatabaseChanges(events) {
                     }
                 }
             }
+            if (event.diff.deleted) {
+                var deletedName = `$recycled$-project-${event.id}`;
+                var normalName = event.current.name;
+                if (event.current.deleted) {
+                    return renameSchema(db, normalName, deletedName);
+                } else {
+                    return renameSchema(db, deletedName, normalName);
+                }
+            }
         } else if (event.table === 'story' || event.table === 'reaction') {
             if (event.diff.language_codes) {
                 if (event.op === 'INSERT' || event.op === 'UPDATE') {
@@ -314,7 +323,10 @@ function deleteSchema(db, schema) {
  * @return {Promise<Boolean>}
  */
 function renameSchema(db, schemaBefore, schemaAfter) {
-
+    var sql = `ALTER SCHEMA "${schemaBefore}" RENAME TO "${schemaAfter}"`;
+    return db.execute(sql).then((result) => {
+        return true;
+    });
 }
 
 /**

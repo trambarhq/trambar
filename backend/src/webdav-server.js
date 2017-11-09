@@ -199,7 +199,7 @@ function start() {
             },
 
             deleteAsync: function() {
-                return this.accessor.removeOne(db, this.schema, { id: this.id }).then((row) => {
+                return this.accessor.updateOne(db, this.schema, { id: this.id, deleted: true }).then((row) => {
                     return true;
                 }).catch((err) => {
                     console.error(err);
