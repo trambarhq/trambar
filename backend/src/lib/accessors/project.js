@@ -17,6 +17,7 @@ module.exports = _.create(Data, {
         repo_ids: Array(Number),
         user_ids: Array(Number),
         settings: Object,
+        archived: Boolean,
     },
     criteria: {
         id: Number,
@@ -24,6 +25,7 @@ module.exports = _.create(Data, {
         name: String,
         repo_ids: Array(Number),
         user_ids: Array(Number),
+        archived: Boolean,
     },
 
     /**
@@ -49,6 +51,7 @@ module.exports = _.create(Data, {
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 role_ids int[],
                 settings jsonb NOT NULL DEFAULT '{}',
+                archived boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
@@ -149,6 +152,9 @@ module.exports = _.create(Data, {
                     object.settings = row.settings;
                 } else {
                     object.settings = _.pick(row.settings, 'access_control');
+                }
+                if (row.archived) {
+                    object.archived = row.archived;
                 }
             });
             return objects;
