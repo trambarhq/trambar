@@ -351,21 +351,35 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(project) {
-        var props = {};
+        var t = this.props.locale.translate;
+        var classes = [];
+        var onClick, title;
+        if (project.deleted) {
+            classes.push('deleted');
+            title = t('project-list-status-deleted');
+        } else if (project.archived) {
+            classes.push('disabled');
+            title = t('project-list-status-archived');
+        }
         if (this.state.renderingFullList) {
             if (project.deleted || project.archived) {
                 if (_.includes(this.state.restoringProjectIds, project.id)) {
-                    props.className = 'selected';
+                    classes.push('selected');
                 }
             } else {
-                props.className = 'fixed';
-                if (!_.includes(this.state.archivingProjectIds, project.id)) {
-                    props.className += ' selected';
+                classes.push('fixed');
+                if (!_.includes(this.state.disablingProjectIds, project.id)) {
+                    classes.push('selected');
                 }
             }
-            props.onClick = this.handleRowClick;
-            props['data-project-id'] = project.id;
+            onClick = this.handleRowClick;
         }
+        var props = {
+            className: classes.join(' '),
+            'data-project-id': project.id,
+            title,
+            onClick,
+        };
         return (
             <tr key={project.id} {...props}>
                 {this.renderTitleColumn(project)}
@@ -758,6 +772,12 @@ var sortProjects = Memoize(function(projects, users, repos, statistics, locale, 
     return _.orderBy(projects, columns, directions);
 });
 
+var filterProjects = Memoize(function(projects) {
+    return _.filter(projects, (project) => {
+        return !project.deleted && !project.archived;
+    });
+});
+
 var findRepos = Memoize(function(repos, project) {
     var hash = _.keyBy(repos, 'id');
     return _.filter(_.map(project.repo_ids, (id) => {
@@ -770,10 +790,4 @@ var findUsers = Memoize(function(users, project) {
     return _.filter(_.map(project.user_ids, (id) => {
         return hash[id];
     }));
-});
-
-var filterProjects = Memoize(function(projects) {
-    return _.filter(projects, (project) => {
-        return !project.deleted && !project.archived;
-    });
 });

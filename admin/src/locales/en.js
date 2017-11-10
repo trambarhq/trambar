@@ -137,6 +137,8 @@ module.exports = function(languageCode) {
         'project-list-deleted': 'Deleted',
         'project-list-edit': 'Edit project list',
         'project-list-save': 'Save project list',
+        'project-list-status-archived': 'Archived',
+        'project-list-status-deleted': 'Deleted',
         'project-list-title': 'Projects',
 
         'project-summary-$title': (title) => {
