@@ -102,6 +102,8 @@ module.exports = function(languageCode) {
         'member-list-reject-all': 'Approve all requests',
         'member-list-save': 'Save member List',
         'member-list-selective-approve': 'Selectively approve',
+        'member-list-status-pending': 'Request pending',
+        'member-list-status-non-member': 'Not a member',
         'member-list-title': 'Members',
 
         'nav-member-new': 'New member',

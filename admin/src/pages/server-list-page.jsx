@@ -399,7 +399,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             var icon = <i className={`fa fa-${iconName} fa-fw`} />;
             return (
                 <td>
-                    <a href={url}>{icon}{' '}{title}</a> {badge}
+                    <a href={url}>{icon} {title}</a>{badge}
                 </td>
             );
         }

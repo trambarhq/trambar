@@ -247,7 +247,6 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTable: function() {
-        var t = this.props.locale.translate;
         var tableProps = {
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,

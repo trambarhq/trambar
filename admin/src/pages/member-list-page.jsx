@@ -223,18 +223,13 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.isEditing()) {
-            // this.state.hasChanges can be false even when there're users that
-            // could be added due to pre-selection
-            var hasChanges = (this.props.project)
-                           ? !_.isEqual(this.state.selectedUserIds, this.props.project.user_ids)
-                           : false;
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
                         {t('member-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('member-list-save')}
                     </PushButton>
                 </div>
@@ -434,11 +429,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 });
             }
             var image = <ProfileImage user={user} theme={this.props.theme} />;
+            var text = t('user-list-$name-with-$username', name, username);
             return (
                 <td>
-                    <a href={url}>
-                        {image} {t('user-list-$name-with-$username', name, username)}{badge}
-                    </a>
+                    <a href={url}>{image} {text}</a>{badge}
                 </td>
             );
         }
@@ -728,7 +722,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 addingUserIds.push(userId);
             }
         }
-        var hasChanges = !_.isEmpty(addingUserIds) && !_.isEmpty(removingUserIds);
+        var hasChanges = !_.isEmpty(addingUserIds) || !_.isEmpty(removingUserIds);
         this.setState({ addingUserIds, removingUserIds, hasChanges });
     }
 });

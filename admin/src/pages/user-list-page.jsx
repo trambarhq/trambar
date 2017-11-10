@@ -266,7 +266,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTable: function() {
-        var t = this.props.locale.translate;
         var tableProps = {
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
@@ -426,14 +425,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 var params = { user: user.id }
                 url = route.find(require('pages/user-summary-page'), params);
             }
+            var image = <ProfileImage user={user} theme={this.props.theme} />;
+            var text = t('user-list-$name-with-$username', name, username);
             return (
                 <td>
-                    <a href={url}>
-                        <ProfileImage user={user} theme={this.props.theme} />
-                        {' '}
-                        {t('user-list-$name-with-$username', name, username)}
-                        {badge}
-                    </a>
+                    <a href={url}>{image} {text}</a>{badge}
                 </td>
             );
         }

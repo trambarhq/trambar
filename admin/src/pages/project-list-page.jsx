@@ -278,7 +278,6 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTable: function() {
-        var t = this.props.locale.translate;
         var tableProps = {
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
@@ -433,12 +432,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 var params = { project: project.id };
                 url = route.find(require('pages/project-summary-page'), params);
             }
+            var text = t('project-list-$title-with-$name', title, project.name);
             return (
                 <td>
-                    <a href={url}>
-                        {t('project-list-$title-with-$name', title, project.name)}
-                    </a>
-                    {badge}
+                    <a href={url}>{text}</a>{badge}
                 </td>
             );
         }

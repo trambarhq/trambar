@@ -274,7 +274,6 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTable: function() {
-        var t = this.props.locale.translate;
         var tableProps = {
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
@@ -411,10 +410,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             }
             return (
                 <td>
-                    <a href={url}>
-                        {title}
-                    </a>
-                    {badge}
+                    <a href={url}>{title}</a>{badge}
                 </td>
             );
         }
