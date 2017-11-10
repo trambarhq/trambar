@@ -534,7 +534,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNameChange: function(evt) {
-        var name = _.trim(_.toLower(evt.target.value))
+        var name = _.toLower(evt.target.value).replace(/\W+/g, '');
         this.setRoleProperty(`name`, name);
     },
 

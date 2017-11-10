@@ -738,7 +738,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleNameChange: function(evt) {
-        var name = _.trim(_.toLower(evt.target.value))
+        var name = _.toLower(evt.target.value).replace(/\W+/g, '');
         this.setServerProperty(`name`, name);
     },
 

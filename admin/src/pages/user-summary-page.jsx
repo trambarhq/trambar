@@ -866,8 +866,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleUsernameChange: function(evt) {
-        var username = _.trim(_.toLower(username));
-        this.setUserProperty(`username`, evt.target.value);
+        var username = _.toLower(evt.target.value).replace(/\W+/g, '');
+        this.setUserProperty(`username`, username);
     },
 
     /**
