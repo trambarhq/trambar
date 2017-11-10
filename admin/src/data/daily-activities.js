@@ -42,9 +42,12 @@ function loadUserStatistics(db, project, users) {
     }
     var schema = project.name;
     // load story-date-range statistics
+    var currentUsers = _.filter(users, (user) => {
+        return !user.deleted;
+    });
     var criteria = {
         type: 'story-date-range',
-        filters: _.map(users, (user) => {
+        filters: _.map(currentUsers, (user) => {
             return {
                 user_ids: [ user.id ]
             };
@@ -83,9 +86,12 @@ function loadRepoStatistics(db, project, repos) {
     }
     var schema = project.name;
     // load story-date-range statistics
+    var currentRepos = _.filter(repos, (repo) => {
+        return !repo.deleted;
+    });
     var criteria = {
         type: 'story-date-range',
-        filters: _.map(repos, (repo) => {
+        filters: _.map(currentRepos, (repo) => {
             var link = _.find(repo.external, { type: repo.type });
             return {
                 external_object: link

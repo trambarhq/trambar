@@ -5,25 +5,6 @@
     }
 
     .sortable-table {
-        TR {
-            &.pending {
-                opacity: 0.25;
-            }
-        }
-
-        .badge {
-            float: right;
-            margin-top: 0.2em;
-
-            &.add {
-                color: #009900;
-            }
-
-            &.remove {
-                color: #cc0000;
-            }
-        }
-
         #type {
             width: 10em;
         }
@@ -42,6 +23,10 @@
 
         #mtime {
             width: 10em;
+        }
+
+        .action-badge {
+            margin-top: 0.35em;
         }
     }
 }

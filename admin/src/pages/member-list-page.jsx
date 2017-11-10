@@ -18,6 +18,7 @@ var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ProfileImage = require('widgets/profile-image');
 var ActivityTooltip = require('tooltips/activity-tooltip');
 var RoleTooltip = require('tooltips/role-tooltip');
+var ActionBadge = require('widgets/action-badge');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 var DataLossWarning = require('widgets/data-loss-warning');
 
@@ -96,8 +97,8 @@ module.exports = Relaks.createClass({
         }).then((project) => {
             props.project = project;
         }).then(() => {
-            // load all approved users
-            var criteria = { approved: true };
+            // load all approved users that weren't deleted
+            var criteria = { approved: true, deleted: false };
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
@@ -145,7 +146,8 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            selectedUserIds: [],
+            removingUserIds: [],
+            addingUserIds: [],
             hasChanges: false,
             renderingFullList: this.isEditing(),
         };
@@ -180,11 +182,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
-                var users = findUsers(nextProps.users, nextProps.project);
-                var userIds = _.map(users, 'id');
                 this.setState({
                     renderingFullList: true,
-                    selectedUserIds: userIds,
+                    removingUserIds: [],
+                    addingUserIds: [],
                     changes: false,
                 });
             } else {
@@ -194,12 +195,6 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                     }
                 }, 500);
             }
-        }
-        if (this.props.project !== nextProps.project || this.props.users !== nextProps.users) {
-            var users = findUsers(nextProps.users, nextProps.project);
-            var userIds = _.map(users, 'id');
-            var selectedUserIds = _.union(this.state.selectedUserIds, userIds);
-            this.setState({ selectedUserIds });
         }
     },
 
@@ -215,6 +210,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 {this.renderButtons()}
                 <h2>{t('member-list-title')}</h2>
                 {this.renderTable()}
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -241,24 +237,21 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                     <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('member-list-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
             var membersPending = false;
+            var preselected = (membersPending) ? 'approve' : undefined;
             return (
                 <div key="view" className="buttons">
-                    <ComboButton preselected={membersPending ? 'approve' : null}>
-                        <option name="approve" onClick={this.handleApproveAllClick}>
+                    <ComboButton preselected={preselected}>
+                        <option name="approve" disabled={!membersPending} onClick={this.handleApproveClick}>
                             {t('member-list-approve-all')}
                         </option>
-                        <option name="reject" onClick={this.handleRejectAllClick}>
+                        <option name="reject" disabled={!membersPending} onClick={this.handleRejectClick}>
                             {t('member-list-reject-all')}
                         </option>
-                        <option name="select" onClick={this.handleSelectivelyApproveClick}>
-                            {t('member-list-selective-approval')}
-                        </option>
-                        <option name="add" className="separated" onClick={this.handleAddClick}>
+                        <option name="add" separator onClick={this.handleAddClick}>
                             {t('member-list-add')}
                         </option>
                     </ComboButton>
@@ -277,7 +270,6 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTable: function() {
-        var t = this.props.locale.translate;
         var tableProps = {
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
@@ -353,30 +345,43 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(user) {
-        var props = {
-            key: user.id,
-        };
-        if (this.state.renderingFullList) {
-            if (_.includes(this.props.project.user_ids, user.id)
-             || _.includes(user.requested_project_ids, this.props.project.id)) {
-                props.className = 'fixed';
-            }
-            if (_.includes(this.state.selectedUserIds, user.id)) {
-                if (props.className) {
-                    props.className += ' selected';
-                } else {
-                    props.className = 'selected';
-                }
-            }
-            props.onClick = this.handleRowClick;
-            props['data-user-id'] = user.id;
-        } else {
-            if (_.includes(user.requested_project_ids, this.props.project.id)) {
-                props.className = 'pending';
+        var t = this.props.locale.translate;
+        var classes = [];
+        var title, onClick;
+        var existing = _.includes(this.props.project.user_ids, user.id);
+        var pending = _.includes(user.requested_project_ids, this.props.project.id);
+        if (!existing) {
+            if (pending) {
+                classes.push('pending');
+                title = t('member-list-status-pending');
+            } else {
+                classes.push('disabled');
+                title = t('member-list-status-non-member');
             }
         }
+        if (this.state.renderingFullList) {
+            if (existing || pending) {
+                classes.push('fixed');
+            }
+            if (existing) {
+                if (!_.includes(this.state.removingUserIds, user.id)) {
+                    classes.push('selected');
+                }
+            } else {
+                if (_.includes(this.state.addingUserIds, user.id)) {
+                    classes.push('selected');
+                }
+            }
+            onClick = this.handleRowClick;
+        }
+        var props = {
+            className: classes.join(' '),
+            'data-user-id': user.id,
+            onClick,
+            title,
+        };
         return (
-            <tr {...props}>
+            <tr key={user.id} {...props}>
                 {this.renderNameColumn(user)}
                 {this.renderTypeColumn(user)}
                 {this.renderRolesColumn(user)}
@@ -403,35 +408,36 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         } else {
             var name = user.details.name;
             var username = user.username;
-            var url;
-            var badge;
+            var url, badge;
             if (this.state.renderingFullList) {
-                // compare against original project object to see if the user
-                // will be added or removed
-                var includedBefore = _.includes(this.props.project.user_ids, user.id);
-                var includedAfter = _.includes(this.state.selectedUserIds, user.id);
-                if (includedBefore && !includedAfter) {
-                    badge = <i className="fa fa-user-times badge remove" />;
-                } else if (!includedBefore && includedAfter) {
-                    badge = <i className="fa fa-user-plus badge add" />;
+                // compare against original list if the member will be added or removed
+                var userIds = _.get(this.props.project, 'user_ids', []);
+                var includedBefore = _.includes(userIds, user.id);
+                var includedAfter;
+                if (includedBefore) {
+                    includedAfter = !_.includes(this.state.removingUserIds, user.id);
+                } else {
+                    includedAfter = _.includes(this.state.addingUserIds, user.id);
+                }
+                if (includedBefore !== includedAfter) {
+                    if (includedAfter) {
+                        badge = <ActionBadge type="add" locale={this.props.locale} />;
+                    } else {
+                        badge = <ActionBadge type="remove" locale={this.props.locale} />;
+                    }
                 }
             } else {
-                if (_.includes(user.requested_project_ids, this.props.project.id)) {
-                    badge = <i className="fa fa-user-plus badge add" />;
-                }
                 // don't create the link when we're editing the list
                 url = this.props.route.find(require('pages/user-summary-page'), {
                     user: user.id,
                     project: this.props.project.id,
                 });
             }
+            var image = <ProfileImage user={user} theme={this.props.theme} />;
             return (
                 <td>
                     <a href={url}>
-                        <ProfileImage user={user} theme={this.props.theme} />
-                        {' '}
-                        {t('user-list-$name-with-$username', name, username)}
-                        {badge}
+                        {image} {t('user-list-$name-with-$username', name, username)}{badge}
                     </a>
                 </td>
             );
@@ -453,7 +459,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         if (!user) {
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
-            return <td>{t('user-list-user-$type-$approved', user.type, user.approved)}</td>;
+            return <td>{t(`user-list-type-${user.type}`)}</td>;
         }
     },
 
@@ -643,20 +649,53 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
     handleEditClick: function(evt) {
         this.setEditability(true);
     },
 
+    /**
+     * Called when user clicks add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.user = 'new';
+        return route.push(require('pages/user-summary-page'), params);
+    },
+
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
     handleCancelClick: function(evt) {
         this.setEditability(false);
     },
 
-    handleSaveClick: function() {
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     *
+     * @return {Promise}
+     */
+    handleSaveClick: function(evt) {
         var db = this.props.database.use({ schema: 'global', by: this });
         return db.start().then((userId) => {
+            var removing = this.state.removingUserIds;
+            var adding = this.state.addingUserIds;
+            var userIds = this.props.project.user_ids;
+            var userIdsAfter = _.union(_.difference(userIds, removing), adding);
             var columns = {
                 id: this.props.project.id,
-                user_ids: this.state.selectedUserIds
+                user_ids: userIdsAfter,
             };
             return db.saveOne({ table: 'project' }, columns).then((project) => {
                 this.setState({ hasChanges: false }, () => {
@@ -666,32 +705,31 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         });
     },
 
-    handleAddClick: function(evt) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.user = 'new';
-        return route.push(require('pages/user-summary-page'), params);
-    },
-
+    /**
+     * Called when user clicks on a row in edit mode
+     *
+     * @param  {Event} evt
+     */
     handleRowClick: function(evt) {
         var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
         var userIds = this.props.project.user_ids;
-        var selectedUserIds = _.slice(this.state.selectedUserIds);
-        var hasChanges = true;
-        if (_.includes(selectedUserIds, userId)) {
-            _.pull(selectedUserIds, userId);
+        var addingUserIds = _.slice(this.state.addingUserIds);
+        var removingUserIds = _.slice(this.state.removingUserIds);
+        if (_.includes(userIds, userId)) {
+            if (_.includes(removingUserIds, userId)) {
+                _.pull(removingUserIds, userId);
+            } else {
+                removingUserIds.push(userId);
+            }
         } else {
-            selectedUserIds.push(userId);
-        }
-        if (selectedUserIds.length === userIds.length) {
-            // if the new list has the same element as the old, use the latter so
-            // to avoid a mere change in order of the ids
-            if (_.difference(selectedUserIds, userIds).length === 0) {
-                selectedUserIds = userIds;
-                hasChanges = false;
+            if (_.includes(addingUserIds, userId)) {
+                _.pull(addingUserIds, userId);
+            } else {
+                addingUserIds.push(userId);
             }
         }
-        this.setState({ selectedUserIds, hasChanges });
+        var hasChanges = !_.isEmpty(addingUserIds) && !_.isEmpty(removingUserIds);
+        this.setState({ addingUserIds, removingUserIds, hasChanges });
     }
 });
 
