@@ -1,6 +1,7 @@
 module.exports = function(languageCode) {
     return {
         'action-badge-add': 'add',
+        'action-badge-approve': 'approve',
         'action-badge-archive': 'archive',
         'action-badge-disable': 'disable',
         'action-badge-reactivate': 'reactivate',
@@ -333,31 +334,25 @@ module.exports = function(languageCode) {
         },
         'user-list-approve-all': 'Approve all requests',
         'user-list-cancel': 'Cancel',
+        'user-list-confirm-disable-$count': (count) => {
+            var accounts = (count === 1) ? `this user account` : `these ${count} user accounts`;
+            return `Are you sure you want to disable ${accounts}?`
+        },
+        'user-list-confirm-reactivate-$count': (count) => {
+            var accounts = (count === 1) ? `this user account` : `these ${count} user accounts`;
+            return `Are you sure you want to reactivate ${accounts}?`
+        },
         'user-list-edit': 'Edit user List',
         'user-list-add': 'Add new user',
         'user-list-reject-all': 'Reject all requests',
-        'user-list-save': 'Approve selected',
-        'user-list-select-approval': 'Selectively approve',
+        'user-list-save': 'Save user list',
+        'user-list-status-deleted': 'Deleted',
+        'user-list-status-disabled': 'Account disabled',
+        'user-list-status-pending': 'Approval pending',
         'user-list-title': 'Users',
-        'user-list-user-$type-$approved': (type, approved) => {
-            var text;
-            switch(type) {
-                case 'guest':
-                    text = 'Guest';
-                    break;
-                case 'member':
-                    text = 'Team member';
-                    break;
-                case 'admin':
-                    text = 'Administrator';
-                    break;
-            }
-            if (!approved) {
-                text += ' (pending)';
-            }
-            return text;
-        },
-
+        'user-list-type-admin': 'Administrator',
+        'user-list-type-guest': 'Guest',
+        'user-list-type-member': 'Team member',
         'user-summary-$name': (name) => {
             var text = 'User';
             if (name) {
@@ -366,6 +361,9 @@ module.exports = function(languageCode) {
             return text;
         },
         'user-summary-cancel': 'Cancel',
+        'user-summary-confirm-delete': 'Are you sure you want to delete this user account?',
+        'user-summary-confirm-disable': 'Are you sure you want to disable this user account?',
+        'user-summary-confirm-reactivate': 'Are you sure you want to reactivate this user account?',
         'user-summary-delete': 'Delete user account',
         'user-summary-disable': 'Disable user account',
         'user-summary-edit': 'Edit user',
@@ -386,6 +384,7 @@ module.exports = function(languageCode) {
         'user-summary-name': 'Name',
         'user-summary-phone': 'Phone number',
         'user-summary-profile-image': 'Profile image',
+        'user-summary-reactivate': 'Reactivate user account',
         'user-summary-roles': 'Roles',
         'user-summary-role-none': 'None',
         'user-summary-save': 'Save user',

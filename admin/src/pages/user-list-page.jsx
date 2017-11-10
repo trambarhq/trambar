@@ -3,6 +3,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -17,6 +18,8 @@ var ProfileImage = require('widgets/profile-image');
 var ProjectTooltip = require('tooltips/project-tooltip');
 var RoleTooltip = require('tooltips/role-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
+var ActionBadge = require('widgets/action-badge');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-list-page.scss');
@@ -44,7 +47,7 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/users/?'
             ], (params) => {
-                params.approve = !!query.approve;
+                params.edit = !!query.edit;
                 return params;
             });
         },
@@ -58,8 +61,8 @@ module.exports = Relaks.createClass({
          */
         getUrl: function(params) {
             var path = `/users/`, query, hash;
-            if (params && params.approve) {
-                query = { approve: 1 };
+            if (params && params.edit) {
+                query = { edit: 1 };
             }
             return { path, query, hash };
         },
@@ -132,25 +135,29 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            renderingPartialList: this.isApproving(),
-            selectedUserIds: [],
+            restoringUserIds: [],
+            disablingUserIds: [],
             hasChanges: false,
+            renderingFullList: this.isEditing(),
         };
     },
 
     /**
      * Change editability of page
      *
-     * @param  {Boolean} approve
+     * @param  {Boolean} edit
      *
      * @return {Promise}
      */
-    setEditability: function(approve) {
+    setEditability: function(edit) {
         var route = this.props.route;
-        var params = { approve };
+        var params = { edit };
         return route.replace(module.exports, params);
     },
 
@@ -161,35 +168,27 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isApproving: function(props) {
+    isEditing: function(props) {
         props = props || this.props;
-        return props.route.parameters.approve;
+        return props.route.parameters.edit;
     },
 
     componentWillReceiveProps: function(nextProps) {
-        if (this.isApproving() !== this.isApproving(nextProps)) {
-            if (this.isApproving(nextProps)) {
-                // preselect all unapproved users
-                var unapprovedUsers = _.filter(nextProps.users, { approved: false });
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
                 this.setState({
-                    renderingPartialList: true,
-                    selectedUserIds: _.map(unapprovedUsers, 'id'),
-                    hasChanges: !_.isEmpty(unapprovedUsers),
+                    renderingFullList: true,
+                    restoringUserIds: [],
+                    disablingUserIds: [],
+                    hasChanges: false,
                 });
             } else {
                 // wait for animation to finish
                 setTimeout(() => {
-                    if (!this.isApproving()) {
-                        this.setState({ renderingPartialList: false });
+                    if (!this.isEditing()) {
+                        this.setState({ renderingFullList: false });
                     }
                 }, 500);
-            }
-        }
-        if (this.props.users !== nextProps.users) {
-            if (_.isEmpty(this.state.selectedUserIds)) {
-                // preselect all unapproved users
-                var unapprovedUsers = _.filter(nextProps.users, { approved: false });
-                this.setState({ selectedUserIds: _.map(unapprovedUsers, 'id') })
             }
         }
     },
@@ -206,6 +205,8 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 {this.renderButtons()}
                 <h2>{t('user-list-title')}</h2>
                 {this.renderTable()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -217,18 +218,16 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        if (this.isApproving()) {
-            var hasSelection = !_.isEmpty(this.state.selectedUserIds);
+        if (this.isEditing()) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
                         {t('user-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasSelection} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('user-list-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
@@ -247,9 +246,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                         </option>
                         <option name="reject" disabled={!userPending} onClick={this.handleRejectClick}>
                             {t('user-list-reject-all')}
-                        </option>
-                        <option name="select" disabled={!userPending} onClick={this.handleSelectClick}>
-                            {t('user-list-select-approval')}
                         </option>
                         <option name="add" separator onClick={this.handleAddClick}>
                             {t('user-list-add')}
@@ -276,8 +272,8 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
-        if (this.state.renderingPartialList) {
-            tableProps.expanded = !this.isApproving();
+        if (this.state.renderingFullList) {
+            tableProps.expanded = this.isEditing();
             tableProps.expandable = true;
             tableProps.selectable = true;
         }
@@ -317,8 +313,11 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {Array<ReactElement>}
      */
     renderRows: function() {
-        var users = sortUsers(
-            this.props.users,
+        var users = this.props.users;
+        if (!this.state.renderingFullList) {
+            users = filterUsers(users);
+        }
+        users = sortUsers(users,
             this.props.roles,
             this.props.projects,
             this.props.locale,
@@ -332,26 +331,50 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * Render a table row
      *
      * @param  {Object} user
-     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderRow: function(user, i) {
-        var props = {
-            key: user.id,
-        };
-        if (this.state.renderingPartialList) {
-            if (!user.approved) {
-                props.className = 'fixed';
-                if (_.includes(this.state.selectedUserIds, user.id)) {
-                    props.className += ' selected';
+    renderRow: function(user) {
+        var t = this.props.locale.translate;
+        var classes = [];
+        var onClick, title;
+        if (user.deleted) {
+            classes.push('deleted');
+            title = t('user-list-status-deleted');
+        } else if (user.disabled) {
+            classes.push('disabled');
+            title = t('user-list-status-disabled');
+        } else if (!user.approved) {
+            classes.push('pending');
+            title = t('user-list-status-pending');
+        }
+        if (this.state.renderingFullList) {
+            if (user.deleted || user.disabled) {
+                if (_.includes(this.state.restoringUserIds, user.id)) {
+                    classes.push('selected');
+                }
+            } else {
+                classes.push('fixed');
+                if (user.approved) {
+                    if (!_.includes(this.state.disablingUserIds, user.id)) {
+                        classes.push('selected');
+                    }
+                } else {
+                    if (_.includes(this.state.restoringUserIds, user.id)) {
+                        classes.push('selected');
+                    }
                 }
             }
-            props.onClick = this.handleRowClick;
-            props['data-user-id'] = user.id;
+            onClick = this.handleRowClick;
         }
+        var props = {
+            className: classes.join(' '),
+            'data-user-id': user.id,
+            title,
+            onClick,
+        };
         return (
-            <tr {...props}>
+            <tr key={user.id} {...props}>
                 {this.renderNameColumn(user)}
                 {this.renderTypeColumn(user)}
                 {this.renderRolesColumn(user)}
@@ -377,13 +400,25 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else {
             var name = p(user.details.name);
             var username = user.username;
-            var url;
-            var badge;
-            if (this.state.renderingPartialList) {
-                // compare against original project object to see if the user
-                // will be added or removed
-                if (_.includes(this.state.selectedUserIds, user.id)) {
-                    badge = <i className="fa fa-check-square badge add" />;
+            var url, badge;
+            if (this.state.renderingFullList) {
+                // add a badge next to the name if we're approving, restoring or
+                // disabling a user
+                var includedBefore, includedAfter;
+                if (user.deleted || user.disabled || !user.approved) {
+                    includedBefore = false;
+                    includedAfter = _.includes(this.state.restoringUserIds, user.id);
+                } else {
+                    includedBefore = true;
+                    includedAfter = !_.includes(this.state.disablingUserIds, user.id);
+                }
+                if (includedBefore !== includedAfter) {
+                    if (includedAfter) {
+                        var action = !user.approved ? 'approve' : 'reactivate';
+                        badge = <ActionBadge type={action} locale={this.props.locale} />;
+                    } else {
+                        badge = <ActionBadge type="disable" locale={this.props.locale} />;
+                    }
                 }
             } else {
                 // don't create the link when we're editing the list
@@ -419,7 +454,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         if (!user) {
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
-            return <td>{t('user-list-user-$type-$approved', user.type, user.approved)}</td>;
+            return <td>{t(`user-list-type-${user.type}`)}</td>;
         }
     },
 
@@ -443,7 +478,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 omit: 1,
                 locale: this.props.locale,
                 theme: this.props.theme,
-                disabled: this.state.renderingPartialList,
+                disabled: this.state.renderingFullList,
             };
             return <td><ProjectTooltip {...props} /></td>;
         }
@@ -468,7 +503,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 roles: findRoles(this.props.roles, user),
                 locale: this.props.locale,
                 theme: this.props.theme,
-                disabled: this.state.renderingPartialList,
+                disabled: this.state.renderingFullList,
             };
             return <td><RoleTooltip {...props} /></td>;
         }
@@ -493,7 +528,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             var email = user.details.email;
             if (email) {
                 var url;
-                if (!this.state.renderingPartialList) {
+                if (!this.state.renderingFullList) {
                     url = `mailto:${email}`;
                 }
                 contents = <a href={url}>{email}</a>;
@@ -520,7 +555,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else {
             var props = {
                 time: user.mtime,
-                disabled: this.state.renderingPartialList,
+                disabled: this.state.renderingFullList,
                 locale: this.props.locale,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
@@ -551,11 +586,51 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks approve button
+     * Called when user clicks approve all button
      *
      * @param  {Event} evt
      */
     handleApproveClick: function(evt) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var usersAfter = [];
+            _.each(this.props.users, (user) => {
+                if (!user.approved) {
+                    var userAfter = _.clone(user);
+                    userAfter.approved = true;
+                    usersAfter.push(userAfter);
+                }
+            });
+            return db.save({ table: 'user' }, usersAfter);
+        });
+    },
+
+    /**
+     * Called when user clicks reject all button
+     *
+     * @param  {Event} evt
+     */
+    handleRejectClick: function(evt) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var usersAfter = [];
+            _.each(this.props.users, (user) => {
+                if (!user.approved) {
+                    var userAfter = _.clone(user);
+                    userAfter.disabled = true;
+                    usersAfter.push(userAfter);
+                }
+            });
+            return db.save({ table: 'user' }, usersAfter);
+        });
+    },
+
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
+    handleEditClick: function(evt) {
         this.setEditability(true);
     },
 
@@ -574,32 +649,83 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((userId) => {
-            var users = _.map(this.state.selectedUserIds, (userId) => {
-                return {
-                    id: userId,
-                    approved: true
-                };
+        var t = this.props.locale.translate;
+        var disabling = this.state.disablingUserIds;
+        var message = t('user-list-confirm-disable-$count', disabling.length);
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message, _.isEmpty(disabling) || undefined).then((confirmed) => {
+            if (!confirmed) {
+                return;
+            }
+            var approving = [];
+            var restoring = _.filter(this.state.restoringUserIds, (userId) => {
+                var user = _.find(this.props.users, { id: userId });
+                if (user.approved) {
+                    return true;
+                } else {
+                    approving.push(userId);
+                    return false;
+                }
             });
-            return db.save({ table: 'user' }, users).then((users) => {
-                this.setState({ hasChanges: false, selectedUserIds: [] }, () => {
-                    this.setEditability(false);
+            var message = t('user-list-confirm-reactivate-$count', restoring.length);
+            return confirmation.ask(message, _.isEmpty(restoring) || undefined).then((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+                var db = this.props.database.use({ schema: 'global', by: this });
+                return db.start().then((userId) => {
+                    var usersAfter = [];
+                    _.each(this.props.users, (user) => {
+                        var flags = {};
+                        if (_.includes(disabling, user.id)) {
+                            flags.disabled = true;
+                        } else if(_.includes(approving, user.id)) {
+                            flags.approved = true;
+                            flags.disabled = flags.deleted = false;
+                        } else if (_.includes(restoring, user.id)) {
+                            flags.disabled = flags.deleted = false;
+                        } else {
+                            return;
+                        }
+                        var userAfter = _.assign({}, user, flags);
+                        usersAfter.push(userAfter);
+                    });
+                    return db.save({ table: 'user' }, usersAfter).then((users) => {
+                        this.setState({ hasChanges: false }, () => {
+                            this.setEditability(false);
+                        });
+                        return null;
+                    });
                 });
-            });
+            })
         });
     },
 
+    /**
+     * Called when user clicks a row in edit mode
+     *
+     * @param  {Event} evt
+     */
     handleRowClick: function(evt) {
         var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        var selectedUserIds = _.slice(this.state.selectedUserIds);
-        if (_.includes(selectedUserIds, userId)) {
-            _.pull(selectedUserIds, userId);
+        var user = _.find(this.props.users, { id: userId });
+        var restoringUserIds = _.slice(this.state.restoringUserIds);
+        var disablingUserIds = _.slice(this.state.disablingUserIds);
+        if (user.deleted || user.disabled || !user.approved) {
+            if (_.includes(restoringUserIds, user.id)) {
+                _.pull(restoringUserIds, user.id);
+            } else {
+                restoringUserIds.push(user.id);
+            }
         } else {
-            selectedUserIds.push(userId);
+            if (_.includes(disablingUserIds, user.id)) {
+                _.pull(disablingUserIds, user.id);
+            } else {
+                disablingUserIds.push(user.id);
+            }
         }
-        var hasChanges = !_.isEmpty(selectedUserIds);
-        this.setState({ selectedUserIds, hasChanges });
+        var hasChanges = !_.isEmpty(restoringUserIds) || !_.isEmpty(disablingUserIds);
+        this.setState({ restoringUserIds, disablingUserIds, hasChanges });
     }
 });
 
@@ -639,6 +765,12 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
         }
     });
     return _.orderBy(users, columns, directions);
+});
+
+var filterUsers = Memoize(function(users) {
+    return _.filter(users, (user) => {
+        return (user.disabled !== true) && (user.deleted !== true);
+    });
 });
 
 var findProjects = Memoize(function(projects, user) {

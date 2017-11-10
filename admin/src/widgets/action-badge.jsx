@@ -11,6 +11,7 @@ function ActionBadge(props) {
     var className = 'action-badge', icon;
     switch (props.type) {
         case 'add':
+        case 'approve':
         case 'restore':
         case 'reactivate':
             className += ' add';

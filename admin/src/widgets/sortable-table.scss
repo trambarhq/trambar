@@ -43,6 +43,18 @@
         TR {
             background-color: #ffffff;
             transition: background-color $expansion-time, opacity $expansion-time;
+
+            &.pending {
+                opacity: 0.5 !important;
+            }
+
+            &.disabled {
+                opacity: 0.3 !important;
+            }
+
+            &.deleted {
+                opacity: 0.15 !important;
+            }
         }
 
         TR:nth-child(even) {
@@ -98,6 +110,7 @@
 
                 &.selected {
                     background-color: #99ddff;
+                    opacity: 1 !important;
                 }
             }
         }

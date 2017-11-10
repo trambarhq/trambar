@@ -4,13 +4,8 @@
     }
 
     .sortable-table {
-        .badge {
-            float: right;
-            margin-top: 0.2em;
-
-            &.add {
-                color: #009900;
-            }
+        .action-badge {
+            margin-top: 0.35em;
         }
 
         #type {

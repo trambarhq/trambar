@@ -4,36 +4,6 @@
     }
 
     .sortable-table {
-        .badge {
-            float: right;
-            position: relative;
-            margin-right: 0.35em;
-
-            svg {
-                height: 1em;
-                margin-bottom: -0.2em;
-                border-bottom-right-radius: 0.7em;
-            }
-
-            .sign {
-                font-size: 0.75em;
-                position: absolute;
-                display: block;
-                right: -0.45em;
-                bottom: -0.1em;
-            }
-
-            &.add {
-                color: #009900;
-                fill: #009900;
-            }
-
-            &.remove {
-                color: #cc0000;
-                fill: #cc0000;
-            }
-        }
-
         #type {
             width: 12em;
         }

@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -23,6 +24,7 @@ var ImageSelector = require('widgets/image-selector');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var ActivityChart = require('widgets/activity-chart');
 var InputError = require('widgets/input-error');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./user-summary-page.scss');
@@ -175,6 +177,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             newUser: null,
             hasChanges: false,
@@ -288,12 +293,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         if (this.isCreating() && !edit && !newUser) {
             // return to list when cancelling user creation
-            if (route.parameters.project) {
-                var params = { project: route.parameters.project };
-                return route.push(require('pages/member-list-page'), params);
-            } else {
-                return route.push(require('pages/user-list-page'));
-            }
+            return this.returnToList();
         } else {
             var params = _.clone(route.parameters);
             params.edit = edit;
@@ -302,6 +302,21 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 params.user = newUser.id;
             }
             return route.replace(module.exports, params);
+        }
+    },
+
+    /**
+     * Return to user or member list
+     *
+     * @return {Promise}
+     */
+    returnToList: function() {
+        var route = this.props.route;
+        if (route.parameters.project) {
+            var params = { project: route.parameters.project };
+            return route.push(require('pages/member-list-page'), params);
+        } else {
+            return route.push(require('pages/user-list-page'));
         }
     },
 
@@ -343,6 +358,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderSocialLinksForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -365,22 +382,32 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t(member ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
-            var preselected
+            var user = this.props.user;
+            var active = true;
+            var preselected;
+            if (user) {
+                active = !user.deleted && !user.disabled;
+            }
+            if (!active) {
+                preselected = 'reactivate';
+            }
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
                         <option>
                             {t('combo-button-other-actions')}
                         </option>
-                        <option name="disable" onClick={this.handleDisableClick}>
+                        <option name="disable" disabled={!active} onClick={this.handleDisableClick}>
                             {t('user-summary-disable')}
                         </option>
-                        <option name="delete" onClick={this.handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
                             {t('user-summary-delete')}
+                        </option>
+                        <option name="reactivate" hidden={active} onClick={this.handleReactivateClick}>
+                            {t('user-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
@@ -691,6 +718,71 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 </ActivityChart>
             </div>
         );
+    },
+
+    /**
+     * Save user with new flags
+     *
+     * @param  {Object} flags
+     *
+     * @return {Promise<User>}
+     */
+    changeFlags: function(flags) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var userAfter = _.assign({}, this.props.user, flags);
+        return db.saveOne({ table: 'user' }, userAfter);
+    },
+
+    /**
+     * Called when user clicks disable button
+     *
+     * @param  {Event} evt
+     */
+    handleDisableClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('user-summary-confirm-disable');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ disabled: true }).then(() => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks delete button
+     *
+     * @param  {Event} evt
+     */
+    handleDeleteClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('user-summary-confirm-delete');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ deleted: true }).then(() => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks disable button
+     *
+     * @param  {Event} evt
+     */
+    handleReactivateClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('user-summary-confirm-reactivate');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ disabled: false, deleted: false });
+            }
+        });
     },
 
     /**

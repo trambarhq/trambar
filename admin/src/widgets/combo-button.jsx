@@ -35,6 +35,17 @@ module.exports = React.createClass({
     },
 
     /**
+     * Change selection when preselection prop changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.preselected !== nextProps.preselected) {
+            this.setState({ selected: nextProps.preselected });
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -118,7 +129,7 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderOption: function(option, i) {
-        if (!option.props.name) {
+        if (!option.props.name || option.props.hidden) {
             return null;
         }
         var itemProps = {
