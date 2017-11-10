@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Locale = require('locale/locale');
@@ -95,6 +96,23 @@ module.exports = React.createClass({
             });
             return promise;
         }
+    },
+
+    /**
+     * Ask a series of confirmation questions
+     *
+     * @param  {Array<String|ReactElement>} message
+     * @param  {Array<Boolean|undefined>} bypass
+     *
+     * @return {Promise<Boolean>}
+     */
+    askSeries: function(messages, bypass) {
+        return Promise.reduce(messages, (confirmed, message, index) => {
+            if (!confirmed) {
+                return false;
+            }
+            return this.ask(message, (bypass) ? bypass[index] : undefined);
+        }, true);
     },
 
     /**

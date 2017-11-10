@@ -651,27 +651,27 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     handleSaveClick: function(evt) {
         var t = this.props.locale.translate;
         var disabling = this.state.disablingUserIds;
-        var message = t('user-list-confirm-disable-$count', disabling.length);
-        var confirmation = this.components.confirmation;
-        return confirmation.ask(message, _.isEmpty(disabling) || undefined).then((confirmed) => {
-            if (!confirmed) {
-                return;
+        var approving = [];
+        var restoring = _.filter(this.state.restoringUserIds, (userId) => {
+            var user = _.find(this.props.users, { id: userId });
+            if (user.approved) {
+                return true;
+            } else {
+                approving.push(userId);
+                return false;
             }
-            var approving = [];
-            var restoring = _.filter(this.state.restoringUserIds, (userId) => {
-                var user = _.find(this.props.users, { id: userId });
-                if (user.approved) {
-                    return true;
-                } else {
-                    approving.push(userId);
-                    return false;
-                }
-            });
-            var message = t('user-list-confirm-reactivate-$count', restoring.length);
-            return confirmation.ask(message, _.isEmpty(restoring) || undefined).then((confirmed) => {
-                if (!confirmed) {
-                    return;
-                }
+        });
+        var messages = [
+            t('user-list-confirm-disable-$count', disabling.length),
+            t('user-list-confirm-reactivate-$count', restoring.length),
+        ];
+        var bypass = [
+            _.isEmpty(disabling) || undefined,
+            _.isEmpty(restoring) || undefined,
+        ];
+        var confirmation = this.components.confirmation;
+        return confirmation.askSeries(messages, bypass).then((confirmed) => {
+            if (confirmed) {
                 var db = this.props.database.use({ schema: 'global', by: this });
                 return db.start().then((userId) => {
                     var usersAfter = [];
@@ -697,7 +697,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                         return null;
                     });
                 });
-            })
+            }
         });
     },
 

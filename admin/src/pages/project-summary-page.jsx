@@ -245,11 +245,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit, newProject) {
-        var route = this.props.route;
         if (this.isCreating() && !edit && !newProject) {
             // return to list when cancelling project creation
-            return route.push(require('pages/project-list-page'));
+            this.returnToList();
         } else {
+            var route = this.props.route;
             var params = _.clone(route.parameters);
             params.edit = edit;
             if (newProject) {
@@ -258,6 +258,16 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             }
             return route.replace(module.exports, params);
         }
+    },
+
+    /**
+     * Return to project list
+     *
+     * @return {Promise}
+     */
+    returnToList: function() {
+        var route = this.props.route;
+        return route.push(require('pages/project-list-page'));
     },
 
     /**
@@ -322,17 +332,23 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var project = this.props.project;
+            var active = (project) ? !project.deleted && !project.archived : true;
+            var preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">
-                    <ComboButton>
+                    <ComboButton preselected={preselected}>
                         <option>
                             {t('combo-button-other-actions')}
                         </option>
-                        <option name="archive" onClick={this.handleArchiveClick}>
+                        <option name="archive" disabled={!active} onClick={this.handleArchiveClick}>
                             {t('project-summary-archive')}
                         </option>
-                        <option name="delete" onClick={this.handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
                             {t('project-summary-delete')}
+                        </option>
+                        <option name="restore" hidden={active} onClick={this.handleRestoreClick}>
+                            {t('project-summary-restore')}
                         </option>
                     </ComboButton>
                     {' '}
@@ -514,25 +530,16 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user select delete project
+     * Save project with new flags
      *
-     * @param  {Event} evt
+     * @param  {Object} flags
+     *
+     * @return {Promise<Project>}
      */
-    handleDeleteClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('project-summary-confirm-delete');
-        return this.components.confirmation.ask(message).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
-            var db = this.props.database.use({ schema: 'global', by: this });
-            var projectAfter = _.clone(this.props.project);
-            projectAfter.archived = true;
-            return db.saveOne({ table: 'project' }, projectAfter).then(() => {
-                var route = this.props.route;
-                return route.push(require('pages/project-list-page'));
-            });
-        });
+    changeFlags: function(flags) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var projectAfter = _.assign({}, this.props.project, flags);
+        return db.saveOne({ table: 'project' }, projectAfter);
     },
 
     /**
@@ -544,16 +551,43 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var message = t('project-summary-confirm-archive');
         return this.components.confirmation.ask(message).then((confirmed) => {
-            if (!confirmed) {
-                return;
+            if (confirmed) {
+                return this.changeFlags({ archived: true }).then((project) => {
+                    return this.returnToList();
+                });
             }
-            var db = this.props.database.use({ schema: 'global', by: this });
-            var projectAfter = _.clone(this.props.project);
-            projectAfter.archived = true;
-            return db.saveOne({ table: 'project' }, projectAfter).then(() => {
-                var route = this.props.route;
-                return route.push(require('pages/project-list-page'));
-            });
+        });
+    },
+
+    /**
+     * Called when user select delete project
+     *
+     * @param  {Event} evt
+     */
+    handleDeleteClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('project-summary-confirm-delete');
+        return this.components.confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ deleted: true }).then((project) => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user select delete project
+     *
+     * @param  {Event} evt
+     */
+    handleRestoreClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('project-summary-confirm-restore');
+        return this.components.confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ archived: false, deleted: false });
+            }
         });
     },
 

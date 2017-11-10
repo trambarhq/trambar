@@ -386,14 +386,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             var user = this.props.user;
-            var active = true;
-            var preselected;
-            if (user) {
-                active = !user.deleted && !user.disabled;
-            }
-            if (!active) {
-                preselected = 'reactivate';
-            }
+            var active = (user) ? !user.deleted && !user.disabled : true;
+            var preselected = (!active) ? 'reactivate' : undefined;
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>

@@ -654,31 +654,31 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
     handleSaveClick: function(evt) {
         var t = this.props.locale.translate;
         var archiving = this.state.archivingProjectIds;
-        var message = t('project-list-confirm-archive-$count', archiving.length);
+        var restoring = this.state.restoringProjectIds;
+        var messages = [
+            t('project-list-confirm-archive-$count', archiving.length),
+            t('project-list-confirm-restore-$count', restoring.length),
+        ];
+        var bypass = [
+            _.isEmpty(archiving) || undefined,
+            _.isEmpty(restoring) || undefined,
+        ];
         var confirmation = this.components.confirmation;
-        return confirmation.ask(message, _.isEmpty(archiving) || undefined).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
-            var restoring = this.state.restoringProjectIds;
-            var message = t('project-list-confirm-restore-$count', restoring.length);
-            return confirmation.ask(message, _.isEmpty(restoring) || undefined).then((confirmed) => {
-                if (!confirmed) {
-                    return;
-                }
+        return confirmation.askSeries(messages, bypass).then((confirmed) => {
+            if (confirmed) {
                 var db = this.props.database.use({ schema: 'global', by: this });
                 return db.start().then((userId) => {
                     var projectsAfter = [];
-                    _.each(archiving, (projectId) => {
-                        var project = _.find(this.props.projects, { id: projectId });
-                        var projectAfter = _.clone(project);
-                        projectAfter.archived = true;
-                        projectsAfter.push(projectAfter);
-                    });
-                    _.each(restoring, (projectId) => {
-                        var project = _.find(this.props.projects, { id: projectId });
-                        var projectAfter = _.clone(project);
-                        projectAfter.archived = projectAfter.deleted = false;
+                    _.each(this.props.projects, (project) => {
+                        var flags = {};
+                        if (_.includes(archiving, project.id)) {
+                            flags.archived = true;
+                        } else if (_.includes(restoring, project.id)) {
+                            flags.archived = flags.deleted = false;
+                        } else {
+                            return;
+                        }
+                        var projectAfter = _.assign({}, project, flags);
                         projectsAfter.push(projectAfter);
                     });
                     return db.save({ table: 'project' }, projectsAfter).then((projects) => {
@@ -688,7 +688,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                         return null;
                     });
                 });
-            })
+            }
         });
     },
 
