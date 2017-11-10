@@ -278,7 +278,6 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             var repoId = this.props.route.parameters.repo;
             var project = this.props.project;
             var active = (project) ? _.includes(project.repo_ids, repoId) : true;
-            console.log(project, repoId);
             var preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">

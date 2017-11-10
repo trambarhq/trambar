@@ -14,6 +14,7 @@ module.exports = _.create(ExternalData, {
         details: Object,
         name: String,
         hidden: Boolean,
+        disabled: Boolean,
         external: Array(Object),
     },
     criteria: {
@@ -21,6 +22,7 @@ module.exports = _.create(ExternalData, {
         deleted: Boolean,
         name: String,
         hidden: Boolean,
+        disabled: Boolean,
 
         server_id: Number,
         external_object: Object,
@@ -46,6 +48,7 @@ module.exports = _.create(ExternalData, {
                 details jsonb NOT NULL DEFAULT '{}',
                 name varchar(128) NOT NULL DEFAULT '',
                 hidden boolean NOT NULL DEFAULT false,
+                disabled boolean NOT NULL DEFAULT false,
                 general boolean NOT NULL DEFAULT true,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
@@ -94,9 +97,13 @@ module.exports = _.create(ExternalData, {
 
                 if (credentials.unrestricted) {
                     object.hidden = row.hidden;
+                    object.disabled = row.disabled;
                 } else {
                     if (row.hidden) {
                         object.hidden = row.hidden;
+                    }
+                    if (row.disabled) {
+                        object.disabled = row.disabled;
                     }
                 }
             });
