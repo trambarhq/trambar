@@ -1,8 +1,10 @@
 module.exports = function(languageCode) {
     return {
+        'action-badge-add': 'add',
         'action-badge-archive': 'archive',
         'action-badge-disable': 'disable',
         'action-badge-reactivate': 'reactivate',
+        'action-badge-remove': 'remove',
         'action-badge-restore': 'restore',
 
         'activity-chart-legend-branch': 'New branches',
@@ -172,6 +174,10 @@ module.exports = function(languageCode) {
         },
 
         'repo-list-cancel': 'Cancel',
+        'repo-list-confirm-remove-$count': (count) => {
+            var repositories = (count === 1) ? `this repository` : `these ${count} repositories`;
+            return `Are you sure you want to remove ${repositories} from the project?`;
+        },
         'repo-list-edit': 'Edit repository list',
         'repo-list-issue-tracker-enabled-false': '',
         'repo-list-issue-tracker-enabled-true': 'Enabled',
@@ -186,12 +192,14 @@ module.exports = function(languageCode) {
             return text;
         },
         'repo-summary-cancel': 'Cancel',
+        'repo-summary-confirm-remove': 'Are you sure you want to remove this repository from the project?',
         'repo-summary-edit': 'Edit repository',
         'repo-summary-gitlab-name': 'GitLab project name',
         'repo-summary-issue-tracker': 'Issue tracker',
         'repo-summary-issue-tracker-import-allowed': 'Allow team members to copy post into issue tracker',
         'repo-summary-issue-tracker-import-disallowed': 'Do not provide issue tracking option',
         'repo-summary-issue-tracker-not-available': 'Not available',
+        'repo-summary-remove': 'Remove repository',
         'repo-summary-save': 'Save repository',
         'repo-summary-statistics': 'Activities',
         'repo-summary-title': 'Name',

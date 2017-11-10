@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -11,11 +12,13 @@ var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
+var ComboButton = require('widgets/combo-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var ActivityChart = require('widgets/activity-chart');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./repo-summary-page.scss');
@@ -138,6 +141,9 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             newRepo: null,
         };
@@ -232,6 +238,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -253,12 +261,20 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                     <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-summary-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
             return (
                 <div key="view" className="buttons">
+                    <ComboButton>
+                        <option>
+                            {t('combo-button-other-actions')}
+                        </option>
+                        <option name="remove" onClick={this.handleRemoveClick}>
+                            {t('repo-summary-remove')}
+                        </option>
+                    </ComboButton>
+                    {' '}
                     <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('repo-summary-edit')}
                     </PushButton>
@@ -370,6 +386,30 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 </ActivityChart>
             </div>
         );
+    },
+
+    /**
+     * Called when user clicks remove button
+     *
+     * @param  {Event} evt
+     */
+    handleRemoveClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('repo-summary-confirm-remove');
+        return this.components.confirmation.ask(message).then((confirmed) => {
+            if (!confirmed) {
+                return;
+            }
+            var db = this.props.database.use({ schema: 'global', by: this });
+            var projectAfter = _.cloneDeep(this.props.project);
+            _.pull(projectAfter.repo_ids, this.props.repo.id);
+            return db.saveOne({ table: 'project' }, projectAfter).then((project) => {
+                var route = this.props.route;
+                return route.push(require('pages/repo-list-page'), {
+                    project: project.id
+                });
+            });
+        });
     },
 
     /**

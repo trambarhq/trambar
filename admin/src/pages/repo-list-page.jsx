@@ -3,6 +3,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -16,6 +17,8 @@ var PushButton = require('widgets/push-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var ActivityTooltip = require('tooltips/activity-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
+var ActionBadge = require('widgets/action-badge');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./repo-list-page.scss');
@@ -140,6 +143,9 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
@@ -175,6 +181,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         return this.props.route.replace(module.exports, params);
     },
 
+    /**
+     * Check if we're switching into edit mode
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
@@ -221,6 +232,8 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 {this.renderButtons()}
                 <h2>{t('repo-list-title')}</h2>
                 {this.renderTable()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -235,12 +248,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
         if (this.isEditing()) {
             return (
                 <div className="buttons">
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
-                    <PushButton className="cancel" onClick={this.handleCancelClick}>
+                    <PushButton onClick={this.handleCancelClick}>
                         {t('repo-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="add" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-list-save')}
                     </PushButton>
                 </div>
@@ -335,26 +347,20 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderRow: function(repo, i) {
-        var props = {
-            key: repo.id,
-        };
+        var props = {};
         if (this.state.renderingFullList) {
             var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
             if (_.includes(originalRepoIds, repo.id)) {
                 props.className = 'fixed';
             }
             if (_.includes(this.state.selectedRepoIds, repo.id)) {
-                if (props.className) {
-                    props.className += ' selected';
-                } else {
-                    props.className = 'selected';
-                }
+                props.className += ' selected';
             }
             props.onClick = this.handleRowClick;
             props['data-repo-id'] = repo.id;
         }
         return (
-            <tr {...props}>
+            <tr key={repo.id} {...props}>
                 {this.renderTitleColumn(repo)}
                 {this.renderServerColumn(repo)}
                 {this.renderIssueTrackerColumn(repo)}
@@ -384,24 +390,17 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             var url;
             var badge;
             if (this.state.renderingFullList) {
-                // compare against original project object to see if the user
+                // compare against original project object to see if the repo
                 // will be added or removed
                 var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
                 var includedBefore = _.includes(originalRepoIds, repo.id);
                 var includedAfter = _.includes(this.state.selectedRepoIds, repo.id);
-                var RepoSVG = require('octicons/build/svg/repo.svg');
-                if (includedBefore && !includedAfter) {
-                    badge = (
-                        <div className="badge remove">
-                            <RepoSVG /><i className="fa fa-times sign" />
-                        </div>
-                    );
-                } else if (!includedBefore && includedAfter) {
-                    badge = (
-                        <div className="badge add">
-                            <RepoSVG /><i className="fa fa-plus sign" />
-                        </div>
-                    );
+                if (includedBefore !== includedAfter) {
+                    if (includedAfter) {
+                        badge = <ActionBadge type="add" locale={this.props.locale} />;
+                    } else {
+                        badge = <ActionBadge type="remove" locale={this.props.locale} />;
+                    }
                 }
             } else {
                 // don't create the link when we're editing the list
@@ -630,15 +629,25 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((userId) => {
-            var project = {
-                id: this.props.project.id,
-                repo_ids: this.state.selectedRepoIds
-            };
-            return db.saveOne({ table: 'project' }, project).then((project) => {
-                this.setState({ hasChanges: false }, () => {
-                    this.setEditability(false);
+        var t = this.props.locale.translate;
+        var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
+        var removing = _.difference(originalRepoIds, this.state.selectedRepoIds);
+        var message = t('repo-list-confirm-remove-$count', removing.length);
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message, _.isEmpty(removing) || undefined).then((confirmed) => {
+            if (!confirmed) {
+                return;
+            }
+            var db = this.props.database.use({ schema: 'global', by: this });
+            return db.start().then((userId) => {
+                var project = {
+                    id: this.props.project.id,
+                    repo_ids: this.state.selectedRepoIds
+                };
+                return db.saveOne({ table: 'project' }, project).then((project) => {
+                    this.setState({ hasChanges: false }, () => {
+                        this.setEditability(false);
+                    });
                 });
             });
         });

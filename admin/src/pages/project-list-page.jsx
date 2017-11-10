@@ -11,7 +11,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
-var StoryTypes = require('data/story-types');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -395,9 +394,10 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(project.details.title);
-            var url;
+            var url, badge;
             if (this.state.renderingFullList) {
-                // will be added or removed
+                // add a badge next to the name if we're archiving or
+                // restoring a project
                 var includedBefore, includedAfter;
                 if (project.deleted || project.archived) {
                     includedBefore = false;
@@ -406,7 +406,6 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                     includedBefore = true;
                     includedAfter = !_.includes(this.state.archivingProjectIds, project.id);
                 }
-                var badge;
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
                         badge = <ActionBadge type="restore" locale={this.props.locale} />;
@@ -415,6 +414,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                     }
                 }
             } else {
+                // link to project summary in non-editing mode
                 var route = this.props.route;
                 var params = { project: project.id };
                 url = route.find(require('pages/project-summary-page'), params);

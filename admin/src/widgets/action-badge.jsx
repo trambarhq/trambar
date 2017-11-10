@@ -10,11 +10,13 @@ function ActionBadge(props) {
     var t = props.locale.translate;
     var className = 'action-badge', icon;
     switch (props.type) {
+        case 'add':
         case 'restore':
         case 'reactivate':
             className += ' add';
             icon = 'plus';
             break;
+        case 'remove':
         case 'archive':
         case 'disable':
             className += ' remove';
