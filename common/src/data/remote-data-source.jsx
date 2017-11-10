@@ -404,6 +404,11 @@ module.exports = React.createClass({
         if (location.schema === 'local') {
             return this.removeLocalObjects(location, objects);
         } else {
+            if (process.env.NODE_ENV !== 'production') {
+                if (_.get(this.props.discoveryFlags, 'include_deleted')) {
+                    console.warn('remove() should not be used when deleted objects are not automatically filtered out');
+                }
+            }
             // set the deleted flag
             objects = _.map(objects, (object) => {
                 // only the id is needed--no point in sending the other properties
