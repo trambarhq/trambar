@@ -241,6 +241,13 @@ module.exports = React.createClass({
      */
     triggerRedirectionRequest: function(url) {
         if (this.props.onRedirectionRequest) {
+            var basePath = this.state.basePath;
+            if (basePath && _.startsWith(url, basePath)) {
+                url = url.substr(basePath.length);
+                if (!_.startsWith(url, '/')) {
+                    url = '/' + url;
+                }
+            }
             return this.props.onRedirectionRequest({
                 type: 'route_request',
                 target: this,
