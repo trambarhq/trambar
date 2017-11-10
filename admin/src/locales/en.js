@@ -259,6 +259,18 @@ module.exports = function(languageCode) {
         'server-list-api-access-false': '',
         'server-list-api-access-true': 'Acquired',
         'server-list-add': 'Add new server',
+        'server-list-cancel': 'Cancel',
+        'server-list-confirm-disable-$count': (count) => {
+            var servers = (count === 1) ? `this server` : `these ${count} servers`;
+            return `Are you sure you want to disable ${servers}?`
+        },
+        'server-list-confirm-reactivate-$count': (count) => {
+            var servers = (count === 1) ? `this server` : `these ${count} servers`;
+            return `Are you sure you want to reactivate ${servers}?`
+        },
+        'server-list-save': 'Save server list',
+        'server-list-status-deleted': 'Deleted',
+        'server-list-status-disabled': 'Disabled',
         'server-list-title': 'Servers',
         'server-list-oauth-false': '',
         'server-list-oauth-true': 'Active',
@@ -269,7 +281,11 @@ module.exports = function(languageCode) {
         'server-summary-api-access-not-applicable': 'Not applicable',
         'server-summary-api-access-pending': 'Waiting for user action',
         'server-summary-cancel': 'Cancel',
+        'server-summary-confirm-delete': 'Are you sure you want to delete this server?',
+        'server-summary-confirm-disable': 'Are you sure you want to disable this server?',
+        'server-summary-confirm-reactivate': 'Are you sure you want to reactivate this server?',
         'server-summary-delete': 'Delete server',
+        'server-summary-disable': 'Disable server',
         'server-summary-edit': 'Edit server',
         'server-summary-member-$name': (name) => {
             return `Server: ${name}`;
@@ -283,6 +299,7 @@ module.exports = function(languageCode) {
         'server-summary-oauth-id': 'OAuth client ID',
         'server-summary-oauth-secret': 'OAuth client secret',
         'server-summary-oauth-url': 'OAuth URL',
+        'server-summary-reactivate': 'Reactivate server',
         'server-summary-save': 'Save server',
         'server-summary-show-api-log': 'Show API log',
         'server-summary-test-oauth': 'Test OAuth integration',

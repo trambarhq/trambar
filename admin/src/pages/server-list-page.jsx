@@ -3,6 +3,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -15,6 +16,9 @@ var ComboButton = require('widgets/combo-button');
 var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
 var UserTooltip = require('tooltips/user-tooltip');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
+var ActionBadge = require('widgets/action-badge');
+var ActionConfirmation = require('widgets/action-confirmation');
+var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./server-list-page.scss');
 
@@ -41,6 +45,7 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/servers/?'
             ], (params) => {
+                params.edit = !!query.edit;
                 return params;
             });
         },
@@ -54,6 +59,9 @@ module.exports = Relaks.createClass({
          */
         getUrl: function(params) {
             var path = `/servers/`, query, hash;
+            if (params.edit) {
+                query = { edit: 1 };
+            }
             return { path, query, hash };
         },
     },
@@ -115,10 +123,68 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
+            restoringServerIds: [],
+            disablingServerIds: [],
+            hasChanges: false,
+            renderingFullList: this.isEditing(),
         };
+    },
+
+    /**
+     * Return true when the URL indicate edit mode
+     *
+     * @param  {Object|null} props
+     *
+     * @return {Boolean}
+     */
+    isEditing: function(props) {
+        props = props || this.props;
+        return props.route.parameters.edit;
+    },
+
+    /**
+     * Change editability of page
+     *
+     * @param  {Boolean} edit
+     *
+     * @return {Promise}
+     */
+    setEditability: function(edit) {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.edit = edit;
+        return this.props.route.replace(module.exports, params);
+    },
+
+    /**
+     * Check if we're switching into edit mode
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.isEditing() !== this.isEditing(nextProps)) {
+            if (this.isEditing(nextProps)) {
+                // initial list of ids to the current list
+                this.setState({
+                    renderingFullList: true,
+                    restoringServerIds: [],
+                    disablingServerIds: [],
+                    hasChanges: false,
+                });
+            } else {
+                setTimeout(() => {
+                    if (!this.isEditing()) {
+                        this.setState({ renderingFullList: false });
+                    }
+                }, 500);
+            }
+        }
     },
 
     /**
@@ -133,6 +199,8 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                 {this.renderButtons()}
                 <h2>{t('server-list-title')}</h2>
                 {this.renderTable()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -144,20 +212,34 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var preselected = 'add';
-        return (
-            <div className="buttons">
-                <ComboButton preselected={preselected}>
-                    <option name="add" onClick={this.handleAddClick}>
-                        {t('server-list-add')}
-                    </option>
-                </ComboButton>
-                {' '}
-                <PushButton name="edit" className="emphasis" onClick={this.handleEditClick}>
-                    {t('server-list-edit')}
-                </PushButton>
-            </div>
-        );
+        if (this.isEditing()) {
+            return (
+                <div className="buttons">
+                    <PushButton onClick={this.handleCancelClick}>
+                        {t('server-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                        {t('server-list-save')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            var preselected = 'add';
+            return (
+                <div className="buttons">
+                    <ComboButton preselected={preselected}>
+                        <option name="add" onClick={this.handleAddClick}>
+                            {t('server-list-add')}
+                        </option>
+                    </ComboButton>
+                    {' '}
+                    <PushButton name="edit" className="emphasis" onClick={this.handleEditClick}>
+                        {t('server-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        }
     },
 
     /**
@@ -166,13 +248,17 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTable: function() {
-        var t = this.props.locale.translate;
         var tableProps = {
-            className: 'servers',
             sortColumns: this.state.sortColumns,
             sortDirections: this.state.sortDirections,
             onSort: this.handleSort,
         };
+        if (this.state.renderingFullList) {
+            tableProps.expandable = true;
+            tableProps.selectable = true;
+            tableProps.expanded = this.isEditing();
+            tableProps.onClick = this.handleRowClick;
+        }
         return (
             <SortableTable {...tableProps}>
                 <thead>
@@ -209,8 +295,11 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      * @return {Array<ReactElement>}
      */
     renderRows: function() {
-        var servers = sortServers(
-            this.props.servers,
+        var servers = this.props.servers;
+        if (!this.state.renderingFullList) {
+            servers = filterServers(servers);
+        }
+        servers = sortServers(servers,
             this.props.users,
             this.props.locale,
             this.state.sortColumns,
@@ -223,13 +312,41 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      * Render a table row
      *
      * @param  {Object} server
-     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderRow: function(server, i) {
+    renderRow: function(server) {
+        var t = this.props.locale.translate;
+        var classes = [];
+        var onClick, title;
+        if (server.deleted) {
+            classes.push('deleted');
+            title = t('server-list-status-deleted');
+        } else if (server.disabled) {
+            classes.push('disabled');
+            title = t('server-list-status-disabled');
+        }
+        if (this.state.renderingFullList) {
+            if (server.deleted || server.disabled) {
+                if (_.includes(this.state.restoringServerIds, server.id)) {
+                    classes.push('selected');
+                }
+            } else {
+                classes.push('fixed');
+                if (!_.includes(this.state.disablingServerIds, server.id)) {
+                    classes.push('selected');
+                }
+            }
+            onClick = this.handleRowClick;
+        }
+        var props = {
+            className: classes.join(' '),
+            'data-server-id': server.id,
+            title,
+            onClick,
+        };
         return (
-            <tr key={i}>
+            <tr key={server.id} {...props}>
                 {this.renderTitleColumn(server)}
                 {this.renderTypeColumn(server)}
                 {this.renderOAuthColumn(server)}
@@ -254,17 +371,35 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
         } else {
             var p = this.props.locale.pick;
             var title = p(server.details.title) || t(`server-type-${server.type}`);
-            var route = this.props.route;
-            var params = { server: server.id };
-            var url = route.find(require('pages/server-summary-page'), params);
-            var icon = getServerIcon(server.type);
+            var url, badge;
+            if (this.state.renderingFullList) {
+                // add a badge next to the name if we're disabling or
+                // restoring a server
+                var includedBefore, includedAfter;
+                if (server.deleted || server.disabled) {
+                    includedBefore = false;
+                    includedAfter = _.includes(this.state.restoringServerIds, server.id);
+                } else {
+                    includedBefore = true;
+                    includedAfter = !_.includes(this.state.disablingServerIds, server.id);
+                }
+                if (includedBefore !== includedAfter) {
+                    if (includedAfter) {
+                        badge = <ActionBadge type="reactivate" locale={this.props.locale} />;
+                    } else {
+                        badge = <ActionBadge type="disable" locale={this.props.locale} />;
+                    }
+                }
+            } else {
+                var route = this.props.route;
+                var params = { server: server.id };
+                url = route.find(require('pages/server-summary-page'), params);
+            }
+            var iconName = getServerIcon(server.type);
+            var icon = <i className={`fa fa-${iconName} fa-fw`} />;
             return (
                 <td>
-                    <a href={url}>
-                        <i className={`fa fa-${icon} fa-fw`} />
-                        {' '}
-                        {title}
-                    </a>
+                    <a href={url}>{icon}{' '}{title}</a> {badge}
                 </td>
             );
         }
@@ -396,6 +531,103 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             server: 'new'
         });
     },
+
+    /**
+     * Called when user clicks edit button
+     *
+     * @param  {Event} evt
+     */
+    handleEditClick: function(evt) {
+        this.setEditability(true);
+    },
+
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelClick: function(evt) {
+        this.setEditability(false);
+    },
+
+    /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+        var t = this.props.locale.translate;
+        var disabling = this.state.disablingServerIds;
+        var restoring = this.state.restoringServerIds;
+        var messages = [
+            t('server-list-confirm-disable-$count', disabling.length),
+            t('server-list-confirm-reactivate-$count', restoring.length),
+        ];
+        var bypass = [
+            _.isEmpty(disabling) || undefined,
+            _.isEmpty(restoring) || undefined,
+        ];
+        var confirmation = this.components.confirmation;
+        return confirmation.askSeries(messages, bypass).then((confirmed) => {
+            if (confirmed) {
+                var db = this.props.database.use({ schema: 'global', by: this });
+                return db.start().then((userId) => {
+                    var serversAfter = [];
+                    _.each(this.props.servers, (server) => {
+                        var flags = {};
+                        if (_.includes(disabling, server.id)) {
+                            flags.disabled = true;
+                        } else if (_.includes(restoring, server.id)) {
+                            flags.disabled = flags.deleted = false;
+                        } else {
+                            return;
+                        }
+                        var serverAfter = _.assign({}, server, flags);
+                        serversAfter.push(serverAfter);
+                    });
+                    return db.save({ table: 'server' }, serversAfter).then((servers) => {
+                        this.setState({ hasChanges: false }, () => {
+                            this.setEditability(false);
+                        });
+                        return null;
+                    });
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks a row in edit mode
+     *
+     * @param  {Event} evt
+     */
+    handleRowClick: function(evt) {
+        var serverId = parseInt(evt.currentTarget.getAttribute('data-server-id'));
+        var server = _.find(this.props.servers, { id: serverId });
+        var restoringServerIds = _.slice(this.state.restoringServerIds);
+        var disablingServerIds = _.slice(this.state.disablingServerIds);
+        if (server.deleted || server.disabled) {
+            if (_.includes(restoringServerIds, server.id)) {
+                _.pull(restoringServerIds, server.id);
+            } else {
+                restoringServerIds.push(server.id);
+            }
+        } else {
+            if (_.includes(disablingServerIds, server.id)) {
+                _.pull(disablingServerIds, server.id);
+            } else {
+                disablingServerIds.push(server.id);
+            }
+        }
+        var hasChanges = !_.isEmpty(restoringServerIds) || !_.isEmpty(disablingServerIds);
+        this.setState({ restoringServerIds, disablingServerIds, hasChanges });
+    },
+});
+
+var filterServers = Memoize(function(servers) {
+    return _.filter(servers, (server) => {
+        return !server.deleted && !server.disabled;
+    });
 });
 
 var sortServers = Memoize(function(servers, users, locale, columns, directions) {

@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -18,6 +19,7 @@ var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var InputError = require('widgets/input-error');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./server-summary-page.scss');
@@ -124,6 +126,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             newServer: null,
             hasChanges: false,
@@ -249,11 +254,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit, newServer) {
-        var route = this.props.route;
         if (this.isCreating() && !edit && !newServer) {
             // return to list when cancelling server creation
-            return route.push(require('pages/server-list-page'));
+            return this.returnToList();
         } else {
+            var route = this.props.route;
             var params = _.clone(route.parameters);
             params.edit = edit;
             if (newServer) {
@@ -262,6 +267,16 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             }
             return route.replace(module.exports, params);
         }
+    },
+
+    /**
+     * Return to repo list
+     *
+     * @return {Promise}
+     */
+    returnToList: function() {
+        var route = this.props.route;
+        return route.push(require('pages/server-list-page'));
     },
 
     /**
@@ -299,6 +314,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <h2>{t('server-summary-member-$name', title)}</h2>
                 {this.renderForm()}
                 {this.renderInstructions()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -320,36 +337,49 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                     <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('server-summary-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
             var server = this.getServer();
+            var active = !server.deleted && !server.disabled;
             var hasIntegration = hasAPIIntegration(server);
             var hasAccessToken = !!_.get(server.settings, 'api.access_token');
             var hasOAuthCredentials = !!(_.get(server.settings, 'oauth.client_id') && _.get(server.settings, 'oauth.client_secret'));
             var preselected;
-            if (hasIntegration && !hasAccessToken) {
-                preselected = 'acquire';
-            } else if (hasOAuthCredentials) {
-                preselected = 'test';
-            } else if (hasIntegration) {
-                preselected = 'log';
+            if (active) {
+                if (hasIntegration && !hasAccessToken) {
+                    preselected = 'acquire';
+                } else if (hasOAuthCredentials) {
+                    preselected = 'test';
+                } else if (hasIntegration) {
+                    preselected = 'log';
+                }
+            } else {
+                preselected = 'reactivate';
             }
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="acquire" disabled={!hasIntegration} onClick={this.handleAcquireClick}>
+                        <option>
+                            {t('combo-button-other-actions')}
+                        </option>
+                        <option name="acquire" disabled={!active || !hasIntegration} onClick={this.handleAcquireClick}>
                             {t('server-summary-acquire')}
                         </option>
-                        <option name="log" disabled={!hasAccessToken} onClick={this.handleLogClick}>
+                        <option name="log" disabled={!active || !hasAccessToken} onClick={this.handleLogClick}>
                             {t('server-summary-show-api-log')}
                         </option>
-                        <option name="test" disabled={!hasOAuthCredentials} onClick={this.handleLogClick}>
+                        <option name="test" disabled={!active || !hasOAuthCredentials} onClick={this.handleTestClick}>
                             {t('server-summary-test-oauth')}
                         </option>
-                        <option name="delete" separator onClick={this.handleDeleteClick}>
+                        <option name="disable" disabled={!active} separator onClick={this.handleDisableClick}>
+                            {t('server-summary-disable')}
+                        </option>
+                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
                             {t('server-summary-delete')}
+                        </option>
+                        <option name="reactivate" hidden={active} onClick={this.handleReactivateClick}>
+                            {t('server-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
@@ -531,6 +561,114 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Save user with new flags
+     *
+     * @param  {Object} flags
+     *
+     * @return {Promise<Role>}
+     */
+    changeFlags: function(flags) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var serverAfter = _.assign({}, this.props.server, flags);
+        return db.saveOne({ table: 'server' }, serverAfter);
+    },
+
+    /**
+     * Called when user clicks disable button
+     *
+     * @param  {Event} evt
+     */
+    handleDisableClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('server-summary-confirm-disable');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ disabled: true }).then(() => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks delete button
+     *
+     * @param  {Event} evt
+     */
+    handleDeleteClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('server-summary-confirm-delete');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ deleted: true }).then(() => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks reactive button
+     *
+     * @param  {Event} evt
+     */
+    handleReactivateClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('server-summary-confirm-reactivate');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ disabled: false, deleted: false });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks log button
+     *
+     * @param  {Event} evt
+     */
+    handleLogClick: function(evt) {
+    },
+
+    /**
+     * Called when user clicks log button
+     *
+     * @param  {Event} evt
+     */
+    handleTestClick: function(evt) {
+    },
+
+    /**
+     * Called when user clicks on "Acquire API access" button
+     *
+     * @param  {Event} evt
+     */
+    handleAcquireClick: function(evt) {
+        var db = this.props.database.use({ by: this });
+        var server = this.getServer();
+        var url = db.getActivationUrl(server);
+
+        var width = 800;
+        var height = 600;
+        var options = {
+            width,
+            height,
+            left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
+            top: window.screenTop + Math.round((window.outerHeight - height) / 2),
+            toolbar: 'no',
+            menubar: 'no',
+            status: 'no',
+        };
+        var pairs = _.map(options, (value, name) => {
+            return `${name}=${value}`;
+        });
+        window.open(url, 'api-access-oauth', pairs.join(','));
+    },
+
+    /**
      * Called when server clicks edit button
      *
      * @param  {Event} evt
@@ -671,33 +809,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setServerProperty(`settings.user.automatic_approval`, newValue);
                 break;
         }
-    },
-
-    /**
-     * Called when user clicks on "Acquire API access" button
-     *
-     * @param  {Event} evt
-     */
-    handleAcquireClick: function(evt) {
-        var db = this.props.database.use({ by: this });
-        var server = this.getServer();
-        var url = db.getActivationUrl(server);
-
-        var width = 800;
-        var height = 600;
-        var options = {
-            width,
-            height,
-            left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
-            top: window.screenTop + Math.round((window.outerHeight - height) / 2),
-            toolbar: 'no',
-            menubar: 'no',
-            status: 'no',
-        };
-        var pairs = _.map(options, (value, name) => {
-            return `${name}=${value}`;
-        });
-        window.open(url, 'api-access-oauth', pairs.join(','));
     },
 });
 

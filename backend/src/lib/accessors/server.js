@@ -14,6 +14,7 @@ module.exports = _.create(Data, {
         details: Object,
         type: String,
         name: String,
+        disabled: Boolean,
         settings: Object,
     },
     criteria: {
@@ -21,6 +22,7 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         type: String,
         name: String,
+        disabled: Boolean,
     },
 
     /**
@@ -43,6 +45,7 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 name varchar(128) NOT NULL DEFAULT '',
                 type varchar(64),
+                disabled boolean NOT NULL DEFAULT false,
                 settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
@@ -108,6 +111,11 @@ module.exports = _.create(Data, {
                 object.name = row.name;
                 if (credentials.unrestricted) {
                     object.settings = _.obscure(row.settings, sensitiveSettings);
+                    object.disabled = row.disabled;
+                } else {
+                    if (row.disabled) {
+                        object.disabled = row.disabled;
+                    }
                 }
             });
             return objects;
