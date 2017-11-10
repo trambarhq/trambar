@@ -212,10 +212,10 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var props = {
-            className: 'option',
-            onClick: this.handleCropClick,
-        };
+        var props = { className: 'option' };
+        if (!this.props.readOnly) {
+            props.onClick = this.handleCropClick;
+        }
         var image = this.getImage();
         if (!image) {
             props.className += ' disabled';
@@ -239,8 +239,12 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
+        var props = { className: 'option' };
+        if (!this.props.readOnly) {
+            props.onClick = this.handleChooseClick;
+        }
         return (
-            <div className="option" onClick={this.handleChooseClick}>
+            <div {...props}>
                 <i className="fa fa-th" />
                 {' '}
                 {t('image-selector-choose-from-album')}
@@ -258,6 +262,7 @@ module.exports = React.createClass({
             type: 'file',
             value: '',
             accept: 'image/*',
+            disabled: this.props.readOnly,
             onChange: this.handleUploadChange,
         };
         var t = this.props.locale.translate;
