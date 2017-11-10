@@ -206,6 +206,17 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return to repo list
+     *
+     * @return {Promise}
+     */
+    returnToList: function() {
+        var route = this.props.route;
+        var params = { project: route.parameters.project };
+        return route.push(require('pages/repo-list-page'), params);
+    },
+
+    /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
@@ -264,14 +275,22 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var repoId = this.props.route.parameters.repo;
+            var project = this.props.project;
+            var active = (project) ? _.includes(project.repo_ids, repoId) : true;
+            console.log(project, repoId);
+            var preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">
-                    <ComboButton>
+                    <ComboButton preselected={preselected}>
                         <option>
                             {t('combo-button-other-actions')}
                         </option>
-                        <option name="remove" onClick={this.handleRemoveClick}>
+                        <option name="remove" disabled={!active} onClick={this.handleRemoveClick}>
                             {t('repo-summary-remove')}
+                        </option>
+                        <option name="restore" hidden={active} onClick={this.handleRestoreClick}>
+                            {t('repo-summary-restore')}
                         </option>
                     </ComboButton>
                     {' '}
@@ -389,6 +408,26 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Save project with repo added or removed
+     *
+     * @param  {Boolean} include
+     *
+     * @return {Promise<Project>}
+     */
+    changeInclusion: function(include) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var repo = this.props.repo;
+        var repoIds = this.props.project.repo_ids;
+        if (include) {
+            repoIds = _.union(repoIds, [ repo.id ]);
+        } else {
+            repoIds = _.difference(repoIds, [ repo.id ]);
+        }
+        var projectAfter = _.assign({}, this.props.project, { repo_ids: repoIds });
+        return db.saveOne({ table: 'project' }, projectAfter);
+    },
+
+    /**
      * Called when user clicks remove button
      *
      * @param  {Event} evt
@@ -397,18 +436,26 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var message = t('repo-summary-confirm-remove');
         return this.components.confirmation.ask(message).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
-            var db = this.props.database.use({ schema: 'global', by: this });
-            var projectAfter = _.cloneDeep(this.props.project);
-            _.pull(projectAfter.repo_ids, this.props.repo.id);
-            return db.saveOne({ table: 'project' }, projectAfter).then((project) => {
-                var route = this.props.route;
-                return route.push(require('pages/repo-list-page'), {
-                    project: project.id
+            if (confirmed) {
+                return this.changeInclusion(false).then((project) => {
+                    return this.returnToList();
                 });
-            });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks restore button
+     *
+     * @param  {Event} evt
+     */
+    handleRestoreClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('repo-summary-confirm-restore');
+        return this.components.confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeInclusion(true);
+            }
         });
     },
 
