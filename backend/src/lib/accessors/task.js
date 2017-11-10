@@ -23,6 +23,7 @@ module.exports = _.create(Data, {
     },
     criteria: {
         id: Number,
+        deleted: Boolean,
         action: String,
         token: String,
         completion: Number,

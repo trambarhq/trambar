@@ -271,7 +271,7 @@ function handleStorage(req, res) {
             if (!_.isArray(objects) || _.isEmpty(objects)) {
                 throw new HttpError(400);
             }
-            if (!_.every(objects, _.isObject)) {
+            if (!_.every(objects, _.isObjectLike)) {
                 throw new HttpError(400);
             }
 
@@ -297,6 +297,10 @@ function handleStorage(req, res) {
                     return db.begin().then(() => {
                         return accessor.save(db, schema, rows);
                     }).then((rows) => {
+                        if (!_.every(rows, _.isObjectLike)) {
+                            // an update failed
+                            throw new HttpError(404);
+                        }
                         return accessor.associate(db, schema, objects, originals, rows, credentials).return(rows);
                     }).then((rows) => {
                         return db.commit().then(() => {

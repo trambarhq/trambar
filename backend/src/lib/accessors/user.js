@@ -9,6 +9,7 @@ module.exports = _.create(ExternalData, {
     columns: {
         id: Number,
         gn: Number,
+        deleted: Boolean,
         ctime: String,
         mtime: String,
         details: Object,
@@ -24,6 +25,7 @@ module.exports = _.create(ExternalData, {
     },
     criteria: {
         id: Number,
+        deleted: Boolean,
         type: String,
         username: String,
         role_ids: Array(Number),
@@ -147,10 +149,10 @@ module.exports = _.create(ExternalData, {
                 object.type = row.type;
                 object.username = row.username;
                 object.role_ids = row.role_ids;
-
                 if (credentials.unrestricted) {
                     object.approved = row.approved;
                     object.hidden = row.hidden;
+                    object.disabled = row.disabled;
                     object.requested_project_ids = row.requested_project_ids;
                     object.settings = row.settings;
                 } else {
@@ -165,6 +167,9 @@ module.exports = _.create(ExternalData, {
                     }
                     if (row.hidden) {
                         object.hidden = row.hidden;
+                    }
+                    if (row.disabled) {
+                        object.disabled = row.disabled;
                     }
                 }
             });

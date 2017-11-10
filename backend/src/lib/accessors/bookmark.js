@@ -19,6 +19,7 @@ module.exports = _.create(Data, {
     },
     criteria: {
         id: Number,
+        deleted: Boolean,
         story_id: Number,
         user_ids: Array(Number),
         target_user_id: Number,
