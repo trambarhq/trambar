@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -17,6 +18,7 @@ var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var InputError = require('widgets/input-error');
+var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
 
 require('./role-summary-page.scss');
@@ -123,6 +125,9 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            confirmation: ActionConfirmation
+        });
         return {
             newRole: null,
             hasChanges: false,
@@ -172,7 +177,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Look for problems in project object
+     * Look for problems in role object
      *
      * @return {Object}
      */
@@ -218,10 +223,10 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Promise}
      */
     setEditability: function(edit, newRole) {
-        var route = this.props.route;
         if (this.isCreating() && !edit && !newRole) {
-            return route.push(require('pages/role-list-page'));
+            return this.returnToList();
         } else {
+            var route = this.props.route;
             var params = _.clone(route.parameters);
             params.edit = edit;
             if (newRole) {
@@ -230,6 +235,16 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             }
             return route.replace(module.exports, params);
         }
+    },
+
+    /**
+     * Return to repo list
+     *
+     * @return {Promise}
+     */
+    returnToList: function() {
+        var route = this.props.route;
+        return route.push(require('pages/role-list-page'));
     },
 
     /**
@@ -264,6 +279,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 <h2>{t('role-summary-$title', title)}</h2>
                 {this.renderForm()}
                 {this.renderInstructions()}
+                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
+                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
         );
     },
@@ -285,12 +302,29 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                     <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
                         {t('role-summary-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
                 </div>
             );
         } else {
+            var role = this.props.role;
+            var active = (role) ? !role.deleted && !role.disabled : true;
+            var preselected = (!active) ? 'reactivate' : undefined;
             return (
                 <div className="buttons">
+                    <ComboButton preselected={preselected}>
+                        <option>
+                            {t('combo-button-other-actions')}
+                        </option>
+                        <option name="archive" disabled={!active} onClick={this.handleDisableClick}>
+                            {t('role-summary-disable')}
+                        </option>
+                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
+                            {t('role-summary-delete')}
+                        </option>
+                        <option name="reactivate" hidden={active} onClick={this.handleReactivateClick}>
+                            {t('role-summary-reactivate')}
+                        </option>
+                    </ComboButton>
+                    {' '}
                     <PushButton className="emphasis" onClick={this.handleEditClick}>
                         {t('role-summary-edit')}
                     </PushButton>
@@ -363,6 +397,71 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 <InstructionBlock {...instructionProps} />
             </div>
         );
+    },
+
+    /**
+     * Save user with new flags
+     *
+     * @param  {Object} flags
+     *
+     * @return {Promise<Role>}
+     */
+    changeFlags: function(flags) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var roleAfter = _.assign({}, this.props.role, flags);
+        return db.saveOne({ table: 'role' }, roleAfter);
+    },
+
+    /**
+     * Called when user clicks disable button
+     *
+     * @param  {Event} evt
+     */
+    handleDisableClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('role-summary-confirm-disable');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ disabled: true }).then(() => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks delete button
+     *
+     * @param  {Event} evt
+     */
+    handleDeleteClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('role-summary-confirm-delete');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ deleted: true }).then(() => {
+                    return this.returnToList();
+                });
+            }
+        });
+    },
+
+    /**
+     * Called when user clicks disable button
+     *
+     * @param  {Event} evt
+     */
+    handleReactivateClick: function(evt) {
+        var t = this.props.locale.translate;
+        var message = t('role-summary-confirm-reactivate');
+        var confirmation = this.components.confirmation;
+        return confirmation.ask(message).then((confirmed) => {
+            if (confirmed) {
+                return this.changeFlags({ disabled: false, deleted: false });
+            }
+        });
     },
 
     /**

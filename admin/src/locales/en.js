@@ -214,7 +214,19 @@ module.exports = function(languageCode) {
         },
 
         'role-list-add': 'Add new role',
+        'role-list-cancel': 'Cancel',
+        'role-list-confirm-disable-$count': (count) => {
+            var roles = (count === 1) ? `this role` : `these ${count} roles`;
+            return `Are you sure you want to disable ${roles}?`
+        },
+        'role-list-confirm-reactivate-$count': (count) => {
+            var roles = (count === 1) ? `this role` : `these ${count} roles`;
+            return `Are you sure you want to reactivate ${roles}?`
+        },
         'role-list-edit': 'Edit role list',
+        'role-list-save': 'Save role list',
+        'role-list-status-deleted': 'Deleted',
+        'role-list-status-disabled': 'Disabled',
         'role-list-title': 'Roles',
 
         'role-summary-$title': (title) => {
@@ -225,9 +237,15 @@ module.exports = function(languageCode) {
             return text;
         },
         'role-summary-cancel': 'Cancel',
+        'role-summary-confirm-delete': 'Are you sure you want to delete this role?',
+        'role-summary-confirm-disable': 'Are you sure you want to disable this role?',
+        'role-summary-confirm-reactivate': 'Are you sure you want to reactivate this role?',
+        'role-summary-delete': 'Delete role',
         'role-summary-description': 'Description',
+        'role-summary-disable': 'Disable role',
         'role-summary-edit': 'Edit role',
         'role-summary-name': 'Identifier',
+        'role-summary-reactivate': 'Reactivate role',
         'role-summary-save': 'Save role',
         'role-summary-title': 'Name',
 
