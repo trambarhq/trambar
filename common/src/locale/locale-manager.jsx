@@ -39,9 +39,13 @@ module.exports = React.createClass({
         var entry = this.state.phraseTable[phrase];
         if (entry != null) {
             if (typeof(entry) === 'function') {
-                var args = _.slice(arguments, 1);
-                var results = entry.apply(this, args);
-                return results;
+                try {
+                    var args = _.slice(arguments, 1);
+                    var results = entry.apply(this, args);
+                    return results;
+                } catch (err) {
+                    return `[${phrase}: ${err.message}]`;
+                }
             } else {
                 return entry;
             }
