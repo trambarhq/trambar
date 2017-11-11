@@ -554,7 +554,7 @@ function findMatchingUser(db, server, account) {
             }
             var criteria = { email, deleted: false };
             return User.findOne(db, 'global', criteria, 'id, type, external');
-        }).then((user) => {
+        }, null).then((user) => {
             if (user) {
                 user.external.push({
                     type: server.type,
