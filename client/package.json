@@ -6,8 +6,8 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "watch": "webpack --watch",
-    "build": "webpack",
+    "watch": "webpack --watch && exit 0",
+    "build": "webpack && exit 0",
     "start": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -10,17 +10,25 @@ var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var event = process.env.npm_lifecycle_event;
+var configArgv = JSON.parse(process.env.npm_config_argv);
+var platform = configArgv.remain[0] || 'browser';
+
+if (platform !== 'mobile' && platform !== 'browser') {
+    console.log(`Invalid platform: ${platform}`);
+    console.log(``);
+    console.log(`Usage: npm run build [mobile|browser]`);
+    process.exit();
+}
 
 var folders = _.mapValues({
     src: 'src',
-    www: 'www',
+    www: (platform === 'mobile') ? 'www-mobile' : 'www',
     assets: 'assets',
     includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
 
 var env = {
-    PLATFORM: 'browser',
-    DEPLOYMENT: 'development',
+    PLATFORM: platform,
     NODE_ENV: (event === 'build') ? 'production' : 'development',
 };
 var constants = {};
@@ -127,7 +135,7 @@ module.exports = {
             rewrites: [
                 {
                     from: /.*/,
-                    to: '/index.html' 
+                    to: '/index.html'
                 }
             ]
         }

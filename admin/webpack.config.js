@@ -20,7 +20,6 @@ var folders = _.mapValues({
 
 var env = {
     PLATFORM: 'browser',
-    DEPLOYMENT: 'development',
     NODE_ENV: (event === 'build') ? 'production' : 'development',
 };
 var constants = {};
