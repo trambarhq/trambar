@@ -44,6 +44,7 @@ module.exports = React.createClass({
                     var results = entry.apply(this, args);
                     return results;
                 } catch (err) {
+                    console.error(err);
                     return `[${phrase}: ${err.message}]`;
                 }
             } else {
