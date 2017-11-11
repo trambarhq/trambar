@@ -264,7 +264,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="section description">
                 <h2>{title}</h2>
-                <p>{description}</p>
+                <Scrollable>
+                    <p>{description}</p>
+                </Scrollable>
             </div>
         );
     },
