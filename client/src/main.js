@@ -4,7 +4,12 @@ var ReactDOM = require('react-dom');
 var Application = require('application');
 
 if (process.env.PLATFORM === 'cordova') {
-    document.addEventListener('deviceready', initialize);
+    if (window.cordova) {
+        document.addEventListener('deviceready', initialize);
+    } else {
+        // for testing in browser
+        window.addEventListener('load', initialize);
+    }
 } else if (process.env.PLATFORM === 'browser') {
     window.addEventListener('load', initialize);
 }

@@ -35,10 +35,12 @@ module.exports = React.createClass({
      * @return {String}
      */
     getBasePath: function() {
-        var base = document.getElementsByTagName('BASE')[0];
-        if (base) {
-            var url = base.getAttribute('href');
-            return _.replace(url, /\/+$/, '');
+        if (process.env.PLATFORM === 'browser') {
+            var base = document.getElementsByTagName('BASE')[0];
+            if (base) {
+                var url = base.getAttribute('href');
+                return _.replace(url, /\/+$/, '');
+            }
         }
         return '';
     },
@@ -194,15 +196,17 @@ module.exports = React.createClass({
         var route = this.parse(url);
         if (route) {
             this.setState(route, () => {
-                // set the browser location
-                var protocol = window.location.protocol;
-                var host = window.location.host;
-                var fullUrl = `${protocol}//${host}${route.url}`;
-                if (window.location.href !== fullUrl) {
-                    if (replacing) {
-                        history.replaceState({}, '', fullUrl);
-                    } else {
-                        history.pushState({}, '', fullUrl);
+                if (process.env.PLATFORM === 'browser') {
+                    // set the browser location
+                    var protocol = window.location.protocol;
+                    var host = window.location.host;
+                    var fullUrl = `${protocol}//${host}${route.url}`;
+                    if (window.location.href !== fullUrl) {
+                        if (replacing) {
+                            history.replaceState({}, '', fullUrl);
+                        } else {
+                            history.pushState({}, '', fullUrl);
+                        }
                     }
                 }
                 this.triggerChangeEvent();
@@ -271,12 +275,10 @@ module.exports = React.createClass({
      * Set the initial route if database is available
      */
     componentDidMount: function() {
-        if (this.props.database) {
-            this.goTo(window.location, true).catch((err) => {
-                console.error(err);
-            });
+        this.componentDidUpdate({}, {});
+        if (process.env.PLATFORM === 'browser') {
+            window.addEventListener('popstate', this.handlePopState);
         }
-        window.addEventListener('popstate', this.handlePopState);
     },
 
     /**
@@ -287,9 +289,15 @@ module.exports = React.createClass({
      */
     componentDidUpdate: function(prevProps, prevState) {
         if (!prevProps.database && this.props.database) {
-            this.goTo(window.location, true).catch((err) => {
-                console.error(err);
-            });
+            if (process.env.PLATFORM === 'browser') {
+                this.goTo(window.location, true).catch((err) => {
+                    console.error(err);
+                });
+            } else if (process.env.PLATFORM === 'cordova') {
+                this.change('/', true).catch((err) => {
+                    console.error(err);
+                });
+            }
         }
     },
 
@@ -297,7 +305,9 @@ module.exports = React.createClass({
      * Remove handlers on unmount
      */
     componentWillUnmount: function() {
-        window.removeEventListener('popstate', this.handlePopState);
+        if (process.env.PLATFORM === 'browser') {
+            window.removeEventListener('popstate', this.handlePopState);
+        }
     },
 
     /**
@@ -306,6 +316,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePopState: function(evt) {
+        if (process.env.PLATFORM !== 'browser') {
+            return;
+        }
         var url = getLocationUrl(window.location);
         var route = this.parse(url);
         if (route) {
