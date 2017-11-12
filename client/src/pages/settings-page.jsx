@@ -38,11 +38,15 @@ module.exports = React.createClass({
             return { path, query, hash };
         },
 
-        navigation: {
-            top: {},
-            bottom: {
-                section: 'settings',
-            }
+        getOptions: function(route) {
+            return {
+                navigation: {
+                    top: {},
+                    bottom: {
+                        section: 'settings',
+                    }
+                },
+            };
         },
     },
 

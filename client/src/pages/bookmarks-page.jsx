@@ -37,15 +37,19 @@ module.exports = Relaks.createClass({
             return { path, query, hash };
         },
 
-        navigation: {
-            top: {
-                dateSelection: false,
-                roleSelection: false,
-                textSearch: false,
-            },
-            bottom: {
-                section: 'bookmarks'
-            }
+        getOptions: function(route) {
+            return {
+                navigation: {
+                    top: {
+                        dateSelection: false,
+                        roleSelection: false,
+                        textSearch: false,
+                    },
+                    bottom: {
+                        section: 'bookmarks'
+                    }
+                },
+            };
         },
     },
 

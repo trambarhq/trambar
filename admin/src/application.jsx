@@ -33,6 +33,7 @@ var UserListPage = require('pages/user-list-page');
 var UserSummaryPage = require('pages/user-summary-page');
 
 var SignInPage = require('pages/sign-in-page');
+var ErrorPage  = require('pages/error-page');
 
 // widgets
 var SideNavigation = require('widgets/side-navigation');
@@ -63,6 +64,7 @@ var pageClasses = [
     SettingsPage,
     UserListPage,
     UserSummaryPage,
+    ErrorPage,
 ];
 
 require('setimmediate');
@@ -170,7 +172,9 @@ module.exports = React.createClass({
             theme: this.state.theme,
         };
         if (!this.state.canAccessServer) {
-            CurrentPage = SignInPage;
+            if (CurrentPage !== ErrorPage) {
+                CurrentPage = SignInPage;
+            }
         }
         return <CurrentPage {...pageProps} />;
     },
@@ -554,7 +558,8 @@ module.exports = React.createClass({
         }).catch((err) => {
             var code = err.statusCode || 500;
             console.error(err);
-            return routeManager.find(ErrorPage, { code });
+            var url = routeManager.find(ErrorPage, { code });
+            return url;
         });
     },
 

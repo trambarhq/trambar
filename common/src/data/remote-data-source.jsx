@@ -1151,7 +1151,7 @@ function getSession(address) {
 function getExpiredSessions() {
     var now = Moment().toISOString();
     return _.pickBy(sessions, (session) => {
-        if (!session.authorization) {
+        if (session && !session.authorization) {
             if (session.authentication && session.authentication.expire < now) {
                 return true;
             }

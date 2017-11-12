@@ -122,6 +122,9 @@ module.exports = React.createClass({
         if (this.state.route.component === StartPage) {
             return true;
         }
+        if (this.state.route.component === ErrorPage) {
+            return false;
+        }
         if (!this.state.canAccessServer || !this.state.canAccessSchema) {
             return true;
         }
@@ -151,24 +154,34 @@ module.exports = React.createClass({
         if (!this.isReady()) {
             return null;
         }
-        var navProps = {
+        var options = this.state.route.component.getOptions(this.state.route);
+        var topNavProps = {
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
+            hidden: !_.get(options, 'navigation.top'),
+        };
+        var bottomNavProps = {
+            database: this.state.database,
+            route: this.state.route,
+            locale: this.state.locale,
+            theme: this.state.theme,
+            hidden: !_.get(options, 'navigation.bottom'),
         };
         if (this.isShowingStartPage()) {
-            navProps.hidden = true;
+            // keep the navs hidden when the start page is shown
+            topNavProps.hidden = bottomNavProps.hidden = true;
         }
         return (
             <div className="application">
-                <TopNavigation {...navProps} />
+                <TopNavigation {...topNavProps} />
                 <section className="page-view-port">
                     <div className="contents">
                         {this.renderCurrentPage()}
                     </div>
                 </section>
-                <BottomNavigation {...navProps} />
+                <BottomNavigation {...bottomNavProps} />
                 {this.renderStartPage()}
             </div>
         );
@@ -829,18 +842,22 @@ module.exports = React.createClass({
      * Fade out and then remove splash screen
      */
     hideSplashScreen: function() {
-        var screen = document.getElementById('splash-screen');
-        var style = document.getElementById('splash-screen-style');
-        if (screen) {
-            screen.className = 'transition-out';
-            setTimeout(() => {
-                if (screen.parentNode) {
-                    screen.parentNode.removeChild(screen);
-                }
-                if (style && style.parentNode) {
-                    style.parentNode.removeChild(style);
-                }
-            }, 1000);
+        if (process.env.PLATFORM === 'browser') {
+            var screen = document.getElementById('splash-screen');
+            var style = document.getElementById('splash-screen-style');
+            if (screen) {
+                screen.className = 'transition-out';
+                setTimeout(() => {
+                    if (screen.parentNode) {
+                        screen.parentNode.removeChild(screen);
+                    }
+                    if (style && style.parentNode) {
+                        style.parentNode.removeChild(style);
+                    }
+                }, 1000);
+            }
+        } else if (process.env.PLATFORM === 'cordova') {
+
         }
     }
 });

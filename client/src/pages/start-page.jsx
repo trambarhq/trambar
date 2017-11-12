@@ -44,6 +44,11 @@ module.exports = Relaks.createClass({
             var path = `/start/`, query, hash;
             return { path, query, hash };
         },
+
+        getOptions: function(route) {
+            return {
+            }
+        },
     },
 
     renderAsync: function(meanwhile) {

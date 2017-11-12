@@ -15,7 +15,7 @@ var folders = _.mapValues({
     src: 'src',
     www: 'www',
     assets: 'assets',
-    includes: [ 'src', '../common/src', 'node_modules' ]
+    includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
 
 var env = {
