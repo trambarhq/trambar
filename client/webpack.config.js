@@ -13,19 +13,21 @@ var event = process.env.npm_lifecycle_event;
 var configArgv = JSON.parse(process.env.npm_config_argv);
 var platform = configArgv.remain[0] || 'browser';
 
-if (platform !== 'mobile' && platform !== 'browser') {
+if (platform !== 'cordova' && platform !== 'browser') {
     console.log(`Invalid platform: ${platform}`);
     console.log(``);
-    console.log(`Usage: npm run build [mobile|browser]`);
+    console.log(`Usage: npm run build [cordova|browser]`);
     process.exit();
 }
 
 var folders = _.mapValues({
     src: 'src',
-    www: (platform === 'mobile') ? 'www-mobile' : 'www',
+    www: (platform === 'cordova') ? 'www-cordova' : 'www',
     assets: 'assets',
     includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
+console.log(`Platform: ${platform}`);
+console.log(`Output folder: ${folders.www}`);
 
 var env = {
     PLATFORM: platform,
@@ -115,7 +117,7 @@ module.exports = {
     plugins: [
         new DefinePlugin(constants),
         new HtmlWebpackPlugin({
-            template: `${folders.assets}/index.html`,
+            template: `${folders.assets}/${platform}.html`,
             filename: `${folders.www}/index.html`,
         }),
         new CommonsChunkPlugin({
