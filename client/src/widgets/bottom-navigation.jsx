@@ -96,7 +96,8 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var route = this.props.route;
         var params = _.pick(route.parameters, 'schema');
-        var section = _.get(route.component, 'navigation.bottom.section');
+        var options = route.component.getOptions(route);
+        var section = _.get(options, 'navigation.bottom.section');
         var newsButtonProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',

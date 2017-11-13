@@ -110,7 +110,8 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButtonBar: function() {
-        var params = _.get(this.props.route.component, 'navigation.top', {});
+        var options = this.props.route.component.getOptions();
+        var params = _.get(options, 'navigation.top', {});
         var selected = (this.state.expanded) ? this.state.selectedControl : '';
         var calendarProps = {
             icon: 'calendar',
