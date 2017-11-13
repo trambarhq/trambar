@@ -417,27 +417,33 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var membershipOptionProps = [
             {
                 name: 'manual',
-                selected: !_.some(_.omit(sc.membership, 'allow_request')),
-                previous: (projectOriginal.id) ? !_.some(_.omit(sp.membership, 'allow_request')) : undefined,
+                selected: !_.some(sc.membership),
+                previous: (projectOriginal.id) ? !_.some(sp.membership) : undefined,
                 children: t('project-summary-new-members-manual'),
             },
             {
-                name: 'accept_team_member_automatically',
-                selected: sc.membership.accept_team_member_automatically,
-                previous: sp.membership.accept_team_member_automatically,
-                children: t('project-summary-new-members-team-member-auto-join'),
+                name: 'allow_user_request',
+                selected: sc.membership.allow_user_request,
+                previous: sp.membership.allow_user_request,
+                children: t('project-summary-new-members-join-user'),
             },
             {
-                name: 'accept_approved_users_automaticlly',
-                selected: sc.membership.accept_approved_users_automaticlly,
-                previous: sp.membership.accept_approved_users_automaticlly,
-                children: t('project-summary-new-members-approved-user-auto-join'),
+                name: 'approve_user_request',
+                selected: sc.membership.approve_user_request,
+                previous: sp.membership.approve_user_request,
+                children: t('project-summary-new-members-auto-accept-user'),
             },
             {
-                name: 'allow_request',
-                selected: sc.membership.allow_request,
-                previous: sp.membership.allow_request,
-                children: t('project-summary-new-members-allow-request'),
+                name: 'allow_guest_request',
+                selected: sc.membership.allow_guest_request,
+                previous: sp.membership.allow_guest_request,
+                children: t('project-summary-new-members-join-guest'),
+            },
+            {
+                name: 'approve_guest_request',
+                selected: sc.membership.approve_guest_request,
+                previous: sp.membership.approve_guest_request,
+                children: t('project-summary-new-members-auto-accept-guest'),
             },
         ];
         var accessControlOptionProps = [
@@ -448,22 +454,16 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t('project-summary-access-control-member-only')
             },
             {
-                name: 'grant_team_members_read_only',
-                selected: sc.access_control.grant_team_members_read_only,
-                previous: sp.access_control.grant_team_members_read_only,
-                children: t('project-summary-access-control-team-member-read-only')
+                name: 'grant_read_access',
+                selected: sc.access_control.grant_read_access,
+                previous: sp.access_control.grant_read_access,
+                children: t('project-summary-access-control-non-member-view')
             },
             {
-                name: 'grant_approved_users_read_only',
-                selected: sc.access_control.grant_approved_users_read_only,
-                previous: sp.access_control.grant_approved_users_read_only,
-                children: t('project-summary-access-control-approved-user-read-only')
-            },
-            {
-                name: 'grant_unapproved_users_read_only',
-                selected: sc.access_control.grant_unapproved_users_read_only,
-                previous: sp.access_control.grant_unapproved_users_read_only,
-                children: t('project-summary-access-control-pending-user-read-only')
+                name: 'grant_comment_access',
+                selected: sc.access_control.grant_comment_access,
+                previous: sp.access_control.grant_comment_access,
+                children: t('project-summary-access-control-non-member-comment')
             },
         ];
         return (
@@ -700,31 +700,54 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var s = _.cloneDeep(findSettings(project));
         switch (evt.name) {
             case 'manual':
-                s.membership.accept_team_member_automatically = false;
-                s.membership.accept_approved_users_automaticlly = false;
+                s.membership = {};
                 break;
-            case 'accept_team_member_automatically':
-                s.membership.accept_team_member_automatically = !s.membership.accept_team_member_automatically;
+            case 'allow_user_request':
+                if (s.membership.allow_user_request) {
+                    delete s.membership.allow_user_request;
+                    delete s.membership.approve_user_request;
+                } else {
+                    s.membership.allow_user_request = true;
+                }
                 break;
-            case 'accept_approved_users_automaticlly':
-                s.membership.accept_approved_users_automaticlly = !s.membership.accept_approved_users_automaticlly;
+            case 'approve_user_request':
+                if (s.membership.approve_user_request) {
+                    delete s.membership.approve_user_request;
+                } else {
+                    s.membership.approve_user_request = true;
+                }
                 break;
-            case 'allow_request':
-                s.membership.allow_request = !s.membership.allow_request;
+            case 'allow_guest_request':
+                if (s.membership.allow_guest_request) {
+                    delete s.membership.allow_guest_request;
+                    delete s.membership.approve_guest_request;
+                } else {
+                    s.membership.allow_guest_request = true;
+                }
+                break;
+            case 'approve_guest_request':
+                if (s.membership.approve_guest_request) {
+                    delete s.membership.approve_guest_request;
+                } else {
+                    s.membership.approve_guest_request = true;
+                }
                 break;
             case 'members_only':
-                s.access_control.grant_team_members_read_only = false;
-                s.access_control.grant_approved_users_read_only = false;
-                s.access_control.grant_unapproved_users_read_only = false;
+                s.access_control = {};
                 break;
-            case 'grant_team_members_read_only':
-                s.access_control.grant_team_members_read_only = !s.access_control.grant_team_members_read_only;
+            case 'grant_read_access':
+                if (s.access_control.grant_read_access) {
+                    delete s.access_control.grant_read_access;
+                } else {
+                    s.access_control.grant_read_access = true;
+                }
                 break;
-            case 'grant_approved_users_read_only':
-                s.access_control.grant_approved_users_read_only = !s.access_control.grant_approved_users_read_only;
-                break;
-            case 'grant_unapproved_users_read_only':
-                s.access_control.grant_unapproved_users_read_only = !s.access_control.grant_unapproved_users_read_only;
+            case 'grant_comment_access':
+                if (s.access_control.grant_comment_access) {
+                    delete s.access_control.grant_comment_access;
+                } else {
+                    s.access_control.grant_comment_access = true;
+                }
                 break;
         }
         this.setProjectProperty(`settings`, s);

@@ -81,9 +81,10 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     canAddIssue: function() {
+        // TODO: should check whether user has a Gitlab account
         if (this.props.currentUser) {
             var userType = this.props.currentUser.type;
-            if (userType === 'member' || userType === 'admin') {
+            if (userType !== 'guest') {
                 return true;
             }
         }

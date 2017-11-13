@@ -454,8 +454,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             },
             {
                 name: 'create-member',
-                selected: _.get(server, 'settings.user.type') === 'member',
-                previous: _.get(serverOriginal, 'settings.user.type') === 'member',
+                selected: _.get(server, 'settings.user.type') === 'regular',
+                previous: _.get(serverOriginal, 'settings.user.type') === 'regular',
                 children: t('server-summary-new-user-member'),
             },
             {
@@ -801,7 +801,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setServerProperty(`settings.user.type`, 'guest');
                 break;
             case 'create-member':
-                this.setServerProperty(`settings.user.type`, 'member');
+                this.setServerProperty(`settings.user.type`, 'regular');
                 break;
             case 'auto-approve':
                 var server = this.getServer();

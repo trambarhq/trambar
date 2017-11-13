@@ -137,10 +137,11 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     canAddIssue: function() {
+        // TODO: should check whether user has a Gitlab account        
         var story = this.props.story;
         var user = this.props.currentUser;
         if (_.includes(StoryTypes.trackable, story.type)) {
-            if (user.type === 'member' || user.type === 'admin') {
+            if (user.type !== 'guest') {
                 return true;
             }
         }

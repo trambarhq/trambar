@@ -231,22 +231,9 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
-            var userPending = _.some(this.props.users, { approved: false });
-            var preselected;
-            if (userPending) {
-                preselected = 'approve';
-            } else {
-                preselected = 'add';
-            }
             return (
                 <div className="buttons">
-                    <ComboButton preselected={preselected}>
-                        <option name="approve" disabled={!userPending} onClick={this.handleApproveClick}>
-                            {t('user-list-approve-all')}
-                        </option>
-                        <option name="reject" disabled={!userPending} onClick={this.handleRejectClick}>
-                            {t('user-list-reject-all')}
-                        </option>
+                    <ComboButton>
                         <option name="add" separator onClick={this.handleAddClick}>
                             {t('user-list-add')}
                         </option>
@@ -343,9 +330,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else if (user.disabled) {
             classes.push('disabled');
             title = t('user-list-status-disabled');
-        } else if (!user.approved) {
-            classes.push('pending');
-            title = t('user-list-status-pending');
         }
         if (this.state.renderingFullList) {
             if (user.deleted || user.disabled) {
@@ -354,14 +338,8 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 }
             } else {
                 classes.push('fixed');
-                if (user.approved) {
-                    if (!_.includes(this.state.disablingUserIds, user.id)) {
-                        classes.push('selected');
-                    }
-                } else {
-                    if (_.includes(this.state.restoringUserIds, user.id)) {
-                        classes.push('selected');
-                    }
+                if (!_.includes(this.state.disablingUserIds, user.id)) {
+                    classes.push('selected');
                 }
             }
             onClick = this.handleRowClick;
@@ -404,7 +382,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 // add a badge next to the name if we're approving, restoring or
                 // disabling a user
                 var includedBefore, includedAfter;
-                if (user.deleted || user.disabled || !user.approved) {
+                if (user.deleted || user.disabled) {
                     includedBefore = false;
                     includedAfter = _.includes(this.state.restoringUserIds, user.id);
                 } else {
@@ -413,8 +391,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 }
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
-                        var action = !user.approved ? 'approve' : 'reactivate';
-                        badge = <ActionBadge type={action} locale={this.props.locale} />;
+                        badge = <ActionBadge type="reactivate" locale={this.props.locale} />;
                     } else {
                         badge = <ActionBadge type="disable" locale={this.props.locale} />;
                     }
@@ -582,46 +559,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks approve all button
-     *
-     * @param  {Event} evt
-     */
-    handleApproveClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((userId) => {
-            var usersAfter = [];
-            _.each(this.props.users, (user) => {
-                if (!user.approved) {
-                    var userAfter = _.clone(user);
-                    userAfter.approved = true;
-                    usersAfter.push(userAfter);
-                }
-            });
-            return db.save({ table: 'user' }, usersAfter);
-        });
-    },
-
-    /**
-     * Called when user clicks reject all button
-     *
-     * @param  {Event} evt
-     */
-    handleRejectClick: function(evt) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((userId) => {
-            var usersAfter = [];
-            _.each(this.props.users, (user) => {
-                if (!user.approved) {
-                    var userAfter = _.clone(user);
-                    userAfter.disabled = true;
-                    usersAfter.push(userAfter);
-                }
-            });
-            return db.save({ table: 'user' }, usersAfter);
-        });
-    },
-
-    /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
@@ -647,16 +584,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     handleSaveClick: function(evt) {
         var t = this.props.locale.translate;
         var disabling = this.state.disablingUserIds;
-        var approving = [];
-        var restoring = _.filter(this.state.restoringUserIds, (userId) => {
-            var user = _.find(this.props.users, { id: userId });
-            if (user.approved) {
-                return true;
-            } else {
-                approving.push(userId);
-                return false;
-            }
-        });
+        var restoring = this.state.restoringUserIds;
         var messages = [
             t('user-list-confirm-disable-$count', disabling.length),
             t('user-list-confirm-reactivate-$count', restoring.length),
@@ -675,9 +603,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                         var flags = {};
                         if (_.includes(disabling, user.id)) {
                             flags.disabled = true;
-                        } else if(_.includes(approving, user.id)) {
-                            flags.approved = true;
-                            flags.disabled = flags.deleted = false;
                         } else if (_.includes(restoring, user.id)) {
                             flags.disabled = flags.deleted = false;
                         } else {
@@ -707,7 +632,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         var user = _.find(this.props.users, { id: userId });
         var restoringUserIds = _.slice(this.state.restoringUserIds);
         var disablingUserIds = _.slice(this.state.disablingUserIds);
-        if (user.deleted || user.disabled || !user.approved) {
+        if (user.deleted || user.disabled) {
             if (_.includes(restoringUserIds, user.id)) {
                 _.pull(restoringUserIds, user.id);
             } else {
@@ -734,7 +659,7 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
                     return p(user.details.name);
                 };
             case 'type':
-                var types = [ 'guest', 'member', 'admin' ];
+                var types = [ 'guest', 'regular', 'moderator', 'admin' ];
                 return (user) => {
                     return _.indexOf(types, user.type);
                 };

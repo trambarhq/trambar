@@ -48,12 +48,7 @@ module.exports = React.createClass({
                     <div className="text">
                         <h1 className="title">{error.statusCode} {error.message}</h1>
                         <p>
-                            Trambar is a client-side JavaScript application. The
-                            server error you see above doesn't actually exist. But
-                            then again, who does?
-
-                            <br/><br/>
-                            You're definitely doing some wrong though...
+                            The page you're trying to reach doesn't exist. But then again, who does?
                         </p>
                     </div>
                 </div>

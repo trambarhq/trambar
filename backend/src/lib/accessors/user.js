@@ -17,7 +17,6 @@ module.exports = _.create(ExternalData, {
         username: String,
         role_ids: Array(Number),
         requested_project_ids: Array(Number),
-        approved: Boolean,
         disabled: Boolean,
         hidden: Boolean,
         settings: Object,
@@ -30,7 +29,6 @@ module.exports = _.create(ExternalData, {
         username: String,
         role_ids: Array(Number),
         requested_project_ids: Array(Number),
-        approved: Boolean,
         disabled: Boolean,
         hidden: Boolean,
 
@@ -60,7 +58,6 @@ module.exports = _.create(ExternalData, {
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 requested_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
-                approved boolean NOT NULL DEFAULT true,
                 disabled boolean NOT NULL DEFAULT false,
                 settings jsonb NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
@@ -101,7 +98,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'approved', 'external' ];
+            var propNames = [ 'external' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
                     var Task = require('accessors/task');
@@ -150,7 +147,6 @@ module.exports = _.create(ExternalData, {
                 object.username = row.username;
                 object.role_ids = row.role_ids;
                 if (credentials.unrestricted) {
-                    object.approved = row.approved;
                     object.hidden = row.hidden;
                     object.disabled = row.disabled;
                     object.requested_project_ids = row.requested_project_ids;
@@ -162,9 +158,6 @@ module.exports = _.create(ExternalData, {
                         object.requested_project_ids = row.requested_project_ids;
                     }
                     // don't export these unless they're not their usual values
-                    if (!row.approved) {
-                        object.approved = row.approved;
-                    }
                     if (row.hidden) {
                         object.hidden = row.hidden;
                     }
@@ -307,10 +300,10 @@ module.exports = _.create(ExternalData, {
             } else {
                 var projectIds = userAfter.requested_project_ids;
                 _.each(projectIds, (projectId) => {
-                    if (userAfter.type === 'member' || userAfter.type === 'admin') {
-                        actions.push({ type: 'add-if-members-allowed', projectId, userId });
-                    } else if (userAfter.approved) {
-                        actions.push({ type: 'add-if-approved-users-allowed', projectId, userId });
+                    if (userAfter.type === 'guest') {
+                        actions.push({ type: 'add-if-guest-accepted', projectId, userId });
+                    } else {
+                        actions.push({ type: 'add-if-user-accepted', projectId, userId });
                     }
                 });
             }
@@ -337,11 +330,11 @@ module.exports = _.create(ExternalData, {
                         case 'add-always':
                             adding = true;
                             break;
-                        case 'add-if-members-allowed':
-                            adding = !!membership.accept_team_member_automatically;
+                        case 'add-if-user-accepted':
+                            adding = !!membership.approve_user_request;
                             break;
-                        case 'add-if-approved-users-allowed':
-                            adding = !!membership.accept_approved_users_automaticlly;
+                        case 'add-if-guest-accepted':
+                            adding = !!membership.approve_guest_request;
                             break;
                     }
                     if (adding) {

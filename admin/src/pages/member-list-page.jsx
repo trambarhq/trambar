@@ -97,8 +97,8 @@ module.exports = Relaks.createClass({
         }).then((project) => {
             props.project = project;
         }).then(() => {
-            // load all approved users that weren't deleted
-            var criteria = { approved: true, deleted: false };
+            // load all users that weren't deleted
+            var criteria = { deleted: false };
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
@@ -235,7 +235,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
-            var membersPending = false;
+            var userIds = _.get(this.props.project, 'user_ids');
+            var membersPending = _.some(this.props.users, (user) => {
+                return !_.inludes(userIds, user.id);
+            });
             var preselected = (membersPending) ? 'approve' : undefined;
             return (
                 <div key="view" className="buttons">
@@ -315,10 +318,10 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
     renderRows: function() {
         var users;
         if (this.state.renderingFullList) {
-            // list all approved users when we're editing the list
+            // list all users when we're editing the list
             users = this.props.users;
         } else {
-            // list only those we're in the project--or are trying to join
+            // list only those who're in the project--or are trying to join
             users = findUsers(this.props.users, this.props.project);
         }
         var users = sortUsers(
