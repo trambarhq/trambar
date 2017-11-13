@@ -186,7 +186,7 @@ function handleHttpasswdRequest(req, res) {
                     username,
                     deleted: false,
                 };
-                var userColumns = 'id, type, approved, requested_project_ids';
+                var userColumns = 'id, type, requested_project_ids';
                 return User.findOne(db, 'global', criteria, userColumns).then((user) => {
                     if (!user) {
                         // create the admin user if it's not there
@@ -245,7 +245,7 @@ function handleSessionRetrieval(req, res) {
             }
             // see which projects the user has access to
             var userId = authorization.user_id;
-            var userColumns = 'id, type, approved, requested_project_ids';
+            var userColumns = 'id, type, requested_project_ids';
             return User.findOne(db, 'global', { id: userId }, userColumns).then((user) => {
                 return {
                     authorization: {
@@ -581,7 +581,6 @@ function findMatchingUser(db, server, account) {
 function createNewUser(db, server, account) {
     var profile = account.profile;
     var preferredUsername = proposeUsername(profile);
-    var autoApprove = _.get(server.settings, 'user.automatic_approval', false);
     var userType = _.get(server.settings, 'user.type');
     if (!userType) {
         throw new HttpError(403);
@@ -591,7 +590,6 @@ function createNewUser(db, server, account) {
             username: preferredUsername,
             type: userType,
             details: extractUserDetails(server.type, profile._json),
-            approved: autoApprove,
             external: [
                 {
                     type: server.type,
