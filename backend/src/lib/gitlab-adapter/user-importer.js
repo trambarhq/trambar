@@ -88,32 +88,43 @@ function importUsers(db, server, glUsers) {
         })
     };
     return User.find(db, 'global', criteria, '*').then((users) => {
-        return Promise.map(glUsers, (glUser) => {
+        var existingUsers = [];
+        var unimported = _.filter(glUsers, (glUser) => {
             var user = _.find(users, (user) => {
                 var userLink = Import.Link.find(user, server);
                 if (userLink.user.id === glUser.id) {
                     return true;
                 }
             });
-            if (user) {
-                // already imported
-                return user;
+            if (!user) {
+                return true;
+            } else {
+                existingUsers.push(user);
+                return false;
             }
-            // retrieve the full profile
-            return fetchUser(server, glUser.id).then((glUser) => {
-                // import profile image
-                return importProfileImage(glUser).then((image) => {
-                    // find user by email
-                    var criteria = { email: glUser.email, deleted: false };
-                    return User.findOne(db, 'global', criteria, '*').then((user) => {
-                        var link = Import.Link.create(server, {
-                            user: { id: glUser.id }
-                        });
-                        var userAfter = copyUserProperties(user, image, glUser, link);
-                        return User.saveOne(db, 'global', userAfter);
+        });
+        if (_.isEmpty(unimported)) {
+            return existingUsers;
+        }
+        // need to fetch the full-list, as result from /users/:id doesn't have
+        // is_admin for some reason
+        return fetchUsers(server).filter((glUser) => {
+            return _.some(unimported, { id: glUser.id });
+        }).mapSeries((glUser) => {
+            // import profile image
+            return importProfileImage(glUser).then((image) => {
+                // find user by email
+                var criteria = { email: glUser.email, deleted: false };
+                return User.findOne(db, 'global', criteria, '*').then((user) => {
+                    var link = Import.Link.create(server, {
+                        user: { id: glUser.id }
                     });
+                    var userAfter = copyUserProperties(user, image, server, glUser, link);
+                    return User.saveOne(db, 'global', userAfter);
                 });
             });
+        }).then((importedUsers) => {
+            return _.concat(existingUsers, importedUsers);
         });
     });
 }
@@ -149,7 +160,7 @@ function updateUser(db, server, user) {
     var link = Import.Link.find(user, server);
     return fetchUser(server, link.user.id).then((glUser) => {
         return importProfileImage(glUser).then((image) => {
-            var userAfter = copyUserProperties(user, glUser, image, link);
+            var userAfter = copyUserProperties(user, image, server, glUser, link);
             if (userAfter) {
                 return User.updateOne(db, 'global', user);
             } else {
@@ -165,14 +176,15 @@ function updateUser(db, server, user) {
  * @param  {User|null} user
  * @param  {Object} glUser
  * @param  {Object} profileImage
+ * @param  {Server} server
  * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyUserProperties(user, profileImage, glUser, link) {
+function copyUserProperties(user, profileImage, server, glUser, link) {
     var userAfter = _.cloneDeep(user) || {};
     var imported = Import.reacquire(userAfter, link, 'user');
-    Import.set(userAfter, imported, 'type', (glUser.is_admin) ? 'admin' : 'member');
+    Import.set(userAfter, imported, 'type', getUserType(server, glUser));
     Import.set(userAfter, imported, 'username', glUser.username);
     Import.set(userAfter, imported, 'details.name', glUser.name);
     Import.set(userAfter, imported, 'details.gitlab_url', glUser.web_url);
@@ -185,6 +197,16 @@ function copyUserProperties(user, profileImage, glUser, link) {
         return null;
     }
     return userAfter;
+}
+
+function getUserType(server, glUser) {
+    if (glUser.is_admin) {
+        return 'admin';
+    } else if (glUser.external) {
+        return 'external';
+    } else {
+        return 'regular';
+    }
 }
 
 /**
@@ -257,13 +279,12 @@ function fetchRepoMembers(server, glRepoId) {
  * Retrieve user record from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glUserId
  *
  * @return {Promise<Object>}
  */
-function fetchUser(server, glUserId) {
-    var url = `/users/${glUserId}`;
-    return Transport.fetch(server, url);
+function fetchUsers(server) {
+    var url = `/users`;
+    return Transport.fetchAll(server, url);
 }
 
 /**
