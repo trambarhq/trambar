@@ -485,7 +485,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 name: 'regular',
                 selected: user.type === 'regular',
                 previous: userOriginal.type === 'regular',
-                children: t('user-summary-type-member'),
+                children: t('user-summary-type-regular'),
             },
             {
                 name: 'moderator',
