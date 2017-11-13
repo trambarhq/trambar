@@ -155,49 +155,47 @@ module.exports = _.create(ExternalData, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return ExternalData.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
-            _.each(objects, (reactionReceived, index) => {
-                var reactionBefore = originals[index];
-                if (reactionBefore) {
-                    if (reactionBefore.user_id !== credentials.user.id) {
-                        // can't modify an object that doesn't belong to the user
-                        throw new HttpError(403);
-                    }
-                    if (reactionReceived.hasOwnProperty('user_id')) {
-                        if (reactionReceived.user_id !== reactionBefore.user_id) {
-                            // cannot make someone else the author
-                            throw new HttpError(403);
-                        }
-                    }
-                } else {
-                    if (reactionReceived.id) {
-                        throw new HttpError(400);
-                    }
-                    if (!reactionReceived.hasOwnProperty('user_id')) {
-                        throw new HttpError(403);
-                    }
-                    if (reactionReceived.user_id !== credentials.user.id) {
-                        // the author must be the current user
+        return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((reactionReceived, index) => {
+            var reactionBefore = originals[index];
+            if (reactionBefore) {
+                if (reactionBefore.user_id !== credentials.user.id) {
+                    // can't modify an object that doesn't belong to the user
+                    throw new HttpError(403);
+                }
+                if (reactionReceived.hasOwnProperty('user_id')) {
+                    if (reactionReceived.user_id !== reactionBefore.user_id) {
+                        // cannot make someone else the author
                         throw new HttpError(403);
                     }
                 }
-
-                // set language_codes
-                if (reactionReceived.details) {
-                    reactionReceived.language_codes = _.filter(_.keys(reactionReceived.details.text), { length: 2 });
+            } else {
+                if (reactionReceived.id) {
+                    throw new HttpError(400);
                 }
-
-                // set the ptime if published is set
-                if (reactionReceived.published && !reactionReceived.ptime) {
-                    reactionReceived.ptime = new String('NOW()');
+                if (!reactionReceived.hasOwnProperty('user_id')) {
+                    throw new HttpError(403);
                 }
-
-                // mark reaction as having been manually deleted
-                if (reactionReceived.deleted) {
-                    reactionReceived.suppressed = true;
+                if (reactionReceived.user_id !== credentials.user.id) {
+                    // the author must be the current user
+                    throw new HttpError(403);
                 }
-            });
-            return objects;
+            }
+
+            // set language_codes
+            if (reactionReceived.details) {
+                reactionReceived.language_codes = _.filter(_.keys(reactionReceived.details.text), { length: 2 });
+            }
+
+            // set the ptime if published is set
+            if (reactionReceived.published && !reactionReceived.ptime) {
+                reactionReceived.ptime = new String('NOW()');
+            }
+
+            // mark reaction as having been manually deleted
+            if (reactionReceived.deleted) {
+                reactionReceived.suppressed = true;
+            }
+            return reactionReceived;
         });
     },
 

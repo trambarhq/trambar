@@ -137,18 +137,18 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
-            var original = originals[index];
-            if (original) {
+        return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((taskReceived, index) => {
+            var taskBefore = originals[index];
+            if (taskBefore) {
                 // task cannot be modified
-                throw new HttpError(403);
+                throw new HttpError(400);
             }
-            if (object.user_id !== credentials.user.id) {
+            if (taskReceived.user_id !== credentials.user.id) {
                 throw new HttpError(403);
             }
             return Crypto.randomBytesAsync(24).then((buffer) => {
-                object.token = buffer.toString('hex');
-                return object;
+                taskReceived.token = buffer.toString('hex');
+                return taskReceived;
             });
         });
     },

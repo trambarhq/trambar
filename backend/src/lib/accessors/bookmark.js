@@ -107,20 +107,20 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).map((object, index) => {
-            var original = originals[index];
-            if (original) {
+        return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((bookmarkReceived, index) => {
+            var bookmarkBefore = originals[index];
+            if (bookmarkBefore) {
                 // the only operation permitted is the removal of the bookmark
-                if (object.deleted) {
-                    object = { id: original.id };
-                    if (original.target_user_id === credentials.user.id) {
-                        object.deleted = true;
-                    } else if (_.includes(original.user_ids, credentials.user.id)) {
-                        if (original.user_ids.length === 1) {
-                            object.deleted = true;
+                if (bookmarkReceived.deleted) {
+                    bookmarkReceived = { id: bookmarkBefore.id };
+                    if (bookmarkBefore.target_user_id === credentials.user.id) {
+                        bookmarkReceived.deleted = true;
+                    } else if (_.includes(bookmarkBefore.user_ids, credentials.user.id)) {
+                        if (bookmarkBefore.user_ids.length === 1) {
+                            bookmarkReceived.deleted = true;
                         } else {
                             // someone else is recommending this story still
-                            object.user_ids =_.difference(original.user_ids, [ credentials.user.id ]);
+                            bookmarkReceived.user_ids =_.difference(bookmarkBefore.user_ids, [ credentials.user.id ]);
                         }
                     } else {
                         throw new HttpError(403);
@@ -128,28 +128,28 @@ module.exports = _.create(Data, {
                 } else {
                     throw new HttpError(400);
                 }
-                return object;
+                return bookmarkReceived;
             } else {
                 // must be the current user
-                if (!_.isEqual(object.user_ids, [ credentials.user.id ])) {
+                if (!_.isEqual(bookmarkReceived.user_ids, [ credentials.user.id ])) {
                     throw new HttpError(403);
                 }
-                if (!object.story_id || !object.target_user_id) {
+                if (!bookmarkReceived.story_id || !bookmarkReceived.target_user_id) {
                     throw new HttpError(400);
                 }
 
                 // see if there's a existing bookmark already
                 var criteria = {
-                    story_id: object.story_id,
-                    target_user_id: object.target_user_id,
+                    story_id: bookmarkReceived.story_id,
+                    target_user_id: bookmarkReceived.target_user_id,
                 };
                 return this.findOne(db, schema, criteria, 'id, user_ids').then((row) => {
                     if (row) {
                         // add the user to the list
-                        row.user_ids = _.union(row.user_ids, object.user_ids);
-                        object = row;
+                        row.user_ids = _.union(row.user_ids, bookmarkReceived.user_ids);
+                        bookmarkReceived = row;
                     }
-                    return object;
+                    return bookmarkReceived;
                 });
             }
         });

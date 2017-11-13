@@ -135,21 +135,19 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                if (object.settings instanceof Object) {
-                    var original = originals[index];
-                    _.each(sensitiveSettings, (path) => {
-                        // restore the original values if these fields are all x's
-                        var value = _.get(object.settings, path);
-                        if (/^x+$/.test(value)) {
-                            var originalValue = _.get(original.settings, path);
-                            _.set(object.settings, path, originalValue);
-                        }
-                    });
-                }
-            })
-            return objects;
+        return Data.import.call(this, db, schema, objects, originals, credentials, options).mapSeries((serverReceived, index) => {
+            var serverBefore = originals[index];
+            if (serverReceived.settings instanceof Object) {
+                _.each(sensitiveSettings, (path) => {
+                    // restore the original values if these fields are all x's
+                    var value = _.get(serverReceived.settings, path);
+                    if (/^x+$/.test(value)) {
+                        var originalValue = _.get(serverBefore.settings, path);
+                        _.set(serverReceived.settings, path, originalValue);
+                    }
+                });
+            }
+            return serverReceived;
         });
     },
 });

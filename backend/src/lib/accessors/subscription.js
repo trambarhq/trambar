@@ -103,32 +103,31 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).then((objects) => {
-            return Promise.each(objects, (object) => {
-                if (object.hasOwnProperty('area')) {
-                    if (object.area !== credentials.area) {
+        return Data.import.call(this, db, schema, objects, originals, credentials, options).mapSeries((subscriptionReceived, index) => {
+            if (subscriptionReceived.hasOwnProperty('area')) {
+                if (subscriptionReceived.area !== credentials.area) {
+                    throw new HttpError(400);
+                }
+            }
+            if (subscriptionReceived.schema === '*') {
+                if (credentials.area !== 'admin') {
+                    throw new HttpError(400);
+                }
+            } else if (subscriptionReceived.schema !== 'global') {
+                // don't allow user to subscribe to a project that he has
+                // no access to
+                var Project = require('accessors/project');
+                var criteria = {
+                    name: subscriptionReceived.schema,
+                    deleted: false,
+                };
+                return Project.findOne(db, schema, criteria, '*').then((project) => {
+                    if (!Project.checkAccess(project, credentials.user, 'read')) {
                         throw new HttpError(400);
                     }
-                }
-                if (object.schema === '*') {
-                    if (credentials.area !== 'admin') {
-                        throw new HttpError(400);
-                    }
-                } else if (object.schema !== 'global') {
-                    // don't allow user to subscribe to a project that he has
-                    // no access to
-                    var Project = require('accessors/project');
-                    var criteria = {
-                        name: object.schema,
-                        deleted: false,
-                    };
-                    return Project.findOne(db, schema, criteria, '*').then((project) => {
-                        if (!Project.checkAccess(project, credentials.user, 'read')) {
-                            throw new HttpError(400);
-                        }
-                    });
-                }
-            }).return(objects);
+                });
+            }
+            return subscriptionReceived;
         });
     },
 });

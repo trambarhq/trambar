@@ -183,21 +183,66 @@ module.exports = _.create(ExternalData, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return ExternalData.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
-            _.each(objects, (userReceived, index) => {
-                var userBefore = originals[index];
-                this.checkWritePermission(userReceived, userBefore, credentials);
-
-                if (credentials.unrestricted) {
-                    if (userReceived.approved) {
-                        // clear the list of requested projects
-                        userReceived = _.clone(userReceived);
-                        userReceived.requested_project_ids = null;
+        return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((userReceived, index) => {
+            var userBefore = originals[index];
+            this.checkWritePermission(userReceived, userBefore, credentials);
+            if (_.isEmpty(userReceived.requested_project_ids)) {
+                // remove ids of projects that'd accept the user automatically
+                // as well as those that can't be joined
+                var Project = require('accessors/project');
+                var projectIds = userReceived.requested_project_ids;
+                var criteria = { id: projectIds, deleted: false };
+                return Project.find(db, schema, criteria, 'id, settings').then((projects) => {
+                    projectIds = _.filter(projectIds, (projectId) => {
+                        var project = _.find(projects, { id: projectId });
+                        if (this.canJoin(userReceived, project)) {
+                            if (this.canJoinAutomatically(userReceived, project)) {
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        } else {
+                            return false;
+                        }
+                    });
+                    if (_.isEmpty(projectIds)) {
+                        projectIds = null;
                     }
-                }
-            });
-            return objects;
+                    userReceived.requested_project_ids = projectIds;
+                    return userReceived;
+                });
+            }
+            return userReceived;
         });
+    },
+
+    canJoin: function(user, project) {
+        if (!project) {
+            return false;
+        }
+        if (user.approved) {
+            return true;
+        }
+        if (user.type === 'guest') {
+            return !!_.get(project, 'settings.membership.allow_guest_request');
+        } else {
+            return !!_.get(project, 'settings.membership.allow_user_request');
+        }
+    },
+
+    canJoinAutomatically: function(user, project) {
+        if (_.includes(project.user_ids, user.id)) {
+            // user is already a member
+            return true;
+        }
+        if (user.approved) {
+            return true;
+        }
+        if (user.type === 'guest') {
+            return !!_.get(project, 'settings.membership.approve_guest_request');
+        } else {
+            return !!_.get(project, 'settings.membership.approve_user_request');
+        }
     },
 
     /**
@@ -264,8 +309,7 @@ module.exports = _.create(ExternalData, {
      },
 
     /**
-     * Add newly approved users as well as those meeting auto-acceptance
-     * criteria to projects they've requested
+     * Add users to projects
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -275,78 +319,35 @@ module.exports = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-     updateMemberList: function(db, schema, usersReceived, usersBefore, usersAfter) {
-        var actions = [];
+    updateMemberList: function(db, schema, usersReceived, usersBefore, usersAfter) {
+        var newMembers = {};
         _.each(usersReceived, (userReceived, index) => {
-            var userBefore = usersBefore[index];
+            // the project ids removed earlier by import() are the ones that
+            // can be joined automatically
             var userAfter = usersAfter[index];
-            var userId = userAfter.id;
-            // user.approved can only be set by an admin
-            // an error would occur earlier if the current user isn't an admin
-            if (userReceived.approved) {
-                // use list from the object received from client side, in case
-                // the approver changed the list
-                var projectIds = userReceived.requested_project_ids
-                if (!projectIds) {
-                    // get the list of ids from the original row
-                    // (since import() has cleared requested_project_ids)
-                    if (userBefore) {
-                        projectIds = userBefore.requested_project_ids;
-                    }
+            var projectIds = _.difference(userReceived.requested_project_ids, userAfter.requested_project_ids);
+            _.each(projectIds, (projectId) => {
+                var members = newMembers[projectId];
+                if (!members) {
+                    members = newMembers[projectId] = [];
                 }
-                _.each(projectIds, (projectId) => {
-                    actions.push({ type: 'add-always', projectId, userId });
-                });
-            } else {
-                var projectIds = userAfter.requested_project_ids;
-                _.each(projectIds, (projectId) => {
-                    if (userAfter.type === 'guest') {
-                        actions.push({ type: 'add-if-guest-accepted', projectId, userId });
-                    } else {
-                        actions.push({ type: 'add-if-user-accepted', projectId, userId });
-                    }
-                });
-            }
+                members.push(userAfter);
+            });
         });
-        if (_.isEmpty(actions)) {
+        if (_.isEmpty(newMembers)) {
             return Promise.resolve();
         }
-        // update user_ids column in project table
         var Project = require('accessors/project');
-        var criteria = {
-            id: _.uniq(_.map(actions, 'projectId'))
-        };
-        return Project.find(db, schema, criteria, 'id, user_ids, settings').then((projects) => {
-            // see which project need be updated
-            var updatedProjects = _.filter(projects, (project) => {
-                // get the actions for this project
-                var projectActions = _.filter(actions, { projectId: project.id });
-                var projectChanged = false;
-                _.each(projectActions, (action) => {
-                    // check the project's settings to see if user should be added
-                    var adding = false;
-                    var membership = project.settings.membership || {};
-                    switch (action.type) {
-                        case 'add-always':
-                            adding = true;
-                            break;
-                        case 'add-if-user-accepted':
-                            adding = !!membership.approve_user_request;
-                            break;
-                        case 'add-if-guest-accepted':
-                            adding = !!membership.approve_guest_request;
-                            break;
-                    }
-                    if (adding) {
-                        project.user_ids = _.union(project.user_ids, [ action.userId ]);
-                        projectChanged = true;
-                    }
-                });
-                return projectChanged;
+        var projectIds = _.map(_.keys(newMembers), parseInt);
+        var criteria = { id: projectIds, deleted: false };
+        // update user_ids column in project table
+        return Project.find(db, schema, criteria, 'id, user_ids, settings').each((project) => {
+            var newProjectMembers = _.filter(newMembers[project.id], (user) => {
+                return this.canJoin(user, project) && this.canJoinAutomatically(user, project);
             });
-            if (!_.isEmpty(updatedProjects)) {
-                return Project.update(db, schema, updatedProjects).return();
-            }
+            var newUserIds = _.map(newProjectMembers, 'id');
+            project.user_ids = _.union(project.user_ids, newUserIds);
+            return Project.update(db, schema, project);
         });
     },
 
@@ -360,31 +361,28 @@ module.exports = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-     updateStoryRoles: function(db, schema, usersBefore, usersAfter) {
-         var usersWithRoleChanges = _.filter(usersBefore, (userBefore, index) => {
+    updateStoryRoles: function(db, schema, usersBefore, usersAfter) {
+        var usersWithRoleChanges = _.filter(usersBefore, (userBefore, index) => {
             if (userBefore) {
                 var userAfter = usersAfter[index];
                 if (!_.isEmpty(_.xor(userBefore.role_ids, userAfter.role_ids))) {
                     return true;
                 }
             }
-         });
-         if (_.isEmpty(usersWithRoleChanges)) {
-             return Promise.resolve();
-         }
+        });
+        if (_.isEmpty(usersWithRoleChanges)) {
+            return Promise.resolve();
+        }
 
-         // find projects the users belongs to
-         var Project = require('accessors/project');
-         var userIds = _.map(usersWithRoleChanges, 'id');
-         var criteria = {
-             user_ids: userIds,
-             deleted: false,
-         };
-         return Project.find(db, schema, criteria, 'name').each((project) => {
-             var Story = require('accessors/story');
+        // find projects the users belongs to
+        var Project = require('accessors/project');
+        var userIds = _.map(usersWithRoleChanges, 'id');
+        var criteria = { user_ids: userIds, deleted: false };
+        return Project.find(db, schema, criteria, 'name').each((project) => {
+            var Story = require('accessors/story');
             return Story.updateUserRoles(db, project.name, userIds);
-         });
-     },
+        });
+    },
 
     /**
      * Return false if the user has no access to system

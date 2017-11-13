@@ -654,14 +654,10 @@ module.exports = {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Promise.map(objects, (object) => {
+        return Promise.mapSeries(objects, (objectReceived) => {
             // these properties cannot be modified from the client side
-            if (object.hasOwnProperty('gn') || object.hasOwnProperty('ctime') || object.hasOwnProperty('mtime')) {
-                return _.omit(object, 'gn', 'ctime', 'mtime');
-            }
-            return object;
+            return _.omit(object, 'gn', 'ctime', 'mtime');
         });
-        return Promise.resolve(objects);
     },
 
     /**

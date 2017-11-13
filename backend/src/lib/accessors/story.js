@@ -213,86 +213,66 @@ module.exports = _.create(ExternalData, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return ExternalData.import.call(this, db, schema, objects, originals, credentials).then((objects) => {
-            _.each(objects, (storyReceived, index) => {
-                // make sure current user has permission to modify the object
-                var storyBefore = originals[index];
-                this.checkWritePermission(storyReceived, storyBefore, credentials);
+        var storiesPublished = [];
+        return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((storyReceived, index) => {
+            // make sure current user has permission to modify the object
+            var storyBefore = originals[index];
+            this.checkWritePermission(storyReceived, storyBefore, credentials);
 
-                // set language_codes
-                if (storyReceived.details) {
-                    storyReceived.language_codes = _.filter(_.keys(storyReceived.details.text), { length: 2 });
-                }
+            // set language_codes
+            if (storyReceived.details) {
+                storyReceived.language_codes = _.filter(_.keys(storyReceived.details.text), { length: 2 });
+            }
 
-                // set the ptime if published is set
-                if (storyReceived.published && !storyReceived.ptime) {
-                    storyReceived.ptime = new String('NOW()');
-                }
+            // set the ptime if published is set
+            if (storyReceived.published && !storyReceived.ptime) {
+                storyReceived.ptime = new String('NOW()');
+            }
 
-                // update btime if user wants to bump story
-                if (storyReceived.bump) {
-                    storyReceived.btime = Object('NOW()');
-                    delete storyReceived.bump;
-                }
+            // update btime if user wants to bump story
+            if (storyReceived.bump) {
+                storyReceived.btime = Object('NOW()');
+                delete storyReceived.bump;
+            }
 
-                // mark story as having been manually deleted
-                if (storyReceived.deleted) {
-                    storyReceived.suppressed = true;
-                }
-            });
+            // mark story as having been manually deleted
+            if (storyReceived.deleted) {
+                storyReceived.suppressed = true;
+            }
 
-            // look for temporary copies created for editing published stories
-            var publishedTempCopies = _.filter(objects, (storyReceived) => {
-                if (storyReceived.published_version_id) {
-                    if (storyReceived.published) {
-                        return true;
+            if (storyReceived.published_version_id) {
+                // load the published versions
+                var criteria = { id: storyReceived.published_version_id, deleted: false };
+                return this.findOne(db, schema, criteria, '*').then((storyPublished) => {
+                    if (storyPublished) {
+                        // update the original row with properties from the temp copy
+                        var updates = {};
+                        updates.id = storyPublished.id;
+                        updates.details = storyReceived.details;
+                        updates.type = storyReceived.type;
+                        updates.user_ids = storyReceived.user_ids;
+                        updates.role_ids  = storyReceived.role_ids;
+                        updates.public = storyReceived.public;
+
+                        // stick contents of the original row into the temp copy
+                        // so we can retrieve them later potentially
+                        storyReceived.details = storyPublished.details;
+                        storyReceived.type = storyPublished.type;
+                        storyReceived.user_ids = storyPublished.user_ids;
+                        storyReceived.role_ids  = storyPublished.role_ids;
+                        storyReceived.public = storyPublished.public;
+                        storyReceived.deleted = true;
+
+                        // check permission again (just in case)
+                        this.checkWritePermission(updates, storyPublished, credentials);
+                        storiesPublished.push(updates);
                     }
-                }
-            });
-            if (_.isEmpty(publishedTempCopies)) {
-                return objects;
-            };
-
-            // load the published versions
-            var criteria = {
-                id: _.map(publishedTempCopies, 'published_version_id'),
-                deleted: false,
-            };
-            return this.find(db, schema, criteria, '*').then((publishedVersions) => {
-                var publishedVersionUpdates = _.filter(_.map(publishedTempCopies, (tempCopy) => {
-                    var publishedVersion = _.find(publishedVersions, { id: tempCopy.published_version_id });
-                    if (!publishedVersion) {
-                        // the story has been deleted
-                        return null;
-                    }
-
-                    // update the original row with properties from the temp copy
-                    var updates = {};
-                    updates.id = publishedVersion.id;
-                    updates.details = tempCopy.details;
-                    updates.type = tempCopy.type;
-                    updates.user_ids = tempCopy.user_ids;
-                    updates.role_ids  = tempCopy.role_ids;
-                    updates.public = tempCopy.public;
-
-                    // stick contents of the original row into the temp copy
-                    // so we can retrieve them later potentially
-                    tempCopy.details = publishedVersion.details;
-                    tempCopy.type = publishedVersion.type;
-                    tempCopy.user_ids = publishedVersion.user_ids;
-                    tempCopy.role_ids  = publishedVersion.role_ids;
-                    tempCopy.public = publishedVersion.public;
-                    tempCopy.deleted = true;
-
-                    // check permission again (just in case)
-                    this.checkWritePermission(updates, publishedVersion, credentials);
-                    return updates;
-                }));
-
-                // append to the list so the original rows are update and
-                // then dispatch to the client
-                return _.concat(objects, publishedVersionUpdates);
-            });
+                    return storyReceived;
+                });
+            }
+            return storyReceived;
+        }).then((storiesReceived) => {
+            return _.concat(storiesReceived, storiesPublished);
         });
     },
 
