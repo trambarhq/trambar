@@ -150,7 +150,7 @@ module.exports = function(languageCode) {
             return text;
         },
         'project-summary-access-control': 'Access control',
-        'project-summary-access-control-member-only': 'Project contents are restricted to members only'.
+        'project-summary-access-control-member-only': 'Project contents are restricted to members only',
         'project-summary-access-control-non-member-comment': 'Non-members can comment on stories',
         'project-summary-access-control-non-member-view': 'Non-members can view contents',
         'project-summary-archive': 'Archive project',
@@ -168,6 +168,7 @@ module.exports = function(languageCode) {
         'project-summary-new-members-auto-accept-user': 'Regular users are accepted automatically',
         'project-summary-new-members-join-guest': 'Guests can request to join project',
         'project-summary-new-members-join-user': 'Regular users can request to join project',
+        'project-summary-new-members-manual': 'Members are added manually',
         'project-summary-other-actions': 'Other actions',
         'project-summary-restore': 'Restore project',
         'project-summary-save': 'Save project',

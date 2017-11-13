@@ -453,17 +453,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t('server-summary-new-user-guest'),
             },
             {
-                name: 'create-member',
+                name: 'create-regular-user',
                 selected: _.get(server, 'settings.user.type') === 'regular',
                 previous: _.get(serverOriginal, 'settings.user.type') === 'regular',
-                children: t('server-summary-new-user-member'),
+                children: t('server-summary-new-user-regular'),
             },
-            {
-                name: 'auto-approve',
-                selected: !!_.get(server, 'settings.user.automatic_approval'),
-                previous: !!_.get(serverOriginal, 'settings.user.automatic_approval'),
-                children: t('server-summary-new-user-automatic-approval'),
-            }
         ];
         var apiAccess;
         if (hasAPIIntegration(server)) {
@@ -505,11 +499,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         };
         return (
             <div className="form">
-                <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>
-                    {t('server-summary-name')}
-                    <InputError>{t(problems.name)}</InputError>
-                </TextField>
                 <OptionList {...typeListProps}>
                     <label>
                         {t('server-summary-type')}
@@ -517,6 +506,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                     </label>
                     {_.map(typeOptionProps, renderOption)}
                 </OptionList>
+                <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
+                <TextField {...nameProps}>
+                    {t('server-summary-name')}
+                    <InputError>{t(problems.name)}</InputError>
+                </TextField>
                 <OptionList {...userOptionListProps}>
                     <label>
                         {t('server-summary-new-user')}
@@ -705,12 +699,12 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             var server = this.getServer();
             return db.start().then((serverId) => {
                 return db.saveOne({ table: 'server' }, server).then((server) => {
-                    this.setState({ hasChanges: false }, () => {
+                    this.setState({ hasChanges: false, saving: false }, () => {
                         return this.setEditability(false, server);
                     });
+                    return null;
                 });
             }).catch((err) => {
-                this.setState({ saving: false });
                 var problems = {};
                 if (err.statusCode === 409) {
                     problems.name = 'validation-duplicate-server-name';
@@ -800,13 +794,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             case 'create-guest':
                 this.setServerProperty(`settings.user.type`, 'guest');
                 break;
-            case 'create-member':
+            case 'create-regular-user':
                 this.setServerProperty(`settings.user.type`, 'regular');
-                break;
-            case 'auto-approve':
-                var server = this.getServer();
-                var newValue = !_.get(server, 'settings.user.automatic_approval');
-                this.setServerProperty(`settings.user.automatic_approval`, newValue);
                 break;
         }
     },

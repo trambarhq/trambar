@@ -431,6 +431,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 name: 'approve_user_request',
                 selected: sc.membership.approve_user_request,
                 previous: sp.membership.approve_user_request,
+                hidden: !sc.membership.allow_user_request,
                 children: t('project-summary-new-members-auto-accept-user'),
             },
             {
@@ -443,6 +444,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 name: 'approve_guest_request',
                 selected: sc.membership.approve_guest_request,
                 previous: sp.membership.approve_guest_request,
+                hidden: !sc.membership.allow_guest_request,
                 children: t('project-summary-new-members-auto-accept-guest'),
             },
         ];
@@ -454,15 +456,16 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t('project-summary-access-control-member-only')
             },
             {
-                name: 'grant_read_access',
-                selected: sc.access_control.grant_read_access,
-                previous: sp.access_control.grant_read_access,
+                name: 'grant_view_access',
+                selected: sc.access_control.grant_view_access,
+                previous: sp.access_control.grant_view_access,
                 children: t('project-summary-access-control-non-member-view')
             },
             {
                 name: 'grant_comment_access',
                 selected: sc.access_control.grant_comment_access,
                 previous: sp.access_control.grant_comment_access,
+                hidden: !sc.access_control.grant_view_access,
                 children: t('project-summary-access-control-non-member-comment')
             },
         ];
@@ -735,11 +738,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             case 'members_only':
                 s.access_control = {};
                 break;
-            case 'grant_read_access':
-                if (s.access_control.grant_read_access) {
-                    delete s.access_control.grant_read_access;
+            case 'grant_view_access':
+                if (s.access_control.grant_view_access) {
+                    delete s.access_control.grant_view_access;
                 } else {
-                    s.access_control.grant_read_access = true;
+                    s.access_control.grant_view_access = true;
                 }
                 break;
             case 'grant_comment_access':

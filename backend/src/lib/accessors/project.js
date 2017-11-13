@@ -142,7 +142,7 @@ module.exports = _.create(Data, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).mapSeries((objects) => {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
                 object.name = row.name;

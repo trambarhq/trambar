@@ -656,7 +656,7 @@ module.exports = {
     import: function(db, schema, objects, originals, credentials, options) {
         return Promise.mapSeries(objects, (objectReceived) => {
             // these properties cannot be modified from the client side
-            return _.omit(object, 'gn', 'ctime', 'mtime');
+            return _.omit(objectReceived, 'gn', 'ctime', 'mtime');
         });
     },
 
