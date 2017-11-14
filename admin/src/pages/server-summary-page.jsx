@@ -133,6 +133,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             newServer: null,
             hasChanges: false,
             saving: false,
+            credentialsChanged: false,
             problems: {},
         };
     },
@@ -140,14 +141,29 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return edited copy of server object or the original object
      *
+     * @param  {String} state
+     *
      * @return {Object}
      */
-    getServer: function() {
-        if (this.isEditing()) {
+    getServer: function(state) {
+        if (this.isEditing() && (!state || state === 'current')) {
             return this.state.newServer || this.props.server || emptyServer;
         } else {
             return this.props.server || emptyServer;
         }
+    },
+
+    /**
+     * Return a property of the server object
+     *
+     * @param  {String} path
+     * @param  {String} state
+     *
+     * @return {*}
+     */
+    getServerProperty: function(path, state) {
+        var server = this.getServer(state);
+        return _.get(server, path);
     },
 
     /**
@@ -280,6 +296,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return list of language codes
+     *
+     * @return {Array<String>}
+     */
+    getInputLanguages: function() {
+        return _.get(this.props.system, 'settings.input_languages', [])
+    },
+
+    /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
@@ -342,17 +367,18 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var server = this.getServer();
             var active = !server.deleted && !server.disabled;
-            var hasIntegration = hasAPIIntegration(server);
+            var hasIntegration = hasAPIIntegration(server.type);
             var hasAccessToken = !!_.get(server.settings, 'api.access_token');
             var hasOAuthCredentials = !!(_.get(server.settings, 'oauth.client_id') && _.get(server.settings, 'oauth.client_secret'));
+            var credentialsChanged = this.state.credentialsChanged;
             var preselected;
             if (active) {
                 if (hasIntegration && !hasAccessToken) {
                     preselected = 'acquire';
-                } else if (hasOAuthCredentials) {
+                } else if (hasOAuthCredentials && credentialsChanged) {
                     preselected = 'test';
-                } else if (hasIntegration) {
-                    preselected = 'log';
+                } else {
+                    preselected = 'return';
                 }
             } else {
                 preselected = 'reactivate';
@@ -360,8 +386,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option>
-                            {t('combo-button-other-actions')}
+                        <option name="return" onClick={this.handleReturnClick}>
+                            {t('server-summary-return')}
                         </option>
                         <option name="acquire" disabled={!active || !hasIntegration} onClick={this.handleAcquireClick}>
                             {t('server-summary-acquire')}
@@ -397,37 +423,35 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderForm: function() {
+        return (
+            <div className="form">
+                {this.renderTypeSelector()}
+                {this.renderTitleInput()}
+                {this.renderNameInput()}
+                {this.renderUserOptions()}
+                {this.renderOAuthUrlInput()}
+                {this.renderOAuthClientIdInput()}
+                {this.renderOAuthClientSecretInput()}
+                {this.renderAPIStatus()}
+            </div>
+        );
+    },
+
+    /**
+     * Render type selector
+     *
+     * @return {ReactElement}
+     */
+    renderTypeSelector: function() {
         var t = this.props.locale.translate;
-        var readOnly = !this.isEditing();
-        var server = this.getServer();
-        var serverOriginal = this.props.server || emptyServer;
-        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
-        var problems = this.state.problems;
-        var titleProps = {
-            id: 'title',
-            value: server.details.title,
-            availableLanguageCodes: inputLanguages,
-            locale: this.props.locale,
-            onChange: this.handleTitleChange,
-            readOnly,
-        };
-        var nameProps = {
-            id: 'name',
-            value: server.name,
-            locale: this.props.locale,
-            onChange: this.handleNameChange,
-            readOnly,
-        };
-        var typeListProps = {
-            onOptionClick: this.handleTypeOptionClick,
-            readOnly,
-        };
-        var typeOptionProps = _.map(serverTypes, (type) => {
+        var typeCurr = this.getServerProperty('type', 'current');
+        var typePrev = this.getServerProperty('type', 'original');
+        var optionProps = _.map(serverTypes, (type) => {
             var icon = getServerIcon(type);
             return {
                 name: type,
-                selected: server.type === type,
-                previous: serverOriginal.type === type,
+                selected: typeCurr === type,
+                previous: typePrev === type,
                 children: [
                     <i className={`fa fa-${icon} fa-fw`} key={0}/>,
                     ' ',
@@ -435,33 +459,195 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 ],
             };
         });
-        var userOptionListProps = {
-            onOptionClick: this.handleUserOptionClick,
-            readOnly,
+        var listProps = {
+            onOptionClick: this.handleTypeOptionClick,
+            readOnly: !this.isEditing(),
         };
-        var userOptionProps = [
+        var problems = this.state.problems;
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('server-summary-type')}
+                    <InputError>{t(problems.type)}</InputError>
+                </label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        );
+    },
+
+    /**
+     * Render title input
+     *
+     * @return {ReactElement}
+     */
+    renderTitleInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'title',
+            value: this.getServerProperty('details.title'),
+            availableLanguageCodes: this.getInputLanguages(),
+            locale: this.props.locale,
+            onChange: this.handleTitleChange,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <MultilingualTextField {...props}>
+                {t('server-summary-title')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render name input
+     *
+     * @return {ReactElement}
+     */
+    renderNameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'name',
+            value: this.getServerProperty('name'),
+            locale: this.props.locale,
+            onChange: this.handleNameChange,
+            readOnly: !this.isEditing(),
+        };
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('server-summary-name')}
+                <InputError>{t(problems.name)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render user creation options
+     *
+     * @return {ReactElement}
+     */
+    renderUserOptions: function() {
+        var t = this.props.locale.translate;
+        var userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
+        var userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
+        var newServer = !!this.getServerProperty('id');
+        var optionProps = [
             {
                 name: 'no-creation',
-                selected: !_.get(server, 'settings.user.type'),
-                previous: (serverOriginal.id) ? !_.get(serverOriginal, 'settings.user.type') : undefined,
+                selected: !userOptsCurr.type,
+                previous: (newServer) ? !userOptsPrev.type : undefined,
                 children: t('server-summary-new-user-no-creation'),
             },
             {
                 name: 'create-guest',
-                selected: _.get(server, 'settings.user.type') === 'guest',
-                previous: _.get(serverOriginal, 'settings.user.type') === 'guest',
+                selected: userOptsCurr.type === 'guest',
+                previous: userOptsPrev.type === 'guest',
                 children: t('server-summary-new-user-guest'),
             },
             {
                 name: 'create-regular-user',
-                selected: _.get(server, 'settings.user.type') === 'regular',
-                previous: _.get(serverOriginal, 'settings.user.type') === 'regular',
+                selected: userOptsCurr.type === 'regular',
+                previous: userOptsPrev.type === 'regular',
                 children: t('server-summary-new-user-regular'),
             },
         ];
+        var listProps = {
+            onOptionClick: this.handleUserOptionClick,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('server-summary-new-user')}
+                </label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        );
+    },
+
+    /**
+     * Render input for OAuth base URL (Gitlab only)
+     *
+     * @return {ReactElement}
+     */
+    renderOAuthUrlInput: function() {
+        var t = this.props.locale.translate;
+        var serverType = this.getServerProperty('type');
+        var props = {
+            id: 'oauth_token',
+            value: this.getServerProperty('settings.oauth.base_url'),
+            locale: this.props.locale,
+            onChange: this.handleOAuthUrlChange,
+            readOnly: !this.isEditing(),
+        };
+        var problems = this.state.problems;
+        return (
+            <CollapsibleContainer open={serverType === 'gitlab'}>
+                <TextField {...props}>
+                    {t('server-summary-oauth-url')}
+                    <InputError>{t(problems.base_url)}</InputError>
+                </TextField>
+            </CollapsibleContainer>
+        );
+    },
+
+    /**
+     * Render input for OAuth client id
+     *
+     * @return {ReactElement}
+     */
+    renderOAuthClientIdInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'oauth_id',
+            value: this.getServerProperty('settings.oauth.client_id'),
+            locale: this.props.locale,
+            onChange: this.handleOAuthIdChange,
+            readOnly: !this.isEditing(),
+        };
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('server-summary-oauth-id')}
+                <InputError>{t(problems.client_id)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render input for OAuth client secret
+     *
+     * @return {ReactElement}
+     */
+    renderOAuthClientSecretInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'oauth_secret',
+            value: this.getServerProperty('settings.oauth.client_secret'),
+            locale: this.props.locale,
+            onChange: this.handleOAuthSecretChange,
+            readOnly: !this.isEditing(),
+        };
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('server-summary-oauth-secret')}
+                <InputError>{t(problems.client_secret)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render API integration status
+     *
+     * @return {ReactElement}
+     */
+    renderAPIStatus: function() {
+        var t = this.props.locale.translate;
+        var serverType = this.getServerProperty('type');
         var apiAccess;
-        if (hasAPIIntegration(server)) {
-            if (_.get(server.settings, 'api.access_token')) {
+        if (hasAPIIntegration(serverType)) {
+            var token = this.getServerProperty('settings.api.access_token');
+            if (token) {
                 apiAccess = t('server-summary-api-access-acquired');
             } else {
                 apiAccess = t('server-summary-api-access-pending');
@@ -475,64 +661,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             readOnly: true
         };
-        var needOAuthUrl = (server.type === 'gitlab');
-        var oauthUrlProps = {
-            id: 'oauth_token',
-            value: _.get(server, 'settings.oauth.base_url', ''),
-            locale: this.props.locale,
-            onChange: this.handleOAuthUrlChange,
-            readOnly: readOnly,
-        };
-        var oauthIdProps = {
-            id: 'oauth_id',
-            value: _.get(server, 'settings.oauth.client_id', ''),
-            locale: this.props.locale,
-            onChange: this.handleOAuthIdChange,
-            readOnly: readOnly,
-        };
-        var oauthSecretProps = {
-            id: 'oauth_secret',
-            value: _.get(server, 'settings.oauth.client_secret', ''),
-            locale: this.props.locale,
-            onChange: this.handleOAuthSecretChange,
-            readOnly: readOnly,
-        };
         return (
-            <div className="form">
-                <OptionList {...typeListProps}>
-                    <label>
-                        {t('server-summary-type')}
-                        <InputError>{t(problems.type)}</InputError>
-                    </label>
-                    {_.map(typeOptionProps, renderOption)}
-                </OptionList>
-                <MultilingualTextField {...titleProps}>{t('server-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>
-                    {t('server-summary-name')}
-                    <InputError>{t(problems.name)}</InputError>
-                </TextField>
-                <OptionList {...userOptionListProps}>
-                    <label>
-                        {t('server-summary-new-user')}
-                    </label>
-                    {_.map(userOptionProps, renderOption)}
-                </OptionList>
-                <CollapsibleContainer open={needOAuthUrl}>
-                    <TextField {...oauthUrlProps}>
-                        {t('server-summary-oauth-url')}
-                        <InputError>{t(problems.base_url)}</InputError>
-                    </TextField>
-                </CollapsibleContainer>
-                <TextField {...oauthIdProps}>
-                    {t('server-summary-oauth-id')}
-                    <InputError>{t(problems.client_id)}</InputError>
-                </TextField>
-                <TextField {...oauthSecretProps}>
-                    {t('server-summary-oauth-secret')}
-                    <InputError>{t(problems.client_secret)}</InputError>
-                </TextField>
-                <TextField {...apiAccessProps}>{t('server-summary-api-access')}</TextField>
-            </div>
+            <TextField {...apiAccessProps}>
+                {t('server-summary-api-access')}
+            </TextField>
         );
     },
 
@@ -660,6 +792,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             return `${name}=${value}`;
         });
         window.open(url, 'api-access-oauth', pairs.join(','));
+    },
+
+    /**
+     * Called when user click return button
+     *
+     * @param  {Event} evt
+     */
+    handleReturnClick: function(evt) {
+        return this.returnToList();
     },
 
     /**
@@ -833,6 +974,6 @@ function getServerIcon(type) {
     }
 }
 
-function hasAPIIntegration(server) {
-    return _.includes(integratedServerTypes, server.type)
+function hasAPIIntegration(type) {
+    return _.includes(integratedServerTypes, type)
 }

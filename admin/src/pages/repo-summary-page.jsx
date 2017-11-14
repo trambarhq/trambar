@@ -152,14 +152,29 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return edited copy of repo object or the original object
      *
+     * @param  {String} state
+     *
      * @return {Object}
      */
-    getRepo: function() {
-        if (this.isEditing()) {
+    getRepo: function(state) {
+        if (this.isEditing() && (!state || state === 'current')) {
             return this.state.newRepo || this.props.repo || emptyRepo;
         } else {
             return this.props.repo || emptyRepo;
         }
+    },
+
+    /**
+     * Return a property of the repo object
+     *
+     * @param  {String} path
+     * @param  {String} state
+     *
+     * @return {*}
+     */
+    getRepoProperty: function(path, state) {
+        var repo = this.getRepo(state);
+        return _.get(repo, path);
     },
 
     /**
@@ -214,6 +229,15 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         var params = { project: route.parameters.project };
         return route.push(require('pages/repo-list-page'), params);
+    },
+
+    /**
+     * Return list of language codes
+     *
+     * @return {Array<String>}
+     */
+    getInputLanguages: function() {
+        return _.get(this.props.system, 'settings.input_languages', [])
     },
 
     /**
@@ -282,8 +306,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option>
-                            {t('combo-button-other-actions')}
+                        <option name="return" onClick={this.handleReturnClick}>
+                            {t('repo-summary-return')}
                         </option>
                         <option name="remove" disabled={!active} onClick={this.handleRemoveClick}>
                             {t('repo-summary-remove')}
@@ -307,31 +331,67 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderForm: function() {
+        return (
+            <div className="form">
+                {this.renderTitleInput()}
+                {this.renderNameInput()}
+                {this.renderIssueTrackingOptions()}
+            </div>
+        );
+    },
+
+    /**
+     * Render title input
+     *
+     * @return {ReactElement}
+     */
+    renderTitleInput: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var readOnly = !this.isEditing();
-        var repoOriginal = this.props.repo || emptyRepo;
-        var repo = this.getRepo();
-        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
-        var hasIssueTracker = !!repo.details.issue_tracking;
-        var titleProps = {
+        var props = {
             id: 'title',
-            value: repo.details.title,
-            availableLanguageCodes: inputLanguages,
+            value: this.getRepoProperty('details.title'),
+            availableLanguageCodes: this.getInputLanguages(),
             locale: this.props.locale,
             onChange: this.handleTitleChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var nameProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('repo-summary-title')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render repo name input (read only)
+     *
+     * @return {ReactElement}
+     */
+    renderNameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'name',
-            value: repo.name,
+            value: this.getRepoProperty('name'),
             locale: this.props.locale,
             readOnly: true,
         };
-        var listProps = {
-            onOptionClick: this.handleOptionClick,
-            readOnly: readOnly || !hasIssueTracker,
-        };
+        return (
+            <TextField {...props}>
+                {t('repo-summary-gitlab-name')}
+            </TextField>
+        );
+    },
+
+    /**
+     * Render repo
+     *
+     * @return {[type]}
+     */
+    renderIssueTrackingOptions: function() {
+        var t = this.props.locale.translate;
+        var hasIssueTracker = !!this.getRepoProperty('details.issue_tracking');
+        var copyingCurr = this.getRepoProperty('details.issue_copying', 'current') || false;
+        var copyingPrev = this.getRepoProperty('details.issue_copying', 'original') || false;
         var optionProps = [
             {
                 name: 'not_available',
@@ -342,28 +402,28 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             },
             {
                 name: 'enabled',
-                selected: repo.details.issue_copying,
-                previous: repoOriginal.details.issue_copying,
+                selected: copyingCurr === true,
+                previous: copyingPrev === true,
                 children: t('repo-summary-issue-tracker-import-allowed'),
                 hidden: !hasIssueTracker,
             },
             {
                 name: 'disabled',
-                selected: !repo.details.issue_copying,
-                previous: !repoOriginal.details.issue_copying,
+                selected: copyingCurr === false,
+                previous: copyingPrev === false,
                 children: t('repo-summary-issue-tracker-import-disallowed'),
                 hidden: !hasIssueTracker,
             },
         ];
+        var listProps = {
+            onOptionClick: this.handleOptionClick,
+            readOnly: !this.isEditing() || !hasIssueTracker,
+        };
         return (
-            <div className="form">
-                <MultilingualTextField {...titleProps}>{t('repo-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>{t('repo-summary-gitlab-name')}</TextField>
-                <OptionList {...listProps}>
-                    <label>{t('repo-summary-issue-tracker')}</label>
-                    {_.map(optionProps, renderOption)}
-                </OptionList>
-            </div>
+            <OptionList {...listProps}>
+                <label>{t('repo-summary-issue-tracker')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
         );
     },
 
@@ -456,6 +516,15 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 return this.changeInclusion(true);
             }
         });
+    },
+
+    /**
+     * Called when user clicks return button
+     *
+     * @param  {Event} evt
+     */
+    handleReturnClick: function(evt) {
+        return this.returnToList();
     },
 
     /**

@@ -237,7 +237,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         } else {
             var userIds = _.get(this.props.project, 'user_ids');
             var membersPending = _.some(this.props.users, (user) => {
-                return !_.inludes(userIds, user.id);
+                return !_.includes(userIds, user.id);
             });
             var preselected = (membersPending) ? 'approve' : undefined;
             return (

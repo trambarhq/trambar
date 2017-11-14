@@ -157,14 +157,29 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return edited copy of project object or the original object
      *
+     * @param  {String} state
+     *
      * @return {Object}
      */
-    getProject: function() {
-        if (this.isEditing()) {
+    getProject: function(state) {
+        if (this.isEditing() && (!state || state === 'current')) {
             return this.state.newProject || this.props.project || emptyProject;
         } else {
             return this.props.project || emptyProject;
         }
+    },
+
+    /**
+     * Return a prop of the project object
+     *
+     * @param  {String} path
+     * @param  {String} state
+     *
+     * @return {*}
+     */
+    getProjectProperty: function(path, state) {
+        var project = this.getProject(state);
+        return _.get(project, path);
     },
 
     /**
@@ -174,7 +189,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setProjectProperty: function(path, value) {
-        var project = this.getProject();
+        var project = this.getProject('current');
         var newProject = _.decoupleSet(project, path, value);
         if (path === 'details.title') {
             var autoNameBefore = SlugGenerator.fromTitle(project.details.title);
@@ -271,6 +286,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return list of language codes
+     *
+     * @return {Array<String>}
+     */
+    getInputLanguages: function() {
+        return _.get(this.props.system, 'settings.input_languages', [])
+    },
+
+    /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
@@ -334,12 +358,12 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var project = this.props.project;
             var active = (project) ? !project.deleted && !project.archived : true;
-            var preselected = (!active) ? 'restore' : undefined;
+            var preselected = (!active) ? 'restore' : 'return';
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option>
-                            {t('combo-button-other-actions')}
+                        <option name="return" onClick={this.handleReturnClick}>
+                            {t('project-summary-return')}
                         </option>
                         <option name="archive" disabled={!active} onClick={this.handleArchiveClick}>
                             {t('project-summary-archive')}
@@ -366,127 +390,208 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderForm: function() {
+        return (
+            <div className="form">
+                {this.renderTitleInput()}
+                {this.renderNameInput()}
+                {this.renderDescriptionInput()}
+                {this.renderEmblemSelector()}
+                {this.renderMembershipOptions()}
+                {this.renderAccessControlOptions()}
+            </div>
+        );
+    },
+
+    /**
+     * Render title input
+     *
+     * @return {ReactElement}
+     */
+    renderTitleInput: function() {
         var t = this.props.locale.translate;
-        var readOnly = !this.isEditing();
-        var project = this.getProject();
-        var projectOriginal = this.props.project || emptyProject;
-        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
-        var problems = this.state.problems;
-        var titleProps = {
+        var props = {
             id: 'title',
-            value: project.details.title,
-            availableLanguageCodes: inputLanguages,
+            value: this.getProjectProperty('details.title'),
+            availableLanguageCodes: this.getInputLanguages(),
             locale: this.props.locale,
             onChange: this.handleTitleChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var nameProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('project-summary-title')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render name input
+     *
+     * @return {ReactElement}
+     */
+    renderNameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'name',
-            value: project.name,
+            value: this.getProjectProperty('name'),
             locale: this.props.locale,
             onChange: this.handleNameChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var descriptionProps = {
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('project-summary-name')}
+                <InputError>{t(problems.name)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render description input
+     *
+     * @return {ReactElement}
+     */
+    renderDescriptionInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'description',
-            value: project.details.description,
-            availableLanguageCodes: inputLanguages,
+            value: this.getProjectProperty('details.description'),
+            availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
             locale: this.props.locale,
             onChange: this.handleDescriptionChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var emblemProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('project-summary-description')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render image selector
+     *
+     * @return {ReactElement}
+     */
+    renderEmblemSelector: function() {
+        var t = this.props.locale.translate;
+        var props = {
             purpose: 'project-emblem',
             desiredWidth: 500,
             desiredHeight: 500,
-            resources: project.details.resources,
+            resources: this.getProjectProperty('details.resources'),
             database: this.props.database,
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
             onChange: this.handleEmblemChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var listProps = {
-            onOptionClick: this.handleOptionClick,
-            readOnly,
-        };
-        var sc = findSettings(project);
-        var sp = findSettings(projectOriginal);
-        var membershipOptionProps = [
+        return (
+            <ImageSelector {...props}>
+                {t('project-summary-emblem')}
+            </ImageSelector>
+        );
+    },
+
+    /**
+     * Render project membership option list
+     *
+     * @return {ReactElement}
+     */
+    renderMembershipOptions: function() {
+        var t = this.props.locale.translate;
+        var memCurr = this.getProjectProperty('settings.membership', 'current') || {};
+        var memPrev = this.getProjectProperty('settings.membership', 'original') || {};
+        var newProject = !!this.getProjectProperty('id');
+        var optionProps = [
             {
                 name: 'manual',
-                selected: !_.some(sc.membership),
-                previous: (projectOriginal.id) ? !_.some(sp.membership) : undefined,
+                selected: !_.some(memCurr),
+                previous: (newProject) ? !_.some(memPrev) : undefined,
                 children: t('project-summary-new-members-manual'),
             },
             {
                 name: 'allow_user_request',
-                selected: sc.membership.allow_user_request,
-                previous: sp.membership.allow_user_request,
+                selected: memCurr.allow_user_request,
+                previous: memPrev.allow_user_request,
                 children: t('project-summary-new-members-join-user'),
             },
             {
                 name: 'approve_user_request',
-                selected: sc.membership.approve_user_request,
-                previous: sp.membership.approve_user_request,
-                hidden: !sc.membership.allow_user_request,
+                selected: memCurr.approve_user_request,
+                previous: memPrev.approve_user_request,
+                hidden: !memCurr.allow_user_request,
                 children: t('project-summary-new-members-auto-accept-user'),
             },
             {
                 name: 'allow_guest_request',
-                selected: sc.membership.allow_guest_request,
-                previous: sp.membership.allow_guest_request,
+                selected: memCurr.allow_guest_request,
+                previous: memPrev.allow_guest_request,
                 children: t('project-summary-new-members-join-guest'),
             },
             {
                 name: 'approve_guest_request',
-                selected: sc.membership.approve_guest_request,
-                previous: sp.membership.approve_guest_request,
-                hidden: !sc.membership.allow_guest_request,
+                selected: memCurr.approve_guest_request,
+                previous: memPrev.approve_guest_request,
+                hidden: !memCurr.allow_guest_request,
                 children: t('project-summary-new-members-auto-accept-guest'),
             },
         ];
-        var accessControlOptionProps = [
+        var listProps = {
+            onOptionClick: this.handleMembershipOptionClick,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>{t('project-summary-new-members')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        );
+    },
+
+    /**
+     * Render project access control option list
+     *
+     * @return {ReactElement}
+     */
+    renderAccessControlOptions: function() {
+        var t = this.props.locale.translate;
+        var accessCurr = this.getProjectProperty('settings.access_control', 'current') || {};
+        var accessPrev = this.getProjectProperty('settings.access_control', 'original') || {};
+        var newProject = !!this.getProjectProperty('id');
+        var optionProps = [
             {
                 name: 'members_only',
-                selected: !_.some(sc.access_control),
-                previous: (projectOriginal.id) ? !_.some(sp.access_control) : undefined,
+                selected: !_.some(accessCurr),
+                previous: (newProject) ? !_.some(accessPrev) : undefined,
                 children: t('project-summary-access-control-member-only')
             },
             {
                 name: 'grant_view_access',
-                selected: sc.access_control.grant_view_access,
-                previous: sp.access_control.grant_view_access,
+                selected: accessCurr.grant_view_access,
+                previous: accessPrev.grant_view_access,
                 children: t('project-summary-access-control-non-member-view')
             },
             {
                 name: 'grant_comment_access',
-                selected: sc.access_control.grant_comment_access,
-                previous: sp.access_control.grant_comment_access,
-                hidden: !sc.access_control.grant_view_access,
+                selected: accessCurr.grant_comment_access,
+                previous: accessPrev.grant_comment_access,
+                hidden: !accessCurr.grant_view_access,
                 children: t('project-summary-access-control-non-member-comment')
             },
         ];
+        var listProps = {
+            onOptionClick: this.handleAccessControlOptionClick,
+            readOnly: !this.isEditing(),
+        };
         return (
-            <div className="form">
-                <MultilingualTextField {...titleProps}>{t('project-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>
-                    {t('project-summary-name')}
-                    <InputError>{t(problems.name)}</InputError>
-                </TextField>
-                <MultilingualTextField {...descriptionProps}>{t('project-summary-description')}</MultilingualTextField>
-                <ImageSelector {...emblemProps}>{t('project-summary-emblem')}</ImageSelector>
-                <OptionList {...listProps}>
-                    <label>{t('project-summary-new-members')}</label>
-                    {_.map(membershipOptionProps, renderOption)}
-                </OptionList>
-                <OptionList {...listProps}>
-                    <label>{t('project-summary-access-control')}</label>
-                    {_.map(accessControlOptionProps, renderOption)}
-                </OptionList>
-            </div>
+            <OptionList {...listProps}>
+                <label>{t('project-summary-access-control')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
         );
     },
 
@@ -595,6 +700,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user click return button
+     *
+     * @param  {Event} evt
+     */
+    handleReturnClick: function(evt) {
+        return this.returnToList();
+    },
+
+    /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
@@ -698,9 +812,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleOptionClick: function(evt) {
-        var project = this.getProject();
-        var s = _.cloneDeep(findSettings(project));
+    handleMembershipOptionClick: function(evt) {
+        var s = _.cloneDeep(this.getProjectProperty('settings'));
         switch (evt.name) {
             case 'manual':
                 s.membership = {};
@@ -735,6 +848,18 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                     s.membership.approve_guest_request = true;
                 }
                 break;
+        }
+        this.setProjectProperty(`settings`, s);
+    },
+
+    /**
+     * Called when user clicks an option under membership or access control
+     *
+     * @param  {Object} evt
+     */
+    handleAccessControlOptionClick: function(evt) {
+        var s = _.cloneDeep(this.getProjectProperty('settings'));
+        switch (evt.name) {
             case 'members_only':
                 s.access_control = {};
                 break;
@@ -766,15 +891,3 @@ var emptySettings = {
     membership: {},
     access_control: {},
 };
-
-function findSettings(project) {
-    if (project) {
-        return _.merge({}, emptySettings, project.settings);
-    } else {
-        return emptySettings;
-    }
-}
-
-function renderOption(props, i) {
-    return <option key={i} {...props} />;
-}

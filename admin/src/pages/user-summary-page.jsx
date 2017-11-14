@@ -192,14 +192,29 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return edited copy of user object or the original object
      *
+     * @param  {String} state
+     *
      * @return {Object}
      */
-    getUser: function() {
-        if (this.isEditing()) {
+    getUser: function(state) {
+        if (this.isEditing() && (!state || state === 'current')) {
             return this.state.newUser || this.props.user || emptyUser;
         } else {
             return this.props.user || emptyUser;
         }
+    },
+
+    /**
+     * Return a property of the user object
+     *
+     * @param  {String} path
+     * @param  {String} state
+     *
+     * @return {*}
+     */
+    getUserProperty: function(path, state) {
+        var user = this.getUser(state);
+        return _.get(user, path);
     },
 
     /**
@@ -209,7 +224,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setUserProperty: function(path, value) {
-        var user = this.getUser();
+        var user = this.getUser('current');
         var newUser = _.decoupleSet(user, path, value);
         if (path === 'details.name') {
             var autoNameBefore = SlugGenerator.fromPersonalName(user.details.name);
@@ -321,6 +336,15 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return list of language codes
+     *
+     * @return {Array<String>}
+     */
+    getInputLanguages: function() {
+        return _.get(this.props.system, 'settings.input_languages', [])
+    },
+
+    /**
      * Reset the edit state when edit starts
      *
      * @param  {Object} nextProps
@@ -387,12 +411,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var user = this.props.user;
             var active = (user) ? !user.deleted && !user.disabled : true;
-            var preselected = (!active) ? 'reactivate' : undefined;
+            var preselected = (!active) ? 'reactivate' : 'return';
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option>
-                            {t('combo-button-other-actions')}
+                        <option name="return" onClick={this.handleReturnClick}>
+                            {t(member ? 'user-summary-member-return' : 'user-summary-return')}
                         </option>
                         <option name="disable" disabled={!active} onClick={this.handleDisableClick}>
                             {t('user-summary-disable')}
@@ -419,151 +443,256 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderForm: function() {
+        return (
+            <div className="form">
+                {this.renderNameInput()}
+                {this.renderUsernameInput()}
+                {this.renderEmailInput()}
+                {this.renderPhoneInput()}
+                {this.renderProfileImageSelector()}
+                {this.renderTypeSelector()}
+                {this.renderRoleSelector()}
+                {this.renderVisiblityOptions()}
+            </div>
+        );
+    },
+
+    /**
+     * Render name input
+     *
+     * @return {ReactElement}
+     */
+    renderNameInput: function() {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var readOnly = !this.isEditing();
-        var roles = sortRoles(this.props.roles, this.props.locale);
-        var user = this.getUser();
-        var userOriginal = this.props.user || emptyUser;
-        var userRoles = findRoles(roles, user);
-        var userRolesOriginal = findRoles(roles, userOriginal);
-        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
-        var problems = this.state.problems;
-        var nameProps = {
+        var props = {
             id: 'name',
-            value: user.details.name,
-            availableLanguageCodes: inputLanguages,
+            value: this.getUserProperty('details.name'),
+            availableLanguageCodes: this.getInputLanguages(),
             locale: this.props.locale,
             onChange: this.handleNameChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var usernameProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('user-summary-name')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render username input
+     *
+     * @return {ReactElement}
+     */
+    renderUsernameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'username',
-            value: user.username,
+            value: this.getUserProperty('username'),
             locale: this.props.locale,
             onChange: this.handleUsernameChange,
-            readOnly: readOnly || !!user.external_id,
+            readOnly: !this.isEditing(),
         };
-        var emailProps = {
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('user-summary-username')}
+                <InputError>{t(problems.username)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render e-mail input
+     *
+     * @return {ReactElement}
+     */
+    renderEmailInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'email',
-            value: user.details.email,
+            value: this.getUserProperty('details.email'),
             locale: this.props.locale,
             onChange: this.handleEmailChange,
-            readOnly: readOnly,
+            readOnly: !this.isEditing(),
         };
-        var phoneProps = {
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('user-summary-email')}
+                <InputError>{t(problems.email)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render phone input
+     *
+     * @return {ReactElement}
+     */
+    renderPhoneInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'phone',
-            value: user.details.phone,
+            value: this.getUserProperty('details.phone'),
             locale: this.props.locale,
             onChange: this.handlePhoneChange,
-            readOnly: readOnly,
+            readOnly: !this.isEditing(),
         };
-        var profileImageProps = {
+        return (
+            <TextField {...props}>
+                {t('user-summary-phone')}
+            </TextField>
+        );
+    },
+
+    /**
+     * Render profile image selector
+     *
+     * @return {ReactElement}
+     */
+    renderProfileImageSelector: function() {
+        var t = this.props.locale.translate;
+        var props = {
             purpose: 'profile-image',
             desiredWidth: 500,
             desiredHeight: 500,
-            resources: user.details.resources,
+            resources: this.getUserProperty('details.resources'),
             database: this.props.database,
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
             onChange: this.handleProfileImageChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var typeListProps = {
-            onOptionClick: this.handleTypeOptionClick,
-            readOnly,
-        };
-        var typeOptionProps = [
+        return (
+            <ImageSelector {...props}>
+                {t('user-summary-profile-image')}
+            </ImageSelector>
+        );
+    },
+
+    /**
+     * Render user type selector
+     *
+     * @return {ReactElement}
+     */
+    renderTypeSelector: function() {
+        var t = this.props.locale.translate;
+        var userTypeCurr = this.getUserProperty('type', 'current');
+        var userTypePrev = this.getUserProperty('type', 'original');
+        var optionProps = [
             {
                 name: 'guest',
-                selected: user.type === 'guest',
-                previous: userOriginal.type === 'guest',
+                selected: userTypeCurr === 'guest',
+                previous: userTypePrev === 'guest',
                 children: t('user-summary-type-guest'),
             },
             {
                 name: 'regular',
-                selected: user.type === 'regular',
-                previous: userOriginal.type === 'regular',
+                selected: userTypeCurr === 'regular',
+                previous: userTypePrev === 'regular',
                 children: t('user-summary-type-regular'),
             },
             {
                 name: 'moderator',
-                selected: user.type === 'moderator',
-                previous: userOriginal.type === 'moderator',
+                selected: userTypeCurr === 'moderator',
+                previous: userTypePrev === 'moderator',
                 children: t('user-summary-type-moderator'),
             },
             {
                 name: 'admin',
-                selected: user.type === 'admin',
-                previous: userOriginal.type === 'admin',
+                selected: userTypeCurr === 'admin',
+                previous: userTypePrev === 'admin',
                 children: t('user-summary-type-admin'),
             },
         ];
-        var roleListProps = {
-            onOptionClick: this.handleRoleOptionClick,
-            readOnly,
+        var listProps = {
+            onOptionClick: this.handleTypeOptionClick,
+            readOnly: !this.isEditing(),
         };
-        var roleOptionProps = _.concat({
+        var problems = this.state.problems;
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('user-summary-type')}
+                    <InputError>{t(problems.type)}</InputError>
+                </label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        );
+    },
+
+    /**
+     * Render role selector
+     *
+     * @return {ReactElement}
+     */
+    renderRoleSelector: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var userRolesCurr = this.getUserProperty('role_ids', 'current') || [];
+        var userRolesPrev = this.getUserProperty('role_ids', 'original') || [];
+        var newUser = !!this.getUserProperty('id');
+        var roles = sortRoles(this.props.roles, this.props.locale);
+        var optionProps = _.concat({
             name: 'none',
-            selected: _.isEmpty(userRoles),
-            previous: userRolesOriginal && _.isEmpty(userRolesOriginal),
+            selected: _.isEmpty(userRolesCurr),
+            previous: (newUser) ? _.isEmpty(userRolesPrev) : undefined,
             children: t('user-summary-role-none')
         }, _.map(roles, (role) => {
             return {
                 name: String(role.id),
-                selected: _.includes(userRoles, role),
-                previous: _.includes(userRolesOriginal, role),
+                selected: _.includes(userRolesCurr, role.id),
+                previous: _.includes(userRolesPrev, role.id),
                 children: p(role.details.title) || p.name
             }
         }));
-        var visibilityListProps = {
-            onOptionClick: this.handleVisibilityOptionClick,
-            readOnly,
+        var listProps = {
+            onOptionClick: this.handleRoleOptionClick,
+            readOnly: !this.isEditing(),
         };
-        var visibilityOptionProps = [
+        return (
+            <OptionList {...listProps}>
+                <label>{t('user-summary-roles')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        )
+    },
+
+    /**
+     * Render visibility options
+     *
+     * @return {ReactElement}
+     */
+    renderVisiblityOptions: function() {
+        var t = this.props.locale.translate;
+        var hiddenCurr = this.getUserProperty('hidden', 'current') || false;
+        var hiddenPrev = this.getUserProperty('hidden', 'original') || false;
+        var newUser = !!this.getUserProperty('id');
+        var optionProps = [
             {
                 name: 'show',
-                selected: _.get(user, 'hidden', false) === false,
-                previous: _.get(userOriginal, 'hidden') === false,
+                selected: hiddenCurr === false,
+                previous: (newUser) ? hiddenPrev === false : undefined,
                 children: t('user-summary-visibility-shown'),
             },
             {
                 name: 'hidden',
-                selected: _.get(user, 'hidden', false) === true,
-                previous: _.get(userOriginal, 'hidden') === true,
+                selected: hiddenCurr === true,
+                previous: hiddenCurr === true,
                 children: t('user-summary-visibility-hidden'),
             }
         ];
+        var listProps = {
+            onOptionClick: this.handleVisibilityOptionClick,
+            readOnly: !this.isEditing(),
+        };
         return (
-            <div className="form">
-                <MultilingualTextField {...nameProps}>{t('user-summary-name')}</MultilingualTextField>
-                <TextField {...usernameProps}>
-                    {t('user-summary-username')}
-                    <InputError>{t(problems.username)}</InputError>
-                </TextField>
-                <TextField {...emailProps}>
-                    {t('user-summary-email')}
-                    <InputError>{t(problems.email)}</InputError>
-                </TextField>
-                <TextField {...phoneProps}>{t('user-summary-phone')}</TextField>
-                <ImageSelector {...profileImageProps}>{t('user-summary-profile-image')}</ImageSelector>
-                <OptionList {...typeListProps}>
-                    <label>
-                        {t('user-summary-type')}
-                        <InputError>{t(problems.type)}</InputError>
-                    </label>
-                    {_.map(typeOptionProps, renderOption)}
-                </OptionList>
-                <OptionList {...roleListProps}>
-                    <label>{t('user-summary-roles')}</label>
-                    {_.map(roleOptionProps, renderOption)}
-                </OptionList>
-                <OptionList {...visibilityListProps}>
-                    <label>{t('user-summary-visibility')}</label>
-                    {_.map(visibilityOptionProps, renderOption)}
-                </OptionList>
-            </div>
+            <OptionList {...listProps}>
+                <label>{t('user-summary-visibility')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
         );
     },
 
@@ -783,6 +912,15 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 return this.changeFlags({ disabled: false, deleted: false });
             }
         });
+    },
+
+    /**
+     * Called when user click return button
+     *
+     * @param  {Event} evt
+     */
+    handleReturnClick: function(evt) {
+        return this.returnToList();
     },
 
     /**
@@ -1063,10 +1201,6 @@ var findRoles = Memoize(function(roles, user) {
         }));
     }
 });
-
-function renderOption(props, i) {
-    return <option key={i} {...props} />;
-}
 
 function extractUsername(text, type) {
     if (/https?:/.test(text)) {

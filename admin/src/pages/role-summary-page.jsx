@@ -139,14 +139,29 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Return edited copy of role object or the original object
      *
+     * @param  {String} state
+     *
      * @return {Object}
      */
-    getRole: function() {
-        if (this.isEditing()) {
+    getRole: function(state) {
+        if (this.isEditing() && (!state || state === 'current')) {
             return this.state.newRole || this.props.role || emptyRole;
         } else {
             return this.props.role || emptyRole;
         }
+    },
+
+    /**
+     * Return a property of the role object
+     *
+     * @param  {String} path
+     * @param  {String} state
+     *
+     * @return {*}
+     */
+    getRoleProperty: function(path, state) {
+        var role = this.getRole(state);
+        return _.get(role, path);
     },
 
     /**
@@ -156,7 +171,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setRoleProperty: function(path, value) {
-        var role = this.getRole();
+        var role = this.getRole('current');
         var newRole = _.decoupleSet(role, path, value);
         if (path === 'details.title') {
             var autoNameBefore = SlugGenerator.fromTitle(role.details.title);
@@ -248,6 +263,15 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return list of language codes
+     *
+     * @return {Array<String>}
+     */
+    getInputLanguages: function() {
+        return _.get(this.props.system, 'settings.input_languages', [])
+    },
+
+    /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
@@ -307,12 +331,12 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var role = this.props.role;
             var active = (role) ? !role.deleted && !role.disabled : true;
-            var preselected = (!active) ? 'reactivate' : undefined;
+            var preselected = (!active) ? 'reactivate' : 'return';
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option>
-                            {t('combo-button-other-actions')}
+                        <option name="return" onClick={this.handleReturnClick}>
+                            {t('role-summary-return')}
                         </option>
                         <option name="archive" disabled={!active} onClick={this.handleDisableClick}>
                             {t('role-summary-disable')}
@@ -339,45 +363,80 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderForm: function() {
+        return (
+            <div className="form">
+                {this.renderTitleInput()}
+                {this.renderNameInput()}
+                {this.renderDescriptionInput()}
+            </div>
+        );
+    },
+
+    /**
+     * Render title input
+     *
+     * @return {ReactElement}
+     */
+    renderTitleInput: function() {
         var t = this.props.locale.translate;
-        var readOnly = !this.isEditing();
-        var roleOriginal = this.props.role || emptyRole;
-        var role = this.getRole();
-        var inputLanguages = _.get(this.props.system, 'settings.input_languages');
-        var problems = this.state.problems;
-        var titleProps = {
+        var props = {
             id: 'title',
-            value: role.details.title,
-            availableLanguageCodes: inputLanguages,
+            value: this.getRoleProperty('details.title'),
+            availableLanguageCodes: this.getInputLanguages(),
             locale: this.props.locale,
             onChange: this.handleTitleChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var nameProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('role-summary-title')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render name input
+     *
+     * @return {ReactElement}
+     */
+    renderNameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'name',
-            value: role.name,
+            value: this.getRoleProperty('name'),
             locale: this.props.locale,
             onChange: this.handleNameChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var descriptionProps = {
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('role-summary-name')}
+                <InputError>{t(problems.name)}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render description input
+     *
+     * @return {ReactElement}
+     */
+    renderDescriptionInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'description',
-            value: role.details.description,
-            availableLanguageCodes: inputLanguages,
+            value: this.getRoleProperty('details.description'),
+            availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
             locale: this.props.locale,
             onChange: this.handleDescriptionChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
         return (
-            <div className="form">
-                <MultilingualTextField {...titleProps}>{t('role-summary-title')}</MultilingualTextField>
-                <TextField {...nameProps}>
-                    {t('role-summary-name')}
-                    <InputError>{t(problems.name)}</InputError>
-                </TextField>
-                <MultilingualTextField {...descriptionProps}>{t('role-summary-description')}</MultilingualTextField>
-            </div>
+            <MultilingualTextField {...props}>
+                {t('role-summary-description')}
+            </MultilingualTextField>
         );
     },
 
@@ -465,6 +524,15 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user click return button
+     *
+     * @param  {Event} evt
+     */
+    handleReturnClick: function(evt) {
+        return this.returnToList();
+    },
+
+    /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
@@ -504,6 +572,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                     this.setState({ hasChanges: false }, () => {
                         return this.setEditability(false, role);
                     });
+                    return null;
                 });
             }).catch((err) => {
                 this.setState({ saving: false });

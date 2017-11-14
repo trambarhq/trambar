@@ -122,14 +122,29 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     /**
      * Return edited copy of system object or the original object
      *
+     * @param  {String} state
+     *
      * @return {Object}
      */
-    getSystem: function() {
-        if (this.isEditing()) {
+    getSystem: function(state) {
+        if (this.isEditing() && (!state || state === 'current')) {
             return this.state.newSystem || this.props.system || defaultSystem;
         } else {
             return this.props.system || emptySystem;
         }
+    },
+
+    /**
+     * Return a property of the system object
+     *
+     * @param  {String} path
+     * @param  {String} state
+     *
+     * @return {*}
+     */
+    getSystemProperty: function(path, state) {
+        var system = this.getSystem(state);
+        return _.get(system, path);
     },
 
     /**
@@ -139,7 +154,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @param  {*} value
      */
     setSystemProperty: function(path, value) {
-        var system = this.getSystem();
+        var system = this.getSystem('current');
         var newSystem = _.decoupleSet(system, path, value);
         var hasChanges = true;
         if (_.isEqual(newSystem, this.props.system)) {
@@ -173,6 +188,16 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         var params = _.clone(route.parameters);
         params.edit = edit;
         return route.replace(module.exports, params);
+    },
+
+    /**
+     * Return list of language codes
+     *
+     * @return {Array<String>}
+     */
+    getInputLanguages: function() {
+        var system = this.getSystem();
+        return _.get(system, 'settings.input_languages', [])
     },
 
     /**
@@ -246,85 +271,163 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderForm: function() {
+        return (
+            <div className="form">
+                {this.renderTitleInput()}
+                {this.renderDescriptionInput()}
+                {this.renderSiteAddressInput()}
+                {this.renderPushRelayInput()}
+                {this.renderBackgroundSelector()}
+                {this.renderInputLanguageSelector()}
+            </div>
+        );
+    },
+
+    /**
+     * Render title input
+     *
+     * @return {ReactElement}
+     */
+    renderTitleInput: function() {
         var t = this.props.locale.translate;
-        var readOnly = !this.isEditing();
-        var systemOriginal = this.props.system;
-        var system = this.getSystem();
-        var inputLanguagesOriginal = _.get(systemOriginal, 'settings.input_languages');
-        var inputLanguages = _.get(system, 'settings.input_languages');
-        var titleProps = {
+        var props = {
             id: 'title',
-            value: system.details.title,
-            availableLanguageCodes: inputLanguages,
+            value: this.getSystemProperty('details.title'),
+            availableLanguageCodes: this.getInputLanguages(),
             locale: this.props.locale,
             onChange: this.handleTitleChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var addressProps = {
-            id: 'address',
-            value: system.settings.address,
-            locale: this.props.locale,
-            placeholder: 'https://',
-            onChange: this.handleAddressChange,
-            readOnly,
-        };
-        var relayProps = {
-            id: 'relay',
-            value: system.settings.push_relay,
-            locale: this.props.locale,
-            placeholder: 'https://',
-            onChange: this.handlePushRelayChange,
-            readOnly,
-        };
-        var descriptionProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('settings-site-title')}
+            </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render description input
+     *
+     * @return {ReactElement}
+     */
+    renderDescriptionInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
             id: 'description',
-            value: system.details.description,
-            availableLanguageCodes: inputLanguages,
+            value: this.getSystemProperty('details.description'),
+            availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
             locale: this.props.locale,
             onChange: this.handleDescriptionChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var backgroundImageProps = {
+        return (
+            <MultilingualTextField {...props}>
+                {t('settings-site-description')}
+            </MultilingualTextField>
+        )
+    },
+
+    /**
+     * Render site address input
+     *
+     * @return {ReactElement}
+     */
+    renderSiteAddressInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'address',
+            value: this.getSystemProperty('settings.address'),
+            locale: this.props.locale,
+            placeholder: 'https://',
+            onChange: this.handleAddressChange,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <TextField {...props}>
+                {t('settings-site-address')}
+            </TextField>
+        );
+    },
+
+    /**
+     * Render push relay input
+     *
+     * @return {ReactElement}
+     */
+    renderPushRelayInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'relay',
+            value: this.getSystemProperty('settings.push_relay'),
+            locale: this.props.locale,
+            placeholder: 'https://',
+            onChange: this.handlePushRelayChange,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <TextField {...props}>
+                {t('settings-push-relay')}
+            </TextField>
+        );
+    },
+
+    /**
+     * Render background image selector
+     *
+     * @return {ReactElement}
+     */
+    renderBackgroundSelector: function() {
+        var t = this.props.locale.translate;
+        var props = {
             purpose: 'background',
-            resources: system.details.resources,
+            resources: this.getSystemProperty('details.resources'),
             database: this.props.database,
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
             onChange: this.handleBackgroundImageChange,
-            readOnly,
+            readOnly: !this.isEditing(),
         };
-        var languageListProps = {
-            onOptionClick: this.handleLanguageOptionClick,
-            readOnly,
-        };
+        return (
+            <ImageSelector {...props}>
+                {t('settings-background-image')}
+            </ImageSelector>
+        );
+    },
+
+    /**
+     * Render input language selector
+     *
+     * @return {ReactElement}
+     */
+    renderInputLanguageSelector: function() {
+        var t = this.props.locale.translate;
         var languages = this.props.locale.directory;
-        var languageOptionProps = _.map(languages, (language) => {
-            var index = _.indexOf(inputLanguages, language.code);
+        var inputLanguageCurr = this.getSystemProperty('settings.input_languages', 'current') || [];
+        var inputLanguagePrev = this.getSystemProperty('settings.input_languages', 'original') || [];
+        var optionProps = _.map(languages, (language) => {
+            var index = _.indexOf(inputLanguageCurr, language.code);
             var badge;
             if (index !== -1) {
                 badge = <span className="pos">{index + 1}</span>;
             }
             return {
                 name: language.code,
-                selected: _.includes(inputLanguages, language.code),
-                previous: _.includes(inputLanguagesOriginal, language.code),
+                selected: _.includes(inputLanguageCurr, language.code),
+                previous: _.includes(inputLanguagePrev, language.code),
                 children: <span>{language.name} {badge}</span>,
             };
         });
+        var listProps = {
+            onOptionClick: this.handleLanguageOptionClick,
+            readOnly: !this.isEditing(),
+        };
         return (
-            <div className="form">
-                <MultilingualTextField {...titleProps}>{t('settings-site-title')}</MultilingualTextField>
-                <MultilingualTextField {...descriptionProps}>{t('settings-site-description')}</MultilingualTextField>
-                <TextField {...addressProps}>{t('settings-site-address')}</TextField>
-                <TextField {...relayProps}>{t('settings-push-relay')}</TextField>
-                <ImageSelector {...backgroundImageProps}>{t('settings-background-image')}</ImageSelector>
-                <OptionList {...languageListProps}>
-                    <label>{t('settings-input-languages')}</label>
-                    {_.map(languageOptionProps, renderOption)}
-                </OptionList>
-            </div>
+            <OptionList {...listProps}>
+                <label>{t('settings-input-languages')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
         );
     },
 
