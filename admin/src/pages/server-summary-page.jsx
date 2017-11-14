@@ -776,22 +776,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks log button
+     * Open a pop-window to OAuth redirection URL
      *
-     * @param  {Event} evt
+     * @param  {String} type
      */
-    handleTestClick: function(evt) {
-    },
-
-    /**
-     * Called when user clicks on "Acquire API access" button
-     *
-     * @param  {Event} evt
-     */
-    handleAcquireClick: function(evt) {
+    openOAuthPopup: function(type) {
         var db = this.props.database.use({ by: this });
         var server = this.getServer();
-        var url = db.getActivationUrl(server);
+        var url = db.getOAuthUrl(server, type);
 
         var width = 800;
         var height = 600;
@@ -808,6 +800,24 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             return `${name}=${value}`;
         });
         window.open(url, 'api-access-oauth', pairs.join(','));
+    },
+
+    /**
+     * Called when user clicks on "Acquire API access" button
+     *
+     * @param  {Event} evt
+     */
+    handleAcquireClick: function(evt) {
+        this.openOAuthPopup('activation');
+    },
+
+    /**
+     * Called when user clicks on "Test OAuth" button
+     *
+     * @param  {Event} evt
+     */
+    handleTestClick: function(evt) {
+        this.openOAuthPopup('test');
     },
 
     /**

@@ -186,14 +186,15 @@ function Database(remoteDataSource, context) {
     };
 
     /**
-     * Return an URL for granting OAuth access to the backend
+     * Return an URL for testing OAuth integration or gaining API access
      *
      * @param  {Object} oauthServer
+     * @param  {String} type
      *
      * @return {String}
      */
-    this.getActivationUrl = function(oauthServer) {
-        return remoteDataSource.getActivationUrl(context, oauthServer);
+    this.getOAuthUrl = function(oauthServer, type) {
+        return remoteDataSource.getOAuthUrl(context, oauthServer, type);
     };
 }
 

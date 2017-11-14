@@ -182,17 +182,23 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Object} oauthServer
+     * @param  {String} type
      *
      * @return {String}
      */
-    getActivationUrl: function(location, oauthServer) {
+    getOAuthUrl: function(location, oauthServer, type) {
         var address = this.getServerAddress(location);
         var session = getSession(address);
         if (!session.authorization) {
             return '';
         }
         var token = session.authorization.token;
-        var query = `activation=1&sid=${oauthServer.id}&token=${token}`;
+        var query = `sid=${oauthServer.id}&token=${token}`;
+        if (type === 'activation') {
+            query += '&activation=1';
+        } else if (type === 'test') {
+            query += '&test=1';
+        }
         var url = `${address}/auth/${oauthServer.type}?${query}`;
         return url;
     },
