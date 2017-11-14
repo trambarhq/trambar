@@ -467,7 +467,7 @@ module.exports = React.createClass({
      */
     loadCredentialsFromCache: function(address) {
         var db = this.state.database.use({ schema: 'local', by: this });
-        var criteria = { address };
+        var criteria = { key: address };
         return db.findOne({ table: 'user_credentials', criteria });
     },
 
