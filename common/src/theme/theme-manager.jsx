@@ -84,7 +84,7 @@ module.exports = React.createClass({
             filters.push(`re${width}-${height}`);
         } else if (!width && height) {
             filters.push(`h${height}`);
-        } else if (height && !width) {
+        } else if (!height && width) {
             filters.push(`w${width}`);
         }
         // set quality

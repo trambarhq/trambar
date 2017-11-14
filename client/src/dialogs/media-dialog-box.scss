@@ -12,8 +12,11 @@
 
     .container {
         flex: 1 1 auto;
+        display: flex;
         overflow: hidden;
         padding-bottom: 0.2em;
+        align-items: center;
+        justify-content: center;
 
         IMG {
             max-width:100%;

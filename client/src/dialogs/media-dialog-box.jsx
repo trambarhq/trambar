@@ -123,11 +123,49 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderView: function() {
-        var index = this.state.selectedIndex;
+        var index = this.getSelectedResourceIndex();
         var res = this.props.resources[index];
-        switch (res.type) {
-            case 'image': return this.renderImage(res);
-            case 'video': return this.renderVideo(res);
+        if (res) {
+            var viewport = document.body.parentNode;
+            var viewportWidth = viewport.clientWidth;
+            var viewportHeight = viewport.clientHeight;
+            if (this.props.theme.mode === 'columns-1') {
+                viewportWidth -= 20;
+                viewportHeight -= 100;
+            } else {
+                viewportWidth -= 100;
+                viewportHeight -= 200;
+            }
+            var viewportAspect = viewportWidth / viewportHeight;
+            var maxWidth = _.max(_.map(this.props.resources, 'width'));
+            var maxHeight = _.max(_.map(this.props.resources, 'height'));
+            var maxAspect = maxWidth / maxHeight;
+            if (viewportAspect > maxAspect) {
+                if (maxHeight > viewportHeight) {
+                    maxHeight = viewportHeight;
+                    maxWidth = Math.round(maxHeight * maxAspect);
+                }
+            } else {
+                if (maxWidth > viewportWidth) {
+                    maxWidth = viewportWidth;
+                    maxHeight = Math.round(maxWidth / maxAspect);
+                }
+            }
+            var style = { width: maxWidth, height: maxHeight };
+            var contents;
+            switch (res.type) {
+                case 'image':
+                    contents = this.renderImage(res, maxWidth, maxHeight);
+                    break;
+                case 'video':
+                    contents = this.renderVideo(res, maxWidth, maxHeight);
+                    break;
+            }
+            return (
+                <div className="container" style={style}>
+                    {contents}
+                </div>
+            );
         }
     },
 
@@ -135,35 +173,32 @@ module.exports = React.createClass({
      * Render image
      *
      * @param  {Object} res
+     * @param  {Number} maxWidth
+     * @param  {Number} maxHeight
      *
      * @return {ReactElement}
      */
-    renderImage: function(res) {
-        var viewport = document.body.parentElement;
-        var viewportWidth = viewport.clientWidth - 100;
-        var viewportHeight = viewport.clientHeight - 200;
+    renderImage: function(res, maxWidth, maxHeight) {
         var width, height;
-        if (res.width > viewportWidth) {
-            width = viewportWidth;
-        } else if (res.height > viewportHeight) {
-            height = viewportHeight;
+        if (res.width > maxWidth) {
+            width = maxWidth;
+        } else if (res.height > maxHeight) {
+            height = maxHeight;
         }
         var theme = this.props.theme;
         var image = _.omit(res, 'clip');
         var props = {
             src: theme.getImageUrl(image, { width, height })
         };
-        return (
-            <div className="image">
-                <img {...props} />
-            </div>
-        );
+        return <img {...props} />;
     },
 
     /**
      * Render video player
      *
      * @param  {Object} res
+     * @param  {Number} maxWidth
+     * @param  {Number} maxHeight
      *
      * @return {ReactElement}
      */
@@ -176,11 +211,7 @@ module.exports = React.createClass({
             controls: true,
             autoPlay: true
         };
-        return (
-            <div className="container">
-                <video {...props} />
-            </div>
-        );
+        return <video {...props} />;
     },
 
     /**
