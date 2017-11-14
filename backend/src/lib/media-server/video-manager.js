@@ -59,24 +59,24 @@ function startTranscodingJob(srcPath, type, jobId) {
     };
     if (type === 'video') {
         job.profiles = {
-            '320x240': {
-                videoBitrate: 250 * 1000,
-                videoScaling: {
-                    width: 320,
-                    height: 240
-                },
-                audioBitrate: 64 * 1000,
-                audioChannels: 1,
-                format: 'mp4',
-            },
-            '640x480': {
+            '896x896': {
                 videoBitrate: 1000 * 1000,
                 videoScaling: {
-                    width: 640,
-                    height: 480,
+                    width: 896,
+                    height: 896
                 },
                 audioBitrate: 128 * 1000,
                 audioChannels: 2,
+                format: 'mp4',
+            },
+            '640x640': {
+                videoBitrate: 500 * 1000,
+                videoScaling: {
+                    width: 640,
+                    height: 640,
+                },
+                audioBitrate: 64 * 1000,
+                audioChannels: 1,
                 format: 'mp4',
             },
         };

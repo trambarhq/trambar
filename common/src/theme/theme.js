@@ -28,10 +28,10 @@ function Theme(themeManager) {
     };
 
     this.getVideoUrl = function(res, params) {
-        return themeManager.getVideoUrl(res);
+        return themeManager.getVideoUrl(res, params);
     };
 
     this.getAudioUrl = function(res, params) {
-        return themeManager.getAudioUrl(res);
+        return themeManager.getAudioUrl(res, params);
     };
 }

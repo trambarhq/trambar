@@ -145,8 +145,22 @@ module.exports = React.createClass({
                 viewportHeight -= 200;
             }
             var viewportAspect = viewportWidth / viewportHeight;
-            var maxWidth = _.max(_.map(this.props.resources, 'width'));
-            var maxHeight = _.max(_.map(this.props.resources, 'height'));
+            var maxWidth, maxHeight;
+            _.each(this.props.resources, (res) => {
+                var dim;
+                if (res.type === 'video') {
+                    var version = chooseVideoVersion(res);
+                    dim = getVideoVersionDimensions(res, version);
+                } else {
+                    dim = res;
+                }
+                if (!(maxWidth >= dim.width)) {
+                    maxWidth = dim.width;
+                }
+                if (!(maxHeight >= dim.height)) {
+                    maxHeight = dim.height;
+                }
+            });
             var maxAspect = maxWidth / maxHeight;
             if (viewportAspect > maxAspect) {
                 if (maxHeight > viewportHeight) {
@@ -213,11 +227,14 @@ module.exports = React.createClass({
     renderVideo: function(res) {
         var video = res;
         var theme = this.props.theme;
+        var version = chooseVideoVersion(res);
+        var dims = getVideoVersionDimensions(res, version);
         var props = {
             ref: 'video',
-            src: theme.getVideoUrl(video),
+            src: theme.getVideoUrl(video, { version }),
             controls: true,
-            autoPlay: true
+            autoPlay: true,
+            poster: theme.getImageUrl(video, { width: dims.width, height: dims.height, quality: 60 }),
         };
         return <video {...props} />;
     },
@@ -320,4 +337,57 @@ function Thumbnail(props) {
             <img src={props.url} />
         </div>
     )
+}
+
+/**
+ * Calculate the actual dimension of one version of the video
+ *
+ * @param  {Object} res
+ * @param  {Object} name
+ *
+ * @return {Object}
+ */
+function getVideoVersionDimensions(res, name) {
+    // videoScaling contain the boundary values
+    var version = res.versions[name];
+    var originalWidth = res.width;
+    var originalHeight = res.height;
+    var maxWidth = version.videoScaling.width;
+    var maxHeight = version.videoScaling.height;
+    var scaling = Math.min(maxWidth / originalWidth, maxHeight / originalHeight);
+    var width = Math.round(originalWidth * scaling);
+    var height = Math.round(originalHeight * scaling);
+    return { width, height };
+}
+
+/**
+ * Choose a version of the video that's best suits the screen
+ *
+ * @param  {Object} res
+ *
+ * @return {String}
+ */
+function chooseVideoVersion(res) {
+    var screenWidth = screen.width;
+    var screenHeight = screen.height;
+    var screenPixelCount = screenWidth * screenHeight;
+    var choices = _.map(_.keys(res.versions), (name) => {
+        var scaledDims = getVideoVersionDimensions(res, name);
+        var scaledPixelCount = scaledDims.width * scaledDims.height;
+        var diff = Math.abs(screenPixelCount - scaledPixelCount);
+        return { name, diff };
+    });
+    var optimal = _.first(_.sortBy(choices, 'diff'));
+    return (optimal) ? optimal.name : null;
+}
+
+/**
+ * Choose a version of the audio
+ *
+ * @param  {Object} res
+ *
+ * @return {String}
+ */
+function chooseAudioVersion(res) {
+    return _.first(_.keys(res.versions)) || null;
 }

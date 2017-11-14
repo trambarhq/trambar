@@ -329,11 +329,13 @@ module.exports = React.createClass({
                         mandatory: {
                             sourceId: this.state.selectedDeviceId
                         }
-                    }
+                    },
+                    audio: true
                 };
             } else {
                 constraints = {
                     video: true,
+                    audio: true
                 };
             }
             promise = navigator.mediaDevices.getUserMedia(constraints);

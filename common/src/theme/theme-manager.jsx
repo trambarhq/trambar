@@ -112,42 +112,16 @@ module.exports = React.createClass({
     },
 
     getVideoUrl: function(res, options) {
-        var screenWidth = screen.width * this.state.devicePixelRatio;
-        var screenHeight = screen.height * this.state.devicePixelRatio;
-        var screenPixelCount = screenWidth * screenHeight;
-        var originalWidth = res.width;
-        var originalHeight = res.height;
-        var aspect = originalWidth / originalHeight;
-        var choices = _.map(res.versions, (version, name) => {
-            // videoScaling contain the boundary values
-            var maxWidth = version.videoScaling.width;
-            var maxHeight = version.videoScaling.height;
-            var scaling = Math.min(maxWidth / originalWidth, maxHeight / originalHeight);
-            var scaledWidth = Math.round(originalWidth * scaling);
-            var scaledHeight = Math.round(originalHeight * scaling);
-            var scaledPixelCount = scaledWidth * scaledHeight;
-            var diff = Math.abs(screenPixelCount - scaledPixelCount);
-            return { name, diff, format: version.format };
-        });
-        var optimal = _.first(_.sortBy(choices, 'diff'));
-        if (optimal) {
-            return `${this.props.serverAddress}${res.url}.${optimal.name}.${optimal.format}`;
-        } else {
-            return `${this.props.serverAddress}${res.url}`;
+        var url = `${this.props.serverAddress}${res.url}`;
+        if (options && options.version) {
+            var version = res.versions[options.version];
+            url += `.${options.version}.${version.format}`;
         }
+        return url;
     },
 
     getAudioUrl: function(res, options) {
-        // assume there's just one
-        var choices = _.map(res.versions, (version, name) => {
-            return { name, format: version.format };
-        });
-        var optimal = _.first(choices);
-        if (optimal) {
-            return `${this.props.serverAddress}${res.url}.${optimal.name}.${optimal.format}`;
-        } else {
-            return `${this.props.serverAddress}${res.url}`;
-        }
+        return this.getVideoUrl(res, options);
     },
 
     /**
