@@ -325,7 +325,7 @@ module.exports = React.createClass({
                 case 'video': url = theme.getVideoUrl(res); break;
             }
             link.href = url;
-            link.download = true;
+            link.download = res.filename || true;   // only works when it's same origin
             link.click();
         }
     },

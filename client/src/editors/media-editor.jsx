@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
 var BlobReader = require('utils/blob-reader');
@@ -86,9 +87,11 @@ module.exports = React.createClass({
                 var isImage = /<img\b/i.test(html);
                 if (isImage) {
                     return MediaLoader.loadImage(url).then((image) => {
+                        var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
                         return {
                             type: 'image',
                             external_url: url,
+                            filename: filename,
                             width: image.naturalWidth,
                             height: image.naturalHeight,
                             clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight)
@@ -419,6 +422,7 @@ module.exports = React.createClass({
                     return {
                         type: 'image',
                         format: format,
+                        filename: file.name,
                         file: file,
                         width: image.naturalWidth,
                         height: image.naturalHeight,
@@ -443,6 +447,7 @@ module.exports = React.createClass({
                             return {
                                 type: 'video',
                                 format: format,
+                                filename: file.name,
                                 file: blob,
                                 stream: stream,
                                 poster_file: poster,
@@ -465,6 +470,7 @@ module.exports = React.createClass({
                     return {
                         type: 'audio',
                         format: format,
+                        filename: file.name,
                         file: file,
                         stream: stream,
                         duration: audio.duration,
@@ -499,6 +505,7 @@ module.exports = React.createClass({
     handlePhotoCapture: function(evt) {
         var res = _.clone(evt.image);
         res.type = 'image';
+        res.filename = getFilenameFromTime('.jpg') ;
         res.clip = getDefaultClippingRect(res.width, res.height);
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
@@ -512,6 +519,7 @@ module.exports = React.createClass({
     handleVideoCapture: function(evt) {
         var res = _.clone(evt.video);
         res.type = 'video';
+        res.filename = getFilenameFromTime('.' + res.format) ;
         res.clip = getDefaultClippingRect(res.width, res.height);
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
@@ -525,6 +533,7 @@ module.exports = React.createClass({
     handleAudioCapture: function(evt) {
         var res = _.clone(evt.audio);
         res.type = 'audio';
+        res.filename = getFilenameFromTime('.' + res.format) ;
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
@@ -670,4 +679,13 @@ function getInnerText(html) {
         node.innerHTML = html.replace(/<.*?>/g, '');
         website.title = node.innerText;
     }
+}
+
+/**
+ * Generate a filename from the current time
+ *
+ * @return {String}
+ */
+function getFilenameFromTime(ext) {
+    return _.toUpper(Moment().format('YYYY-MMM-DD-hhA')) + ext;
 }
