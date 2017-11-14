@@ -150,6 +150,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return {
             newProject: null,
             saving: false,
+            adding: false,
             problems: {},
         };
     },
@@ -286,6 +287,18 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Start creating a new role
+     *
+     * @return {Promise}
+     */
+    startNew: function() {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.project = 'new';
+        return route.replace(module.exports, params);
+    },
+
+    /**
      * Return list of language codes
      *
      * @return {Array<String>}
@@ -358,14 +371,22 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var project = this.props.project;
             var active = (project) ? !project.deleted && !project.archived : true;
-            var preselected = (!active) ? 'restore' : 'return';
+            var preselected;
+            if (active) {
+                preselected = (this.state.adding) ? 'add' : 'return';
+            } else {
+                preselected = 'restore';
+            }
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
                         <option name="return" onClick={this.handleReturnClick}>
                             {t('project-summary-return')}
                         </option>
-                        <option name="archive" disabled={!active} onClick={this.handleArchiveClick}>
+                        <option name="add" onClick={this.handleAddClick}>
+                            {t('project-summary-add')}
+                        </option>
+                        <option name="archive" disabled={!active} separator onClick={this.handleArchiveClick}>
                             {t('project-summary-archive')}
                         </option>
                         <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
@@ -503,40 +524,40 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderMembershipOptions: function() {
         var t = this.props.locale.translate;
-        var memCurr = this.getProjectProperty('settings.membership', 'current') || {};
-        var memPrev = this.getProjectProperty('settings.membership', 'original') || {};
+        var memOptsCurr = this.getProjectProperty('settings.membership', 'current') || {};
+        var memOptsPrev = this.getProjectProperty('settings.membership', 'original') || {};
         var newProject = !!this.getProjectProperty('id');
         var optionProps = [
             {
                 name: 'manual',
-                selected: !_.some(memCurr),
-                previous: (newProject) ? !_.some(memPrev) : undefined,
+                selected: !_.some(memOptsCurr),
+                previous: (newProject) ? !_.some(memOptsPrev) : undefined,
                 children: t('project-summary-new-members-manual'),
             },
             {
                 name: 'allow_user_request',
-                selected: memCurr.allow_user_request,
-                previous: memPrev.allow_user_request,
+                selected: memOptsCurr.allow_user_request,
+                previous: memOptsPrev.allow_user_request,
                 children: t('project-summary-new-members-join-user'),
             },
             {
                 name: 'approve_user_request',
-                selected: memCurr.approve_user_request,
-                previous: memPrev.approve_user_request,
-                hidden: !memCurr.allow_user_request,
+                selected: memOptsCurr.approve_user_request,
+                previous: memOptsPrev.approve_user_request,
+                hidden: !memOptsCurr.allow_user_request,
                 children: t('project-summary-new-members-auto-accept-user'),
             },
             {
                 name: 'allow_guest_request',
-                selected: memCurr.allow_guest_request,
-                previous: memPrev.allow_guest_request,
+                selected: memOptsCurr.allow_guest_request,
+                previous: memOptsPrev.allow_guest_request,
                 children: t('project-summary-new-members-join-guest'),
             },
             {
                 name: 'approve_guest_request',
-                selected: memCurr.approve_guest_request,
-                previous: memPrev.approve_guest_request,
-                hidden: !memCurr.allow_guest_request,
+                selected: memOptsCurr.approve_guest_request,
+                previous: memOptsPrev.approve_guest_request,
+                hidden: !memOptsCurr.allow_guest_request,
                 children: t('project-summary-new-members-auto-accept-guest'),
             },
         ];
@@ -559,27 +580,27 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderAccessControlOptions: function() {
         var t = this.props.locale.translate;
-        var accessCurr = this.getProjectProperty('settings.access_control', 'current') || {};
-        var accessPrev = this.getProjectProperty('settings.access_control', 'original') || {};
+        var acOptsCurr = this.getProjectProperty('settings.access_control', 'current') || {};
+        var acOptsPrev = this.getProjectProperty('settings.access_control', 'original') || {};
         var newProject = !!this.getProjectProperty('id');
         var optionProps = [
             {
                 name: 'members_only',
-                selected: !_.some(accessCurr),
-                previous: (newProject) ? !_.some(accessPrev) : undefined,
+                selected: !_.some(acOptsCurr),
+                previous: (newProject) ? !_.some(acOptsPrev) : undefined,
                 children: t('project-summary-access-control-member-only')
             },
             {
                 name: 'grant_view_access',
-                selected: accessCurr.grant_view_access,
-                previous: accessPrev.grant_view_access,
+                selected: acOptsCurr.grant_view_access,
+                previous: acOptsPrev.grant_view_access,
                 children: t('project-summary-access-control-non-member-view')
             },
             {
                 name: 'grant_comment_access',
-                selected: accessCurr.grant_comment_access,
-                previous: accessPrev.grant_comment_access,
-                hidden: !accessCurr.grant_view_access,
+                selected: acOptsCurr.grant_comment_access,
+                previous: acOptsPrev.grant_comment_access,
+                hidden: !acOptsCurr.grant_view_access,
                 children: t('project-summary-access-control-non-member-comment')
             },
         ];
@@ -709,6 +730,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user click add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        return this.startNew();
+    },
+
+    /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
@@ -740,9 +770,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             this.setState({ problems });
             return;
         }
-        this.setState({ saving: true, problems: {} }, () => {
+        var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
+        this.setState({ saving: true, adding: !project.id, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
-            var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
             var payloads = this.props.payloads;
             return payloads.prepare(project).then(() => {
                 return db.start().then((userId) => {
@@ -813,43 +843,43 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleMembershipOptionClick: function(evt) {
-        var s = _.cloneDeep(this.getProjectProperty('settings'));
+        var memOpts = _.clone(this.getProjectProperty('settings.membership')) || {};
         switch (evt.name) {
             case 'manual':
-                s.membership = {};
+                memOpts = {};
                 break;
             case 'allow_user_request':
-                if (s.membership.allow_user_request) {
-                    delete s.membership.allow_user_request;
-                    delete s.membership.approve_user_request;
+                if (memOpts.allow_user_request) {
+                    delete memOpts.allow_user_request;
+                    delete memOpts.approve_user_request;
                 } else {
-                    s.membership.allow_user_request = true;
+                    memOpts.allow_user_request = true;
                 }
                 break;
             case 'approve_user_request':
-                if (s.membership.approve_user_request) {
-                    delete s.membership.approve_user_request;
+                if (memOpts.approve_user_request) {
+                    delete memOpts.approve_user_request;
                 } else {
-                    s.membership.approve_user_request = true;
+                    memOpts.approve_user_request = true;
                 }
                 break;
             case 'allow_guest_request':
-                if (s.membership.allow_guest_request) {
-                    delete s.membership.allow_guest_request;
-                    delete s.membership.approve_guest_request;
+                if (memOpts.allow_guest_request) {
+                    delete memOpts.allow_guest_request;
+                    delete memOpts.approve_guest_request;
                 } else {
-                    s.membership.allow_guest_request = true;
+                    memOpts.allow_guest_request = true;
                 }
                 break;
             case 'approve_guest_request':
-                if (s.membership.approve_guest_request) {
-                    delete s.membership.approve_guest_request;
+                if (memOpts.approve_guest_request) {
+                    delete memOpts.approve_guest_request;
                 } else {
-                    s.membership.approve_guest_request = true;
+                    memOpts.approve_guest_request = true;
                 }
                 break;
         }
-        this.setProjectProperty(`settings`, s);
+        this.setProjectProperty(`settings.membership`, memOpts);
     },
 
     /**
@@ -858,27 +888,27 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleAccessControlOptionClick: function(evt) {
-        var s = _.cloneDeep(this.getProjectProperty('settings'));
+        var acOpts = _.clone(this.getProjectProperty('settings.access_control')) || {};
         switch (evt.name) {
             case 'members_only':
-                s.access_control = {};
+                acOpts = {};
                 break;
             case 'grant_view_access':
-                if (s.access_control.grant_view_access) {
-                    delete s.access_control.grant_view_access;
+                if (acOpts.grant_view_access) {
+                    delete acOpts.grant_view_access;
                 } else {
-                    s.access_control.grant_view_access = true;
+                    acOpts.grant_view_access = true;
                 }
                 break;
             case 'grant_comment_access':
-                if (s.access_control.grant_comment_access) {
-                    delete s.access_control.grant_comment_access;
+                if (acOpts.grant_comment_access) {
+                    delete acOpts.grant_comment_access;
                 } else {
-                    s.access_control.grant_comment_access = true;
+                    acOpts.grant_comment_access = true;
                 }
                 break;
         }
-        this.setProjectProperty(`settings`, s);
+        this.setProjectProperty(`settings.access_control`, acOpts);
     },
 });
 

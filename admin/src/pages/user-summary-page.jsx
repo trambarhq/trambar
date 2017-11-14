@@ -185,6 +185,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             hasChanges: false,
             showingSocialLinks: false,
             saving: false,
+            adding: false,
             problems: {},
         };
     },
@@ -336,6 +337,18 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Start creating a new role
+     *
+     * @return {Promise}
+     */
+    startNew: function() {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.user = 'new';
+        return route.replace(module.exports, params);
+    },
+
+    /**
      * Return list of language codes
      *
      * @return {Array<String>}
@@ -411,14 +424,22 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var user = this.props.user;
             var active = (user) ? !user.deleted && !user.disabled : true;
-            var preselected = (!active) ? 'reactivate' : 'return';
+            var preselected;
+            if (active) {
+                preselected = (this.state.adding) ? 'add' : 'return';
+            } else {
+                preselected = 'reactivate';
+            }
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
                         <option name="return" onClick={this.handleReturnClick}>
                             {t(member ? 'user-summary-member-return' : 'user-summary-return')}
                         </option>
-                        <option name="disable" disabled={!active} onClick={this.handleDisableClick}>
+                        <option name="add" onClick={this.handleAddClick}>
+                            {t('user-summary-add')}
+                        </option>
+                        <option name="disable" disabled={!active} separator onClick={this.handleDisableClick}>
                             {t('user-summary-disable')}
                         </option>
                         <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
@@ -924,6 +945,15 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user click add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        return this.startNew();
+    },
+
+    /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
@@ -955,9 +985,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             this.setState({ problems });
             return;
         }
-        this.setState({ saving: true, problems: {} }, () => {
+        var user = this.getUser();
+        this.setState({ saving: true, adding: !user.id, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
-            var user = this.getUser();
             var payloads = this.props.payloads;
             return payloads.prepare(user).then(() => {
                 return db.start().then((userId) => {

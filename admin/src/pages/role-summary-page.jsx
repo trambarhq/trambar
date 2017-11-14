@@ -132,6 +132,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             newRole: null,
             hasChanges: false,
             saving: false,
+            adding: false,
             problems: {},
         };
     },
@@ -263,6 +264,18 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Start creating a new role
+     *
+     * @return {Promise}
+     */
+    startNew: function() {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.role = 'new';
+        return route.replace(module.exports, params);
+    },
+
+    /**
      * Return list of language codes
      *
      * @return {Array<String>}
@@ -331,14 +344,22 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var role = this.props.role;
             var active = (role) ? !role.deleted && !role.disabled : true;
-            var preselected = (!active) ? 'reactivate' : 'return';
+            var preselected;
+            if (active) {
+                preselected = (this.state.adding) ? 'add' : 'return';
+            } else {
+                preselected = 'reactivate';
+            }
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
                         <option name="return" onClick={this.handleReturnClick}>
                             {t('role-summary-return')}
                         </option>
-                        <option name="archive" disabled={!active} onClick={this.handleDisableClick}>
+                        <option name="add" onClick={this.handleAddClick}>
+                            {t('role-summary-add')}
+                        </option>
+                        <option name="archive" disabled={!active} separator onClick={this.handleDisableClick}>
                             {t('role-summary-disable')}
                         </option>
                         <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
@@ -533,6 +554,15 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user click add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        return this.startNew();
+    },
+
+    /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
@@ -564,18 +594,17 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             this.setState({ problems });
             return;
         }
-        this.setState({ saving: true, problems: {} }, () => {
+        var role = this.getRole();
+        this.setState({ saving: true, adding: !role.id, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
-            var role = this.getRole();
             return db.start().then((userId) => {
                 return db.saveOne({ table: 'role' }, role).then((role) => {
-                    this.setState({ hasChanges: false }, () => {
+                    this.setState({ hasChanges: false, saving: false }, () => {
                         return this.setEditability(false, role);
                     });
                     return null;
                 });
             }).catch((err) => {
-                this.setState({ saving: false });
                 var problems = {};
                 if (err.statusCode === 409) {
                     problems.name = 'validation-duplicate-role-name';

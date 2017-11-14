@@ -133,6 +133,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             newServer: null,
             hasChanges: false,
             saving: false,
+            adding: false,
             credentialsChanged: false,
             problems: {},
         };
@@ -296,6 +297,18 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Start creating a new role
+     *
+     * @return {Promise}
+     */
+    startNew: function() {
+        var route = this.props.route;
+        var params = _.clone(route.parameters);
+        params.server = 'new';
+        return route.replace(module.exports, params);
+    },
+
+    /**
      * Return list of language codes
      *
      * @return {Array<String>}
@@ -368,8 +381,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             var server = this.getServer();
             var active = !server.deleted && !server.disabled;
             var hasIntegration = hasAPIIntegration(server.type);
-            var hasAccessToken = !!_.get(server.settings, 'api.access_token');
-            var hasOAuthCredentials = !!(_.get(server.settings, 'oauth.client_id') && _.get(server.settings, 'oauth.client_secret'));
+            var hasAccessToken = !!_.get(server, 'settings.api.access_token');
+            var hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
             var credentialsChanged = this.state.credentialsChanged;
             var preselected;
             if (active) {
@@ -378,7 +391,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 } else if (hasOAuthCredentials && credentialsChanged) {
                     preselected = 'test';
                 } else {
-                    preselected = 'return';
+                    preselected = (this.state.adding) ? 'add' : 'return';
                 }
             } else {
                 preselected = 'reactivate';
@@ -389,7 +402,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                         <option name="return" onClick={this.handleReturnClick}>
                             {t('server-summary-return')}
                         </option>
-                        <option name="acquire" disabled={!active || !hasIntegration} onClick={this.handleAcquireClick}>
+                        <option name="add" onClick={this.handleAddClick}>
+                            {t('server-summary-add')}
+                        </option>
+                        <option name="acquire" disabled={!active || !hasIntegration} separator onClick={this.handleAcquireClick}>
                             {t('server-summary-acquire')}
                         </option>
                         <option name="log" disabled={!active || !hasAccessToken} onClick={this.handleLogClick}>
@@ -804,6 +820,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user click add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        return this.startNew();
+    },
+
+    /**
      * Called when server clicks edit button
      *
      * @param  {Event} evt
@@ -835,9 +860,12 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             this.setState({ problems });
             return;
         }
-        this.setState({ saving: true, problems: {} }, () => {
+        var server = this.getServer();
+        var oauthBefore = this.getServerProperty('settings.oauth', 'original');
+        var oauthAfter = this.getServerProperty('settings.oauth', 'current');
+        var credentialsChanged = !_.isEqual(oauthBefore, oauthAfter);
+        this.setState({ saving: true, adding: !server.id, credentialsChanged, problems: {} }, () => {
             var db = this.props.database.use({ schema: 'global', by: this });
-            var server = this.getServer();
             return db.start().then((serverId) => {
                 return db.saveOne({ table: 'server' }, server).then((server) => {
                     this.setState({ hasChanges: false, saving: false }, () => {

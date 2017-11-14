@@ -151,6 +151,7 @@ module.exports = function(languageCode) {
         'project-summary-access-control-member-only': 'Project contents are restricted to members only',
         'project-summary-access-control-non-member-comment': 'Non-members can comment on stories',
         'project-summary-access-control-non-member-view': 'Non-members can view contents',
+        'project-summary-add': 'Add new project',
         'project-summary-archive': 'Archive project',
         'project-summary-cancel': 'Cancel',
         'project-summary-confirm-archive': 'Are you sure you want to archive this project?',
@@ -239,6 +240,7 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'role-summary-add': 'Add new role',
         'role-summary-cancel': 'Cancel',
         'role-summary-confirm-delete': 'Are you sure you want to delete this role?',
         'role-summary-confirm-disable': 'Are you sure you want to disable this role?',
@@ -278,6 +280,7 @@ module.exports = function(languageCode) {
         'server-list-oauth-true': 'Active',
 
         'server-summary-acquire': 'Acquire API access',
+        'server-summary-add': 'Add new server',
         'server-summary-api-access': 'API access',
         'server-summary-api-access-acquired': 'Administrative access acquired',
         'server-summary-api-access-not-applicable': 'Not applicable',
@@ -405,6 +408,7 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'user-summary-add': 'Add new user',
         'user-summary-cancel': 'Cancel',
         'user-summary-confirm-delete': 'Are you sure you want to delete this user account?',
         'user-summary-confirm-disable': 'Are you sure you want to disable this user account?',
