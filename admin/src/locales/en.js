@@ -339,6 +339,9 @@ module.exports = function(languageCode) {
         'sign-in-password': 'Password:',
         'sign-in-submit': 'Sign in',
         'sign-in-oauth': 'Sign in through OAuth',
+        'sign-in-problem-incorrect-username-password': 'Incorrect user name or password',
+        'sign-in-problem-no-support-for-username-password': 'System does not accept password',
+        'sign-in-problem-unexpected-error': 'Unexpected error encountered',
         'sign-in-username': 'User name:',
 
         'sign-off-menu-sign-off': 'Sign off',

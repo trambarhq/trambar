@@ -171,10 +171,18 @@ function handleHttpasswdRequest(req, res) {
                 throw new HttpError(400);
             }
             var htpasswdPath = process.env.HTPASSWD_PATH;
+            if (!htpasswdPath) {
+                throw new HttpError(403);
+            }
             return FS.readFileAsync(htpasswdPath, 'utf-8').then((data) => {
                 return HtpasswdAuth.authenticate(username, password, data);
             }).catch((err) => {
-                return false;
+                if (err.code === 'ENOENT') {
+                    // password file isn't there
+                    throw new HttpError(403);
+                } else {
+                    throw err;
+                }
             }).then((successful) => {
                 if (successful !== true) {
                     return Promise.delay(Math.random() * 1000).return(null);
@@ -441,10 +449,10 @@ function handleOAuthActivationRequest(req, res, done) {
  */
 function authorizeUser(db, user, authentication, authType, serverId, details) {
     if (!user) {
-        return Promise.resolve(new HttpError(401));
+        return Promise.reject(new HttpError(401));
     }
     if (authentication.area === 'admin' && user.type !== 'admin') {
-        return Promise.resolve(new HttpError(403));
+        return Promise.reject(new HttpError(403));
     }
     // update Authentication record
     authentication.type = authType;
@@ -744,9 +752,6 @@ function retrieveProfileImage(profile) {
     };
     return new Promise((resolve, reject) => {
         Request.post(options, (err, resp, body) => {
-            if (!err && resp && resp.statusCode >= 400) {
-                err = new HttpError(resp.statusCode);
-            }
             if (!err) {
                 var image = body;
                 resolve(image);

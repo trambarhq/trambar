@@ -33,9 +33,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onOAuthEnd: this.handleOAuthEnd,
-            onPasswordSubmit: this.handlePasswordSubmit,
         };
         // start authorization process--will receive system description
         // and list of OAuth providers along with links
@@ -46,27 +43,7 @@ module.exports = Relaks.createClass({
             return <SignInPageSync {...props} />;
         });
     },
-
-    /**
-     * Retrieve authorization object from server
-     *
-     * @param  {Object} evt
-     */
-    handleOAuthEnd: function(evt) {
-        var db = this.props.database.use({ by: this });
-        db.checkAuthorizationStatus();
-    },
-
-    /**
-     * Submit username/password to server
-     *
-     * @param  {Object} evt
-     */
-    handlePasswordSubmit: function(evt) {
-        var db = this.props.database.use({ by: this });
-        db.submitPassword(evt.username, evt.password);
-    },
-})
+});
 
 var SignInPageSync = module.exports.Sync = React.createClass({
     displayName: 'SignInPage.Sync',
@@ -78,9 +55,6 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onOAuthEnd: PropTypes.func,
-        onPasswordSubmit: PropTypes.func,
     },
 
     /**
@@ -92,6 +66,8 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         return {
             username: '',
             password: '',
+            submitting: false,
+            problem: null,
         };
     },
 
@@ -134,6 +110,11 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render login/password form
+     *
+     * @return {ReactElement}
+     */
     renderForm: function() {
         var t = this.props.locale.translate;
         var valid = this.canSubmitForm();
@@ -141,6 +122,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             id: 'username',
             type: 'text',
             value: this.state.username,
+            disabled: this.state.submitting,
             locale: this.props.locale,
             onChange: this.handleUsernameChange,
         };
@@ -148,17 +130,40 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             id: 'password',
             type: 'password',
             value: this.state.password,
+            disabled: this.state.submitting,
             locale: this.props.locale,
             onChange: this.handlePasswordChange,
         };
         return (
             <form onSubmit={this.handleFormSubmit}>
+                {this.renderProblem()}
                 <TextField {...usernameProps}>{t('sign-in-username')}</TextField>
                 <TextField {...passwordProps}>{t('sign-in-password')}</TextField>
                 <div className="button-row">
-                    <PushButton disabled={!valid}>{t('sign-in-submit')}</PushButton>
+                    <PushButton disabled={!valid || this.state.submitting}>
+                        {t('sign-in-submit')}
+                    </PushButton>
                 </div>
             </form>
+        );
+    },
+
+    /**
+     * Render error message
+     *
+     * @return {ReactElement|null}
+     */
+    renderProblem: function() {
+        if (!this.state.problem) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        return (
+            <div className="error">
+                <i className="fa fa-exclamation-circle" />
+                {' '}
+                {t(`sign-in-problem-${this.state.problem}`)}
+            </div>
         );
     },
 
@@ -244,35 +249,6 @@ var SignInPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Signal to parent component that the OAuth login process has ended
-     */
-    triggerOAuthEndEvent: function() {
-        if (this.props.onOAuthEnd) {
-            this.props.onOAuthEnd({
-                type: 'oauthended',
-                target: this,
-            })
-        }
-    },
-
-    /**
-     * Tell parent component to sign-in using username and password
-     *
-     * @param  {String} username
-     * @param  {String} password
-     */
-    triggerPasswordSubmitEvent: function(username, password) {
-        if (this.props.onPasswordSubmit) {
-            this.props.onPasswordSubmit({
-                type: 'passwordsubmit',
-                target: this,
-                username,
-                password,
-            });
-        }
-    },
-
-    /**
      * Called when user clicks on one of the OAuth buttons
      *
      * @param  {Event} evt
@@ -281,7 +257,9 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         var url = evt.currentTarget.getAttribute('href');
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
-            this.triggerOAuthEndEvent();
+            // retrieve authorization object from server
+            var db = this.props.database.use({ by: this });
+            db.checkAuthorizationStatus();
         });
     },
 
@@ -313,7 +291,19 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         if (!this.canSubmitForm()) {
             return;
         }
-        this.triggerPasswordSubmitEvent(this.state.username, this.state.password);
+        this.setState({ submitting: true }, () => {
+            var db = this.props.database.use({ by: this });
+            db.submitPassword(this.state.username, this.state.password).catch((err) => {
+                console.log('Cannot login: ' + err.statusCode)
+                var problem;
+                switch (err.statusCode) {
+                    case 401: problem = 'incorrect-username-password'; break;
+                    case 403: problem = 'no-support-for-username-password'; break;
+                    default: problem = 'unexpected-error';
+                }
+                this.setState({ problem, submitting: false });
+            });
+        });
     },
 });
 
