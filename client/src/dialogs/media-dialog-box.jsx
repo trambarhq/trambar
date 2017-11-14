@@ -272,6 +272,11 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var downloadButtonProps = {
+            label: t('media-download-original'),
+            emphasized: false,
+            onClick: this.handleDownloadClick,
+        };
         var closeButtonProps = {
             label: t('media-close'),
             emphasized: true,
@@ -279,6 +284,7 @@ module.exports = React.createClass({
         };
         return (
             <div className="buttons">
+                <PushButton {...downloadButtonProps} />
                 <PushButton {...closeButtonProps} />
             </div>
         );
@@ -299,6 +305,29 @@ module.exports = React.createClass({
     handleThumbnailClick: function(evt) {
         var index = parseInt(evt.currentTarget.id);
         return this.selectResource(index);
+    },
+
+    /**
+     * Called when user clicks on download button
+     *
+     * @param  {Evt} evt
+     */
+    handleDownloadClick: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        var res = this.props.resources[index];
+        if (res) {
+            // create a link then simulate a click
+            var link = document.createElement('A');
+            var theme = this.props.theme;
+            var url;
+            switch (res.type) {
+                case 'image': url = theme.getImageUrl(res, { noClipping: true }); break;
+                case 'video': url = theme.getVideoUrl(res); break;
+            }
+            link.href = url;
+            link.download = true;
+            link.click();
+        }
     },
 
     /**
