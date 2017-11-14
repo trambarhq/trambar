@@ -49,6 +49,7 @@ module.exports = React.createClass({
         if (!this.containerNode) {
             this.containerNode = document.createElement('DIV');
             document.body.appendChild(this.containerNode);
+            document.body.addEventListener('keydown', this.handleKeyDown);
         } else {
             if (this.containerRemovalTimeout) {
                 clearTimeout(this.containerRemovalTimeout);
@@ -84,6 +85,7 @@ module.exports = React.createClass({
             this.containerRemovalTimeout = setTimeout(() => {
                 ReactDOM.unmountComponentAtNode(this.containerNode);
                 document.body.removeChild(this.containerNode);
+                document.body.removeEventListener('keydown', this.handleKeyDown);
                 this.containerNode = null;
                 this.containerRemovalTimeout = 0;
             }, 1000);
@@ -98,6 +100,14 @@ module.exports = React.createClass({
     handleClick: function(evt) {
         var targetClass = evt.target.className;
         if (targetClass === 'foreground' || targetClass === 'background') {
+            if (this.props.onBackgroundClick) {
+                this.props.onBackgroundClick(evt);
+            }
+        }
+    },
+
+    handleKeyDown: function(evt) {
+        if (evt.keyCode === 27) {
             if (this.props.onBackgroundClick) {
                 this.props.onBackgroundClick(evt);
             }

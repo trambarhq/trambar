@@ -74,6 +74,12 @@ module.exports = React.createClass({
         });
     },
 
+    componentWillMount: function() {
+        if (this.props.show) {
+            document.body.addEventListener('keydown', this.handleKeyDown);
+        }
+    },
+
     /**
      * Set the selectedIndex when the dialog box becomes visible
      *
@@ -85,11 +91,13 @@ module.exports = React.createClass({
                 this.setState({
                     selectedIndex: nextProps.selectedIndex,
                 });
+                document.body.addEventListener('keydown', this.handleKeyDown);
             } else {
                 var video = this.refs.video;
                 if (video) {
                     video.pause();
                 }
+                document.body.removeEventListener('keydown', this.handleKeyDown);
             }
         }
     },
@@ -260,6 +268,13 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove event handler on unmount
+     */
+    componentWillUnmount: function() {
+        document.body.removeEventListener('keydown', this.handleKeyDown);
+    },
+
+    /**
      * Called when user clicks on a thumbnail
      *
      * @param  {Event} evt
@@ -267,7 +282,32 @@ module.exports = React.createClass({
     handleThumbnailClick: function(evt) {
         var index = parseInt(evt.currentTarget.id);
         return this.selectResource(index);
-    }
+    },
+
+    /**
+     * Called when user presses a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyDown: function(evt) {
+        var diff = 0;
+        if (evt.keyCode === 39) {           // right arrow
+            diff = +1;
+        } else if (evt.keyCode == 37) {     // left arrow
+            diff = -1;
+        }
+        if (diff) {
+            var count = this.getResourceCount();
+            var index = this.getSelectedResourceIndex() + diff;
+            if (index >= count) {
+                index = 0;
+            } else if (index < 0){
+                index = count - 1;
+            }
+            this.selectResource(index);
+            evt.preventDefault();
+        }
+    },
 });
 
 function Thumbnail(props) {
