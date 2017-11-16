@@ -30,6 +30,7 @@
 
         .device-selector {
             float: left;
+            margin-right: 2em;
 
             SELECT {
                 color: #666666;
@@ -46,6 +47,11 @@
 
         .buttons {
             float: right;
+        }
+
+        .duration-indiactor {
+            float: left;
+            margin-top: 0.65em;
         }
     }
 }

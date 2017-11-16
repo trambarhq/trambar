@@ -31,7 +31,7 @@
 
             .bar-container {
                 flex: 1 1 auto;
-                margin: 0.2em 0.2em 0.2em 0.2em;
+                margin: 0.2em 0 0.2em 0.2em;
 
                 .bar {
                     padding: 2px 2px 2px 2px;
@@ -46,10 +46,18 @@
         }
     }
 
-    .buttons {
+    .controls {
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
-        text-align: right;
         border-top: 1px solid #666666;
+
+        .buttons {
+            float: right;
+        }
+
+        .duration-indiactor {
+            margin-top: 0.65em;
+            float: left;
+        }
     }
 }

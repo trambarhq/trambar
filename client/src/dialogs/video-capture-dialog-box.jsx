@@ -9,6 +9,7 @@ var BlobStream = require('transport/blob-stream');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var DurationIndicator = require('widgets/duration-indicator');
 
 require('./video-capture-dialog-box.scss');
 
@@ -40,6 +41,8 @@ module.exports = React.createClass({
             previewUrl: null,
             videoDevices: DeviceManager.getDevices('videoinput'),
             selectedDeviceId: null,
+            startTime: null,
+            duration: 0,
         };
     },
 
@@ -155,6 +158,7 @@ module.exports = React.createClass({
                     <div className="controls">
                         {this.renderDeviceSelector()}
                         {this.renderButtons()}
+                        {this.renderDuration()}
                     </div>
                 </div>
             </Overlay>
@@ -220,6 +224,9 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderDeviceSelector: function() {
+        if (this.state.mediaRecorder) {
+            return null;
+        }
         if (this.state.videoDevices.length < 2) {
             return null;
         }
@@ -246,6 +253,22 @@ module.exports = React.createClass({
     },
 
     /**
+     * Show duration when we're recording
+     *
+     * @return {ReactElement|null}
+     */
+    renderDuration: function() {
+        if (!this.state.mediaRecorder) {
+            return null;
+        }
+        var durationProps = {
+            duration: this.state.duration,
+            startTime: this.state.startTime,
+        };
+        return <DurationIndicator {...durationProps} />
+    },
+
+    /**
      * Render buttons
      *
      * @return {ReactElement}
@@ -253,19 +276,27 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.state.mediaRecorder) {
+            var paused = this.state.mediaRecorder.state === 'paused';
             var pauseButtonProps = {
                 label: t('video-capture-pause'),
                 onClick: this.handlePauseClick,
-                disabled: this.state.mediaRecorder.state === 'paused'
+                hidden: paused,
+            };
+            var resumeButtonProps = {
+                label: t('video-capture-resume'),
+                onClick: this.handleResumeClick,
+                hidden: !paused,
+                emphasized: true
             };
             var stopButtonProps = {
                 label: t('video-capture-stop'),
                 onClick: this.handleStopClick,
-                emphasized: true,
+                emphasized: !paused,
             };
             return (
                 <div className="buttons">
                     <PushButton {...pauseButtonProps} />
+                    <PushButton {...resumeButtonProps} />
                     <PushButton {...stopButtonProps} />
                 </div>
             );
@@ -425,6 +456,20 @@ module.exports = React.createClass({
     },
 
     /**
+     * Resume capturing
+     *
+     * @return {Promise}
+     */
+    resumeRecording: function() {
+        return Promise.try(() => {
+            var recorder = this.state.mediaRecorder;
+            if (recorder) {
+                recorder.resume();
+            }
+        });
+    },
+
+    /**
      * Stop capturing video, returning what was captured
      *
      * @return {Promise}
@@ -474,7 +519,9 @@ module.exports = React.createClass({
             this.props.payloads.stream(recorder.outputStream);
             this.setState({
                 capturedImage: image,
-                mediaRecorder: recorder
+                mediaRecorder: recorder,
+                startTime: new Date,
+                duration: 0,
             });
             return null;
         });
@@ -486,7 +533,24 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePauseClick: function(evt) {
-        return this.pauseRecording();
+        return this.pauseRecording().then(() => {
+            var now = new Date;
+            var elapsed = now - this.state.startTime;
+            var duration = this.state.duration + elapsed;
+            this.setState({ duration, startTime: null });
+        });
+    },
+
+    /**
+     * Called when user clicks resume button
+     *
+     * @param  {Event} evt
+     */
+    handleResumeClick: function(evt) {
+        return this.resumeRecording().then(() => {
+            var now = new Date;
+            this.setState({ startTime: now });
+        });
     },
 
     /**
@@ -498,6 +562,12 @@ module.exports = React.createClass({
         return this.endRecording().then((video) => {
             var blob = video.stream.toBlob();
             var url = URL.createObjectURL(blob);
+            var elapsed = 0;
+            if (this.state.startTime) {
+                var now = new Date;
+                elapsed = now - this.state.startTime;
+            }
+            video.duration = this.state.duration + elapsed;
             this.setState({
                 capturedVideo: video,
                 previewUrl: url,

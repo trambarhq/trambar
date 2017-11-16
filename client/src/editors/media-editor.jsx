@@ -22,6 +22,7 @@ var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
 var ImageEditor = require('editors/image-editor');
+var VideoEditor = require('editors/video-editor');
 var AudioEditor = require('editors/audio-editor');
 
 require('./media-editor.scss');
@@ -177,9 +178,10 @@ module.exports = React.createClass({
         };
         switch (props.resource.type) {
             case 'image':
-            case 'video':
             case 'website':
                 return <ImageEditor {...props} />;
+            case 'video':
+                return <VideoEditor {...props} />;
             case 'audio':
                 return <AudioEditor {...props} />;
         }

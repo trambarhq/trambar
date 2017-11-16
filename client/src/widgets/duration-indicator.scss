@@ -1,0 +1,19 @@
+.duration-indiactor {
+    .icon {
+        color: #eeeeee;
+
+        &.blinking {
+            color: #cc2222;
+            opacity: 1;
+            animation: blinking 0.5s linear infinite;
+            @keyframes blinking {
+                50% { opacity: 0; }
+            }
+        }
+    }
+
+    .duration {
+        margin-left: 0.5em;
+        color: #eeeeee;
+    }
+}

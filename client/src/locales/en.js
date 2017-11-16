@@ -357,6 +357,7 @@ module.exports = function(languageCode) {
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',
         'video-capture-pause': 'Pause',
+        'video-capture-resume': 'Resume',
         'video-capture-retake': 'Retake',
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stop',

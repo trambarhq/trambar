@@ -9,6 +9,9 @@ var Theme = require('theme/theme');
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
+// widgets
+var DurationIndicator = require('widgets/duration-indicator');
+
 require('./audio-editor.scss');
 
 module.exports = React.createClass({
@@ -29,27 +32,10 @@ module.exports = React.createClass({
                         <i className="fa fa-microphone" />
                     </div>
                     <div className="duration">
-                        {formatDuration(duration)}
+                        {DurationIndicator.format(duration)}
                     </div>
                 </div>
             </div>
         );
     },
 });
-
-function formatDuration(duration) {
-    duration = Math.round(duration / 1000);
-    var hr = String(Math.floor(duration / 3600));
-    var min = String(Math.floor(duration / 60) % 60);
-    var sec = String(duration % 60);
-    if (hr.length === 1) {
-        hr = '0' + hr;
-    }
-    if (min.length === 1) {
-        min = '0' + min;
-    }
-    if (sec.length === 1) {
-        sec = '0' + sec;
-    }
-    return `${hr}:${min}:${sec}`;
-}

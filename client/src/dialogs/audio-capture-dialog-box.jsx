@@ -5,14 +5,19 @@ var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
 var BlobStream = require('transport/blob-stream');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var DurationIndicator = require('widgets/duration-indicator');
 
 require('./audio-capture-dialog-box.scss');
 
 module.exports = React.createClass({
     displayName: 'AudioCaptureDialogBox',
+    mixins: [ UpdateCheck ],
     propTypes: {
         show: PropTypes.bool,
 
@@ -23,6 +28,11 @@ module.exports = React.createClass({
         onCapture: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             liveAudioStream: null,
@@ -41,12 +51,21 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Initialize microphone on mount
+     */
     componentWillMount: function() {
         if (this.props.show) {
             this.initializeMicrophone();
         }
     },
 
+    /**
+     * Initialize microphone when dialog box is shown and shut it down when
+     * dialog closes
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
@@ -61,6 +80,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Clear captured audio
+     */
     clearCapturedAudio: function() {
         if (this.state.capturedAudio) {
             URL.revokeObjectURL(this.state.previewUrl);
@@ -71,6 +93,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Create audio stream
+     */
     initializeMicrophone: function() {
         this.createLiveAudioStream().then((stream) => {
             this.setLiveAudioState(null, stream);
@@ -79,12 +104,21 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Destroy audio stream
+     */
     shutdownMicrophone: function() {
         this.destroyLiveAudioStream().then(() => {
             this.setLiveAudioState(null, null);
         });
     },
 
+    /**
+     * Set audio state
+     *
+     * @param  {Error} err
+     * @param  {MediaStream} stream
+     */
     setLiveAudioState: function(err, stream) {
         if (this.state.liveAudioUrl) {
             URL.revokeObjectURL(this.state.liveAudioUrl);
@@ -134,6 +168,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var overlayProps = {
             show: this.props.show,
@@ -143,12 +182,20 @@ module.exports = React.createClass({
             <Overlay {...overlayProps}>
                 <div className="audio-capture-dialog-box">
                     {this.renderView()}
-                    {this.renderButtons()}
+                    <div className="controls">
+                        {this.renderDuration()}
+                        {this.renderButtons()}
+                    </div>
                 </div>
             </Overlay>
         );
     },
 
+    /**
+     * Render either playback control for captured audio or volume bar
+     *
+     * @return {ReactElement}
+     */
     renderView: function() {
         if (this.state.capturedAudio) {
             return this.renderCapturedAudio();
@@ -157,6 +204,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render volume level coming from mic
+     *
+     * @return {ReactElement|null}
+     */
     renderLiveAudio: function() {
         if (!this.state.liveAudioUrl) {
             // TODO: return placeholder
@@ -194,6 +246,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render audio playback control
+     *
+     * @return {ReactElement}
+     */
     renderCapturedAudio: function() {
         var props = {
             src: this.state.previewUrl,
@@ -206,6 +263,27 @@ module.exports = React.createClass({
         )
     },
 
+    /**
+     * Render duration when we're recording
+     *
+     * @return {ReactElement|null}
+     */
+    renderDuration: function() {
+        if (!this.state.mediaRecorder) {
+            return null;
+        }
+        var durationProps = {
+            duration: this.state.duration,
+            startTime: this.state.startTime,
+        };
+        return <DurationIndicator {...durationProps} />;
+    },
+
+    /**
+     * Render buttons
+     *
+     * @return {[type]}
+     */
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.state.mediaRecorder) {
@@ -269,10 +347,18 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Destroy audio stream on unmount
+     */
     componentWillUnmount: function() {
         this.destroyLiveAudioStream();
     },
 
+    /**
+     * Create audio stream
+     *
+     * @return {Promise}
+     */
     createLiveAudioStream: function() {
         var promise = this.audioStreamPromise;
         if (!promise) {
@@ -280,9 +366,15 @@ module.exports = React.createClass({
             promise = navigator.mediaDevices.getUserMedia(constraints);
             this.audioStreamPromise = promise;
         }
+        // return Bluebird promise instead of native promise
         return Promise.resolve(promise);
     },
 
+    /**
+     * Destroy audio stream
+     *
+     * @return {Promise}
+     */
     destroyLiveAudioStream: function() {
         var promise = this.audioStreamPromise;
         this.audioStreamPromise = null;
@@ -296,6 +388,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Start recording audio
+     *
+     * @return {Promise<MediaRecorder>}
+     */
     beginRecording: function() {
         return Promise.try(() => {
             var segmentDuration = 3 * 1000;
@@ -316,6 +413,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Pause recording
+     *
+     * @return {Promise}
+     */
     pauseRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
@@ -325,6 +427,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Resume recording
+     *
+     * @return {Promise}
+     */
     resumeRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
@@ -334,6 +441,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * End recording
+     *
+     * @return {Promise}
+     */
     endRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
@@ -348,6 +460,9 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Inform parent component that an audio has been captured and accepted
+     */
     triggerCaptureEvent: function(audio) {
         if (this.props.onCapture) {
             this.props.onCapture({
@@ -358,6 +473,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when user clicks start button
+     *
+     * @param  {Event} evt
+     */
     handleStartClick: function(evt) {
         return this.beginRecording().then((recorder) => {
             // start uploading immediately upon receiving data from MediaRecorder
@@ -371,6 +491,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks pause button
+     *
+     * @param  {Event} evt
+     */
     handlePauseClick: function(evt) {
         return this.pauseRecording().then(() => {
             var now = new Date;
@@ -380,6 +505,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks resume button
+     *
+     * @param  {Event} evt
+     */
     handleResumeClick: function(evt) {
         return this.resumeRecording().then(() => {
             var now = new Date;
@@ -387,6 +517,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks stop button
+     *
+     * @param  {Event} evt
+     */
     handleStopClick: function(evt) {
         return this.endRecording().then((audio) => {
             var blob = audio.stream.toBlob();
@@ -406,15 +541,30 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks rerecord button
+     *
+     * @param  {Event} evt
+     */
     handleRerecordClick: function(evt) {
         this.clearCapturedAudio();
     },
 
+    /**
+     * Called when user clicks accept button
+     *
+     * @param  {Event} evt
+     */
     handleAcceptClick: function(evt) {
         console.log(this.state.capturedAudio);
         this.triggerCaptureEvent(this.state.capturedAudio);
     },
 
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
     handleCancelClick: function(evt) {
         if (this.props.onCancel) {
             this.props.onCancel({
