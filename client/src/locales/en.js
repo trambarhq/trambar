@@ -17,6 +17,7 @@ module.exports = function(languageCode) {
         'audio-capture-cancel': 'Cancel',
         'audio-capture-pause': 'Pause',
         'audio-capture-rerecord': 'Rerecord',
+        'audio-capture-resume': 'Resume',
         'audio-capture-start': 'Start',
         'audio-capture-stop': 'Stop',
 
@@ -83,6 +84,8 @@ module.exports = function(languageCode) {
         'comment-$user-likes-this': (user) => {
             return `${user} likes this`;
         },
+
+        'image-editor-upload-in-progress': 'Upload in progress...',
 
         'list-$count-more': (count) => {
             return `${count} more...`;

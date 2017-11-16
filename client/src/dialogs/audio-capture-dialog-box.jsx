@@ -36,6 +36,8 @@ module.exports = React.createClass({
             mediaRecorder: null,
             capturedAudio: null,
             previewUrl: null,
+            startTime: null,
+            duration: 0,
         };
     },
 
@@ -207,19 +209,27 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         if (this.state.mediaRecorder) {
+            var paused = this.state.mediaRecorder.state === 'paused';
             var pauseButtonProps = {
                 label: t('audio-capture-pause'),
                 onClick: this.handlePauseClick,
-                disabled: this.state.mediaRecorder.state === 'paused'
+                hidden: paused,
+            };
+            var resumeButtonProps = {
+                label: t('audio-capture-resume'),
+                onClick: this.handleResumeClick,
+                hidden: !paused,
+                emphasized: true,
             };
             var stopButtonProps = {
                 label: t('audio-capture-stop'),
                 onClick: this.handleStopClick,
-                emphasized: true,
+                emphasized: !paused,
             };
             return (
                 <div className="buttons">
                     <PushButton {...pauseButtonProps} />
+                    <PushButton {...resumeButtonProps} />
                     <PushButton {...stopButtonProps} />
                 </div>
             );
@@ -315,13 +325,22 @@ module.exports = React.createClass({
         });
     },
 
+    resumeRecording: function() {
+        return Promise.try(() => {
+            var recorder = this.state.mediaRecorder;
+            if (recorder) {
+                recorder.resume();
+            }
+        });
+    },
+
     endRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
             if (recorder) {
                 recorder.stop();
                 return {
-                    type: recorder.mimeType,
+                    format: _.last(_.split(recorder.mimeType, '/')),
                     audio_bitrate: recorder.audioBitsPerSecond,
                     stream: recorder.outputStream,
                 };
@@ -344,20 +363,40 @@ module.exports = React.createClass({
             // start uploading immediately upon receiving data from MediaRecorder
             this.props.payloads.stream(recorder.outputStream);
             this.setState({
-                mediaRecorder: recorder
+                mediaRecorder: recorder,
+                startTime: new Date,
+                duration: 0,
             });
             return null;
         });
     },
 
     handlePauseClick: function(evt) {
-        return this.pauseRecording();
+        return this.pauseRecording().then(() => {
+            var now = new Date;
+            var elapsed = now - this.state.startTime;
+            var duration = this.state.duration + elapsed;
+            this.setState({ duration, startTime: null });
+        });
+    },
+
+    handleResumeClick: function(evt) {
+        return this.resumeRecording().then(() => {
+            var now = new Date;
+            this.setState({ startTime: now });
+        });
     },
 
     handleStopClick: function(evt) {
         return this.endRecording().then((audio) => {
             var blob = audio.stream.toBlob();
             var url = URL.createObjectURL(blob);
+            var elapsed = 0;
+            if (this.state.startTime) {
+                var now = new Date;
+                elapsed = now - this.state.startTime;
+            }
+            audio.duration = this.state.duration + elapsed;
             this.setState({
                 capturedAudio: audio,
                 previewUrl: url,
@@ -372,6 +411,7 @@ module.exports = React.createClass({
     },
 
     handleAcceptClick: function(evt) {
+        console.log(this.state.capturedAudio);
         this.triggerCaptureEvent(this.state.capturedAudio);
     },
 

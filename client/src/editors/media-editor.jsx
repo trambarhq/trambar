@@ -21,7 +21,8 @@ var MediaButton = require('widgets/media-button');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
-var ImageCropper = require('media/image-cropper');
+var ImageEditor = require('editors/image-editor');
+var AudioEditor = require('editors/audio-editor');
 
 require('./media-editor.scss');
 
@@ -137,38 +138,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return URL of resource preview
-     *
-     * @param  {Object} res
-     *
-     * @return {String}
-     */
-    getResourceImageUrl: function(res) {
-        var theme = this.props.theme;
-        var file = theme.getImageFile(res);
-        if (this.imageBlob) {
-            if (file === this.imageBlob) {
-                return this.imageBlobUrl;
-            } else {
-                URL.revokeObjectURL(this.imageBlobUrl);
-                this.imageBlob = null;
-                this.imageBlobUrl = null;
-            }
-        }
-        var url;
-        if (file) {
-            // don't download files that we'd earlier uploaded
-            url = URL.createObjectURL(file);
-            this.imageBlob = file;
-            this.imageBlobUrl = url;
-        } else {
-            // download the original file
-            url = theme.getImageUrl(res, { noClipping: true });
-        }
-        return url;
-    },
-
-    /**
      * Render component
      *
      * @return {ReactELement}
@@ -183,9 +152,7 @@ module.exports = React.createClass({
             <div className={className}>
                 {this.renderResource()}
                 {this.renderNavigation()}
-                {this.renderPhotoDialog()}
-                {this.renderAudioDialog()}
-                {this.renderVideoDialog()}
+                {this.renderDialogBox()}
             </div>
         );
     },
@@ -201,18 +168,20 @@ module.exports = React.createClass({
             // render placeholder
             return this.props.children;
         }
-        var res = this.props.resources[index];
-        switch (res.type) {
+        var props = {
+            resource: this.props.resources[index],
+            locale: this.props.locale,
+            theme: this.props.theme,
+            payloads: this.props.payloads,
+            onChange: this.handleResourceChange,
+        };
+        switch (props.resource.type) {
             case 'image':
             case 'video':
             case 'website':
-                return this.renderImageCropper(res);
+                return <ImageEditor {...props} />;
             case 'audio':
-                return (
-                    <div className="audio-placeholder">
-                        <i className="fa fa-microphone" />
-                    </div>
-                );
+                return <AudioEditor {...props} />;
         }
     },
 
@@ -260,39 +229,29 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render image with cropping handling
+     * Render dialog box
      *
-     * @param  {Object} res
-     *
-     * @return {ReactElement}
+     * @return {ReactELement|null}
      */
-    renderImageCropper: function(res) {
-        var url = this.getResourceImageUrl(res);
-        if (!url) {
-            // will only happen when someone else's has just added an image
-            // to a draft story (there's either an URL or a file)
-            //
-            // TODO: improve appearance of this
-            return <div>Loading</div>;
+    renderDialogBox: function() {
+        if (process.env.PLATFORM !== 'browser') {
+            return null;
         }
-        var props = {
-            url: url,
-            clippingRect: res.clip,
-            onChange: this.handleClipRectChange,
-            onClip: this.handleClipDefault,
-        };
-        return <ImageCropper {...props} />;
+        return (
+            <div>
+                {this.renderPhotoDialog()}
+                {this.renderAudioDialog()}
+                {this.renderVideoDialog()}
+            </div>
+        );
     },
 
     /**
      * Render dialogbox for capturing picture through MediaStream API
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
     renderPhotoDialog: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
         var props = {
             show: (this.state.capturing === 'image'),
             locale: this.props.locale,
@@ -305,12 +264,9 @@ module.exports = React.createClass({
     /**
      * Render dialogbox for capturing video through MediaStream API
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
     renderVideoDialog: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
         var props = {
             show: (this.state.capturing === 'video'),
             payloads: this.props.payloads,
@@ -324,12 +280,9 @@ module.exports = React.createClass({
     /**
      * Render dialogbox for capturing video through MediaStream API
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
     renderAudioDialog: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
         var props = {
             show: (this.state.capturing === 'audio'),
             payloads: this.props.payloads,
@@ -438,12 +391,9 @@ module.exports = React.createClass({
                     var url = urls[index] = URL.createObjectURL(blob);
                     return MediaLoader.loadVideo(url).then((video) => {
                         return FrameGrabber.capture(video).then((poster) => {
-                            var stream;
-                            if (file.size > 2 * 1024 * 1024) {
-                                // upload large files in smaller chunks
-                                stream = new BlobStream;
-                                stream.pipe(blob);
-                            }
+                            // upload large files in small chunks
+                            var stream = new BlobStream;
+                            stream.pipe(blob);
                             return {
                                 type: 'video',
                                 format: format,
@@ -461,19 +411,16 @@ module.exports = React.createClass({
                 });
             } else if (/^audio\//.test(file.type)) {
                 var url = urls[index] = URL.createObjectURL(file);
-                return Media.loadAudio(url).then((audio) => {
-                    var stream;
-                    if (file.size > 2 * 1024 * 1024) {
-                        stream = new BlobStream;
-                       stream.pipe(file);
-                    }
+                return MediaLoader.loadAudio(url).then((audio) => {
+                    var stream = new BlobStream;
+                    stream.pipe(file);
                     return {
                         type: 'audio',
                         format: format,
                         filename: file.name,
                         file: file,
                         stream: stream,
-                        duration: audio.duration,
+                        duration: Math.round(audio.duration * 1000),
                     };
                 });
             } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
@@ -548,21 +495,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called after user has made adjustments to an image's clipping rect
-     *
-     * @param  {Object} evt
-     *
-     * @return {Promise<Story>}
-     */
-    handleClipRectChange: function(evt) {
-        var resources = _.slice(this.props.resources);
-        var index = this.getSelectedResourceIndex();
-        var res = resources[index] = _.clone(resources[index]);
-        res.clip = evt.rect;
-        return this.triggerChangeEvent(resources);
-    },
-
-    /**
      * Called when user clicks shift button
      *
      * @param  {Event} evt
@@ -628,6 +560,13 @@ module.exports = React.createClass({
     handleForwardClick: function(evt) {
         var index = this.getSelectedResourceIndex();
         return this.selectResource(index + 1);
+    },
+
+    handleResourceChange: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        var resources = _.slice(this.props.resources);
+        resources[index] = evt.resource;
+        this.triggerChangeEvent(resources);
     },
 });
 

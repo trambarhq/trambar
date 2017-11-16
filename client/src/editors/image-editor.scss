@@ -1,0 +1,25 @@
+.image-editor {
+    position: relative;
+    width: 100%;
+    padding-top: 50%;
+    padding-bottom: 50%;
+
+    .image-cropper, .preview, .placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    .preview {
+        cursor: wait;
+        filter: saturate(0%);
+    }
+
+    .placeholder {
+        display: flex;
+        bottom: 0;
+        align-items: center;
+        justify-content: center;
+    }
+}

@@ -321,7 +321,7 @@ module.exports = React.createClass({
             var theme = this.props.theme;
             var url;
             switch (res.type) {
-                case 'image': url = theme.getImageUrl(res, { noClipping: true }); break;
+                case 'image': url = theme.getImageUrl(res, { clip: null }); break;
                 case 'video': url = theme.getVideoUrl(res); break;
             }
             link.href = url;

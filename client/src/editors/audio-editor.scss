@@ -1,0 +1,26 @@
+.audio-editor {
+    position: relative;
+    width: 100%;
+    padding-top: 50%;
+    padding-bottom: 50%;
+
+    .graphic {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .icon {
+            font-size: 8em;
+        }
+
+        .duration {
+            font-size: 2em;
+        }
+    }
+}

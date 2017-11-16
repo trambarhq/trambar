@@ -63,13 +63,13 @@ module.exports = React.createClass({
 
         var filters = [];
         // apply clipping rect
-        if (res.clip && !params.noClipping) {
-            var rect = [
-                res.clip.left,
-                res.clip.top,
-                res.clip.width,
-                res.clip.height,
-            ];
+        var clip = res.clip;
+        if (params.hasOwnProperty('clip')) {
+            // override the one stored in res
+            clip = params.clip;
+        }
+        if (clip) {
+            var rect = [ clip.left, clip.top, clip.width, clip.height ];
             filters.push(`cr${rect.join('-')}`)
         }
         // resize image (if dimensions are specified)

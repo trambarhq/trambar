@@ -8,7 +8,7 @@ var ImageView = require('media/image-view');
 require('./image-cropper.scss');
 
 module.exports = React.createClass({
-    displayName: 'ImageDisplay',
+    displayName: 'ImageCropper',
     propTypes: {
         url: PropTypes.string.isRequired,
         clippingRect: PropTypes.object,
@@ -17,12 +17,22 @@ module.exports = React.createClass({
         onLoad: PropTypes.func,
     },
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
             aspectRatio: 1
         };
     },
 
+    /**
+     * Return inital state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         this.components = ComponentRefs({
             container: HTMLElement,
@@ -33,6 +43,11 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Update state when props changes
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.url !== nextProps.url || this.props.clippingRect !== nextProps.clippingRect) {
             if (this.zoomChangeTimeout) {
@@ -46,6 +61,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var setters = this.components.setters;
         var containerProps = {
@@ -68,6 +88,9 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Remove handler and timeout function on unmount
+     */
     componentWillUnmount: function() {
         if (this.dragStart) {
             this.handleMouseUp();
@@ -78,6 +101,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Inform parent component that clipping rect has changed
+     *
+     * @param  {Object} clippingRect
+     */
     triggerChangeEvent: function(clippingRect) {
         if (_.isEqual(this.props.clippingRect, clippingRect)) {
             return;
@@ -91,6 +119,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when user presses down on mouse button
+     *
+     * @param  {Event} evt
+     */
     handleMouseDown: function(evt) {
         var image = this.components.image;
         var container = this.components.container;
@@ -110,6 +143,11 @@ module.exports = React.createClass({
         document.addEventListener('mousemove', this.handleMouseMove);
     },
 
+    /**
+     * Called when user moves the mouse with button down
+     *
+     * @param  {Event} evt
+     */
     handleMouseMove: function(evt) {
         evt.preventDefault();
 
@@ -131,6 +169,11 @@ module.exports = React.createClass({
         this.setState({ clippingRect });
     },
 
+    /**
+     * Called when user releases mouse button
+     *
+     * @param  {Event} evt
+     */
     handleMouseUp: function(evt) {
         if (!this.dragStart) {
             return;
@@ -140,6 +183,11 @@ module.exports = React.createClass({
         this.dragStart = null;
     },
 
+    /**
+     * Called when user moves the mouse wheel
+     *
+     * @param  {Event} evt
+     */
     handleMouseWheel: function(evt) {
         evt.preventDefault();
 
@@ -200,6 +248,13 @@ module.exports = React.createClass({
     },
 });
 
+/**
+ * Keep clipping rect from going outside of the image
+ *
+ * @param  {Object} clippingRect
+ * @param  {Number} imageWidth
+ * @param  {Number} imageHeight
+ */
 function constrainPosition(clippingRect, imageWidth, imageHeight) {
     if (clippingRect.left < 0) {
         clippingRect.left = 0;

@@ -152,10 +152,10 @@ module.exports = React.createClass({
                 var url = this.props.theme.getImageUrl(image, {
                     width,
                     height,
-                    noClipping: !clip
+                    clip,
                 });
                 var fullResUrl = this.props.theme.getImageUrl(image, {
-                    noClipping: !clip
+                    clip
                 });
                 return (
                     <div className="image">

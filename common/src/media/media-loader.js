@@ -37,7 +37,7 @@ function loadAudio(url) {
         audio.src = url;
         audio.preload = true;
         audio.onloadeddata = function(evt) {
-            resolve(video);
+            resolve(audio);
         };
         audio.onerror = function(evt) {
             reject(new Error(`Unable to load ${url}`));
