@@ -28,6 +28,7 @@ module.exports = React.createClass({
         story: PropTypes.object.isRequired,
         cornerPopUp: PropTypes.element,
         selectedResourceIndex: PropTypes.number,
+        options: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -136,6 +137,7 @@ module.exports = React.createClass({
             payloads: this.props.payloads,
             initialResourceIndex: this.props.selectedResourceIndex,
             onChange: this.handleResourcesChange,
+            onEmbed: this.handleResourceEmbed,
         };
         return (
             <DropZone onDrop={this.handleDrop}>
@@ -247,6 +249,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Call onChange handler
+     *
+     * @param  {Story} story
+     * @param  {String} path
+     */
+    triggerChangeEvent: function(story, path) {
+        return this.props.onChange({
+            type: 'change',
+            target: this,
+            story,
+            path,
+        });
+    },
+
+    /**
      * Called when user add new resources or adjusted image cropping
      *
      * @param  {Object} evt
@@ -259,12 +276,31 @@ module.exports = React.createClass({
         if (_.isEmpty(story.details.resources)) {
             delete story.details.resources;
         }
-        return this.props.onChange({
-            type: 'change',
-            target: this,
-            story,
-            path,
-        });
+        return this.triggerChangeEvent(story, path);
+    },
+
+    /**
+     * Called when user wants to embed a resource into Markdown text
+     *
+     * @param  {Object} evt
+     */
+    handleResourceEmbed: function(evt) {
+        var resource = evt.resource;
+        var resources = this.props.story.details.resources;
+        var resourcesOfType = _.filter(resources, { type: resource.type });
+        var index = _.indexOf(resourcesOfType, resource);
+        if (index !== -1) {
+            var tag = `![${resource.type}-${index+1}]`;
+            var languageCode = this.props.options.languageCode;
+            var lang = languageCode.substr(0, 2);
+            var path = `details.text.${lang}`;
+            var langText = _.get(this.props.story, path, '') + tag;
+            var story = _.decoupleSet(this.props.story, path, langText);
+            if (!_.get(story.details.markdown)) {
+                story.details.markdown = true;
+            }
+            this.triggerChangeEvent(story, path);
+        }
     },
 
     /**

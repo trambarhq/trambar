@@ -96,6 +96,10 @@ module.exports = function(languageCode) {
         'media-next': 'Next',
         'media-previous': 'Previous',
 
+        'media-editor-embed': 'Embed',
+        'media-editor-remove': 'Remove',
+        'media-editor-shift': 'Shift',
+
         'membership-request-cancel': 'Cancel',
         'membership-request-join': 'Join',
         'membership-request-ok': 'OK',

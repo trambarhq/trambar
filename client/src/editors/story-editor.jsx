@@ -294,6 +294,7 @@ module.exports = React.createClass({
             story: this.state.draft,
             cornerPopUp: this.renderPopUpMenu('supplemental'),
             selectedResourceIndex: this.state.selectedResourceIndex,
+            options: this.state.options,
 
             database: this.props.database,
             payloads: this.props.payloads,

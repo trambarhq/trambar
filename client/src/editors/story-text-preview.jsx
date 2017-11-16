@@ -242,9 +242,10 @@ module.exports = React.createClass({
             var url;
             if (evt.forImage)  {
                 // images are style at height = 1.5em
-                url = this.props.theme.getImageUrl(res, { height: 24 });;
+                url = this.props.theme.getImageUrl(res, { height: 24 });
             } else {
-                url = this.props.theme.getUrl(res);
+                // TODO
+                //url = this.props.theme.getUrl(res);
             }
             // remember the resource and the url
             this.resourcesReferenced[url] = res;

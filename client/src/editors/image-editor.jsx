@@ -128,11 +128,14 @@ module.exports = React.createClass({
     /**
      * Render image with cropping handling
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderImageCropper: function() {
+        if (!this.state.imageUrl) {
+            return null;
+        }
         var props = {
-            url: this.state.blobUrl || this.state.imageUrl,
+            url: this.state.imageUrl,
             clippingRect: this.props.resource.clip,
             onChange: this.handleClipRectChange,
             onLoad: this.handleImageLoad,

@@ -39,6 +39,7 @@ module.exports = React.createClass({
         payloads: PropTypes.instanceOf(Payloads).isRequired,
 
         onChange: PropTypes.func.isRequired,
+        onEmbed: PropTypes.func,
     },
 
     /**
@@ -193,18 +194,24 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderNavigation: function() {
+        var t = this.props.locale.translate;
         var index = this.getSelectedResourceIndex();
         var count = this.getResourceCount();
         if (count === 0) {
             return null;
         }
         var removeProps = {
-            label: 'Remove',
+            label: t('media-editor-remove'),
             icon: 'remove',
             onClick: this.handleRemoveClick,
         };
+        var embedProps = {
+            label: t('media-editor-embed'),
+            icon: 'code',
+            onClick: this.handleEmbedClick,
+        };
         var shiftProps = {
-            label: 'Shift',
+            label: t('media-editor-shift'),
             icon: 'chevron-left',
             hidden: !(count > 1),
             disabled: !(index > 0),
@@ -221,6 +228,7 @@ module.exports = React.createClass({
             <div className="navigation">
                 <div className="left">
                     <MediaButton {...removeProps} />
+                    <MediaButton {...embedProps} />
                     <MediaButton {...shiftProps} />
                 </div>
                 <div className="right">
@@ -320,6 +328,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Call onEmbed handler
+     *
+     * @param  {Object} resource
+     */
+    triggerEmbedEvent: function(resource) {
+        if (this.props.onEmbed) {
+            this.props.onEmbed({
+                type: 'embed',
+                target: this,
+                resource,
+            });
+        }
+    },
+
+    /**
      * Select the resource at the given index
      *
      * @param  {Number} index
@@ -406,7 +429,7 @@ module.exports = React.createClass({
                                 width: video.videoWidth,
                                 height: video.videoHeight,
                                 clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
-                                duration: video.duration,
+                                duration: Math.round(video.duration * 1000),
                             };
                         });
                     });
@@ -527,7 +550,7 @@ module.exports = React.createClass({
     handleRemoveClick: function(evt) {
         var index = this.getSelectedResourceIndex();
         if (index < 0) {
-            return index;
+            return Promise.resolve(index);
         }
         var resources = _.slice(this.props.resources);
         resources.splice(index, 1);
@@ -538,6 +561,15 @@ module.exports = React.createClass({
                 return index;
             }
         });
+    },
+
+    handleEmbedClick: function(evt) {
+        var index = this.getSelectedResourceIndex();
+        if (index < 0) {
+            return;
+        }
+        var resource = this.props.resources[index];
+        this.triggerEmbedEvent(resource);
     },
 
     /**

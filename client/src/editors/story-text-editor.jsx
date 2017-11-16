@@ -225,7 +225,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Call onStoryChange handler
+     * Call onChange handler
      *
      * @param  {Story} story
      * @param  {String} path
