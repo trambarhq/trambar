@@ -125,6 +125,7 @@ module.exports = _.create(Data, {
                     if (!Project.checkAccess(project, credentials.user, 'read')) {
                         throw new HttpError(400);
                     }
+                    return subscriptionReceived;
                 });
             }
             return subscriptionReceived;
