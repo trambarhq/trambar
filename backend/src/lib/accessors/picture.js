@@ -61,7 +61,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'purpose', 'user_id' ];
+            var propNames = [ 'deleted', 'purpose', 'user_id' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },

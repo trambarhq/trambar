@@ -70,7 +70,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [];
+            var propNames = [ 'deleted' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },

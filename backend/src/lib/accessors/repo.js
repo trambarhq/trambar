@@ -80,7 +80,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'external' ];
+            var propNames = [ 'deleted', 'external' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
                 var Task = require('accessors/task');

@@ -72,7 +72,7 @@ module.exports = _.create(LiveData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'dirty', 'type' ];
+            var propNames = [ 'deleted', 'dirty', 'type' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },

@@ -76,7 +76,7 @@ module.exports = _.create(LiveData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'dirty', 'type', 'target_user_id' ];
+            var propNames = [ 'deleted', 'dirty', 'type', 'target_user_id' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
