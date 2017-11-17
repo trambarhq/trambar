@@ -7,12 +7,49 @@
         height: auto;
     }
 
-    .image {
+    .image, .video, .audio, .website {
         cursor: pointer;
     }
 
-    .video {
-        cursor: pointer;
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 0;
+
+        .icon {
+            font-size: 10em;
+        }
+
+        .duration {
+            font-size: 2em;
+        }
+
+        &.hidden {
+            opacity: 0;
+
+            &:hover {
+                opacity: 0.5;
+            }
+        }
+    }
+
+    .website {
+        A {
+            display: block;
+        }
+    }
+
+    .audio {
+        padding-top: 50%;
+        padding-bottom: 50%;
+        background-color: #111111;
     }
 
     .navigation {
@@ -30,23 +67,10 @@
         }
     }
 
-    .icon {
-        font-size: 10em;
+    audio {
         position: absolute;
-        left: 0;
         top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto;
-        width: 1em;
-        height: 1em;
-        text-align: center;
-        opacity: 0;
-    }
-
-    &:hover {
-        .icon {
-            opacity: 0.25;
-        }
+        left: 0;
+        width: 100%;
     }
 }

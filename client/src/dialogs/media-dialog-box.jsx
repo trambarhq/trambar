@@ -234,7 +234,7 @@ module.exports = React.createClass({
             src: theme.getVideoUrl(video, { version }),
             controls: true,
             autoPlay: true,
-            poster: theme.getImageUrl(video, { width: dims.width, height: dims.height, quality: 60 }),
+            poster: theme.getImageUrl(video, { width: dims.width, height: dims.height, clip: null, quality: 60 }),
         };
         return <video {...props} />;
     },
@@ -371,14 +371,18 @@ function Thumbnail(props) {
 /**
  * Calculate the actual dimension of one version of the video
  *
+ * (videoScaling contains boundary values)
+ *
  * @param  {Object} res
  * @param  {Object} name
  *
  * @return {Object}
  */
 function getVideoVersionDimensions(res, name) {
-    // videoScaling contain the boundary values
-    var version = res.versions[name];
+    var version = (res.versions) ? res.versions[name] : null;
+    if (!version) {
+        return {};
+    }
     var originalWidth = res.width;
     var originalHeight = res.height;
     var maxWidth = version.videoScaling.width;
@@ -408,15 +412,4 @@ function chooseVideoVersion(res) {
     });
     var optimal = _.first(_.sortBy(choices, 'diff'));
     return (optimal) ? optimal.name : null;
-}
-
-/**
- * Choose a version of the audio
- *
- * @param  {Object} res
- *
- * @return {String}
- */
-function chooseAudioVersion(res) {
-    return _.first(_.keys(res.versions)) || null;
 }

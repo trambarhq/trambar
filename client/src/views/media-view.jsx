@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -10,6 +11,7 @@ var Overlay = require('widgets/overlay');
 var MediaButton = require('widgets/media-button');
 var MediaDialogBox = require('dialogs/media-dialog-box');
 var ImageView = require('media/image-view');
+var DurationIndicator = require('widgets/duration-indicator')
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -31,10 +33,14 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            audioPlayer: HTMLAudioElement,
+        })
         return {
             selectedIndex: 0,
             renderingDialogBox: false,
             showingDialogBox: false,
+            audioUrl: null,
         };
     },
 
@@ -48,7 +54,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return the currently selected resource
+     * Return the index of the currently selected resource
      *
      * @return {Number}
      */
@@ -56,6 +62,16 @@ module.exports = React.createClass({
         var maxIndex = this.getResourceCount() - 1;
         var index = _.min([ this.state.selectedIndex, maxIndex ]);
         return index;
+    },
+
+    /**
+     * Return the currently selected resource
+     *
+     * @return {Number}
+     */
+    getSelectedResource: function() {
+        var index = this.getSelectedResourceIndex();
+        return (index !== -1) ? this.props.resources[index] : null;
     },
 
     /**
@@ -88,6 +104,7 @@ module.exports = React.createClass({
             <div className="media-view">
                 {this.renderResource()}
                 {this.renderNavigation()}
+                {this.renderAudioPlayer()}
                 {this.renderDialogBox()}
             </div>
         );
@@ -117,6 +134,25 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
+    },
+
+    /**
+     * Render audio player when an audio file was selected
+     *
+     * @return {[type]}
+     */
+    renderAudioPlayer: function() {
+        if (!this.state.audioUrl) {
+            return null;
+        }
+        var audioProps = {
+            ref: this.components.setters.audioPlayer,
+            src: this.state.audioUrl,
+            autoPlay: true,
+            controls: true,
+            onEnded: this.handleAudioEnded,
+        };
+        return <audio {...audioProps} />;
     },
 
     /**
@@ -187,7 +223,14 @@ module.exports = React.createClass({
         return (
             <div className="video" onClick={this.handleVideoClick}>
                 {this.renderImageElement(res)}
-                <i className="fa fa-play-circle-o icon" />
+                <div className="overlay hidden">
+                    <div className="icon">
+                        <i className="fa fa-play-circle-o" />
+                    </div>
+                    <div className="duration">
+                        {DurationIndicator.format(res.duration)}
+                    </div>
+                </div>
             </div>
         );
     },
@@ -200,7 +243,18 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderAudio: function(res) {
-
+        return (
+            <div className="audio" onClick={this.handleAudioClick}>
+                <div className="overlay">
+                    <div className="icon">
+                        <i className="fa fa-play-circle" />
+                    </div>
+                    <div className="duration">
+                        {DurationIndicator.format(res.duration)}
+                    </div>
+                </div>
+            </div>
+        )
     },
 
     /**
@@ -215,13 +269,24 @@ module.exports = React.createClass({
             <div className="website">
                 <a href={res.url} target="_blank">
                     {this.renderImageElement(res)}
-                    <i className="fa fa-external-link icon" />
+                    <div className="overlay">
+                        <div className="icon">
+                            <i className="fa fa-external-link icon" />
+                        </div>
+                    </div>
                 </a>
             </div>
         );
     },
 
-    renderImageElement: function(res, type) {
+    /**
+     * Render image of resource (image/video/website)
+     *
+     * @param  {Object} res
+     *
+     * @return {[type]}
+     */
+    renderImageElement: function(res) {
         var clip = res.clip;
         var width = 512;
         var height;
@@ -234,7 +299,6 @@ module.exports = React.createClass({
         var url = theme.getImageUrl(res, { width, height });
         var file = theme.getImageFile(res);
         if (url) {
-            // TODO: implement preloading
             return <img src={url} width={width} height={height} />;
         }
 
@@ -246,6 +310,16 @@ module.exports = React.createClass({
         } else {
             // TODO: placeholder for pending images
             return null;
+        }
+    },
+
+    /**
+     * Stop playing audio
+     */
+    pauseAudio: function() {
+        var audioPlayer = this.components.audioPlayer;
+        if (audioPlayer) {
+            audioPlayer.pause();
         }
     },
 
@@ -273,6 +347,11 @@ module.exports = React.createClass({
         return this.selectResource(index + 1);
     },
 
+    /**
+     * Called when user clicks on image preview
+     *
+     * @param  {Event} evt
+     */
     handleImageClick: function(evt) {
         this.setState({
             showingDialogBox: true,
@@ -280,11 +359,38 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Called when user clicks on video poster
+     *
+     * @param  {Event} evt
+     */
     handleVideoClick: function(evt) {
+        this.pauseAudio();
         this.setState({
             showingDialogBox: true,
             renderingDialogBox: true,
         });
+    },
+
+    /**
+     * Called when user clicks on audio preview
+     *
+     * @param  {Event} evt
+     */
+    handleAudioClick: function(evt) {
+        var res = this.getSelectedResource();
+        var version = chooseAudioVersion(res);
+        var audioUrl = this.props.theme.getAudioUrl(res, { version });
+        this.setState({ audioUrl });
+    },
+
+    /**
+     * Called when audio playback ends
+     *
+     * @param  {Event} evt
+     */
+    handleAudioEnded: function(evt) {
+        this.setState({ audioUrl: null });
     },
 
     /**
@@ -310,3 +416,14 @@ var getZoomableResources = Memoize(function(resources) {
         }
     })
 });
+
+/**
+ * Choose a version of the audio
+ *
+ * @param  {Object} res
+ *
+ * @return {String}
+ */
+function chooseAudioVersion(res) {
+    return _.first(_.keys(res.versions)) || null;
+}

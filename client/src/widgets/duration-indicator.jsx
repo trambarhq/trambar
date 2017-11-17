@@ -100,6 +100,9 @@ module.exports = React.createClass({
 module.exports.format = format;
 
 function format(ms) {
+    if (typeof(ms) !== 'number') {
+        return '';
+    }
     var hr = String(Math.floor(ms / 3600000));
     var min = String(Math.floor(ms / 60000) % 60);
     var sec = String(Math.round(ms / 1000) % 60);
