@@ -269,9 +269,9 @@ module.exports = React.createClass({
             <div className="website">
                 <a href={res.url} target="_blank">
                     {this.renderImageElement(res)}
-                    <div className="overlay">
+                    <div className="overlay hidden">
                         <div className="icon">
-                            <i className="fa fa-external-link icon" />
+                            <i className="fa fa-external-link" />
                         </div>
                     </div>
                 </a>

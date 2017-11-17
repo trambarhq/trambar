@@ -94,7 +94,7 @@ module.exports = React.createClass({
             nextState.previewUrl = theme.getImageUrl(res, {
                 width: this.props.previewWidth,
                 height: this.props.previewHeight,
-                clip: res.clip || getDefaultClippingRect(res),
+                clip: res.clip || getDefaultClippingRect(res.width, res.height),
             });
         }
         if (nextState.imageUrl !== imageUrlBefore) {
@@ -134,9 +134,10 @@ module.exports = React.createClass({
         if (!this.state.imageUrl) {
             return null;
         }
+        var res = this.props.resource;
         var props = {
             url: this.state.imageUrl,
-            clippingRect: this.props.resource.clip,
+            clippingRect: res.clip || getDefaultClippingRect(res.width, res.height),
             onChange: this.handleClipRectChange,
             onLoad: this.handleImageLoad,
         };
@@ -210,3 +211,25 @@ module.exports = React.createClass({
 });
 
 var loaded = {};
+
+/**
+ * Return a square clipping rect
+ *
+ * @param  {Number} width
+ * @param  {Number} height
+ * @param  {String} align
+ *
+ * @return {Object}
+ */
+function getDefaultClippingRect(width, height, align) {
+    var left = 0, top = 0;
+    var length = Math.min(width, height);
+    if (align === 'center' || !align) {
+        if (width > length) {
+            left = Math.floor((width - length) / 2);
+        } else if (height > length) {
+            top = Math.floor((height - length) / 2);
+        }
+    }
+    return { left, top, width: length, height: length };
+}
