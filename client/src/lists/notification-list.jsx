@@ -21,7 +21,7 @@ require('./notification-list.scss');
 module.exports = Relaks.createClass({
     displayName: 'NotificationList',
     propTypes: {
-        reactions: PropTypes.arrayOf(PropTypes.object),
+        notifications: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -35,10 +35,9 @@ module.exports = Relaks.createClass({
         var schema = route.parameters.schema;
         var db = this.props.database.use({ server, schema, by: this });
         var props = {
-            respondents: null,
-            stories: null,
+            users: null,
 
-            reactions: this.props.reactions,
+            notifications: this.props.notifications,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -48,15 +47,15 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load authors of comments
             var criteria = {};
-            criteria.id = _.uniq(_.map(props.reactions, 'user_id'));
+            criteria.id = _.uniq(_.map(props.notifications, 'user_id'));
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
-            props.respondents = users;
+            props.users = users;
             meanwhile.show(<NotificationListSync {...props} />);
         }).then(() => {
             // load stories
             var criteria = {};
-            criteria.id = _.uniq(_.map(props.reactions, 'story_id'));
+            criteria.id = _.uniq(_.map(props.notifications, 'story_id'));
             return db.find({ table: 'story', criteria });
         }).then((stories) => {
             props.stories = stories;
@@ -69,9 +68,8 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     displayName: 'NotificationList.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
+        notifications: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -80,47 +78,37 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        var reactions = sortReactions(this.props.reactions);
+        var notifications = sortReactions(this.props.notifications);
         return (
             <div className="notification-list">
-                {_.map(reactions, this.renderReaction)}
+                {_.map(notifications, this.renderReaction)}
             </div>
         );
     },
 
-    renderReaction: function(reaction) {
-        var respondent = findRespondent(this.props.respondents, reaction);
-        var story = findStory(this.props.stories, reaction);
+    renderReaction: function(notification) {
+        var user = findUser(this.props.users, notification);
         var props = {
-            reaction,
-            respondent,
-            story,
+            notification,
+            user,
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: reaction.id,
+            key: notification.id,
         };
         return <NotificationView {...props} />;
     },
 });
 
-var sortReactions = Memoize(function(reactions) {
-    return _.orderBy(reactions, [ 'ptime' ], [ 'desc' ]);
+var sortReactions = Memoize(function(notifications) {
+    return _.orderBy(notifications, [ 'ptime' ], [ 'desc' ]);
 });
 
-var findStory = Memoize(function(stories, reaction) {
-    if (reaction) {
-        return _.find(stories, { id: reaction.story_id });
-    } else {
-        return null;
-    }
-});
-
-var findRespondent = Memoize(function(users, reaction) {
-    if (reaction) {
-        return _.find(users, { id: reaction.user_id });
+var findUser = Memoize(function(users, notification) {
+    if (notification) {
+        return _.find(users, { id: notification.user_id });
     } else {
         return null;
     }

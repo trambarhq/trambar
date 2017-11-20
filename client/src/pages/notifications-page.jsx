@@ -65,7 +65,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             currentUser: null,
-            reactions: null,
+            notifications: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -81,7 +81,7 @@ module.exports = Relaks.createClass({
             props.currentUser = user;
             meanwhile.show(<NotificationsPageSync {...props} />);
         }).then(() => {
-            // load reactions
+            // load notifications
             var criteria = {};
             criteria.target_user_id = props.currentUser.id;
             if (params.date) {
@@ -102,8 +102,8 @@ module.exports = Relaks.createClass({
                 criteria.limit = 500;
             }
             return db.find({ table: 'notification', criteria });
-        }).then((reactions) => {
-            props.reactions = reactions;
+        }).then((notifications) => {
+            props.notifications = notifications;
             return <NotificationsPageSync {...props} />;
         });
     }
@@ -112,7 +112,7 @@ module.exports = Relaks.createClass({
 var NotificationsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NotificationsPage.Sync',
     propTypes: {
-        reactions: PropTypes.arrayOf(PropTypes.object),
+        notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -131,7 +131,7 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
 
     renderList: function() {
         var listProps = {
-            reactions: this.props.reactions,
+            notifications: this.props.notifications,
 
             database: this.props.database,
             route: this.props.route,

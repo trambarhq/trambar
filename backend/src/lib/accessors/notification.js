@@ -141,7 +141,7 @@ module.exports = _.create(Data, {
                     object.reaction_id = row.reaction_id;
                 }
                 if (row.user_id) {
-                    object.user_id;
+                    object.user_id = row.user_id;
                 }
                 object.target_user_id = row.target_user_id;
             });

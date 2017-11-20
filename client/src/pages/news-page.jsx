@@ -55,7 +55,7 @@ module.exports = Relaks.createClass({
                 query = { search: params.search };
             }
             if (params.story) {
-                hash = `#story-${params.story}`;
+                hash = `story-${params.story}`;
             }
             return { path, query, hash };
         },

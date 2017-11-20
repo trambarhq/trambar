@@ -19,9 +19,8 @@ module.exports = React.createClass({
     displayName: 'NotificationView',
     mixins: [ UpdateCheck ],
     propTypes: {
-        reaction: PropTypes.object.isRequired,
-        story: PropTypes.object,
-        respondent: PropTypes.object,
+        notification: PropTypes.object.isRequired,
+        user: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -37,10 +36,7 @@ module.exports = React.createClass({
     render: function() {
         var props = {
             className: `notification-view ${this.props.theme.mode}`,
-            url: this.props.route.find(require('pages/news-page'), {
-                schema: this.props.route.parameters.schema,
-                storyId: this.props.reaction.story_id
-            }),
+            url: this.getNotificationUrl(),
         };
         return (
             <Link {...props}>
@@ -57,13 +53,13 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render the respondent's profile image
+     * Render the user's profile image
      *
      * @return {ReactElement}
      */
     renderProfileImage: function() {
         var props = {
-            user: this.props.respondent,
+            user: this.props.user,
             theme: this.props.theme,
             size: 'small',
         };
@@ -76,27 +72,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderText: function() {
-        var t = this.props.locale.translate;
-        var n = this.props.locale.pick;
-        var user = this.props.respondent;
-        var name = (user) ? n(user.details.name, user.details.gender) : '';
-        var reactionType = _.get(this.props.reaction, 'type');
-        var storyType = _.get(this.props.story, 'type') || 'story';
-        var text;
-        switch (reactionType) {
-            case 'like':
-                text = t(`notification-$user-likes-your-${storyType}`, name);
-                break;
-            case 'comment':
-                text = t(`notification-$user-commented-on-your-${storyType}`, name);
-                break;
-            case 'vote':
-                text = t(`notification-$user-voted-in-your-survey`, name);
-                break;
-            case 'task-completion':
-                text = t(`notification-$user-completed-task`, name);
-                break;
-        }
+        var text = this.getNotificationText();
         return <span className="text">{text}</span>;
     },
 
@@ -107,7 +83,7 @@ module.exports = React.createClass({
      */
     renderTime: function() {
         var props = {
-            time: this.props.reaction.ptime,
+            time: this.props.notification.ctime,
             locale: this.props.locale,
         };
         return <Time {...props} />;
@@ -119,23 +95,92 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderIcon: function() {
-        var reactionType = _.get(this.props.reaction, 'type');
-        var icon;
-        switch (reactionType) {
+        return <i className={`fa fa-${this.getNotificationIcon()}`}/>;
+    },
+
+    /**
+     * Return URL that notification directs to
+     *
+     * @return {String}
+     */
+    getNotificationUrl: function() {
+        var notification = this.props.notification;
+        var route = this.props.route;
+        var params = _.clone(this.props.route.parameters);
+        switch (notification.type) {
             case 'like':
-                icon = 'thumbs-up';
-                break;
             case 'comment':
-                icon = 'comment';
-                break;
+            case 'issue':
             case 'vote':
-                icon = 'check-square-o';
-                break;
             case 'task-completion':
-                icon = 'star';
-                break;
+            case 'note':
+            case 'assignment':
+            case 'push':
+            case 'merge':
+            case 'task-list':
+            case 'survey':
+            case 'issue':
+                params.story = notification.story_id;
+                return route.find(require('pages/news-page'), params);
         }
-        var classNames = [ 'fa', `fa-${icon}` ];
-        return <i className={classNames.join(' ')}/>;
+    },
+
+    /**
+     * Return text of the notification
+     *
+     * @return {String}
+     */
+    getNotificationText: function() {
+        var t = this.props.locale.translate;
+        var n = this.props.locale.name;
+        var user = this.props.user;
+        var notification = this.props.notification;
+        var name = (user) ? n(user.details.name, user.details.gender) : '';
+        switch (notification.type) {
+            case 'like':
+                return t('notification-$user-likes-your-$story', name, notification.details.story_type);
+            case 'comment':
+                return t('notification-$user-commented-on-your-$story', name, notification.details.story_type);
+            case 'issue':
+                return t('notification-$user-opened-an-issue', name);
+            case 'vote':
+                return t('notification-$user-voted-in-your-survey', name);
+            case 'task-completion':
+                return t('notification-$user-completed-task', name);
+            case 'note':
+                return t('notification-$user-posted-a-note-about-your-$story', name, notification.details.story_type);
+            case 'assignment':
+                return t('notification-$user-is-assigned-to-your-issue', name);
+            case 'push':
+                return t('notification-$user-pushed-code-to-$branch', name, notification.details.branch);
+            case 'merge':
+                return t('notification-$user-merged-code-to-$branch', name, notification.details.branch);
+            case 'task-list':
+                return t('notification-$user-added-you-to-task-list', name);
+            case 'survey':
+                return t('notification-$user-posted-a-survey', name);
+        }
+    },
+
+    /**
+     * Return Font Awesome class name
+     *
+     * @return {String}
+     */
+    getNotificationIcon: function() {
+        var notification = this.props.notification;
+        switch (notification.type) {
+            case 'like': return 'thumbs-up';
+            case 'comment': return 'comment';
+            case 'issue': return 'exclamation-circle';
+            case 'vote': return 'check-square-o';
+            case 'task-completion': return 'star';
+            case 'note': return 'sticky-note';
+            case 'assignment': return 'hand-o-right';
+            case 'push': 'cubes';
+            case 'merge': 'cubes';
+            case 'task-list': return 'list-ol';
+            case 'survey': return 'list-url';
+        }
     }
 });
