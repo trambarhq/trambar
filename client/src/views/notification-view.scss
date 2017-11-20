@@ -1,5 +1,5 @@
 .notification-view {
-    display: flow-root;
+    display: block;
     background-color: #362a2a;
     border: 2px solid #211a1a;
     margin: 0.5em 1em 0.5em 1em;
@@ -31,6 +31,12 @@
         .fa {
             margin-left: 0.4em;
         }
+    }
+
+    &:after {
+        content: "";
+        display: table;
+        clear: both;
     }
 }
 

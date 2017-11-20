@@ -23,7 +23,7 @@
     }
 
     .controls {
-        display: flow-root;
+        display: block;
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
         border-top: 1px solid #666666;
@@ -52,6 +52,12 @@
         .duration-indiactor {
             float: left;
             margin-top: 0.65em;
+        }
+
+        &:after {
+            content: "";
+            display: table;
+            clear: both;
         }
     }
 }

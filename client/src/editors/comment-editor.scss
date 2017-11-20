@@ -26,7 +26,7 @@
             }
 
             .buttons {
-                display: flow-root;
+                display: block;
 
                 .media-buttons {
                     padding-top: 0.30em;
@@ -35,6 +35,12 @@
 
                 .action-buttons {
                     float: right;
+                }
+
+                &:after {
+                    content: "";
+                    display: table;
+                    clear: both;
                 }
             }
         }
