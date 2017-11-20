@@ -121,6 +121,7 @@ module.exports = React.createClass({
                             if (object.changes) {
                                 this.triggerNotifyEvent(serverAddress, object.changes);
                             } else if (object.alert) {
+                                console.log('WebSocket: ', object);
                                 this.showAlert(serverAddress, object.alert);
                             } else if (object.socket) {
                                 this.triggerConnectEvent(serverAddress, object.socket);
@@ -301,7 +302,7 @@ module.exports = React.createClass({
                 // show attach image only if there's no text
                 options.image = `${serverAddress}${alert.attached_image}`;
             }
-            options.lang = this.props.locale.languageCode;
+            options.lang = _.get(this.props.locale, 'languageCode');
             var notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
                 this.triggerAlertClickEvent(address, alert);

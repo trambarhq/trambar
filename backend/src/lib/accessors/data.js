@@ -901,16 +901,16 @@ module.exports = {
      * @return {Promise<Array<Object>>}
      */
     findCached: function(db, schema, criteria, columns) {
+        // remove old ones
+        var time = new Date;
+        _.remove(this.cachedSearches, (search) => {
+            var elapsed = time - search.time;
+            if (elapsed > 5 * 60 * 1000) {
+                return true;
+            }
+        });
         var matchingSearch = _.find(this.cachedSearches, { schema, criteria, columns });
         if (matchingSearch) {
-            // remove old ones
-            var time = new Date;
-            _.remove(this.cachedSearches, (search) => {
-                var elapsed = time - search.time;
-                if (elapsed > 5 * 60 * 1000) {
-                    return true;
-                }
-            });
             return Promise.resolve(matchingSearch.results);
         } else {
             return this.find(db, schema, criteria, columns).then((results) => {

@@ -17,6 +17,7 @@ module.exports = function(languageCode) {
         'audio-capture-cancel': 'Cancel',
         'audio-capture-pause': 'Pause',
         'audio-capture-rerecord': 'Rerecord',
+        'audio-capture-resume': 'Resume',
         'audio-capture-start': 'Start',
         'audio-capture-stop': 'Stop',
 
@@ -84,6 +85,8 @@ module.exports = function(languageCode) {
             return `${user} likes this`;
         },
 
+        'image-editor-upload-in-progress': 'Upload in progress...',
+
         'list-$count-more': (count) => {
             return `${count} more...`;
         },
@@ -93,6 +96,10 @@ module.exports = function(languageCode) {
         'media-next': 'Next',
         'media-previous': 'Previous',
 
+        'media-editor-embed': 'Embed',
+        'media-editor-remove': 'Remove',
+        'media-editor-shift': 'Shift',
+
         'membership-request-cancel': 'Cancel',
         'membership-request-join': 'Join',
         'membership-request-ok': 'OK',
@@ -100,35 +107,28 @@ module.exports = function(languageCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
-        'notification-$user-commented-on-your-merge': (user) => {
-            return `${user} commented on your merge`;
-        },
-        'notification-$user-commented-on-your-story': (user) => {
-            return `${user} commented on your post`;
-        },
-        'notification-$user-commented-on-your-survey': (user) => {
-            return `${user} commented on your survey`;
-        },
-        'notification-$user-commented-on-your-task-list': (user) => {
-            return `${user} commented on your task list`;
+        'notification-$user-commented-on-your-$story': (user, story) => {
+            switch (story) {
+                case 'push': story = 'push'; break;
+                case 'merge': story = 'merge'; break;
+                case 'branch': story = 'branch'; break;
+                case 'survey': story = 'survey'; break;
+                case 'task-list': story = 'task list'; break;
+            }
+            return `${user} commented on your ${story}`;
         },
         'notification-$user-completed-task': (user) => {
             return `${user} completed a task on your list`;
         },
-        'notification-$user-likes-your-push': (user) => {
-            return `${user} likes your push`;
-        },
-        'notification-$user-likes-your-merge': (user) => {
-            return `${user} likes your merge`;
-        },
-        'notification-$user-likes-your-story': (user) => {
-            return `${user} likes your post`;
-        },
-        'notification-$user-likes-your-survey': (user) => {
-            return `${user} likes your survey`;
-        },
-        'notification-$user-likes-your-task-list': (user) => {
-            return `${user} likes your task list`;
+        'notification-$user-likes-your-$story': (user, story) => {
+            switch (story) {
+                case 'push': story = 'push'; break;
+                case 'merge': story = 'merge'; break;
+                case 'branch': story = 'branch'; break;
+                case 'survey': story = 'survey'; break;
+                case 'task-list': story = 'task list'; break;
+            }
+            return `${user} likes your ${story}`;
         },
         'notification-$user-voted-in-your-survey': (user) => {
             return `${user} answered your survey`;
@@ -354,6 +354,7 @@ module.exports = function(languageCode) {
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',
         'video-capture-pause': 'Pause',
+        'video-capture-resume': 'Resume',
         'video-capture-retake': 'Retake',
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stop',

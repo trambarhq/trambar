@@ -87,7 +87,10 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema);
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'deleted', 'user_id' ];
+            return this.createNotificationTriggers(db, schema, propNames);
+        });
     },
 
     /**

@@ -304,7 +304,7 @@ module.exports = React.createClass({
         };
         if (Notifier === WebsocketNotifier) {
             _.assign(notifierProps, {
-                locale: this.props.locale,
+                locale: this.state.locale,
                 defaultProfileImage: require('profile-image-placeholder.png'),
             })
         } else if (Notifier === PushNotifier) {

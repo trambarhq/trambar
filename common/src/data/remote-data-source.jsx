@@ -20,7 +20,6 @@ module.exports = React.createClass({
         onAuthorization: PropTypes.func,
         onExpiration: PropTypes.func,
         onViolation: PropTypes.func,
-        onAlertClick: PropTypes.func,
     },
 
     /**

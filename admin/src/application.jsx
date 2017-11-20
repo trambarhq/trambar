@@ -243,7 +243,7 @@ module.exports = React.createClass({
         var notifierProps = {
             ref: setters.notifier,
             serverAddress: serverAddress,
-            locale: this.props.locale,
+            locale: this.state.locale,
             onNotify: this.handleChangeNotification,
             onConnect: this.handleConnection,
             onDisconnect: this.handleDisconnection,

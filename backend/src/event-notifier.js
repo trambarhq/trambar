@@ -44,6 +44,7 @@ var accessors = [
     Notification,
     Reaction,
     Statistics,
+    Subscription,
     Story,
 
     Notification,
@@ -106,20 +107,33 @@ function handleDatabaseChanges(events) {
         });
         ListenerManager.send(db, messages);
 
-        // generate new Notification objects
-        return NotificationGenerator.generate(db, events).then((notifications) => {
-            // send them to users who're currently listening
-            var messages = [];
-            _.each(notifications, (notification) => {
-                _.each(listeners, (listener) => {
-                    if (listener.user.id === notification.target_user_id) {
-                        var alert = AlertComposer.format(db, notification, listener);
-                        messages.push(new Message('alert', listener, { alert }));
-                    }
+        var eventsBySchema = _.groupBy(events, 'schema');
+        return Promise.each(_.keys(eventsBySchema), (schema) => {
+            // generate new Notification objects
+            return NotificationGenerator.generate(db, eventsBySchema[schema]).then((notifications) => {
+                if (_.isEmpty(notifications)) {
+                    return;
+                }
+                var criteria = { deleted: false, disabled: false };
+                return User.findCached(db, 'global', criteria, '*').then((users) => {
+                    var messages = [];
+                    _.each(notifications, (notification) => {
+                        _.each(listeners, (listener) => {
+                            if (listener.user.id === notification.target_user_id) {
+                                var user = _.find(users, { id: notification.user_id });
+                                if (user) {
+                                    var locale = listener.subscription.locale || process.env.LANG || 'en-US';
+                                    var lang = locale.substr(0, 2);
+                                    var alert = AlertComposer.format(schema, user, notification, lang);
+                                    messages.push(new Message('alert', listener, { alert }));
+                                }
+                            }
+                        });
+                    });
+                    return ListenerManager.send(db, messages);
                 });
             });
-            ListenerManager.send(db, messages);
-        });
+        })
     });
 }
 
