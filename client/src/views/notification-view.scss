@@ -4,7 +4,7 @@
     border: 2px solid #211a1a;
     margin: 0.5em 1em 0.5em 1em;
     padding: 0.4em 0.4em 0.3em 0.4em;
-    color: #cccccc;
+    color: #666666;
     cursor: pointer;
 
     .event {
@@ -30,6 +30,14 @@
 
         .fa {
             margin-left: 0.4em;
+        }
+    }
+
+    &.unread {
+        color: #eeeeee;
+
+        .date {
+            color: #eeeeee;
         }
     }
 

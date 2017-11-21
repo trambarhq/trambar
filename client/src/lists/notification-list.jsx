@@ -29,6 +29,13 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Retrieve data needed by synchronous component
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
@@ -77,16 +84,28 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
-        var notifications = sortReactions(this.props.notifications);
+        var notifications = sortNotifications(this.props.notifications);
         return (
             <div className="notification-list">
-                {_.map(notifications, this.renderReaction)}
+                {_.map(notifications, this.renderNotification)}
             </div>
         );
     },
 
-    renderReaction: function(notification) {
+    /**
+     * Render a notification
+     *
+     * @param  {Object} notification
+     *
+     * @return {ReactElement}
+     */
+    renderNotification: function(notification) {
         var user = findUser(this.props.users, notification);
         var props = {
             notification,
@@ -97,13 +116,70 @@ var NotificationListSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             key: notification.id,
+
+            onClick: this.handleNotificationClick,
         };
         return <NotificationView {...props} />;
     },
+
+    /**
+     * Set seen flag of notifications to true
+     *
+     * @param  {Array<Notification>} notifications
+     *
+     * @return {Promise<Array>}
+     */
+    markAsSeen: function(notifications) {
+        var route = this.props.route;
+        var server = route.parameters.server;
+        var schema = route.parameters.schema;
+        var db = this.props.database.use({ server, schema, by: this });
+        var notificationsAfter = _.map(notifications, (notification) => {
+            return { id: notification.id, seen: true };
+        });
+        return db.save({ table: 'notification' }, notificationsAfter);
+    },
+
+    /**
+     * Mark unread notification as seen after some time
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        if (prevProps.notifications !== this.props.notifications) {
+            var unread = _.filter(this.props.notifications, { seen: false });
+            if (!_.isEmpty(unread)) {
+                clearTimeout(this.markAsSeenTimeout);
+                this.markAsSeenTimeout = setTimeout(() => {
+                    this.markAsSeen(unread);
+                }, 10 * 1000);
+            }
+        }
+    },
+
+    /**
+     * Clear timeout on unmount
+     */
+    componentWillUnmount: function() {
+        clearTimeout(this.markAsSeenTimeout);
+    },
+
+    /**
+     * Called when user clicks on a notification
+     *
+     * @param  {Object} evt
+     */
+    handleNotificationClick: function(evt) {
+        var notification = evt.target.props.notification;
+        if (!notification.seen) {
+            this.markAsSeen([ notification ]);
+        }
+    }
 });
 
-var sortReactions = Memoize(function(notifications) {
-    return _.orderBy(notifications, [ 'ptime' ], [ 'desc' ]);
+var sortNotifications = Memoize(function(notifications) {
+    return _.orderBy(notifications, [ 'ctime' ], [ 'desc' ]);
 });
 
 var findUser = Memoize(function(users, notification) {

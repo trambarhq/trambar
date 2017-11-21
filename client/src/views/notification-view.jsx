@@ -26,6 +26,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onClick: PropTypes.func,
     },
 
     /**
@@ -38,7 +40,11 @@ module.exports = React.createClass({
             className: `notification-view ${this.props.theme.mode}`,
             url: this.getNotificationUrl(),
             target: this.getNotificationTarget(),
+            onClick: this.handleClick,
         };
+        if (!this.props.notification.seen) {
+            props.className += ' unread';
+        }
         return (
             <Link {...props}>
                 <div className="event">
@@ -206,6 +212,20 @@ module.exports = React.createClass({
             case 'survey': return 'list-url';
             case 'bookmark': return 'bookmark';
             case 'join_request': return 'user-circle';
+        }
+    },
+
+    /**
+     * Called when click is clicked
+     *
+     * @param  {Event} evt
+     */
+    handleClick: function(evt) {
+        if (this.props.onClick) {
+            this.props.onClick({
+                type: 'click',
+                target: this,
+            });
         }
     }
 });
