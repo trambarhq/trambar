@@ -42,6 +42,13 @@ module.exports = Relaks.createClass({
         };
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;

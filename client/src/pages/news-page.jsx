@@ -28,6 +28,15 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
                 '/:schema/news/:roles/:date/?',
@@ -41,6 +50,13 @@ module.exports = Relaks.createClass({
             });
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getUrl: function(params) {
             var path = `/${params.schema}/news/`, query, hash;
             if (!_.isEmpty(params.roles)) {
@@ -60,6 +76,13 @@ module.exports = Relaks.createClass({
             return { path, query, hash };
         },
 
+        /**
+         * Obtain page options
+         *
+         * @param  {Route} route
+         *
+         * @return {Object}
+         */
         getOptions: function(route) {
             return {
                 navigation: {
@@ -76,6 +99,13 @@ module.exports = Relaks.createClass({
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
@@ -229,6 +259,11 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div className="news-page">
@@ -237,6 +272,11 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render list of stories
+     *
+     * @return {ReactElement}
+     */
     renderList: function() {
         var listProps = {
             showEditors: this.props.showEditors,

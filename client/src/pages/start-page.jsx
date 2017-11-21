@@ -32,6 +32,15 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
                 '/start/?'
@@ -40,17 +49,38 @@ module.exports = Relaks.createClass({
             });
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getUrl: function(params) {
             var path = `/start/`, query, hash;
             return { path, query, hash };
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getOptions: function(route) {
             return {
             }
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
@@ -329,6 +359,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render project buttons
+     *
+     * @return {ReactElement}
+     */
     renderProjectButtons: function() {
         var t = this.props.locale.translate;
         var projects = sortProject(this.props.projects, this.props.locale);
@@ -345,6 +380,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a project button
+     *
+     * @return {ReactElement}
+     */
     renderProjectButton: function(project, i) {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
@@ -376,7 +416,6 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
 
         var props = {
-            key: i,
             'data-project-id': project.id,
             className: 'project-button'
         };
@@ -392,7 +431,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
 
         return (
-            <a {...props}>
+            <a key={project.id} {...props}>
                 <div className="icon">{icon}</div>
                 <div className="text">
                     {badge}
@@ -444,7 +483,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Look
+     * Check for changes to props
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState

@@ -24,6 +24,15 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
                 '/:schema/bookmarks/?',
@@ -33,6 +42,13 @@ module.exports = Relaks.createClass({
             });
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getUrl: function(params) {
             var path = `/${params.schema}/bookmarks/`, query, hash;
             if (params.story) {
@@ -41,6 +57,13 @@ module.exports = Relaks.createClass({
             return { path, query, hash };
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getOptions: function(route) {
             return {
                 navigation: {
@@ -58,7 +81,7 @@ module.exports = Relaks.createClass({
     },
 
     /**
-     * Retrieve data needed by synchronous component
+     * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
      *

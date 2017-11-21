@@ -27,6 +27,13 @@ module.exports = Relaks.createClass({
         onSelect: PropTypes.func,
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
@@ -70,6 +77,11 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
         onSelect: PropTypes.func,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var users = sortUsers(this.props.users, this.props.locale);
         return (
@@ -79,6 +91,11 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a user's name and profile picture
+     *
+     * @return {ReactElement}
+     */
     renderUser: function(user) {
         var props = {
             user,
@@ -92,6 +109,11 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
         return <User {...props} />
     },
 
+    /**
+     * Inform parent component that the selection has changed
+     *
+     * @param  {Array<Number>} selection
+     */
     triggerSelectEvent: function(selection) {
         if (this.props.onSelect) {
             this.props.onSelect({
@@ -102,6 +124,11 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Called when user clicks on a user
+     *
+     * @param  {Event} evt
+     */
     handleUserClick: function(evt) {
         var userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
         var selection = this.props.selection;

@@ -30,6 +30,13 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var route = this.props.route;
         var server = route.parameters.server;
@@ -124,6 +131,11 @@ var UserListSync = module.exports.Sync = React.createClass({
         loading: PropTypes.bool,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var users = sortUsers(this.props.users, this.props.locale);
         return (
@@ -133,6 +145,14 @@ var UserListSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a user view component
+     *
+     * @param  {User} user
+     * @param  {Number} index
+     *
+     * @return {ReactElement}
+     */
     renderUser: function(user, index) {
         var roles = findRoles(this.props.roles, user);
         var dailyActivities = findDailyActivities(this.props.dailyActivities, user);

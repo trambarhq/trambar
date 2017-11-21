@@ -23,6 +23,15 @@ module.exports = Relaks.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
                 '/:schema/notifications/:date/?',
@@ -33,6 +42,13 @@ module.exports = Relaks.createClass({
             })
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getUrl: function(params) {
             var path = `/${params.schema}/notifications/`, query, hash;
             if (params.date) {
@@ -44,6 +60,13 @@ module.exports = Relaks.createClass({
             return { path, query, hash };
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getOptions: function(route) {
             return {
                 navigation: {
@@ -60,6 +83,13 @@ module.exports = Relaks.createClass({
         },
     },
 
+    /**
+     * Render the component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
@@ -121,6 +151,11 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div className="notifications-page">
@@ -129,6 +164,11 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render list of notifications
+     *
+     * @return {ReactElement}
+     */
     renderList: function() {
         var listProps = {
             notifications: this.props.notifications,

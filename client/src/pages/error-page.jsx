@@ -18,6 +18,15 @@ module.exports = React.createClass({
     },
 
     statics: {
+        /**
+         * Match current URL against the page's
+         *
+         * @param  {String} path
+         * @param  {Object} query
+         * @param  {String} hash
+         *
+         * @return {Object|null}
+         */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
                 '/error/:code',
@@ -27,16 +36,35 @@ module.exports = React.createClass({
             });
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getUrl: function(params) {
             var path = `/error/${params.code}`, query, hash;
             return { path, query, hash };
         },
 
+        /**
+         * Generate a URL of this page based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {Object}
+         */
         getOptions: function(route) {
             return {};
         },
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var params = this.props.route.parameters;
         var error = new HttpError(params.code)

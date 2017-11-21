@@ -17,46 +17,43 @@ var OptionButton = require('widgets/option-button');
 
 require('./language-panel.scss');
 
-module.exports = Relaks.createClass({
+module.exports = React.createClass({
     displayName: 'LanguagePanel',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    renderAsync: function(meanwhile) {
-        var props = {
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <LanguagePanelSync {...props} />;
-    },
-});
-
-var LanguagePanelSync = module.exports.Sync = React.createClass({
-    displayName: 'LanguagePanel.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
+        currentUser: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render the langauge portion of the language code
+     *
+     * @return {String}
+     */
     getSelectedLanguageCode: function() {
         var parts = _.split(this.props.locale.languageCode, '-');
         return _.lowerCase(parts[0]);
     },
 
+    /**
+     * Render the country portion of the language code
+     *
+     * @return {String}
+     */
     getSelectedCountryCode: function() {
         var parts = _.split(this.props.locale.languageCode, '-');
         return _.lowerCase(parts[1]);
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var t = this.props.locale.translate;
         return (
@@ -71,11 +68,23 @@ var LanguagePanelSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render list of languages
+     *
+     * @return {Array<ReactElement>}
+     */
     renderList: function() {
         var languages = _.filter(this.props.locale.directory, { locales: { client: true } });
         return _.map(languages, this.renderButton);
     },
 
+    /**
+     * Render a language button and a country dropdown
+     *
+     * @param  {Object} language
+     *
+     * @return {ReactElement}
+     */
     renderButton: function(language) {
         var languageCode = this.getSelectedLanguageCode();
         var buttonProps = {
@@ -88,6 +97,13 @@ var LanguagePanelSync = module.exports.Sync = React.createClass({
         return <OptionButton {...buttonProps} />
     },
 
+    /**
+     * Render a dropbox select control
+     *
+     * @param  {Object} language
+     *
+     * @return {ReactElement}
+     */
     renderCountrySelect: function(language) {
         var languageCode = this.getSelectedLanguageCode();
         var countryCode = this.getSelectedCountryCode();
@@ -109,6 +125,11 @@ var LanguagePanelSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Called when user click on a language
+     *
+     * @param  {Event} evt
+     */
     handleLanguageClick: function(evt) {
         var code = evt.currentTarget.id;
         if (code !== this.getSelectedLanguageCode()) {
