@@ -11,6 +11,8 @@ var Theme = require('theme/theme');
 var ProjectPanel = require('panels/project-panel');
 var UserPanel = require('panels/user-panel');
 var NotificationPanel = require('panels/notification-panel');
+var WebAlertPanel = require('panels/web-alert-panel');
+var MobileAlertPanel = require('panels/mobile-alert-panel');
 var LanguagePanel = require('panels/language-panel');
 
 require('./settings-page.scss');
@@ -170,6 +172,8 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <ProjectPanel {...panelProps} />
                     <UserPanel {...panelProps} />
                     <NotificationPanel {...panelProps} />
+                    <WebAlertPanel {...panelProps} />
+                    <MobileAlertPanel {...panelProps} />
                     <LanguagePanel {...panelProps} />
                 </Masonry>
             </div>

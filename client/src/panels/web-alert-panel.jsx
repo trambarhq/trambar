@@ -15,10 +15,10 @@ var UpdateCheck = require('mixins/update-check');
 var SettingsSection = require('widgets/settings-section');
 var OptionButton = require('widgets/option-button');
 
-require('./notification-panel.scss');
+require('./web-alert-panel.scss');
 
 module.exports = React.createClass({
-    displayName: 'NotificationPanel',
+    displayName: 'WebAlertPanel',
     mixins: [ UpdateCheck ],
     propTypes: {
         currentUser: PropTypes.object,
@@ -59,9 +59,9 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="notification">
+            <SettingsSection className="web-alert">
                 <header>
-                    <i className="fa fa-exclamation-circle" /> {t('settings-notification')}
+                    <i className="fa fa-id-card" /> {t('settings-web-alert')}
                 </header>
                 <body>
                     {this.renderOptions()}
@@ -96,10 +96,12 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var optionName = _.snakeCase(type);
         var settings = _.get(this.props.currentUser, 'settings', {});
-        var enabled = !!_.get(settings, `notification.${optionName}`);
+        var notificationEnabled = !!_.get(settings, `notification.${optionName}`);
+        var alertEnabled = !!_.get(settings, `web_alert.${optionName}`);
         var buttonProps = {
             label: t(`notification-option-${type}`),
-            selected: enabled,
+            selected: alertEnabled && notificationEnabled,
+            disabled: !notificationEnabled,
             onClick: this.handleOptionClick,
             id: optionName,
         };
@@ -112,17 +114,12 @@ module.exports = React.createClass({
     handleOptionClick: function(evt) {
         var optionName = evt.currentTarget.id;
         var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
-        var enabled = !!_.get(settings, `notification.${optionName}`);
-        if (enabled) {
-            _.unset(settings, `notification.${optionName}`);
+        var alertEnabled = !!_.get(settings, `web_alert.${optionName}`);
+        if (alertEnabled) {
             _.unset(settings, `web_alert.${optionName}`);
-            _.unset(settings, `mobile_alert.${optionName}`);
         } else {
-            _.set(settings, `notification.${optionName}`, (optionName === 'merge') ? 'master' : true);
             _.set(settings, `web_alert.${optionName}`, true);
-            _.set(settings, `mobile_alert.${optionName}`, true);
         }
-        console.log(enabled, settings);
         this.setUserProperty('settings', settings);
     },
 });

@@ -120,6 +120,7 @@ module.exports = function(languageCode) {
         'notification-option-task-completion': 'When someone completes a task on your list',
         'notification-option-task-list': 'When someone adds you to a task list',
         'notification-option-vote': 'When someone answers your survey',
+        'notification-option-web-session': 'When a web session is active',
 
         'notification-$user-commented-on-your-$story': (user, story) => {
             switch (story) {
@@ -198,9 +199,11 @@ module.exports = function(languageCode) {
         'server-type-google': 'Google',
 
         'settings-language': 'Language',
+        'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',
         'settings-projects': 'Projects',
         'settings-user-profile': 'User Profile',
+        'settings-web-alert': 'Web Alert',
 
         'start-projects': 'Projects',
         'start-social-login': 'Social login',

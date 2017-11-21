@@ -35,10 +35,6 @@ OptionButton.propTypes = {
     onClick: PropTypes.func,
 };
 
-OptionButton.defaultProps = {
-    icon: 'check-circle',
-};
-
 function buttonClasses(props) {
     var classNames = [ 'option-button' ];
     if (props.className) {
@@ -59,7 +55,7 @@ function iconClasses(props) {
         classNames.push(`fa-${props.icon}`);
     } else {
         if (props.selected) {
-            classNames.push(`fa-${props.icon}`);
+            classNames.push('fa-check-circle');
         } else {
             classNames.push('fa-circle-o');
         }

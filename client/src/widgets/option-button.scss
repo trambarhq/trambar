@@ -19,6 +19,12 @@
         color: #eeeeee;
     }
 
+    &.disabled {
+        color: #666666;
+        opacity: 0.25;
+        cursor: default;
+    }
+
     .label {
         display: table-cell;
         font-size: 0.9em;
