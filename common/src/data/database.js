@@ -48,6 +48,11 @@ function Database(remoteDataSource, context) {
      * @return {Promise<Array<Object>>}
      */
     this.save = function(location, objects) {
+        if (process.env.NODE_ENV !== 'production') {
+            if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
+                throw new Error('save() expects an array of objects');
+            }
+        }
         location = merge(context, location);
         return remoteDataSource.save(location, objects);
     };
@@ -61,6 +66,11 @@ function Database(remoteDataSource, context) {
      * @return {Promise<Object>}
      */
     this.saveOne = function(location, object) {
+        if (process.env.NODE_ENV !== 'production') {
+            if (!_.isObject(object)) {
+                throw new Error('saveOne() expects an object');
+            }
+        }
         return self.save(location, [ object ]).then((objects) => {
             return (objects.length > 0) ? objects[0] : null;
         });
@@ -75,6 +85,11 @@ function Database(remoteDataSource, context) {
      * @return {Promise<Array<Object>>}
      */
     this.remove = function(location, objects) {
+        if (process.env.NODE_ENV !== 'production') {
+            if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
+                throw new Error('remove() expects an array of objects');
+            }
+        }
         location = merge(context, location);
         return remoteDataSource.remove(location, objects);
     };
@@ -88,6 +103,11 @@ function Database(remoteDataSource, context) {
      * @return {Promise<Object>}
      */
     this.removeOne = function(location, object) {
+        if (process.env.NODE_ENV !== 'production') {
+            if (!_.isObject(object)) {
+                throw new Error('removeOne() expects an object');
+            }
+        }
         return self.remove(location, [ object ]).then((objects) => {
             return (objects.length > 0) ? objects[0] : null;
         });
