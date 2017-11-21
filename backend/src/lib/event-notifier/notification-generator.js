@@ -5,6 +5,7 @@ var Moment = require('moment');
 // accessors
 var Bookmark = require('accessors/bookmark');
 var Notification = require('accessors/notification');
+var Project = require('accessors/project');
 var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
 var User = require('accessors/user');
@@ -274,11 +275,40 @@ function getStoryNotificationTemplate(db, event) {
     });
 }
 
+/**
+ * Create notifications in response to a change to the table "user"
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise<Array<Object>}
+ */
 function createUserNotifications(db, event) {
     return getUserNotificationTemplate(db, event).then((template) => {
         if (!template) {
             return [];
         }
+        var criteria = { deleted: false, disabled: false };
+        return User.findCached(db, 'global', criteria, '*').filter((user) => {
+            if (user.type !== 'admin') {
+                return false;
+            }
+            var n = _.get(user, 'settings.notification', {});
+            switch (template.type) {
+                case 'join_request': return n.join_request;
+            }
+        }).then((recipients) => {
+            return Promise.map(template.project_names, (schema) => {
+                var notifications = _.map(recipients, (recipient) => {
+                    var notification = _.omit(template, 'project_names');
+                    notification.target_user_id = recipient
+                    return notification;
+                });
+                return Notification.insert(db, schema, notifications);
+            }).then((notificationLists) => {
+                return _.flatten(notificationLists);
+            });
+        });
     });
 }
 
@@ -295,15 +325,61 @@ function getUserNotificationTemplate(db, event) {
         if (event.op === 'DELETE' || event.current.deleted) {
             return null;
         }
+        if (event.diff.requested_project_ids) {
+            var newProjectIds = _.difference(event.current.requested_project_ids, event.previous.requested_project_ids);
+            if (!_.isEmpty(newProjectIds)) {
+                var criteria = {
+                    id: newProjectIds,
+                    deleted: false
+                };
+                return Project.find(db, 'global', criteria, 'name').then((projects) => {
+                    return {
+                        type: 'join_request',
+                        user_id: event.id,
+                        project_names: _.map(projects, 'name'),
+                    };
+                });
+            }
+        }
         return null;
     });
 }
 
-function createBookmarkNotifications(events, listeners) {
+/**
+ * Create notifications in response to a change to the table "bookmark"
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise<Array<Object>}
+ */
+function createBookmarkNotifications(db, event) {
     return getBookmarkNotificationTemplate(db, event).then((template) => {
         if (!template) {
             return [];
         }
+        var criteria = { deleted: false, disabled: false };
+        return User.findCached(db, 'global', criteria, '*').filter((user) => {
+            if (user.id !== template.target_user_id) {
+                return false;
+            }
+            var n = _.get(user, 'settings.notification', {});
+            switch (template.type) {
+                case 'bookmark': return n.bookmark;
+            }
+        }).then((recipients) => {
+            return Promise.map(template.user_ids, (userId) => {
+                var schema = event.schema;
+                var notifications = _.map(recipients, (recipient) => {
+                    var notification = _.omit(template, 'user_ids');
+                    notification.user_id = userId;
+                    return notification;
+                });
+                return Notification.insert(db, schema, notifications);
+            }).then((notificationLists) => {
+                return _.flatten(notificationLists);
+            });
+        });
     });
 }
 
@@ -315,12 +391,36 @@ function createBookmarkNotifications(events, listeners) {
  *
  * @return {Promise<String|null>}
  */
-function getBookNotificationTemplate(db, event) {
+function getBookmarkNotificationTemplate(db, event) {
     return Promise.try(() => {
         if (event.op === 'DELETE' || event.current.deleted) {
             return null;
         }
         var schema = event.schema;
+        if (event.diff.user_ids) {
+            var newUserIds = _.difference(event.current.user_ids, event.previous.user_ids);
+            _.pull(newUserIds, event.current.target_user_id);
+            if (!_.isEmpty(newUserIds)) {
+                var criteria = {
+                    id: event.current.story_id,
+                    deleted: false,
+                };
+                return Story.findOne(db, schema, criteria, 'type').then((story) => {
+                    if (!story) {
+                        return null;
+                    }
+                    return {
+                        type: 'bookmark',
+                        story_id: event.current.story_id,
+                        user_ids: newUserIds,
+                        target_user_id: event.current.target_user_id,
+                        details: {
+                            story_type: story.type
+                        }
+                    };
+                });
+            }
+        }
         return null;
     });
 }

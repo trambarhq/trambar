@@ -114,6 +114,7 @@ module.exports = function(languageCode) {
                 case 'branch': story = 'branch'; break;
                 case 'survey': story = 'survey'; break;
                 case 'task-list': story = 'task list'; break;
+                default: story = 'post';
             }
             return `${user} commented on your ${story}`;
         },
@@ -127,8 +128,20 @@ module.exports = function(languageCode) {
                 case 'branch': story = 'branch'; break;
                 case 'survey': story = 'survey'; break;
                 case 'task-list': story = 'task list'; break;
+                default: story = 'post';
             }
             return `${user} likes your ${story}`;
+        },
+        'notification-$user-requested-to-join': (user) => {
+            return `${user} requested to join this project`;
+        },
+        'notification-$user-sent-bookmark-to-$story': (user, story) => {
+            switch (story) {
+                case 'survey': story = 'a survey'; break;
+                case 'task-list': story = 'a task list'; break;
+                default: story = 'a post';
+            }
+            return `${user} sent you a bookmark to ${story}`;
         },
         'notification-$user-voted-in-your-survey': (user) => {
             return `${user} answered your survey`;

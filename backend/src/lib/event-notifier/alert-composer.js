@@ -40,8 +40,10 @@ function getNotificationText(user, notification, lang) {
             return getLocalizedText(lang, 'notification-$user-added-you-to-task-list', name);
         case 'survey':
             return getLocalizedText(lang, 'notification-$user-posted-a-survey', name);
-        case 'issue':
-            return getLocalizedText(lang, 'notification-$user-opened-an-issue', name);
+        case 'bookmark':
+            return getLocalizedText(lang, 'notification-$user-sent-bookmark-to-$story', name, notification.details.story_type);
+        case 'join_request':
+            return getLocalizedText(lang, 'notification-$user-requested-to-join', name);
     }
 }
 

@@ -37,6 +37,7 @@ module.exports = React.createClass({
         var props = {
             className: `notification-view ${this.props.theme.mode}`,
             url: this.getNotificationUrl(),
+            target: this.getNotificationTarget(),
         };
         return (
             <Link {...props}>
@@ -122,6 +123,24 @@ module.exports = React.createClass({
             case 'issue':
                 params.story = notification.story_id;
                 return route.find(require('pages/news-page'), params);
+            case 'bookmark':
+                params.story = notification.story_id;
+                return route.find(require('pages/bookmarks-page'), params);
+            case 'join_request':
+                return `/admin`;
+        }
+    },
+
+    /**
+     * Return target window that notification directs to
+     *
+     * @return {String|undefined}
+     */
+    getNotificationTarget: function() {
+        var notification = this.props.notification;
+        switch (notification.type) {
+            case 'join_request':
+                return '_blank';
         }
     },
 
@@ -159,6 +178,10 @@ module.exports = React.createClass({
                 return t('notification-$user-added-you-to-task-list', name);
             case 'survey':
                 return t('notification-$user-posted-a-survey', name);
+            case 'bookmark':
+                return t('notification-$user-sent-bookmark-to-$story', name, notification.details.story_type);
+            case 'join_request':
+                return t('notification-$user-requested-to-join', name);
         }
     },
 
@@ -181,6 +204,8 @@ module.exports = React.createClass({
             case 'merge': 'cubes';
             case 'task-list': return 'list-ol';
             case 'survey': return 'list-url';
+            case 'bookmark': return 'bookmark';
+            case 'join_request': return 'user-circle';
         }
     }
 });
