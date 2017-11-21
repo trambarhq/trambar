@@ -19,6 +19,7 @@ module.exports = _.create(Data, {
         reaction_id: Number,
         user_id: Number,
         target_user_id: Number,
+        seen: Boolean,
     },
     criteria: {
         id: Number,
@@ -28,6 +29,8 @@ module.exports = _.create(Data, {
         reaction_id: Number,
         user_id: Number,
         target_user_id: Number,
+        seen: Boolean,
+
         time_range: String,
         newer_than: String,
         older_than: String,
@@ -57,6 +60,7 @@ module.exports = _.create(Data, {
                 reaction_id int NOT NULL DEFAULT 0,
                 user_id int NOT NULL DEFAULT 0,
                 target_user_id int NOT NULL DEFAULT 0,
+                seen boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
         `;
@@ -134,6 +138,7 @@ module.exports = _.create(Data, {
                 object.ctime = row.ctime;
                 object.type = row.type;
                 object.details = row.details;
+                object.seen = row.seen;
                 if (row.story_id) {
                     object.story_id = row.story_id;
                 }
