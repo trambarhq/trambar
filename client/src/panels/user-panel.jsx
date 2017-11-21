@@ -17,33 +17,11 @@ var PushButton = require('widgets/push-button');
 
 require('./user-panel.scss');
 
-module.exports = Relaks.createClass({
+module.exports = React.createClass({
     displayName: 'UserPanel',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    renderAsync: function(meanwhile) {
-        var props = {
-            currentUser: null,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <UserPanelSync {...props} />;
-    },
-});
-
-var UserPanelSync = module.exports.Sync = React.createClass({
-    displayName: 'UserPanel.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
-        currentUser: PropTypes.arrayOf(PropTypes.object).isRequired,
+        currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,

@@ -107,6 +107,20 @@ module.exports = function(languageCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
+        'notification-option-assignment': 'When you are assigned to an issue',
+        'notification-option-bookmark': 'When someone sends you a bookmark',
+        'notification-option-comment': 'When someone comments on your post',
+        'notification-option-issue': 'When someone opens an issue',
+        'notification-option-join-request': 'When someone wants to join this project',
+        'notification-option-like': 'When someone likes your post',
+        'notification-option-merge': 'When someone merges code into the master branch',
+        'notification-option-note': 'When someone posts a note on a commit or issue',
+        'notification-option-push': 'When someone pushes code into Git',
+        'notification-option-survey': 'When someone posts a survey',
+        'notification-option-task-completion': 'When someone completes a task on your list',
+        'notification-option-task-list': 'When someone adds you to a task list',
+        'notification-option-vote': 'When someone answers your survey',
+
         'notification-$user-commented-on-your-$story': (user, story) => {
             switch (story) {
                 case 'push': story = 'push'; break;

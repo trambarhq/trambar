@@ -20,6 +20,8 @@ require('./project-panel.scss');
 module.exports = Relaks.createClass({
     displayName: 'ProjectPanel',
     propTypes: {
+        currentUser: PropTypes.object,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,

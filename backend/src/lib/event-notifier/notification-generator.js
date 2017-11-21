@@ -295,7 +295,7 @@ function createUserNotifications(db, event) {
             }
             var n = _.get(user, 'settings.notification', {});
             switch (template.type) {
-                case 'join_request': return n.join_request;
+                case 'join-request': return n.join_request;
             }
         }).then((recipients) => {
             return Promise.map(template.project_names, (schema) => {
@@ -334,7 +334,7 @@ function getUserNotificationTemplate(db, event) {
                 };
                 return Project.find(db, 'global', criteria, 'name').then((projects) => {
                     return {
-                        type: 'join_request',
+                        type: 'join-request',
                         user_id: event.id,
                         project_names: _.map(projects, 'name'),
                     };
