@@ -745,84 +745,174 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var user = this.getUser();
         var readOnly = !this.isEditing();
-        var skypeProps = {
-            id: 'skype',
-            value: _.get(user, 'details.skype_username', ''),
-            locale: this.props.locale,
-            onChange: this.handleSkypeUsernameChange,
-            readOnly,
-        };
-        var slackProps = {
-            id: 'slack-team',
-            value: _.get(user, 'details.slack_team_id', ''),
-            locale: this.props.locale,
-            onChange: this.handleSlackTeamIDChange,
-            readOnly,
-        };
-        var slackProps = {
-            id: 'slack-user',
-            value: _.get(user, 'details.slack_user_id', ''),
-            locale: this.props.locale,
-            onChange: this.handleSlackUserIDChange,
-            readOnly,
-        };
-        var ichatProps = {
-            id: 'ichat',
-            value: _.get(user, 'details.ichat_username', ''),
-            locale: this.props.locale,
-            onChange: this.handleIchatUsernameChange,
-            readOnly,
-        };
-        var twitterProps = {
-            id: 'twitter',
-            value: _.get(user, 'details.twitter_username', ''),
-            locale: this.props.locale,
-            onChange: this.handleTwitterUsernameChange,
-            readOnly,
-        };
-        var githubProps = {
-            id: 'github',
-            value: _.get(user, 'details.github_url', ''),
-            locale: this.props.locale,
-            onChange: this.handleGitHubURLChange,
-            readOnly,
-        };
-        var gitlabProps = {
-            id: 'github',
-            value: _.get(user, 'details.gitlab_url', ''),
-            locale: this.props.locale,
-            onChange: this.handleGitlabURLChange,
-            readOnly,
-        };
-        var linkedinProps = {
-            id: 'skype',
-            value: _.get(user, 'details.linkedin_url', ''),
-            locale: this.props.locale,
-            onChange: this.handleLinkedinURLChange,
-            readOnly,
-        };
-        var stackoverflowProps = {
-            id: 'skype',
-            value: _.get(user, 'details.stackoverflow_url', ''),
-            locale: this.props.locale,
-            onChange: this.handleStackoverflowURLChange,
-            readOnly,
-        };
         return (
             <div className="form social">
                 <CollapsibleContainer open={this.state.showingSocialLinks}>
-                    <TextField {...skypeProps}>{t('user-summary-skype')}</TextField>
-                    <TextField {...slackProps}>{t('user-summary-slack-team')}</TextField>
-                    <TextField {...slackProps}>{t('user-summary-slack')}</TextField>
-                    <TextField {...ichatProps}>{t('user-summary-ichat')}</TextField>
-                    <TextField {...twitterProps}>{t('user-summary-twitter')}</TextField>
-                    <TextField {...githubProps}>{t('user-summary-github')}</TextField>
-                    <TextField {...gitlabProps}>{t('user-summary-gitlab')}</TextField>
-                    <TextField {...linkedinProps}>{t('user-summary-linkedin')}</TextField>
-                    <TextField {...stackoverflowProps}>{t('user-summary-stackoverflow')}</TextField>
+                    {this.renderSkypeNameInput()}
+                    {this.renderSlackTeamInput()}
+                    {this.renderSlackIdInput()}
+                    {this.renderIChatInput()}
+                    {this.renderTwitterInput()}
+                    {this.renderGithubUrlInput()}
+                    {this.renderGitlabUrlInput()}
+                    {this.renderLinkedInUrlInput()}
+                    {this.renderStackoverflowUrlInput()}
                 </CollapsibleContainer>
             </div>
         );
+    },
+
+    /**
+     * Render input for Skype username
+     *
+     * @return {ReactElement}
+     */
+    renderSkypeNameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'skype',
+            value: this.getUserProperty('details.skype_username'),
+            locale: this.props.locale,
+            onChange: this.handleSkypeUsernameChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-skype')}</TextField>;
+    },
+
+    /**
+     * Render input for Slack team name
+     *
+     * @return {ReactElement}
+     */
+    renderSlackTeamInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'slack-team',
+            value: this.getUserProperty('details.slack_team_id'),
+            locale: this.props.locale,
+            onChange: this.handleSlackTeamIDChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-slack-team')}</TextField>;
+    },
+
+    /**
+     * Render input for Slack userid
+     *
+     * @return {ReactElement}
+     */
+    renderSlackIdInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'slack-user',
+            value: this.getUserProperty('details.slack_user_id'),
+            locale: this.props.locale,
+            onChange: this.handleSlackUserIDChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-slack')}</TextField>;
+    },
+
+    /**
+     * Render input for iChat username
+     *
+     * @return {ReactElement}
+     */
+    renderIChatInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'ichat',
+            value: this.getUserProperty('details.ichat_username'),
+            locale: this.props.locale,
+            onChange: this.handleIchatUsernameChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-ichat')}</TextField>;
+    },
+
+    /**
+     * Render input for Twitter username
+     *
+     * @return {ReactElement}
+     */
+    renderTwitterInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'twitter',
+            value: this.getUserProperty('details.twitter_username'),
+            locale: this.props.locale,
+            onChange: this.handleTwitterUsernameChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-twitter')}</TextField>;
+    },
+
+    /**
+     * Render input for Github URL
+     *
+     * @return {ReactElement}
+     */
+    renderGithubUrlInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'github',
+            value: this.getUserProperty('details.github_url'),
+            locale: this.props.locale,
+            onChange: this.handleGitHubUrlChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-github')}</TextField>;
+    },
+
+    /**
+     * Render input for Gitlab URL
+     *
+     * @return {ReactElement}
+     */
+    renderGitlabUrlInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'github',
+            value: this.getUserProperty('details.gitlab_url'),
+            locale: this.props.locale,
+            onChange: this.handleGitlabUrlChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-gitlab')}</TextField>;
+    },
+
+    /**
+     * Render input for Linkedin URL
+     *
+     * @return {ReactElement}
+     */
+    renderLinkedInUrlInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'linkedin',
+            value: this.getUserProperty('details.linkedin_url'),
+            locale: this.props.locale,
+            onChange: this.handleLinkedinUrlChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-linkedin')}</TextField>;
+    },
+
+    /**
+     * Render input for Stackoverflow URL
+     *
+     * @return {ReactElement}
+     */
+    renderStackoverflowUrlInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'stackoverflow',
+            value: this.getUserProperty('details.stackoverflow_url'),
+            locale: this.props.locale,
+            onChange: this.handleStackoverflowUrlChange,
+            readOnly: !this.isEditing(),
+        };
+        return <TextField {...props}>{t('user-summary-stackoverflow')}</TextField>;
     },
 
     /**
@@ -1175,8 +1265,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleLinkedinURLChange: function(evt) {
-        var url = _trim(evt.target.value);
+    handleLinkedinUrlChange: function(evt) {
+        var url = _.trim(evt.target.value);
         this.setUserProperty(`details.linkedin_url`, url);
     },
 
@@ -1185,8 +1275,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleGitHubURLChange: function(evt) {
-        var url = _trim(evt.target.value);
+    handleGitHubUrlChange: function(evt) {
+        var url = _.trim(evt.target.value);
         this.setUserProperty(`details.github_url`, url);
     },
 
@@ -1195,8 +1285,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleGitlabURLChange: function(evt) {
-        var url = _trim(evt.target.value);
+    handleGitlabUrlChange: function(evt) {
+        var url = _.trim(evt.target.value);
         this.setUserProperty(`details.gitlab_url`, url);
     },
 
@@ -1205,8 +1295,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleStackoverflowURLChange: function(evt) {
-        var url = _trim(evt.target.value);
+    handleStackoverflowUrlChange: function(evt) {
+        var url = _.trim(evt.target.value);
         this.setUserProperty(`details.stackoverflow_url`, url);
     },
 });
