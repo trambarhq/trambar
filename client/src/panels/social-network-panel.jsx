@@ -16,7 +16,7 @@ var SettingsSection = require('widgets/settings-section');
 var PushButton = require('widgets/push-button');
 var TextField = require('widgets/text-field');
 
-require('./user-panel.scss');
+require('./social-network-panel.scss');
 
 module.exports = React.createClass({
     displayName: 'UserPanel',
@@ -28,6 +28,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
     },
 
     /**

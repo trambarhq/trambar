@@ -203,7 +203,7 @@ module.exports = function(languageCode) {
         'settings-notification': 'Notification',
         'settings-projects': 'Projects',
         'settings-social-networks': 'Social Networks',
-        'settings-user-profile': 'User Profile',
+        'settings-user-information': 'User Information',
         'settings-web-alert': 'Web Alert',
 
         'social-network-github': 'GitHub profile URL',
@@ -365,6 +365,14 @@ module.exports = function(languageCode) {
         'telephone-dialog-close': 'Close',
 
         'user-actions': 'Actions',
+
+        'user-info-name': 'Name',
+        'user-info-email': 'E-mail address',
+        'user-info-phone': 'Phone number',
+        'user-info-gender': 'Gender',
+        'user-info-gender-male': 'Male',
+        'user-info-gender-female': 'Female',
+        'user-info-gender-unspecified': 'Unspecified',
 
         'user-statistics-legend-issue': 'Issues',
         'user-statistics-legend-merge': 'Code merges',

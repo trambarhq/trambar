@@ -9,7 +9,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 var ProjectPanel = require('panels/project-panel');
-var UserPanel = require('panels/user-panel');
+var UserInfoPanel = require('panels/user-info-panel');
 var NotificationPanel = require('panels/notification-panel');
 var WebAlertPanel = require('panels/web-alert-panel');
 var MobileAlertPanel = require('panels/mobile-alert-panel');
@@ -171,7 +171,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             <div className="settings-page">
                 <Masonry options={masonryOptions}>
                     <ProjectPanel {...panelProps} />
-                    <UserPanel {...panelProps} />
+                    <UserInfoPanel {...panelProps} />
                     <SocialNetworkPanel {...panelProps} />
                     <NotificationPanel {...panelProps} />
                     <WebAlertPanel {...panelProps} />
