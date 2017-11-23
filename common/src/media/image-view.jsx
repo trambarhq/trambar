@@ -111,9 +111,6 @@ module.exports = React.createClass({
                         height: this.naturalHeight
                     };
                 }
-                this.width = rect.width;
-                this.height = rect.height;
-
                 this.drawImage(rect);
                 this.triggerLoadEvent();
             });
@@ -186,6 +183,9 @@ module.exports = React.createClass({
                 height: (orientation < 5) ? imageHeight : imageWidth,
             };
         }
+        this.width = rect.width;
+        this.height = rect.height;
+
         var inverse = invert(matrix);
     	var src = transformRect(inverse, rect);
     	var dst = transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });

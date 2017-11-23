@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
+var Hammer = require('hammerjs');
 var ComponentRefs = require('utils/component-refs');
 
 var ImageView = require('media/image-view');
@@ -72,7 +73,6 @@ module.exports = React.createClass({
             ref: setters.container,
             className: 'image-cropper',
             onMouseDown: this.handleMouseDown,
-            onMouseUp: this.handleMouseUp,
             onWheel: this.handleMouseWheel,
         };
         var imageProps = {
@@ -89,6 +89,28 @@ module.exports = React.createClass({
     },
 
     /**
+     * Set up Hammer.js once the node is created
+     */
+    componentDidMount: function() {
+        var container = this.components.container;
+        this.hammer = new Hammer(container);
+        var pan = this.hammer.get('pan').set({
+            direction: Hammer.DIRECTION_ALL,
+            threshold: 5
+        });
+        var pinch = this.hammer.get('pinch').set({
+            enable: true
+        });
+        pinch.recognizeWith(pan);
+        this.hammer.on('panstart', this.handlePanStart);
+        this.hammer.on('panmove', this.handlePanMove);
+        this.hammer.on('panend', this.handlePanEnd);
+        this.hammer.on('pinchstart', this.handlePinchStart);
+        this.hammer.on('pinchmove', this.handlePinchMove);
+        this.hammer.on('pinchend', this.handlePinchEnd)
+    },
+
+    /**
      * Remove handler and timeout function on unmount
      */
     componentWillUnmount: function() {
@@ -98,6 +120,14 @@ module.exports = React.createClass({
         if (this.zoomChangeTimeout) {
             clearTimeout(this.zoomChangeTimeout);
             this.triggerChangeEvent(this.state.clippingRect);
+        }
+        if (this.hammer) {
+            this.hammer.off('panstart', this.handlePanStart);
+            this.hammer.off('panmove', this.handlePanMove);
+            this.hammer.off('panend', this.handlePanEnd);
+            this.hammer.off('pinchstart', this.handlePinchStart);
+            this.hammer.off('pinchmove', this.handlePinchMove);
+            this.hammer.off('pinchend', this.handlePinchEnd)
         }
     },
 
@@ -130,17 +160,18 @@ module.exports = React.createClass({
         if (!image || !container || !this.state.clippingRect) {
             return;
         }
-        var rect = container.getBoundingClientRect();
+        var boundingRect = container.getBoundingClientRect();
+        var clippingRect = this.state.clippingRect;
         this.dragStart = {
-            clippingRect: this.state.clippingRect,
+            clippingRect: clippingRect,
+            boundingRect: boundingRect,
             pageX: evt.pageX,
             pageY: evt.pageY,
-            scale: {
-                x: image.width / rect.width,
-                y: image.height / rect.height,
-            }
+            naturalWidth: image.naturalWidth,
+            naturalHeight: image.naturalHeight,
         };
         document.addEventListener('mousemove', this.handleMouseMove);
+        document.addEventListener('mouseup', this.handleMouseUp);
     },
 
     /**
@@ -155,17 +186,19 @@ module.exports = React.createClass({
         if (!this.dragStart) {
             return;
         }
-        var diff = {
-            x: evt.pageX - this.dragStart.pageX,
-            y: evt.pageY - this.dragStart.pageY,
+        var offset = {
+            x: this.dragStart.pageX - evt.pageX,
+            y: this.dragStart.pageY - evt.pageY,
         };
-        var image = this.components.image;
+        var boundingRect = this.dragStart.boundingRect;
         var clippingRect = _.clone(this.dragStart.clippingRect);
-        clippingRect.left -= Math.round(diff.x * this.dragStart.scale.x);
-        clippingRect.top -= Math.round(diff.y * this.dragStart.scale.y);
+        var dX = offset.x * clippingRect.width / boundingRect.width;
+        var dY = offset.y * clippingRect.height / boundingRect.height;
+        clippingRect.left += Math.round(dX);
+        clippingRect.top += Math.round(dY);
 
         // keep rect within the image
-        constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
+        constrainPosition(clippingRect, this.dragStart.naturalWidth, this.dragStart.naturalHeight);
         this.setState({ clippingRect });
     },
 
@@ -179,6 +212,7 @@ module.exports = React.createClass({
             return;
         }
         document.removeEventListener('mousemove', this.handleMouseMove);
+        document.removeEventListener('mouseup', this.handleMouseUp);
         this.triggerChangeEvent(this.state.clippingRect);
         this.dragStart = null;
     },
@@ -196,35 +230,38 @@ module.exports = React.createClass({
         if (!image || !container || !this.state.clippingRect) {
             return;
         }
-        var rect = container.getBoundingClientRect();
-        var scale = {
-            x: image.width / rect.width,
-            y: image.height / rect.height,
-        };
-        var delta = (evt.deltaY * scale.y) / 4;
+        var divider = 4;
+        if (evt.shiftKey) {
+            // faster zoom when shift is pressed
+            divider = 1;
+        }
+        var boundingRect = container.getBoundingClientRect();
         var clippingRect = _.clone(this.state.clippingRect);
-        // TODO: rework this code to handle different aspect ratio
+        var delta = (evt.deltaY * clippingRect.height / boundingRect.height) / divider;
+        var newClippingWidth = clippingRect.width + delta;
         // prevent expansion of the clipping rect that'd that it outside the image
-        if (clippingRect.width + delta > image.naturalWidth) {
-            delta = image.naturalWidth - clippingRect.width;
+        if (newClippingWidth > image.naturalWidth) {
+            newClippingWidth = image.naturalWidth;
+            delta = newClippingWidth - clippingRect.width;
         }
-        if (clippingRect.height + delta > image.naturalHeight) {
-            delta = image.naturalHeight - clippingRect.height;
+        var newClippingHeight = clippingRect.height + delta;
+        if (newClippingHeight > image.naturalHeight) {
+            newClippingHeight = image.naturalHeight;
+            delta = newClippingHeight - clippingRect.height;
+            newClippingWidth = clippingRect.width + delta;
         }
-        clippingRect.width += delta;
-        clippingRect.height += delta;
 
         // center the change at the mouse cursor
         var cursorPos = {
-            x: evt.pageX - rect.left,
-            y: evt.pageY - rect.top
+            x: evt.pageX - boundingRect.left,
+            y: evt.pageY - boundingRect.top
         };
-        var diff = {
-            x: cursorPos.x * (delta / image.width),
-            y: cursorPos.y * (delta / image.height),
-        };
-        clippingRect.left -= Math.round(diff.x * scale.x);
-        clippingRect.top -= Math.round(diff.y * scale.y);
+        var dX = - cursorPos.x * delta / boundingRect.width;
+        var dY = - cursorPos.y * delta / boundingRect.height;
+        clippingRect.left += Math.round(dX);
+        clippingRect.top += Math.round(dY);
+        clippingRect.width = newClippingWidth;
+        clippingRect.height = newClippingHeight;
         constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
         this.setState({ clippingRect }, () => {
             if (this.zoomChangeTimeout) {
@@ -240,11 +277,169 @@ module.exports = React.createClass({
         if (this.dragStart) {
             this.dragStart = {
                 clippingRect,
+                boundingRect,
                 pageX: evt.pageX,
                 pageY: evt.pageY,
-                scale
+                naturalWidth: image.naturalWidth,
+                naturalHeight: image.naturalHeight,
             };
         }
+    },
+
+    /**
+     * Called when multitouch panning starts
+     *
+     * @param  {HammerEvent} evt
+     */
+    handlePanStart: function(evt) {
+        if (evt.pointerType === 'mouse') {
+            // don't handle mouse events through Hammer
+            return;
+        }
+        var image = this.components.image;
+        var container = this.components.container;
+        if (!image || !container || !this.state.clippingRect) {
+            return;
+        }
+        var boundingRect = container.getBoundingClientRect();
+        var clippingRect = this.state.clippingRect;
+        this.panStart = {
+            clippingRect: clippingRect,
+            boundingRect: boundingRect,
+            naturalWidth: image.naturalWidth,
+            naturalHeight: image.naturalHeight,
+        };
+        this.handlePanMove(evt);
+    },
+
+    /**
+     * Called during multitouch panning
+     *
+     * @param  {HammerEvent} evt
+     */
+    handlePanMove: function(evt) {
+        if (!this.panStart) {
+            return;
+        }
+        var boundingRect = this.panStart.boundingRect;
+        var clippingRect = _.clone(this.panStart.clippingRect);
+        var dX = - evt.deltaX * clippingRect.width / boundingRect.width;
+        var dY = - evt.deltaY * clippingRect.height / boundingRect.height;
+        clippingRect.left += Math.round(dX);
+        clippingRect.top += Math.round(dY);
+        constrainPosition(clippingRect, this.panStart.naturalWidth, this.panStart.naturalHeight);
+        this.setState({ clippingRect });
+    },
+
+    /**
+     * Called when multitouch panning ends
+     *
+     * @param  {HammerEvent} evt
+     */
+    handlePanEnd: function(evt) {
+        if (!this.panStart) {
+            return;
+        }
+        this.triggerChangeEvent(this.state.clippingRect);
+        this.panStart = null;
+    },
+
+    /**
+     * Called when multitouch pinching starts
+     *
+     * @param  {HammerEvent} evt
+     */
+    handlePinchStart: function(evt) {
+        if (evt.pointerType === 'mouse') {
+            return;
+        }
+        var image = this.components.image;
+        var container = this.components.container;
+        if (!image || !container || !this.state.clippingRect) {
+            return;
+        }
+        var boundingRect = container.getBoundingClientRect();
+        var clippingRect = this.state.clippingRect;
+        this.pinchStart = {
+            clippingRect: clippingRect,
+            boundingRect: boundingRect,
+            pointers: _.map(evt.pointers, (pointer) => {
+                return {
+                    pageX: pointer.pageX,
+                    pageY: pointer.pageY,
+                };
+            })
+        };
+        this.handlePinchMove(evt);
+    },
+
+    /**
+     * Called during multitouch pinching
+     *
+     * @param  {HammerEvent} evt
+     */
+    handlePinchMove: function(evt) {
+        if (!this.pinchStart) {
+            return;
+        }
+        var image = this.components.image;
+        var clippingRect = _.clone(this.pinchStart.clippingRect);
+        var boundingRect = this.pinchStart.boundingRect;
+        var scale = 1 / evt.scale;
+        var newClippingWidth = Math.round(clippingRect.width * scale);
+        if (newClippingWidth > image.naturalWidth) {
+            newClippingWidth = image.naturalWidth;
+            scale = newClippingWidth / clippingRect.width;
+        }
+        var newClippingHeight = Math.round(clippingRect.height * scale);
+        if (newClippingHeight > image.naturalHeight) {
+            newClippingHeight = image.naturalHeight;
+            scale = newClippingHeight / clippingRect.height;
+            newClippingWidth = Math.round(clippingRect.width * scale);
+        }
+
+        // try to keep the pointers to the same place on the image
+        var p1B = {
+            x: this.pinchStart.pointers[0].pageX - boundingRect.left,
+            y: this.pinchStart.pointers[0].pageY - boundingRect.top,
+        };
+        var p2B = {
+            x: this.pinchStart.pointers[1].pageX - boundingRect.left,
+            y: this.pinchStart.pointers[1].pageY - boundingRect.top,
+        };
+        var p1A = {
+            x: evt.pointers[0].pageX - boundingRect.left,
+            y: evt.pointers[0].pageY - boundingRect.top,
+        };
+        var p2A = {
+            x: evt.pointers[1].pageX - boundingRect.left,
+            y: evt.pointers[1].pageY - boundingRect.top,
+        };
+        // calculate the offsets using each pointer
+        var dX1 = (p1B.x * clippingRect.width - p1A.x * newClippingWidth) / boundingRect.width;
+        var dX2 = (p2B.x * clippingRect.width - p2A.x * newClippingWidth) / boundingRect.width;
+        var dY1 = (p1B.y * clippingRect.height - p1A.y * newClippingHeight) / boundingRect.height;
+        var dY2 = (p2B.y * clippingRect.height - p2A.y * newClippingHeight) / boundingRect.height;
+        // use the average of the two
+        clippingRect.left += Math.round((dX1 + dX2) / 2);
+        clippingRect.top += Math.round((dY1 + dY2) / 2);
+        clippingRect.width = newClippingWidth;
+        clippingRect.height = newClippingHeight;
+        constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
+        this.setState({ clippingRect });
+    },
+
+    /**
+     * Called when multitouch pinching ends
+     *
+     * @param  {HammerEvent} evt
+     */
+    handlePinchEnd: function(evt) {
+        if (!this.pinchStart) {
+            return;
+        }
+        this.triggerChangeEvent(this.state.clippingRect);
+        this.pinchStart = null;
     },
 });
 
