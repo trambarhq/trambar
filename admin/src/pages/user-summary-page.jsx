@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var HttpError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -119,7 +120,7 @@ module.exports = Relaks.createClass({
             // load selected user
             if (params.user !== 'new') {
                 var criteria = { id: params.user };
-                return db.findOne({ table: 'user', criteria });
+                return db.findOne({ table: 'user', criteria, required: true });
             }
         }).then((user) => {
             props.user = user;
@@ -135,7 +136,7 @@ module.exports = Relaks.createClass({
             // load project if project id is provider (i.e. member summary)
             if (params.project) {
                 var criteria = { id: params.project };
-                return db.findOne({ table: 'project', criteria });
+                return db.findOne({ table: 'project', criteria, required: true });
             }
         }).then((project) => {
             props.project = project;
@@ -151,6 +152,8 @@ module.exports = Relaks.createClass({
         }).then((statistics) => {
             props.statistics = statistics;
             return <UserSummaryPageSync {...props} />;
+        }).catch(HttpError, (error) => {
+            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

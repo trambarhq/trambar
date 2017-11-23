@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var HttpError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -101,6 +102,8 @@ module.exports = Relaks.createClass({
         }).then((users) => {
             props.users = users;
             return <ServerListPageSync {...props} />;
+        }).catch(HttpError, (error) => {
+            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

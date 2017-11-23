@@ -28,7 +28,13 @@ module.exports = React.createClass({
         },
 
         getUrl: function(params) {
-            var path = `/error/${params.code}`, query, hash;
+            var code = params.code;
+            if (params.error) {
+                code = params.error.statusCode;
+            } else {
+                code = params.code || 400;
+            }
+            var path = `/error/${code}`, query, hash;
             return { path, query, hash };
         },
 

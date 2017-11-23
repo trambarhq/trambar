@@ -1,7 +1,8 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var HttpRequest = require('transport/http-request');
 var Relaks = require('relaks');
+var HttpRequest = require('transport/http-request');
+var HttpError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -41,6 +42,8 @@ module.exports = Relaks.createClass({
             props.system = info.system;
             props.providers = info.providers;
             return <SignInPageSync {...props} />;
+        }).catch(HttpError, (error) => {
+            this.props.route.replace(require('pages/error-page'), { error });
         });
     },
 });

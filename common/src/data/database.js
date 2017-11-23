@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var HttpError = require('errors/http-error');
 
 module.exports = Database;
 
@@ -34,7 +35,14 @@ function Database(remoteDataSource, context) {
     this.findOne = function(query) {
         query = _.extend({ expected: 1 }, query);
         return self.find(query).then((objects) => {
-            return (objects.length > 0) ? objects[0] : null;
+            if (objects.length > 0) {
+                return objects[0];
+            } else {
+                if (query.required) {
+                    throw new HttpError(404);
+                }
+                return null;
+            }
         });
     };
 
