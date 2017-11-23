@@ -384,10 +384,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             var hasAccessToken = !!_.get(server, 'settings.api.access_token');
             var hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
             var credentialsChanged = this.state.credentialsChanged;
-            var preselected;
+            var preselected, alert;
             if (active) {
                 if (hasIntegration && !hasAccessToken) {
                     preselected = 'acquire';
+                    alert = true;
                 } else if (hasOAuthCredentials && credentialsChanged) {
                     preselected = 'test';
                 } else {
@@ -398,7 +399,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             }
             return (
                 <div key="view" className="buttons">
-                    <ComboButton preselected={preselected}>
+                    <ComboButton preselected={preselected} alert={alert}>
                         <option name="return" onClick={this.handleReturnClick}>
                             {t('server-summary-return')}
                         </option>
