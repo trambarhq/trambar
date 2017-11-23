@@ -4,6 +4,7 @@
     margin-bottom: 0.1em;
     padding: 0.4em 1em 0.4em 1em;
     color: #666666;
+    font-size: 0.9em;
     background-color: #4d3936;
     border: 2px solid #4d3936;
 
@@ -17,5 +18,13 @@
         &:active {
             border: 2px inset #333333;
         }
+    }
+
+    INPUT[type="file"] {
+        position: absolute;
+        z-index: -50000;
+        width: 1px;
+        height: 1px;
+        top: -1000px;
     }
 }

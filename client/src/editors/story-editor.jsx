@@ -428,17 +428,15 @@ module.exports = React.createClass({
         this.cancelAutosave();
 
         // send images and videos to server
+        var params = this.props.route.parameters;
         var resources = story.details.resources || [];
         var payloads = this.props.payloads;
-        return payloads.prepare(story).then(() => {
-            var route = this.props.route;
-            var server = route.parameters.server;
-            var schema = route.parameters.schema;
-            var db = this.props.database.use({ server, schema, by: this });
+        return payloads.prepare(params.schema, story).then(() => {
+            var db = this.props.database.use({ schema: params.schema, by: this });
             return db.start().then(() => {
                 return db.saveOne({ table: 'story' }, story).then((story) => {
                     // start file upload
-                    return payloads.dispatch(story).return(story);
+                    return payloads.dispatch(params.schema, story).return(story);
                 });
             });
         });

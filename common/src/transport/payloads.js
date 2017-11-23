@@ -6,37 +6,35 @@ function Payloads(payloadManager) {
     /**
      * Create a payload of files needed by a res
      *
+     * @param  {String} schema
      * @param  {Object} res
      *
      * @return {Promise<Number>}
      */
-    this.queue = function(res) {
-        return payloadManager.queue(res);
+    this.queue = function(schema, res) {
+        return payloadManager.queue(schema, res);
     };
 
     /**
      * Look for a payload
      *
+     * @param  {String} schema
      * @param  {Object} criteria
      *
      * @return {Object}
      */
-    this.find = function(criteria) {
-        return payloadManager.find(criteria);
+    this.find = function(schema, criteria) {
+        return payloadManager.find(schema, criteria);
     },
 
     /**
      * Begin sending a previously queued payload
      *
+     * @param  {String} schema
      * @param  {Number} payloadId
      */
-    this.send = function(payloadId) {
-        return payloadManager.send(payloadId);
-    };
-
-    this.abort = function(payloadId) {
-        // TODO
-        return payloadManager.abort(payloadId);
+    this.send = function(schema, payloadId) {
+        return payloadManager.send(schema, payloadId);
     };
 
     /**
@@ -53,15 +51,16 @@ function Payloads(payloadManager) {
     /**
      * Reattach blobs that were filtered out when objects are saved
      *
+     * @param  {String} schema
      * @param  {Object} object
      */
-    this.reattach = function(object) {
+    this.reattach = function(schema, object) {
         var resources = _.get(object, 'details.resources', []);
         _.each(resources, (res) => {
             // these properties also exist in the corresponding payload objects
             // find payload with one of them
             var criteria = _.pick(res, 'payload_id', 'url', 'poster_url');
-            var payload = this.find(criteria);
+            var payload = this.find(schema, criteria);
             if (payload) {
                 // add properties that are blobs
                 _.forIn(payload, (value, name) => {
@@ -76,18 +75,19 @@ function Payloads(payloadManager) {
     /**
      * Scan an object's resource array and queue blobs for uploading
      *
+     * @param  {String} schema
      * @param  {Object} object
      * @param  {Object} options
      *
      * @return {Promise}
      */
-    this.prepare = function(object, options) {
+    this.prepare = function(schema, object, options) {
         var resources = _.get(object, 'details.resources', []);
         return Promise.each(resources, (res) => {
             if (!res.payload_id) {
                 // acquire a task id for each attached resource
                 var typeOptions = _.get(options, res.type);
-                return this.queue(res, typeOptions).then((payloadId) => {
+                return this.queue(schema, res, typeOptions).then((payloadId) => {
                     if (payloadId) {
                         res.payload_id = payloadId;
                     }
@@ -99,15 +99,16 @@ function Payloads(payloadManager) {
     /**
      * Scan an object's resource array and upload any blobs to the server
      *
+     * @param  {String} schema
      * @param  {Object} object
      *
      * @return {Promise}
      */
-    this.dispatch = function(object) {
+    this.dispatch = function(schema, object) {
         var resources = _.get(object, 'details.resources', []);
         var payloadIds = _.filter(_.map(resources, 'payload_id'));
         return Promise.each(payloadIds, (payloadId) => {
-            this.send(payloadId);
+            this.send(schema, payloadId);
             return null;
         });
     };
@@ -115,17 +116,18 @@ function Payloads(payloadManager) {
     /**
      * Scan an object's resource array and calculate the overall progress
      *
+     * @param  {String} schema
      * @param  {Object} object
      *
      * @return {Object|null}
      */
-    this.inquire = function(object) {
+    this.inquire = function(schema, object) {
         // find the payloads
         var resources = _.get(object, 'details.resources', []);
         var payloads = [];
         _.each(resources, (res) => {
             if (res.payload_id) {
-                var payload = this.find({ payload_id: res.payload_id });
+                var payload = this.find(schema, { payload_id: res.payload_id });
                 if (payload) {
                     payloads.push(payload)
                 }

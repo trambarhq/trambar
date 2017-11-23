@@ -772,14 +772,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         }
         var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
         this.setState({ saving: true, adding: !project.id, problems: {} }, () => {
-            var db = this.props.database.use({ schema: 'global', by: this });
+            var schema = 'global';
+            var db = this.props.database.use({ schema, by: this });
             var payloads = this.props.payloads;
-            return payloads.prepare(project).then(() => {
+            return payloads.prepare(schema, project).then(() => {
                 return db.start().then((userId) => {
                     return db.saveOne({ table: 'project' }, project).then((project) => {
                         // reattach blob, if any
-                        payloads.reattach(project);
-                        return payloads.dispatch(project).then(() => {
+                        payloads.reattach(schema, project);
+                        return payloads.dispatch(schema, project).then(() => {
                             this.setState({ hasChanges: false, saving: false }, () => {
                                 this.setEditability(false, project);
                             });

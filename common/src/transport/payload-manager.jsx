@@ -32,20 +32,22 @@ module.exports = React.createClass({
     /**
      * Create a payload of files needed by a res
      *
+     * @param  {String} schema
      * @param  {Object} res
      *
      * @return {Promise<Number>}
      */
-    queue: function(res) {
+    queue: function(schema, res) {
         // see what action need to be perform for the resource
         var action = this.getAction(res);
         if (!action) {
             return Promise.resolve(null);
         }
+        var address = this.props.route.parameters.address;
         var options = {};
         // create a task object on the server-side to track
         // backend processing of the payload
-        return this.createTask(action, options).then((task) => {
+        return this.createTask(schema, action, options).then((task) => {
             var params = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
             var payload = _.assign({
                 payload_id: task.id,
@@ -55,8 +57,8 @@ module.exports = React.createClass({
                 transferred: 0,
                 total: 0,
                 backendProgress: 0,
-                address: this.props.route.parameters.address,
-                schema: this.props.route.parameters.schema,
+                address: address,
+                schema: schema,
                 promise: null
             }, params);
             var payloads = _.concat(this.state.payloads, payload);
@@ -123,14 +125,14 @@ module.exports = React.createClass({
      * Create a task object for tracking progress of upload and backend
      * processing
      *
+     * @param  {String} schema
      * @param  {String} action
      * @param  {Object} options
      *
      * @return {Promise<Task>}
      */
-    createTask: function(action, options) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+    createTask: function(schema, action, options) {
+        var db = this.props.database.use({ schema, by: this });
         return db.start().then((userId) => {
             var task = {
                 action: action,
@@ -144,28 +146,31 @@ module.exports = React.createClass({
     /**
      * Look for a payload
      *
+     * @param  {String} schema
      * @param  {Object} criteria
      *
      * @return {Object}
      */
-    find: function(criteria) {
+    find: function(schema, criteria) {
         // try each criterium until one matches
-        var result;
-        var keys = _.keys(criteria);
-        _.each(keys, (key) => {
-            result = _.find(this.state.payloads, _.pick(criteria, key));
-            return !result;
+        var address = this.props.route.parameters.address;
+        return _.find(this.state.payloads, (payload) => {
+            if (payload.address === address && payload.schema === schema) {
+                return _.some(criteria, (value, key) => {
+                    return (payload[key] === value);
+                });
+            }
         });
-        return result;
     },
 
     /**
      * Begin sending a previously queued payload
      *
+     * @param  {String} schema
      * @param  {Number} payloadId
      */
-    send: function(payloadId) {
-        var payload = _.find(this.state.payloads, { payload_id: payloadId });
+    send: function(schema, payloadId) {
+        var payload = this.find(schema, { payload_id: payloadId });
         if (!payload) {
             return;
         }
@@ -238,9 +243,8 @@ module.exports = React.createClass({
      * @return {String}
      */
     getUrl: function(payload) {
-        var params = this.props.route.parameters;
-        var schema = params.schema;
-        var url = params.address;
+        var schema = payload.schema;
+        var url = payload.address;
         var id = payload.payload_id;
         switch (payload.action) {
             case 'upload image':
@@ -309,7 +313,7 @@ module.exports = React.createClass({
                                 // evt.loaded and evt.total are encoded sizes,
                                 // which are slightly larger than the blob size
                                 var bytesSent = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
-                                this.updatePayloadStatus(payload.payload_id, {
+                                this.updatePayloadStatus(payload, {
                                     transferred: uploadedChunkSize + bytesSent,
                                     total: stream.size,
                                 });
@@ -349,13 +353,17 @@ module.exports = React.createClass({
     /**
      * Update status of file payload, using info from response
      *
-     * @param  {Number} payloadId
+     * @param  {Object} payload
      * @param  {Object} props
      */
-    updatePayloadStatus: function(payloadId, props) {
-        var payloads = _.map(this.state.payloads, (p) => {
-            return (p.payload_id === payloadId) ? _.assign({}, p, props) : p;
-        });
+    updatePayloadStatus: function(payload, props) {
+        var payloads = _.slice(this.state.payloads);
+        var index = _.indexOf(payloads, payload);
+        if (index === -1) {
+            return;
+        }
+        payload = _.assign({}, payload, props);
+        payloads[index] = payload;
         this.setState({ payloads }, () => {
             this.triggerChangeEvent();
         });
@@ -367,8 +375,10 @@ module.exports = React.createClass({
     updateProgress: function() {
         var db = this.props.database.use({ by: this })
         // in theory, there could be payloads going to different servers and schema
+        // only update those that belong to the currently selected server
         var payloads = _.filter(this.state.payloads, (payload) => {
             if (payload.address === db.context.address) {
+                // and only those that aren't done
                 if (payload.backendProgress !== 100) {
                     return true;
                 }

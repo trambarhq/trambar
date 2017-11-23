@@ -19,6 +19,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         resource: PropTypes.object,
+        locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         previewWidth: PropTypes.number,
         previewHeight: PropTypes.number,

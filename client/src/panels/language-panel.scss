@@ -1,11 +1,16 @@
 .settings-section.language {
     .option-button {
+        margin-top: 0.35em;
+        margin-bottom: 0.35em;
+
         SELECT {
             color: #666666;
             background-color: #4d3936;
             border: 0;
-            padding: 0.3em;
+            padding: 2px;
             margin-left: 0.5em;
+            margin-top: -3px;
+            margin-bottom: -3px;
 
             &:hover, &:focus {
                 color: #eeeeee;

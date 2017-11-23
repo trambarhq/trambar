@@ -127,7 +127,8 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderContents: function() {
-        var uploadStatus = this.props.payloads.inquire(this.props.story);
+        var schema = this.props.route.parameters.schema;
+        var uploadStatus = this.props.payloads.inquire(schema, this.props.story);
         var props = {
             story: this.props.story,
             authors: this.props.authors,

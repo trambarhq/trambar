@@ -338,7 +338,7 @@ module.exports = React.createClass({
      */
     captureImage: function() {
         return new Promise((resolve, reject) => {
-            var type = 'image/jpeg';
+            var format = 'jpeg';
             var canvas = document.createElement('CANVAS');
             var context = canvas.getContext('2d');
             var video = this.refs.video;
@@ -348,8 +348,8 @@ module.exports = React.createClass({
             canvas.height = height;
             context.drawImage(video, 0, 0, width, height);
             canvas.toBlob((file) => {
-                resolve({ type, file, width, height });
-            }, type, 90);
+                resolve({ format, file, width, height });
+            }, 'image/jpeg', 90);
         });
     },
 

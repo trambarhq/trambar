@@ -1077,9 +1077,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         }
         var user = this.getUser();
         this.setState({ saving: true, adding: !user.id, problems: {} }, () => {
-            var db = this.props.database.use({ schema: 'global', by: this });
+            var schema = 'global';
+            var db = this.props.database.use({ schema, by: this });
             var payloads = this.props.payloads;
-            return payloads.prepare(user).then(() => {
+            return payloads.prepare(schema, user).then(() => {
                 return db.start().then((userId) => {
                     if (!user.id) {
                         // creating a new user
@@ -1093,8 +1094,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     }
                     return db.saveOne({ table: 'user' }, user).then((user) => {
                         // reattach blob, if any
-                        payloads.reattach(user);
-                        return payloads.dispatch(user).then(() => {
+                        payloads.reattach(schema, user);
+                        return payloads.dispatch(schema, user).then(() => {
                             this.setState({ hasChanges: false, saving: false }, () => {
                                 return this.setEditability(false, user);
                             });

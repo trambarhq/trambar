@@ -1,10 +1,10 @@
 .settings-section {
-    margin: 0 0 0 0;
     background-color: #362a2a;
     border: 2px solid #211a1a;
-    margin: 0.5em 0.5em 0.5em 0.5em;
-    width: calc(100% - 1em);
+    width: 100%;
     max-width: 25em;
+    break-inside: avoid-column;
+    margin-bottom: 1em;
 
     .header {
         font-size: 1.2em;
@@ -17,18 +17,14 @@
         }
     }
 
-    .subheader {
-        padding: 0.25em 0.5em 0.1em 0.5em;
-    }
-
     .body {
         color: #cccccc;
-        padding: 0.2em 0.5em 0.3em 0.5em;
+        padding: 0.35em 0.35em 0.35em 0.35em;
         clear: both;
     }
 
     .footer {
-        padding: 0.0em 0.5em 0.4em 0.5em;
+        padding: 0.15em 0.35em 0.25em 0.35em;
         text-align: right;
         clear: both;
     }

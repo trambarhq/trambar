@@ -1,15 +1,16 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var Masonry = require('react-masonry-component');
 
 var Database = require('data/database');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 var ProjectPanel = require('panels/project-panel');
 var UserInfoPanel = require('panels/user-info-panel');
+var UserImagePanel = require('panels/user-image-panel');
 var NotificationPanel = require('panels/notification-panel');
 var WebAlertPanel = require('panels/web-alert-panel');
 var MobileAlertPanel = require('panels/mobile-alert-panel');
@@ -22,6 +23,7 @@ module.exports = Relaks.createClass({
     displayName: 'SettingsPage',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -91,6 +93,7 @@ module.exports = Relaks.createClass({
             currentUser: null,
 
             database: this.props.database,
+            payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -101,6 +104,7 @@ module.exports = Relaks.createClass({
             var criteria = { id: userId };
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
+            this.props.payloads.reattach('global', user);
             props.currentUser = user;
             return <SettingsPageSync {...props} />;
         });
@@ -113,6 +117,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -164,22 +169,32 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
             onChange: this.handleChange,
         };
-        var masonryOptions = {
-            transitionDuration: 0
-        };
         return (
             <div className="settings-page">
-                <Masonry options={masonryOptions}>
+                <div className="panels">
                     <ProjectPanel {...panelProps} />
                     <UserInfoPanel {...panelProps} />
+                    <UserImagePanel {...panelProps} />
                     <SocialNetworkPanel {...panelProps} />
                     <NotificationPanel {...panelProps} />
                     <WebAlertPanel {...panelProps} />
                     <MobileAlertPanel {...panelProps} />
                     <LanguagePanel {...panelProps} />
-                </Masonry>
+                </div>
             </div>
         );
+    },
+
+    /**
+     * Save immediately on unmount
+     *
+     * @return {[type]}
+     */
+    componentWillUnmount: function() {
+        if (this.autosaveTimeout && this.state.user) {
+            clearTimeout(this.autosaveTimeout);
+            this.saveUser(this.state.user);
+        }
     },
 
     /**
@@ -193,6 +208,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         }
         this.autosaveTimeout = setTimeout(() => {
             this.saveUser(user);
+            this.autosaveTimeout = null;
         }, 2000);
     },
 
@@ -204,11 +220,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {Promise<User>}
      */
     saveUser: function(user) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var db = this.props.database.use({ server, schema: 'global', by: this });
-        return db.saveOne({ table: 'user' }, user).then((user) => {
-            return user;
+        var payloads = this.props.payloads;
+        var schema = 'global';
+        return payloads.prepare(schema, user).then(() => {
+            var db = this.props.database.use({ schema, by: this });
+            return db.saveOne({ table: 'user' }, user).then((user) => {
+                // start file upload
+                return payloads.dispatch(schema, user).return(user);
+            });
         });
     },
 

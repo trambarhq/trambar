@@ -201,6 +201,7 @@ module.exports = function(languageCode) {
         'settings-language': 'Language',
         'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',
+        'settings-profile-image': 'Profile image',
         'settings-projects': 'Projects',
         'settings-social-networks': 'Social Networks',
         'settings-user-information': 'User Information',
