@@ -237,7 +237,7 @@ module.exports = React.createClass({
         }
         var boundingRect = container.getBoundingClientRect();
         var clippingRect = _.clone(this.state.clippingRect);
-        var delta = (evt.deltaY * clippingRect.height / boundingRect.height) / divider;
+        var delta = Math.round((evt.deltaY * clippingRect.height / boundingRect.height) / divider);
         var newClippingWidth = clippingRect.width + delta;
         // prevent expansion of the clipping rect that'd that it outside the image
         if (newClippingWidth > image.naturalWidth) {
