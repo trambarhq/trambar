@@ -104,9 +104,8 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             onClick: this.handleUserClick,
-            key: user.id,
         };
-        return <User {...props} />
+        return <User key={user.id} {...props} />
     },
 
     /**

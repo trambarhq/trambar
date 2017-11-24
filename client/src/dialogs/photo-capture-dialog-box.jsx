@@ -218,11 +218,10 @@ module.exports = React.createClass({
             var label = device.label;
             label = _.replace(device.label, /\(\w{4}:\w{4}\)/g, '');
             var props = {
-                key: index,
                 value: device.deviceId,
                 selected: device.deviceId === this.state.selectedDeviceId,
             };
-            return <option {...props}>{label}</option>;
+            return <option key={index} {...props}>{label}</option>;
         });
         return (
             <div className="device-selector">

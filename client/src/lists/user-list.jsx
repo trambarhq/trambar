@@ -168,7 +168,6 @@ var UserListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: user.id,
         };
         return (
             <OnDemand key={user.id} type="users" initial={index < 10}>

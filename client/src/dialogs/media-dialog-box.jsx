@@ -253,16 +253,11 @@ module.exports = React.createClass({
                 url: this.props.theme.getImageUrl(res, { width: 28, height: 28 }),
                 selected: (index === selectedIndex),
                 id: index,
-                key: index,
                 onClick: this.handleThumbnailClick,
             };
             return <Thumbnail {...props} />;
         });
-        return (
-            <div className="links">
-                {thumbnails}
-            </div>
-        )
+        return <div key={index} className="links">{thumbnails}</div>;
     },
 
     /**

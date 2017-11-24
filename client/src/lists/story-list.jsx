@@ -324,7 +324,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: story.id,
         };
         var id = `story-${story.id}`;
         return (

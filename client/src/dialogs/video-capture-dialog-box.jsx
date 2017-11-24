@@ -233,11 +233,7 @@ module.exports = React.createClass({
         var options = _.map(this.state.videoDevices, (device, index) => {
             var label = device.label;
             label = _.replace(device.label, /\(\w{4}:\w{4}\)/g, '');
-            var props = {
-                key: index,
-                value: device.deviceId,
-            };
-            return <option {...props}>{label}</option>;
+            return <option key={index} value={device.deviceId}>{label}</option>;
         });
         var selectProps = {
             value: this.state.selectedDeviceId || '',

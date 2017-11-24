@@ -120,7 +120,6 @@ module.exports = React.createClass({
         var languages = _.filter(this.props.locale.directory, { locales: { admin: true } });
         var items = _.map(languages, (language, i) => {
             var props = {
-                key: i,
                 className: 'item',
                 'data-code': language.code,
                 onClick: this.handleLanguageClick,
@@ -130,7 +129,7 @@ module.exports = React.createClass({
                 props.onClick = null;
             }
             return (
-                <div {...props}>
+                <div key={i} {...props}>
                     <i className="fa fa-check-circle-o" /> {language.name}
                 </div>
             )
@@ -168,7 +167,6 @@ module.exports = React.createClass({
         var countryName = language.countries[countryCode];
         var items = _.map(language.countries, (name, code) => {
             var props = {
-                key: code,
                 className: 'item',
                 'data-code': code,
                 onClick: this.handleCountryClick,
@@ -178,7 +176,7 @@ module.exports = React.createClass({
                 props.onClick = null;
             }
             return (
-                <div {...props}>
+                <div key={code} {...props}>
                     <i className="fa fa-check-circle-o" /> {name}
                 </div>
             )

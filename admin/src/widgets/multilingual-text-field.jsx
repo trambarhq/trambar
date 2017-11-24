@@ -176,7 +176,6 @@ module.exports = React.createClass({
      */
     renderTab: function(language, i) {
         var props = {
-            key: i,
             className: 'tab',
             lang: language.code,
             onClick: this.handleLanguageClick,
@@ -188,7 +187,7 @@ module.exports = React.createClass({
             props.onClick = props.onMouseOver = props.onMouseOut = null;
         }
         return (
-            <div {...props}>
+            <div key={i} {...props}>
                 {language.name}
             </div>
         );

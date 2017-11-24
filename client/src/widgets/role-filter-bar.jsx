@@ -152,9 +152,8 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
             selected: _.includes(roleIds, role.id),
             onRoleClick: this.handleRoleClick,
-            key: role.id
         };
-        return <RoleFilterButton {...props} />;
+        return <RoleFilterButton key={role.id} {...props} />;
     },
 
     /**

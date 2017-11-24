@@ -167,9 +167,8 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
                 dailyActivities: month.activities,
                 locale: this.props.locale,
                 onDateClick: this.handleDateClick,
-                key: index,
             };
-            return <Calendar {...props} />;
+            return <Calendar key={index} {...props} />;
         });
         return (
             <div className="calendar-bar">

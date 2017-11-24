@@ -63,9 +63,8 @@ module.exports = React.createClass({
                         title: t('bookmark-recommendations'),
                         locale: this.props.locale,
                         theme: this.props.theme,
-                        key: 1,
                     };
-                    var users = <MultipleUserNames {...props} />;
+                    var users = <MultipleUserNames key={1} {...props} />;
                     contents = t('bookmark-you-bookmarked-it-and-$users-recommends-it', users, others.length);
             }
         } else {
@@ -88,9 +87,8 @@ module.exports = React.createClass({
                         title: t('bookmark-recommendations'),
                         locale: this.props.locale,
                         theme: this.props.theme,
-                        key: 1,
                     };
-                    var users = <MultipleUserNames {...props} />;
+                    var users = <MultipleUserNames key={1} {...props} />;
                     contents = t('bookmark-$name-and-$users-recommend-this', name, users, additional.length);
             }
         }

@@ -66,13 +66,12 @@ module.exports = React.createClass({
             }
         }
         var props = {
-            key: i,
             className: classNames.join(' '),
             'data-name': option.props.name,
             onClick: this.handleClick,
         };
         return (
-            <tr {...props}>
+            <tr key={i} {...props}>
                 <td>
                     {option.props.children}
                     {badge}

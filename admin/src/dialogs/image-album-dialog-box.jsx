@@ -170,7 +170,6 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
     renderPicture: function(picture, i) {
         var image = picture.details;
         var props = {
-            key: i,
             className: 'picture',
             onClick: this.handleImageClick,
             'data-picture-id': picture.id,
@@ -197,7 +196,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         if (image.url) {
             var url = this.props.theme.getImageUrl(image, { height, width });
             return (
-                <div {...props}>
+                <div key={i} {...props}>
                     <img src={url} style={style} />
                 </div>
             );
@@ -206,7 +205,7 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
             props.className += ' disabled';
             props.onClick = null;
             return (
-                <div {...props}>
+                <div key={i} {...props}>
                     <ImageView url={imageUrl} style={style} />
                 </div>
             );

@@ -142,9 +142,8 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: reaction.id,
         };
-        return <CommentView {...props} />
+        return <CommentView key={reaction.id} {...props} />
     },
 
     /**
@@ -169,10 +168,9 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: key,
             onFinish: this.props.onFinish,
         };
-        return <CommentEditor {...props} />
+        return <CommentEditor key={key} {...props} />
     },
 
     /**

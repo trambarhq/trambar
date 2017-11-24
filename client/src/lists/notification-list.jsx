@@ -110,16 +110,13 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         var props = {
             notification,
             user,
-
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            key: notification.id,
-
             onClick: this.handleNotificationClick,
         };
-        return <NotificationView {...props} />;
+        return <NotificationView key={notification.id} {...props} />;
     },
 
     /**

@@ -92,9 +92,8 @@ module.exports = React.createClass({
             selected: (language.code === languageCode),
             onClick: this.handleLanguageClick,
             id: language.code,
-            key: language.code
         };
-        return <OptionButton {...buttonProps} />
+        return <OptionButton key={language.code} {...buttonProps} />
     },
 
     /**

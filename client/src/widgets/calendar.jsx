@@ -112,10 +112,9 @@ module.exports = React.createClass({
                 var props = {
                     className: classNames.join(' '),
                     'data-date': date,
-                    key: index
                 };
                 return (
-                    <td {...props}>
+                    <td key={index} {...props}>
                         {label}
                     </td>
                 );

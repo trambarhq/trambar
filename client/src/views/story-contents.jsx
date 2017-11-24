@@ -221,9 +221,8 @@ module.exports = React.createClass({
                     title: t('story-coauthors'),
                     locale: this.props.locale,
                     theme: this.props.theme,
-                    key: 1,
                 };
-                var users = <MultipleUserNames {...props} />
+                var users = <MultipleUserNames key={1} {...props} />
                 contents = t('story-author-$name-and-$users', names[0], users, coauthors.length);
         }
         return <span className="name">{contents}</span>;
@@ -741,13 +740,12 @@ module.exports = React.createClass({
      */
     renderAppComponent: function(component, i) {
         var componentProps = {
-            key: i,
             component: component,
             locale: this.props.locale,
             theme: this.props.theme,
             onSelect: this.handleComponentSelect,
         };
-        return <AppComponent {...componentProps} />
+        return <AppComponent key={i} {...componentProps} />
     },
 
     /**

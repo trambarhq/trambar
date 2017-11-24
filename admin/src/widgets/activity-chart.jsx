@@ -119,9 +119,8 @@ module.exports = React.createClass({
             var props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
                 label: t(`activity-chart-legend-${type}`),
-                key: index,
             };
-            return <LegendItem {...props} />;
+            return <LegendItem key={index} {...props} />;
         });
         if (_.isEmpty(items)) {
             items = '\u00a0';

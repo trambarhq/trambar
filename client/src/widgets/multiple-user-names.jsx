@@ -162,10 +162,9 @@ module.exports = React.createClass({
         var userProps = {
             user,
             theme: this.props.theme,
-            key: user.id,
             locale: this.props.locale,
         };
-        return <User {...userProps} />;
+        return <User key={user.id} {...userProps} />;
     },
 
     /**

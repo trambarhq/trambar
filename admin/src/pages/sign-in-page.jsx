@@ -199,14 +199,13 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         var title = p(provider.details.title) || t(`server-type-${provider.type}`);
         var icon = getServerIcon(provider.type);
         var buttonProps = {
-            key: i,
             className: 'oauth-button',
             name: provider.name,
             href: provider.url,
             onClick: this.handleOAuthButtonClick,
         };
         return (
-            <a {...buttonProps}>
+            <a key={i} {...buttonProps}>
                 <i className={`fa fa-${icon}`} />
                 <span className="label">{title}</span>
             </a>
