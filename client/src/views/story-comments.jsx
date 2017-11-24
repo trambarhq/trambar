@@ -157,8 +157,10 @@ module.exports = React.createClass({
                 return null;
             }
         }
-        if (_.isEmpty(this.props.reactions)) {
-            return null;
+        if (!this.state.editing) {
+            if (_.isEmpty(this.props.reactions)) {
+                return null;
+            }
         }
         var listProps = {
             showEditor: this.state.editing,
