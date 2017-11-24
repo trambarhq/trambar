@@ -91,6 +91,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             currentUser: null,
+            currentProject: null,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -106,6 +107,11 @@ module.exports = Relaks.createClass({
         }).then((user) => {
             this.props.payloads.reattach('global', user);
             props.currentUser = user;
+        }).then(() => {
+            var criteria = { name: params.schema };
+            return db.findOne({ schema: 'global', table: 'project', criteria });
+        }).then((project) => {
+            props.currentProject = project;
             return <SettingsPageSync {...props} />;
         });
     },
@@ -115,6 +121,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     displayName: 'SettingsPage.Sync',
     propTypes: {
         currentUser: PropTypes.object,
+        currentProject: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -163,6 +170,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     render: function() {
         var panelProps = {
             currentUser: this.getUser(),
+            currentProject: this.props.currentProject,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,

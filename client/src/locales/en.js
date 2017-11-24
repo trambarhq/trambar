@@ -162,6 +162,8 @@ module.exports = function(languageCode) {
             return `${user} answered your survey`;
         },
 
+        'mobile-setup-close': 'Close',
+
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
         'option-bookmark-story': 'Bookmark story',
@@ -184,6 +186,12 @@ module.exports = function(languageCode) {
         'photo-capture-cancel': 'Cancel',
         'photo-capture-retake': 'Retake',
         'photo-capture-snap': 'Snap',
+
+        'project-description-close': 'Close',
+
+        'project-panel-description': 'Project description',
+        'project-panel-mobile-set-up': 'Mobile set up',
+        'project-panel-sign-out': 'Sign out',
 
         'role-filter-no-roles': 'No roles defined',
 

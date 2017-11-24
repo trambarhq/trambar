@@ -152,6 +152,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     find: function(schema, criteria) {
+        if (!this.props.route) {
+            return null;
+        }
         // try each criterium until one matches
         var address = this.props.route.parameters.address;
         return _.find(this.state.payloads, (payload) => {

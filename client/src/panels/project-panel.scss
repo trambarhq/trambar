@@ -1,0 +1,50 @@
+.settings-section.project {
+    .project-option-button {
+        display: table;
+        width: 100%;
+        color: #666666;
+        margin-top: 0.35em;
+        margin-bottom: 0.35em;
+        cursor: pointer;
+
+        &.selected, &:hover {
+            color: #eeeeee;
+        }
+
+        &.selected {
+            cursor: default;
+        }
+
+        .icon {
+            display: table-cell;
+            width: 1em;
+            padding-right: 0.25em;
+        }
+
+        .text {
+            display: table-cell;
+            font-size: 0.9em;
+
+            .supplemental {
+                margin-top: 0.5em;
+                margin-bottom: 0.15em;
+
+                .item {
+                    margin-bottom: 0.35em;
+
+                    .label {
+                        color: #999999;
+                        &:hover {
+                            color: #eeeeee;
+                        }
+                        cursor: pointer;
+
+                        .fa {
+                            margin-right: 0.15em;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
