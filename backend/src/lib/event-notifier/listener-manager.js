@@ -178,7 +178,9 @@ function sendToWebsockets(db, messages) {
         if (listener.type === 'websocket') {
             var socket = _.find(sockets, { token: subscription.token });
             if (socket) {
-                console.log(`Sending message to socket ${subscription.token}`);
+                var messageType = _.first(_.keys(message.body));
+                console.log(`Sending message (${messageType}) to socket ${subscription.token}`);
+                console.log(message.body);
                 socket.write(JSON.stringify(message.body));
             } else {
                 subscription.deleted = true;

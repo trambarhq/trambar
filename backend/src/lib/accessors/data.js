@@ -163,6 +163,9 @@ module.exports = {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
+        if (this.schema === 'global') {
+            return true;
+        }
         if (subscription.schema === '*' || subscription.schema === event.schema) {
             return true;
         }

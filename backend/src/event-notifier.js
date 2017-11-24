@@ -79,14 +79,16 @@ function handleDatabaseChanges(events) {
         } else if (table === 'subscription') {
             Subscription.clearCache(events);
         }
+        console.log('Changes to table: ' + table);
     });
 
     // see who's listening
     ListenerManager.find(db).then((listeners) => {
         var messages = [];
         // send change messages (silent) first
-        _.each(listeners, (listener) => {
+        _.each(listeners, (listener, index) => {
             var changes = {};
+            console.log(`Listener ${index + 1}: user_id = ${listener.user.id}, type = ${listener.type}`);
             _.each(events, (event) => {
                 var accessor = _.find(accessors, { table: event.table });
                 if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
