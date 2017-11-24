@@ -69,7 +69,8 @@ module.exports = React.createClass({
             clip = params.clip;
         }
         if (clip) {
-            var rect = [ clip.left, clip.top, clip.width, clip.height ];
+            // run number through Math.round() just in case error elsewhere left fractional pixel dimensions
+            var rect = _.map([ clip.left, clip.top, clip.width, clip.height ], Math.round);
             filters.push(`cr${rect.join('-')}`)
         }
         // resize image (if dimensions are specified)
