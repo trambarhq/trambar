@@ -167,7 +167,8 @@ module.exports = React.createClass({
      */
     handleNameChange: function(evt) {
         var text = evt.target.value;
-        var name =
+        var name = {};
+        name[this.props.locale.lang] = text;
         this.setUserProperty(`details.name`, name);
     },
 
