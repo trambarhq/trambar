@@ -252,12 +252,12 @@ module.exports = React.createClass({
             var props = {
                 url: this.props.theme.getImageUrl(res, { width: 28, height: 28 }),
                 selected: (index === selectedIndex),
-                id: index,
+                'data-index': index,
                 onClick: this.handleThumbnailClick,
             };
-            return <Thumbnail {...props} />;
+            return <Thumbnail key={index} {...props} />;
         });
-        return <div key={index} className="links">{thumbnails}</div>;
+        return <div className="links">{thumbnails}</div>;
     },
 
     /**
@@ -298,7 +298,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleThumbnailClick: function(evt) {
-        var index = parseInt(evt.currentTarget.id);
+        var index = parseInt(evt.currentTarget.getAttribute('data-index'));
         return this.selectResource(index);
     },
 
