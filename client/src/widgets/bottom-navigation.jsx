@@ -194,15 +194,14 @@ var NewNotificationsBadge = Relaks.createClass({
             theme: this.props.theme,
         };
         return db.start().then((userId) => {
-            // use the same query as in NotificationsPage
             var criteria = {
                 target_user_id: userId,
-                limit: 500,
+                seen: false,
+                limit: 100,
             };
             return db.find({ table: 'notification', criteria });
         }).then((notifications) => {
-            var unread = _.filter(notifications, { seen: false });
-            var count = unread.length;
+            var count = notifications.length;
             if (!count) {
                 return null;
             }
