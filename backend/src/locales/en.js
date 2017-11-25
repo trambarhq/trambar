@@ -189,6 +189,9 @@ module.exports = function(languageCode) {
 
         'project-description-close': 'Close',
 
+        'project-management-cancel': 'Cancel',
+        'project-management-remove': 'Remove',
+
         'project-panel-add': 'Add',
         'project-panel-description': 'Project description',
         'project-panel-manage': 'Manage list',

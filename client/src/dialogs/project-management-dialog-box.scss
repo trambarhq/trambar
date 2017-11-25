@@ -1,0 +1,34 @@
+.project-management-dialog-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 80%;
+    max-width: 100%;
+    min-width: 20em;
+    background-color: #362a2a;
+    box-shadow: 2px 2px 2px #000000;
+    color: #666666;
+    margin: auto;
+    padding: 0.4em 0.4em 0.4em 0.4em;
+
+    .scrollable {
+        flex-grow: 1;
+        flex-shrink: 1;
+        flex-basis: auto;
+
+    }
+
+    .option-button {
+        &.selected, &:hover {
+            color: #ee3333;
+        }
+    }
+
+    .buttons {
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: auto;
+        padding: 0.4em 0 0.2em 0.2em;
+        text-align: right;
+        border-top: 1px solid #666666;
+    }
+}

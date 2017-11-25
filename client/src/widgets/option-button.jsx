@@ -27,12 +27,19 @@ OptionButton.propTypes = {
     label: PropTypes.node,
     id: PropTypes.string,
     icon: PropTypes.string,
+    iconOn: PropTypes.string,
+    iconOff: PropTypes.string,
     url: PropTypes.string,
     target: PropTypes.string,
     hidden: PropTypes.bool,
     selected: PropTypes.bool,
     disabled: PropTypes.bool,
     onClick: PropTypes.func,
+};
+
+OptionButton.defaultProps = {
+    iconOn: 'check-circle',
+    iconOff: 'circle-o',
 };
 
 function buttonClasses(props) {
@@ -55,9 +62,9 @@ function iconClasses(props) {
         classNames.push(`fa-${props.icon}`);
     } else {
         if (props.selected) {
-            classNames.push('fa-check-circle');
+            classNames.push(`fa-${props.iconOn}`);
         } else {
-            classNames.push('fa-circle-o');
+            classNames.push(`fa-${props.iconOff}`);
         }
     }
     return classNames.join(' ');

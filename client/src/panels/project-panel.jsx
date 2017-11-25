@@ -16,6 +16,7 @@ var PushButton = require('widgets/push-button');
 var ProjectDescriptionDialogBox = require('dialogs/project-description-dialog-box');
 var MobileSetupDialogBox = require('dialogs/mobile-setup-dialog-box');
 var SignOutDialogBox = require('dialogs/sign-out-dialog-box');
+var ProjectManagementDialogBox = require ('dialogs/project-management-dialog-box');
 
 require('./project-panel.scss');
 
@@ -171,6 +172,7 @@ module.exports = React.createClass({
                 {this.renderDescriptionDialogBox()}
                 {this.renderMobileSetupDialogBox()}
                 {this.renderSignOutDialogBox()}
+                {this.renderProjectManagementDialogBox()}
             </div>
         );
     },
@@ -223,6 +225,18 @@ module.exports = React.createClass({
         return <SignOutDialogBox {...props} />;
     },
 
+    renderProjectManagementDialogBox: function() {
+        var props = {
+            show: (this.state.showingDialog === 'management'),
+            projectLinks: this.props.projectLinks,
+            route: this.props.route,
+            locale: this.props.locale,
+            onDelete: this.handleProjectDelete,
+            onCancel: this.handleDialogClose,
+        };
+        return <ProjectManagementDialogBox {...props} />
+    },
+
     handleProjectClick: function(evt) {
         var key = evt.currentTarget.getAttribute('data-key');
         var link = _.find(this.props.projectLinks, { key });
@@ -243,6 +257,15 @@ module.exports = React.createClass({
      */
     handleAddClick: function(evt) {
         this.props.route.push(require('pages/start-page'), { add: true });
+    },
+
+    /**
+     * Called when user clicks manage list button
+     *
+     * @param  {Event} evt
+     */
+    handleManageClick: function(evt) {
+        this.setState({ showingDialog: 'management' });
     },
 
     /**
@@ -279,5 +302,20 @@ module.exports = React.createClass({
      */
     handleDialogClose: function(evt) {
         this.setState({ showingDialog: null });
+    },
+
+    /**
+     * Called when user choose to remove selected projects
+     *
+     * @param  {Object} evt
+     */
+    handleProjectDelete: function(evt) {
+        var links = _.map(evt.selection, (key) => {
+            return { key };
+        });
+        var db = this.props.database.use({ by: this });
+        db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
+            this.setState({ showingDialog: null });
+        });
     },
 });
