@@ -93,7 +93,7 @@ module.exports = React.createClass({
                 <div key={i} className="project-option-button selected">
                     <i className="icon fa fa-check-circle" />
                     <div className="text">
-                        <span>{p(link.name)}</span>
+                        <span className="name">{p(link.name)}</span>
                         <div className="supplemental">
                             <div className="item">
                                 <span className="label">
@@ -128,7 +128,7 @@ module.exports = React.createClass({
                 <div key={i} data-key={link.key} className="project-option-button" onClick={this.handleProjectClick}>
                     <i className="icon fa fa-circle-o" />
                     <div className="text">
-                        <span>{p(link.name)}</span>
+                        <span className="name">{p(link.name)}</span>
                     </div>
                 </div>
             );
@@ -149,6 +149,7 @@ module.exports = React.createClass({
         var manageProps = {
             label: t('project-panel-manage'),
             onClick: this.handleManageClick,
+            disabled: _.size(this.props.projectLinks) < 2,
         };
         return (
             <div className="buttons">

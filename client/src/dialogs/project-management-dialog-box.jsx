@@ -78,12 +78,13 @@ module.exports = React.createClass({
     renderProjectButton: function(link, index) {
         var p = this.props.locale.pick;
         var params = this.props.route.parameters;
+        var current = (link.address === params.address && link.schema === params.schema);
         var props = {
             id: link.key,
             label: p(link.name),
-            iconOn: 'times-circle',
-            selected: _.includes(this.state.selection, link.key),
-            disabled: (link.address === params.address && link.schema === params.schema),
+            iconOn: (current) ? 'check-circle' : 'times-circle',
+            selected: _.includes(this.state.selection, link.key) || current,
+            disabled: current,
             onClick: this.handleProjectClick,
         };
         return <OptionButton key={index} {...props} />;

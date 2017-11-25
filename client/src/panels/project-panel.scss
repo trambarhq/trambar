@@ -1,4 +1,8 @@
 .settings-section.project {
+    .body {
+        padding-left: 0.5em;
+    }
+
     .project-option-button {
         display: table;
         width: 100%;
@@ -19,11 +23,15 @@
             display: table-cell;
             width: 1em;
             padding-right: 0.25em;
+            font-size: 1.4em;
         }
 
         .text {
             display: table-cell;
-            font-size: 0.9em;
+
+            .name {
+                font-size: 1.4em;
+            }
 
             .supplemental {
                 margin-top: 0.5em;
