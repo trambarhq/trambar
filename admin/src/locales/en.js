@@ -23,6 +23,9 @@ module.exports = function(languageCode) {
         'activity-tooltip-$count': (count) => {
             return (count === 1) ? `1 story` : `${count} stories`;
         },
+        'activity-tooltip-$count-branch': (count) => {
+            return (count === 1) ? `1 branch` : `${count} branches`;
+        },
         'activity-tooltip-$count-push': (count) => {
             return (count === 1) ? `1 push` : `${count} pushes`;
         },
@@ -31,6 +34,9 @@ module.exports = function(languageCode) {
         },
         'activity-tooltip-$count-member': (count) => {
             return (count === 1) ? `1 membership change` : `${count} membership changes`;
+        },
+        'activity-tooltip-$count-merge': (count) => {
+            return (count === 1) ? `1 merge` : `${count} merges`;
         },
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
