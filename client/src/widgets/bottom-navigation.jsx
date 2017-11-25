@@ -4,6 +4,7 @@
  * Buttons at the bottom of the screen for going from section to section.
  */
 var React = require('react'), PropTypes = React.PropTypes;
+var Relaks = require('relaks');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -16,6 +17,9 @@ var NotificationsPage = require('pages/notifications-page');
 var BookmarksPage = require('pages/bookmarks-page');
 var SettingsPage = require('pages/settings-page');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 // widgets
 var Link = require('widgets/link');
 
@@ -23,6 +27,7 @@ require('./bottom-navigation.scss');
 
 module.exports = React.createClass({
     displayName: 'BottomNavigation',
+    mixins: [ UpdateCheck ],
     propTypes: {
         hidden: PropTypes.bool,
 
@@ -98,48 +103,54 @@ module.exports = React.createClass({
         var params = _.pick(route.parameters, 'schema');
         var options = route.component.getOptions(route);
         var section = _.get(options, 'navigation.bottom.section');
-        var newsButtonProps = {
+        var newsProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
             url: route.find(NewsPage, params),
             onClick: this.handleButtonClick,
         };
-        var notificationsButtonProps = {
+        var notificationsProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
             url: route.find(NotificationsPage, params),
             onClick: this.handleButtonClick,
         };
-        var bookmarksButtonProps = {
+        var bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
             url: route.find(BookmarksPage, params),
             onClick: this.handleButtonClick,
         };
-        var peopleButtonProps = {
+        var peopleProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
             url: route.find(PeoplePage, params),
             onClick: this.handleButtonClick,
         };
-        var settingsButtonProps = {
+        var settingsProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
             url: route.find(SettingsPage, params),
             onClick: this.handleButtonClick,
         };
+        var newNotiifcationProps = {
+            database: this.props.database,
+            route: this.props.route,
+        };
         return (
             <div ref="container" className="container">
-                <Button {...newsButtonProps} />
-                <Button {...notificationsButtonProps} />
-                <Button {...bookmarksButtonProps} />
-                <Button {...peopleButtonProps} />
-                <Button {...settingsButtonProps} />
+                <Button {...newsProps} />
+                <Button {...notificationsProps}>
+                    <NewNotificationsBadge {...newNotiifcationProps} />
+                </Button>
+                <Button {...bookmarksProps} />
+                <Button {...peopleProps} />
+                <Button {...settingsProps} />
             </div>
         );
     },
@@ -158,6 +169,48 @@ function Button(props) {
             <i className={`fa fa-${props.icon}`} />
             {' '}
             <span className="label">{props.label}</span>
+            {props.children}
         </Link>
     );
 }
+
+var NewNotificationsBadge = Relaks.createClass({
+    displayName: 'NewNotificationsBadge',
+    propTypes: {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+    },
+
+    renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        var props = {
+            currentUser: null,
+            notifications: null,
+
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return db.start().then((userId) => {
+            // use the same query as in NotificationsPage
+            var criteria = {
+                target_user_id: userId,
+                limit: 500,
+            };
+            return db.find({ table: 'notification', criteria });
+        }).then((notifications) => {
+            var unread = _.filter(notifications, { seen: false });
+            var count = unread.length;
+            if (!count) {
+                return null;
+            }
+            return (
+                <span className="badge">
+                    <span className="number">{count}</span>
+                </span>
+            )
+        });
+    },
+});

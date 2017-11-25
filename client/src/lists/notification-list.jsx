@@ -147,10 +147,11 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         if (prevProps.notifications !== this.props.notifications) {
             var unread = _.filter(this.props.notifications, { seen: false });
             if (!_.isEmpty(unread)) {
+                var delay = Math.min(10, unread.length * 2);
                 clearTimeout(this.markAsSeenTimeout);
                 this.markAsSeenTimeout = setTimeout(() => {
                     this.markAsSeen(unread);
-                }, 10 * 1000);
+                }, delay * 1000);
             }
         }
     },
