@@ -27,7 +27,7 @@ module.exports = function(languageCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+        'bookmark-$name-and-$users-recommend-this': (name, users) => {
             return [ `${name} and `, users, ` recommend this` ];
         },
         'bookmark-$name-recommends-this': (name) => {
@@ -41,7 +41,7 @@ module.exports = function(languageCode) {
         'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
             return `You bookmarked this (and ${name} recommends it)`;
         },
-        'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+        'bookmark-you-bookmarked-it-and-$users-recommends-it': (users) => {
             return [ `You bookmarked this (and `, users, ` recommend it)` ];
         },
 
@@ -55,7 +55,7 @@ module.exports = function(languageCode) {
             return `${user} cast a vote`;
         },
         'comment-$user-commented-on-branch': (user) => {
-            return `${user} commented on a commit`;
+            return `${user} commented on this branch`;
         },
         'comment-$user-commented-on-issue': (user) => {
             return `${user} commented on this issue`;
@@ -67,7 +67,7 @@ module.exports = function(languageCode) {
             return `${user} commented on this merge request`;
         },
         'comment-$user-commented-on-push': (user) => {
-            return `${user} commented on a commit`;
+            return `${user} commented on this push`;
         },
         'comment-$user-completed-a-task': (user) => {
             return `${user} completed a task`;
@@ -405,7 +405,7 @@ module.exports = function(languageCode) {
         'user-summary-$name-left-repo': 'Left a git project',
         'user-summary-$name-merged-code': 'Performed a code merge',
         'user-summary-$name-opened-an-issue': 'Opened an issue',
-        'user-summary-$name-posted-a-link': 'Post a link to a website',
+        'user-summary-$name-posted-a-link': 'Posted a link to a website',
         'user-summary-$name-posted-a-picture': 'Posted a picture',
         'user-summary-$name-posted-a-video-clip': 'Posted a video clip',
         'user-summary-$name-posted-an-audio-clip': 'Posted an audio clip',

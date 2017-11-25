@@ -27,7 +27,7 @@ module.exports = function(languageCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+        'bookmark-$name-and-$users-recommend-this': (name, users) => {
             return [ `${name} and `, users, ` recommend this` ];
         },
         'bookmark-$name-recommends-this': (name) => {
@@ -41,7 +41,7 @@ module.exports = function(languageCode) {
         'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
             return `You bookmarked this (and ${name} recommends it)`;
         },
-        'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+        'bookmark-you-bookmarked-it-and-$users-recommends-it': (users) => {
             return [ `You bookmarked this (and `, users, ` recommend it)` ];
         },
 
@@ -55,7 +55,7 @@ module.exports = function(languageCode) {
             return `${user} cast a vote`;
         },
         'comment-$user-commented-on-branch': (user) => {
-            return `${user} commented on a commit`;
+            return `${user} commented on this branch`;
         },
         'comment-$user-commented-on-issue': (user) => {
             return `${user} commented on this issue`;
@@ -67,7 +67,7 @@ module.exports = function(languageCode) {
             return `${user} commented on this merge request`;
         },
         'comment-$user-commented-on-push': (user) => {
-            return `${user} commented on a commit`;
+            return `${user} commented on this push`;
         },
         'comment-$user-completed-a-task': (user) => {
             return `${user} completed a task`;
@@ -106,6 +106,21 @@ module.exports = function(languageCode) {
         'membership-request-proceed': 'Proceed',
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
+
+        'notification-option-assignment': 'When you are assigned to an issue',
+        'notification-option-bookmark': 'When someone sends you a bookmark',
+        'notification-option-comment': 'When someone comments on your post',
+        'notification-option-issue': 'When someone opens an issue',
+        'notification-option-join-request': 'When someone wants to join this project',
+        'notification-option-like': 'When someone likes your post',
+        'notification-option-merge': 'When someone merges code into the master branch',
+        'notification-option-note': 'When someone posts a note on a commit or issue',
+        'notification-option-push': 'When someone pushes code into Git',
+        'notification-option-survey': 'When someone posts a survey',
+        'notification-option-task-completion': 'When someone completes a task on your list',
+        'notification-option-task-list': 'When someone adds you to a task list',
+        'notification-option-vote': 'When someone answers your survey',
+        'notification-option-web-session': 'When a web session is active',
 
         'notification-$user-commented-on-your-$story': (user, story) => {
             switch (story) {
@@ -147,6 +162,8 @@ module.exports = function(languageCode) {
             return `${user} answered your survey`;
         },
 
+        'mobile-setup-close': 'Close',
+
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
         'option-bookmark-story': 'Bookmark story',
@@ -170,6 +187,14 @@ module.exports = function(languageCode) {
         'photo-capture-retake': 'Retake',
         'photo-capture-snap': 'Snap',
 
+        'project-description-close': 'Close',
+
+        'project-panel-add': 'Add',
+        'project-panel-description': 'Project description',
+        'project-panel-manage': 'Manage list',
+        'project-panel-mobile-set-up': 'Mobile set up',
+        'project-panel-sign-out': 'Sign out',
+
         'role-filter-no-roles': 'No roles defined',
 
         'search-bar-keywords': 'Keywords',
@@ -184,9 +209,27 @@ module.exports = function(languageCode) {
         'server-type-google': 'Google',
 
         'settings-language': 'Language',
+        'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',
+        'settings-profile-image': 'Profile image',
         'settings-projects': 'Projects',
-        'settings-user-profile': 'User Profile',
+        'settings-social-networks': 'Social Networks',
+        'settings-user-information': 'User Information',
+        'settings-web-alert': 'Web Alert',
+
+        'sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
+        'sign-out-cancel': 'Cancel',
+        'sign-out-confirm': 'Confirm',
+
+        'social-network-github': 'GitHub profile URL',
+        'social-network-gitlab': 'Gitlab profile URL',
+        'social-network-ichat': 'iChat user name',
+        'social-network-linkedin': 'Linkedin profile URL',
+        'social-network-skype': 'Skype user name',
+        'social-network-slack': 'Slack user id',
+        'social-network-slack-team': 'Slack team id',
+        'social-network-stackoverflow': 'Stack Overflow profile URL',
+        'social-network-twitter': 'Twitter user name',
 
         'start-projects': 'Projects',
         'start-social-login': 'Social login',
@@ -338,6 +381,14 @@ module.exports = function(languageCode) {
 
         'user-actions': 'Actions',
 
+        'user-info-name': 'Name',
+        'user-info-email': 'E-mail address',
+        'user-info-phone': 'Phone number',
+        'user-info-gender': 'Gender',
+        'user-info-gender-male': 'Male',
+        'user-info-gender-female': 'Female',
+        'user-info-gender-unspecified': 'Unspecified',
+
         'user-statistics-legend-issue': 'Issues',
         'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-milestone': 'Milestones',
@@ -354,7 +405,7 @@ module.exports = function(languageCode) {
         'user-summary-$name-left-repo': 'Left a git project',
         'user-summary-$name-merged-code': 'Performed a code merge',
         'user-summary-$name-opened-an-issue': 'Opened an issue',
-        'user-summary-$name-posted-a-link': 'Post a link to a website',
+        'user-summary-$name-posted-a-link': 'Posted a link to a website',
         'user-summary-$name-posted-a-picture': 'Posted a picture',
         'user-summary-$name-posted-a-video-clip': 'Posted a video clip',
         'user-summary-$name-posted-an-audio-clip': 'Posted an audio clip',
