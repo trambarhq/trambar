@@ -55,7 +55,7 @@ module.exports = React.createClass({
         var projectImage = _.find(project.details.resources, { type: 'image' });
         var image;
         if (projectImage) {
-            var imageUrl = this.props.theme.getImageUrl(projectImage, { width: 128 });
+            var imageUrl = this.props.theme.getImageUrl(projectImage, { width: 160 });
             image = <img src={imageUrl} />;
         }
         return (
