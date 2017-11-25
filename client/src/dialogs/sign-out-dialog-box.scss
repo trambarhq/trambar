@@ -1,0 +1,23 @@
+.sign-out-dialog-box {
+    display: flex;
+    flex-direction: column;
+    background-color: #362a2a;
+    box-shadow: 2px 2px 2px #000000;
+    color: #cccccc;
+    margin: auto;
+    padding: 0.4em 0.5em 0.4em 0.5em;
+
+    .message {
+        font-size: 1.5em;
+        font-weight: bold;
+        padding: 0.5em 0.2em 0.3em 0.2em;
+    }
+
+    .buttons {
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: auto;
+        padding: 0.5em 0 0.2em 0.2em;
+        text-align: right;
+    }
+}

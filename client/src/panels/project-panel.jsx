@@ -15,6 +15,7 @@ var SettingsSection = require('widgets/settings-section');
 var PushButton = require('widgets/push-button');
 var ProjectDescriptionDialogBox = require('dialogs/project-description-dialog-box');
 var MobileSetupDialogBox = require('dialogs/mobile-setup-dialog-box');
+var SignOutDialogBox = require('dialogs/sign-out-dialog-box');
 
 require('./project-panel.scss');
 
@@ -168,11 +169,14 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButtons: function() {
+        var t = this.props.locale.translate;
         var addProps = {
-            label: 'Add',
+            label: t('project-panel-add'),
+            onClick: this.handleAddClick,
         };
         var manageProps = {
-            label: 'Manage list',
+            label: t('project-panel-manage'),
+            onClick: this.handleManageClick,
         };
         return (
             <div className="buttons">
@@ -195,6 +199,7 @@ module.exports = React.createClass({
             <div>
                 {this.renderDescriptionDialogBox()}
                 {this.renderMobileSetupDialogBox()}
+                {this.renderSignOutDialogBox()}
             </div>
         );
     },
@@ -229,6 +234,31 @@ module.exports = React.createClass({
             onClose: this.handleDialogClose,
         };
         return <MobileSetupDialogBox {...props} />;
+    },
+
+    /**
+     * Render sign out dialog box
+     *
+     * @return {ReactElement}
+     */
+    renderSignOutDialogBox: function() {
+        var props = {
+            show: (this.state.showingDialog === 'sign-out'),
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            onClose: this.handleDialogClose,
+        };
+        return <SignOutDialogBox {...props} />;
+    },
+
+    /**
+     * Called when user clicks add button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        this.props.route.push(require('pages/start-page'), { add: true });
     },
 
     /**

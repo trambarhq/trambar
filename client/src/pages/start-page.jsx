@@ -45,6 +45,7 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/start/?'
             ], (params) => {
+                params.add = !!query.add;
                 return params;
             });
         },
@@ -58,6 +59,9 @@ module.exports = Relaks.createClass({
          */
         getUrl: function(params) {
             var path = `/start/`, query, hash;
+            if (params && params.add) {
+                query = { add: 1 };
+            }
             return { path, query, hash };
         },
 
@@ -247,6 +251,19 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return the class of the page that we're targeting--typically the news page
+     *
+     * @return {ReactClass}
+     */
+    getTargetPage: function() {
+        if (this.props.route.parameters.add) {
+            return require('pages/settings-page');
+        } else {
+            return require('pages/news-page');
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -421,7 +438,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         };
         if (this.hasReadAccess(project)) {
             // link to the project's news page
-            props.href = this.props.route.find(require('pages/news-page'), { schema: project.name });
+            props.href = this.props.route.find(this.getTargetPage(), { schema: project.name });
         } else {
             // add handler for requesting access
             // (or just show the project info if user has joined already)
@@ -674,7 +691,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
 
         var projectId = this.state.selectedProjectId;
         var project = _.find(this.props.projects, { id: projectId });
-        this.props.route.push(require('pages/news-page'), { schema: project.name });
+        this.props.route.push(this.getTargetPage(), { schema: project.name });
     },
 });
 

@@ -189,7 +189,9 @@ module.exports = function(languageCode) {
 
         'project-description-close': 'Close',
 
+        'project-panel-add': 'Add',
         'project-panel-description': 'Project description',
+        'project-panel-manage': 'Manage list',
         'project-panel-mobile-set-up': 'Mobile set up',
         'project-panel-sign-out': 'Sign out',
 
@@ -214,6 +216,10 @@ module.exports = function(languageCode) {
         'settings-social-networks': 'Social Networks',
         'settings-user-information': 'User Information',
         'settings-web-alert': 'Web Alert',
+
+        'sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
+        'sign-out-cancel': 'Cancel',
+        'sign-out-confirm': 'Confirm',
 
         'social-network-github': 'GitHub profile URL',
         'social-network-gitlab': 'Gitlab profile URL',
