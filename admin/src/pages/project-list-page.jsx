@@ -71,7 +71,7 @@ module.exports = Relaks.createClass({
          */
         getUrl: function(params) {
             var path = `/projects/`, query, hash;
-            if (params.edit) {
+            if (params && params.edit) {
                 query = { edit: 1 };
             }
             return { path, query, hash };
