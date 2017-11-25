@@ -404,10 +404,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      */
     renderNameColumn: function(user) {
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
         if (!user) {
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
-            var name = user.details.name;
+            var name = p(user.details.name);
             var username = user.username;
             var url, badge;
             if (this.state.renderingFullList) {
@@ -734,10 +735,13 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
 });
 
 var sortUsers = Memoize(function(users, roles, statistics, locale, columns, directions) {
+    var p = locale.pick;
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'name':
-                return 'details.name';
+                return (user) => {
+                    return p(user.details.name);
+                };
             case 'range':
                 return (user) => {
                     return _.get(statistics, [ user.id, 'range', 'start' ], '');

@@ -487,19 +487,21 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderNameInput: function() {
+        // not supporting multilingual name yet
         var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var name = p(this.getUserProperty('details.name'));
         var props = {
             id: 'name',
-            value: this.getUserProperty('details.name'),
-            availableLanguageCodes: this.getInputLanguages(),
+            value: name,
             locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
         };
         return (
-            <MultilingualTextField {...props}>
+            <TextField {...props}>
                 {t('user-summary-name')}
-            </MultilingualTextField>
+            </TextField>
         );
     },
 
