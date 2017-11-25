@@ -116,6 +116,57 @@ function send(db, messages) {
     });
 }
 
+/**
+ * Send messages intended for websockets
+ *
+ * @param  {Database} db
+ * @param  {Array<Message>} messages
+ *
+ * @return {Promise}
+ */
+function sendToWebsockets(db, messages) {
+    return filterWebsocketMessages(messages).each((message) => {
+        // dispatch web-socket messages
+        var listener = message.listener;
+        var subscription = listener.subscription;
+        var socket = _.find(sockets, { token: subscription.token });
+        if (socket) {
+            var messageType = _.first(_.keys(message.body));
+            console.log(`Sending message (${messageType}) to socket ${subscription.token}`);
+            console.log(message.body);
+            socket.write(JSON.stringify(message.body));
+        } else {
+            subscription.deleted = true;
+            return Subscription.updateOne(db, 'global', subscription);
+        }
+    });
+}
+
+/**
+ * Remove messages that aren't intended for web-socket and those the users do
+ * not wish to receive
+ *
+ * @param  {Array<Message>} messages
+ *
+ * @return {Promise<Array<Message>>}
+ */
+function filterWebsocketMessages(messages) {
+    return Promise.filter(messages, (message) => {
+        if (message.listener.type !== 'websocket') {
+            return false;
+        }
+        if (message.body.alert) {
+            var user = message.listener.user;
+            var alertType = message.body.alert.type;
+            var receiving = _.get(user.settings, [ 'web_alert', alertType ], false);
+            if (!receiving) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
+
 function sendToPushRelays(db, messages) {
     return filterPushMessages(messages).then((messages) => {
         var messagesByRelay = _.groupBy(messages, 'listener.relay');
@@ -141,10 +192,6 @@ function sendToPushRelays(db, messages) {
     });
 }
 
-function formatPushMessages(db, messages) {
-
-}
-
 /**
  * Remove messages that aren't push or if the user is already receiving
  * over websocket
@@ -158,38 +205,35 @@ function filterPushMessages(messages) {
         if (message.listener.type !== 'push') {
             return false;
         }
+        if (message.body.alert) {
+            var user = message.listener.user;
+            var alertType = message.body.alert.type;
+            var receiving = _.get(user.settings, [ 'mobile_alert', alertType ], false);
+            if (!receiving) {
+                return false;
+            }
+            var hasWebSession = _.some(messages, (m) => {
+                if (m.type === 'websocket') {
+                    if (m.user.id === user.id) {
+                        return true;
+                    }
+                }
+            });
+            if (hasWebSession) {
+                var sendToBoth = _.get(user.settings, [ 'mobile_alert', 'web_session' ], false);
+                if (!sendToBoth) {
+                    console.log(`Suppression mobile alert: user_id = ${user.id}`);
+                    return false;
+                }
+            }
+        }
         return true;
     });
 }
 
-/**
- * Send messages intended for websockets
- *
- * @param  {Database} db
- * @param  {Array<Message>} messages
- *
- * @return {Promise}
- */
-function sendToWebsockets(db, messages) {
-    return Promise.each(messages, (message) => {
-        // dispatch web-socket messages
-        var listener = message.listener;
-        var subscription = listener.subscription;
-        if (listener.type === 'websocket') {
-            var socket = _.find(sockets, { token: subscription.token });
-            if (socket) {
-                var messageType = _.first(_.keys(message.body));
-                console.log(`Sending message (${messageType}) to socket ${subscription.token}`);
-                console.log(message.body);
-                socket.write(JSON.stringify(message.body));
-            } else {
-                subscription.deleted = true;
-                return Subscription.updateOne(db, 'global', subscription);
-            }
-        }
-    });
+function formatPushMessages(db, messages) {
+    // TODO
 }
-
 
 function Listener(user, subscription) {
     if (/^websocket\b/.test(subscription.address)) {
