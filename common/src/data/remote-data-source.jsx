@@ -6,6 +6,7 @@ var Moment = require('moment');
 var HttpRequest = require('transport/http-request');
 var HttpError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
+var SessionStartTime = require('data/session-start-time');
 
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
@@ -1253,7 +1254,7 @@ function isSufficientlyRecent(search, refreshInterval) {
     }
     var rtimes = _.map(search.results, 'rtime');
     var minRetrievalTime = _.min(rtimes);
-    if (minRetrievalTime < sessionStartTime) {
+    if (minRetrievalTime < SessionStartTime) {
         // one of the objects was retrieved in an earlier session
         return false;
     }
@@ -1267,8 +1268,6 @@ function isSufficientlyRecent(search, refreshInterval) {
     search.finish = minRetrievalTime;
     return true;
 }
-
-var sessionStartTime = (new Date).toISOString();
 
 /**
  * Return the number of object expected

@@ -92,6 +92,7 @@ module.exports = Relaks.createClass({
         var props = {
             currentUser: null,
             currentProject: null,
+            projectLinks: null,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -107,11 +108,18 @@ module.exports = Relaks.createClass({
         }).then((user) => {
             this.props.payloads.reattach('global', user);
             props.currentUser = user;
+            meanwhile.show(<SettingsPageSync {...props} />, 250);
         }).then(() => {
             var criteria = { name: params.schema };
             return db.findOne({ schema: 'global', table: 'project', criteria });
         }).then((project) => {
             props.currentProject = project;
+            meanwhile.show(<SettingsPageSync {...props} />, 250);
+        }).then(() => {
+            var criteria = {};
+            return db.find({ schema: 'local', table: 'project_link', criteria });
+        }).then((projectLinks) => {
+            props.projectLinks = projectLinks;
             return <SettingsPageSync {...props} />;
         });
     },
@@ -122,6 +130,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         currentUser: PropTypes.object,
         currentProject: PropTypes.object,
+        projectLinks: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -180,17 +189,131 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="settings-page">
                 <div className="panels">
-                    <ProjectPanel {...panelProps} />
-                    <UserInfoPanel {...panelProps} />
-                    <UserImagePanel {...panelProps} />
-                    <SocialNetworkPanel {...panelProps} />
-                    <NotificationPanel {...panelProps} />
-                    <WebAlertPanel {...panelProps} />
-                    <MobileAlertPanel {...panelProps} />
-                    <LanguagePanel {...panelProps} />
+                    {this.renderProjectPanel()}
+                    {this.renderUserInfoPanel()}
+                    {this.renderUserImagePanel()}
+                    {this.renderSocialNetworkPanel()}
+                    {this.renderLanguagePanel()}
+                    {this.renderNotificationPanel()}
+                    {this.renderWebAlertPanel()}
+                    {this.renderMobileAlertPanel()}
                 </div>
             </div>
         );
+    },
+
+    /**
+     * Render project panel
+     *
+     * @return {ReactElement}
+     */
+    renderProjectPanel: function() {
+        var panelProps = {
+            currentProject: this.props.currentProject,
+            projectLinks: this.props.projectLinks,
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <ProjectPanel {...panelProps} />;
+    },
+
+    /**
+     * Render user info panel
+     *
+     * @return {ReactElement}
+     */
+    renderUserInfoPanel: function() {
+        var panelProps = {
+            currentUser: this.getUser(),
+            locale: this.props.locale,
+            onChange: this.handleChange,
+        };
+        return <UserInfoPanel {...panelProps} />;
+    },
+
+    /**
+     * Render user image panel
+     *
+     * @return {ReactElement}
+     */
+    renderUserImagePanel: function() {
+        var panelProps = {
+            currentUser: this.getUser(),
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onChange: this.handleChange,
+        };
+        return <UserImagePanel {...panelProps} />;
+    },
+
+    /**
+     * Render social network panel
+     *
+     * @return {ReactElement}
+     */
+    renderSocialNetworkPanel: function() {
+        var panelProps = {
+            currentUser: this.getUser(),
+            locale: this.props.locale,
+            onChange: this.handleChange,
+        };
+        return <SocialNetworkPanel {...panelProps} />;
+    },
+
+    /**
+     * Render notification panel
+     *
+     * @return {ReactElement}
+     */
+    renderNotificationPanel: function() {
+        var panelProps = {
+            currentUser: this.getUser(),
+            locale: this.props.locale,
+            onChange: this.handleChange,
+        };
+        return <NotificationPanel {...panelProps} />;
+    },
+
+    /**
+     * Render web alert panel
+     *
+     * @return {ReactElement}
+     */
+    renderWebAlertPanel: function() {
+        var panelProps = {
+            currentUser: this.getUser(),
+            locale: this.props.locale,
+            onChange: this.handleChange,
+        };
+        return <WebAlertPanel {...panelProps} />;
+    },
+
+    /**
+     * Render mobile alert panel
+     *
+     * @return {ReactElement}
+     */
+    renderMobileAlertPanel: function() {
+        var panelProps = {
+            currentUser: this.getUser(),
+            locale: this.props.locale,
+            onChange: this.handleChange,
+        };
+        return <MobileAlertPanel {...panelProps} />;
+    },
+
+    /**
+     * Render language panel
+     *
+     * @return {ReactElement}
+     */
+    renderLanguagePanel: function() {
+        var panelProps = {
+            locale: this.props.locale,
+        };
+        return <LanguagePanel {...panelProps} />;
     },
 
     /**

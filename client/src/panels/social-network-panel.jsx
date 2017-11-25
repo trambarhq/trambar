@@ -3,10 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 
-var Database = require('data/database');
-var Route = require('routing/route');
 var Locale = require('locale/locale');
-var Theme = require('theme/theme');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -23,12 +20,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         currentUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
         onChange: PropTypes.func,
     },
 

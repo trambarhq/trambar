@@ -23,7 +23,6 @@ module.exports = React.createClass({
     displayName: 'ProjectPanel',
     mixins: [ UpdateCheck ],
     propTypes: {
-        currentUser: PropTypes.object,
         currentProject: PropTypes.object,
         projectLinks: PropTypes.arrayOf(PropTypes.object),
 
@@ -31,34 +30,6 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    getDefaultProps: function() {
-        return {
-            projectLinks: [
-                {
-                    name: {
-                        en: 'Trambar',
-                    },
-                    schema: 'trambar',
-                    address: 'http://localhost',
-                },
-                {
-                    name: {
-                        en: 'Test Project',
-                    },
-                    schema: 'test',
-                    address: 'http://localhost',
-                },
-                {
-                    name: {
-                        en: 'Chicken love',
-                    },
-                    schema: 'chicken',
-                    address: 'http://localhost',
-                }
-            ]
-        };
     },
 
     /**
@@ -115,8 +86,8 @@ module.exports = React.createClass({
     renderProject: function(link, i) {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var schema = this.props.route.parameters.schema;
-        if (link.schema === schema) {
+        var params = this.props.route.parameters;
+        if (link.schema === params.schema && link.address == params.address) {
             return (
                 <div key={i} className="project-option-button selected">
                     <i className="icon fa fa-check-circle" />
@@ -153,7 +124,7 @@ module.exports = React.createClass({
             );
         } else {
             return (
-                <div key={i} className="project-option-button">
+                <div key={i} data-key={link.key} className="project-option-button" onClick={this.handleProjectClick}>
                     <i className="icon fa fa-circle-o" />
                     <div className="text">
                         <span>{p(link.name)}</span>
@@ -250,6 +221,19 @@ module.exports = React.createClass({
             onClose: this.handleDialogClose,
         };
         return <SignOutDialogBox {...props} />;
+    },
+
+    handleProjectClick: function(evt) {
+        var key = evt.currentTarget.getAttribute('data-key');
+        var link = _.find(this.props.projectLinks, { key });
+        if (link) {
+            // redirect to settings page with new schema, possibly new address
+            var params = {
+                address: link.address,
+                schema: link.schema,
+            };
+            this.props.route.replace(require('pages/settings-page'), params);
+        }
     },
 
     /**

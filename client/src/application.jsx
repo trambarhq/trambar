@@ -360,6 +360,22 @@ module.exports = React.createClass({
             }, 100);
         }
 
+        // see if the project is different
+        if (prevState.route !== this.state.route) {
+            var prevAddress = _.get(prevState.route, 'parameters.address');
+            var currAddress = _.get(this.state.route, 'parameters.address');
+            var currSchema = _.get(this.state.route, 'parameters.schema');
+            var prevSchema = _.get(prevState.route, 'parameters.schema');
+            if (prevAddress !== currAddress || prevSchema !== currSchema) {
+                if (currSchema) {
+                    if (this.state.canAccessServer && this.state.canAccessSchema) {
+                        // remember that we have accessed this project
+                        this.addProjectLink(currAddress, currSchema);
+                    }
+                }
+            }
+        }
+
         // see if there's a change in the URL hash
         if (prevState.route !== this.state.route) {
             if (!prevState.route || prevState.route.url !== this.state.route.url) {
@@ -434,9 +450,9 @@ module.exports = React.createClass({
     },
 
     /**
-     * Ask remote server for the
+     * Ask remote server for the push relay URL
      *
-     * @return {[type]}
+     * @return {Promise}
      */
     discoverPushRelay: function() {
         if (this.discoveringPushRelay) {
@@ -500,6 +516,46 @@ module.exports = React.createClass({
         var db = this.state.database.use({ schema: 'local', by: this });
         var record = { key: address };
         return db.removeOne({ table: 'user_credentials' }, record);
+    },
+
+    /**
+     * Add project to list of visited projects
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<Object>}
+     */
+    addProjectLink: function(address, schema) {
+        var db = this.state.database.use({ by: this });
+        // get the project object so we have the project's display name
+        var criteria = { name: schema };
+        return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
+            if (!project) {
+                return;
+            }
+            var now = new Date;
+            var record = {
+                key: `${address}/${schema}`,
+                address: address,
+                schema: schema,
+                name: project.details.title,
+                atime: now.toISOString(),
+            };
+            return db.saveOne({ schema: 'local', table: 'project_link' }, record);
+        });
+    },
+
+    /**
+     * Return a list of visited projects, order by last access time
+     *
+     * @return {Array<Object>}
+     */
+    getProjectLinks: function() {
+        var db = this.state.database.use({ by: this });
+        return db.find({ schema: 'local', table: 'project_link' }).then((links) => {
+            return _.sortBy(links, 'atime');
+        });
     },
 
     /**
@@ -729,9 +785,8 @@ module.exports = React.createClass({
         return Promise.try(() => {
             if (evt.url === '/') {
                 // go to either StartPage or NewsPage
-                var db = this.state.database.use({ schema: 'local', by: this });
-                return db.find({ table: 'project_link' }).then((links) => {
-                    var recent = _.last(_.sortBy(links, 'atime'));
+                return getProjectLinks().then((links) => {
+                    var recent = _.last(links);
                     var url;
                     if (recent) {
                         url = routeManager.find(NewsPage, {
