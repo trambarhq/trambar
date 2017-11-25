@@ -157,9 +157,16 @@ module.exports = React.createClass({
                 var fullResUrl = this.props.theme.getImageUrl(image, {
                     clip
                 });
+                var linkProps = {
+                    href: fullResUrl,
+                    target: '_blank',
+                    'data-width': imgWidth,
+                    'data-height': imgHeight,
+                    onClick: this.handleImageClick,
+                };
                 return (
                     <div className="image">
-                        <a href={fullResUrl} target="_blank">
+                        <a {...linkProps}>
                             <img src={url} style={{ width, height }} />
                         </a>
                     </div>
@@ -407,5 +414,25 @@ module.exports = React.createClass({
                 }
             }, 500);
         }
+    },
+
+    /**
+     * Called when user clicks on image link
+     *
+     * @param  {Event} evt
+     */
+    handleImageClick: function(evt) {
+        // open URL in pop-up instead of a tab
+        var url = evt.currentTarget.href;
+        var width = parseInt(evt.currentTarget.getAttribute('data-width'));
+        var height = parseInt(evt.currentTarget.getAttribute('data-height'));
+        var params = [
+            `left=${(screen.width - width) / 3}`,
+            `top=${(screen.height - height) / 3}`,
+            `width=${Math.min(screen.width - 100, width)}`,
+            `height=${Math.min(screen.height - 100, height)}`,
+        ];
+        window.open(url, '_blank', params.join(','));
+        evt.preventDefault();
     },
 });
