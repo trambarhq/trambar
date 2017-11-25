@@ -96,27 +96,27 @@ module.exports = React.createClass({
                         <span className="name">{p(link.name)}</span>
                         <div className="supplemental">
                             <div className="item">
-                                <span className="label">
+                                <span className="button">
                                     <i className="fa fa-fw fa-home" />
-                                    {link.address}
+                                    <span className="label">{link.address}</span>
                                 </span>
                             </div>
                             <div className="item">
-                                <span className="label" onClick={this.handleDescriptionClick}>
+                                <span className="button" onClick={this.handleDescriptionClick}>
                                     <i className="fa fa-fw fa-info-circle" />
-                                    {t('project-panel-description')}
+                                    <span className="label">{t('project-panel-description')}</span>
                                 </span>
                             </div>
                             <div className="item">
-                                <span className="label" onClick={this.handleMobileSetupClick}>
+                                <span className="button" onClick={this.handleMobileSetupClick}>
                                     <i className="fa fa-fw fa-qrcode" />
-                                    {t('project-panel-mobile-set-up')}
+                                    <span className="label">{t('project-panel-mobile-set-up')}</span>
                                 </span>
                             </div>
                             <div className="item">
-                                <span className="label" onClick={this.handleSignOutClick}>
+                                <span className="button" onClick={this.handleSignOutClick}>
                                     <i className="fa fa-fw fa-sign-out" />
-                                    {t('project-panel-sign-out')}
+                                    <span className="label">{t('project-panel-sign-out')}</span>
                                 </span>
                             </div>
                         </div>

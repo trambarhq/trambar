@@ -40,7 +40,7 @@
                 .item {
                     margin-bottom: 0.35em;
 
-                    .label {
+                    .button {
                         color: #999999;
                         &:hover {
                             color: #eeeeee;
@@ -49,6 +49,10 @@
 
                         .fa {
                             margin-right: 0.15em;
+                        }
+
+                        .label {
+                            font-size: 0.9em;
                         }
                     }
                 }
