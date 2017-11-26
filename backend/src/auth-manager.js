@@ -8,9 +8,10 @@ var FS = Promise.promisifyAll(require('fs'));
 var Moment = require('moment');
 var Request = require('request');
 var HtpasswdAuth = require('htpasswd-auth');
+var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
 var Database = require('database');
-var Async = require('async-do-while');
+var UserSettings = require('data/user-settings');
 
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
@@ -200,6 +201,7 @@ function handleHttpasswdRequest(req, res) {
                             type: 'admin',
                             username,
                             details: { name },
+                            settings: UserSettings.default,
                             hidden: true,
                         };
                         return User.insertOne(db, 'global', user);
@@ -627,6 +629,7 @@ function createNewUser(db, server, account) {
             username: preferredUsername,
             type: userType,
             details: extractUserDetails(server.type, profile._json),
+            settings: UserSettings.default,
             external: [
                 {
                     type: server.type,

@@ -4,6 +4,7 @@ var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
+var UserSettings = require('data/user-settings');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -1309,6 +1310,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
 
 var emptyUser = {
     details: {},
+    settings: UserSettings.default,
 };
 
 var sortRoles = Memoize(function(roles, locale) {

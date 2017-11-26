@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Request = require('request');
 var HttpError = require('errors/http-error');
+var UserSettings = require('data/user-settings');
 
 var Transport = require('gitlab-adapter/transport');
 var Import = require('gitlab-adapter/import');
@@ -182,7 +183,9 @@ function updateUser(db, server, user) {
  * @return {Object|null}
  */
 function copyUserProperties(user, profileImage, server, glUser, link) {
-    var userAfter = _.cloneDeep(user) || {};
+    var userAfter = _.cloneDeep(user) || {
+        settings: UserSettings.default,
+    };
     var imported = Import.reacquire(userAfter, link, 'user');
     Import.set(userAfter, imported, 'type', getUserType(server, glUser));
     Import.set(userAfter, imported, 'username', glUser.username);

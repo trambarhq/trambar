@@ -12,6 +12,7 @@ module.exports = exports = [
     'merge',
     'survey',
     'join-request',
+    'coauthor',
 ];
 
 exports.admin = [
