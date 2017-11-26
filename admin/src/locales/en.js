@@ -103,7 +103,7 @@ module.exports = function(languageCode) {
         'member-list-approve-all': 'Approve all requests',
         'member-list-cancel': 'Cancel',
         'member-list-edit': 'Edit member List',
-        'member-list-reject-all': 'Approve all requests',
+        'member-list-reject-all': 'Reject all requests',
         'member-list-save': 'Save member List',
         'member-list-status-pending': 'Request pending',
         'member-list-status-non-member': 'Not a member',

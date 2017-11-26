@@ -13,13 +13,13 @@ module.exports = function(languageCode) {
 
         'app-name': 'Trambar',
 
-        'audio-capture-accept': 'Aksepterer',
+        'audio-capture-accept': 'Aksepter',
         'audio-capture-cancel': 'Avbryt',
         'audio-capture-pause': 'Pause',
         'audio-capture-rerecord': 'Ta opp igjen',
         'audio-capture-resume': 'Gjenoppta',
         'audio-capture-start': 'Start',
-        'audio-capture-stop': 'Stoppe',
+        'audio-capture-stop': 'Stopp',
 
         'bookmark-$count-other-users': (count) => {
             return (count === 1) ? `1 annen bruker` : `${count} andre brukere`;
@@ -97,13 +97,13 @@ module.exports = function(languageCode) {
         'media-previous': 'Tidligere',
 
         'media-editor-embed': 'Legg inn i tekst',
-        'media-editor-remove': 'Fjerne',
-        'media-editor-shift': 'Skifte',
+        'media-editor-remove': 'Fjern',
+        'media-editor-shift': 'Skift',
 
         'membership-request-cancel': 'Avbryt',
-        'membership-request-join': 'Tiltre',
+        'membership-request-join': 'Bli med',
         'membership-request-ok': 'OK',
-        'membership-request-proceed': 'Fortsette',
+        'membership-request-proceed': 'Fortsett',
         'membership-request-you-are-now-member': 'Du er nå medlem i dette prosjektet',
         'membership-request-you-have-requested-membership': 'Du har bedt om medlemskap i dette prosjektet',
 
@@ -183,7 +183,7 @@ module.exports = function(languageCode) {
         'option-show-media-preview': 'Vis vedlagte medier',
         'option-show-text-preview': 'Vis tekstforhåndsvisning',
 
-        'photo-capture-accept': 'Aksepterer',
+        'photo-capture-accept': 'Aksepter',
         'photo-capture-cancel': 'Avbryt',
         'photo-capture-retake': 'Ta om igjen',
         'photo-capture-snap': 'Ta',
@@ -416,12 +416,12 @@ module.exports = function(languageCode) {
         'user-summary-$name-wrote-a-post': 'Skrev et innlegg',
         'user-summary-more': 'Flere...',
 
-        'video-capture-accept': 'Aksepterer',
+        'video-capture-accept': 'Aksepter',
         'video-capture-cancel': 'Avbryt',
         'video-capture-pause': 'Pause',
         'video-capture-resume': 'Gjenoppta',
         'video-capture-retake': 'Ta om igjen',
         'video-capture-start': 'Start',
-        'video-capture-stop': 'Stoppe',
+        'video-capture-stop': 'Stopp',
     };
 };
