@@ -785,7 +785,7 @@ module.exports = React.createClass({
         return Promise.try(() => {
             if (evt.url === '/') {
                 // go to either StartPage or NewsPage
-                return getProjectLinks().then((links) => {
+                return this.getProjectLinks().then((links) => {
                     var recent = _.last(links);
                     var url;
                     if (recent) {
