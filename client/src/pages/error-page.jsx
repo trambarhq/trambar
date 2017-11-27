@@ -69,15 +69,19 @@ module.exports = React.createClass({
         var params = this.props.route.parameters;
         var error = new HttpError(params.code)
         var Unicorn = require('unicorn.svg');
+        var message;
+        if (params.code === 404) {
+            message = `The page you're trying to reach doesn't exist. But then again, who does?`;
+        } else {
+            message = `The application is behaving in ways its maker never intended.`;
+        }
         return (
             <div className="error-page">
                 <div>
                     <div className="graphic"><Unicorn /></div>
                     <div className="text">
                         <h1 className="title">{error.statusCode} {error.message}</h1>
-                        <p>
-                            The page you're trying to reach doesn't exist. But then again, who does?
-                        </p>
+                        <p>{message}</p>
                     </div>
                 </div>
             </div>
