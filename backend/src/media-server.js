@@ -103,14 +103,14 @@ function sendFile(res, buffer, mimeType, cc) {
 }
 
 /**
- * Offload serving of a static file to Nginx
+ * Send static file to browser
  *
  * @param  {Response} res
  * @param  {String} path
  * @param  {String|undefined} cc
  * @param  {String|undefined} filename
  */
-function sendInternalRedirect(res, path, cc, filename) {
+function sendStaticFile(res, path, cc, filename) {
     getFileType(path).then((info) => {
         res.type(info.mime);
         if (cc) {
@@ -119,9 +119,20 @@ function sendInternalRedirect(res, path, cc, filename) {
         if (filename) {
             res.set('Content-disposition', `attachment; filename=${filename}`);
         }
-        var relPath = path.substr(CacheFolders.root.length + 1);
-        var uri = `/static_media/${relPath}`;
-        res.set('X-Accel-Redirect', uri).end();
+        return FS.lstatAsync(path).then((stat) => {
+            if (stat.isSymbolicLink()) {
+                // serve file through Express if it's a symlink, since it's probably
+                // pointing to a file that only exist in this Docker container
+                res.sendFile(path);
+            } else {
+                // ask Nginx to server the file
+                var relPath = path.substr(CacheFolders.root.length + 1);
+                var uri = `/static_media/${relPath}`;
+                res.set('X-Accel-Redirect', uri).end();
+            }
+        });
+    }).catch((err) => {
+        sendError(res, new HttpError(404));
     });
 }
 
@@ -180,7 +191,7 @@ function handleImageFiltersRequest(req, res) {
  */
 function handleImageOriginalRequest(req, res) {
     var path = `${CacheFolders.image}/${req.params.filename}`;
-    sendInternalRedirect(res, path, cacheControl.image);
+    sendStaticFile(res, path, cacheControl.video);
 }
 
 /**
@@ -191,7 +202,7 @@ function handleImageOriginalRequest(req, res) {
  */
 function handleVideoRequest(req, res) {
     var path = `${CacheFolders.video}/${req.params.filename}`;
-    sendInternalRedirect(res, path, cacheControl.video);
+    sendStaticFile(res, path, cacheControl.video);
 }
 
 /**
@@ -202,7 +213,7 @@ function handleVideoRequest(req, res) {
  */
 function handleAudioRequest(req, res) {
     var path = `${CacheFolders.audio}/${req.params.filename}`;
-    sendInternalRedirect(res, path, cacheControl.audio);
+    sendStaticFile(res, path, cacheControl.audio);
 }
 
 /**
