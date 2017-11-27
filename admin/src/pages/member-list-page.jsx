@@ -182,6 +182,11 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         return this.props.route.replace(module.exports, params);
     },
 
+    /**
+     * Update state on prop changes
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
@@ -702,7 +707,61 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 this.setState({ hasChanges: false }, () => {
                     return this.setEditability(false);
                 });
+                return null;
             });
+        });
+    },
+
+    /**
+     * Called when user clicks approve all button
+     *
+     * @param  {Event} evt
+     *
+     * @return {Promise}
+     */
+    handleApproveClick: function(evt) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var projectId = this.props.project.id;
+            var pendingUsers = _.filter(this.props.users, (user) => {
+                if (_.includes(user.requested_project_ids, projectId)) {
+                    return true;
+                }
+            });
+            var adding = _.map(pendingUsers, 'id');
+            var userIds = this.props.project.user_ids;
+            var userIdsAfter = _.union(userIds, adding);
+            var columns = {
+                id: this.props.project.id,
+                user_ids: userIdsAfter,
+            };
+            return db.saveOne({ table: 'project' }, columns);
+        });
+    },
+
+    /**
+     * Called when user clicks reject all button
+     *
+     * @param  {Event} evt
+     *
+     * @return {Promise}
+     */
+    handleRejectClick: function(evt) {
+        var db = this.props.database.use({ schema: 'global', by: this });
+        return db.start().then((userId) => {
+            var projectId = this.props.project.id;
+            var pendingUsers = _.filter(this.props.users, (user) => {
+                if (_.includes(user.requested_project_ids, projectId)) {
+                    return true;
+                }
+            });
+            var changes = _.map(pendingUsers, (user) => {
+                return {
+                    id: user.id,
+                    requested_project_ids: _.without(user.requested_project_ids, projectId),
+                };
+            });
+            return db.save({ table: 'user' }, changes);
         });
     },
 
@@ -774,7 +833,12 @@ var findUsers = Memoize(function(users, project) {
         var pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
-        return _.concat(existingUsers, pendingUsers);
+        // need to use union() here, since user.requested_project_ids could contain
+        // the project id even when project.user_ids has the user id
+        //
+        // this will happen right after the project is saved and the the updated
+        // users (changed by backend) haven't been retrieved yet
+        return _.union(existingUsers, pendingUsers);
     } else {
         return [];
     }

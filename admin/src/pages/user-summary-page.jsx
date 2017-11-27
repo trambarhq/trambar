@@ -1088,16 +1088,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             var payloads = this.props.payloads;
             return payloads.prepare(schema, user).then(() => {
                 return db.start().then((userId) => {
-                    if (!user.id) {
-                        // creating a new user
-                        var projectId = this.props.route.parameters.project;
-                        if (projectId) {
-                            // add user to project--on approval, the user id
-                            // will get added to user_ids of project on backend
-                            user.requested_project_ids = [ projectId ];
-                        }
-                        user.approved = true;
-                    }
                     return db.saveOne({ table: 'user' }, user).then((user) => {
                         // reattach blob, if any
                         payloads.reattach(schema, user);
@@ -1106,6 +1096,19 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                                 return this.setEditability(false, user);
                             });
                             return null;
+                        }).then(() => {
+                            if (this.props.project) {
+                                // add user to member list if he's not there yet
+                                var userIds = this.props.project.user_ids;
+                                if (!_.includes(userIds, user.id)) {
+                                    var userIdsAfter = _.union(userIds, [ user.id ]);
+                                    var columns = {
+                                        id: this.props.project.id,
+                                        user_ids: userIdsAfter
+                                    };
+                                    return db.saveOne({ table: 'project' }, columns);
+                                }
+                            }
                         });
                     });
                 });

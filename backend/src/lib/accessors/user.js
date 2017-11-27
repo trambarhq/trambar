@@ -220,9 +220,6 @@ module.exports = _.create(ExternalData, {
         if (!project) {
             return false;
         }
-        if (user.approved) {
-            return true;
-        }
         if (user.type === 'guest') {
             return !!_.get(project, 'settings.membership.allow_guest_request');
         } else {
@@ -233,9 +230,6 @@ module.exports = _.create(ExternalData, {
     canJoinAutomatically: function(user, project) {
         if (_.includes(project.user_ids, user.id)) {
             // user is already a member
-            return true;
-        }
-        if (user.approved) {
             return true;
         }
         if (user.type === 'guest') {
@@ -270,10 +264,6 @@ module.exports = _.create(ExternalData, {
         }
         if (userReceived.deleted) {
             // users cannot delete themselves
-            throw new HttpError(400);
-        }
-        if (userReceived.approved) {
-            // user cannot approve himself
             throw new HttpError(400);
         }
     },
