@@ -3,6 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
+var ServerTypes = require('objects/types/server-types');
+var ServerSettings = require('objects/settings/server-settings');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -383,7 +385,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             var server = this.getServer();
             var active = !server.deleted && !server.disabled;
-            var hasIntegration = hasAPIIntegration(server.type);
+            var hasIntegration = _.includes(ServerTypes.integrated, server.type);
             var hasAccessToken = !!_.get(server, 'settings.api.access_token');
             var hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
             var credentialsChanged = this.state.credentialsChanged;
@@ -466,7 +468,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var typeCurr = this.getServerProperty('type', 'current');
         var typePrev = this.getServerProperty('type', 'original');
-        var optionProps = _.map(serverTypes, (type) => {
+        var optionProps = _.map(ServerTypes, (type) => {
             var icon = getServerIcon(type);
             return {
                 name: type,
@@ -665,7 +667,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
         var apiAccess;
-        if (hasAPIIntegration(serverType)) {
+        if (_.includes(ServerTypes.integrated, serverType)) {
             var token = this.getServerProperty('settings.api.access_token');
             if (token) {
                 apiAccess = t('server-summary-api-access-acquired');
@@ -984,23 +986,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 });
 
-var serverTypes = [
-    'dropbox',
-    'facebook',
-    'github',
-    'gitlab',
-    'google',
-];
-
-var integratedServerTypes = [
-    'dropbox',
-    'gitlab',
-    'google',
-];
-
 var emptyServer = {
     details: {},
-    settings: {},
+    settings: ServerSettings.default,
 };
 
 function renderOption(props, i) {
@@ -1014,8 +1002,4 @@ function getServerIcon(type) {
         default:
             return type;
     }
-}
-
-function hasAPIIntegration(type) {
-    return _.includes(integratedServerTypes, type)
 }

@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
-var ReactionTypes = require('data/reaction-types');
+var ReactionTypes = require('objects/types/reaction-types');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');

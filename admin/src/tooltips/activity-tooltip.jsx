@@ -4,7 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var StoryTypes = require('data/story-types');
+var StoryTypes = require('objects/types/story-types');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');

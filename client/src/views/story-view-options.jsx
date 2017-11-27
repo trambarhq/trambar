@@ -1,6 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
-var StoryTypes = require('data/story-types');
+var StoryTypes = require('objects/types/story-types');
 
 var Database = require('data/database');
 var Route = require('routing/route');

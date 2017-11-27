@@ -323,47 +323,24 @@ module.exports = _.create(Data, {
         }
 
         // see if read-only access should be granted
-        var ms = project.settings.membership;
-        if (!ms) {
-            return false;
-        }
-        if (access === 'know' || access === 'read') {
-            // see if people can know about the project's existence
-            if (!ms.allow_request) {
-                return false;
-            }
-            if (access == 'know') {
+        if (access === 'know') {
+            // see if user can know about the project's existence
+            if (_.get(project, 'settings.access_control.grant_view_access')) {
                 return true;
             }
-        }
-        var ac = project.settings.access_control;
-        if (!ac) {
-            return false;
-        }
-        if (access === 'read') {
-            if (!_.includes(user.requested_project_ids, project.id)) {
-                // only users who wants to join the project can have
-                // read-only access
-                return false;
-            }
-            if (user.type === 'member') {
-                if (!ac.grant_team_members_read_only) {
-                    return false;
-                }
-            } else if(user.type === 'guest') {
-                if (user.approved) {
-                    if (!ac.grant_approved_users_read_only) {
-                        return false;
-                    }
-                } else {
-                    if (!ac.grant_unapproved_users_read_only) {
-                        return false;
-                    }
+            if (user.type === 'guest') {
+                if (_.get(project, 'settings.membership.allow_guest_request')) {
+                    return true;
                 }
             } else {
-                return false;
+                if (!_.get(project, 'settings.membership.allow_user_request')) {
+                    return true;
+                }
             }
-            return true;
+        } else if (access == 'read') {
+            if (_.get(project, 'settings.access_control.grant_view_access')) {
+                return true;
+            }
         }
         return false;
     }

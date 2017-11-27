@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-var NotificationTypes = require('data/notification-types');
+var NotificationTypes = require('objects/types/notification-types');
 
 var Locale = require('locale/locale');
 

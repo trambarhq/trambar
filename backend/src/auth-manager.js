@@ -11,7 +11,7 @@ var HtpasswdAuth = require('htpasswd-auth');
 var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
 var Database = require('database');
-var UserSettings = require('data/user-settings');
+var UserSettings = require('objects/settings/user-settings');
 
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');

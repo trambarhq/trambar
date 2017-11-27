@@ -5,7 +5,7 @@ var BodyParser = require('body-parser');
 var DNSCache = require('dnscache');
 var Database = require('database');
 var TaskQueue = require('utils/task-queue');
-var StoryTypes = require('data/story-types');
+var StoryTypes = require('objects/types/story-types');
 
 var Import = require('gitlab-adapter/import');
 var HookManager = require('gitlab-adapter/hook-manager');

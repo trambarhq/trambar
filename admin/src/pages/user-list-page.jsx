@@ -5,6 +5,7 @@ var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
+var UserTypes = require('objects/types/user-types');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -662,9 +663,8 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
                     return p(user.details.name);
                 };
             case 'type':
-                var types = [ 'guest', 'regular', 'moderator', 'admin' ];
                 return (user) => {
-                    return _.indexOf(types, user.type);
+                    return _.indexOf(UserTypes, user.type);
                 };
             case 'roles':
                 return (user) => {

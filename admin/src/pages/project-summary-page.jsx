@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
+var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -918,10 +919,5 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
 
 var emptyProject = {
     details: {},
-    settings: {},
-};
-
-var emptySettings = {
-    membership: {},
-    access_control: {},
+    settings: ProjectSettings.default,
 };

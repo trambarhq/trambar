@@ -235,16 +235,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
     hasReadAccess: function(project) {
         if (this.isMember(project)) {
             return true;
-        } else if (this.isPendingMember(project)) {
-            // see if the project is read-only for pending member
-            var ac = _.get(project.settings, 'access_control', {});
-            var userType = this.props.currentUser.type;
-            if (userType === 'admin') {
+        } else {
+            if (this.props.currentUser.type === 'admin') {
                 return true;
-            } else if (userType === 'regular' || userType === 'moderator') {
-                return ac.grant_user_read_only;
-            } else if (userType === 'guest') {
-                return ac.grant_guest_read_only;
+            } else {
+                return _.get(project, 'settings.access_control.grant_view_access');
             }
         }
         return false;

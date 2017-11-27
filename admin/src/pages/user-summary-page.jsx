@@ -4,7 +4,8 @@ var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
-var UserSettings = require('data/user-settings');
+var UserTypes = require('objects/types/user-types');
+var UserSettings = require('objects/settings/user-settings');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -608,32 +609,14 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var userTypeCurr = this.getUserProperty('type', 'current');
         var userTypePrev = this.getUserProperty('type', 'original');
-        var optionProps = [
-            {
-                name: 'guest',
-                selected: userTypeCurr === 'guest',
-                previous: userTypePrev === 'guest',
-                children: t('user-summary-type-guest'),
-            },
-            {
-                name: 'regular',
-                selected: userTypeCurr === 'regular',
-                previous: userTypePrev === 'regular',
-                children: t('user-summary-type-regular'),
-            },
-            {
-                name: 'moderator',
-                selected: userTypeCurr === 'moderator',
-                previous: userTypePrev === 'moderator',
-                children: t('user-summary-type-moderator'),
-            },
-            {
-                name: 'admin',
-                selected: userTypeCurr === 'admin',
-                previous: userTypePrev === 'admin',
-                children: t('user-summary-type-admin'),
-            },
-        ];
+        var optionProps = _.map(UserTypes, (type) => {
+            return {
+                name: type,
+                selected: userTypeCurr === type,
+                previous: userTypePrev === type,
+                children: t(`user-summary-type-${type}`),
+            };
+        });
         var listProps = {
             onOptionClick: this.handleTypeOptionClick,
             readOnly: !this.isEditing(),

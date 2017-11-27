@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Request = require('request');
 var HttpError = require('errors/http-error');
-var UserSettings = require('data/user-settings');
+var UserSettings = require('objects/settings/user-settings');
 
 var Transport = require('gitlab-adapter/transport');
 var Import = require('gitlab-adapter/import');

@@ -9,7 +9,7 @@ var Memoize = require('utils/memoize');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
-var StoryTypes = require('data/story-types');
+var StoryTypes = require('objects/types/story-types');
 
 require('./activity-chart.scss');
 
