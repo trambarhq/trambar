@@ -13,7 +13,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var OnDemand = require('widgets/on-demand');
+var SmartList = require('widgets/smart-list');
 var NotificationView = require('views/notification-view');
 
 require('./notification-list.scss');
@@ -91,32 +91,55 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var notifications = sortNotifications(this.props.notifications);
+        var smartListProps = {
+            items: notifications,
+            behind: 10,
+            ahead: 50,
+
+            onIdentity: this.handleNotificationIdentity,
+            onRender: this.handleNotificationRender,
+        };
         return (
             <div className="notification-list">
-                {_.map(notifications, this.renderNotification)}
+                <SmartList {...smartListProps} />
             </div>
         );
     },
 
     /**
-     * Render a notification
+     * Return id of notification view in response to event triggered by SmartList
      *
-     * @param  {Object} notification
+     * @type {String}
+     */
+    handleNotificationIdentity: function(evt) {
+        return `notification-${evt.item.id}`;
+    },
+
+    /**
+     * Render a notification in response to event triggered by SmartList
+     *
+     * @param  {Object} evt
      *
      * @return {ReactElement}
      */
-    renderNotification: function(notification) {
-        var user = findUser(this.props.users, notification);
-        var props = {
-            notification,
-            user,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            onClick: this.handleNotificationClick,
-        };
-        return <NotificationView key={notification.id} {...props} />;
+    handleNotificationRender: function(evt) {
+        if (evt.needed) {
+            var notification = evt.item;
+            var user = findUser(this.props.users, notification);
+            var props = {
+                notification,
+                user,
+                database: this.props.database,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+                onClick: this.handleNotificationClick,
+            };
+            return <NotificationView key={notification.id} {...props} />;
+        } else {
+            var height = evt.previousHeight || evt.estimatedHeight || 25;
+            return <div className="notification-view" style={{ height }} />
+        }
     },
 
     /**

@@ -15,10 +15,9 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var OnDemand = require('widgets/on-demand');
+var SmartList = require('widgets/smart-list');
 var BookmarkView = require('views/bookmark-view');
 var StoryView = require('views/story-view');
-var StoryList = require('lists/story-list');
 var StoryEditor = require('editors/story-editor');
 
 require('./bookmark-list.scss');
@@ -28,6 +27,7 @@ module.exports = Relaks.createClass({
     propTypes: {
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        anchorStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -61,6 +61,7 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
+            anchorStoryId: this.props.anchorStoryId,
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
             database: this.props.database,
@@ -190,13 +191,13 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         recipients: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        anchorStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-        loading: PropTypes.bool,
     },
 
     /**
@@ -205,51 +206,68 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var bookmarks = sortBookmark(this.props.bookmarks);
+        var anchorId = this.props.anchorStoryId;
+        var smartListProps = {
+            items: bookmarks,
+            offset: 20,
+            behind: 2,
+            ahead: 8,
+            anchor: (anchorId) ? `story-${anchorId}` : undefined,
+
+            onIdentity: this.handleBookmarkIdentity,
+            onRender: this.handleBookmarkRender,
+            onAnchorChange: this.handleBookmarkAnchorChange,
+        };
         return (
             <div className="story-list">
-                {this.renderBookmarks()}
+                <SmartList {...smartListProps} />
             </div>
         );
     },
 
     /**
-     * Render bookmarks
+     * Return id of bookmark view in response to event triggered by SmartList
      *
-     * @return {Array<ReactElement>}
+     * @param  {Object} evt
+     *
+     * @return {String}
      */
-    renderBookmarks: function() {
-        var bookmarks = sortBookmark(this.props.bookmarks);
-        return _.map(bookmarks, this.renderBookmark);
+    handleBookmarkIdentity: function(evt) {
+        return `story-${evt.item.story_id}`;
     },
 
     /**
      * Render a bookmark
      *
-     * @param  {Bookmark} bookmark
-     * @param  {Number} index
+     * @param  {Object} evt
      *
      * @return {ReactElement}
      */
-    renderBookmark: function(bookmark, index) {
-        var story = findStory(this.props.stories, bookmark);
-        var senders = findSenders(this.props.senders, bookmark);
-        var bookmarkProps = {
-            bookmark,
-            senders,
-            currentUser: this.props.currentUser,
+    handleBookmarkRender: function(evt) {
+        if (evt.needed) {
+            var bookmark = evt.item;
+            var story = findStory(this.props.stories, bookmark);
+            var senders = findSenders(this.props.senders, bookmark);
+            var bookmarkProps = {
+                bookmark,
+                senders,
+                currentUser: this.props.currentUser,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return (
-            <OnDemand key={bookmark.id} type="bookmarks" initial={index < 10}>
+                database: this.props.database,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return (
                 <BookmarkView {...bookmarkProps}>
                     {this.renderStory(story)}
                 </BookmarkView>
-            </OnDemand>
-        );
+            );
+        } else {
+            var height = evt.previousHeight || evt.estimatedHeight || 100;
+            return <div className="bookmark-view" style={{ height }} />
+        }
     },
 
     /**

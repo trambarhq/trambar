@@ -69,6 +69,9 @@ module.exports = React.createClass({
             }
         } else {
             switch (others.length) {
+                case 0:
+                    contents = '\u00a0';
+                    break;
                 case 1:
                     var name = n(others[0].details.name, others[0].details.gender);
                     contents = t('bookmark-$name-recommends-this', name);

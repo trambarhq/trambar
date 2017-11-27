@@ -284,6 +284,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
+            anchorStoryId: this.props.route.parameters.story,
 
             database: this.props.database,
             payloads: this.props.payloads,

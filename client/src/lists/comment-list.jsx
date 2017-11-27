@@ -14,7 +14,6 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var OnDemand = require('widgets/on-demand');
 var CommentView = require('views/comment-view');
 var CommentEditor = require('editors/comment-editor');
 var Scrollable = require('widgets/scrollable');

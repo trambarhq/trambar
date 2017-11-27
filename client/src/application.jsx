@@ -380,7 +380,7 @@ module.exports = React.createClass({
         if (prevState.route !== this.state.route) {
             if (!prevState.route || prevState.route.url !== this.state.route.url) {
                 // scroll to element with id matching hash
-                AnchorFinder.scrollTo(this.state.route.hash);
+                //AnchorFinder.scrollTo(this.state.route.hash);
             }
         }
     },

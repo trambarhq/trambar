@@ -13,7 +13,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var OnDemand = require('widgets/on-demand');
+var SmartList = require('widgets/smart-list');
 var UserView = require('views/user-view');
 
 require('./user-list.scss');
@@ -138,42 +138,55 @@ var UserListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var users = sortUsers(this.props.users, this.props.locale);
+        var smartListProps = {
+            items: users,
+            behind: 2,
+            ahead: 8,
+
+            onIdentity: this.handleUserIdentity,
+            onRender: this.handleUserRender,
+        };
         return (
             <div className="user-list">
-                {_.map(users, this.renderUser)}
+                <SmartList {...smartListProps} />
             </div>
         );
     },
 
+    handleUserIdentity: function(evt) {
+        return `user-${evt.item.id}`;
+    },
+
     /**
-     * Render a user view component
+     * Render a user view component in response to event fired by SmartList
      *
-     * @param  {User} user
-     * @param  {Number} index
+     * @param  {Object} evt
      *
      * @return {ReactElement}
      */
-    renderUser: function(user, index) {
-        var roles = findRoles(this.props.roles, user);
-        var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
-        var listing = findListing(this.props.listings, user);
-        var stories = findStories(this.props.stories, listing);
-        var userProps = {
-            user,
-            roles,
-            dailyActivities,
-            stories,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return (
-            <OnDemand key={user.id} type="users" initial={index < 10}>
-                <UserView {...userProps} />
-            </OnDemand>
-        );
+    handleUserRender: function(evt) {
+        if (evt.needed) {
+            var user = evt.item;
+            var roles = findRoles(this.props.roles, user);
+            var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
+            var listing = findListing(this.props.listings, user);
+            var stories = findStories(this.props.stories, listing);
+            var userProps = {
+                user,
+                roles,
+                dailyActivities,
+                stories,
+                currentUser: this.props.currentUser,
+                database: this.props.database,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <UserView {...userProps} />;
+        } else {
+            var height = evt.previousHeight || evt.estimatedHeight || 100;
+            return <div className="user-view" style={{ height }} />;
+        }
     },
 });
 

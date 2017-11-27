@@ -14,7 +14,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var OnDemand = require('widgets/on-demand');
+var SmartList = require('widgets/smart-list');
 var StoryView = require('views/story-view');
 var StoryEditor = require('editors/story-editor');
 
@@ -28,6 +28,7 @@ module.exports = Relaks.createClass({
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        anchorStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -63,6 +64,7 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
+            anchorStoryId: this.props.anchorStoryId,
             showEditors: this.props.showEditors,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
@@ -198,6 +200,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
+        anchorStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -281,56 +284,65 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render pending stories
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderStories: function() {
-        var stories = sortStories(this.props.stories, this.props.pendingStories);
-        return _.map(stories, this.renderStory);
-    },
-
-    /**
-     * Render a published story
-     *
-     * @param  {Story} story
-     * @param  {Number} index
+     * Render stories
      *
      * @return {ReactElement}
      */
-    renderStory: function(story, index) {
+    renderStories: function() {
+        var stories = sortStories(this.props.stories, this.props.pendingStories);
+        var anchorId = this.props.anchorStoryId;
+        var smartListProps = {
+            items: stories,
+            offset: 20,
+            behind: 2,
+            ahead: 8,
+            anchor: (anchorId) ? `story-${anchorId}` : undefined,
+
+            onIdentity: this.handleStoryIdentity,
+            onRender: this.handleStoryRender,
+            onAnchorChange: this.handleStoryAnchorChange,
+        };
+        return <SmartList {...smartListProps} />
+    },
+
+    handleStoryIdentity: function(evt) {
+        return `story-${evt.item.id}`;
+    },
+
+    handleStoryRender: function(evt) {
+        var story = evt.item;
         // see if it's being editted
         var draft = _.find(this.props.draftStories, { published_version_id: story.id });
         if (draft) {
             return this.renderEditor(draft);
         }
-        var reactions = findReactions(this.props.reactions, story);
-        var authors = findAuthors(this.props.authors, story);
-        var respondents = findRespondents(this.props.respondents, reactions);
-        var recommendations = findRecommendations(this.props.recommendations, story);
-        var recipients = findRecipients(this.props.recipients, recommendations);
-        var repo = findRepo(this.props.repos, story);
-        var storyProps = {
-            story,
-            reactions,
-            authors,
-            respondents,
-            recommendations,
-            recipients,
-            repo,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        var id = `story-${story.id}`;
-        return (
-            <OnDemand key={story.id} id={id} type="stories" initial={index < 10}>
-                <StoryView {...storyProps} />
-            </OnDemand>
-        );
+        if (evt.needed) {
+            var reactions = findReactions(this.props.reactions, story);
+            var authors = findAuthors(this.props.authors, story);
+            var respondents = findRespondents(this.props.respondents, reactions);
+            var recommendations = findRecommendations(this.props.recommendations, story);
+            var recipients = findRecipients(this.props.recipients, recommendations);
+            var repo = findRepo(this.props.repos, story);
+            var storyProps = {
+                story,
+                reactions,
+                authors,
+                respondents,
+                recommendations,
+                recipients,
+                repo,
+                currentUser: this.props.currentUser,
+                database: this.props.database,
+                payloads: this.props.payloads,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <StoryView {...storyProps} />
+        } else {
+            var height = evt.previousHeight || evt.estimatedHeight || 100;
+            return <div className="story-view" style={{ height }} />
+        }
     },
 });
 
