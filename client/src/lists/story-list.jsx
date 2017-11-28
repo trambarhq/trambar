@@ -28,13 +28,16 @@ module.exports = Relaks.createClass({
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        anchorStoryId: PropTypes.number,
+        selectedStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onHiddenStories: PropTypes.func,
+        onTopStoryChange: PropTypes.func,
     },
 
     getDefaultProps: function() {
@@ -64,7 +67,7 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
-            anchorStoryId: this.props.anchorStoryId,
+            selectedStoryId: this.props.selectedStoryId,
             showEditors: this.props.showEditors,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
@@ -75,6 +78,9 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onHiddenStories: this.props.onHiddenStories,
+            onTopStoryChange: this.props.onTopStoryChange,
         };
         meanwhile.show(<StoryListSync {...props} />, 250);
         return db.start().then((userId) => {
@@ -200,13 +206,16 @@ var StoryListSync = module.exports.Sync = React.createClass({
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
-        anchorStoryId: PropTypes.number,
+        selectedStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onHiddenStories: PropTypes.func,
+        onTopStoryChange: PropTypes.func,
     },
 
     /**
@@ -216,7 +225,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var stories = sortStories(this.props.stories, this.props.pendingStories, this.props.draftStories, this.props.currentUser, this.props.showEditors);
-        var anchorId = this.props.anchorStoryId;
+        var anchorId = this.props.selectedStoryId;
         var smartListProps = {
             items: stories,
             offset: 20,
@@ -227,14 +236,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
             onIdentity: this.handleStoryIdentity,
             onRender: this.handleStoryRender,
             onAnchorChange: this.handleStoryAnchorChange,
+            onBeforeAnchor: this.handleStoryBeforeAnchor,
         };
         return <SmartList {...smartListProps} />
-
-
-        return (
-            <div className="story-list">
-            </div>
-        );
     },
 
     /**
@@ -328,6 +332,31 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 var height = evt.previousHeight || evt.estimatedHeight || 100;
                 return <div className="story-view" style={{ height }} />
             }
+        }
+    },
+
+    handleStoryAnchorChange: function(evt) {
+        if (this.props.onTopStoryChange) {
+            this.props.onTopStoryChange({
+                type: 'topitemchange',
+                target: this,
+                story: evt.item,
+            });
+        }
+    },
+
+    /**
+     * Called when SmartList notice new items were rendered out of view
+     *
+     * @param  {Object} evt
+     */
+    handleStoryBeforeAnchor: function(evt) {
+        if (this.props.onHiddenStories) {
+            this.props.onHiddenStories({
+                type: 'hiddenitems',
+                target: this,
+                stories: evt.items,
+            });
         }
     },
 });

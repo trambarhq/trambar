@@ -107,6 +107,10 @@ module.exports = function(languageCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
+        'news-page-$count-new-stories': (count) => {
+            return (count === 1) ? `1 new story` : `${count} new stories`;
+        },
+
         'notification-option-assignment': 'When you are assigned to an issue',
         'notification-option-bookmark': 'When someone sends you a bookmark',
         'notification-option-coauthor': 'When someone invites you to jointly edit a post',

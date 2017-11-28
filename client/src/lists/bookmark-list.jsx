@@ -27,7 +27,7 @@ module.exports = Relaks.createClass({
     propTypes: {
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        anchorStoryId: PropTypes.number,
+        selectedStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -61,7 +61,7 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
-            anchorStoryId: this.props.anchorStoryId,
+            selectedStoryId: this.props.selectedStoryId,
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
             database: this.props.database,
@@ -191,7 +191,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         recipients: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        anchorStoryId: PropTypes.number,
+        selectedStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -207,7 +207,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var bookmarks = sortBookmark(this.props.bookmarks);
-        var anchorId = this.props.anchorStoryId;
+        var anchorId = this.props.selectedStoryId;
         var smartListProps = {
             items: bookmarks,
             offset: 20,

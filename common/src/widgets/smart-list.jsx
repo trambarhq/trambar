@@ -13,6 +13,7 @@ module.exports = React.createClass({
         onIdentity: PropTypes.func.isRequired,
         onRender: PropTypes.func.isRequired,
         onAnchorChange: PropTypes.func,
+        onBeforeAnchor: PropTypes.func,
     },
 
     /**
@@ -41,6 +42,18 @@ module.exports = React.createClass({
             currentAnchor: this.props.anchor,
             estimatedHeight: undefined,
         };
+    },
+
+    /**
+     * Change state.currentAnchor when props.anchor changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.anchor !== nextProps.anchor) {
+            this.setState({ currentAnchor: nextProps.anchor });
+            this.anchorOffset = nextProps.offset;
+        }
     },
 
     /**
@@ -111,11 +124,7 @@ module.exports = React.createClass({
         // remember the range where we have fully rendered the items
         this.startIndex = startIndex;
         this.endIndex = endIndex;
-        return (
-            <div className="smart-list">
-                {children}
-            </div>
-        )
+        return <div className="smart-list">{children}</div>;
     },
 
     /**
@@ -144,7 +153,20 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        this.scanItemNodes();
+        var newItemIndices = this.scanItemNodes();
+        if (this.state.currentAnchor) {
+            // see which new items are behind (i.e. above) the anchor element
+            var ids = _.keys(this.itemNodes);
+            var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
+            var items = _.transform(newItemIndices, (list, index) => {
+                if (index < anchorIndex) {
+                    list.push(this.props.items[index]);
+                }
+            }, []);
+            if (!_.isEmpty(items)) {
+                this.triggerBeforeAnchorEvent(items);
+            }
+        }
     },
 
     /**
@@ -157,19 +179,25 @@ module.exports = React.createClass({
 
     /**
      * Find DOM nodes, record their heights, as well as maintaining the position
-     * of the anchored element
+     * of the anchored element. Return indices new nodes
+     *
+     * @return {Array<String>}
      */
     scanItemNodes: function() {
         var startIndex = this.startIndex;
         var endIndex = this.endIndex;
         var index = 0;
         var itemNodesBefore = this.itemNodes;
+        var newItemIndices = []
         this.itemNodes = {};
         for (var c = this.container.firstChild; c; c = c.nextSibling) {
             var id = c.id;
             this.itemNodes[id] = c;
             if (startIndex <= index && index < endIndex) {
                 this.itemHeights[id] = c.offsetHeight;
+            }
+            if (!itemNodesBefore[id]) {
+                newItemIndices.push(index);
             }
             index++;
         }
@@ -195,6 +223,7 @@ module.exports = React.createClass({
                 }
             }
         }
+        return newItemIndices;
     },
 
     /**
@@ -205,12 +234,36 @@ module.exports = React.createClass({
         this.setState({ estimatedHeight: undefined });
     },
 
+    /**
+     * Inform parent component that the anchor has changed
+     *
+     * @param  {String} anchor
+     */
     triggerAnchorChangeEvent: function(anchor) {
         if (this.props.onAnchorChange) {
+            var ids = _.keys(this.itemNodes);
+            var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
+            var item = this.props.items[anchorIndex];
             this.props.onAnchorChange({
                 type: 'anchorchange',
                 target: this,
                 anchor,
+                item,
+            });
+        }
+    },
+
+    /**
+     * Inform parent component that so items were rendered behind the anchor
+     *
+     * @param  {String} anchor
+     */
+    triggerBeforeAnchorEvent: function(items) {
+        if (this.props.onBeforeAnchor) {
+            this.props.onBeforeAnchor({
+                type: 'beforeanchor',
+                target: this,
+                items,
             });
         }
     },

@@ -1,32 +1,52 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 
-require('./overlay.scss');
+require('./new-items-alert.scss');
 
 module.exports = React.createClass({
-    display: 'OverlayProxy',
+    displayName: 'NewItemsAlertProxy',
     propTypes: {
-        className: PropTypes.string,
         show: PropTypes.bool,
-        onBackgroundClick: PropTypes.func,
+        onClick: PropTypes.func,
     },
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
             show: false
         };
     },
 
+    /**
+     * Do not render anything
+     *
+     * @return {null}
+     */
     render: function() {
         return null;
     },
 
+    /**
+     * Draw the alert if component is show on mount
+     *
+     * @return {[type]}
+     */
     componentDidMount: function() {
         if (this.props.show) {
             this.show();
         }
     },
 
+    /**
+     * Show or hide the actual element when props.show changes
+     *
+     * @param  {Object} prevProps
+     */
     componentDidUpdate: function(prevProps) {
         if (prevProps.show !== this.props.show) {
             if (this.props.show) {
@@ -41,15 +61,21 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Remove the alert on unmount
+     */
     componentWillUnmount: function() {
         this.hide();
     },
 
+    /**
+     * Render the actual component into the viewport element
+     */
     show: function() {
         if (!this.containerNode) {
             this.containerNode = document.createElement('DIV');
-            document.body.appendChild(this.containerNode);
-            document.body.addEventListener('keydown', this.handleKeyDown);
+            var viewport = document.getElementById('page-view-port');
+            viewport.appendChild(this.containerNode);
         } else {
             if (this.containerRemovalTimeout) {
                 clearTimeout(this.containerRemovalTimeout);
@@ -58,25 +84,31 @@ module.exports = React.createClass({
         }
         var props = {
             show: false,
-            onClick: this.handleClick,
+            onClick: this.props.onClick,
             children: this.props.children
         };
-        ReactDOM.render(<Overlay {...props} />, this.containerNode);
+        ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
         setTimeout(() => {
             props.show = true;
-            ReactDOM.render(<Overlay {...props} />, this.containerNode);
+            ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
         }, 10);
     },
 
+    /**
+     * Redraw the actual component
+     */
     redraw: function() {
         var props = {
             show: true,
-            onClick: this.handleClick,
+            onClick: this.props.onClick,
             children: this.props.children
         };
-        ReactDOM.render(<Overlay {...props} />, this.containerNode);
+        ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
     },
 
+    /**
+     * Remove the actual component from the viewport element
+     */
     hide: function() {
         if (!this.containerNode) {
             return;
@@ -84,46 +116,26 @@ module.exports = React.createClass({
         if (!this.containerRemovalTimeout) {
             this.containerRemovalTimeout = setTimeout(() => {
                 ReactDOM.unmountComponentAtNode(this.containerNode);
-                document.body.removeChild(this.containerNode);
-                document.body.removeEventListener('keydown', this.handleKeyDown);
+                var viewport = document.getElementById('page-view-port');
+                viewport.removeChild(this.containerNode);
                 this.containerNode = null;
                 this.containerRemovalTimeout = 0;
-            }, 1000);
+            }, 500);
         }
         var props = {
             show: false,
             children: this.props.children
         };
-        ReactDOM.render(<Overlay {...props} />, this.containerNode);
-    },
-
-    handleClick: function(evt) {
-        var targetClass = evt.target.className;
-        if (targetClass === 'foreground' || targetClass === 'background') {
-            if (this.props.onBackgroundClick) {
-                this.props.onBackgroundClick(evt);
-            }
-        }
-    },
-
-    handleKeyDown: function(evt) {
-        if (evt.keyCode === 27) {
-            if (this.props.onBackgroundClick) {
-                this.props.onBackgroundClick(evt);
-            }
-        }
+        ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
     },
 });
 
-function Overlay(props) {
-    var classNames = [ 'overlay', props.show ? 'show' : 'hide' ];
-    if (props.className) {
-        classNames.push(props.className);
-    }
+function NewItemsAlert(props) {
+    var classNames = [ 'new-items-alert', props.show ? 'show' : 'hide' ];
     return (
         <div className={classNames.join(' ')} onClick={props.onClick}>
-            <div className="background"/>
-            <div className="foreground">{props.children}</div>
+            <i className="fa fa-arrow-up" />
+            {props.children}
         </div>
     );
 }

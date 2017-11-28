@@ -176,9 +176,11 @@ module.exports = React.createClass({
         return (
             <div className="application">
                 <TopNavigation {...topNavProps} />
-                <section className="page-view-port">
-                    <div className="contents">
-                        {this.renderCurrentPage()}
+                <section className="page-view-port" id="page-view-port">
+                    <div className="scroll-box">
+                        <div className="contents">
+                            {this.renderCurrentPage()}
+                        </div>
                     </div>
                 </section>
                 <BottomNavigation {...bottomNavProps} />

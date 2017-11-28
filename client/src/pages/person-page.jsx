@@ -162,7 +162,6 @@ module.exports = Relaks.createClass({
             return db.findOne({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
-            console.log(statistics)
             meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             if (params.date || params.search) {
@@ -288,7 +287,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             stories: this.props.stories,
             currentUser: this.props.currentUser,
-            anchorStoryId: this.props.route.parameters.story,
+            selectedStoryId: this.props.route.parameters.story,
 
             database: this.props.database,
             payloads: this.props.payloads,

@@ -1,0 +1,19 @@
+.new-items-alert {
+    position: absolute;
+    transition: opacity 0.5s;
+    opacity: 1;
+    right: 3em;
+    top: 2em;
+    padding: 0.75em 0.75em 0.75em 0.75em;
+    color: #111111;
+    background-color: #fca326;
+    cursor: pointer;
+
+    &.hide {
+        opacity: 0;
+    }
+
+    .fa {
+        margin-right: 0.5em;
+    }
+}
