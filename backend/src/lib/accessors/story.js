@@ -286,7 +286,7 @@ module.exports = _.create(ExternalData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo(event, user, subscription)) {
+        if (ExternalData.isRelevantTo(event, user, subscription)) {
             if (event.current.published && event.current.ready) {
                 return true;
             }

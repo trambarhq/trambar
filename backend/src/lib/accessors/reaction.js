@@ -246,7 +246,7 @@ module.exports = _.create(ExternalData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo(event, user, subscription)) {
+        if (ExternalData.isRelevantTo(event, user, subscription)) {
             // reactions are relevant to all user even before they're published
             // that's used to show someone is commenting
             return true;

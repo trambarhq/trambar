@@ -181,7 +181,7 @@ module.exports = _.create(LiveData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo(event, user, subscription)) {
+        if (LiveData.isRelevantTo(event, user, subscription)) {
             if (event.current.target_user_id === user.id) {
                 return true;
             }
