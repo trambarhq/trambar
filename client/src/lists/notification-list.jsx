@@ -15,6 +15,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var SmartList = require('widgets/smart-list');
 var NotificationView = require('views/notification-view');
+var NewItemsAlert = require('widgets/new-items-alert');
 
 require('./notification-list.scss');
 
@@ -22,6 +23,7 @@ module.exports = Relaks.createClass({
     displayName: 'NotificationList',
     propTypes: {
         notifications: PropTypes.arrayOf(PropTypes.object),
+        selectedNotificationId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -44,11 +46,15 @@ module.exports = Relaks.createClass({
         var props = {
             users: null,
 
+            selectedNotificationId: this.props.selectedNotificationId,
             notifications: this.props.notifications,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onHiddenNotifications: this.props.onHiddenNotifications,
+            onTopNotificationChange: this.props.onTopNotificationChange,
         };
         meanwhile.show(<NotificationListSync {...props} />, 250);
         return db.start().then((userId) => {
@@ -77,11 +83,24 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     propTypes: {
         notifications: PropTypes.arrayOf(PropTypes.object),
         users: PropTypes.arrayOf(PropTypes.object),
+        selectedNotificationId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            hiddenNotificationIds: [],
+            selectedNotificationId: null,
+        };
     },
 
     /**
@@ -91,19 +110,87 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var notifications = sortNotifications(this.props.notifications);
+        var selectedNotificationId = this.state.selectedNotificationId || this.props.selectedNotificationId;
         var smartListProps = {
             items: notifications,
             behind: 10,
             ahead: 50,
+            anchor: (selectedNotificationId) ? `notification-${selectedNotificationId}` : undefined,
+            offset: 10,
 
             onIdentity: this.handleNotificationIdentity,
             onRender: this.handleNotificationRender,
+            onAnchorChange: this.handleNotificationAnchorChange,
+            onBeforeAnchor: this.handleNotificationBeforeAnchor,
         };
         return (
             <div className="notification-list">
                 <SmartList {...smartListProps} />
+                {this.renderNewNotificationAlert()}
             </div>
         );
+    },
+
+    /**
+     * Render alert indicating there're new stories hidden up top
+     *
+     * @return {ReactElement}
+     */
+    renderNewNotificationAlert: function() {
+        var t = this.props.locale.translate;
+        var count = _.size(this.state.hiddenNotificationIds);
+        var show = (count > 0);
+        if (count) {
+            this.previousHiddenNotificationCount = count;
+        } else {
+            // show the previous count as the alert transitions out
+            count = this.previousHiddenNotificationCount || 0;
+        }
+        var props = {
+            show: show,
+            onClick: this.handleNewNotificationAlertClick,
+        };
+        return (
+            <NewItemsAlert {...props}>
+                {t('alert-$count-new-notifications', count)}
+            </NewItemsAlert>
+        );
+    },
+
+    /**
+     * Mark unread notification as seen after some time
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        if (prevProps.notifications !== this.props.notifications || prevState.hiddenNotificationIds !== this.state.hiddenNotificationIds) {
+            // need a small delay here, since hiddenNotificationIds isn't updated
+            // until the SmartList's componentDidUpdate() is called
+            setTimeout(() => {
+                var unread = _.filter(this.props.notifications, (notification) => {
+                    if (!notification.seen) {
+                        if (!_.includes(this.state.hiddenNotificationIds, notification.id)) {
+                            return true;
+                        }
+                    }
+                });
+                if (!_.isEmpty(unread)) {
+                    var delay = Math.min(10, unread.length * 2);
+                    clearTimeout(this.markAsSeenTimeout);
+                    this.markAsSeenTimeout = setTimeout(() => {
+                        this.markAsSeen(unread);
+                    }, delay * 1000);
+                }
+            }, 50);
+        }
+    },
+
+    /**
+     * Clear timeout on unmount
+     */
+    componentWillUnmount: function() {
+        clearTimeout(this.markAsSeenTimeout);
     },
 
     /**
@@ -161,32 +248,6 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Mark unread notification as seen after some time
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (prevProps.notifications !== this.props.notifications) {
-            var unread = _.filter(this.props.notifications, { seen: false });
-            if (!_.isEmpty(unread)) {
-                var delay = Math.min(10, unread.length * 2);
-                clearTimeout(this.markAsSeenTimeout);
-                this.markAsSeenTimeout = setTimeout(() => {
-                    this.markAsSeen(unread);
-                }, delay * 1000);
-            }
-        }
-    },
-
-    /**
-     * Clear timeout on unmount
-     */
-    componentWillUnmount: function() {
-        clearTimeout(this.markAsSeenTimeout);
-    },
-
-    /**
      * Called when user clicks on a notification
      *
      * @param  {Object} evt
@@ -196,7 +257,42 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         if (!notification.seen) {
             this.markAsSeen([ notification ]);
         }
-    }
+    },
+
+    /**
+     * Called when a different notification is shown at the top of the viewport
+     *
+     * @return {Object}
+     */
+    handleNotificationAnchorChange: function(evt) {
+        var notificationId = _.get(evt.item, 'id');
+        if (!notificationId || _.includes(this.state.hiddenNotificationIds, notificationId)) {
+            this.setState({ hiddenNotificationIds: [] });
+        }
+    },
+
+    /**
+     * Called when SmartList notice new items were rendered off screen
+     *
+     * @param  {Object} evt
+     */
+    handleNotificationBeforeAnchor: function(evt) {
+        var notificationIds = _.map(evt.items, 'id');
+        var hiddenNotificationIds = _.union(notificationIds, this.state.hiddenNotificationIds);
+        this.setState({ hiddenNotificationIds });
+    },
+
+    /**
+     * Called when user clicks on new notification alert
+     *
+     * @param  {Event} evt
+     */
+    handleNewNotificationAlertClick: function(evt) {
+        this.setState({
+            hiddenNotificationIds: [],
+            selectedNotificationId: _.first(this.state.hiddenNotificationIds),
+        });
+    },
 });
 
 var sortNotifications = Memoize(function(notifications) {

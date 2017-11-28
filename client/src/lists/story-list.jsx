@@ -17,6 +17,7 @@ var UpdateCheck = require('mixins/update-check');
 var SmartList = require('widgets/smart-list');
 var StoryView = require('views/story-view');
 var StoryEditor = require('editors/story-editor');
+var NewItemsAlert = require('widgets/new-items-alert');
 
 require('./story-list.scss');
 
@@ -35,9 +36,6 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onHiddenStories: PropTypes.func,
-        onTopStoryChange: PropTypes.func,
     },
 
     getDefaultProps: function() {
@@ -78,9 +76,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onHiddenStories: this.props.onHiddenStories,
-            onTopStoryChange: this.props.onTopStoryChange,
         };
         meanwhile.show(<StoryListSync {...props} />, 250);
         return db.start().then((userId) => {
@@ -213,9 +208,37 @@ var StoryListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
 
-        onHiddenStories: PropTypes.func,
-        onTopStoryChange: PropTypes.func,
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            hiddenStoryIds: [],
+            selectedStoryId: null,
+        };
+    },
+
+    /**
+     * Make sure hiddenStoryIds contain valid ids
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.stories !== nextProps.stories) {
+            if (!_.isEmpty(this.state.hiddenStoryIds)) {
+                var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
+                    return _.some(nextProps.stories, { id });
+                });
+                this.setState({ hiddenStoryIds });
+            }
+        }
+        if (this.props.route !== nextProps.route) {
+            this.setState({ selectedStoryId: null });
+        }
     },
 
     /**
@@ -225,7 +248,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var stories = sortStories(this.props.stories, this.props.pendingStories, this.props.draftStories, this.props.currentUser, this.props.showEditors);
-        var anchorId = this.props.selectedStoryId;
+        var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
         var smartListProps = {
             items: stories,
             offset: 20,
@@ -238,7 +261,38 @@ var StoryListSync = module.exports.Sync = React.createClass({
             onAnchorChange: this.handleStoryAnchorChange,
             onBeforeAnchor: this.handleStoryBeforeAnchor,
         };
-        return <SmartList {...smartListProps} />
+        return (
+            <div className="story-list">
+                <SmartList {...smartListProps} />
+                {this.renderNewStoryAlert()}
+            </div>
+        );
+    },
+
+    /**
+     * Render alert indicating there're new stories hidden up top
+     *
+     * @return {ReactElement}
+     */
+    renderNewStoryAlert: function() {
+        var t = this.props.locale.translate;
+        var count = _.size(this.state.hiddenStoryIds);
+        var show = (count > 0);
+        if (count) {
+            this.previousHiddenStoryCount = count;
+        } else {
+            // show the previous count as the alert transitions out
+            count = this.previousHiddenStoryCount || 0;
+        }
+        var props = {
+            show: show,
+            onClick: this.handleNewStoryAlertClick,
+        };
+        return (
+            <NewItemsAlert {...props}>
+                {t('alert-$count-new-stories', count)}
+            </NewItemsAlert>
+        );
     },
 
     /**
@@ -335,29 +389,41 @@ var StoryListSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Called when a different story is positioned at the top of the viewport
+     *
+     * @param  {Object} evt
+     */
     handleStoryAnchorChange: function(evt) {
-        if (this.props.onTopStoryChange) {
-            this.props.onTopStoryChange({
-                type: 'topitemchange',
-                target: this,
-                story: evt.item,
-            });
+        var storyId = _.get(evt.item, 'id');
+        if (!storyId || _.includes(this.state.hiddenStoryIds, storyId)) {
+            // clear the whole list as soon as one of them come into view
+            // or if we've reach the top (where the story might be null)
+            this.setState({ hiddenStoryIds: [] });
         }
     },
 
     /**
-     * Called when SmartList notice new items were rendered out of view
+     * Called when SmartList notice new items were rendered off screen
      *
      * @param  {Object} evt
      */
     handleStoryBeforeAnchor: function(evt) {
-        if (this.props.onHiddenStories) {
-            this.props.onHiddenStories({
-                type: 'hiddenitems',
-                target: this,
-                stories: evt.items,
-            });
-        }
+        var storyIds = _.map(evt.items, 'id');
+        var hiddenStoryIds = _.union(storyIds, this.state.hiddenStoryIds);
+        this.setState({ hiddenStoryIds });
+    },
+
+    /**
+     * Called when user clicks on new story alert
+     *
+     * @param  {Event} evt
+     */
+    handleNewStoryAlertClick: function(evt) {
+        this.setState({
+            hiddenStoryIds: [],
+            selectedStoryId: _.first(this.state.hiddenStoryIds),
+        });
     },
 });
 

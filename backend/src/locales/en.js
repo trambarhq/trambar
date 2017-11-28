@@ -11,6 +11,16 @@ module.exports = function(languageCode) {
         'action-view-linkedin-page': 'View LinkedIn page',
         'action-view-stackoverflow-page': 'View Stack Overflow Page',
 
+        'alert-$count-new-bookmarks': (count) => {
+            return (count === 1) ? `1 new bookmark` : `${count} new bookmarks`;
+        },
+        'alert-$count-new-notifications': (count) => {
+            return (count === 1) ? `1 new notification` : `${count} new notifications`;
+        },
+        'alert-$count-new-stories': (count) => {
+            return (count === 1) ? `1 new story` : `${count} new stories`;
+        },
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Accept',
@@ -106,10 +116,6 @@ module.exports = function(languageCode) {
         'membership-request-proceed': 'Proceed',
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
-
-        'news-page-$count-new-stories': (count) => {
-            return (count === 1) ? `1 new story` : `${count} new stories`;
-        },
 
         'notification-option-assignment': 'When you are assigned to an issue',
         'notification-option-bookmark': 'When someone sends you a bookmark',

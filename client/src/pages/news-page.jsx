@@ -15,7 +15,6 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryList = require('lists/story-list');
-var NewItemsAlert = require('widgets/new-items-alert');
 
 require('./news-page.scss');
 
@@ -262,18 +261,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            hiddenStoryIds: [],
-            selectedStoryId: null,
-        };
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -282,28 +269,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="news-page">
                 {this.renderList()}
-                {this.renderNewStoryAlert()}
             </div>
         );
-    },
-
-    /**
-     * Make sure hiddenStoryIds contain valid ids
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.stories !== nextProps.stories) {
-            if (!_.isEmpty(this.state.hiddenStoryIds)) {
-                var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
-                    return _.some(nextProps.stories, { id });
-                });
-                this.setState({ hiddenStoryIds });
-            }
-        }
-        if (this.props.route !== nextProps.route) {
-            this.setState({ selectedStoryId: null });
-        }
     },
 
     /**
@@ -318,80 +285,14 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
-            selectedStoryId: this.state.selectedStoryId || this.props.route.parameters.story,
+            selectedStoryId: this.props.route.parameters.story,
 
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onHiddenStories: this.handleHiddenStories,
-            onTopStoryChange: this.handleTopStoryChange,
         };
         return <StoryList {...listProps} />
-    },
-
-    /**
-     * Render alert indicating there're new stories hidden up top
-     *
-     * @return {ReactElement}
-     */
-    renderNewStoryAlert: function() {
-        var t = this.props.locale.translate;
-        var count = _.size(this.state.hiddenStoryIds);
-        var show = (count > 0);
-        if (count) {
-            this.previousHiddenStoryCount = count;
-        } else {
-            // show the previous count as the alert transitions out
-            count = this.previousHiddenStoryCount || 0;
-        }
-        var props = {
-            show: show,
-            onClick: this.handleNewStoryAlertClick,
-        };
-        return (
-            <NewItemsAlert {...props}>
-                {t('news-page-$count-new-stories', count)}
-            </NewItemsAlert>
-        );
-    },
-
-    /**
-     * Called when stories are rendered off screen
-     *
-     * @param  {Object} evt
-     */
-    handleHiddenStories: function(evt) {
-        var storyIds = _.map(evt.stories, 'id');
-        var hiddenStoryIds = _.union(storyIds, this.state.hiddenStoryIds);
-        this.setState({ hiddenStoryIds });
-    },
-
-    /**
-     * Called when a different story sits at the top of the list
-     *
-     * @return {Object}
-     */
-    handleTopStoryChange: function(evt) {
-        var storyId = _.get(evt.story, 'id');
-        if (!storyId || _.includes(this.state.hiddenStoryIds, storyId)) {
-            // clear the whole list as soon as one of them come into view
-            // or if we've reach the top (where the story might be null)
-            this.setState({ hiddenStoryIds: [] });
-        }
-    },
-
-    /**
-     * Called when user clicks on new story alert
-     *
-     * @param  {Event} evt
-     */
-    handleNewStoryAlertClick: function(evt) {
-        this.setState({
-            hiddenStoryIds: [],
-            selectedStoryId: _.first(this.state.hiddenStoryIds),
-        });
     },
 });
