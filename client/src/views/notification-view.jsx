@@ -120,11 +120,11 @@ module.exports = React.createClass({
             case 'issue':
             case 'vote':
             case 'task-completion':
+            case 'coauthor':
             case 'note':
             case 'assignment':
             case 'push':
             case 'merge':
-            case 'task-list':
             case 'survey':
             case 'issue':
                 params.story = notification.story_id;
@@ -172,6 +172,8 @@ module.exports = React.createClass({
                 return t('notification-$user-voted-in-your-survey', name);
             case 'task-completion':
                 return t('notification-$user-completed-task', name);
+            case 'coauthor':
+                return t('notification-$user-added-you-as-coauthor', name);
             case 'note':
                 return t('notification-$user-posted-a-note-about-your-$story', name, notification.details.story_type);
             case 'assignment':
@@ -180,8 +182,6 @@ module.exports = React.createClass({
                 return t('notification-$user-pushed-code-to-$branch', name, notification.details.branch);
             case 'merge':
                 return t('notification-$user-merged-code-to-$branch', name, notification.details.branch);
-            case 'task-list':
-                return t('notification-$user-added-you-to-task-list', name);
             case 'survey':
                 return t('notification-$user-posted-a-survey', name);
             case 'bookmark':
@@ -208,7 +208,7 @@ module.exports = React.createClass({
             case 'assignment': return 'hand-o-right';
             case 'push': 'cubes';
             case 'merge': 'cubes';
-            case 'task-list': return 'list-ol';
+            case 'coauthor': return '?';
             case 'survey': return 'list-url';
             case 'bookmark': return 'bookmark';
             case 'join_request': return 'user-circle';

@@ -16,34 +16,43 @@ function format(schema, user, notification, lang) {
 }
 
 function getNotificationText(user, notification, lang) {
-    var name = getLocalizedName(lang, user);
+    var t = function() {
+        var args = _.concat(lang, arguments);
+        return getLocalizedText.apply(null, args);
+    };
+    var n = function() {
+        var args = _.concat(lang, arguments);
+        return getLocalizedName.apply(null, args);
+    };
+    var name = n(user);
+    console.log(notification);
     switch (notification.type) {
         case 'like':
-            return getLocalizedText(lang, 'notification-$user-likes-your-$story', name, notification.details.story_type);
+            return t('notification-$user-likes-your-$story', name, notification.details.story_type);
         case 'comment':
-            return getLocalizedText(lang, 'notification-$user-commented-on-your-$story', name, notification.details.story_type);
+            return t('notification-$user-commented-on-your-$story', name, notification.details.story_type);
         case 'issue':
-            return getLocalizedText(lang, 'notification-$user-opened-an-issue', name);
+            return t('notification-$user-opened-an-issue', name);
         case 'vote':
-            return getLocalizedText(lang, 'notification-$user-voted-in-your-survey', name);
+            return t('notification-$user-voted-in-your-survey', name);
         case 'task-completion':
-            return getLocalizedText(lang, 'notification-$user-completed-task', name);
+            return t('notification-$user-completed-task', name);
         case 'note':
-            return getLocalizedText(lang, 'notification-$user-posted-a-note-about-your-$story', name, notification.details.story_type);
+            return t('notification-$user-posted-a-note-about-your-$story', name, notification.details.story_type);
         case 'assignment':
-            return getLocalizedText(lang, 'notification-$user-is-assigned-to-your-issue', name);
+            return t('notification-$user-is-assigned-to-your-issue', name);
         case 'push':
-            return getLocalizedText(lang, 'notification-$user-pushed-code-to-$branch', name, notification.details.branch);
+            return t('notification-$user-pushed-code-to-$branch', name, notification.details.branch);
         case 'merge':
-            return getLocalizedText(lang, 'notification-$user-merged-code-to-$branch', name, notification.details.branch);
-        case 'task-list':
-            return getLocalizedText(lang, 'notification-$user-added-you-to-task-list', name);
+            return t('notification-$user-merged-code-to-$branch', name, notification.details.branch);
+        case 'coauthor':
+            return t('notification-$user-added-you-as-coauthor', name);
         case 'survey':
-            return getLocalizedText(lang, 'notification-$user-posted-a-survey', name);
+            return t('notification-$user-posted-a-survey', name);
         case 'bookmark':
-            return getLocalizedText(lang, 'notification-$user-sent-bookmark-to-$story', name, notification.details.story_type);
+            return t('notification-$user-sent-bookmark-to-$story', name, notification.details.story_type);
         case 'join_request':
-            return getLocalizedText(lang, 'notification-$user-requested-to-join', name);
+            return t('notification-$user-requested-to-join', name);
     }
 }
 

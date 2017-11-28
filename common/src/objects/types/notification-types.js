@@ -3,8 +3,8 @@ module.exports = exports = [
     'comment',
     'task-completion',
     'vote',
+    'coauthor',
     'bookmark',
-    'task-list',
     'note',
     'assignment',
     'issue',
@@ -12,7 +12,6 @@ module.exports = exports = [
     'merge',
     'survey',
     'join-request',
-    'coauthor',
 ];
 
 exports.admin = [

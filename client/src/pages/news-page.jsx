@@ -183,7 +183,7 @@ module.exports = Relaks.createClass({
                             // itself
                             var criteria = { id: params.story };
                             return db.findOne({ table: 'story', criteria }).then((story) => {
-                                if (story) {
+                                if (story && story.ptime) {
                                     return this.props.route.replace(require('pages/news-page'), {
                                         date: Moment(story.ptime).format('YYYY-MM-DD'),
                                         story: params.story,

@@ -215,81 +215,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        return (
-            <div className="story-list">
-                {this.renderEditors()}
-                {this.renderStories()}
-            </div>
-        );
-    },
-
-    /**
-     * Render editors for new drafts at the top of the page
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderEditors: function() {
-        if (!this.props.showEditors) {
-            return null;
-        }
-        var newDrafts = _.filter(this.props.draftStories, (story) => {
-            return !story.published_version_id;
-        });
-        newDrafts = sortStoryDrafts(newDrafts, this.props.currentUser);
-
-        // see if the current user has a draft
-        var currentUserDraft = _.find(newDrafts, (story) => {
-            if (story.user_ids[0] === this.props.currentUser.id) {
-                return true;
-            }
-        });
-        if (!currentUserDraft) {
-            newDrafts = _.concat(null, newDrafts);
-        }
-        return _.map(newDrafts, this.renderEditor);
-    },
-
-    /**
-     * Render editor for story
-     *
-     * @param  {Story} story
-     * @param  {Number} index
-     *
-     * @return {ReactElement}
-     */
-    renderEditor: function(story, index) {
-        // always use 0 as the key for the top story, so we don't lose focus
-        // when the new story acquires an id after being saved automatically
-        var key = (index === 0) ? 0 : story.id;
-        var authors = findAuthors(this.props.draftAuthors, story);
-        var recommendations = findRecommendations(this.props.recommendations, story);
-        var recipients = findRecipients(this.props.recipients, recommendations);
-        if (!story) {
-            authors = array(this.props.currentUser);
-        }
-        var editorProps = {
-            story,
-            authors,
-            recommendations,
-            recipients,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            key,
-        };
-        return <StoryEditor {...editorProps}/>
-    },
-
-    /**
-     * Render stories
-     *
-     * @return {ReactElement}
-     */
-    renderStories: function() {
-        var stories = sortStories(this.props.stories, this.props.pendingStories);
+        var stories = sortStories(this.props.stories, this.props.pendingStories, this.props.draftStories, this.props.currentUser, this.props.showEditors);
         var anchorId = this.props.anchorStoryId;
         var smartListProps = {
             items: stories,
@@ -303,34 +229,69 @@ var StoryListSync = module.exports.Sync = React.createClass({
             onAnchorChange: this.handleStoryAnchorChange,
         };
         return <SmartList {...smartListProps} />
+
+
+        return (
+            <div className="story-list">
+            </div>
+        );
     },
 
+    /**
+     * Called when SmartList wants an item's id
+     *
+     * @param  {Object} evt
+     *
+     * @return {String}
+     */
     handleStoryIdentity: function(evt) {
+        if (this.props.showEditors) {
+            // use a fixed id for the first editor, so we don't lose focus
+            // when the new story acquires an id after being saved automatically
+            if (evt.currentIndex === 0) {
+                return 'story-top';
+            }
+        }
         return `story-${evt.item.id}`;
     },
 
+    /**
+     * Called when SmartList wants to render an item
+     *
+     * @param  {Object} evt
+     *
+     * @return {ReactElement}
+     */
     handleStoryRender: function(evt) {
         var story = evt.item;
         // see if it's being editted
-        var draft = _.find(this.props.draftStories, { published_version_id: story.id });
-        if (draft) {
-            return this.renderEditor(draft);
+        var renderEditor = false;
+        if (story) {
+            if (!story.published) {
+                renderEditor = true;
+            } else {
+                var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
+                if (tempCopy) {
+                    // edit the temporary copy
+                    story = tempCopy;
+                    renderEditor = true;
+                }
+            }
+        } else {
+            renderEditor = true;
         }
-        if (evt.needed) {
-            var reactions = findReactions(this.props.reactions, story);
-            var authors = findAuthors(this.props.authors, story);
-            var respondents = findRespondents(this.props.respondents, reactions);
+        if (renderEditor) {
+            var authors = findAuthors(this.props.draftAuthors, story);
             var recommendations = findRecommendations(this.props.recommendations, story);
             var recipients = findRecipients(this.props.recipients, recommendations);
-            var repo = findRepo(this.props.repos, story);
-            var storyProps = {
+            if (!story) {
+                authors = array(this.props.currentUser);
+            }
+            var editorProps = {
                 story,
-                reactions,
                 authors,
-                respondents,
                 recommendations,
                 recipients,
-                repo,
                 currentUser: this.props.currentUser,
                 database: this.props.database,
                 payloads: this.props.payloads,
@@ -338,10 +299,35 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
-            return <StoryView {...storyProps} />
+            return <StoryEditor {...editorProps}/>
         } else {
-            var height = evt.previousHeight || evt.estimatedHeight || 100;
-            return <div className="story-view" style={{ height }} />
+            if (evt.needed) {
+                var reactions = findReactions(this.props.reactions, story);
+                var authors = findAuthors(this.props.authors, story);
+                var respondents = findRespondents(this.props.respondents, reactions);
+                var recommendations = findRecommendations(this.props.recommendations, story);
+                var recipients = findRecipients(this.props.recipients, recommendations);
+                var repo = findRepo(this.props.repos, story);
+                var storyProps = {
+                    story,
+                    reactions,
+                    authors,
+                    respondents,
+                    recommendations,
+                    recipients,
+                    repo,
+                    currentUser: this.props.currentUser,
+                    database: this.props.database,
+                    payloads: this.props.payloads,
+                    route: this.props.route,
+                    locale: this.props.locale,
+                    theme: this.props.theme,
+                };
+                return <StoryView {...storyProps} />
+            } else {
+                var height = evt.previousHeight || evt.estimatedHeight || 100;
+                return <div className="story-view" style={{ height }} />
+            }
         }
     },
 });
@@ -350,7 +336,7 @@ var array = Memoize(function(object) {
     return [ object ];
 });
 
-var sortStories = Memoize(function(stories, pendingStories) {
+var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser, showEditors) {
     if (!_.isEmpty(pendingStories)) {
         stories = _.slice(stories);
         _.each(pendingStories, (story) => {
@@ -359,20 +345,37 @@ var sortStories = Memoize(function(stories, pendingStories) {
             }
         });
     }
-    return _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
+    stories = _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
+
+    if (showEditors) {
+        // add new drafts (drafts includes published stories being edited)
+        var newDrafts = _.filter(drafts, (story) => {
+            return !story.published_version_id;
+        });
+        // current user's own drafts are listed first
+        var own = function(story) {
+            return story.user_ids[0] === currentUser.id;
+        };
+        newDrafts = _.orderBy(newDrafts, [ own, 'id' ], [ 'desc', 'desc' ]);
+
+        // see if the current user has a draft
+        var currentUserDraft = _.find(newDrafts, (story) => {
+            if (story.user_ids[0] === currentUser.id) {
+                return true;
+            }
+        });
+        if (!currentUserDraft) {
+            // add a blank
+            newDrafts = _.concat(null, newDrafts);
+        }
+        stories = _.concat(newDrafts, stories);
+    }
+    return stories;
 });
 
 var getStoryTime = function(story) {
     return story.btime || story.ptime;
 };
-
-var sortStoryDrafts = Memoize(function(stories, currentUser) {
-    // current user's own stories are listed first
-    var ownStory = function(story) {
-        return story.user_ids[0] === currentUser.id;
-    };
-    return _.orderBy(stories, [ ownStory, 'id' ], [ 'desc', 'desc' ]);
-});
 
 var findReactions = Memoize(function(reactions, story) {
     if (story) {
