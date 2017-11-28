@@ -277,6 +277,27 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            if (event.current.published && event.current.ready) {
+                return true;
+            }
+            if (_.includes(event.current.user_ids, user.id)) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
      * Throw an exception if modifications aren't permitted
      *
      * @param  {Object} storyReceived

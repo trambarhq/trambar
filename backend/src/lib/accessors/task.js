@@ -70,7 +70,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted' ];
+            var propNames = [ 'user_id', 'deleted' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
@@ -151,5 +151,27 @@ module.exports = _.create(Data, {
                 return taskReceived;
             });
         });
+    },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            if (event.current.user_id) {
+                if (event.current.user_id === user.id) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+        return false;
     },
 });

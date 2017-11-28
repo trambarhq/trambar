@@ -152,5 +152,23 @@ module.exports = _.create(Data, {
             });
             return objects;
         });
-    }
+    },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            if (event.current.target_user_id === user.id) {
+                return true;
+            }
+        }
+        return false;
+    },
 });

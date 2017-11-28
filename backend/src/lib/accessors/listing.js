@@ -171,8 +171,32 @@ module.exports = _.create(LiveData, {
         });
     },
 
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            if (event.current.target_user_id === user.id) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
+     * Move stories from candidate list into actual list
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} row
+     */
     finalize: function(db, schema, row) {
-        // move stories from candidate list into actual list
         if (chooseStories(row)) {
             // save the results
             setTimeout(() => {

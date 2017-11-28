@@ -150,10 +150,27 @@ module.exports = _.create(Data, {
             return serverReceived;
         });
     },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        // not used in client app
+        if (subscription.schema === '*' || subscription.schema === event.schema) {
+            return true;
+        }
+        return false;
+    },
 });
 
 var sensitiveSettings = [
     'api.access_token',
     'api.refresh_token',
-    'oauth.clientSecret',
+    'oauth.client_secret',
 ];

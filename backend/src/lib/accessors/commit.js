@@ -79,4 +79,18 @@ module.exports = _.create(ExternalData, {
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        // objects aren't currently used on client-side
+        return false;
+    },
 });

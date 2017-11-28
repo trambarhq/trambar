@@ -235,4 +235,22 @@ module.exports = _.create(ExternalData, {
             return objects;
         });
     },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            // reactions are relevant to all user even before they're published
+            // that's used to show someone is commenting
+            return true;
+        }
+        return false;
+    },
 });

@@ -72,7 +72,7 @@ module.exports = _.create(LiveData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'dirty', 'type' ];
+            var propNames = [ 'deleted', 'dirty', 'type', 'filters' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
@@ -145,7 +145,36 @@ module.exports = _.create(LiveData, {
             });
             return objects;
         });
-    }
+    },
+
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            switch (event.current.type) {
+                case 'story-popularity':
+                    // used for ranking stories only
+                    break;
+                case 'daily-notifications':
+                    // TODO: remove this check once filters have been added to the event object
+                    if (event.current.filters) {
+                        if (event.current.filters.target_user_id !== user.id) {
+                            break;
+                        }
+                    }
+                default:
+                    return true;
+            }
+        }
+        return false;
+    },
 });
 
 /**

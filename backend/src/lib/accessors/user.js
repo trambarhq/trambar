@@ -216,6 +216,34 @@ module.exports = _.create(ExternalData, {
         });
     },
 
+    /**
+     * See if a database change event is relevant to a given user
+     *
+     * @param  {Object} event
+     * @param  {User} user
+     * @param  {Subscription} subscription
+     *
+     * @return {Boolean}
+     */
+    isRelevantTo: function(event, user, subscription) {
+        if (Data.isRelevantTo(event, user, subscription)) {
+            var columns = _.keys(event.diff);
+            var publicColumns = _.without(columns, 'settings');
+            if (!_.isEmpty(publicColumns)) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
+     * Return true if user can join project
+     *
+     * @param  {User} user
+     * @param  {Project} project
+     *
+     * @return {Boolean}
+     */
     canJoin: function(user, project) {
         if (!project) {
             return false;
@@ -227,6 +255,14 @@ module.exports = _.create(ExternalData, {
         }
     },
 
+    /**
+     * Return true if user would be accepted into project automatically
+     *
+     * @param  {User} user
+     * @param  {Project} project
+     *
+     * @return {Boolean}
+     */
     canJoinAutomatically: function(user, project) {
         if (_.includes(project.user_ids, user.id)) {
             // user is already a member
