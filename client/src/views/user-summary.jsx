@@ -20,7 +20,7 @@ module.exports = React.createClass({
     displayName: 'UserSummary',
     mixins: [ UpdateCheck ],
     propTypes: {
-        user: PropTypes.object.isRequired,
+        user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         cornerPopUp: PropTypes.element,
@@ -32,10 +32,11 @@ module.exports = React.createClass({
     },
 
     getUrl: function(story) {
+        var params = this.props.route.parameters;
         var url = this.props.route.find(require('pages/person-page'), {
-            schema: this.props.route.parameters.schema,
+            schema: params.schema,
             user: this.props.user.id,
-            storyId: (story) ? story.id : 0,
+            story: (story) ? story.id : 0,
         });
         return url;
     },
@@ -62,6 +63,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render the user's profile image
+     *
+     * @return {ReactElement}
+     */
     renderProfileImage: function() {
         var props = {
             user: this.props.user,
@@ -71,6 +77,11 @@ module.exports = React.createClass({
         return <ProfileImage {...props} />;
     },
 
+    /**
+     * Render the user's roles
+     *
+     * @return {ReactElement}
+     */
     renderRoles: function() {
         var p = this.props.locale.pick;
         var names = _.map(this.props.roles, (role) => {
@@ -83,17 +94,27 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render name of user
+     *
+     * @return {ReactElement}
+     */
     renderName: function() {
-        var p = this.props.locale.pick;
         var user = this.props.user;
-        var name = p(user.details.name);
+        var p = this.props.locale.pick;
+        var name = (user) ? p(user.details.name) : '\u00a0';
         return <h2 className="name">{name}</h2>;
     },
 
+    /**
+     * Render username
+     *
+     * @return {ReactElement}
+     */
     renderTag: function() {
         var t = this.props.locale.translate;
         var user = this.props.user;
-        var tag = `@${user.username}`;
+        var tag = (user) ? `@${user.username}` : '\u00a0';
         return (
             <h3 className="tag" ref="tag" onClick={this.handleTagClick}>
                 {tag}
@@ -101,6 +122,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render the user's recent activities
+     *
+     * @return {ReactElement}
+     */
     renderRecentActivities: function() {
         var stories = _.slice(this.props.stories).reverse();
         // TODO: remove this once listing can be limited in length
@@ -112,10 +138,18 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render a brief description about a story
+     *
+     * @param  {Story} story
+     *
+     * @return {ReactElement}
+     */
     renderActivity: function(story) {
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var name = p(this.props.user.details.name);
+        var n = this.props.locale.name;
+        var user = this.props.user;
+        var name = n(_.get(user, 'details.name'), _.get(user, 'details.gender'));
         var text;
         switch (story.type) {
             case 'push':
@@ -168,6 +202,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render a "more..." link if there are stories
+     *
+     * @return {ReactElement|null}
+     */
     renderMoreLink: function() {
         if (_.isEmpty(this.props.stories)) {
             return null;
@@ -179,7 +218,13 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Call when user clicks on the user tag
+     *
+     * @param  {Event} evt
+     */
     handleTagClick: function(evt) {
+        // just select the text
         var range = document.createRange();
         range.selectNode(this.refs.tag);
         window.getSelection().removeAllRanges();

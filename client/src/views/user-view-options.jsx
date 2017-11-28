@@ -18,7 +18,7 @@ module.exports = React.createClass({
     propTypes: {
         inMenu: PropTypes.bool,
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
-        user: PropTypes.object.isRequired,
+        user: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -90,7 +90,7 @@ module.exports = React.createClass({
      */
     renderButtons: function(section) {
         var t = this.props.locale.translate;
-        var details = this.props.user.details;
+        var details = _.get(this.props.user, 'details', {});
         if (section === 'main') {
             var phoneProps = {
                 label: t('action-contact-by-phone'),

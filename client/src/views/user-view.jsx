@@ -20,9 +20,10 @@ module.exports = React.createClass({
     displayName: 'UserView',
     mixins: [ UpdateCheck ],
     propTypes: {
-        user: PropTypes.object.isRequired,
+        user: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
+        currentUser: PropTypes.object,
         dailyActivities: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,

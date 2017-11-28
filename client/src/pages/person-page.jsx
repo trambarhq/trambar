@@ -14,6 +14,7 @@ var UpdateCheck = require('mixins/update-check');
 
 // widgets
 var StoryList = require('lists/story-list');
+var UserView = require('views/user-view');
 
 require('./news-page.scss');
 
@@ -70,7 +71,7 @@ module.exports = Relaks.createClass({
                 query = { search: params.search };
             }
             if (params.story) {
-                hash = `#story-${params.story}`;
+                hash = `story-${params.story}`;
             }
             return { path, query, hash };
         },
@@ -110,6 +111,9 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             stories: null,
+            user: null,
+            roles: null,
+            dailyActivities: null,
             currentUser: null,
 
             database: this.props.database,
@@ -125,6 +129,40 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.currentUser = user;
+            meanwhile.show(<PersonPageSync {...props} />);
+        }).then(() => {
+            // load the selected user
+            var criteria = { id: params.user };
+            return db.findOne({ schema: 'global', table: 'user', criteria });
+        }).then((user) => {
+            props.user = user;
+            meanwhile.show(<PersonPageSync {...props} />);
+        }).then(() => {
+            // load roles
+            var criteria = {
+                id: props.user.role_ids
+            };
+            return db.find({ schema: 'global', table: 'role', criteria });
+        }).then((roles) => {
+            props.roles = roles;
+            meanwhile.show(<PersonPageSync {...props} />);
+        }).then(() => {
+            // load daily-activities statistics
+            var now = Moment();
+            var end = now.clone().endOf('month');
+            var start = now.clone().startOf('month').subtract(1, 'month');
+            var range = `[${start.toISOString()},${end.toISOString()}]`;
+            var criteria = {
+                type: 'daily-activities',
+                filters: {
+                    user_ids: [ props.user.id ],
+                    time_range: range,
+                },
+            };
+            return db.findOne({ table: 'statistics', criteria });
+        }).then((statistics) => {
+            props.dailyActivities = statistics;
+            console.log(statistics)
             meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             if (params.date || params.search) {
@@ -201,6 +239,9 @@ var PersonPageSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         stories: PropTypes.arrayOf(PropTypes.object),
+        user: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -218,9 +259,24 @@ var PersonPageSync = module.exports.Sync = React.createClass({
     render: function() {
         return (
             <div className="person-page">
+                {this.renderUserView()}
                 {this.renderList()}
             </div>
         );
+    },
+
+    renderUserView: function() {
+        var userProps = {
+            user: this.props.user,
+            roles: this.props.roles,
+            dailyActivities: this.props.dailyActivities,
+            currentUser: this.props.currentUser,
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <UserView {...userProps} />;
     },
 
     /**
@@ -232,6 +288,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             stories: this.props.stories,
             currentUser: this.props.currentUser,
+            anchorStoryId: this.props.route.parameters.story,
 
             database: this.props.database,
             payloads: this.props.payloads,

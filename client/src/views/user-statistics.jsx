@@ -19,7 +19,7 @@ require('./user-statistics.scss');
 module.exports = React.createClass({
     displayName: 'UserStatistics',
     propTypes: {
-        user: PropTypes.object.isRequired,
+        user: PropTypes.object,
         dailyActivities: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -35,9 +35,11 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         // use state from previous instance (unmounted due to on-demand rendering)
-        var previousState = previousStates[this.props.user.id];
-        if (previousState) {
-            return previousState;
+        if (this.props.user) {
+            var previousState = previousStates[this.props.user.id];
+            if (previousState) {
+                return previousState;
+            }
         }
         return {
             chartType: 'bar',
@@ -246,7 +248,9 @@ module.exports = React.createClass({
      */
     componentWillUnmount: function() {
         DateTracker.removeEventListener('change', this.handleDateChange);
-        previousStates[this.props.user.id] = this.state;
+        if (this.props.user) {
+            previousStates[this.props.user.id] = this.state;
+        }
     },
 
     /**
