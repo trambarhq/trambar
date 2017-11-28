@@ -19,6 +19,7 @@ var SmartList = require('widgets/smart-list');
 var BookmarkView = require('views/bookmark-view');
 var StoryView = require('views/story-view');
 var StoryEditor = require('editors/story-editor');
+var NewItemsAlert = require('widgets/new-items-alert');
 
 require('./bookmark-list.scss');
 
@@ -201,73 +202,62 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            hiddenStoryIds: [],
+            selectedStoryId: null,
+        };
+    },
+
+    /**
+     * Make sure hiddenStoryIds contain valid ids
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.stories !== nextProps.stories) {
+            if (!_.isEmpty(this.state.hiddenStoryIds)) {
+                var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
+                    return _.some(nextProps.stories, { id });
+                });
+                this.setState({ hiddenStoryIds });
+            }
+        }
+        if (this.props.route !== nextProps.route) {
+            this.setState({ selectedStoryId: null });
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render: function() {
         var bookmarks = sortBookmark(this.props.bookmarks);
-        var anchorId = this.props.selectedStoryId;
+        var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
         var smartListProps = {
             items: bookmarks,
-            offset: 20,
             behind: 2,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
+            offset: 20,
 
             onIdentity: this.handleBookmarkIdentity,
             onRender: this.handleBookmarkRender,
             onAnchorChange: this.handleBookmarkAnchorChange,
+            onBeforeAnchor: this.handleBookmarkBeforeAnchor,
         };
         return (
-            <div className="story-list">
+            <div className="bookmark-list">
                 <SmartList {...smartListProps} />
+                {this.renderNewStoryAlert()}
             </div>
         );
-    },
-
-    /**
-     * Return id of bookmark view in response to event triggered by SmartList
-     *
-     * @param  {Object} evt
-     *
-     * @return {String}
-     */
-    handleBookmarkIdentity: function(evt) {
-        return `story-${evt.item.story_id}`;
-    },
-
-    /**
-     * Render a bookmark
-     *
-     * @param  {Object} evt
-     *
-     * @return {ReactElement}
-     */
-    handleBookmarkRender: function(evt) {
-        if (evt.needed) {
-            var bookmark = evt.item;
-            var story = findStory(this.props.stories, bookmark);
-            var senders = findSenders(this.props.senders, bookmark);
-            var bookmarkProps = {
-                bookmark,
-                senders,
-                currentUser: this.props.currentUser,
-
-                database: this.props.database,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
-            };
-            return (
-                <BookmarkView {...bookmarkProps}>
-                    {this.renderStory(story)}
-                </BookmarkView>
-            );
-        } else {
-            var height = evt.previousHeight || evt.estimatedHeight || 100;
-            return <div className="bookmark-view" style={{ height }} />
-        }
     },
 
     /**
@@ -338,6 +328,113 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <StoryEditor {...editorProps}/>
+    },
+
+    /**
+     * Render alert indicating there're new stories hidden up top
+     *
+     * @return {ReactElement}
+     */
+    renderNewStoryAlert: function() {
+        var t = this.props.locale.translate;
+        var count = _.size(this.state.hiddenStoryIds);
+        var show = (count > 0);
+        if (count) {
+            this.previousHiddenStoryCount = count;
+        } else {
+            // show the previous count as the alert transitions out
+            count = this.previousHiddenStoryCount || 0;
+        }
+        var props = {
+            show: show,
+            onClick: this.handleNewBookmarkAlertClick,
+        };
+        return (
+            <NewItemsAlert {...props}>
+                {t('alert-$count-new-bookmarks', count)}
+            </NewItemsAlert>
+        );
+    },
+
+    /**
+     * Return id of bookmark view in response to event triggered by SmartList
+     *
+     * @param  {Object} evt
+     *
+     * @return {String}
+     */
+    handleBookmarkIdentity: function(evt) {
+        return `story-${evt.item.story_id}`;
+    },
+
+    /**
+     * Render a bookmark
+     *
+     * @param  {Object} evt
+     *
+     * @return {ReactElement}
+     */
+    handleBookmarkRender: function(evt) {
+        if (evt.needed) {
+            var bookmark = evt.item;
+            var story = findStory(this.props.stories, bookmark);
+            var senders = findSenders(this.props.senders, bookmark);
+            var bookmarkProps = {
+                bookmark,
+                senders,
+                currentUser: this.props.currentUser,
+
+                database: this.props.database,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return (
+                <BookmarkView {...bookmarkProps}>
+                    {this.renderStory(story)}
+                </BookmarkView>
+            );
+        } else {
+            var height = evt.previousHeight || evt.estimatedHeight || 100;
+            return <div className="bookmark-view" style={{ height }} />
+        }
+    },
+
+    /**
+     * Called when a different story is positioned at the top of the viewport
+     *
+     * @param  {Object} evt
+     */
+    handleBookmarkAnchorChange: function(evt) {
+        var storyId = _.get(evt.item, 'story_id');
+        if (!storyId || _.includes(this.state.hiddenStoryIds, storyId)) {
+            // clear the whole list as soon as one of them come into view
+            // or if we've reach the top (where the story might be null)
+            this.setState({ hiddenStoryIds: [] });
+        }
+    },
+
+    /**
+     * Called when SmartList notice new items were rendered off screen
+     *
+     * @param  {Object} evt
+     */
+    handleBookmarkBeforeAnchor: function(evt) {
+        var storyIds = _.map(evt.items, 'story_id');
+        var hiddenStoryIds = _.union(storyIds, this.state.hiddenStoryIds);
+        this.setState({ hiddenStoryIds });
+    },
+
+    /**
+     * Called when user clicks on new story alert
+     *
+     * @param  {Event} evt
+     */
+    handleNewBookmarkAlertClick: function(evt) {
+        this.setState({
+            hiddenStoryIds: [],
+            selectedStoryId: _.first(this.state.hiddenStoryIds),
+        });
     },
 });
 

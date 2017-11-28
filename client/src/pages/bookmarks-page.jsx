@@ -100,7 +100,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<BookmarksPageSync {...props} />, 250);
+        meanwhile.show(<BookmarksPageSync {...props} />, 1000);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
