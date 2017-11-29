@@ -153,8 +153,9 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
+        var updatingList = !_.isEmpty(this.itemNodes);
         var newItemIndices = this.scanItemNodes();
-        if (this.state.currentAnchor) {
+        if (this.state.currentAnchor && updatingList) {
             // see which new items are behind (i.e. above) the anchor element
             var ids = _.keys(this.itemNodes);
             var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
@@ -181,7 +182,7 @@ module.exports = React.createClass({
      * Find DOM nodes, record their heights, as well as maintaining the position
      * of the anchored element. Return indices new nodes
      *
-     * @return {Array<String>}
+     * @return {Array<Number>}
      */
     scanItemNodes: function() {
         var startIndex = this.startIndex;
