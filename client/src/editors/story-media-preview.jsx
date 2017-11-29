@@ -29,6 +29,7 @@ module.exports = React.createClass({
         cornerPopUp: PropTypes.element,
         selectedResourceIndex: PropTypes.number,
         options: PropTypes.object.isRequired,
+        showHints: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -158,10 +159,15 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var phraseIds = [
-            'story-drop-files-here',
-            'story-paste-image-here',
-        ];
+        var phraseIds;
+        if (process.env.PLATFORM !== 'mobile') {
+            if (this.props.showHints) {
+                phraseIds = [
+                    'story-drop-files-here',
+                    'story-paste-image-here',
+                ]
+            }
+        }
         var messages = _.map(phraseIds, (phraseId, index) => {
             var delay = 10 * index;
             return (

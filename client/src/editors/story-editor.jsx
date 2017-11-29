@@ -33,6 +33,7 @@ module.exports = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        showHints: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -295,6 +296,7 @@ module.exports = React.createClass({
             cornerPopUp: this.renderPopUpMenu('supplemental'),
             selectedResourceIndex: this.state.selectedResourceIndex,
             options: this.state.options,
+            showHints: this.props.showHints,
 
             database: this.props.database,
             payloads: this.props.payloads,
