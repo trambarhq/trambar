@@ -84,12 +84,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             bookmarks: null,
             currentUserId: null,
@@ -100,7 +102,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<BookmarksPageSync {...props} />, 1000);
+        meanwhile.show(<BookmarksPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};

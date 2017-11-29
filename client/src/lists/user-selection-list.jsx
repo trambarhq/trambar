@@ -35,10 +35,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var db = this.props.database.use({ by: this });
         var props = {
             users: null,
 
@@ -49,7 +46,7 @@ module.exports = Relaks.createClass({
             onSelect: this.props.onSelect,
             loading: true,
         };
-        meanwhile.show(<UserSelectionListSync {...props} />, 250);
+        meanwhile.show(<UserSelectionListSync {...props} />, 1000);
         return db.start().then((userId) => {
             // load users who aren't hidden
             var criteria = {

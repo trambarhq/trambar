@@ -361,9 +361,8 @@ module.exports = React.createClass({
      */
     removeReaction: function(reaction) {
         var route = this.props.route;
-        var server = route.parameters.server;
         var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var db = this.props.database.use({ schema, by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
     },
 

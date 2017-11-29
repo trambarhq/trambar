@@ -82,11 +82,13 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             projects: null,
             repos: null,
@@ -98,14 +100,14 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ProjectListPageSync {...props} />, 250);
+        meanwhile.show(<ProjectListPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load all projects
             var criteria = {};
             return db.find({ table: 'project', criteria });
         }).then((projects) => {
             props.projects = projects;
-            meanwhile.show(<ProjectListPageSync {...props} />);
+            return meanwhile.show(<ProjectListPageSync {...props} />);
         }).then(() => {
             // load repos
             var criteria = {
@@ -114,7 +116,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'repo', criteria });
         }).then((repos) => {
             props.repos = repos;
-            meanwhile.show(<ProjectListPageSync {...props} />);
+            return meanwhile.show(<ProjectListPageSync {...props} />);
         }).then(() => {
             // load members of projects
             var criteria = {
@@ -123,7 +125,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
-            meanwhile.show(<ProjectListPageSync {...props} />);
+            return meanwhile.show(<ProjectListPageSync {...props} />);
         }).then(() => {
             // load statistics of each project
             return DailyActivities.loadProjectStatistics(db, props.projects);

@@ -70,11 +70,13 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             roles: null,
             users: null,
@@ -84,14 +86,14 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RoleListPageSync {...props} />, 250);
+        meanwhile.show(<RoleListPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load all roles
             var criteria = {};
             return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
-            meanwhile.show(<RoleListPageSync {...props} />);
+            return meanwhile.show(<RoleListPageSync {...props} />);
         }).then(() => {
             var criteria = {
                 role_ids: _.flatten(_.map(props.roles, 'id')),

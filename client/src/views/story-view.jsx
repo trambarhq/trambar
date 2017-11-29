@@ -256,10 +256,8 @@ module.exports = React.createClass({
     saveStory: function(story) {
         this.cancelAutosave();
 
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, story);
         });
@@ -273,10 +271,8 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     removeStory: function(story) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.removeOne({ table: 'story' }, story);
     },
 
@@ -288,10 +284,8 @@ module.exports = React.createClass({
      * @return {Promise<Reaction>}
      */
     saveReaction: function(reaction) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
@@ -308,10 +302,8 @@ module.exports = React.createClass({
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
@@ -328,10 +320,8 @@ module.exports = React.createClass({
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.remove({ table: 'bookmark' }, bookmarks);
         });

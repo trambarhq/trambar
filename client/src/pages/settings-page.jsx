@@ -83,12 +83,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             currentUser: null,
             currentProject: null,
@@ -100,7 +102,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<SettingsPageSync {...props} />, 250);
+        meanwhile.show(<SettingsPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };
@@ -108,13 +110,13 @@ module.exports = Relaks.createClass({
         }).then((user) => {
             this.props.payloads.reattach('global', user);
             props.currentUser = user;
-            meanwhile.show(<SettingsPageSync {...props} />, 250);
+            return meanwhile.show(<SettingsPageSync {...props} />, 250);
         }).then(() => {
             var criteria = { name: params.schema };
             return db.findOne({ schema: 'global', table: 'project', criteria });
         }).then((project) => {
             props.currentProject = project;
-            meanwhile.show(<SettingsPageSync {...props} />, 250);
+            return meanwhile.show(<SettingsPageSync {...props} />, 250);
         }).then(() => {
             var criteria = {};
             return db.find({ schema: 'local', table: 'project_link', criteria });

@@ -103,12 +103,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             stories: null,
             user: null,
@@ -129,14 +131,14 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.currentUser = user;
-            meanwhile.show(<PersonPageSync {...props} />);
+            return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             // load the selected user
             var criteria = { id: params.user };
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.user = user;
-            meanwhile.show(<PersonPageSync {...props} />);
+            return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             // load roles
             var criteria = {
@@ -145,7 +147,7 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
-            meanwhile.show(<PersonPageSync {...props} />);
+            return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
             var now = Moment();
@@ -162,7 +164,7 @@ module.exports = Relaks.createClass({
             return db.findOne({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
-            meanwhile.show(<PersonPageSync {...props} />);
+            return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             if (params.date || params.search) {
                 // load story matching filters

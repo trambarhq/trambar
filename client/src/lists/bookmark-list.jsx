@@ -41,15 +41,15 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+    renderAsync: function(meanwhile, prevProps) {
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var defaultAuthors = array(this.props.currentUser);
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             stories: null,
             authors: defaultAuthors,
@@ -71,7 +71,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<BookmarkListSync {...props} />, 250);
+        meanwhile.show(<BookmarkListSync {...props} />, delay);
         return db.start().then((userId) => {
             // load stories
             var criteria = {}
@@ -86,14 +86,14 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.authors = users;
-            meanwhile.show(<BookmarkListSync {...props} />);
+            return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             var criteria = {};
             criteria.id = _.flatten(_.map(props.bookmarks, 'user_ids'));
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.senders = users;
-            meanwhile.show(<BookmarkListSync {...props} />);
+            return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // load reactions to stories
             var criteria = {};
@@ -101,7 +101,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
             props.reactions = reactions;
-            meanwhile.show(<BookmarkListSync {...props} />);
+            return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // load users of reactions
             var criteria = {};
@@ -109,7 +109,7 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;
-            meanwhile.show(<BookmarkListSync {...props} />);
+            return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             if (props.currentUser) {
                 // look for story drafts
@@ -122,7 +122,7 @@ module.exports = Relaks.createClass({
         }).then((stories) => {
             if (stories) {
                 props.draftStories = stories;
-                meanwhile.show(<BookmarkListSync {...props} />);
+                return meanwhile.show(<BookmarkListSync {...props} />);
             }
         }).then(() => {
             // load other authors also working on drafts
@@ -148,7 +148,7 @@ module.exports = Relaks.createClass({
             }
         }).then((recommendations) => {
             props.recommendations = recommendations;
-            meanwhile.show(<BookmarkListSync {...props} />);
+            return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // look for recipient of these bookmarks
             if (props.recommendations) {
@@ -159,7 +159,7 @@ module.exports = Relaks.createClass({
             }
         }).then((recipients) => {
             props.recipients = recipients;
-            meanwhile.show(<BookmarkListSync {...props} />);
+            return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // load repos from which the stories came
             var repoIds = _.uniq(_.filter(_.map(props.stories, 'repo_id')));

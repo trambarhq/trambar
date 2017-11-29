@@ -93,12 +93,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             system: null,
             user: null,
@@ -112,7 +114,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             payloads: this.props.payloads,
         };
-        meanwhile.show(<UserSummaryPageSync {...props} />, 250);
+        meanwhile.show(<UserSummaryPageSync {...props} />, delay);
         return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
@@ -126,14 +128,14 @@ module.exports = Relaks.createClass({
             }
         }).then((user) => {
             props.user = user;
-            meanwhile.show(<UserSummaryPageSync {...props} />);
+            return meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
             // load all roles
             var criteria = {};
             return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
-            meanwhile.show(<UserSummaryPageSync {...props} />);
+            return meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
             // load project if project id is provider (i.e. member summary)
             if (params.project) {
@@ -142,7 +144,7 @@ module.exports = Relaks.createClass({
             }
         }).then((project) => {
             props.project = project;
-            meanwhile.show(<UserSummaryPageSync {...props} />);
+            return meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
             // load statistics if project is specified (unless we're creating a
             // new member)

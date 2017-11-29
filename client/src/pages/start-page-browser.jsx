@@ -82,11 +82,13 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             currentUser: null,
             system: null,
@@ -108,7 +110,7 @@ module.exports = Relaks.createClass({
         if (!this.props.canAccessServer) {
             // start authorization process--will receive system description
             // and list of OAuth providers along with links
-            meanwhile.show(<StartPageSync {...props} />, 250);
+            meanwhile.show(<StartPageSync {...props} />, delay);
             return db.beginAuthorization('client').then((info) => {
                 props.system = info.system;
                 props.providers = info.providers;
@@ -118,7 +120,7 @@ module.exports = Relaks.createClass({
             // handle things normally after we've gained authorization
             //
             // keep showing what was there before until we've retrieved the
-            // system object
+            // system object (delay = undefined)
             meanwhile.show(<StartPageSync {...props} />);
             var currentUserId;
             return db.start().then((userId) => {
@@ -130,14 +132,14 @@ module.exports = Relaks.createClass({
                 return db.findOne({ table: 'system', criteria });
             }).then((system) => {
                 props.system = system;
-                meanwhile.show(<StartPageSync {...props} />, 250);
+                return meanwhile.show(<StartPageSync {...props} />, 250);
             }).then(() => {
                 // load projects
                 var criteria = {};
                 return db.find({ table: 'project', criteria });
             }).then((projects) => {
                 props.projects = projects;
-                meanwhile.show(<StartPageSync {...props} />);
+                return meanwhile.show(<StartPageSync {...props} />);
             }).then(() => {
                 // load current user
                 var criteria = {

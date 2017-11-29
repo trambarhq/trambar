@@ -77,6 +77,7 @@ module.exports = Relaks.createClass({
             onSelect: this.props.onSelect,
             onCancel: this.props.onCancel,
         };
+        // TODO: give dialog box minimal dimension
         //meanwhile.show(<ImageAlbumDialogBoxSync {...props} />);
         return db.start().then((userId) => {
             // load pictures for given purpose if we're showing the dialog box

@@ -104,13 +104,15 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
         var db = this.props.database.use({ schema: params.schema, by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             stories: null,
             draftStories: null,
@@ -124,7 +126,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<NewsPageSync {...props} />, 1000);
+        meanwhile.show(<NewsPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load current user
             var criteria = {};
@@ -132,7 +134,7 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'user', criteria });
         }).then((user) => {
             props.currentUser = user;
-            meanwhile.show(<NewsPageSync {...props} />);
+            return meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
             if (searching) {
                 // load story matching filters
@@ -199,7 +201,7 @@ module.exports = Relaks.createClass({
             }
         }).then((stories) => {
             props.stories = stories
-            meanwhile.show(<NewsPageSync {...props} />);
+            return meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
             if (!searching) {
                 // look for story drafts
@@ -216,7 +218,7 @@ module.exports = Relaks.createClass({
                     props.payloads.reattach(params.schema, story);
                 });
                 props.draftStories = stories;
-                meanwhile.show(<NewsPageSync {...props} />);
+                return meanwhile.show(<NewsPageSync {...props} />);
             }
         }).then(() => {
             if (!searching) {

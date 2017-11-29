@@ -181,8 +181,18 @@ var NewNotificationsBadge = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
     },
 
+    /**
+     * Render component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
+        if (!params.schema) {
+            return null;
+        }
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             currentUser: null,

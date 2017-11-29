@@ -48,13 +48,15 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var defaultAuthors = array(this.props.currentUser);
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             authors: defaultAuthors,
             draftAuthors: defaultAuthors,
@@ -77,7 +79,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<StoryListSync {...props} />, 250);
+        meanwhile.show(<StoryListSync {...props} />, delay);
         return db.start().then((userId) => {
             // load authors of stories
             var criteria = {
@@ -86,7 +88,7 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.authors = users;
-            meanwhile.show(<StoryListSync {...props} />);
+            return meanwhile.show(<StoryListSync {...props} />);
         }).then(() => {
             // load reactions to stories
             var criteria = {
@@ -100,7 +102,7 @@ module.exports = Relaks.createClass({
                 props.payloads.reattach(params.schema, reaction);
             });
             props.reactions = reactions;
-            meanwhile.show(<StoryListSync {...props} />);
+            return meanwhile.show(<StoryListSync {...props} />);
         }).then(() => {
             // load users of reactions
             var criteria = {
@@ -109,7 +111,7 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;
-            meanwhile.show(<StoryListSync {...props} />);
+            return meanwhile.show(<StoryListSync {...props} />);
         }).then(() => {
             if (props.draftStories) {
                 // load other authors also working on drafts
@@ -127,7 +129,7 @@ module.exports = Relaks.createClass({
         }).then((users) => {
             if (users) {
                 props.draftAuthors = users;
-                meanwhile.show(<StoryListSync {...props} />);
+                return meanwhile.show(<StoryListSync {...props} />);
             }
         }).then(() => {
             if (props.pendingStories) {
@@ -145,7 +147,7 @@ module.exports = Relaks.createClass({
         }).then((users) => {
             if (users) {
                 props.pendingAuthors = users;
-                meanwhile.show(<StoryListSync {...props} />);
+                return meanwhile.show(<StoryListSync {...props} />);
             }
         }).then(() => {
             // look for bookmark sent by current user

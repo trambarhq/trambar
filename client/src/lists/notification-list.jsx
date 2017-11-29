@@ -35,14 +35,14 @@ module.exports = Relaks.createClass({
      * Retrieve data needed by synchronous component
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+    renderAsync: function(meanwhile, prevProps) {
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             users: null,
 
@@ -56,7 +56,7 @@ module.exports = Relaks.createClass({
             onHiddenNotifications: this.props.onHiddenNotifications,
             onTopNotificationChange: this.props.onTopNotificationChange,
         };
-        meanwhile.show(<NotificationListSync {...props} />, 250);
+        meanwhile.show(<NotificationListSync {...props} />, delay);
         return db.start().then((userId) => {
             // load authors of comments
             var criteria = {};
@@ -64,7 +64,7 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.users = users;
-            meanwhile.show(<NotificationListSync {...props} />);
+            return meanwhile.show(<NotificationListSync {...props} />);
         }).then(() => {
             // load stories
             var criteria = {};
@@ -237,10 +237,8 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      * @return {Promise<Array>}
      */
     markAsSeen: function(notifications) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var notificationsAfter = _.map(notifications, (notification) => {
             return { id: notification.id, seen: true };
         });

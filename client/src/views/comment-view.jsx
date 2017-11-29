@@ -318,10 +318,8 @@ module.exports = React.createClass({
      * @return {Promise<Reaction>}
      */
     saveReaction: function(reaction) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
@@ -335,10 +333,8 @@ module.exports = React.createClass({
      * @return {Promise<Reaction>}
      */
     removeReaction: function(reaction) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
     },
 

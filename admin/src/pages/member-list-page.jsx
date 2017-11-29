@@ -74,12 +74,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             project: null,
             users: null,
@@ -90,7 +92,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<MemberListPageSync {...props} />, 250);
+        meanwhile.show(<MemberListPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load project
             var criteria = { id: params.project };
@@ -103,7 +105,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'user', criteria });
         }).then((users) => {
             props.users = users;
-            meanwhile.show(<MemberListPageSync {...props} />);
+            return meanwhile.show(<MemberListPageSync {...props} />);
         }).then(() => {
             // load roles
             var criteria = {
@@ -112,7 +114,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
-            meanwhile.show(<MemberListPageSync {...props} />);
+            return meanwhile.show(<MemberListPageSync {...props} />);
         }).then(() => {
             // load statistics of members
             var users = findUsers(props.users, props.project)

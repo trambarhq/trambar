@@ -73,12 +73,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             project: null,
             repos: null,
@@ -90,7 +92,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RepoListPageSync {...props} />, 250);
+        meanwhile.show(<RepoListPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load project
             var criteria = { id: params.project };
@@ -103,7 +105,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'repo', criteria });
         }).then((repos) => {
             props.repos = repos;
-            meanwhile.show(<RepoListPageSync {...props} />);
+            return meanwhile.show(<RepoListPageSync {...props} />);
         }).then(() => {
             // load servers
             var criteria = {
@@ -112,7 +114,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'server', criteria });
         }).then((servers) => {
             props.servers = servers;
-            meanwhile.show(<RepoListPageSync {...props} />);
+            return meanwhile.show(<RepoListPageSync {...props} />);
         }).then(() => {
             // load user statistics of the project's repo
             var repos = findRepos(props.repos, props.project);

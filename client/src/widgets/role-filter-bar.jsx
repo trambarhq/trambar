@@ -34,10 +34,8 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             roles: null,
             users: null,
@@ -47,7 +45,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             theme: this.props.theme,
         };
-        meanwhile.show(<RoleFilterBarSync {...props} />, 250);
+        return meanwhile.show(<RoleFilterBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             // load project
             var criteria = {

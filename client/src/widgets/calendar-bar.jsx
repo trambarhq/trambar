@@ -29,11 +29,17 @@ module.exports = Relaks.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
     },
 
+    /**
+     * Render component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+        var pageClass = this.props.route.component;
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var currentUserId;
         var props = {
             projectRange: null,
@@ -42,7 +48,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
         };
-        meanwhile.show(<CalendarBarSync {...props} />, 250);
+        return meanwhile.show(<CalendarBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             // load story-date-range statistics
             var criteria = {
@@ -53,7 +59,7 @@ module.exports = Relaks.createClass({
             return db.findOne({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.projectRange = statistics;
-            meanwhile.show(<CalendarBarSync {...props} />);
+            return meanwhile.show(<CalendarBarSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
             var startTime = _.get(props.projectRange, 'details.start_time');
@@ -70,7 +76,7 @@ module.exports = Relaks.createClass({
                     timeRanges.push(range);
                 }
                 var criteria = {};
-                if (route.component === NewsPage) {
+                if (pageClass === NewsPage) {
                     criteria.type = 'daily-activities';
                     criteria.filters = _.map(timeRanges, (timeRange) => {
                         return {
@@ -78,7 +84,7 @@ module.exports = Relaks.createClass({
                             time_range: timeRange
                         };
                     });
-                } else if (route.component === NotificationsPage) {
+                } else if (pageClass === NotificationsPage) {
                     criteria.type = 'daily-notifications';
                     criteria.filters = _.map(timeRanges, (timeRange) => {
                         return {
@@ -86,7 +92,7 @@ module.exports = Relaks.createClass({
                             time_range: timeRange
                         };
                     });
-                } else if (route.component === PersonPage) {
+                } else if (pageClass === PersonPage) {
                     var userId = parseInt(route.parameters.userId);
                     criteria.type = 'daily-activities';
                     criteria.filters =  _.map(timeRanges, (timeRange) => {

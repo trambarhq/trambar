@@ -81,12 +81,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             system: null,
             project: null,
@@ -98,7 +100,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             payloads: this.props.payloads,
         };
-        meanwhile.show(<ProjectSummaryPageSync {...props} />, 250);
+        meanwhile.show(<ProjectSummaryPageSync {...props} />, delay);
         return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });
@@ -111,7 +113,7 @@ module.exports = Relaks.createClass({
             }
         }).then((project) => {
             props.project = project;
-            meanwhile.show(<ProjectSummaryPageSync {...props} />);
+            return meanwhile.show(<ProjectSummaryPageSync {...props} />);
         }).then(() => {
             // load project statistics (unless we're creating a new project)
             if (props.project) {

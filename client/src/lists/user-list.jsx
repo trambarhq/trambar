@@ -34,14 +34,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
+     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var route = this.props.route;
-        var server = route.parameters.server;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ server, schema, by: this });
+    renderAsync: function(meanwhile, prevProps) {
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             roles: null,
             dailyActivities: null,
@@ -55,7 +55,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<UserListSync {...props} />, 250);
+        meanwhile.show(<UserListSync {...props} />, delay);
         return db.start().then((userId) => {
             // load roles
             var roleIds = _.flatten(_.map(props.users, 'role_ids'));
@@ -65,7 +65,7 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'role', criteria });
         }).then((roles) => {
             props.roles = roles;
-            meanwhile.show(<UserListSync {...props} />);
+            return meanwhile.show(<UserListSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
             var now = Moment();
@@ -84,7 +84,7 @@ module.exports = Relaks.createClass({
             return db.find({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
-            meanwhile.show(<UserListSync {...props} />);
+            return meanwhile.show(<UserListSync {...props} />);
         }).then(() => {
             // load story listings, one per user
             var criteria = {
