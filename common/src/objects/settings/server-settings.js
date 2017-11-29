@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== 'production') {
         },
         user: {
             type: String,
-            roles: Array(Number),
+            role_ids: Array(Number),
         },
     }
 }

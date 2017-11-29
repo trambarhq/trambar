@@ -302,11 +302,11 @@ module.exports = function(languageCode) {
             return `Server: ${name}`;
         },
         'server-summary-name': 'Identifier',
-        'server-summary-new-user': 'Nye brukere',
         'server-summary-new-user-no-creation': 'Ikke opprett nye brukere',
         'server-summary-new-user-guest': 'Opprett nye brukere som gjester',
         'server-summary-new-user-regular': 'Opprett nye brukere som vanlige brukere',
         'server-summary-new-user-automatic-approval': 'Godkjenn nye brukere automatisk',
+        'server-summary-new-users': 'Nye brukere',
         'server-summary-oauth-id': 'OAuth klient-ID',
         'server-summary-oauth-secret': 'OAuth klienthemmelighet',
         'server-summary-oauth-url': 'OAuth URL',

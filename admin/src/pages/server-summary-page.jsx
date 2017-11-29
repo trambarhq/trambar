@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
 var ServerTypes = require('objects/types/server-types');
@@ -87,6 +88,7 @@ module.exports = Relaks.createClass({
         var props = {
             system: null,
             server: null,
+            roles: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -106,6 +108,12 @@ module.exports = Relaks.createClass({
             }
         }).then((server) => {
             props.server = server;
+            meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
+        }).then(() => {
+            var criteria = {};
+            return db.find({ table: 'role', criteria });
+        }).then((roles) => {
+            props.roles = roles;
             return <ServerSummaryPageSync {...props} />;
         }).catch(HttpError, (error) => {
             this.props.route.replace(require('pages/error-page'), { error });
@@ -118,6 +126,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         system: PropTypes.object,
         server: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -199,6 +208,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             var autoNameAfter = SlugGenerator.fromTitle(newServer.details.title);
             if (!server.name || server.name === autoNameBefore) {
                 newServer.name = autoNameAfter;
+            }
+        }
+        if (path === 'settings.user.type') {
+            if (!value) {
+                newServer = _.decoupleSet(newServer, 'settings.user.role_ids', undefined);
             }
         }
         if(_.size(newServer.name) > 128) {
@@ -451,6 +465,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderTitleInput()}
                 {this.renderNameInput()}
                 {this.renderUserOptions()}
+                {this.renderRoleSelector()}
                 {this.renderOAuthUrlInput()}
                 {this.renderOAuthClientIdInput()}
                 {this.renderOAuthClientSecretInput()}
@@ -579,11 +594,49 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <OptionList {...listProps}>
                 <label>
-                    {t('server-summary-new-user')}
+                    {t('server-summary-new-users')}
                 </label>
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
+    },
+
+    /**
+     * Render role selector
+     *
+     * @return {ReactElement}
+     */
+    renderRoleSelector: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var userRolesCurr = this.getServerProperty('settings.user.role_ids', 'current') || [];
+        var userRolesPrev = this.getServerProperty('settings.user.role_ids', 'original') || [];
+        var newServer = !!this.getServerProperty('id');
+        var roles = sortRoles(this.props.roles, this.props.locale);
+        var optionProps = _.concat({
+            name: 'none',
+            selected: _.isEmpty(userRolesCurr),
+            previous: (newServer) ? _.isEmpty(userRolesPrev) : undefined,
+            children: t('server-summary-role-none')
+        }, _.map(roles, (role) => {
+            var name = p(role.details.title) || p.name;
+            return {
+                name: String(role.id),
+                selected: _.includes(userRolesCurr, role.id),
+                previous: _.includes(userRolesPrev, role.id),
+                children: <span>{t('server-summary-new-users')} <i className="fa fa-arrow-right" style={{ marginLeft: 3 }} /> {name}</span>
+            };
+        }));
+        var listProps = {
+            onOptionClick: this.handleRoleOptionClick,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>{t('server-summary-roles')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        )
     },
 
     /**
@@ -984,6 +1037,27 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 break;
         }
     },
+
+    /**
+     * Called when user clicks on a role
+     *
+     * @param  {Object} evt
+     */
+    handleRoleOptionClick: function(evt) {
+        var server = this.getServer();
+        var roleIds = _.slice(_.get(server, 'settings.user.role_ids', []));
+        if (evt.name === 'none') {
+            roleIds = [];
+        } else {
+            var roleId = parseInt(evt.name);
+            if (_.includes(roleIds, roleId)) {
+                _.pull(roleIds, roleId);
+            } else {
+                roleIds.push(roleId);
+            }
+        }
+        this.setServerProperty('settings.user.role_ids', roleIds);
+    },
 });
 
 var emptyServer = {
@@ -1003,3 +1077,11 @@ function getServerIcon(type) {
             return type;
     }
 }
+
+var sortRoles = Memoize(function(roles, locale) {
+    var p = locale.pick;
+    var name = (role) => {
+        return p(role.details.title) || role.name;
+    };
+    return _.sortBy(roles, name);
+});

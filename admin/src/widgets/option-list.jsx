@@ -70,6 +70,9 @@ module.exports = React.createClass({
             'data-name': option.props.name,
             onClick: this.handleClick,
         };
+        if (this.props.readOnly) {
+            props.onClick = undefined;
+        }
         return (
             <tr key={i} {...props}>
                 <td>
