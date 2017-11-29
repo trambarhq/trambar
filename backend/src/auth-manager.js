@@ -620,14 +620,16 @@ function findMatchingUser(db, server, account) {
 function createNewUser(db, server, account) {
     var profile = account.profile;
     var preferredUsername = proposeUsername(profile);
-    var userType = _.get(server.settings, 'user.type');
+    var userType = _.get(server, 'settings.user.type');
     if (!userType) {
         throw new HttpError(403);
     }
+    var roleIds = _.get(server, 'settings.user.role_ids');
     return retrieveProfileImage(profile).then((image) => {
         var user = {
             username: preferredUsername,
             type: userType,
+            role_ids: roleIds,
             details: extractUserDetails(server.type, profile._json),
             settings: UserSettings.default,
             external: [

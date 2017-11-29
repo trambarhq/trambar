@@ -184,6 +184,7 @@ function updateUser(db, server, user) {
  */
 function copyUserProperties(user, profileImage, server, glUser, link) {
     var userAfter = _.cloneDeep(user) || {
+        role_ids: _.get(server, 'settings.user.role_ids'),
         settings: UserSettings.default,
     };
     var imported = Import.reacquire(userAfter, link, 'user');
