@@ -15,7 +15,7 @@ var SettingsSection = require('widgets/settings-section');
 var PushButton = require('widgets/push-button');
 var ProjectDescriptionDialogBox = require('dialogs/project-description-dialog-box');
 var MobileSetupDialogBox = require('dialogs/mobile-setup-dialog-box');
-var SignOutDialogBox = require('dialogs/sign-out-dialog-box');
+var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
 var ProjectManagementDialogBox = require ('dialogs/project-management-dialog-box');
 
 require('./project-panel.scss');
@@ -216,14 +216,18 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderSignOutDialogBox: function() {
+        var t = this.props.locale.translate;
         var props = {
             show: (this.state.showingDialog === 'sign-out'),
-            database: this.props.database,
-            route: this.props.route,
             locale: this.props.locale,
             onClose: this.handleDialogClose,
+            onConfirm: this.handleSignOutConfirm,
         };
-        return <SignOutDialogBox {...props} />;
+        return (
+            <ConfirmationDialogBox {...props}>
+                {t('project-panel-sign-out-are-you-sure')}
+            </ConfirmationDialogBox>
+        );
     },
 
     renderProjectManagementDialogBox: function() {
@@ -317,6 +321,18 @@ module.exports = React.createClass({
         var db = this.props.database.use({ by: this });
         db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
             this.setState({ showingDialog: null });
+        });
+    },
+
+    /**
+     * Called when user confirms his intention to sign out
+     *
+     * @param {Object} evt
+     */
+    handleSignOutConfirm: function(evt) {
+        var db = this.props.database.use({ by: this });
+        db.endAuthorization().then(() => {
+            return this.props.route.replace(require('pages/start-page'));
         });
     },
 });

@@ -61,6 +61,9 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'People',
         'bottom-nav-settings': 'Settings',
 
+        'confirmation-cancel': 'Cancel',
+        'confirmation-confirm': 'Confirm',
+
         'comment-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;
         },
@@ -210,6 +213,7 @@ module.exports = function(languageCode) {
         'project-panel-manage': 'Manage list',
         'project-panel-mobile-set-up': 'Mobile set up',
         'project-panel-sign-out': 'Sign out',
+        'project-panel-sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
 
         'role-filter-no-roles': 'No roles defined',
 
@@ -232,10 +236,6 @@ module.exports = function(languageCode) {
         'settings-social-networks': 'Social Networks',
         'settings-user-information': 'User Information',
         'settings-web-alert': 'Web Alert',
-
-        'sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
-        'sign-out-cancel': 'Cancel',
-        'sign-out-confirm': 'Confirm',
 
         'social-network-github': 'GitHub profile URL',
         'social-network-gitlab': 'Gitlab profile URL',
@@ -273,6 +273,7 @@ module.exports = function(languageCode) {
             return `${name1} and ${name2}`;
         },
         'story-cancel': 'Cancel',
+        'story-cancel-are-you-sure': 'Are you sure you want to abandon this post?',
         'story-coauthors': 'Coauthors',
         'story-comment': 'Comment',
         'story-drop-files-here': 'Drag and drop media files here',
@@ -366,6 +367,8 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'story-remove-yourself': 'Remove yourself',
+        'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
         'story-status-transcoding-$progress': (progress) => {
             return `transcoding (${progress}%)`;
         },

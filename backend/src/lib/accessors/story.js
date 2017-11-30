@@ -316,8 +316,11 @@ module.exports = _.create(ExternalData, {
             if (storyReceived.hasOwnProperty('user_ids')) {
                 if (!_.isEqual(storyReceived.user_ids, storyBefore.user_ids)) {
                     if (storyBefore.user_ids[0] !== credentials.user.id) {
-                        // only the main author can modify the list
-                        throw new HttpError(400);
+                        // a coauthor can remove himself only
+                        var withoutCurrentUser = _.without(storyBefore.user_ids, credentials.user.id);
+                        if (!_.isEqual(storyReceived.user_ids, withoutCurrentUser)) {
+                            throw new HttpError(400);
+                        }
                     }
                     if (storyReceived.user_ids[0] !== storyBefore.user_ids[0]) {
                         // cannot make someone else the lead author

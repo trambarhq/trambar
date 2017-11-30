@@ -28,8 +28,10 @@ module.exports = React.createClass({
     propTypes: {
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
         options: PropTypes.object.isRequired,
         cornerPopUp: PropTypes.element,
+        coauthoring: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -139,20 +141,31 @@ module.exports = React.createClass({
      */
     renderCoauthoringButtons: function() {
         var t = this.props.locale.translate;
-        var label;
-        if (this.props.story.user_ids.length > 1) {
-            label = t('story-add-remove-coauthor');
+        if (this.props.coauthoring) {
+            return (
+                <div>
+                    <span className="button" onClick={this.props.onCancel}>
+                        <i className="fa fa-minus-square" />
+                        <span className="label">{t('story-remove-yourself')}</span>
+                    </span>
+                </div>
+            );
         } else {
-            label = t('story-add-coauthor');
+            var label;
+            if (this.props.story.user_ids.length > 1) {
+                label = t('story-add-remove-coauthor');
+            } else {
+                label = t('story-add-coauthor');
+            }
+            return (
+                <div>
+                    <span className="button" onClick={this.handleCoauthoringClick}>
+                        <i className="fa fa-plus-square" />
+                        <span className="label">{label}</span>
+                    </span>
+                </div>
+            );
         }
-        return (
-            <div>
-                <span className="button" onClick={this.handleCoauthoringClick}>
-                    <i className="fa fa-plus-square" />
-                    <span className="label">{label}</span>
-                </span>
-            </div>
-        )
     },
 
     /**

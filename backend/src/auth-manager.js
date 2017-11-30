@@ -608,7 +608,6 @@ function findMatchingUser(db, server, account) {
             }
         }
         return retrieveProfileImage(profile).then((image) => {
-            console.log(image);
             var link = Import.Link.create(server, {
                 user: { id: profile.id }
             });
@@ -750,7 +749,6 @@ function retrieveProfileImage(profile) {
     if (!url) {
         return Promise.resolve(null);
     }
-    console.log('URL: ' + url);
     var options = {
         json: true,
         url: 'http://media_server/internal/import',

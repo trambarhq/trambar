@@ -1,26 +1,20 @@
 var React = require('react'), PropTypes = React.PropTypes;
 
-var Database = require('data/database');
-var Route = require('routing/route');
 var Locale = require('locale/locale');
 
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
 
-require('./sign-out-dialog-box.scss');
+require('./confirmation-dialog-box.scss');
 
 module.exports = React.createClass({
-    displayName: 'SignOutDialogBox',
+    displayName: 'ConfirmationDialogBox',
     propTypes: {
         show: PropTypes.bool,
-        number: PropTypes.string,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
-
         onClose: PropTypes.func,
+        onConfirm: PropTypes.func,
     },
 
     /**
@@ -35,7 +29,7 @@ module.exports = React.createClass({
         };
         return (
             <Overlay {...overlayProps}>
-                <div className="sign-out-dialog-box">
+                <div className="confirmation-dialog-box">
                     {this.renderMessage()}
                     {this.renderButtons()}
                 </div>
@@ -44,15 +38,14 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render QR-code and number
+     * Render message
      *
      * @return {ReactElement}
      */
     renderMessage: function() {
-        var t = this.props.locale.translate;
         return (
             <div className="message">
-                {t('sign-out-are-you-sure')}
+                {this.props.children}
             </div>
         );
     },
@@ -65,12 +58,12 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var cancelProps = {
-            label: t('sign-out-cancel'),
+            label: t('confirmation-cancel'),
             onClick: this.props.onClose,
         };
         var confirmProps = {
-            label: t('sign-out-confirm'),
-            onClick: this.handleConfirmClick,
+            label: t('confirmation-confirm'),
+            onClick: this.props.onConfirm,
             emphasized: true,
         };
         return (
@@ -79,15 +72,5 @@ module.exports = React.createClass({
                 <PushButton {...confirmProps} />
             </div>
         );
-    },
-
-    /**
-     * Called when user confirms his intention to sign out
-     */
-    handleConfirmClick: function(evt) {
-        var db = this.props.database.use({ by: this });
-        db.endAuthorization().then(() => {
-            return this.props.route.replace(require('pages/start-page'));
-        });
     },
 });

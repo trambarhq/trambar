@@ -196,7 +196,7 @@ function createStoryNotifications(db, event) {
                 case 'survey': return n.survey;
                 case 'issue': return n.issue;
                 case 'coauthor':
-                    var newCoauthorIds = getNewCoauthorIds(event); 
+                    var newCoauthorIds = getNewCoauthorIds(event);
                     return n.coauthor && _.includes(newCoauthorIds, user.id);
             }
         }).then((recipients) => {
@@ -286,7 +286,7 @@ function getStoryNotificationTemplate(db, event) {
 function getNewCoauthorIds(event) {
     var coauthorIdsBefore = _.slice(event.previous.user_ids, 1);
     var coauthorIdsAfter = _.slice(event.current.user_ids, 1);
-    return _.difference(coauthorIdsBefore, coauthorIdsAfter);
+    return _.difference(coauthorIdsAfter, coauthorIdsBefore);
 }
 
 /**

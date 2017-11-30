@@ -19,6 +19,7 @@ var StoryMediaPreview = require('editors/story-media-preview');
 var StoryTextPreview = require('editors/story-text-preview');
 var StoryEditorOptions = require('editors/story-editor-options');
 var CornerPopUp = require('widgets/corner-pop-up');
+var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
 
 require('./story-editor.scss');
 
@@ -33,7 +34,7 @@ module.exports = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        showHints: PropTypes.bool,
+        isStationary: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -52,11 +53,25 @@ module.exports = React.createClass({
             options: defaultOptions,
             selectedResourceIndex: undefined,
             draft: null,
+            confirming: false,
+            action: null,
         };
         this.updateDraft(nextState, this.props);
         this.updateOptions(nextState, this.props);
         this.updateLeadAuthor(nextState, this.props);
         return nextState;
+    },
+
+    /**
+     * Return true if the current user is coauthoring this article
+     *
+     * @return {Boolean}
+     */
+    isCoauthoring: function() {
+        var userIds = _.get(this.props.story, 'user_ids');
+        var currentUserId = _.get(this.props.currentUser, 'id');
+        var index = _.indexOf(userIds, currentUserId);
+        return (index > 0);
     },
 
     /**
@@ -113,7 +128,7 @@ module.exports = React.createClass({
     updateLeadAuthor: function(nextState, nextProps) {
         if (!nextState.story) {
             var currentUserId = _.get(nextProps.currentUser, 'id');
-            if (!nextState.draft.user_ids || nextState.draft.user_ids[0] !== currentUserId) {
+            if (!nextState.draft.user_ids) {
                 nextState.draft = _.decouple(nextState.draft, 'user_ids', []);
                 nextState.draft.user_ids[0] = currentUserId;
             }
@@ -195,6 +210,7 @@ module.exports = React.createClass({
                 <div className="story-view columns-1">
                     {this.renderTextEditor()}
                     {this.renderSupplementalEditor()}
+                    {this.renderConfirmationDialogBox()}
                 </div>
             );
         } else if (this.props.theme.mode === 'columns-2') {
@@ -206,6 +222,7 @@ module.exports = React.createClass({
                     <div className="column-2">
                         {this.renderSupplementalEditor()}
                     </div>
+                    {this.renderConfirmationDialogBox()}
                 </div>
             );
         } else if (this.props.theme.mode === 'columns-3') {
@@ -220,6 +237,7 @@ module.exports = React.createClass({
                     <div className="column-3">
                         {this.renderOptions()}
                     </div>
+                    {this.renderConfirmationDialogBox()}
                 </div>
             );
         }
@@ -234,6 +252,7 @@ module.exports = React.createClass({
         var props = {
             story: this.state.draft,
             authors: this.props.authors,
+            coauthoring: this.isCoauthoring(),
             options: this.state.options,
             cornerPopUp: this.renderPopUpMenu('main'),
 
@@ -348,6 +367,33 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render confirmation dialog box
+     *
+     * @return {ReactElement}
+     */
+    renderConfirmationDialogBox: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            show: this.state.confirming,
+            locale: this.props.locale,
+            onClose: this.handleDialogClose,
+        };
+        var message;
+        if (this.state.action === 'delete-post') {
+            message = t('story-cancel-are-you-sure');
+            props.onConfirm = this.handleCancelConfirm;
+        } else {
+            message = t('story-remove-yourself-are-you-sure');
+            props.onConfirm = this.handleRemoveConfirm;
+        }
+        return (
+            <ConfirmationDialogBox {...props}>
+                {message}
+            </ConfirmationDialogBox>
+        );
+    },
+
+    /**
      * Set current draft
      *
      * @param  {Story} draft
@@ -456,6 +502,25 @@ module.exports = React.createClass({
         var schema = route.parameters.schema;
         var db = this.props.database.use({ schema, by: this });
         return db.removeOne({ table: 'story' }, story);
+    },
+
+    /**
+     * Remove current user from author list
+     *
+     * @return {Promise<Story>}
+     */
+    removeSelf: function() {
+        var story = this.props.story;
+        var userIds = _.without(story.user_ids, this.props.currentUser.id);
+        var columns = {
+            id: story.id,
+            user_ids: userIds,
+        };
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'story' }, columns);
+        });
     },
 
     /**
@@ -598,15 +663,13 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     handleCancel: function(evt) {
-        var story = this.state.draft;
-        var draft = createBlankStory(this.props.currentUser);
-        return this.changeDraft(draft).then(() => {
-            if (story.id) {
-                return this.removeStory(story);
-            } else {
-                return story;
-            }
-        });
+        var action;
+        if (this.isCoauthoring()) {
+            action = 'remove-self';
+        } else {
+            action = 'delete-post';
+        }
+        this.setState({ confirming: true, action });
     },
 
     /**
@@ -632,7 +695,50 @@ module.exports = React.createClass({
         var selectedResourceIndex = _.indexOf(resources, evt.resource);
         var options = _.decoupleSet(this.state.options, 'preview', 'media');
         this.setState({ selectedResourceIndex, options });
-    }
+    },
+
+    /**
+     * Called when user cancel an action
+     *
+     * @param  {Event} evt
+     */
+    handleDialogClose: function(evt) {
+        this.setState({ confirming: false });
+    },
+
+    /**
+     * Called when user confirms his desire to cancel a story
+     *
+     * @param  {Event} evt
+     */
+    handleCancelConfirm: function(evt) {
+        this.setState({ confirming: false });
+        var story = this.state.draft;
+        if (this.props.isStationary) {
+            // when it's the top editor, create a blank story first, since this
+            // instance of the component will be reused
+            var draft = createBlankStory(this.props.currentUser);
+            this.changeDraft(draft).then(() => {
+                if (story.id) {
+                    return this.removeStory(story);
+                } else {
+                    return story;
+                }
+            });
+        } else {
+            this.removeStory(story);
+        }
+    },
+
+    /**
+     * Called when user confirms his desire to remove himself as a co-author
+     *
+     * @param  {Event} evt
+     */
+    handleRemoveConfirm: function(evt) {
+        this.setState({ confirming: false });
+        this.removeSelf();
+    },
 });
 
 var defaultOptions = {
