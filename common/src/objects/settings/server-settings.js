@@ -14,6 +14,11 @@ if (process.env.NODE_ENV !== 'production') {
         },
         user: {
             type: String,
+            mapping: {
+                admin: String,
+                user: String,
+                external_user: String,
+            },
             role_ids: Array(Number),
         },
     }

@@ -565,32 +565,137 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderUserOptions: function() {
+        var serverType = this.getServerProperty('type');
+        switch (serverType) {
+            case 'gitlab': return this.renderGitlabUserOptions();
+            default: return this.renderOAuthUserOptions();
+        }
+    },
+
+    /**
+     * Render user creation options for Gitlab
+     *
+     * @return {ReactElement}
+     */
+    renderGitlabUserOptions: function() {
         var t = this.props.locale.translate;
         var userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
         var userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
         var newServer = !!this.getServerProperty('id');
         var optionProps = [
             {
-                name: 'no-creation',
-                selected: !userOptsCurr.type,
-                previous: (newServer) ? !userOptsPrev.type : undefined,
-                children: t('server-summary-new-user-no-creation'),
+                name: 'import-admin-disabled',
+                selected: !_.get(userOptsCurr, 'mapping.admin'),
+                previous: (newServer) ? !_.get(userOptsPrev, 'mapping.admin') : undefined,
+                children: t('server-summary-user-import-gitlab-admin-disabled')
             },
             {
-                name: 'create-guest',
-                selected: userOptsCurr.type === 'guest',
-                previous: userOptsPrev.type === 'guest',
-                children: t('server-summary-new-user-guest'),
+                name: 'import-admin-as-admin',
+                selected: _.get(userOptsCurr, 'mapping.admin') === 'admin',
+                previous: _.get(userOptsPrev, 'mapping.admin') === 'admin',
+                children: <span>{t('server-summary-gitlab-admin')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-admin`)}</span>
             },
             {
-                name: 'create-regular-user',
-                selected: userOptsCurr.type === 'regular',
-                previous: userOptsPrev.type === 'regular',
-                children: t('server-summary-new-user-regular'),
+                name: 'import-admin-as-moderator',
+                selected: _.get(userOptsCurr, 'mapping.admin') === 'moderator',
+                previous: _.get(userOptsPrev, 'mapping.admin') === 'moderator',
+                children: <span>{t('server-summary-gitlab-admin')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-moderator`)}</span>
+            },
+            {
+                name: 'import-admin-as-regular-user',
+                selected: _.get(userOptsCurr, 'mapping.admin') === 'regular',
+                previous: _.get(userOptsPrev, 'mapping.admin') === 'regular',
+                children: <span>{t('server-summary-gitlab-admin')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
+            },
+            {
+                name: 'import-user-disabled',
+                selected: !_.get(userOptsCurr, 'mapping.user'),
+                previous: (newServer) ? !_.get(userOptsPrev, 'mapping.user') : undefined,
+                children: t('server-summary-user-import-gitlab-user-disabled')
+            },
+            {
+                name: 'import-user-as-moderator',
+                selected: _.get(userOptsCurr, 'mapping.user') === 'moderator',
+                previous: _.get(userOptsPrev, 'mapping.user') === 'moderator',
+                children: <span>{t('server-summary-gitlab-regular-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-moderator`)}</span>
+            },
+            {
+                name: 'import-user-as-regular-user',
+                selected: _.get(userOptsCurr, 'mapping.user') === 'regular',
+                previous: _.get(userOptsPrev, 'mapping.user') === 'regular',
+                children: <span>{t('server-summary-gitlab-regular-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
+            },
+            {
+                name: 'import-user-as-guest',
+                selected: _.get(userOptsCurr, 'mapping.user') === 'guest',
+                previous: _.get(userOptsPrev, 'mapping.user') === 'guest',
+                children: <span>{t('server-summary-gitlab-regular-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
+            },
+            {
+                name: 'import-external-user-disabled',
+                selected: !_.get(userOptsCurr, 'mapping.external_user'),
+                previous: (newServer) ? !_.get(userOptsPrev, 'mapping.external_user') : undefined,
+                children: t('server-summary-user-import-gitlab-external-user-disabled')
+            },
+            {
+                name: 'import-external-user-as-regular-user',
+                selected: _.get(userOptsCurr, 'mapping.external_user') === 'regular',
+                previous: _.get(userOptsPrev, 'mapping.external_user') === 'regular',
+                children: <span>{t('server-summary-gitlab-external-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
+            },
+            {
+                name: 'import-external-user-as-guest',
+                selected: _.get(userOptsCurr, 'mapping.external_user') === 'guest',
+                previous: _.get(userOptsPrev, 'mapping.external_user') === 'guest',
+                children: <span>{t('server-summary-gitlab-external-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
             },
         ];
         var listProps = {
-            onOptionClick: this.handleUserOptionClick,
+            onOptionClick: this.handleGitlabUserOptionClick,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('server-summary-new-users')}
+                </label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        );
+    },
+
+    /**
+     * Render user creation options for basic OAuth provider
+     *
+     * @return {ReactElement}
+     */
+    renderOAuthUserOptions: function() {
+        var t = this.props.locale.translate;
+        var userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
+        var userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
+        var newServer = !!this.getServerProperty('id');
+        var optionProps = [
+            {
+                name: 'import-disabled',
+                selected: !userOptsCurr.type,
+                previous: (newServer) ? !userOptsPrev.type : undefined,
+                children: t('server-summary-user-import-disabled')
+            },
+            {
+                name: 'import-user-as-guest',
+                selected: userOptsCurr.type === 'guest',
+                previous: userOptsPrev.type === 'guest',
+                children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
+            },
+            {
+                name: 'import-user-as-regular-user',
+                selected: userOptsCurr.type === 'regular',
+                previous: userOptsPrev.type === 'regular',
+                children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
+            },
+        ];
+        var listProps = {
+            onOptionClick: this.handleOAuthUserOptionClick,
             readOnly: !this.isEditing(),
         };
         return (
@@ -626,7 +731,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 name: String(role.id),
                 selected: _.includes(userRolesCurr, role.id),
                 previous: _.includes(userRolesPrev, role.id),
-                children: <span>{t('server-summary-new-users')} <i className="fa fa-arrow-right" style={{ marginLeft: 3 }} /> {name}</span>
+                children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {name}</span>
             };
         }));
         var listProps = {
@@ -1026,18 +1131,65 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleUserOptionClick: function(evt) {
+    handleGitlabUserOptionClick: function(evt) {
+        var mapping = this.getServerProperty('settings.user.mapping') || {};
         switch (evt.name) {
-            case 'no-creation':
-                this.setServerProperty(`settings.user.type`, undefined);
+            case 'import-admin-disabled':
+                mapping.admin = undefined;
                 break;
-            case 'create-guest':
-                this.setServerProperty(`settings.user.type`, 'guest');
+            case 'import-admin-as-regular-user':
+                mapping.admin = (mapping.admin !== 'regular') ? 'regular' : undefined;
                 break;
-            case 'create-regular-user':
-                this.setServerProperty(`settings.user.type`, 'regular');
+            case 'import-admin-as-moderator':
+                mapping.admin = (mapping.admin !== 'moderator') ? 'moderator' : undefined;
+                break;
+            case 'import-admin-as-admin':
+                mapping.admin = (mapping.admin !== 'admin') ? 'admin' : undefined;
+                break;
+            case 'import-user-disabled':
+                mapping.user = undefined;
+                break;
+            case 'import-user-as-guest':
+                mapping.user = (mapping.user !== 'guest') ? 'guest' : undefined;
+                break;
+            case 'import-user-as-regular-user':
+                mapping.user = (mapping.user !== 'regular') ? 'regular' : undefined;
+                break;
+            case 'import-user-as-moderator':
+                mapping.user = (mapping.user !== 'moderator') ? 'moderator' : undefined;
+                break;
+            case 'import-external-user-disabled':
+                mapping.external_user = undefined;
+                break;
+            case 'import-external-user-as-guest':
+                mapping.external_user = (mapping.external_user !== 'guest') ? 'guest' : undefined;
+                break;
+            case 'import-external-user-as-regular-user':
+                mapping.external_user = (mapping.external_user !== 'regular') ? 'regular' : undefined;
                 break;
         }
+        this.setServerProperty('settings.user.mapping', mapping);
+    },
+
+    /**
+     * Called when user clicks one of the user options
+     *
+     * @param  {Object} evt
+     */
+    handleOAuthUserOptionClick: function(evt) {
+        var type = this.getServerProperty('settings.user.type');
+        switch (evt.name) {
+            case 'import-disabled':
+                type = undefined;
+                break;
+            case 'import-user-as-guest':
+                type = (type !== 'guest') ? 'guest' : undefined;
+                break;
+            case 'import-user-as-regular-user':
+                type = (type !== 'regular') ? 'regular' : undefined;
+                break;
+        }
+        this.setServerProperty('settings.user.type', type);
     },
 
     /**
