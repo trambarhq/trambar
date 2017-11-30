@@ -35,7 +35,7 @@ module.exports = React.createClass({
     /**
      * Look for objects in cache
      *
-     * Query object contains the name of the origin server, schema, and table
+     * Query object contains the server address, schema, and table
      *
      * @param  {Object} query
      *
@@ -44,13 +44,13 @@ module.exports = React.createClass({
     find: function(query) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = query.server || '';
+                var address = query.address;
                 var schema = query.schema;
                 var table = query.table;
                 var local = (schema === 'local');
                 var storeName = (local) ? 'local-data' : 'remote-data';
                 var transaction = db.transaction(storeName, 'readonly');
-                var path = `${server}/${schema}/${table}`;
+                var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
                 var results = [];
                 var criteria = query.criteria;
@@ -132,13 +132,13 @@ module.exports = React.createClass({
     save: function(location, objects) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = location.server || '';
+                var address = location.address;
                 var schema = location.schema;
                 var table = location.table;
                 var local = (schema === 'local');
                 var storeName = (local) ? 'local-data' : 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
-                var path = `${server}/${schema}/${table}`;
+                var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
                 transaction.oncomplete = (evt) => {
                     resolve(objects);
@@ -149,7 +149,7 @@ module.exports = React.createClass({
                 _.each(objects, (object) => {
                     var key = (local) ? nonumericKey(path, object.key) : primaryKey(path, object.id);
                     var record = {
-                        server: server,
+                        address: address,
                         location: path,
                         data: object,
                     };
@@ -170,13 +170,13 @@ module.exports = React.createClass({
     remove: function(location, objects) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var server = location.server || '';
+                var address = location.address;
                 var schema = location.schema;
                 var table = location.table;
                 var local = (schema === 'local');
                 var storeName = (local) ? 'local-data' : 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
-                var path = `${server}/${schema}/${table}`;
+                var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
                 transaction.oncomplete = (evt) => {
                     resolve(objects);
@@ -195,7 +195,7 @@ module.exports = React.createClass({
     /**
      * Remove objects by one of three criteria:
      *
-     * server - remove all objects from specified server
+     * address - remove all objects from specified address
      * count - remove certain number of objects, starting from those least recent
      * before - remove objects with retrieval time (rtime) earlier than given value
      *
@@ -211,9 +211,9 @@ module.exports = React.createClass({
                 var storeName = 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
-                if (criteria.server !== undefined) {
-                    var index = objectStore.index('server');
-                    var req = index.openCursor(criteria.server);
+                if (criteria.address !== undefined) {
+                    var index = objectStore.index('address');
+                    var req = index.openCursor(criteria.address);
                     var count = 0;
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
@@ -292,7 +292,7 @@ module.exports = React.createClass({
                     localStore.createIndex('location', 'location', { unique: false });
                     var remoteStore = db.createObjectStore('remote-data');
                     remoteStore.createIndex('location', 'location', { unique: false });
-                    remoteStore.createIndex('server', 'server', { unique: false });
+                    remoteStore.createIndex('address', 'address', { unique: false });
                     remoteStore.createIndex('rtime', 'data.rtime', { unique: false });
                 };
             });
