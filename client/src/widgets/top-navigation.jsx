@@ -25,21 +25,37 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
-        var route = this.props.route;
-        var selectedControl = null;
-        if (route.query.search) {
-            selectedControl = 'search';
-        } else if (route.parameters.date) {
-            selectedControl = 'calendar';
-        } else if (!_.isEmpty(route.parameters.roles)) {
-            selectedControl = 'filter';
-        }
+        var control = this.getRequiredControl(this.props.route);
         return {
-            selectedControl,
-            expanded: !!selectedControl,
+            selectedControl: control,
+            expanded: !!control,
             height: (this.props.hidden) ? 0 : 'auto',
         };
+    },
+
+    /**
+     * Return control required by route
+     *
+     * @param  {Route} route
+     *
+     * @return {String|null}
+     */
+    getRequiredControl: function(route) {
+        var params = route.parameters;
+        if (params.search) {
+            return 'search';
+        } else if (params.date) {
+            return 'calendar';
+        } else if (!_.isEmpty(params.roles)) {
+            return 'filter';
+        }
+        return null;
     },
 
     /**
@@ -73,6 +89,12 @@ module.exports = React.createClass({
                         this.setState({ height: 'auto' });
                     }
                 }, 1000);
+            }
+        }
+        if (this.props.route !== nextProps.route) {
+            var control = this.getRequiredControl(nextProps.route);
+            if (this.state.selectedControl !== control) {
+                this.setState({ selectedControl: control, expanded: true });
             }
         }
     },
@@ -217,20 +239,39 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Remove parameters that the top nav provides, as well as hash
+     * variables
+     */
     clearRouteParameters: function() {
         var route = this.props.route;
-        var params = _.omit(route.parameters, 'date', 'roleIds');
+        var params = _.omit(route.parameters, 'date', 'roles', 'search', 'story');
         route.replace(route.component, params);
     },
 
+    /**
+     * Called when user clicks the calendar icon
+     *
+     * @param  {Event} evt
+     */
     handleCalendarClick: function(evt) {
         this.toggleControl('calendar');
     },
 
+    /**
+     * Called when user clicks the filter icon
+     *
+     * @param  {Event} evt
+     */
     handleFilterClick: function(evt) {
         this.toggleControl('filter');
     },
 
+    /**
+     * Called when user clicks the search icon
+     *
+     * @param  {Event} evt
+     */
     handleSearchClick: function(evt) {
         this.toggleControl('search');
     },

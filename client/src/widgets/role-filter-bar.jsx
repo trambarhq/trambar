@@ -45,11 +45,11 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             theme: this.props.theme,
         };
-        return meanwhile.show(<RoleFilterBarSync {...props} />, 1000);
+        meanwhile.show(<RoleFilterBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             // load project
             var criteria = {
-                name: schema
+                name: params.schema
             };
             return db.findOne({ schema: 'global', table: 'project', criteria });
         }).then((project) => {

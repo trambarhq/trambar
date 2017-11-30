@@ -186,11 +186,20 @@ module.exports = Relaks.createClass({
                             // itself
                             var criteria = { id: params.story };
                             return db.findOne({ table: 'story', criteria }).then((story) => {
-                                if (story && story.ptime) {
-                                    return this.props.route.replace(require('pages/news-page'), {
-                                        date: Moment(story.ptime).format('YYYY-MM-DD'),
-                                        story: params.story,
-                                    }).return([]);
+                                var redirect = false;
+                                if (story && story.ptime && story.published && story.ready !== false) {
+                                    // don't redirect if the story is very recent
+                                    var elapsed = Moment() - Moment(story.ptime);
+                                    if (elapsed > 60 * 1000) {
+                                        redirect = true;
+                                    }
+                                }
+                                if (redirect) {
+                                    var newParams = _.clone(params);
+                                    newParams.date = Moment(story.ptime).format('YYYY-MM-DD');
+                                    return this.props.route.replace(require('pages/news-page'), newParams).then(() => {
+                                        return [];
+                                    });
                                 }
                                 return stories;
                             });

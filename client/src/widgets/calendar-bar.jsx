@@ -48,7 +48,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
         };
-        return meanwhile.show(<CalendarBarSync {...props} />, 1000);
+        meanwhile.show(<CalendarBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             // load story-date-range statistics
             var criteria = {
