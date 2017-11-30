@@ -2,9 +2,9 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 
+var Export = require('external-services/export');
+var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Export = require('gitlab-adapter/export');
-var Import = require('gitlab-adapter/import');
 var UserExporter = require('gitlab-adapter/user-exporter');
 
 // accessors
@@ -24,7 +24,7 @@ exports.exportStory = exportStory;
  * @return {Promise<Story|null>}
  */
 function exportStory(db, project, story) {
-    var link = Import.Link.find(story);
+    var link = Import.Link.find(story, { type: 'gitlab' });
     var criteria = { id: link.server_id, deleted: false };
     return Server.findOne(db, 'global', criteria, '*').then((server) => {
         var criteria = { id: story.user_ids[0], deleted: false };
@@ -37,7 +37,7 @@ function exportStory(db, project, story) {
             var glIssueNumber = story.details.number;
             return saveIssue(server, link.project.id, glIssueNumber, glIssue, authorLink.user.id).then((glIssue) => {
                 var storyAfter = _.cloneDeep(story);
-                var linkAfter = Import.Link.find(storyAfter);
+                var linkAfter = Import.Link.find(storyAfter, { type: 'gitlab' });
                 _.set(linkAfter, 'issue.id', glIssue.id);
                 _.set(storyAfter, 'details.number', glIssue.iid);
                 return Story.updateOne(db, project.name, storyAfter);

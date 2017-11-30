@@ -3,8 +3,8 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var ParseDiff = require('parse-diff');
 
+var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Import = require('gitlab-adapter/import');
 
 // accessors
 var Commit = require('accessors/commit');

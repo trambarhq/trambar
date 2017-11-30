@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 
-var Import = require('gitlab-adapter/import');
+var Import = require('external-services/import');
 
 // accessors
 var Story = require('accessors/story');

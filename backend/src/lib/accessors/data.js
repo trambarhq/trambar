@@ -481,6 +481,9 @@ module.exports = {
      * @return {Promise<Object>}
      */
     insertOne: function(db, schema, row) {
+        if (!row) {
+            return Promise.reject(new Error('Cannot insert empty row'));
+        }
         return this.insert(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });

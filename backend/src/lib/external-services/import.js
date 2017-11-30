@@ -133,21 +133,19 @@ var lang = (process.env.LANG || 'en-US').substr(0, 2);
  * Find a link by server
  *
  * @param  {ExternalData} object
- * @param  {Server|null} server
+ * @param  {Object} server
  *
  * @return {Object|undefined}
  */
 function find(object, server) {
-    if (server) {
-        return _.find(object.external, {
-            type: 'gitlab',
-            server_id: server.id
-        });
-    } else {
-        return _.find(object.external, {
-            type: 'gitlab',
-        });
+    var props = {};
+    if (server.type) {
+        props.type = server.type;
     }
+    if (server.id) {
+        props.server_id = server.id;
+    }
+    return _.find(object.external, props);
 }
 
 /**
@@ -160,7 +158,7 @@ function find(object, server) {
  */
 function create(server, props) {
     return _.merge({}, {
-        type: 'gitlab',
+        type: server.type,
         server_id: server.id
     }, props);
 }

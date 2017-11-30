@@ -2,8 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
 
+var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Import = require('gitlab-adapter/import');
 
 // accessors
 var Project = require('accessors/project');

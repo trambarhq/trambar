@@ -7,7 +7,7 @@ var Database = require('database');
 var TaskQueue = require('utils/task-queue');
 var StoryTypes = require('objects/types/story-types');
 
-var Import = require('gitlab-adapter/import');
+var Import = require('external-services/import');
 var HookManager = require('gitlab-adapter/hook-manager');
 var CommentImporter = require('gitlab-adapter/comment-importer');
 var CommentExporter = require('gitlab-adapter/comment-exporter');

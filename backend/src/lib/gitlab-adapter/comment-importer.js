@@ -2,8 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 
+var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Import = require('gitlab-adapter/import');
 var UserImporter = require('gitlab-adapter/user-importer');
 
 var Story = require('accessors/story');

@@ -128,6 +128,33 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
+     * Insert row, appending a number if a username conflict occurs
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {user} object
+     *
+     * @return {Promise<Object>}
+     */
+    insertUnique: function(db, schema, user) {
+        return this.insertOne(db, schema, user).catch((err) => {
+            // unique violation
+            if (err.code === '23505') {
+                user = _.clone(user);
+                var m = /(.*)(\d+)$/.exec(user.username);
+                if (m) {
+                    var number = parseInt(m[2]);
+                    user.username = m[1] + (number + 1);
+                } else {
+                    user.username += '2';
+                }
+                return this.insertUnique(db, schema, user);
+            }
+            throw err;
+        });
+    },
+
+    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *

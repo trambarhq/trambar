@@ -11,8 +11,13 @@ var HtpasswdAuth = require('htpasswd-auth');
 var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
 var Database = require('database');
+var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 
+var Import = require('external-services/import');
+var GitlabUserImporter = require('gitlab-adapter/user-importer');
+
+// accessors
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
 var Project = require('accessors/project');
@@ -380,9 +385,7 @@ function handleOAuthTestRequest(req, res, done) {
  * @param  {Function}  done
  */
 function handleOAuthActivationRequest(req, res, done) {
-    console.log('activation');
     if (!req.query.activation) {
-        console.log('not activation');
         done();
         return;
     }
@@ -533,7 +536,7 @@ function authenticateThruPassport(req, res, server, params, scope) {
         var options = { session: false, scope };
         if (provider === 'facebook') {
             // ask Facebook to return these fields
-            params.profileFields = [
+            settings.profileFields = [
                 'id',
                 'email',
                 'gender',
@@ -574,11 +577,12 @@ function authenticateThruPassport(req, res, server, params, scope) {
  */
 function findMatchingUser(db, server, account) {
     // look for a user with the external id
+    var profile = account.profile;
     var criteria = {
         external_object: {
             type: server.type,
             server_id: server.id,
-            user: { id: account.profile.id },
+            user: { id: profile.id },
         },
         deleted: false,
     };
@@ -587,112 +591,110 @@ function findMatchingUser(db, server, account) {
             return user;
         }
         // find a user with the email address
-        return Promise.reduce(account.profile.emails, (matching, email) => {
+        return Promise.reduce(_.map(profile.emails, 'value'), (matching, email) => {
             if (matching) {
                 return matching;
             }
-            var criteria = { email, deleted: false };
+            if (!email) {
+                return null;
+            }
+            var criteria = { email, deleted: false, order: 'id' };
             return User.findOne(db, 'global', criteria, 'id, type, external');
-        }, null).then((user) => {
-            if (user) {
-                user.external.push({
-                    type: server.type,
-                    user: { id: account.profile.id }
-                });
-                return User.updateOne(db, 'global', user);
-            } else {
-                // create the user
-                return createNewUser(db, server, account);
+        }, null);
+    }).then((user) => {
+        if (!user) {
+            if (!acceptNewUser(server)) {
+                throw new HttpError(403);
+            }
+        }
+        return retrieveProfileImage(profile).then((image) => {
+            console.log(image);
+            var link = Import.Link.create(server, {
+                user: { id: profile.id }
+            });
+            var userAfter = copyUserProperties(user, image, server, profile, link);
+            if(userAfter) {
+                if (user) {
+                    return User.updateOne(db, 'global', userAfter);
+                } else {
+                    if (userAfter.disabled) {
+                        // don't create disabled user
+                        throw new HttpError(403);
+                    }
+                    return User.insertUnique(db, 'global', userAfter);
+                }
             }
         });
     });
 }
 
 /**
- * Create a user connected to external account
+ * Copy information from Passport profile object into user object
  *
- * @param  {Database} db
+ * @param  {User|null} user
+ * @param  {Object} image
  * @param  {Server} server
- * @param  {Object} account
+ * @param  {Object} profile
+ * @param  {Object} link
  *
- * @return {Promise<User>}
+ * @return {User|null}
  */
-function createNewUser(db, server, account) {
-    var profile = account.profile;
-    var preferredUsername = proposeUsername(profile);
-    var userType = _.get(server, 'settings.user.type');
-    if (!userType) {
-        throw new HttpError(403);
-    }
-    var roleIds = _.get(server, 'settings.user.role_ids');
-    return retrieveProfileImage(profile).then((image) => {
-        var user = {
-            username: preferredUsername,
-            type: userType,
-            role_ids: roleIds,
-            details: extractUserDetails(server.type, profile._json),
+function copyUserProperties(user, image, server, profile, link) {
+    var json = profile._json;
+    if (server.type === 'gitlab') {
+        // use GitlabAdapter's importer
+        return GitlabUserImporter.copyUserProperties(user, image, server, json, link);
+    } else {
+        var userAfter = _.cloneDeep(user) || {
+            role_ids: _.get(server, 'settings.user.role_ids', []),
             settings: UserSettings.default,
-            external: [
-                {
-                    type: server.type,
-                    user: { id: account.profile.id }
-                }
-            ]
         };
-        if (image) {
-            image[`from_${server.type}`] = true;
-            image.type = 'image';
-            user.details.resources = [ image ];
+        var email = _.first(_.map(profile.emails, 'value'));
+        var name = profile.displayName;
+        var username = profile.username || proposeUsername(profile);
+        var imported = Import.reacquire(userAfter, link, 'user');
+        Import.set(userAfter, imported, 'username', username);
+        Import.set(userAfter, imported, 'details.name', name);
+        Import.set(userAfter, imported, 'details.email', email);
+        Import.attach(userAfter, imported, 'image', image);
+
+        // set user type
+        if (server.type === 'facebook') {
+            Import.set(userAfter, imported, 'details.gender', json.gender);
         }
-        var attempts = 1;
-        var newUser;
-        Async.do(() => {
-            return User.insertOne(db, 'global', user).then((user) => {
-                newUser = user;
-            }).catch((err) => {
-                // unique violation
-                if (err.code === '23505') {
-                    attempts++;
-                    user.username = preferredUserName + attempts;
-                } else {
-                    throw err;
-                }
-            });
-        });
-        Async.while(() => { return !newUser });
-        Async.return(() => { return newUser });
-        return Async.end();
-    });
+        var userType = _.get(server, 'settings.user.type');
+        if (user) {
+            // set it if it's more privileged
+            if (UserTypes.indexOf(userType) > UserTypes.indexOf(userAfter.type)) {
+                userAfter.type = userType;
+            }
+        } else {
+            if (userType) {
+                userAfter.type = userType;
+            } else {
+                userAfter.type = 'regular';
+                userAfter.disabled
+            }
+        }
+
+        if (_.isEqual(user, userAfter)) {
+            return null;
+        }
+        return userAfter;
+    }
 }
 
 /**
- * Extract user details from provider-specific profile
+ * Return true if server accepts new users
  *
- * @param  {String} type
- * @param  {Object} profile
+ * @param  {Server} server
  *
- * @return {Object}
+ * @return {Boolean}
  */
-function extractUserDetails(type, profile) {
-    var details = {};
-    if (type === 'gitlab') {
-        var nameParts = _.split(profile.name, /\s+/);
-        details.first_name = (nameParts.length >= 2) ? _.first(nameParts) : undefined;
-        details.last_name = (nameParts.length >= 2) ? _.last(nameParts) : undefined;
-        details.name = profile.name;
-        details.gitlab_url = profile.web_url;
-        details.skype_username = profile.skype || undefined;
-        details.twitter_username = profile.twitter || undefined;
-        details.linkedin_username = profile.linkedin_name || undefined;
-        details.email = profile.email;
-    } else if (type === 'facebook') {
-        details.name = profile.name;
-        details.email = profile.email;
-        details.gender = profile.gender;
-        details.first_name = profile.first_name;
-        details.last_name = profile.last_name;
-    }
-    return details;
+function acceptNewUser(server) {
+    var type = _.get(server, 'settings.user.type');
+    var mapping = _.get(server, 'settings.user.mapping');
+    return !!type || _.some(mapping);
 }
 
 /**
@@ -748,6 +750,7 @@ function retrieveProfileImage(profile) {
     if (!url) {
         return Promise.resolve(null);
     }
+    console.log('URL: ' + url);
     var options = {
         json: true,
         url: 'http://media_server/internal/import',

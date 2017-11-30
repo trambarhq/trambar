@@ -229,7 +229,7 @@ module.exports = _.create(Data, {
      */
     updateNewMembers: function(db, schema, projectsReceived, projectsBefore, projectsAfter) {
         // first, obtain ids of projects that new members are added to
-        var newUserMemberships = {};
+        var newUserMemberships = {}, newMemberIds = [];
         _.each(projectsReceived, (projectReceived, index) => {
             var projectBefore = projectsBefore[index];
             var projectAfter = projectsAfter[index];
@@ -244,6 +244,7 @@ module.exports = _.create(Data, {
                         ids.push(projectAfter.id);
                     } else {
                         newUserMemberships[userId] = [ projectAfter.id ];
+                        newMemberIds.push(userId);
                     }
                 });
             }
@@ -253,9 +254,7 @@ module.exports = _.create(Data, {
         }
         // load the users and update requested_project_ids column
         var User = require('accessors/user');
-        var criteria = {
-            id: _.map(_.keys(newUserMemberships), parseInt)
-        };
+        var criteria = { id: newMemberIds };
         return User.find(db, schema, criteria, 'id, requested_project_ids').then((users) => {
             _.each(users, (user) => {
                 user.requested_project_ids = _.difference(user.requested_project_ids, newUserMemberships[user.id]);

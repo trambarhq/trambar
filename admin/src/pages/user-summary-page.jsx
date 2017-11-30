@@ -611,12 +611,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var userTypeCurr = this.getUserProperty('type', 'current');
         var userTypePrev = this.getUserProperty('type', 'original');
-        var userTypes = UserTypes;
-        // don't show shadow unless it was the type
-        if (userTypePrev !== 'shadow') {
-            userTypes = _.without(UserTypes, 'shadow');
-        }
-        var optionProps = _.map(userTypes, (type) => {
+        var optionProps = _.map(UserTypes, (type) => {
             return {
                 name: type,
                 selected: userTypeCurr === type,

@@ -471,7 +471,6 @@ module.exports = function(languageCode) {
         'user-summary-type-guest': 'Guest',
         'user-summary-type-moderator': 'Moderator',
         'user-summary-type-regular': 'Regular user',
-        'user-summary-type-shadow': 'Shadow',
         'user-summary-username': 'User name',
         'user-summary-visibility': 'Visibility',
         'user-summary-visibility-hidden': 'User is not shown in People section',

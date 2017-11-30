@@ -3,10 +3,11 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Request = require('request');
 var HttpError = require('errors/http-error');
+var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 
+var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Import = require('gitlab-adapter/import');
 
 // accessors
 var Project = require('accessors/project');
@@ -20,6 +21,7 @@ exports.importUsers = importUsers;
 exports.importUser = importUser;
 exports.importProjectMembers = importProjectMembers;
 exports.updateUser = updateUser;
+exports.copyUserProperties = copyUserProperties;
 
 /**
  * Import an activity log entry about someone joining or leaving the project
@@ -114,20 +116,49 @@ function importUsers(db, server, glUsers) {
         }).mapSeries((glUser) => {
             // import profile image
             return importProfileImage(glUser).then((image) => {
-                // find user by email
-                var criteria = { email: glUser.email, deleted: false };
-                return User.findOne(db, 'global', criteria, '*').then((user) => {
+                // find existing user by email and root account
+                return findExistingUser(db, glUser).then((user) => {
                     var link = Import.Link.create(server, {
                         user: { id: glUser.id }
                     });
                     var userAfter = copyUserProperties(user, image, server, glUser, link);
-                    return User.saveOne(db, 'global', userAfter);
+                    if (user) {
+                        return User.updateOne(db, 'global', userAfter);
+                    } else {
+                        return User.insertUnique(db, 'global', userAfter);
+                    }
                 });
             });
         }).then((importedUsers) => {
             return _.concat(existingUsers, importedUsers);
         });
     });
+}
+
+/**
+ * Find an existing user to link Gitlab account to
+ *
+ * @param  {Database} db
+ * @param  {[type]} glUser
+ *
+ * @return {[type]}
+ */
+function findExistingUser(db, glUser) {
+    var strategies = [ 'email', 'username' ];
+    return Promise.reduce(strategies, (matching, strategy) => {
+        if (matching) {
+            return matching;
+        }
+        var criteria = { deleted: false, order: 'id' };
+        if (strategy === 'email' && glUser.email) {
+            criteria.email = glUser.email;
+        } else if (strategy === 'username' && glUser.username === 'root') {
+            criteria.username = glUser.username;
+        } else {
+            return null;
+        }
+        return User.findOne(db, 'global', criteria, '*');
+    }, null);
 }
 
 /**
@@ -176,19 +207,18 @@ function updateUser(db, server, user) {
  *
  * @param  {User|null} user
  * @param  {Object} glUser
- * @param  {Object} profileImage
+ * @param  {Object} image
  * @param  {Server} server
  * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyUserProperties(user, profileImage, server, glUser, link) {
+function copyUserProperties(user, image, server, glUser, link) {
     var userAfter = _.cloneDeep(user) || {
-        role_ids: _.get(server, 'settings.user.role_ids'),
+        role_ids: _.get(server, 'settings.user.role_ids', []),
         settings: UserSettings.default,
     };
     var imported = Import.reacquire(userAfter, link, 'user');
-    Import.set(userAfter, imported, 'type', getUserType(server, glUser));
     Import.set(userAfter, imported, 'username', glUser.username);
     Import.set(userAfter, imported, 'details.name', glUser.name);
     Import.set(userAfter, imported, 'details.gitlab_url', glUser.web_url);
@@ -196,21 +226,40 @@ function copyUserProperties(user, profileImage, server, glUser, link) {
     Import.set(userAfter, imported, 'details.twitter_username', glUser.twitter || undefined);
     Import.set(userAfter, imported, 'details.linkedin_username', glUser.linkedin_name || undefined);
     Import.set(userAfter, imported, 'details.email', glUser.email);
-    Import.attach(userAfter, imported, 'image', profileImage);
+    Import.attach(userAfter, imported, 'image', image);
+
+    // set user type
+    var mapping = _.get(server, 'settings.user.mapping', {});
+    var userType;
+    if (glUser.is_admin) {
+        userType = mapping.admin;
+    } else if (glUser.external) {
+        userType = mapping.external_user;
+    } else {
+        userType = mapping.user;
+    }
+    if (user) {
+        if (userType) {
+            // set it if it's more privileged
+            if (UserTypes.indexOf(userType) > UserTypes.indexOf(userAfter.type)) {
+                userAfter.type = userType;
+            }
+        }
+    } else {
+        // new user
+        if (userType) {
+            userAfter.type = userType;
+        } else {
+            // create as disabled if user import is disabled
+            userAfter.type = 'regular';
+            userAfter.disabled = true;
+        }
+    }
+
     if (_.isEqual(user, userAfter)) {
         return null;
     }
     return userAfter;
-}
-
-function getUserType(server, glUser) {
-    if (glUser.is_admin) {
-        return 'admin';
-    } else if (glUser.external) {
-        return 'external';
-    } else {
-        return 'regular';
-    }
 }
 
 /**

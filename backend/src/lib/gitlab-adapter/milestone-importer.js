@@ -3,8 +3,8 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
 
+var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Import = require('gitlab-adapter/import');
 
 // accessors
 var Story = require('accessors/story');
