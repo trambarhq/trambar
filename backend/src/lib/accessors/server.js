@@ -161,9 +161,11 @@ module.exports = _.create(Data, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        // not used in client app
-        if (subscription.schema === '*' || subscription.schema === event.schema) {
-            return true;
+        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+            // not used in client app
+            if (subscription.area === 'admin') {
+                return true;
+            }
         }
         return false;
     },
