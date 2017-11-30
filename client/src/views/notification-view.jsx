@@ -102,7 +102,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderIcon: function() {
-        return <i className={`fa fa-${this.getNotificationIcon()}`}/>;
+        return <i className={`fa fa-${this.getNotificationIcon()} fa-fw`}/>;
     },
 
     /**
@@ -208,7 +208,7 @@ module.exports = React.createClass({
             case 'assignment': return 'hand-o-right';
             case 'push': 'cubes';
             case 'merge': 'cubes';
-            case 'coauthor': return '?';
+            case 'coauthor': return 'handshake-o';
             case 'survey': return 'list-url';
             case 'bookmark': return 'bookmark';
             case 'join_request': return 'user-circle';
