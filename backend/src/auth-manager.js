@@ -11,6 +11,7 @@ var HtpasswdAuth = require('htpasswd-auth');
 var Async = require('async-do-while');
 var HttpError = require('errors/http-error');
 var Database = require('database');
+var Shutdown = require('shutdown');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 
@@ -792,14 +793,4 @@ if (process.argv[1] === __filename) {
     start();
 }
 
-_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
-    process.on(sig, function() {
-        stop().then(() => {
-            process.exit(0);
-        });
-    });
-});
-
-process.on('uncaughtException', function(err) {
-    console.error(err);
-});
+Shutdown.on(stop);

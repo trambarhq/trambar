@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
+var Shutdown = require('shutdown');
 
 // global accessors
 var Authentication = require('accessors/authentication');

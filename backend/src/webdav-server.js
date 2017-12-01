@@ -7,7 +7,9 @@ var File = JsDAVPromise.File;
 var Collection = JsDAVPromise.Collection;
 
 var Database = require('database');
+var Shutdown = require('shutdown');
 
+// accessors
 var Authentication = require('accessors/authentication');
 var Authorization = require('accessors/authorization');
 var Commit = require('accessors/commit');

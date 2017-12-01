@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
+var Shutdown = require('shutdown');
 var TaskQueue = require('utils/task-queue');
 
 var Task = require('accessors/task');
@@ -66,6 +67,12 @@ function TaskLog(server, action, options) {
     this.noop = true;
     this.unsaved = false;
     this.error = null;
+
+    // monitor for system shutdown to ensure data is saved
+    this.shutdownListener = () => {
+        return this.save();
+    };
+    Shutdown.on(this.shutdownListener);
 }
 
 /**
@@ -113,11 +120,33 @@ TaskLog.prototype.report = function(completion, details) {
 };
 
 /**
+ * Preserved any unsaved progress info
+ *
+ * @return {Promise}
+ */
+TaskLog.prototype.save = function() {
+    if (!this.unsaved) {
+        return Promise.resolve();
+    }
+    return Database.open().then((db) => {
+        var columns = {
+            id: this.id,
+            completion: this.completion,
+            details: this.details,
+        };
+        return Task.updateOne(db, 'global', columns).then((task) => {
+            this.unsaved = false;
+        });
+    });
+};
+
+/**
  * Record that the task is done
  */
 TaskLog.prototype.finish = function(details) {
     // indicate we don't want to skip the call by omitting frequency
     this.queue.schedule('log', () => {
+        Shutdown.off(this.shutdownListener);
         return Database.open().then((db) => {
             var columns = {
                 id: this.id,
@@ -125,7 +154,8 @@ TaskLog.prototype.finish = function(details) {
                 details: (this.unsaved) ? this.details : undefined,
                 etime: String('NOW()'),
             };
-            return Task.updateOne(db, 'global', columns).then(() => {
+            return Task.updateOne(db, 'global', columns).then((task) => {
+                console.log(`${task.action}: finished`);
                 this.unsaved = false;
             });
         });
@@ -140,6 +170,7 @@ TaskLog.prototype.finish = function(details) {
 TaskLog.prototype.abort = function(err) {
     this.error = err;
     this.queue.schedule('log', () => {
+        Shutdown.off(this.shutdownListener);
         return Database.open().then((db) => {
             var details = _.clone(this.details) || {};
             var completion = this.completion;
@@ -159,7 +190,8 @@ TaskLog.prototype.abort = function(err) {
                 details,
                 etime: String('NOW()'),
             };
-            return Task.updateOne(db, 'global', columns).then(() => {
+            return Task.updateOne(db, 'global', columns).then((task) => {
+                console.log(`${task.action}: aborted`);
                 this.unsaved = false;
             });
         });

@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
+var Shutdown = require('shutdown');
 
 // accessors
 var Statistics = require('accessors/statistics');
@@ -238,14 +239,4 @@ if (process.argv[1] === __filename) {
     start();
 }
 
-_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
-    process.on(sig, function() {
-        stop().then(() => {
-            process.exit(0);
-        });
-    });
-});
-
-process.on('uncaughtException', function(err) {
-    console.error(err);
-});
+Shutdown.on(stop);

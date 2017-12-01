@@ -6,6 +6,7 @@ var Moment = require('moment');
 
 var LodashExtra = require('utils/lodash-extra');
 var Database = require('database');
+var Shutdown = require('shutdown');
 var HttpError = require('errors/http-error');
 
 // global accessors
@@ -427,15 +428,4 @@ if (process.argv[1] === __filename) {
     start();
 }
 
-_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
-    process.on(sig, function() {
-        stop().then(() => {
-            process.exit(0);
-        });
-    });
-});
-
-
-process.on('uncaughtException', function(err) {
-    console.error(err);
-});
+Shutdown.on(stop);

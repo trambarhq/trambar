@@ -10,6 +10,7 @@ var DNSCache = require('dnscache');
 var FileType = require('file-type');
 
 var Database = require('database');
+var Shutdown = require('shutdown');
 var Task = require('accessors/task');
 var HttpError = require('errors/http-error');
 
@@ -562,14 +563,4 @@ if (process.argv[1] === __filename) {
     start();
 }
 
-_.each(['SIGTERM', 'SIGUSR2'], (sig) => {
-    process.on(sig, function() {
-        stop().then(() => {
-            process.exit(0);
-        });
-    });
-});
-
-process.on('uncaughtException', function(err) {
-    console.error(err);
-});
+Shutdown.on(stop);
