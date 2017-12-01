@@ -163,11 +163,8 @@ module.exports = _.create(LiveData, {
                     // used for ranking stories only
                     break;
                 case 'daily-notifications':
-                    // TODO: remove this check once filters have been added to the event object
-                    if (event.current.filters) {
-                        if (event.current.filters.target_user_id !== user.id) {
-                            break;
-                        }
+                    if (event.current.filters.target_user_id !== user.id) {
+                        break;
                     }
                 default:
                     return true;

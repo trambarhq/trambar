@@ -18,7 +18,10 @@ module.exports = _.create(Data, {
         token: String,
         details: Object,
         completion: Number,
+        failed: Boolean,
+        noop: Boolean,
         user_id: Number,
+        server_id: Number,
         etime: String,
     },
     criteria: {
@@ -27,7 +30,11 @@ module.exports = _.create(Data, {
         action: String,
         token: String,
         completion: Number,
+        failed: Boolean,
+        noop: Boolean,
         deleted: Boolean,
+        user_id: Number,
+        server_id: Number,
     },
 
     /**
@@ -49,10 +56,13 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 action varchar(64) NOT NULL,
-                token varchar(64) NULL,
+                token varchar(64),
                 options jsonb NOT NULL DEFAULT '{}',
                 completion int NOT NULL DEFAULT 0,
+                failed boolean NOT NULL DEFAULT false,
+                noop boolean NOT NULL DEFAULT false,
                 user_id int,
+                server_id int,
                 etime timestamp,
                 PRIMARY KEY (id)
             );
@@ -70,7 +80,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'user_id', 'deleted' ];
+            var propNames = [ 'action', 'user_id', 'server_id', 'deleted' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
@@ -117,6 +127,7 @@ module.exports = _.create(Data, {
                 object.action = row.action;
                 object.token = row.token;
                 object.user_id = row.user_id;
+                object.server_id = row.server_id;
                 object.options = row.options;
                 object.completion = row.completion;
             });

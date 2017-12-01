@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 
 var Import = require('external-services/import');
+var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
 
 // accessors
@@ -68,7 +69,7 @@ function copyEventProperties(story, author, glEvent, link) {
  * @return {Promise<Array<Repo>>}
  */
 function importRepositories(db, server) {
-    console.log(`Importing repositories from ${server.name}`);
+    var taskLog = TaskLog.start(server, 'gitlab-repo-import');
     // find existing repos connected with server
     var criteria = {
         external_object: Import.Link.create(server),
@@ -77,12 +78,24 @@ function importRepositories(db, server) {
     return Repo.find(db, 'global', criteria, '*').then((repos) => {
         // get list of repos from Gitlab
         return fetchRepos(server).then((glRepos) => {
+            var count = _.size(glRepos);
             return deleteMissingRepos(db, server, repos, glRepos).then((deleted) => {
                 return addNewRepos(db, server, repos, glRepos).then((added) => {
+                    if (!_.isEmpty(deleted) || !_.isEmpty(added)) {
+                        taskLog.report(100, {
+                            count,
+                            deleted: _.size(deleted),
+                            added: _.size(added),
+                        });
+                    }
                     return added;
                 });
             });
         });
+    }).then(() => {
+        taskLog.finish();
+    }).catch((err) => {
+        taskLog.abort(err);
     });
 }
 

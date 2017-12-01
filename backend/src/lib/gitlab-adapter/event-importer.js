@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 
 var Import = require('external-services/import');
+var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
 var IssueImporter = require('gitlab-adapter/issue-importer');
 var MergeRequestImporter = require('gitlab-adapter/merge-request-importer');
@@ -27,7 +28,8 @@ exports.importEvents = importEvents;
  * @return {Promise}
  */
 function importEvents(db, server, repo, project) {
-    return findLastEventTime(db, project, server, repo).then((lastEventTime) => {
+    return TaskLog.last(server, 'gitlab-event-import').then((lastTask) => {
+        var lastEventTime = _.get(lastTask, 'details.last_event_time');
         var repoLink = Import.Link.find(repo, server);
         var url = `/projects/${repoLink.project.id}/events`;
         var params = { sort: 'asc' };
@@ -37,19 +39,20 @@ function importEvents(db, server, repo, project) {
             var dayBefore = Moment(lastEventTime).subtract(1, 'day');
             params.after = dayBefore.format('YYYY-MM-DD');
         }
+        var taskLog = TaskLog.start(server, 'gitlab-event-import');
+        var count = 0;
         var firstEventAge;
         var now = Moment();
         return Transport.fetchEach(server, url, params, (glEvent, index, total) => {
-            var eventTime = Moment(glEvent.created_at).toISOString();
             if (lastEventTime) {
-                if (eventTime <= lastEventTime) {
+                if (glEvent.created_at <= lastEventTime) {
                     return;
                 }
             }
             var progress;
             if (total) {
                 // when the number of events is known, calculate progress using that
-                progress = index / total;
+                progress = (index + 1) / total;
             } else {
                 // otherwise, use the event time to calculate progress
                 var eventAge = now.diff(eventTime);
@@ -58,9 +61,16 @@ function importEvents(db, server, repo, project) {
                 }
                 progress = (firstEventAge - eventAge) / firstEventAge;
             }
-            var percent = Math.round(progress * 100);
-            console.log(`Importing event "${glEvent.action_name}" [${percent}%]`);
-            return importEvent(db, server, repo, project, glEvent);
+            return importEvent(db, server, repo, project, glEvent).then(() => {
+                taskLog.report(Math.round(progress * 100), {
+                    last_event_time: glEvent.created_at,
+                    added: ++count,
+                });
+            });
+        }).then(() => {
+            taskLog.finish();
+        }).catch((err) => {
+            taskLog.abort(err);
         });
     }).then(() => {
         console.log('Finished importing events')
@@ -117,26 +127,4 @@ function getImporter(glEvent) {
         case 'pushed_to':
         case 'pushed to': return PushImporter;
     }
-}
-
-/**
- * Return publication time of the most recent story from repository
- *
- * @param  {Database} db
- * @param  {Project} project
- * @param  {Server} server
- * @param  {Repo} repo
- *
- * @return {Promise<String|null>}
- */
-function findLastEventTime(db, project, server, repo) {
-    var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
-    var criteria = {
-        external_object: repoLink,
-        published: true,
-    };
-    return Story.findOne(db, schema, criteria, 'MAX(ptime) AS time').then((row) => {
-        return (row && row.time) ? row.time : null;
-    });
 }

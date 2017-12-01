@@ -82,39 +82,39 @@ module.exports = React.createClass({
                 if (!res.url) {
                     if (res.file instanceof Blob) {
                         // a local file
-                        return 'upload image';
+                        return 'image-upload';
                     } else if (res.external_url) {
                         // a file at cloud-storage provider
-                        return 'copy image';
+                        return 'image-copy';
                     }
                 }
                 break;
             case 'audio':
                 if (!res.url) {
                     if (res.stream) {
-                        return 'copy and transcode audio';
+                        return 'audio-upload-transcode';
                     } else if (res.file instanceof Blob) {
-                        return 'upload and transcode audio';
+                        return 'audio-upload-transcode';
                     } else if (res.external_url) {
-                        return 'copy and transcode audio';
+                        return 'audio-copy-transcode';
                     }
                 }
             break;
             case 'video':
                 if (!res.url) {
                     if (res.stream) {
-                        return 'copy and transcode video';
+                        return 'video-upload-transcode';
                     } else if (res.file instanceof Blob) {
-                        return 'upload and transcode video';
+                        return 'video-upload-transcode';
                     } else if (res.external_url) {
-                        return 'copy and transcode video';
+                        return 'video-copy-transcode';
                     }
                 }
                 break;
             case 'website':
                 if (!res.poster_url) {
                     if (res.url) {
-                        return 'generate website poster';
+                        return 'website-poster-generate';
                     }
                 }
                 break;
@@ -250,19 +250,19 @@ module.exports = React.createClass({
         var url = payload.address;
         var id = payload.payload_id;
         switch (payload.action) {
-            case 'upload image':
-            case 'copy image':
+            case 'image-upload':
+            case 'image-copy':
                 url += `/media/images/upload/${schema}/${id}`;
                 break;
-            case 'copy and transcode video':
-            case 'upload and transcode video':
+            case 'video-copy-transcode':
+            case 'video-upload-transcode':
                 url += `/media/videos/upload/${schema}/${id}`;
                 break;
-            case 'copy and transcode audio':
-            case 'upload and transcode audio':
+            case 'audio-copy-transcode':
+            case 'audio-upload-transcode':
                 url += `/media/audios/upload/${schema}/${id}`;
                 break;
-            case 'generate website poster':
+            case 'website-poster-generate':
                 url += `/media/html/screenshot/${schema}/${id}`;
                 break;
             default:
