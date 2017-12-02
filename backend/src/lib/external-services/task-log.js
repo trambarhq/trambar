@@ -61,7 +61,7 @@ function TaskLog(server, action, options) {
     this.queue = new TaskQueue({ overriding: true });
     this.frequency = '1 second';
 
-    this.id = null;
+    this.id = undefined;
     this.completion = undefined;
     this.details = undefined;
     this.noop = true;
@@ -102,6 +102,7 @@ TaskLog.prototype.start = function() {
 TaskLog.prototype.report = function(completion, details) {
     this.completion = completion;
     this.details = details;
+
     this.noop = false;
     this.unsaved = true;
     this.queue.schedule('log', this.frequency, () => {
@@ -132,9 +133,12 @@ TaskLog.prototype.save = function() {
         var columns = {
             id: this.id,
             completion: this.completion,
+            noop: this.noop,
             details: this.details,
+            etime: (this.completion === 100) ? String('NOW()') : undefined,
         };
-        return Task.updateOne(db, 'global', columns).then((task) => {
+        return Task.saveOne(db, 'global', columns).then((task) => {
+            console.log(`${task.action}: interrupted`);
             this.unsaved = false;
         });
     });
@@ -145,12 +149,14 @@ TaskLog.prototype.save = function() {
  */
 TaskLog.prototype.finish = function(details) {
     // indicate we don't want to skip the call by omitting frequency
+    this.completion = 100;
     this.queue.schedule('log', () => {
         Shutdown.off(this.shutdownListener);
         return Database.open().then((db) => {
             var columns = {
                 id: this.id,
-                completion: 100,
+                completion: this.completion,
+                noop: this.noop,
                 details: (this.unsaved) ? this.details : undefined,
                 etime: String('NOW()'),
             };
@@ -185,7 +191,6 @@ TaskLog.prototype.abort = function(err) {
             var columns = {
                 id: this.id,
                 failed: true,
-                noop: this.noop,
                 completion,
                 details,
                 etime: String('NOW()'),

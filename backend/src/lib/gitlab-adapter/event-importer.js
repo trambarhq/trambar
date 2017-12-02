@@ -72,8 +72,6 @@ function importEvents(db, server, repo, project) {
         }).catch((err) => {
             taskLog.abort(err);
         });
-    }).then(() => {
-        console.log('Finished importing events')
     });
 }
 

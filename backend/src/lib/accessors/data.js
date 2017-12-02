@@ -432,7 +432,8 @@ module.exports = {
         // see which columns are being set
         _.each(rows, (row) => {
             _.each(columns, (name) => {
-                if (row.hasOwnProperty(name)) {
+                var value = row[name];
+                if (value !== undefined) {
                     if (columnsPresent.indexOf(name) === -1) {
                         columnsPresent.push(name);
                         if (name === 'id') {
@@ -445,8 +446,8 @@ module.exports = {
         _.each(rows, (row) => {
             var values = [];
             _.each(columnsPresent, (name) => {
-                if (row.hasOwnProperty(name)) {
-                    var value = row[name];
+                var value = row[name];
+                if (value !== undefined) {
                     if (value instanceof String) {
                         // a boxed string--just insert it into the query
                         values.push(value.valueOf());

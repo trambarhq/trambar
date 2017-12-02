@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var Moment = require('moment');
 
 module.exports = TaskQueue;
@@ -8,6 +9,7 @@ function TaskQueue(options) {
     this.current = null;
     this.options = options || {};
     this.startTimes = {};
+    this.random = Math.random();
 }
 
 TaskQueue.prototype.schedule = function(name, frequency, func) {
@@ -54,9 +56,7 @@ TaskQueue.prototype.schedule = function(name, frequency, func) {
     }
     this.tasks.push({ name, func });
     if (!this.current) {
-        setImmediate(() => {
-            this.next();
-        });
+        this.next();
     }
     return null;
 }
@@ -64,27 +64,21 @@ TaskQueue.prototype.schedule = function(name, frequency, func) {
 TaskQueue.prototype.next = function() {
     var task = this.tasks.shift();
     if (task) {
-        try {
-            var promise = task.func();
-            if (task.name) {
-                this.startTimes[task.name] = Moment().toISOString();
-            }
-        } catch(err) {
-            console.log(`Error encountered performing task: ${task.name}`);
-            console.error(err);
-        }
-        if (promise) {
-            this.current = task;
-            promise.catch((err) => {
+        this.current = task;
+        setImmediate(() => {
+            Promise.try(() => {
+                return task.func();
+            }).then(() => {
+                if (task.name) {
+                    this.startTimes[task.name] = Moment().toISOString();
+                }
+            }).catch((err) => {
+                console.log(`Error encountered performing task: ${task.name}`);
                 console.error(err);
             }).finally(() => {
                 this.current = null;
                 this.next();
             });
-        } else {
-            setImmediate(() => {
-                this.next();
-            });
-        }
+        });
     }
 }
