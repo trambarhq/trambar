@@ -212,6 +212,7 @@ var NewNotificationsBadge = Relaks.createClass({
             return db.find({ table: 'notification', criteria });
         }).then((notifications) => {
             var count = notifications.length;
+            this.changeFavIcon(count);
             if (!count) {
                 return null;
             }
@@ -222,4 +223,42 @@ var NewNotificationsBadge = Relaks.createClass({
             )
         });
     },
+
+    /**
+     * Use favicon with a badge if there are unread notifications
+     *
+     * @param  {Number} count
+     */
+    changeFavIcon: function(count) {
+        var links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
+            if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
+                return true;
+            }
+        });
+        _.each(links, (link) => {
+            var currentFilename = link.getAttribute('href');
+            if (count > 0) {
+                var icon = _.find(favIcons, { withoutBadge: currentFilename });
+                if (icon) {
+                    link.href = icon.withBadge;
+                }
+            } else {
+                var icon = _.find(favIcons, { withBadge: currentFilename });
+                if (icon) {
+                    link.href = icon.withoutBadge;
+                }
+            }
+        });
+    }
+});
+
+// get the post-WebPack filenames of the favicons
+var paths = require.context('favicon-notification', true, /\.png$/).keys();
+var favIcons = _.map(paths, (path) => {
+    // make the file extension part of the expression passed to require()
+    // so WebPack will filter out other files
+    var name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
+    var withoutBadge = require(`favicon/${name}.png`);
+    var withBadge = require(`favicon-notification/${name}.png`);
+    return { withoutBadge, withBadge };
 });
