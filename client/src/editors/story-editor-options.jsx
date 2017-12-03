@@ -245,8 +245,7 @@ module.exports = React.createClass({
                 renderingDialogBox: true
             });
 
-            // stop menu from closing, as otherwise this component would be
-            // unmounted
+            // stop menu from closing, as otherwise this component would unmount
             evt.stopPropagation();
             this.sendBookmakTarget = evt.target;
         }
@@ -267,6 +266,7 @@ module.exports = React.createClass({
             // fire click event to close menu
             if (this.sendBookmakTarget) {
                 this.sendBookmakTarget.click();
+                this.sendBookmakTarget = null;
             }
         }
     },

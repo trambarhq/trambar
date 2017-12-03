@@ -137,7 +137,7 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     canAddIssue: function() {
-        // TODO: should check whether user has a Gitlab account        
+        // TODO: should check whether user has a Gitlab account
         var story = this.props.story;
         var user = this.props.currentUser;
         if (_.includes(StoryTypes.trackable, story.type)) {
@@ -298,24 +298,40 @@ module.exports = React.createClass({
 
     /**
      * Open dialog box for selecting user
+     *
+     * @param  {Event} evt
      */
-    openSelectionDialogBox: function() {
-        this.setState({
-            selectingRecipients: true,
-            renderingDialogBox: true
-        });
+    openSelectionDialogBox: function(evt) {
+        if (!this.state.selectingRecipients) {
+            this.setState({
+                selectingRecipients: true,
+                renderingDialogBox: true
+            });
+
+            // stop menu from closing, as otherwise this component would unmount
+            evt.stopPropagation();
+            this.sendBookmakTarget = evt.target;
+        }
     },
 
     /**
      * Close dialog box
      */
     closeSelectionDialogBox: function() {
-        this.setState({ selectingRecipients: false });
-        setTimeout(() => {
-            if (!this.state.selectingRecipients) {
-                this.setState({ renderingDialogBox: false });
+        if (this.state.selectingRecipients) {
+            this.setState({ selectingRecipients: false });
+            setTimeout(() => {
+                if (!this.state.selectingRecipients) {
+                    this.setState({ renderingDialogBox: false });
+                }
+            }, 1000);
+
+            // fire click event to close menu
+            if (this.sendBookmakTarget) {
+                this.sendBookmakTarget.click();
+                this.sendBookmakTarget = null;
             }
-        }, 1000);
+        }
     },
 
     /**
@@ -340,7 +356,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleSendBookmarkClick: function(evt) {
-        this.openSelectionDialogBox();
+        this.openSelectionDialogBox(evt);
     },
 
     /**
