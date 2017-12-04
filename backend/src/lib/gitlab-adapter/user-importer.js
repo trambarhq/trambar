@@ -33,7 +33,7 @@ exports.copyUserProperties = copyUserProperties;
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise}
+ * @return {Promise<Story>}
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;

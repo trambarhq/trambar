@@ -16,6 +16,7 @@ module.exports = _.create(Data, {
         details: Object,
         action: String,
         token: String,
+        options: Object,
         details: Object,
         completion: Number,
         failed: Boolean,
@@ -35,6 +36,10 @@ module.exports = _.create(Data, {
         deleted: Boolean,
         user_id: Number,
         server_id: Number,
+        etime: String,
+
+        newer_than: String,
+        older_than: String,
     },
 
     /**
@@ -86,25 +91,28 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Create a trigger on this table that updates another table
+     * Add conditions to SQL query based on criteria object
      *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {String} triggerName
-     * @param  {String} method
-     * @param  {Array<String>} arguments
+     * @param  {Object} criteria
+     * @param  {Object} query
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createUpdateTrigger: function(db, schema, triggerName, method, arguments) {
-        var table = this.getTableName(schema);
-        var sql = `
-            CREATE TRIGGER "${triggerName}"
-            AFTER UPDATE ON ${table}
-            FOR EACH ROW
-            EXECUTE PROCEDURE "${method}"(${arguments.join(', ')});
-        `;
-        return db.execute(sql).return(true);
+    apply: function(criteria, query) {
+        var special = [
+            'newer_than',
+            'older_than',
+        ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.newer_than !== undefined) {
+            conds.push(`ctime > $${params.push(criteria.newer_than)}`);
+        }
+        if (criteria.older_than !== undefined) {
+            conds.push(`ctime < $${params.push(criteria.older_than)}`);
+        }
     },
 
     /**
@@ -130,6 +138,8 @@ module.exports = _.create(Data, {
                 object.server_id = row.server_id;
                 object.options = row.options;
                 object.completion = row.completion;
+                object.etime = row.etime;
+                object.failed = row.failed;
             });
             return objects;
         });
@@ -184,5 +194,27 @@ module.exports = _.create(Data, {
             }
         }
         return false;
+    },
+
+    /**
+     * Create a trigger on this table that updates another table
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {String} triggerName
+     * @param  {String} method
+     * @param  {Array<String>} arguments
+     *
+     * @return {Promise<Boolean>}
+     */
+    createUpdateTrigger: function(db, schema, triggerName, method, arguments) {
+        var table = this.getTableName(schema);
+        var sql = `
+            CREATE TRIGGER "${triggerName}"
+            AFTER UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "${method}"(${arguments.join(', ')});
+        `;
+        return db.execute(sql).return(true);
     },
 });

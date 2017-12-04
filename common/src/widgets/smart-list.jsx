@@ -133,7 +133,7 @@ module.exports = React.createClass({
     componentDidMount: function() {
         // find the list's DOM node and its scroll container
         this.container = ReactDOM.findDOMNode(this);
-        for (var p = this.container.offsetParent; p; p = p.offsetParent) {
+        for (var p = this.container.parentNode; p; p = p.offsetParent) {
             var style = getComputedStyle(p);
             if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
                 this.scrollContainer = p;
@@ -215,10 +215,12 @@ module.exports = React.createClass({
                 var anchorNode = this.itemNodes[this.state.currentAnchor];
                 var anchorOffset = this.anchorOffset;
                 if (anchorNode && anchorOffset !== undefined) {
-                    var actualOffset = anchorNode.offsetTop - this.scrollContainer.scrollTop;
+                    var containerOffsetTop = this.scrollContainer.offsetTop;
+                    var top = anchorNode.offsetTop - containerOffsetTop;
+                    var actualOffset = top - this.scrollContainer.scrollTop;
                     if (actualOffset !== anchorOffset) {
                         // don't reposition when it's at the top
-                        var newScrollTop = anchorNode.offsetTop - anchorOffset;
+                        var newScrollTop = top - anchorOffset;
                         this.scrollContainer.scrollTop = Math.max(0, newScrollTop);
                     }
                 }
@@ -276,18 +278,20 @@ module.exports = React.createClass({
      */
     handleScroll: function(evt) {
         var scrollTop = this.scrollContainer.scrollTop;
-        var anchorNode;
+        var containerOffsetTop = this.scrollContainer.offsetTop;
+        var anchorNode, anchorTop;
         if (scrollTop > 0) {
             // release the anchor when user scrolls to the very top
             for (var id in this.itemNodes) {
                 anchorNode = this.itemNodes[id];
-                if (anchorNode.offsetTop > scrollTop) {
+                anchorTop = anchorNode.offsetTop - containerOffsetTop;
+                if (anchorTop > scrollTop) {
                     break;
                 }
             }
         }
         var currentAnchor = (anchorNode) ? anchorNode.id : undefined;
-        this.anchorOffset = (anchorNode) ? anchorNode.offsetTop - scrollTop : undefined;
+        this.anchorOffset = (anchorNode) ? anchorTop - scrollTop : undefined;
         if (this.state.currentAnchor !== currentAnchor) {
             this.setState({ currentAnchor });
             this.triggerAnchorChangeEvent(currentAnchor);

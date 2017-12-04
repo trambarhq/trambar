@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var ReactDOM = require('react-dom');
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
@@ -22,6 +23,7 @@ var TextField = require('widgets/text-field');
 var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var CollapsibleContainer = require('widgets/collapsible-container');
+var TaskList = require('widgets/task-list');
 var InputError = require('widgets/input-error');
 var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
@@ -55,6 +57,7 @@ module.exports = Relaks.createClass({
                     params.server = parseInt(params.server);
                 }
                 params.edit = !!query.edit;
+                params.task = parseInt(_.replace(hash, /\D+/g, ''));
                 return params;
             });
         },
@@ -70,6 +73,9 @@ module.exports = Relaks.createClass({
             var path = `/servers/${params.server}/`, query, hash;
             if (params.edit) {
                 query = { edit: 1 };
+            }
+            if (params.task) {
+                hash = `T${params.task}`;
             }
             return { path, query, hash };
         },
@@ -373,6 +379,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <h2>{t('server-summary-member-$name', title)}</h2>
                 {this.renderForm()}
                 {this.renderInstructions()}
+                {this.renderTaskList()}
                 <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
                 <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
@@ -429,9 +436,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                         </option>
                         <option name="acquire" disabled={!active || !hasIntegration} separator onClick={this.handleAcquireClick}>
                             {t('server-summary-acquire')}
-                        </option>
-                        <option name="log" disabled={!active || !hasAccessToken} onClick={this.handleLogClick}>
-                            {t('server-summary-show-api-log')}
                         </option>
                         <option name="test" disabled={!active || !hasOAuthCredentials} onClick={this.handleTestClick}>
                             {t('server-summary-test-oauth')}
@@ -869,6 +873,40 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Render task history
+     *
+     * @return {ReactElement}
+     */
+    renderTaskList: function() {
+        var t = this.props.locale.translate;
+        var params = this.props.route.parameters;
+        var historyProps = {
+            server: this.props.server,
+            selectedTaskId: params.task,
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return (
+            <div className="task-history">
+                <h2>{t('server-summary-activities')}</h2>
+                <TaskList {...historyProps} />
+            </div>
+        );
+    },
+
+    componentDidMount: function() {
+        var params = this.props.route.parameters;
+        if (params.task) {
+            var node = ReactDOM.findDOMNode(this);
+            setTimeout(() => {
+                node.scrollIntoView(false);
+            }, 500);
+        }
+    },
+
+    /**
      * Save user with new flags
      *
      * @param  {Object} flags
@@ -931,14 +969,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 return this.changeFlags({ disabled: false, deleted: false });
             }
         });
-    },
-
-    /**
-     * Called when user clicks log button
-     *
-     * @param  {Event} evt
-     */
-    handleLogClick: function(evt) {
     },
 
     /**

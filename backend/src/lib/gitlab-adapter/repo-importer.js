@@ -24,7 +24,7 @@ exports.updateRepository = updateRepository;
  * @param  {Project} project
  * @param  {Object} glEvent
  *
- * @return {Promise}
+ * @return {Promise<Story>}
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
@@ -83,9 +83,8 @@ function importRepositories(db, server) {
                 return addNewRepos(db, server, repos, glRepos).then((added) => {
                     if (!_.isEmpty(deleted) || !_.isEmpty(added)) {
                         taskLog.report(100, {
-                            count,
-                            deleted: _.size(deleted),
-                            added: _.size(added),
+                            deleted: _.map(deleted, 'name'),
+                            added: _.map(added, 'name'),
                         });
                     }
                     return added;

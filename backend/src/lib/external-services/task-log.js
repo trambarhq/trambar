@@ -132,6 +132,7 @@ TaskLog.prototype.save = function() {
     return Database.open().then((db) => {
         var columns = {
             id: this.id,
+            action: (!this.id) ? this.action : undefined,
             completion: this.completion,
             noop: this.noop,
             details: this.details,

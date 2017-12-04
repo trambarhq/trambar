@@ -10,4 +10,6 @@ module.exports = exports = [
     'gitlab-event-import',
     'gitlab-user-import',
     'gitlab-repo-import',
+    'gitlab-hook-remove',
+    'gitlab-hook-install',
 ];

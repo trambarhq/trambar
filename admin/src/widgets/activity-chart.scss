@@ -10,12 +10,13 @@
         text-align: right;
         font-size: 0.8em;
         margin-bottom: 1em;
-        margin-right: 30px;
+        padding-top: 0.25em;
 
         .item {
             display: inline-block;
             white-space: nowrap;
             margin-left: 0.6em;
+            margin-top: 0.25em;
 
             .ct-chart-bar {
                 width: 0.8em;

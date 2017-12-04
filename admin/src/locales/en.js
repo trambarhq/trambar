@@ -286,6 +286,7 @@ module.exports = function(languageCode) {
         'server-list-oauth-true': 'Active',
 
         'server-summary-acquire': 'Acquire API access',
+        'server-summary-activities': 'Activities',
         'server-summary-add': 'Add new server',
         'server-summary-api-access': 'API access',
         'server-summary-api-access-acquired': 'Administrative access acquired',
@@ -315,7 +316,6 @@ module.exports = function(languageCode) {
         'server-summary-role-none': 'Do not assign any roles to new users',
         'server-summary-roles': 'Role assignment',
         'server-summary-save': 'Save server',
-        'server-summary-show-api-log': 'Show API log',
         'server-summary-test-oauth': 'Test OAuth integration',
         'server-summary-title': 'Name',
         'server-summary-type': 'Server type',
@@ -380,6 +380,37 @@ module.exports = function(languageCode) {
         'table-heading-to-date': 'To date',
         'table-heading-type': 'Type',
         'table-heading-users': 'Users',
+
+        'task-$seconds': (seconds) => {
+            return (seconds === 1) ? `1 second` : `${seconds} seconds`;
+        },
+        'task-imported-$count-events-from-$repo': (count, repo) => {
+            var events = (count === 1) ? `1 event` : `${count} events`;
+            return `Imported ${events} from “${repo}”`;
+        },
+        'task-imported-$count-users': (count) => {
+            var users = (count === 1) ? `1 user` : `${count} users`;
+            return `Imported ${users}`;
+        },
+        'task-imported-$count-repos': (count) => {
+            var repos = (count === 1) ? `1 repository` : `${count} repositories`;
+            return `Imported ${repos}`;
+        },
+        'task-importing-events-from-$repo': (repo) => {
+            return `Importing events from “${repo}”`;
+        },
+        'task-importing-users': 'Importing users',
+        'task-importing-repos': 'Importing repositories',
+        'task-installed-$count-hooks': (count) => {
+            var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
+            return `Installed ${hooks}`;
+        },
+        'task-installing-hooks': 'Installing hooks',
+        'task-removed-$count-hooks': (count) => {
+            var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
+            return `Removed ${hooks}`;
+        },
+        'task-removing-hooks': 'Uninstalling hooks',
 
         'text-field-placeholder-none': 'none',
 

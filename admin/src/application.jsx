@@ -37,6 +37,7 @@ var ErrorPage  = require('pages/error-page');
 
 // widgets
 var SideNavigation = require('widgets/side-navigation');
+var TaskAlertBar = require('widgets/task-alert-bar');
 
 // cache
 var IndexedDBCache = require('data/indexed-db-cache');
@@ -150,7 +151,10 @@ module.exports = React.createClass({
             <div className="application">
                 <SideNavigation {...navProps} />
                 <section className="page-view-port">
-                    {this.renderCurrentPage()}
+                    <div className="scroll-box">
+                        {this.renderCurrentPage()}
+                    </div>
+                    {this.renderTaskAlert()}
                 </section>
             </div>
         );
@@ -177,6 +181,22 @@ module.exports = React.createClass({
             }
         }
         return <CurrentPage {...pageProps} />;
+    },
+
+    /**
+     * Render alert message in pop-up bar at bottom of page
+     *
+     * @return {[type]}
+     */
+    renderTaskAlert: function() {
+        var props = {
+            database: this.state.database,
+            route: this.state.route,
+            payloads: this.state.payloads,
+            locale: this.state.locale,
+            theme: this.state.theme,
+        };
+        return <TaskAlertBar {...props} />;
     },
 
     /**

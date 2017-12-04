@@ -39,8 +39,10 @@ function importEvents(db, server, repo, project) {
             var dayBefore = Moment(lastEventTime).subtract(1, 'day');
             params.after = dayBefore.format('YYYY-MM-DD');
         }
-        var taskLog = TaskLog.start(server, 'gitlab-event-import');
-        var count = 0;
+        var taskLog = TaskLog.start(server, 'gitlab-event-import', {
+            repo: repo.name,
+        });
+        var events = [];
         var firstEventAge;
         var now = Moment();
         return Transport.fetchEach(server, url, params, (glEvent, index, total) => {
@@ -61,10 +63,13 @@ function importEvents(db, server, repo, project) {
                 }
                 progress = (firstEventAge - eventAge) / firstEventAge;
             }
-            return importEvent(db, server, repo, project, glEvent).then(() => {
+            return importEvent(db, server, repo, project, glEvent).then((story) => {
+                if (story) {
+                    events.push(glEvent.action_name);
+                }
                 taskLog.report(Math.round(progress * 100), {
                     last_event_time: glEvent.created_at,
-                    added: ++count,
+                    events,
                 });
             });
         }).then(() => {

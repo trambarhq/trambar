@@ -33,11 +33,14 @@ function installHooks(db, host) {
                 return a.server.id === server.id;
             });
             var count = _.size(serverAssociations);
+            var repos = _.map(serverAssociations, (a) => {
+                return a.repo.name;
+            });
             return Promise.each(serverAssociations, (sa, index) => {
                 return installProjectHook(host, sa.server, sa.repo, sa.project).then(() => {
                     var progress = (index + 1) / count;
                     taskLog.report(Math.round(progress * 100), {
-                        count,
+                        repos,
                     });
                 });
             }).then(() => {
@@ -66,16 +69,18 @@ function removeHooks(db, host) {
                 return a.server.id === server.id;
             });
             var count = _.size(serverAssociations);
+            var repos = _.map(serverAssociations, (a) => {
+                return a.repo.name;
+            });
             return Promise.each(serverAssociations, (sa, index) => {
                 return removeProjectHook(host, sa.server, sa.repo, sa.project).then(() => {
                     var progress = (index + 1) / count;
                     taskLog.report(Math.round(progress * 100), {
-                        count,
+                        repos,
                     });
                 });
             }).then(() => {
                 taskLog.finish();
-                console.log('finish')
             }).catch((err) => {
                 taskLog.abort(err);
             });
