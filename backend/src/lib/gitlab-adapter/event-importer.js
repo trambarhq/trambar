@@ -42,18 +42,19 @@ function importEvents(db, server, repo, project) {
         var taskLog = TaskLog.start(server, 'gitlab-event-import', {
             repo: repo.name,
         });
-        var events = [];
+        var added = [];
         var firstEventAge;
         var now = Moment();
         return Transport.fetchEach(server, url, params, (glEvent, index, total) => {
+            var ctime = glEvent.created_at;
             if (lastEventTime) {
-                if (glEvent.created_at <= lastEventTime) {
+                if (ctime <= lastEventTime) {
                     return;
                 }
             }
             return importEvent(db, server, repo, project, glEvent).then((story) => {
                 if (story) {
-                    events.push(glEvent.action_name);
+                    added.push(glEvent.action_name);
                 }
             }).tap(() => {
                 var nom = index + 1;
@@ -68,10 +69,7 @@ function importEvents(db, server, repo, project) {
                     nom = (firstEventAge - eventAge);
                     denom = firstEventAge;
                 }
-                taskLog.report(nom, denom, {
-                    last_event_time: glEvent.created_at,
-                    events,
-                });
+                taskLog.report(nom, denom, { added, last_event_time: ctime });
             });
         }).tap(() => {
             taskLog.finish();

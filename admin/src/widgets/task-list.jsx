@@ -46,20 +46,6 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<TaskListSync {...props} />);
         return db.start().then((userId) => {
-            // load last 20 tasks
-            if (this.props.server) {
-                var criteria = {
-                    server_id: this.props.server.id,
-                    deleted: false,
-                    noop: false,
-                    limit: 20,
-                };
-                return db.find({ table: 'task', criteria });
-            }
-        }).then((tasks) => {
-            props.tasks = tasks;
-            return meanwhile.show(<TaskListSync {...props} />);
-        }).then(() => {
             if (this.props.server) {
                 // load up to 1000 tasks
                 var criteria = {
@@ -110,37 +96,67 @@ var TaskListSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         if (task.completion === 100) {
             switch (task.action) {
-                case 'gitlab-event-import':
-                    var count = _.size(task.details.events);
-                    var repo = task.options.repo;
-                    return t('task-imported-$count-events-from-$repo', count, repo);
-                case 'gitlab-user-import':
-                    var count = _.size(task.details.added);
-                    return t('task-imported-$count-users', count);
                 case 'gitlab-repo-import':
                     var count = _.size(task.details.added);
                     return t('task-imported-$count-repos', count);
+                case 'gitlab-user-import':
+                    var count = _.size(task.details.added);
+                    return t('task-imported-$count-users', count);
                 case 'gitlab-hook-install':
-                    var count = _.size(task.details.repos);
+                    var count = _.size(task.details.added);
                     return t('task-installed-$count-hooks', count);
                 case 'gitlab-hook-remove':
-                    var count = _.size(task.details.repos);
+                    var count = _.size(task.details.deleted);
                     return t('task-removed-$count-hooks', count);
+                case 'gitlab-event-import':
+                    var count = _.size(task.details.added);
+                    var repo = task.options.repo;
+                    return t('task-imported-$count-events-from-$repo', count, repo);
+                case 'gitlab-push-import':
+                    var count = _.size(task.details.added);
+                    var repo = task.options.repo;
+                    var branch = task.options.branch;
+                    return t('task-imported-push-with-$count-commits-from-$repo-$branch', count, repo, branch);
+                case 'gitlab-commit-comment-import':
+                    var count = _.size(task.details.added);
+                    var repo = task.options.repo;
+                    return t('task-imported-$count-commit-comments-from-$repo', count, repo);
+                case 'gitlab-issue-comment-import':
+                    var count = _.size(task.details.added);
+                    var repo = task.options.repo;
+                    return t('task-imported-$count-issue-comments-from-$repo', count, repo);
+                case 'gitlab-merge-request-comment-import':
+                    var count = _.size(task.details.added);
+                    var repo = task.options.repo;
+                    return t('task-imported-$count-merge-request-comments-from-$repo', count, repo);
                 default:
                     return '';
             }
         } else {
             switch (task.action) {
-                case 'gitlab-event-import':
-                    return t('task-importing-events', task.options.repo);
-                case 'gitlab-user-import':
-                    return t('task-importing-users');
                 case 'gitlab-repo-import':
                     return t('task-importing-repos');
+                case 'gitlab-user-import':
+                    return t('task-importing-users');
                 case 'gitlab-hook-install':
                     return t('task-installing-hooks');
                 case 'gitlab-hook-remove':
                     return t('task-removing-hooks');
+                case 'gitlab-event-import':
+                    var repo = task.options.repo;
+                    return t('task-importing-events-from-$repo', repo);
+                case 'gitlab-push-import':
+                    var repo = task.options.repo;
+                    return t('task-importing-push-from-$repo', repo);
+                case 'gitlab-commit-comment-import':
+                    var repo = task.options.repo;
+                    return t('task-importing-commit-comments-from-$repo', repo);
+                case 'gitlab-issue-comment-import':
+                    var repo = task.options.repo;
+                    return t('task-importing-issue-comments-from-$repo', repo);
+                case 'gitlab-merge-request-comment-import':
+                    var repo = task.options.repo;
+                    return t('task-importing-merge-request-comments-from-$repo', repo);
                 default:
                     return '';
             }
@@ -157,27 +173,16 @@ var TaskListSync = module.exports.Sync = React.createClass({
     getDetails: function(task) {
         var t = this.props.locale.translate;
         switch (task.action) {
-            case 'gitlab-event-import':
-                var eventNames = task.details.events;
-                return _.join(eventNames, ', ');
-            case 'gitlab-user-import':
-                var userNames = _.slice(task.details.added);
-                _.each(task.details.removed, (userName) => {
-                    var key = userNames.length;
-                    userNames.push(<del key={key}>{userName}</del>);
-                });
-                return _.join(userNames, ', ');
             case 'gitlab-repo-import':
-                var repoNames = _.slice(task.details.added);
-                _.each(task.details.removed, (repoName) => {
-                    var key = repoNames.length;
-                    repoNames.push(<del key={key}>{repoName}</del>);
-                });
-                return _.join(repoNames, ', ');
+            case 'gitlab-user-import':
             case 'gitlab-hook-install':
             case 'gitlab-hook-remove':
-                var repoNames = task.details.repos;
-                return _.join(repoNames, ', ');
+            case 'gitlab-event-import':
+            case 'gitlab-push-import':
+            case 'gitlab-commit-comment-import':
+            case 'gitlab-issue-comment-import':
+            case 'gitlab-merge-request-comment-import':
+                return formatAddedDeleteChanged(task.details);
             default:
                 return '';
         }
@@ -363,3 +368,24 @@ var TaskListSync = module.exports.Sync = React.createClass({
 var sortTasks = Memoize(function(tasks) {
     return _.orderBy(tasks, 'id', 'desc');
 });
+
+function formatAddedDeleteChanged(object) {
+    var list = [];
+    _.each(object.deleted, (s) => {
+        var key = list.length;
+        list.push(<del key={key}>{s}</del>);
+        list.push(', ');
+    });
+    _.each(object.modified, (s) => {
+        var key = list.length;
+        list.push(<em key={key}>{s}</em>);
+        list.push(', ');
+    });
+    _.each(object.added, (s) => {
+        var key = list.length;
+        list.push(<ins key={key}>{s}</ins>);
+        list.push(', ');
+    });
+    list.pop();
+    return list;
+}

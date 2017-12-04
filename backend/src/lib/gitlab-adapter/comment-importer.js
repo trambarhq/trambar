@@ -222,12 +222,16 @@ function importPushComments(db, server, repo, project, story) {
                     return Reaction.insertOne(db, schema, reactioNew);
                 }).tap(() => {
                     if (commitCount === 1) {
-                        taskLog.report(noteIndex + 1, noteCount, { added, deleted });
+                        if (!_.isEmpty(added) || !_.isEmpty(deleted)) {
+                            taskLog.report(noteIndex + 1, noteCount, { added, deleted });
+                        }
                     }
                 });
             }).tap(() => {
                 if (commitCount > 1) {
-                    taskLog.report(commitIndex + 1, commitCount, { added, deleted });
+                    if (!_.isEmpty(added) || !_.isEmpty(deleted)) {
+                        taskLog.report(commitIndex + 1, commitCount, { added, deleted });
+                    }
                 }
             });
         });

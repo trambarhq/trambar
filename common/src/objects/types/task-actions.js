@@ -12,4 +12,8 @@ module.exports = exports = [
     'gitlab-repo-import',
     'gitlab-hook-remove',
     'gitlab-hook-install',
+    'gitlab-push-import',
+    'gitlab-commit-comment-import',
+    'gitlab-issue-comment-import',
+    'gitlab-merge-request-comment-import',
 ];

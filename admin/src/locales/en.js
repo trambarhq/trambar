@@ -388,19 +388,47 @@ module.exports = function(languageCode) {
             var events = (count === 1) ? `1 event` : `${count} events`;
             return `Imported ${events} from “${repo}”`;
         },
-        'task-imported-$count-users': (count) => {
-            var users = (count === 1) ? `1 user` : `${count} users`;
-            return `Imported ${users}`;
+        'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
+            var comments = (count === 1) ? `1 commit comment` : `${count} commit comments`;
+            return `Imported ${comments} from “${repo}”`;
+        },
+        'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
+            var comments = (count === 1) ? `1 issue comment` : `${count} issue comments`;
+            return `Imported ${comments} from “${repo}”`;
+        },
+        'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
+            var comments = (count === 1) ? `1 merge-request comment` : `${count} merge-request comments`;
+            return `Imported ${comments} from “${repo}”`;
         },
         'task-imported-$count-repos': (count) => {
             var repos = (count === 1) ? `1 repository` : `${count} repositories`;
             return `Imported ${repos}`;
         },
+        'task-imported-$count-users': (count) => {
+            var users = (count === 1) ? `1 user` : `${count} users`;
+            return `Imported ${users}`;
+        },
+        'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
+            var commits = (count === 1) ? `1 commit` : `${count} commits`;
+            return `Imported push with ${commits} from “${branch}” of “${repo}”`;
+        },
+        'task-importing-commit-comments-from-$repo': (repo) => {
+            return `Importing commit comments from “${repo}”`;
+        },
+        'task-importing-issue-comments-from-$repo': (repo) => {
+            return `Importing issue comments from “${repo}”`;
+        },
+        'task-importing-merge-request-comments-from-$repo': (repo) => {
+            return `Importing merge-request comments from “${repo}”`;
+        },
         'task-importing-events-from-$repo': (repo) => {
             return `Importing events from “${repo}”`;
         },
-        'task-importing-users': 'Importing users',
+        'task-importing-push-from-$repo': (repo) => {
+            return `Importing push from “${repo}”`;
+        },
         'task-importing-repos': 'Importing repositories',
+        'task-importing-users': 'Importing users',
         'task-installed-$count-hooks': (count) => {
             var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
             return `Installed ${hooks}`;

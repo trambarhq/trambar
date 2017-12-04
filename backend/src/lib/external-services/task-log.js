@@ -19,9 +19,7 @@ exports.last = last;
  * @return {TaskLog}
  */
 function start(server, action, options) {
-    var taskLog = new TaskLog(server, action, options);
-    taskLog.start();
-    return taskLog;
+    return new TaskLog(server, action, options);
 }
 
 /**
@@ -65,33 +63,21 @@ function TaskLog(server, action, options) {
     this.completion = undefined;
     this.details = undefined;
     this.noop = true;
-    this.unsaved = false;
+    this.saved = false;
+    this.saving = false;
     this.error = null;
 
     // monitor for system shutdown to ensure data is saved
     this.shutdownListener = () => {
-        return this.save();
+        if (!this.saved) {
+            this.queue.clear();
+            return this.save();
+        } else {
+            return this.savePromise;
+        }
     };
     Shutdown.on(this.shutdownListener);
 }
-
-/**
- * Start logging a task
- */
-TaskLog.prototype.start = function() {
-    this.queue.schedule(() => {
-        return Database.open().then((db) => {
-            var columns = {
-                server_id: _.get(this.server, 'id'),
-                action: this.action,
-                options: this.options,
-            };
-            return Task.insertOne(db, 'global', columns).then((task) => {
-                this.id = task.id;
-            });
-        });
-    });
-};
 
 /**
  * Record progress of task
@@ -103,70 +89,27 @@ TaskLog.prototype.start = function() {
 TaskLog.prototype.report = function(current, total, details) {
     this.completion = (total > 0) ? Math.round(current / total * 100) : 0;
     this.details = details;
-
     this.noop = false;
-    this.unsaved = true;
+    this.saved = false;
     this.queue.schedule('log', this.frequency, () => {
-        return Database.open().then((db) => {
-            var columns = {
-                id: this.id,
-                completion: this.completion,
-                details: this.details,
-            };
-            return Task.updateOne(db, 'global', columns).then((task) => {
-                console.log(`[${task.id}] ${task.action}: ${task.completion}%`);
-                this.unsaved = false;
-            });
-        });
-    });
-};
-
-/**
- * Preserved any unsaved progress info
- *
- * @return {Promise}
- */
-TaskLog.prototype.save = function() {
-    if (!this.unsaved) {
-        return Promise.resolve();
-    }
-    return Database.open().then((db) => {
-        var columns = {
-            id: this.id,
-            action: (!this.id) ? this.action : undefined,
-            completion: this.completion,
-            noop: this.noop,
-            details: this.details,
-            etime: (this.completion === 100) ? String('NOW()') : undefined,
-        };
-        return Task.saveOne(db, 'global', columns).then((task) => {
-            console.log(`[${task.id}] ${task.action}: interrupted`);
-            this.unsaved = false;
-        });
+        return this.save();
     });
 };
 
 /**
  * Record that the task is done
  */
-TaskLog.prototype.finish = function(details) {
+TaskLog.prototype.finish = function() {
+    if (this.completion === 100 && this.saved) {
+        // already has the right values
+        return;
+    }
     // indicate we don't want to skip the call by omitting frequency
     this.completion = 100;
+    this.saved = false;
     this.queue.schedule('log', () => {
         Shutdown.off(this.shutdownListener);
-        return Database.open().then((db) => {
-            var columns = {
-                id: this.id,
-                completion: this.completion,
-                noop: this.noop,
-                details: (this.unsaved) ? this.details : undefined,
-                etime: String('NOW()'),
-            };
-            return Task.updateOne(db, 'global', columns).then((task) => {
-                console.log(`[${task.id}] ${task.action}: finished`);
-                this.unsaved = false;
-            });
-        });
+        return this.save();
     });
 };
 
@@ -177,30 +120,61 @@ TaskLog.prototype.finish = function(details) {
  */
 TaskLog.prototype.abort = function(err) {
     this.error = err;
+    this.details = _.clone(this.details) || {};
+    this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode');
+    this.failed = true;
+    this.saved = false;
     this.queue.schedule('log', () => {
         Shutdown.off(this.shutdownListener);
-        return Database.open().then((db) => {
-            var details = _.clone(this.details) || {};
-            var completion = this.completion;
-            if (err) {
-                details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode');
+        return this.save();
+    });
+};
+
+/**
+ * Preserved any unsaved progress info
+ *
+ * @return {Promise}
+ */
+TaskLog.prototype.save = function() {
+    this.savePromise = Database.open().then((db) => {
+        var columns = {};
+        if (!this.id) {
+            columns.server_id = _.get(this.server, 'id');
+            columns.action = this.action;
+            columns.options = this.options;
+        } else {
+            columns.id = this.id;
+        }
+        columns.completion = this.completion;
+        columns.details  = this.details;
+        if (this.completion === 100 || this.failed) {
+            columns.failed = this.failed;
+            if (!this.failed) {
+                columns.noop = this.noop;
+            }
+            columns.etime = String('NOW()');
+        }
+        return Task.saveOne(db, 'global', columns).then((task) => {
+            if (!this.id) {
+                this.id = task.id;
+            }
+            this.saved = true;
+
+            var state = ''
+            if (task.completion < 100) {
+                if (this.failed) {
+                    state = 'aborted';
+                } else {
+                    state = `${task.completion}%`;
+                }
             } else {
-                if (!this.unsaved) {
-                    // nothing to save
-                    return;
+                state = 'finished';
+                if (this.noop) {
+                    state += ' (noop)';
                 }
             }
-            var columns = {
-                id: this.id,
-                failed: true,
-                completion,
-                details,
-                etime: String('NOW()'),
-            };
-            return Task.updateOne(db, 'global', columns).then((task) => {
-                console.log(`[${task.id}] ${task.action}: aborted`);
-                this.unsaved = false;
-            });
+            console.log(`[${task.id}] ${task.action}: ${state}`);
         });
     });
+    return this.savePromise;
 };

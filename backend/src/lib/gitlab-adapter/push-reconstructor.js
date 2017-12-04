@@ -87,7 +87,7 @@ function importCommits(db, server, repo, branch, headId, count) {
                 queue.push(parentId);
             });
         }).tap(() => {
-            taskLog.report(commitIds.length, count, { ids: commitIds });
+            taskLog.report(commitIds.length, count, { added: commitIds });
         });
     });
     Async.while(() => {
