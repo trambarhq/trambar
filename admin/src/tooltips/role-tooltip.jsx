@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -18,6 +19,7 @@ module.exports = React.createClass({
     propTypes: {
         roles: PropTypes.arrayOf(PropTypes.object),
         disabled: PropTypes.bool,
+        route: PropTypes.object.isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
@@ -28,6 +30,7 @@ module.exports = React.createClass({
         }
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var route = this.props.route;
         var roles = this.props.roles;
         var first = '-';
         if (roles.length > 0) {
@@ -35,9 +38,9 @@ module.exports = React.createClass({
             var role0 = roles[0]
             var url0;
             if (!this.props.disabled) {
-                url0 = require('pages/role-summary-page').getUrl({
-                   roleId: role0.id,
-               });
+                url0 = route.find(require('pages/role-summary-page'), {
+                   role: role0.id,
+                });
             }
             var title0 = p(role0.details.title) || role0.name;
             var first = <a href={url0} key={0}>{title0}</a>;
@@ -52,8 +55,8 @@ module.exports = React.createClass({
                 ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
             }
             var list = _.map(roles, (role, i) => {
-                var url = require('pages/role-summary-page').getUrl({
-                    roleId: role.id,
+                var url = route.find(require('pages/role-summary-page'), {
+                    role: role.id,
                 });
                 var title = p(role.details.title) || role.name;
                 return (
@@ -64,7 +67,7 @@ module.exports = React.createClass({
                     </div>
                 );
             });
-            var listUrl = require('pages/role-list-page').getUrl();
+            var listUrl = route.find(require('pages/role-list-page'));
             var tooltip = (
                 <Tooltip className="role" disabled={this.props.disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>

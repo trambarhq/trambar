@@ -482,6 +482,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
         } else {
             var props = {
                 users: findUsers(this.props.users, server),
+                route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
             };

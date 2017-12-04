@@ -455,6 +455,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             var props = {
                 projects: findProjects(this.props.projects, user),
                 omit: 1,
+                route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
                 disabled: this.state.renderingFullList,
@@ -480,6 +481,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         } else {
             var props = {
                 roles: findRoles(this.props.roles, user),
+                route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
                 disabled: this.state.renderingFullList,

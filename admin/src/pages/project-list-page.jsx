@@ -464,6 +464,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             var props = {
                 users: findUsers(this.props.users, project),
                 project,
+                route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
@@ -489,6 +490,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             var props = {
                 repos: findRepos(this.props.repos, project),
                 project,
+                route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
             };

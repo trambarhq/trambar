@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -19,6 +20,7 @@ module.exports = React.createClass({
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         disabled: PropTypes.bool,
@@ -29,6 +31,7 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
+        var route = this.props.route;
         var label = t('user-tooltip-$count', this.props.users.length);
         var users = this.props.users;
         var ellipsis;
@@ -39,13 +42,13 @@ module.exports = React.createClass({
         var list = _.map(users, (user, i) => {
             var url;
             if (this.props.project) {
-                url = require('pages/user-summary-page').getUrl({
-                    projectId: this.props.project.id,
-                    userId: user.id,
+                url = route.find(require('pages/user-summary-page'), {
+                    project: this.props.project.id,
+                    user: user.id,
                 });
             } else {
-                url = require('pages/user-summary-page').getUrl({
-                    userId: user.id,
+                url = route.find(require('pages/user-summary-page'), {
+                    user: user.id,
                 });
             }
             return (
@@ -60,12 +63,11 @@ module.exports = React.createClass({
         });
         var listUrl;
         if (this.props.project) {
-            listUrl = require('pages/member-list-page').getUrl({
-                projectId: this.props.project.id,
+            listUrl = route.find(require('pages/member-list-page'), {
+                project: this.props.project.id,
             });
         } else {
-            listUrl = require('pages/user-list-page').getUrl({
-            });
+            listUrl = route.find(require('pages/user-list-page'));
         }
         return (
             <Tooltip className="user" disabled={list.length === 0}>

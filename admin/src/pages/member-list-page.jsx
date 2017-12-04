@@ -488,6 +488,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         } else {
             var props = {
                 roles: findRoles(this.props.roles, user),
+                route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
                 disabled: this.state.renderingFullList,

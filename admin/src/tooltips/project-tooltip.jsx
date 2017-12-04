@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
+var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -17,6 +18,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         projects: PropTypes.arrayOf(PropTypes.object),
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
@@ -27,6 +29,7 @@ module.exports = React.createClass({
         }
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var route = this.props.route;
         var projects = this.props.projects;
         var first = '-';
         if (projects.length > 0) {
@@ -34,8 +37,8 @@ module.exports = React.createClass({
             var project0 = projects[0]
             var url0;
             if (!this.props.disabled) {
-                url0 = require('pages/project-summary-page').getUrl({
-                    projectId: project0.id,
+                url0 = route.find(require('pages/project-summary-page'), {
+                    project: project0.id,
                 });
             }
             var title0 = p(project0.details.title) || project0.name;
@@ -51,8 +54,8 @@ module.exports = React.createClass({
                 ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
             }
             var list = _.map(projects, (project, i) => {
-                var url = require('pages/project-summary-page').getUrl({
-                    projectId: project.id,
+                var url = route.find(require('pages/project-summary-page'), {
+                    project: project.id,
                 });
                 var title = p(project.details.title) || project.name;
                 return (
@@ -63,7 +66,7 @@ module.exports = React.createClass({
                     </div>
                 );
             });
-            var listUrl = require('pages/project-list-page').getUrl();
+            var listUrl = route.find(require('pages/project-list-page'), {});
             var tooltip = (
                 <Tooltip className="project" disabled={this.props.disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>
