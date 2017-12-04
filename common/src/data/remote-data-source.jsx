@@ -293,7 +293,11 @@ module.exports = React.createClass({
                     }
                 }
             } else if (search.promise.isRejected()) {
-                search.promise = this.searchRemoteDatabase(search).then(() => {
+                search.promise = this.searchRemoteDatabase(search).then((changed) => {
+                    if (changed) {
+                        this.triggerChangeEvent();
+                        return null;
+                    }
                     return search.results;
                 });
             }
@@ -323,7 +327,12 @@ module.exports = React.createClass({
                 if (localDataValid) {
                     return false;
                 }
-                return this.searchRemoteDatabase(search);
+                return this.searchRemoteDatabase(search).then((changed) => {
+                    if (changed) {
+                        this.triggerChangeEvent();
+                        return null;
+                    }
+                });
             });
             search.promise = localSearchPromise.then((localDataValid) => {
                 if (localDataValid) {
@@ -1226,7 +1235,7 @@ function isSufficientlyCached(search) {
 /**
  * Check if the number of object retrieved from cache meet expectation
  *
- * @param  {[type]}  search
+ * @param  {Object}  search
  *
  * @return {Boolean}
  */
