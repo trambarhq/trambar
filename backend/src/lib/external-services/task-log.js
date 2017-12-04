@@ -96,11 +96,12 @@ TaskLog.prototype.start = function() {
 /**
  * Record progress of task
  *
- * @param  {Number} completion
+ * @param  {Number} current
+ * @param  {Number} total
  * @param  {Object|undefined} details
  */
-TaskLog.prototype.report = function(completion, details) {
-    this.completion = completion;
+TaskLog.prototype.report = function(current, total, details) {
+    this.completion = (total > 0) ? Math.round(current / total * 100) : 0;
     this.details = details;
 
     this.noop = false;
@@ -109,11 +110,11 @@ TaskLog.prototype.report = function(completion, details) {
         return Database.open().then((db) => {
             var columns = {
                 id: this.id,
-                completion,
-                details,
+                completion: this.completion,
+                details: this.details,
             };
             return Task.updateOne(db, 'global', columns).then((task) => {
-                console.log(`${task.action}: ${task.completion}%`);
+                console.log(`[${task.id}] ${task.action}: ${task.completion}%`);
                 this.unsaved = false;
             });
         });
@@ -139,7 +140,7 @@ TaskLog.prototype.save = function() {
             etime: (this.completion === 100) ? String('NOW()') : undefined,
         };
         return Task.saveOne(db, 'global', columns).then((task) => {
-            console.log(`${task.action}: interrupted`);
+            console.log(`[${task.id}] ${task.action}: interrupted`);
             this.unsaved = false;
         });
     });
@@ -162,7 +163,7 @@ TaskLog.prototype.finish = function(details) {
                 etime: String('NOW()'),
             };
             return Task.updateOne(db, 'global', columns).then((task) => {
-                console.log(`${task.action}: finished`);
+                console.log(`[${task.id}] ${task.action}: finished`);
                 this.unsaved = false;
             });
         });
@@ -197,7 +198,7 @@ TaskLog.prototype.abort = function(err) {
                 etime: String('NOW()'),
             };
             return Task.updateOne(db, 'global', columns).then((task) => {
-                console.log(`${task.action}: aborted`);
+                console.log(`[${task.id}] ${task.action}: aborted`);
                 this.unsaved = false;
             });
         });

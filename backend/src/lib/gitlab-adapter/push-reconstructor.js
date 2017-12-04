@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Async = require('async-do-while');
 
+var TaskLog = require('external-services/task-log');
 var CommitImporter = require('gitlab-adapter/commit-importer');
 
 exports.reconstructPush = reconstructPush;
@@ -64,8 +65,13 @@ function reconstructPush(db, server, repo, branch, headId, tailId, count) {
  * @return {Promise<Object<Commits>>}
  */
 function importCommits(db, server, repo, branch, headId, count) {
+    var taskLog = TaskLog.start(server, 'gitlab-push-import', {
+        repo: repo.name,
+        branch: branch,
+    });
     var queue = [ headId ];
     var commits = {};
+    var commitIds = [];
     Async.do(() => {
         var commitId = queue.shift();
         if (commits[commitId]) {
@@ -73,17 +79,20 @@ function importCommits(db, server, repo, branch, headId, count) {
         }
         return CommitImporter.importCommit(db, server, repo, branch, commitId).then((commit) => {
             commits[commitId] = commit;
+            commitIds.push(commitId);
 
             // add parents to queue
             var parentIds = getParentIds(commit);
             _.each(parentIds, (parentId) => {
                 queue.push(parentId);
             });
+        }).tap(() => {
+            taskLog.report(commitIds.length, count, { ids: commitIds });
         });
     });
     Async.while(() => {
         if (!_.isEmpty(queue)) {
-            if (_.size(commits) < count) {
+            if (commitIds.length < count) {
                 return true;
             }
         }
@@ -92,7 +101,11 @@ function importCommits(db, server, repo, branch, headId, count) {
     Async.return(() => {
         return commits;
     });
-    return Async.end();
+    return Async.end().tap(() => {
+        taskLog.finish();
+    }).tapCatch((err) => {
+        taskLog.abort(err);
+    });
 }
 
 function mergeLineChanges(chain) {

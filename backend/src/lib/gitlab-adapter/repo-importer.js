@@ -12,7 +12,6 @@ var Story = require('accessors/story');
 
 exports.importEvent = importEvent;
 exports.importRepositories = importRepositories;
-exports.updateRepository = updateRepository;
 
 /**
  * Import an activity log entry about an issue
@@ -70,113 +69,82 @@ function copyEventProperties(story, author, glEvent, link) {
  */
 function importRepositories(db, server) {
     var taskLog = TaskLog.start(server, 'gitlab-repo-import');
-    // find existing repos connected with server
+    // find existing repos connected with server (including deleted ones)
     var criteria = {
         external_object: Import.Link.create(server),
-        deleted: false,
     };
     return Repo.find(db, 'global', criteria, '*').then((repos) => {
+        var added = [];
+        var deleted = [];
+        var modified = [];
         // get list of repos from Gitlab
         return fetchRepos(server).then((glRepos) => {
-            var count = _.size(glRepos);
-            return deleteMissingRepos(db, server, repos, glRepos).then((deleted) => {
-                return addNewRepos(db, server, repos, glRepos).then((added) => {
-                    if (!_.isEmpty(deleted) || !_.isEmpty(added)) {
-                        taskLog.report(100, {
-                            deleted: _.map(deleted, 'name'),
-                            added: _.map(added, 'name'),
-                        });
+            // delete ones that no longer exists
+            return Promise.each(repos, (repo) => {
+                var repoLink = Import.Link.find(repo, server);
+                if (!_.some(glRepos, { id: repoLink.project.id })) {
+                    deleted.push(repo.name);
+                    return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
+                }
+            }).return(glRepos);
+        }).mapSeries((glRepo, index, count) => {
+            // fetch issue-tracker labels
+            return fetchLabels(server, glRepo.id).then((glLabels) => {
+                // find matching repo
+                return findExistingRepo(db, server, repos, glRepo).then((repo) => {
+                    var link = Import.Link.create(server, {
+                        project: { id: glRepo.id }
+                    });
+                    var repoAfter = copyRepoDetails(repo, glRepo, glLabels, link);
+                    if (!repoAfter) {
+                        return repo;
                     }
-                    return added;
+                    if (repo) {
+                        modified.push(repoAfter.name);
+                        return Repo.updateOne(db, 'global', repoAfter);
+                    } else {
+                        added.push(repoAfter.name);
+                        return Repo.insertOne(db, 'global', repoAfter);
+                    }
+                }).tap(() => {
+                    taskLog.report(index + 1, count, { added, deleted, modified });
                 });
             });
         });
-    }).then(() => {
+    }).tap(() => {
         taskLog.finish();
-    }).catch((err) => {
+    }).tapCatch((err) => {
         taskLog.abort(err);
     });
 }
 
 /**
- * Mark repo records as deleted if there're no corresponding record in Gitlab
+ * Find repo from among existing ones
  *
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Array<Repo>} repos
- * @param  {Array<Object>} glRepos
- *
- * @return {Promise<Array<Repo>>}
- */
-function deleteMissingRepos(db, server, repos, glRepos) {
-    // filter out repos that we want to keep
-    return Promise.filter(repos, (repo) => {
-        var repoLink = Import.Link.find(repo, server);
-        return _.some(glRepos, { id: repoLink.project.id });
-    }).mapSeries((repo) => {
-        return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
-    });
-}
-
-/**
- * Add repos that don't exist in the system yet
- *
- * @param {Database} db
- * @param {Server} server
- * @param {Array<Repo>} repos
- * @param {Array<Object>} glRepos
- *
- * @return {Promise<Array<Repo>>}
- */
-function addNewRepos(db, server, repos, glRepos) {
-    // filter out Gitlab records that have been imported already
-    return Promise.filter(glRepos, (glRepo) => {
-        return !_.some(repos, (repo) => {
-            var repoLink = Import.Link.find(repo, server);
-            if (repoLink.project.id === glRepo.id) {
-                return true;
-            }
-        });
-    }).mapSeries((glRepo) => {
-        // fetch labels as well
-        return fetchLabels(server, glRepo.id).then((glLabels) => {
-            var link = {
-                type: 'gitlab',
-                server_id: server.id,
-                project: { id: glRepo.id }
-            };
-            var repoNew = copyRepoDetails(null, glRepo, glLabels, link);
-            return Repo.insertOne(db, 'global', repoNew);
-        });
-    });
-}
-
-/**
- * Update info of one repo
- *
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Repo} repo
+ * @param  {Object} glRepo
  *
  * @return {Promise<Repo|null>}
  */
-function updateRepository(db, server, repo) {
-    // retrieve record
-    var link = Import.Link.find(repo, server);
-    return fetchRepo(server, link.project.id).then((glRepo) => {
-        // retrieve labels
-        return fetchLabels(server, link.project.id).then((glLabels) => {
-            // update the record if it's different
-            var repoAfter = copyRepoDetails(repo, glRepo, glLabels, link);
-            if (repoAfter) {
-                return Repo.updateOne(db, 'global', repo);
-            } else {
-                return repo;
-            }
-        });
+function findExistingRepo(db, server, repos, glRepo) {
+    var repo = _.find(repos, (repo) => {
+        var repoLink = Import.Link.find(repo, server);
+        if (repoLink.project && repoLink.project.id === glRepo.id) {
+            return true;
+        }
     });
+    if (repo) {
+        if (repo.deleted) {
+            // restore it
+            return Repo.updateOne(db, 'global', { id: repo.id, deleted: false });
+        } else {
+            return Promise.resolve(repo);
+        }
+    }
+    return Promise.resolve(null);
 }
-
 /**
  * Copy details from Gitlab project object
  *
@@ -216,19 +184,6 @@ function copyRepoDetails(repo, glRepo, glLabels, link) {
 function fetchRepos(server) {
     var url = `/projects`;
     return Transport.fetchAll(server, url);
-}
-
-/**
- * Retrieve a single Gitlab repo record
- *
- * @param  {Server} server
- * @param  {Number} glRepoId
- *
- * @return {Promise<Object>}
- */
-function fetchRepo(server, glRepoId) {
-    var url = `/projects/${glRepoId}`;
-    return Transport.fetch(server, url);
 }
 
 /**

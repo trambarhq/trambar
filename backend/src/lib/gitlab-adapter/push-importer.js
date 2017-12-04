@@ -56,7 +56,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
             var link = Import.Link.merge(commitLink, repoLink);
             var storyNew = copyPushProperties(null, author, push, components, glEvent, link);
             return Story.insertOne(db, schema, storyNew).then((story) => {
-                return CommentImporter.importComments(db, server, project, story).return(story);
+                return CommentImporter.importComments(db, server, repo, project, story).return(story);
             });
         });
     });

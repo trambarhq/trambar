@@ -51,30 +51,31 @@ function importEvents(db, server, repo, project) {
                     return;
                 }
             }
-            var progress;
-            if (total) {
-                // when the number of events is known, calculate progress using that
-                progress = (index + 1) / total;
-            } else {
-                // otherwise, use the event time to calculate progress
-                var eventAge = now.diff(eventTime);
-                if (firstEventAge === undefined) {
-                    firstEventAge = eventAge;
-                }
-                progress = (firstEventAge - eventAge) / firstEventAge;
-            }
             return importEvent(db, server, repo, project, glEvent).then((story) => {
                 if (story) {
                     events.push(glEvent.action_name);
                 }
-                taskLog.report(Math.round(progress * 100), {
+            }).tap(() => {
+                var nom = index + 1;
+                var denom = total;
+                if (!total) {
+                    // when the number of events is not yet known, use the event
+                    // time to calculate progress
+                    var eventAge = now.diff(eventTime);
+                    if (firstEventAge === undefined) {
+                        firstEventAge = eventAge;
+                    }
+                    nom = (firstEventAge - eventAge);
+                    denom = firstEventAge;
+                }
+                taskLog.report(nom, denom, {
                     last_event_time: glEvent.created_at,
                     events,
                 });
             });
-        }).then(() => {
+        }).tap(() => {
             taskLog.finish();
-        }).catch((err) => {
+        }).tapCatch((err) => {
             taskLog.abort(err);
         });
     });
@@ -92,7 +93,7 @@ function importEvents(db, server, repo, project) {
  * @return {Promise}
  */
 function importEvent(db, server, repo, project, glEvent) {
-    return UserImporter.importUser(db, server, glEvent.author).then((author) => {
+    return UserImporter.findUser(db, server, glEvent.author).then((author) => {
         if (!author) {
             return;
         }
