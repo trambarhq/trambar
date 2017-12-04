@@ -137,16 +137,29 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var task = this.state.selectedTask;
         switch (task.action) {
-            case 'gitlab-event-import':
-                return t('task-importing-events', task.options.repo);
-            case 'gitlab-user-import':
-                return t('task-importing-users');
             case 'gitlab-repo-import':
                 return t('task-importing-repos');
+            case 'gitlab-user-import':
+                return t('task-importing-users');
             case 'gitlab-hook-install':
                 return t('task-installing-hooks');
             case 'gitlab-hook-remove':
                 return t('task-removing-hooks');
+            case 'gitlab-event-import':
+                var repo = task.options.repo;
+                return t('task-importing-events-from-$repo', repo);
+            case 'gitlab-push-import':
+                var repo = task.options.repo;
+                return t('task-importing-push-from-$repo', repo);
+            case 'gitlab-commit-comment-import':
+                var repo = task.options.repo;
+                return t('task-importing-commit-comments-from-$repo', repo);
+            case 'gitlab-issue-comment-import':
+                var repo = task.options.repo;
+                return t('task-importing-issue-comments-from-$repo', repo);
+            case 'gitlab-merge-request-comment-import':
+                var repo = task.options.repo;
+                return t('task-importing-merge-request-comments-from-$repo', repo);
             default:
                 return '';
         }

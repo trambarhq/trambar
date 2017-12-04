@@ -62,7 +62,7 @@ function importEvents(db, server, repo, project) {
                 if (!total) {
                     // when the number of events is not yet known, use the event
                     // time to calculate progress
-                    var eventAge = now.diff(eventTime);
+                    var eventAge = now.diff(ctime);
                     if (firstEventAge === undefined) {
                         firstEventAge = eventAge;
                     }
