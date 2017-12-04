@@ -131,11 +131,12 @@ function parseSurveyResults(text, voteCounts, onReference) {
                 var total = _.get(tally, 'total', 0);
                 var count = _.get(tally, [ 'answers', item.key ], 0);
                 var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+                var color = `color-${item.key % 10}`;
                 return (
                     <div className="vote-count" key={key}>
                         <div className="label">{label}</div>
                         <div className="bar">
-                            <span className="filled" style={{ width: percent }} />
+                            <span className={`filled ${color}`} style={{ width: percent }} />
                             <span className="percent">{percent}</span>
                             <span className="count">{count + '/' + total}</span>
                         </div>

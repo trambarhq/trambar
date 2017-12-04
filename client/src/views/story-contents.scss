@@ -128,7 +128,7 @@
                             );
 
                             @for $i from 0 to length($series-colors) {
-                              &:nth-child(10n+#{$i}) {
+                              &.color-#{$i} {
                                 background-color: nth($series-colors, $i + 1);
                               }
                             }
