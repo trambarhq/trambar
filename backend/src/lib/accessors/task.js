@@ -85,7 +85,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'action', 'user_id', 'server_id', 'deleted' ];
+            var propNames = [ 'action', 'user_id', 'server_id', 'noop', 'failed', 'deleted' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
@@ -185,12 +185,17 @@ module.exports = _.create(Data, {
      */
     isRelevantTo: function(event, user, subscription) {
         if (Data.isRelevantTo(event, user, subscription)) {
+            if (event.current.noop) {
+                return false;
+            }
             if (event.current.user_id) {
                 if (event.current.user_id === user.id) {
                     return true;
                 }
             } else {
-                return true;
+                if (subscription.area === 'admin') {
+                    return true;
+                }
             }
         }
         return false;
