@@ -96,9 +96,8 @@ module.exports = Relaks.createClass({
             props.servers = servers;
             return meanwhile.show(<ServerListPageSync {...props} />);
         }).then(() => {
-            // load users associated with servers
             var criteria = {
-                server_id: _.map(props.servers, 'id')
+                deleted: false,
             };
             return db.find({ table: 'user', criteria });
         }).then((users) => {
@@ -689,5 +688,11 @@ function hasAPICredentials(server) {
 }
 
 var findUsers = Memoize(function(users, server) {
-    return _.filter(users, { server_id: server.id });
+    return _.filter(users, (user) => {
+        return _.some(user.external, (link) => {
+            if (link.server_id === server.id) {
+                return true;
+            }
+        });
+    });
 });
