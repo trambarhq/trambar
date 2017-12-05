@@ -8,7 +8,7 @@ exports.loadUserStatistics = loadUserStatistics;
 exports.loadRepoStatistics = loadRepoStatistics;
 
 function loadProjectStatistics(db, projects) {
-    return Promise.map(projects, (project) => {
+    return Promise.mapSeries(projects, (project) => {
         if (project.deleted) {
             return null;
         }
@@ -140,7 +140,7 @@ function getRangeFilters(dateRange) {
     var e = Moment(dateRange.details.end_time).endOf('month');
     var tzOffset = s.utcOffset();
     var timeRanges = [];
-    for (var m = s.clone(); m.month() <= e.month(); m.add(1, 'month')) {
+    for (var m = s.clone(); m < e; m.add(1, 'month')) {
         var rangeStart = m.toISOString();
         var rangeEnd = m.clone().endOf('month').toISOString();
         var range = `[${rangeStart},${rangeEnd}]`;
