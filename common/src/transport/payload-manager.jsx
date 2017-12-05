@@ -316,7 +316,7 @@ module.exports = React.createClass({
                                 // evt.loaded and evt.total are encoded sizes,
                                 // which are slightly larger than the blob size
                                 var bytesSent = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
-                                this.updatePayloadStatus(payload, {
+                                this.updatePayloadStatus(payload.id, {
                                     transferred: uploadedChunkSize + bytesSent,
                                     total: stream.size,
                                 });
@@ -356,17 +356,16 @@ module.exports = React.createClass({
     /**
      * Update status of file payload, using info from response
      *
-     * @param  {Object} payload
+     * @param  {Number} payloadId
      * @param  {Object} props
      */
-    updatePayloadStatus: function(payload, props) {
+    updatePayloadStatus: function(payloadId, props) {
         var payloads = _.slice(this.state.payloads);
-        var index = _.indexOf(payloads, payload);
+        var index = _.findIndex(payloads, { payload_id: payloadId });
         if (index === -1) {
             return;
         }
-        payload = _.assign({}, payload, props);
-        payloads[index] = payload;
+        payloads[index] = _.assign({}, payloads[index], props);
         this.setState({ payloads }, () => {
             this.triggerChangeEvent();
         });
@@ -418,6 +417,33 @@ module.exports = React.createClass({
                 return null;
             }
         });
+    },
+
+    /**
+     * Return the current upload progress
+     *
+     * @return {Object|null}
+     */
+    getUploadProgress: function() {
+        var files = 0;
+        var bytes = 0;
+        _.each(this.state.payloads, (payload) => {
+            var transferred = payload.transferred;
+            var total = payload.total;
+            if (total === 0) {
+                // hasn't started yet
+                if (payload.file) {
+                    total = payload.file.size;
+                } else if (payload.stream) {
+                    total = payload.stream.size;
+                }
+            }
+            if (transferred < total) {
+                files++;
+                bytes += Math.max(0, total - transferred);
+            }
+        });
+        return (files > 0) ? { files, bytes } : null;
     },
 
     /**

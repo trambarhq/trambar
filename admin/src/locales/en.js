@@ -447,6 +447,11 @@ module.exports = function(languageCode) {
         },
         'tooltip-more': 'More',
 
+        'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `Uploading ${files}, ${size} remaining`;
+        },
+
         'user-list-$name-with-$username': (name, username) => {
             if (name) {
                 if (username) {

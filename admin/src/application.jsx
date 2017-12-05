@@ -39,6 +39,7 @@ var ErrorPage  = require('pages/error-page');
 // widgets
 var SideNavigation = require('widgets/side-navigation');
 var TaskAlertBar = require('widgets/task-alert-bar');
+var UploadProgress = require('widgets/upload-progress');
 
 // cache
 var IndexedDBCache = require('data/indexed-db-cache');
@@ -103,6 +104,7 @@ module.exports = React.createClass({
             canAccessServer: false,
             subscriptionId: null,
             connectionId: null,
+            showingUploadProgress: false,
         };
     },
 
@@ -157,6 +159,7 @@ module.exports = React.createClass({
                         {this.renderCurrentPage()}
                     </div>
                     {this.renderTaskAlert()}
+                    {this.renderUploadProgress()}
                 </section>
             </div>
         );
@@ -285,6 +288,29 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render upload progress pop-up if it's activated
+     *
+     * @return {ReactElement|null}
+     */
+    renderUploadProgress: function() {
+        if (!this.state.showingUploadProgress) {
+            return null;
+        }
+        var props = {
+            payloads: this.state.payloads,
+            locale: this.state.locale,
+        };
+        return <UploadProgress {...props} />;
+    },
+
+    /**
+     * Attach beforeUnload event handler
+     */
+    componentDidMount: function() {
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
+    },
+
+    /**
      * Check state variables after update
      */
     componentDidUpdate: function(prevProps, prevState) {
@@ -305,6 +331,13 @@ module.exports = React.createClass({
                 this.hideSplashScreen();
             }, 100);
         }
+    },
+
+    /**
+     * Remove beforeUnload event handler
+     */
+    componentWillUnmount: function() {
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
     },
 
     /**
@@ -486,7 +519,12 @@ module.exports = React.createClass({
      */
     handlePayloadsChange: function(evt) {
         var payloads = new Payloads(evt.target);
-        this.setState({ payloads });
+        var showingUploadProgress = this.state.showingUploadProgress;
+        if (!payloads.uploading) {
+            // stop showing it once it's done
+            showingUploadProgress = false;
+        }
+        this.setState({ payloads, showingUploadProgress });
     },
 
     /**
@@ -648,6 +686,19 @@ module.exports = React.createClass({
         _.forIn(evt.changes, (idList, name) => {
              console.log('Change notification: ', name, idList);
         });
+    },
+
+    /**
+     * Called when user navigate to another site or hit refresh
+     *
+     * @param  {Event} evt
+     */
+    handleBeforeUnload: function(evt) {
+        if (this.state.payloads && this.state.payloads.uploading) {
+            // Chrome will repaint only after the modal dialog is dismissed
+            this.setState({ showingUploadProgress: true });
+            return (evt.returnValue = 'Are you sure?');
+        }
     },
 
     /**

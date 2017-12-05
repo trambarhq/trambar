@@ -3,6 +3,8 @@ var Promise = require('bluebird');
 module.exports = Payloads;
 
 function Payloads(payloadManager) {
+    this.uploading = payloadManager.getUploadProgress();
+
     /**
      * Create a payload of files needed by a res
      *

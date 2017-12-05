@@ -398,6 +398,11 @@ module.exports = function(languageCode) {
 
         'telephone-dialog-close': 'Close',
 
+        'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `Uploading ${files}, ${size} remaining`;
+        },
+
         'user-actions': 'Actions',
 
         'user-info-name': 'Name',
