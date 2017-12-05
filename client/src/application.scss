@@ -42,6 +42,9 @@ body {
         overflow-y: auto;
         overflow-x: hidden;
         z-index: 0;     // drawn beneath the start page (z-index = 1)
+        display: flex;
+        flex-direction: column;
+        align-items: center;
 
         &::-webkit-scrollbar-track {
             -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);

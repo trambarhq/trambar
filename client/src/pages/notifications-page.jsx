@@ -108,7 +108,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };
-            return db.findOne({ schema: 'global', table: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.currentUser = user;
             return meanwhile.show(<NotificationsPageSync {...props} />);

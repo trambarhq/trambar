@@ -43,8 +43,12 @@ module.exports = Relaks.createClass({
          */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
-                '/'
+                '/:extra?'
             ], (params) => {
+                if (_.trimEnd(params.extra, '/')) {
+                    // there's extra stuff--not a match
+                    return null;
+                }
                 params.add = !!query.add;
                 return params;
             });
@@ -129,7 +133,7 @@ module.exports = Relaks.createClass({
 
                 // load system info
                 var criteria = {};
-                return db.findOne({ table: 'system', criteria });
+                return db.findOne({ table: 'system', criteria, required: true });
             }).then((system) => {
                 props.system = system;
                 return meanwhile.show(<StartPageSync {...props} />, 250);

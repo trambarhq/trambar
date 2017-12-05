@@ -106,14 +106,14 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };
-            return db.findOne({ schema: 'global', table: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             this.props.payloads.reattach('global', user);
             props.currentUser = user;
             return meanwhile.show(<SettingsPageSync {...props} />, 250);
         }).then(() => {
             var criteria = { name: params.schema };
-            return db.findOne({ schema: 'global', table: 'project', criteria });
+            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
         }).then((project) => {
             props.currentProject = project;
             return meanwhile.show(<SettingsPageSync {...props} />, 250);

@@ -259,6 +259,7 @@ module.exports = React.createClass({
             onAuthorization: this.handleAuthorization,
             onExpiration: this.handleExpiration,
             onViolation: this.handleViolation,
+            onStupefaction: this.handleStupefaction,
         };
         var payloadManagerProps = {
             ref: setters.payloadManager,
@@ -632,6 +633,16 @@ module.exports = React.createClass({
                 canAccessSchema: false,
             });
         }
+    },
+
+    /**
+     * Called if a data query fails to yield the required object
+     *
+     * @param  {Object} evt
+     */
+    handleStupefaction: function(evt) {
+        var route = this.state.route;
+        route.replace(require('pages/error-page'), { code: 404 });
     },
 
     /**

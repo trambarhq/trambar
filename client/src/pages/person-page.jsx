@@ -43,7 +43,7 @@ module.exports = Relaks.createClass({
                 '/:schema/people/:role/:user/:date/?',
                 '/:schema/people/:role/:user/?',
             ], (params) => {
-                params.user = parseInt(params.user);
+                params.user = _.strictParseInt(params.user);
                 params.story = (hash) ? parseInt(_.replace(hash, /\D/g, '')) : undefined
                 return params;
             });
@@ -128,14 +128,14 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };
-            return db.findOne({ schema: 'global', table: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.currentUser = user;
             return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             // load the selected user
             var criteria = { id: params.user };
-            return db.findOne({ schema: 'global', table: 'user', criteria });
+            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.user = user;
             return meanwhile.show(<PersonPageSync {...props} />);
