@@ -11,6 +11,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var DevicePlaceholder = require('widgets/device-placeholder');
 var DurationIndicator = require('widgets/duration-indicator');
 
 require('./audio-capture-dialog-box-browser.scss');
@@ -181,7 +182,9 @@ module.exports = React.createClass({
         return (
             <Overlay {...overlayProps}>
                 <div className="audio-capture-dialog-box">
-                    {this.renderView()}
+                    <div className="container">
+                        {this.renderView()}
+                    </div>
                     <div className="controls">
                         {this.renderDuration()}
                         {this.renderButtons()}
@@ -199,9 +202,24 @@ module.exports = React.createClass({
     renderView: function() {
         if (this.state.capturedAudio) {
             return this.renderCapturedAudio();
-        } else {
+        } else if (this.state.liveAudioUrl) {
             return this.renderLiveAudio();
+        } else {
+            return this.renderPlaceholder();
         }
+    },
+
+    /**
+     * Render placeholder graphic when microphone isn't available
+     *
+     * @return {ReactElement}
+     */
+    renderPlaceholder: function() {
+        var props = {
+            blocked: !!this.state.liveAudioError,
+            icon: 'microphone',
+        };
+        return <DevicePlaceholder {...props} />;
     },
 
     /**
@@ -210,10 +228,6 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderLiveAudio: function() {
-        if (!this.state.liveAudioUrl) {
-            // TODO: return placeholder
-            return null;
-        }
         var audioProps = {
             ref: 'audio',
             src: this.state.liveAudioUrl,
@@ -230,7 +244,7 @@ module.exports = React.createClass({
             volumeIcon = 'volume-up';
         }
         return (
-            <div className="container">
+            <div>
                 <div className="volume-meter">
                     <div className="icon">
                         <i className={'fa fa-' + volumeIcon} />
@@ -256,11 +270,7 @@ module.exports = React.createClass({
             src: this.state.previewUrl,
             controls: true
         };
-        return (
-            <div className="container">
-                <audio {...props} />
-            </div>
-        )
+        return <audio {...props} />;
     },
 
     /**

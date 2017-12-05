@@ -7,6 +7,7 @@ var Locale = require('locale/locale');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var DevicePlaceholder = require('widgets/device-placeholder');
 
 require('./photo-capture-dialog-box-browser.scss');
 
@@ -143,7 +144,9 @@ module.exports = React.createClass({
         return (
             <Overlay {...overlayProps}>
                 <div className="photo-capture-dialog-box">
-                    {this.renderView()}
+                    <div className="container">
+                        {this.renderView()}
+                    </div>
                     <div className="controls">
                         {this.renderDeviceSelector()}
                         {this.renderButtons()}
@@ -161,9 +164,24 @@ module.exports = React.createClass({
     renderView: function() {
         if (this.state.capturedImage) {
             return this.renderCapturedImage();
-        } else {
+        } else if (this.state.liveVideoUrl) {
             return this.renderLiveVideo();
+        } else {
+            return this.renderPlaceholder();
         }
+    },
+
+    /**
+     * Render placeholder graphic when camera isn't available
+     *
+     * @return {ReactElement}
+     */
+    renderPlaceholder: function() {
+        var props = {
+            blocked: !!this.state.liveVideoError,
+            icon: 'camera',
+        };
+        return <DevicePlaceholder {...props} />;
     },
 
     /**
@@ -172,21 +190,13 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderLiveVideo: function() {
-        if (!this.state.liveVideoUrl) {
-            // TODO: return placeholder
-            return null;
-        }
         var videoProps = {
             ref: 'video',
             src: this.state.liveVideoUrl,
             autoPlay: true,
             muted: true,
         };
-        return (
-            <div className="container">
-                <video {...videoProps} />
-            </div>
-        );
+        return <video {...videoProps} />
     },
 
     /**
