@@ -549,18 +549,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return a list of visited projects, order by last access time
-     *
-     * @return {Array<Object>}
-     */
-    getProjectLinks: function() {
-        var db = this.state.database.use({ by: this });
-        return db.find({ schema: 'local', table: 'project_link' }).then((links) => {
-            return _.sortBy(links, 'atime');
-        });
-    },
-
-    /**
      * Rewrite the URL that, either extracting the server address or inserting it
      *
      * @param  {Object} urlParts
@@ -784,31 +772,8 @@ module.exports = React.createClass({
      */
     handleRedirectionRequest: function(evt) {
         var routeManager = evt.target;
-        return Promise.try(() => {
-            if (evt.url === '/') {
-                // go to either StartPage or NewsPage
-                return this.getProjectLinks().then((links) => {
-                    var recent = _.last(links);
-                    var url;
-                    if (recent) {
-                        url = routeManager.find(NewsPage, {
-                            address: recent.address,
-                            schema: recent.schema,
-                        });
-                    } else {
-                        url = routeManager.find(StartPage);
-                    }
-                    return url;
-                });
-            } else {
-                throw new HttpError(404);
-            }
-        }).catch((err) => {
-            var code = err.statusCode || 500;
-            console.error(err);
-            var url = routeManager.find(ErrorPage, { code });
-            return url;
-        });
+        var url = routeManager.find(ErrorPage, { code: 404 });
+        return Promise.resolve(url);
     },
 
     /**

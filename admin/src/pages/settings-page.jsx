@@ -90,7 +90,9 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<SettingsPageSync {...props} />, delay);
         return db.start().then((userId) => {
-            var criteria = {};
+            var criteria = {
+                deleted: false
+            };
             return db.findOne({ table: 'system', criteria });
         }).then((system) => {
             props.system = system;

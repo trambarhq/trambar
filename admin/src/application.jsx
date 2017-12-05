@@ -29,6 +29,7 @@ var RepoSummaryPage = require('pages/repo-summary-page');
 var ServerListPage = require('pages/server-list-page');
 var ServerSummaryPage = require('pages/server-summary-page');
 var SettingsPage = require('pages/settings-page');
+var StartPage = require('pages/start-page');
 var UserListPage = require('pages/user-list-page');
 var UserSummaryPage = require('pages/user-summary-page');
 
@@ -63,6 +64,7 @@ var pageClasses = [
     ServerListPage,
     ServerSummaryPage,
     SettingsPage,
+    StartPage,
     UserListPage,
     UserSummaryPage,
     ErrorPage,
@@ -569,18 +571,8 @@ module.exports = React.createClass({
      */
     handleRedirectionRequest: function(evt) {
         var routeManager = evt.target;
-        return Promise.try(() => {
-            if (evt.url === '/') {
-                return routeManager.find(ProjectListPage);
-            } else {
-                throw new HttpError(404);
-            }
-        }).catch((err) => {
-            var code = err.statusCode || 500;
-            console.error(err);
-            var url = routeManager.find(ErrorPage, { code });
-            return url;
-        });
+        var url = routeManager.find(ErrorPage, { code: 404 });
+        return Promise.resolve(url);
     },
 
     /**

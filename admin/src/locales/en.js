@@ -547,5 +547,7 @@ module.exports = function(languageCode) {
         'validation-password-for-admin-only': 'Only administrators can sign in using password',
         'validation-required': 'Required',
         'validation-required-for-oauth': 'Required when OAuth is used',
+
+        'welcome': 'Welcome!',
     };
 };
