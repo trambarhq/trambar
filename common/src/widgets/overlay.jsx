@@ -11,22 +11,38 @@ module.exports = React.createClass({
         onBackgroundClick: PropTypes.func,
     },
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
             show: false
         };
     },
 
+    /**
+     * Don't render anything
+     */
     render: function() {
         return null;
     },
 
+    /**
+     * Insert overlay element into document body on mount
+     */
     componentDidMount: function() {
         if (this.props.show) {
             this.show();
         }
     },
 
+    /**
+     * Redraw the overlay element when props change
+     *
+     * @param  {Object} prevProps
+     */
     componentDidUpdate: function(prevProps) {
         if (prevProps.show !== this.props.show) {
             if (this.props.show) {
@@ -41,10 +57,16 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Remove overlay element on unmount
+     */
     componentWillUnmount: function() {
         this.hide();
     },
 
+    /**
+     * Insert overlay element into document body
+     */
     show: function() {
         if (!this.containerNode) {
             this.containerNode = document.createElement('DIV');
@@ -62,21 +84,34 @@ module.exports = React.createClass({
             children: this.props.children
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
+        this.shown = false;
         setTimeout(() => {
-            props.show = true;
+            // this.props.children could be different here
+            var props = {
+                show: true,
+                onClick: this.handleClick,
+                children: this.props.children
+            };
             ReactDOM.render(<Overlay {...props} />, this.containerNode);
+            this.shown = true;
         }, 10);
     },
 
+    /**
+     * Redraw overlay element
+     */
     redraw: function() {
         var props = {
-            show: true,
+            show: this.shown,
             onClick: this.handleClick,
             children: this.props.children
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
     },
 
+    /**
+     * Transition out, then remove overlay element
+     */
     hide: function() {
         if (!this.containerNode) {
             return;
@@ -95,8 +130,14 @@ module.exports = React.createClass({
             children: this.props.children
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
+        this.shown = false;
     },
 
+    /**
+     * Called when user clicks somewhere
+     *
+     * @param  {Event} evt
+     */
     handleClick: function(evt) {
         var targetClass = evt.target.className;
         if (targetClass === 'foreground' || targetClass === 'background') {
@@ -106,6 +147,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when user hits a key on the keyboard
+     *
+     * @param  {Event} evt
+     */
     handleKeyDown: function(evt) {
         if (evt.keyCode === 27) {
             if (this.props.onBackgroundClick) {
