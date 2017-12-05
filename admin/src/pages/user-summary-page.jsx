@@ -3,7 +3,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
-var HttpError = require('errors/http-error');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 
@@ -58,10 +57,10 @@ module.exports = Relaks.createClass({
                 '/projects/:project/members/:user/?',
             ], (params) => {
                 if (params.user !== 'new') {
-                    params.user = parseInt(params.user);
+                    params.user = _.strictParseInt(params.user);
                 }
                 if (params.project) {
-                    params.project = parseInt(params.project);
+                    params.project = _.strictParseInt(params.project);
                 }
                 params.edit = !!query.edit;
                 return params;
@@ -156,8 +155,6 @@ module.exports = Relaks.createClass({
         }).then((statistics) => {
             props.statistics = statistics;
             return <UserSummaryPageSync {...props} />;
-        }).catch(HttpError, (error) => {
-            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

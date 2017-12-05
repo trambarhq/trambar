@@ -4,7 +4,6 @@ var ReactDOM = require('react-dom');
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
-var HttpError = require('errors/http-error');
 var ServerTypes = require('objects/types/server-types');
 var ServerSettings = require('objects/settings/server-settings');
 
@@ -54,7 +53,7 @@ module.exports = Relaks.createClass({
                 '/servers/:server/?'
             ], (params) => {
                 if (params.server !== 'new') {
-                    params.server = parseInt(params.server);
+                    params.server = _.strictParseInt(params.server);
                 }
                 params.edit = !!query.edit;
                 params.task = parseInt(_.replace(hash, /\D+/g, ''));
@@ -123,8 +122,6 @@ module.exports = Relaks.createClass({
         }).then((roles) => {
             props.roles = roles;
             return <ServerSummaryPageSync {...props} />;
-        }).catch(HttpError, (error) => {
-            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

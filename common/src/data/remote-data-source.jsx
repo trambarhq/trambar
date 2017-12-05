@@ -21,6 +21,7 @@ module.exports = React.createClass({
         onAuthorization: PropTypes.func,
         onExpiration: PropTypes.func,
         onViolation: PropTypes.func,
+        onStupefaction: PropTypes.func,
     },
 
     /**
@@ -265,6 +266,7 @@ module.exports = React.createClass({
      */
     find: function(query) {
         var byComponent = _.get(query, 'by.constructor.displayName',)
+        var required = query.required;
         query = getSearchQuery(query);
         var search = this.findRecentSearch(query);
         if (search) {
@@ -359,7 +361,17 @@ module.exports = React.createClass({
             }
             this.setState({ recentSearchResults });
         }
-        return search.promise;
+        if (required && query.expected) {
+            return search.promise.then((results) => {
+                if (results.length < query.expected) {
+                    this.triggerStupefactionEvent(query, results);
+                    throw new HttpError(404);
+                }
+                return results;
+            });
+        } else {
+            return search.promise;
+        }
     },
 
     /**
@@ -524,7 +536,7 @@ module.exports = React.createClass({
      */
     triggerAuthorizationEvent: function(address, credentials) {
         if (this.props.onAuthorization) {
-            return this.props.onAuthorization({
+            this.props.onAuthorization({
                 type: 'authorization',
                 target: this,
                 address,
@@ -540,7 +552,7 @@ module.exports = React.createClass({
      */
     triggerExpirationEvent: function(address) {
         if (this.props.onExpiration) {
-            return this.props.onExpiration({
+            this.props.onExpiration({
                 type: 'expiration',
                 target: this,
                 address,
@@ -556,11 +568,28 @@ module.exports = React.createClass({
      */
     triggerViolationEvent: function(address, schema) {
         if (this.props.onViolation) {
-            return this.props.onViolation({
+            this.props.onViolation({
                 type: 'violation',
                 target: this,
                 address,
                 schema,
+            });
+        }
+    },
+
+    /**
+     * Inform parent component that query has yield fewer objects than expected
+     *
+     * @param  {Object} query
+     * @param  {Array<Object>} results
+     */
+    triggerStupefactionEvent: function(query, results) {
+        if (this.props.onStupefaction) {
+            this.props.onStupefaction({
+                type: 'missingobject',
+                target: this,
+                query,
+                results,
             });
         }
     },
@@ -598,6 +627,9 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     searchRemoteDatabase: function(search) {
+        if (search.schema === 'local') {
+            return Promise.resolve(false);
+        }
         var location = getSearchLocation(search);
         var query = getSearchQuery(search);
         search.start = getCurrentTime();
@@ -1138,7 +1170,7 @@ function getSearchLocation(search) {
  * @return {Object}
  */
 function getSearchQuery(search) {
-    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum');
+    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected');
 }
 
 var sessions = {};

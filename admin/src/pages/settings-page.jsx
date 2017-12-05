@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var HttpError = require('errors/http-error');
 var SystemSettings = require('objects/settings/system-settings');
 
 var Database = require('data/database');
@@ -97,8 +96,6 @@ module.exports = Relaks.createClass({
         }).then((system) => {
             props.system = system;
             return <SettingsPageSync {...props} />;
-        }).catch(HttpError, (error) => {
-            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

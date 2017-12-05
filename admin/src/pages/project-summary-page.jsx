@@ -2,7 +2,6 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
-var HttpError = require('errors/http-error');
 var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
@@ -54,7 +53,7 @@ module.exports = Relaks.createClass({
                 '/projects/:project/?'
             ], (params) => {
                 if (params.project !== 'new') {
-                    params.project = parseInt(params.project);
+                    params.project = _.strictParseInt(params.project);
                 }
                 params.edit = !!query.edit;
                 return params;
@@ -124,8 +123,6 @@ module.exports = Relaks.createClass({
         }).then((statistics) => {
             props.statistics = statistics;
             return <ProjectSummaryPageSync {...props} />;
-        }).catch(HttpError, (error) => {
-            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

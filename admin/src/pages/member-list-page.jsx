@@ -3,7 +3,6 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
-var HttpError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -48,7 +47,7 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/projects/:project/members/?'
             ], (params) => {
-                params.project = parseInt(params.project);
+                params.project = _.strictParseInt(params.project);
                 params.edit = !!query.edit;
                 return params;
             });
@@ -122,8 +121,6 @@ module.exports = Relaks.createClass({
         }).then((statistics) => {
             props.statistics = statistics;
             return <MemberListPageSync {...props} />;
-        }).catch(HttpError, (error) => {
-            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

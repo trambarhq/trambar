@@ -2,7 +2,6 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
-var HttpError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -48,7 +47,7 @@ module.exports = Relaks.createClass({
                 '/roles/:role/?'
             ], (params) => {
                 if (params.role !== 'new') {
-                    params.role = parseInt(params.role);
+                    params.role = _.strictParseInt(params.role);
                 }
                 params.edit = !!query.edit;
                 return params;
@@ -106,8 +105,6 @@ module.exports = Relaks.createClass({
         }).then((role) => {
             props.role = role;
             return <RoleSummaryPageSync {...props} />;
-        }).catch(HttpError, (error) => {
-            this.props.route.replace(require('pages/error-page'), { error });
         });
     }
 });

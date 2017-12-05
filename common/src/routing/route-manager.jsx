@@ -155,28 +155,33 @@ module.exports = React.createClass({
         }
         var route;
         var matchLength = 0;
-        _.each(this.props.pages, (page) => {
-            if (typeof(page.parseUrl) !== 'function') {
-                var pageName = _.get(page, 'displayName', 'Page')
-                throw new Error(`${pageName} does not implement the static function parseUrl()`);
-            }
-            var params = page.parseUrl(urlParts.path, urlParts.query, urlParts.hash);
-            if (params) {
-                // use the one with the longest match
-                if (params.match.length > matchLength) {
-                    var routeParams = _.assign(_.omit(params, 'match'), rewriteParams);
-                    var canonicalUrl = this.find(page, routeParams);
-                    route = {
-                        url: canonicalUrl,
-                        component: page,
-                        parameters: routeParams,
-                        query: urlParts.query,
-                        hash: urlParts.hash,
-                    };
-                    matchLength = params.match.length;
+        try {
+            _.each(this.props.pages, (page) => {
+                if (typeof(page.parseUrl) !== 'function') {
+                    var pageName = _.get(page, 'displayName', 'Page')
+                    throw new Error(`${pageName} does not implement the static function parseUrl()`);
                 }
-            }
-        });
+                var params = page.parseUrl(urlParts.path, urlParts.query, urlParts.hash);
+                if (params) {
+                    // use the one with the longest match
+                    if (params.match.length > matchLength) {
+                        var routeParams = _.assign(_.omit(params, 'match'), rewriteParams);
+                        var canonicalUrl = this.find(page, routeParams);
+                        route = {
+                            url: canonicalUrl,
+                            component: page,
+                            parameters: routeParams,
+                            query: urlParts.query,
+                            hash: urlParts.hash,
+                        };
+                        matchLength = params.match.length;
+                    }
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
         return route;
     },
 

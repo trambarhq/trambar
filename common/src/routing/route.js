@@ -135,11 +135,15 @@ Route.match = function(url, patterns, f) {
             });
             if (f) {
                 params = f(params);
-                if (typeof(params) !== 'object') {
-                    throw new Error(`Callback for route "${patterns[i]}" does not return an object`);
+                if (process.env.NODE_ENV !== 'production') {
+                    if (typeof(params) !== 'object') {
+                        throw new Error(`Callback for route "${patterns[i]}" does not return an object`);
+                    }
                 }
             }
-            params.match = m[0];
+            if (params) {
+                params.match = m[0];
+            }
             return params;
         }
     }

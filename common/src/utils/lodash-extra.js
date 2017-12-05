@@ -126,6 +126,14 @@ _.mixin({
         });
     },
 
+    /**
+     * Obscure properties in an object
+     *
+     * @param  {Object} object
+     * @param  {Array<String>} paths
+     *
+     * @return {Object}
+     */
     obscure: function(object, paths) {
         var clone = _.cloneDeep(object);
         _.each(paths, (path) => {
@@ -134,6 +142,21 @@ _.mixin({
         });
         return clone;
     },
+
+    /**
+     * Parse an integer, the string isn't the exact representation
+     *
+     * @param  {String} s
+     *
+     * @return {Number}
+     */
+    strictParseInt: function(s) {
+        var n = _.parseInt(s);
+        if (n.toString() !== s) {
+            throw new Error(`Not an integer: ${s}`);
+        }
+        return n;
+    }
 });
 
 function obscureValue(value) {

@@ -31,8 +31,12 @@ module.exports = Relaks.createClass({
          */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
-                '/'
+                '/:extra?'
             ], (params) => {
+                if (_.trimEnd(params.extra, '/')) {
+                    // there's extra stuff--not a match
+                    return null;
+                }
                 return params;
             });
         },
