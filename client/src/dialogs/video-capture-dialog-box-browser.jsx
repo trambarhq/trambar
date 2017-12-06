@@ -94,10 +94,8 @@ module.exports = React.createClass({
      */
     initializeCamera: function() {
         return this.createLiveVideoStream().then((stream) => {
-            console.log('?')
             this.setLiveVideoState(null, stream);
         }).catch((err) => {
-            console.log('??')
             this.setLiveVideoState(err, null);
         });
     },
@@ -176,7 +174,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderView: function() {
-        console.log(this.state.capturedVideo, this.state.liveVideoUrl, this.state.liveVideoError)
         if (this.state.capturedVideo) {
             return this.renderCapturedVideo();
         } else if (this.state.liveVideoUrl) {

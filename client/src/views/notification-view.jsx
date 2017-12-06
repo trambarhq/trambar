@@ -111,30 +111,7 @@ module.exports = React.createClass({
      * @return {String}
      */
     getNotificationUrl: function() {
-        var notification = this.props.notification;
-        var route = this.props.route;
-        var params = _.clone(this.props.route.parameters);
-        switch (notification.type) {
-            case 'like':
-            case 'comment':
-            case 'issue':
-            case 'vote':
-            case 'task-completion':
-            case 'coauthor':
-            case 'note':
-            case 'assignment':
-            case 'push':
-            case 'merge':
-            case 'survey':
-            case 'issue':
-                params.story = notification.story_id;
-                return route.find(require('pages/news-page'), params);
-            case 'bookmark':
-                params.story = notification.story_id;
-                return route.find(require('pages/bookmarks-page'), params);
-            case 'join_request':
-                return `/admin`;
-        }
+        return getNotificationUrl(this.props.notification, this.props.route);
     },
 
     /**
@@ -143,11 +120,7 @@ module.exports = React.createClass({
      * @return {String|undefined}
      */
     getNotificationTarget: function() {
-        var notification = this.props.notification;
-        switch (notification.type) {
-            case 'join_request':
-                return '_blank';
-        }
+        return getNotificationTarget(this.props.notification);
     },
 
     /**
@@ -229,3 +202,40 @@ module.exports = React.createClass({
         }
     }
 });
+
+// these functions are needed for handling web and push alerts
+module.exports.getNotificationUrl = getNotificationUrl;
+module.exports.getNotificationTarget = getNotificationTarget;
+
+function getNotificationUrl(notification, route) {
+    var params = _.clone(route.parameters);
+    switch (notification.type) {
+        case 'like':
+        case 'comment':
+        case 'issue':
+        case 'vote':
+        case 'task-completion':
+        case 'coauthor':
+        case 'note':
+        case 'assignment':
+        case 'push':
+        case 'merge':
+        case 'survey':
+        case 'issue':
+            params.story = notification.story_id;
+            return route.find(require('pages/news-page'), params);
+        case 'bookmark':
+            params.story = notification.story_id;
+            return route.find(require('pages/bookmarks-page'), params);
+        case 'join_request':
+            return `/admin`;
+    }
+}
+
+function getNotificationTarget(notification) {
+    switch (notification.type) {
+        case 'join_request':
+            return 'admin';
+    }
+    return '';
+}

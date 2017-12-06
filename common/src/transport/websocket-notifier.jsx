@@ -305,7 +305,7 @@ module.exports = React.createClass({
             options.lang = _.get(this.props.locale, 'languageCode');
             var notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
-                this.triggerAlertClickEvent(address, alert);
+                this.triggerAlertClickEvent(serverAddress, alert);
                 notification.close();
             });
         }

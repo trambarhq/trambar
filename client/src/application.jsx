@@ -33,6 +33,7 @@ var ErrorPage = require('pages/error-page');
 var TopNavigation = require('widgets/top-navigation');
 var BottomNavigation = require('widgets/bottom-navigation');
 var UploadProgress = require('widgets/upload-progress');
+var NotificationView = require('views/notification-view');
 
 // cache
 var IndexedDBCache = require('data/indexed-db-cache');
@@ -899,14 +900,38 @@ module.exports = React.createClass({
      */
     handleAlertClick: function(evt) {
         var alert = evt.alert;
-        // redirect to news page
-        this.state.route.push(require('pages/news-page'), {
-            schema: alert.schema,
-            story: alert.story_id,
-        });
+        // create an object take has some of Notification's properties
+        var notification = {
+            id: alert.notification_id,
+            type: alert.type,
+            user_id: alert.user_id,
+            reaction_id: alert.reaction_id,
+            story_id: alert.story_id,
+        };
+        var url = NotificationView.getNotificationUrl(notification, this.state.route);
+        var target = NotificationView.getNotificationTarget(notification);
+        if (target) {
+            // create a link and click it to open a new tab
+            var a = document.createElement('A');
+            a.href = url;
+            a.target = target;
+            a.click();
+        } else {
+            // handle it internally
+            this.state.route.change(url);
+            window.focus();
+        }
 
-        // this is needed in Chrome
-        window.focus();
+        // mark as read
+        var params = this.state.route.parameters;
+        var db = this.state.database.use({ schema: params.schema, by: this });
+        db.start().then((userId) => {
+            var columns = {
+                id: alert.notification_id,
+                seen: true
+            };
+            return db.saveOne({ table: 'notification' }, columns);
+        });
     },
 
     /**

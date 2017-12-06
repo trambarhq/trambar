@@ -9,6 +9,7 @@ function format(schema, user, notification, lang) {
         title: getNotificationText(user, notification, lang),
         profile_image: getProfileImageUrl(user),
         type: notification.type,
+        notification_id: notification.id,
         user_id: notification.user_id,
         reaction_id: notification.reaction_id,
         story_id: notification.story_id,
