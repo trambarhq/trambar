@@ -118,6 +118,7 @@ module.exports = Relaks.createClass({
             draftStories: null,
             pendingStories: null,
             currentUser: null,
+            project: null,
 
             showEditors: !searching,
             database: this.props.database,
@@ -129,11 +130,20 @@ module.exports = Relaks.createClass({
         meanwhile.show(<NewsPageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load current user
-            var criteria = {};
-            criteria.id = userId;
+            var criteria = {
+                id: userId
+            };
             return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.currentUser = user;
+            return meanwhile.show(<NewsPageSync {...props} />);
+        }).then(() => {
+            var criteria = {
+                name: params.schema
+            };
+            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+        }).then((project) => {
+            props.project = project;
             return meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
             if (searching) {
@@ -263,6 +273,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        project: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -296,6 +307,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
+            project: this.props.project,
             selectedStoryId: this.props.route.parameters.story,
 
             database: this.props.database,

@@ -29,6 +29,7 @@ module.exports = Relaks.createClass({
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        project: PropTypes.object,
         selectedStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -73,6 +74,7 @@ module.exports = Relaks.createClass({
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
+            project: this.props.project,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
@@ -172,14 +174,11 @@ module.exports = Relaks.createClass({
         }).then((recipients) => {
             props.recipients = recipients;
         }).then(() => {
-            // load repos from which the stories came
-            var repoIds = _.uniq(_.filter(_.map(props.stories, 'repo_id')));
-            if (!_.isEmpty(repoIds)) {
-                var criteria = {
-                    id: repoIds
-                };
-                return db.find({ schema: 'global', table: 'repo', criteria });
-            }
+            // load repos linked to project
+            var criteria = {
+                id: _.get(props.project, 'repo_ids', [])
+            };
+            return db.find({ schema: 'global', table: 'repo', criteria });
         }).then((repos) => {
             props.repos = repos;
             return <StoryListSync {...props} />;
@@ -518,8 +517,12 @@ var findRecipients = Memoize(function(recipients, recommendations) {
 });
 
 var findRepo = Memoize(function(repos, story) {
-    if (story && story.repo_id) {
-        return _.find(repos, { id: story.repo_id });
+    if (story && story.external) {
+        return _.find(repos, (repo) => {
+            return _.some(repo.external, (link) => {
+                return _.some(story.external, link);
+            });
+        });
     } else {
         return null;
     }

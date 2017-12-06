@@ -479,9 +479,9 @@ module.exports = React.createClass({
         }
         var url;
         var baseUrl = _.get(this.props.repo, 'details.web_url');
-        if (baseUrl) {
-            var issueId = this.props.story.external_id;
-            url = `${baseUrl}/issues/${issueId}`;
+        var issueLink = findLink(this.props.story, this.props.repo);
+        if (baseUrl && issueLink) {
+            url = `${baseUrl}/issues/${issueLink.issue.id}`;
         }
         return (
             <div className="text issue">
@@ -515,9 +515,9 @@ module.exports = React.createClass({
         var startDate = formatDate(story.details.start_date) || '-';
         var url;
         var baseUrl = _.get(this.props.repo, 'details.web_url');
-        if (baseUrl) {
-            var milestoneId = this.props.story.external_id;
-            url = `${baseUrl}/milestones/${milestoneId}`;
+        var milestoneLink = findLink(this.props.story, this.props.repo);
+        if (baseUrl && milestoneLink) {
+            url = `${baseUrl}/milestones/${milestoneLink.milestone.id}`;
         }
         return (
             <div className="text milestone">
@@ -605,13 +605,9 @@ module.exports = React.createClass({
         var url;
         var baseUrl = _.get(this.props.repo, 'details.web_url');
         if (baseUrl) {
-            var commitIdBefore = story.details.commit_id_before;
-            var commitIdAfter = story.details.commit_id_after;
-            if (story.details.commit_ids.length === 1) {
-                url = `${baseUrl}/commit/${commitIdAfter}`;
-            } else {
-                url = `${baseUrl}/compare/${commitIdBefore}...${commitIdAfter}`;
-            }
+            var commitBefore = story.details.commit_before;
+            var commitAfter = story.details.commit_after;
+            url = `${baseUrl}/compare/${commitBefore}...${commitAfter}`;
         }
         var text;
         if (story.type === 'push') {
@@ -1009,3 +1005,14 @@ var getZoomableResources = Memoize(function(resources) {
         }
     })
 });
+
+function findLink(story, repo) {
+    if (!story || !repo) {
+        return null;
+    }
+    return _.find(story.external, (link1) => {
+        return _.some(repo.external, (link2) => {
+            return _.isMatch(link1, link2);
+        });
+    });
+}
