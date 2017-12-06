@@ -517,6 +517,22 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove recent searches on schema
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     */
+    clear: function(address, schema) {
+        var recentSearchResults = _.filter(this.state.recentSearchResults, (search) => {
+            if (_.isMatch(search, { address, schema })) {
+                return false;
+            }
+            return true;
+        });
+        this.setState({ recentSearchResults });
+    },
+
+    /**
      * Inform parent component that database queries could yield new results
      */
     triggerChangeEvent: function() {

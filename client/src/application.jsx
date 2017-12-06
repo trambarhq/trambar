@@ -96,6 +96,7 @@ module.exports = React.createClass({
             canAccessServer: false,
             canAccessSchema: false,
             subscriptionId: null,
+            subscriptionError: null,
             connectionId: null,
             pushRelay: (Notifier == PushNotifier) ? null : undefined,
             renderingStartPage: false,
@@ -361,6 +362,15 @@ module.exports = React.createClass({
      * Check state variables after update
      */
     componentDidUpdate: function(prevProps, prevState) {
+        // hide the splash screen once app is ready
+        if (!this.splashScreenHidden && this.isReady()) {
+            this.splashScreenHidden = true;
+            setTimeout(() => {
+                this.hideSplashScreen();
+            }, 100);
+        }
+
+        // create data change subscription
         if (!this.state.subscriptionId) {
             if (this.state.canAccessServer) {
                 if (this.state.connectionId) {
@@ -374,20 +384,6 @@ module.exports = React.createClass({
                     }
                 }
             }
-        } else if (!(this.state.subscriptionId instanceof Error)) {
-            var schemaBefore = prevState.route.parameters.schema || 'global';
-            var schemaAfter = this.state.route.parameters.schema || 'global';
-            if (schemaBefore !== schemaAfter && this.state.locale !== prevState.locale) {
-                this.updateSubscription();
-            }
-        }
-
-        // hide the splash screen once app is ready
-        if (!this.splashScreenHidden && this.isReady()) {
-            this.splashScreenHidden = true;
-            setTimeout(() => {
-                this.hideSplashScreen();
-            }, 100);
         }
 
         // see if the project is different
@@ -403,7 +399,18 @@ module.exports = React.createClass({
                         this.addProjectLink(currAddress, currSchema);
                     }
                 }
+                if (prevAddress === currAddress) {
+                    this.updateSubscription();
+                }
+                if (prevAddress && prevSchema) {
+                    var dataSource = this.components.remoteDataSource;
+                    dataSource.clear(prevAddress, prevSchema);
+                }
             }
+        }
+
+        if (this.state.locale !== prevState.locale) {
+            this.updateSubscription();
         }
 
         // see if there's a change in the URL hash
@@ -454,7 +461,7 @@ module.exports = React.createClass({
                 this.setState({ subscriptionId: subscription.id })
             });
         }).catch((err) => {
-            this.setState({ subscriptionId: err });
+            this.setState({ subscriptionError: err });
         }).finally(() => {
             this.creatingSubscription = false;
         });
@@ -464,6 +471,9 @@ module.exports = React.createClass({
      * Update subscription
      */
     updateSubscription: function() {
+        if (!this.state.subscriptionId) {
+            return;
+        }
         if (this.updatingSubscription) {
             return;
         }
@@ -480,7 +490,7 @@ module.exports = React.createClass({
                 this.setState({ subscriptionId: subscription.id })
             });
         }).catch((err) => {
-            this.setState({ subscriptionId: err });
+            this.setState({ subscriptionError: err });
         }).finally(() => {
             this.updatingSubscription = false;
         });
@@ -843,8 +853,6 @@ module.exports = React.createClass({
                     evt.preventDefault();
                     // clear focus on change
                     target.blur();
-
-
                 }
             }
         }
@@ -866,7 +874,8 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleConnection: function(evt) {
-        this.setState({ connectionId: evt.token });
+        // a new connection--old subscription no longer works
+        this.setState({ connectionId: evt.token, subscriptionId: null });
     },
 
     /**
@@ -875,7 +884,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDisconnection: function(evt) {
-        this.setState({ connectionId: null });
+        this.setState({ connectionId: null, subscriptionId: null });
     },
 
     /**
