@@ -372,20 +372,22 @@ var sortTasks = Memoize(function(tasks) {
 function formatAddedDeleteChanged(object) {
     var list = [];
     _.each(object.deleted, (s) => {
-        var key = list.length;
-        list.push(<del key={key}>{s}</del>);
-        list.push(', ');
+        pushItem(list, s, 'item deleted')
     });
     _.each(object.modified, (s) => {
-        var key = list.length;
-        list.push(<em key={key}>{s}</em>);
-        list.push(', ');
+        pushItem(list, s, 'item modified')
     });
     _.each(object.added, (s) => {
-        var key = list.length;
-        list.push(<ins key={key}>{s}</ins>);
-        list.push(', ');
+        pushItem(list, s, 'item added')
     });
-    list.pop();
     return list;
+}
+
+function pushItem(list, text, className) {
+    var key = list.length;
+    list.push(
+        <span className={className} key={key}>
+            {text}
+        </span>
+    );
 }
