@@ -131,56 +131,7 @@ exports.extendAuthorization.args = 'token text, expire date';
 exports.extendAuthorization.ret = 'void';
 exports.extendAuthorization.flags = 'SECURITY DEFINER';
 
-exports.externalIdStrings = function(external, type, names) {
-    var strings = [];
-    if (external) {
-        for (var i = 0; i < external.length; i++) {
-            var link = external[i];
-            if (link.type === type || !type) {
-                var valid = true;
-                var idLists = [];
-                if (type) {
-                    idLists.push([ link.server_id ]);
-                } else {
-                    idLists.push([]);
-                }
-                for (var j = 0; j < names.length; j++) {
-                    var name = names[j];
-                    var object = link[name];
-                    if (!object) {
-                        valid = false;
-                        break;
-                    }
-                    if (object.ids instanceof Array) {
-                        // multiple the lists
-                        var ids = object.ids;
-                        var newIdLists = [];
-                        for (var k = 0; k < idLists.length; k++) {
-                            var idList = idLists[k];
-                            for (var m = 0; m < ids.length; m++) {
-                                newIdLists.push(idList.concat(ids[m]));
-                            }
-                        }
-                        idLists = newIdLists;
-                    } else {
-                        // add id to each list
-                        for (var k = 0; k < idLists.length; k++) {
-                            var idList = idLists[k];
-                            idList.push(object.id);
-                        }
-                    }
-                }
-                if (valid) {
-                    for (var k = 0; k < idLists.length; k++) {
-                        var idList = idLists[k];
-                        strings.push(idList.join(','));
-                    }
-                }
-            }
-        }
-    }
-    return (strings.length > 0) ? strings : null;
-};
+exports.externalIdStrings = require('./runtime').externalIdStrings;
 exports.externalIdStrings.args = 'external jsonb[], type text, names text[]';
 exports.externalIdStrings.ret = 'text[]';
 exports.externalIdStrings.flags = 'IMMUTABLE';

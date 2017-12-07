@@ -120,6 +120,27 @@ exports.matchObject = function(filters, object) {
                 break;
             case 'tz_offset':
                 break;
+            case 'external_object':
+                var filterObject = filters[name];
+                var filterExternal = [ filterObject ];
+                var serverType = filterObject.type || '';
+                var objectNames = [];
+                for (var name in filterObject) {
+                    var link = filterObject[name];
+                    if (link.id || link.ids instanceof Array) {
+                        objectNames.push(name);
+                    }
+                }
+                var filterIdStrings = externalIdStrings(filterExternal, serverType, objectNames);
+                var objectIdStrings = externalIdStrings(object.external, serverType, objectNames);
+                if (filterIdStrings && objectIdStrings) {
+                    for (var i = 0; i < filterIdStrings.length; i++) {
+                        if (objectIdStrings.indexOf(filterIdStrings[i]) !== -1) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             default:
                 if (!matchScalars(filters[name], object[name])) {
                     return false;
@@ -128,6 +149,57 @@ exports.matchObject = function(filters, object) {
     }
     return true;
 };
+
+exports.externalIdStrings = function(external, type, names) {
+    var strings = [];
+    if (external) {
+        for (var i = 0; i < external.length; i++) {
+            var link = external[i];
+            if (link.type === type || !type) {
+                var valid = true;
+                var idLists = [];
+                if (type) {
+                    idLists.push([ link.server_id ]);
+                } else {
+                    idLists.push([]);
+                }
+                for (var j = 0; j < names.length; j++) {
+                    var name = names[j];
+                    var object = link[name];
+                    if (!object) {
+                        valid = false;
+                        break;
+                    }
+                    if (object.ids instanceof Array) {
+                        // multiple the lists
+                        var ids = object.ids;
+                        var newIdLists = [];
+                        for (var k = 0; k < idLists.length; k++) {
+                            var idList = idLists[k];
+                            for (var m = 0; m < ids.length; m++) {
+                                newIdLists.push(idList.concat(ids[m]));
+                            }
+                        }
+                        idLists = newIdLists;
+                    } else {
+                        // add id to each list
+                        for (var k = 0; k < idLists.length; k++) {
+                            var idList = idLists[k];
+                            idList.push(object.id);
+                        }
+                    }
+                }
+                if (valid) {
+                    for (var k = 0; k < idLists.length; k++) {
+                        var idList = idLists[k];
+                        strings.push(idList.join(','));
+                    }
+                }
+            }
+        }
+    }
+    return (strings.length > 0) ? strings : null;
+}
 
 exports.transferProps = function(src, dst) {
     for (var name in src) {

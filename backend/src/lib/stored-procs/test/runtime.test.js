@@ -230,5 +230,98 @@ describe('Runtime', function() {
             };
             expect(Runtime.matchObject(filters, object)).to.equal(false);
         })
+        it('should return true when a object\'s external array contains an entry that match an external_object filter', function() {
+            var object = {
+                story_id: 1,
+                external: [
+                    {
+                        type: 'facebook',
+                        server_id: 1,
+                        user: {
+                            id: '1234567890'
+                        }
+                    },
+                    {
+                        type: 'gitlab',
+                        server_id: 2,
+                        user: {
+                            id: 4,
+                        }
+                    },
+                ],
+            };
+            var filters = {
+                external_object: {
+                    type: 'gitlab',
+                    server_id: 2,
+                    user: {
+                        id: 4,
+                    }
+                }
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(true);
+        })
+        it('should return false when a object\'s external array does not contain an entry that match an external_object filter', function() {
+            var object = {
+                story_id: 1,
+                external: [
+                    {
+                        type: 'facebook',
+                        server_id: 1,
+                        user: {
+                            id: '1234567890'
+                        }
+                    },
+                    {
+                        type: 'gitlab',
+                        server_id: 2,
+                        user: {
+                            id: 4,
+                        }
+                    },
+                ],
+            };
+            var filters = {
+                external_object: {
+                    type: 'gitlab',
+                    server_id: 2,
+                    user: {
+                        id: 3,
+                    }
+                }
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
+        it('should return false when a object\'s external array contains an entry that match an external_object filter except for the type', function() {
+            var object = {
+                story_id: 1,
+                external: [
+                    {
+                        type: 'facebook',
+                        server_id: 1,
+                        user: {
+                            id: '1234567890'
+                        }
+                    },
+                    {
+                        type: 'gitlab',
+                        server_id: 2,
+                        user: {
+                            id: 4,
+                        }
+                    },
+                ],
+            };
+            var filters = {
+                external_object: {
+                    type: 'donkey',
+                    server_id: 2,
+                    user: {
+                        id: 4,
+                    }
+                }
+            };
+            expect(Runtime.matchObject(filters, object)).to.equal(false);
+        })
     })
 })
