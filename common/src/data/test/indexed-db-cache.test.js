@@ -12,7 +12,7 @@ describe('IndexedDBCache', function() {
     describe('#save', function() {
         it('should save an object to IndexedDB', function() {
             var location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -30,7 +30,7 @@ describe('IndexedDBCache', function() {
         })
         it('should overwrite an existing object', function() {
             var location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -48,7 +48,7 @@ describe('IndexedDBCache', function() {
         })
         it('should save multiple objects', function() {
             var location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -89,7 +89,7 @@ describe('IndexedDBCache', function() {
     describe('#find', function() {
         it('should be able to find object saved earlier', function() {
             var query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -102,7 +102,7 @@ describe('IndexedDBCache', function() {
         })
         it('should be able to find object by multiple ids', function() {
             var query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -115,7 +115,7 @@ describe('IndexedDBCache', function() {
         })
         it('should find object by other criteria', function() {
             var query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -140,7 +140,7 @@ describe('IndexedDBCache', function() {
     describe('#remove', function() {
         it('should remove an object saved earlier', function() {
             var location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -156,7 +156,7 @@ describe('IndexedDBCache', function() {
             };
             return cache.remove(location, [ object ]).then((objects) => {
                 var query = {
-                    server: 'somewhere.net',
+                    address: 'http://somewhere.net',
                     schema: 'global',
                     table: 'user',
                     criteria: {
@@ -196,7 +196,7 @@ describe('IndexedDBCache', function() {
                 table: 'comment',
             };
             var location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -211,7 +211,7 @@ describe('IndexedDBCache', function() {
             }).then(() => {
                 return cache.save(location2, objects);
             }).then(() => {
-                return cache.clean({ server: 'mordor.me' }).then((count) => {
+                return cache.clean({ address: 'http://mordor.me' }).then((count) => {
                     expect(count).to.equal(10);
                 });
             }).then(() => {
@@ -229,7 +229,7 @@ describe('IndexedDBCache', function() {
                 table: 'comment',
             };
             var location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -262,7 +262,7 @@ describe('IndexedDBCache', function() {
                 table: 'comment',
             };
             var location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };

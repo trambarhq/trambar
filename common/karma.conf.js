@@ -1,4 +1,6 @@
 var Path = require('path');
+var Webpack = require('webpack');
+var DefinePlugin = Webpack.DefinePlugin;
 
 module.exports = function(config) {
     config.set({
@@ -51,6 +53,12 @@ module.exports = function(config) {
                     return Path.resolve(`./${folder}`);
                 })
             },
+            plugins: [
+                new DefinePlugin({
+                    'process.env.NODE_ENV': '"production"',
+                    'process.env.PLATFORM': '"browser"',
+                }),
+            ],
             externals: {
                 'react/addons': true,
                 'react/lib/ExecutionEnvironment': true,
