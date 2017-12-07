@@ -233,7 +233,7 @@ describe('Runtime', function() {
         it('should return true when a object\'s external array contains an entry that match an external_object filter', function() {
             var object = {
                 story_id: 1,
-                external: [
+                external_object: [
                     {
                         type: 'facebook',
                         server_id: 1,
@@ -264,7 +264,7 @@ describe('Runtime', function() {
         it('should return false when a object\'s external array does not contain an entry that match an external_object filter', function() {
             var object = {
                 story_id: 1,
-                external: [
+                external_object: [
                     {
                         type: 'facebook',
                         server_id: 1,
@@ -295,7 +295,7 @@ describe('Runtime', function() {
         it('should return false when a object\'s external array contains an entry that match an external_object filter except for the type', function() {
             var object = {
                 story_id: 1,
-                external: [
+                external_object: [
                     {
                         type: 'facebook',
                         server_id: 1,

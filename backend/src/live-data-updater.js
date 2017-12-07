@@ -54,10 +54,15 @@ function start() {
 
 function stop() {
     if (database) {
-        database.close();
-        database = null;
+        return Statistics.relinquish(database).then(() => {
+            return Listing.relinquish(database).then(() => {
+                database.close();
+                database = null;
+            });
+        });
+    } else {
+        return Promise.resolve();
     }
-    return Promise.resolve();
 }
 
 /**
@@ -83,6 +88,21 @@ function handleCleanRequests(events) {
                 break;
         }
     })
+}
+
+/**
+ * Called when monitored tables have changed
+ *
+ * @param  {Array<Object>} events
+ */
+function handleDatabaseChanges(events) {
+    _.each(events, (event) => {
+        _.each(storyRaters, (rater) => {
+            if (_.includes(rater.monitoring, event.table)) {
+                rater.handleEvent(event);
+            }
+        });
+    });
 }
 
 /**
@@ -148,14 +168,14 @@ function addToStatisticsQueue(schema, id, atime) {
     // push item onto queue unless it's already there
     var item = { schema, id };
     var queue = statisticsUpdateQueues[priority];
-    if (!_.find(queue, item)) {
+    if (!_.some(queue, item)) {
         queue.push(item);
     }
 
     // remove it from the other queues
-    _.forIn(statisticsUpdateQueues, (otherQueue) => {
+    _.forIn(statisticsUpdateQueues, (otherQueue, priority) => {
         if (otherQueue !== queue) {
-            var index = _.find(otherQueue, item);
+            var index = _.findIndex(otherQueue, item);
             if (index !== -1) {
                 otherQueue.splice(index, 1);
             }
@@ -174,8 +194,8 @@ function processNextInStatisticsQueue() {
         // already in the middle of something
         return;
     }
-    var nextItem;
-    _.each(statisticsUpdateQueues, (queue, priority) => {
+    for (var priority in statisticsUpdateQueues) {
+        var queue = statisticsUpdateQueues[priority];
         var nextItem = queue.shift();
         if (nextItem) {
             updatingStatistics = true;
@@ -198,9 +218,9 @@ function processNextInStatisticsQueue() {
                 console.error(err)
                 setImmediate(processNextInStatisticsQueue);
             });
-            return false;
+            return;
         }
-    });
+    }
 }
 
 /**
@@ -209,13 +229,17 @@ function processNextInStatisticsQueue() {
  * @param  {String} schema
  * @param  {Number} id
  *
- * @return {Promise<Statistics>}
+ * @return {Promise<Statistics|null>}
  */
 function updateStatistics(schema, id) {
+    console.log(`Updating statistics in ${schema}: ${id}`);
     return Database.open().then((db) => {
         // establish a lock on the row first, so multiple instances of this
         // script won't waste time performing the same work
         return Statistics.lock(db, schema, id, '1 minute', 'gn, type, filters').then((row) => {
+            if (!row) {
+                return null;
+            }
             // regenerate the row
             var analyser = _.find(analysers, { type: row.type });
             if (!analyser) {
@@ -224,6 +248,8 @@ function updateStatistics(schema, id) {
             return analyser.generate(db, schema, row.filters).then((props) => {
                 // save the new data and release the lock
                 return Statistics.unlock(db, schema, id, props, 'gn');
+            }).catch((err) => {
+                return Statistics.unlock(db, schema, id).throw(err);
             });
         }).finally(() => {
             return db.close();
@@ -246,6 +272,7 @@ var listingUpdateQueues = {
  * @param {String} atime
  */
 function addToListingQueue(schema, id, atime) {
+    //console.log(`Queuing listing: ${id}`);
     var elapsed = getTimeElapsed(atime, new Date);
     var priority = 'low';
     if (elapsed < 60 * 1000) {
@@ -256,14 +283,14 @@ function addToListingQueue(schema, id, atime) {
     // push item onto queue unless it's already there
     var item = { schema, id };
     var queue = listingUpdateQueues[priority];
-    if (!_.find(queue, item)) {
+    if (!_.some(queue, item)) {
         queue.push(item);
     }
 
     // remove it from the other queues
     _.forIn(listingUpdateQueues, (otherQueue) => {
         if (otherQueue !== queue) {
-            var index = _.find(otherQueue, item);
+            var index = _.findIndex(otherQueue, item);
             if (index !== -1) {
                 otherQueue.splice(index, 1);
             }
@@ -282,8 +309,8 @@ function processNextInListingQueue() {
         // already in the middle of something
         return;
     }
-    var nextItem;
-    _.each(listingUpdateQueues, (queue, priority) => {
+    for (var priority in listingUpdateQueues) {
+        var queue = listingUpdateQueues[priority];
         var nextItem = queue.shift();
         if (nextItem) {
             updatingListing = true;
@@ -306,9 +333,9 @@ function processNextInListingQueue() {
                 console.error(err)
                 setImmediate(processNextInListingQueue);
             });
-            return false;
+            return;
         }
-    });
+    }
 }
 
 /**
@@ -320,11 +347,15 @@ function processNextInListingQueue() {
  * @return {Promise<Listing>}
  */
 function updateListing(schema, id) {
+    console.log(`Updating listing in ${schema}: ${id}`);
     var maxCandidateCount = 1000;
     return Database.open().then((db) => {
         // establish a lock on the row first, so multiple instances of this
         // script won't waste time performing the same work
         return Listing.lock(db, schema, id, '1 minute', 'gn, type, filters, details').then((listing) => {
+            if (!listing) {
+                return null;
+            }
             var oldStories = _.get(listing.details, 'stories', []);
             var newStories = _.get(listing.details, 'candidates', []);
             var earliest = _.reduce(oldStories, (earliest, story) => {
@@ -375,6 +406,8 @@ function updateListing(schema, id) {
                     var details = _.assign({}, listing.details, { candidates });
                     return Listing.unlock(db, schema, id, { details }, 'gn');
                 });
+            }).catch((err) => {
+                return Listing.unlock(db, schema, id).throw(err);
             });
         }).finally(() => {
             return db.close();
@@ -418,21 +451,6 @@ function calculateStoryRating(contexts, story) {
         return total + rating;
     }, 0);
     return rating;
-}
-
-/**
- * Called when monitored tables have changed
- *
- * @param  {Array<Object>} events
- */
-function handleDatabaseChanges(events) {
-    _.each(events, (event) => {
-        _.each(storyRaters, (rater) => {
-            if (_.includes(rater.monitoring, event.table)) {
-                rater.handleEvent(event);
-            }
-        });
-    });
 }
 
 /**

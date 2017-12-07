@@ -107,8 +107,13 @@ function invalidateStatistics(db, schema, events) {
                         if (requiredValue !== undefined) {
                             // see if there's a change in whether the object meets the
                             // fixed filter's condition
-                            var valueBefore = event.diff[column][0];
-                            var valueAfter = event.diff[column][0];
+                            var valueBefore = event.previous[column];
+                            var valueAfter = event.current[column];
+                            if (valueBefore === undefined || valueAfter === undefined) {
+                                // column isn't included in the change object
+                                // assume the change can lead to stats change
+                                return true;
+                            }
                             var conditionMetBefore = (valueBefore === requiredValue);
                             var conditionMetAfter = (valueAfter === requiredValue);
                             if (conditionMetBefore !== conditionMetAfter) {
@@ -119,25 +124,11 @@ function invalidateStatistics(db, schema, events) {
                 }
                 return false;
             });
-
             if (_.isEmpty(relevantEvents)) {
                 return;
             }
 
-            // load the changed objects, fetching only columns that are filtered on
-            var ids = _.map(relevantEvents, 'id');
-            var accessor = require(`accessors/${table}`);
-            var objectCriteria = _.extend({ id: ids }, fixedFilters);
-            var columns = [];
-            _.each(filteredColumns, (column, filter) => {
-                // use the filter name for the column
-                if (column !== filter) {
-                    columns.push(`${column} AS ${filter}`);
-                } else {
-                    columns.push(column);
-                }
-            });
-            return accessor.find(db, schema, objectCriteria, columns.join(', ')).then((rows) => {
+            return loadObjectsForFilters(db, schema, table, filteredColumns, fixedFilters, relevantEvents).then((rows) => {
                 if (_.isEmpty(rows)) {
                     return [];
                 }
@@ -151,13 +142,84 @@ function invalidateStatistics(db, schema, events) {
                 // invalidate those stats with fewer data points first
                 var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
                 var ids = _.map(orderedRows, 'id');
-                var chunks = _.chunk(ids, 10);
-                console.log(`Invalidating statistics: ${ids.join(', ')}`)
+                var chunks = _.chunk(ids, 20);
+                if (!_.isEmpty(ids)) {
+                    console.log(`Invalidating statistics in ${schema}: ${ids.join(', ')}`)
+                }
                 return Promise.each(chunks, (ids) => {
                     return Statistics.invalidate(db, schema, ids);
                 });
             });
         });
+    });
+}
+
+/**
+ * Extract column values from change event objects if possible,
+ * otherwise load the changed rows from database
+ *
+ * @param  {Database} db
+ * @param  {String} schema
+ * @param  {String} table
+ * @param  {Object} filteredColumns
+ * @param  {Object} fixedFilters
+ * @param  {Array<Object>} events
+ *
+ * @return {Array<Object>}
+ */
+function loadObjectsForFilters(db, schema, table, filteredColumns, fixedFilters, events) {
+    // first, see if the necessary properties are in the change event objects
+    return Promise.try(() => {
+        var objects = _.map(events, (event, index) => {
+            var current = event.current;
+            if (index === 0) {
+                // make sure all the properties are there
+                // only need to do this for the first event
+                _.each(fixedFilters, (value, column) => {
+                    if (!current.hasOwnProperty(column)) {
+                        throw new Error(`Missing column: ${column}`);
+                    }
+                });
+                _.each(filteredColumns, (column) => {
+                    if (column !== 'id') {
+                        if (!current.hasOwnProperty(column)) {
+                            throw new Error(`Missing column: ${column}`);
+                        }
+                    }
+                });
+            }
+
+            // all required fields are there in the change object already
+            // see if the properties match the fixed filters (e.g. deleted, published, etc.)
+            if (_.isMatch(current, fixedFilters)) {
+                var object = {};
+                _.each(filteredColumns, (column, filter) => {
+                    // stored the value under the filter name, as required by the
+                    // stored proc matchAny()
+                    object[filter] = (column === 'id') ? event.id : current[column];
+                });
+                return object;
+            } else {
+                return null;
+            }
+        });
+        return _.filter(objects);
+    }).catch((err) => {
+        console.warn(err.message);
+        // need to actually load the objects
+        var accessor = require(`accessors/${table}`);
+        var ids = _.map(events, 'id');
+        var objectCriteria = _.extend({ id: ids }, fixedFilters);
+        var columns = [];
+        _.each(filteredColumns, (column, filter) => {
+            // use the filter name for the column as required by matchAny()
+            if (column !== filter) {
+                columns.push(`${column} AS ${filter}`);
+            } else {
+                columns.push(column);
+            }
+        });
+        return accessor.find(db, schema, objectCriteria, columns.join(', '));
     });
 }
 
@@ -167,8 +229,10 @@ function invalidateListings(db, schema, events) {
         findListingsImpactedByStatisticsChange(db, schema, events),
     ]).then((idLists) => {
         var ids = _.flatten(idLists);
-        var chunks = _.chunk(ids, 10);
-        console.log(`Invalidating story listings: ${ids.join(', ')}`)
+        var chunks = _.chunk(ids, 20);
+        if (!_.isEmpty(ids)) {
+            console.log(`Invalidating story listings in ${schema}: ${ids.join(', ')}`)
+        }
         return Promise.each(chunks, (ids) => {
             return Listing.invalidate(db, schema, ids);
         });
@@ -183,28 +247,26 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
             }
         }
     });
-    if (_.isEmpty(relevantEvents)) {
+    // the change object for Story happens to have the properties
+    // that Listing filters operate on
+    var stories = _.map(relevantEvents, (event) => {
+        return event.current;
+    });
+    if (_.isEmpty(stories)) {
         return [];
     }
-    var storyCriteria = {
-        id: _.map(relevantEvents, 'id'),
+    // find listing rows that cover these stories
+    var listingCriteria = {
+        match_any: stories,
+        dirty: false,
     };
-    return Story.find(db, schema, storyCriteria, 'user_ids, role_ids').then((rows) => {
-        if (_.isEmpty(rows)) {
-            return [];
-        }
-        // find statistics rows that cover these objects
-        var listingCriteria = {
-            match_any: rows,
-            dirty: false,
-        };
-        return Listing.find(db, schema, listingCriteria, 'id');
-    }).then((rows) => {
+    return Listing.find(db, schema, listingCriteria, 'id').then((rows) => {
         return _.map(rows, 'id');
     });
 }
 
 function findListingsImpactedByStatisticsChange(db, schema, events) {
+    // only story-popularity is used
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'statistics') {
             if (event.current.type === 'story-popularity') {
@@ -212,23 +274,18 @@ function findListingsImpactedByStatisticsChange(db, schema, events) {
             }
         }
     });
-    if (_.isEmpty(relevantEvents)) {
+    // change object for Statistics contains the row's filters
+    var storyIds = _.map(relevantEvents, (event) => {
+        return event.current.filters.story_id;
+    });
+    if (_.isEmpty(storyIds)) {
         return [];
     }
-    var statsCriteria = {
-        id: _.map(relevantEvents, 'id'),
+    var listingCriteria = {
+        has_candidates: storyIds,
+        dirty: false,
     };
-    return Statistics.find(db, schema, statsCriteria, 'filters').then((rows) => {
-        var storyIds = _.filter(_.map(rows, 'filters.story_id'));
-        if (_.isEmpty(storyIds)) {
-            return [];
-        }
-        var listingCriteria = {
-            has_candidates: storyIds,
-            dirty: false,
-        };
-        return Listing.find(db, schema, listingCriteria, 'id')
-    }).then((rows) => {
+    return Listing.find(db, schema, listingCriteria, 'id').then((rows) => {
         return _.map(rows, 'id');
     });
 }

@@ -103,7 +103,7 @@ module.exports = _.create(LiveData, {
         }
         if (criteria.has_candidates) {
             var storyIds = `$${params.push(criteria.has_candidates)}`;
-            conds.push(`"hasCandidates"(filters, ${storyIds})`);
+            conds.push(`"hasCandidates"(details, ${storyIds})`);
         }
     },
 

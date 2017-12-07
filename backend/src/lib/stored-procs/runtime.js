@@ -121,6 +121,11 @@ exports.matchObject = function(filters, object) {
             case 'tz_offset':
                 break;
             case 'external_object':
+                // this function expects object properties to have the same
+                // names as the filters operating on them
+                //
+                // so the external array is in "external_object"
+                var objectExternal = object[name];
                 var filterObject = filters[name];
                 var filterExternal = [ filterObject ];
                 var serverType = filterObject.type || '';
@@ -132,7 +137,7 @@ exports.matchObject = function(filters, object) {
                     }
                 }
                 var filterIdStrings = externalIdStrings(filterExternal, serverType, objectNames);
-                var objectIdStrings = externalIdStrings(object.external, serverType, objectNames);
+                var objectIdStrings = externalIdStrings(objectExternal, serverType, objectNames);
                 if (filterIdStrings && objectIdStrings) {
                     for (var i = 0; i < filterIdStrings.length; i++) {
                         if (objectIdStrings.indexOf(filterIdStrings[i]) !== -1) {

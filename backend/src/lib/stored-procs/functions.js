@@ -10,13 +10,13 @@ exports.matchAny.args = 'filters jsonb, objects jsonb[]';
 exports.matchAny.ret = 'boolean';
 exports.matchAny.flags = 'IMMUTABLE';
 
-exports.hasCandidates = function(details, storyIds) {
+exports.hasCandidates = function(details, ids) {
     var candidates = details.candidates;
     if (candidates instanceof Array) {
         for (var i = 0; i < candidates.length; i++) {
             var id = candidates[i].id;
-            for (var j = 0; j < storyIds.length; j++) {
-                if (id === storyIds[j]) {
+            for (var j = 0; j < ids.length; j++) {
+                if (id === ids[j]) {
                     return true;
                 }
             }
@@ -24,7 +24,7 @@ exports.hasCandidates = function(details, storyIds) {
     }
     return false;
 };
-exports.hasCandidates.args = 'details jsonb, storyIds int[]';
+exports.hasCandidates.args = 'details jsonb, ids int[]';
 exports.hasCandidates.ret = 'boolean';
 exports.hasCandidates.flags = 'IMMUTABLE';
 

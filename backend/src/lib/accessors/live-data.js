@@ -23,7 +23,7 @@ module.exports = _.create(Data, {
 
     /**
      * Create table in schema
-     * 
+     *
      * (for reference purpose only)
      *
      * @param  {Database} db
@@ -138,7 +138,7 @@ module.exports = _.create(Data, {
      * @param  {String} interval
      * @param  {String} columns
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Object|null>}
      */
     lock: function(db, schema, id, interval, columns) {
         var table = this.getTableName(schema);
@@ -150,15 +150,19 @@ module.exports = _.create(Data, {
             RETURNING ${columns}
         `;
         return db.query(sql, parameters).get(0).then((row) => {
-            if (!row) {
-                throw new Error('Unable to establish lock on row');
+            if (row) {
+                if (!this.locked) {
+                    this.locked = [];
+                }
+                this.locked.push({ schema, id });
             }
-            return row;
+            return row || null;
         });
     },
 
     /**
-     * Update a row then unlock it
+     * Update a row then unlock it when props are provided. If not, simply
+     * release the lock.
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -166,34 +170,54 @@ module.exports = _.create(Data, {
      * @param  {Object} props
      * @param  {String} columns
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Object|null>}
      */
     unlock: function(db, schema, id, props, columns) {
         var table = this.getTableName(schema);
-        var assignments = [];
         var parameters = [ id ];
-        var index = parameters.length + 1;
-        _.each(_.keys(this.columns), (name, i) => {
-            if (name !== 'id') {
-                var value = props[name];
-                if (value !== undefined) {
-                    var bound = '$' + index++;
-                    parameters.push(value);
-                    assignments.push(`${name} = ${bound}`);
+        var sql;
+        if (props) {
+            var assignments = [];
+            var index = parameters.length + 1;
+            _.each(_.keys(this.columns), (name, i) => {
+                if (name !== 'id') {
+                    var value = props[name];
+                    if (value !== undefined) {
+                        var bound = '$' + index++;
+                        parameters.push(value);
+                        assignments.push(`${name} = ${bound}`);
+                    }
                 }
-            }
-        });
-        var sql = `
-            UPDATE ${table}
-            SET ${assignments.join(',')}, ltime = NULL, dirty = false
-            WHERE id = $1 AND ltime >= NOW()
-            RETURNING ${columns}
-        `;
+            });
+            sql = `
+                UPDATE ${table}
+                SET ${assignments.join(',')}, ltime = NULL, dirty = false
+                WHERE id = $1 AND ltime >= NOW()
+                RETURNING ${columns}
+            `;
+        } else {
+            sql = `
+                UPDATE ${table}
+                SET ltime = NULL
+                WHERE id = $1 AND ltime >= NOW()
+            `;
+        }
         return db.query(sql, parameters).get(0).then((row) => {
-            if (!row) {
-                throw new Error('Unable to update row')
-            }
-            return row;
+            _.pullAllBy(this.locked, { schema, id });
+            return row || null;
+        });
+    },
+
+    /**
+     * Unlock any previous locked row
+     *
+     * @param  {Database} db
+     *
+     * @return {Promise}
+     */
+    relinquish: function(db) {
+        return Promise.each(this.locked || [], (lock) => {
+            return this.unlock(db, lock.schema, lock.id);
         });
     },
 
