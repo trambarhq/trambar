@@ -16,6 +16,16 @@
             font-size: 0.9em;
         }
 
+        .time {
+            &.today {
+                color: #aaaaaa;
+            }
+
+            &.yesterday {
+                color: #999999;
+            }
+        }
+
         .graphic {
             float: right;
 
