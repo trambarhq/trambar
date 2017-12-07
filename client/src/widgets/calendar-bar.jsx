@@ -69,7 +69,7 @@ module.exports = Relaks.createClass({
                 var s = Moment(startTime).startOf('month');
                 var e = Moment(endTime).endOf('month');
                 var timeRanges = [];
-                for (var m = s.clone(); m.month() <= e.month(); m.add(1, 'month')) {
+                for (var m = s.clone(); m <= e; m.add(1, 'month')) {
                     var rangeStart = m.toISOString();
                     var rangeEnd = m.clone().endOf('month').toISOString();
                     var range = `[${rangeStart},${rangeEnd}]`;
