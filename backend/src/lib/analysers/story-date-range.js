@@ -9,7 +9,7 @@ module.exports = {
         story: {
             user_ids: 'user_ids',
             role_ids: 'role_ids',
-            external_object: 'external_object',
+            external_object: 'external',
         },
     },
     depedentColumns: {

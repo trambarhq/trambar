@@ -178,7 +178,7 @@ function invalidateListings(db, schema, events) {
 function findListingsImpactedByStoryChanges(db, schema, events) {
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
-            if (event.diff.published || event.diff.ready) {
+            if (event.current.published || event.current.ready) {
                 return true;
             }
         }
@@ -207,14 +207,15 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
 function findListingsImpactedByStatisticsChange(db, schema, events) {
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'statistics') {
-            return true;
+            if (event.current.type === 'story-popularity') {
+                return true;
+            }
         }
     });
     if (_.isEmpty(relevantEvents)) {
         return [];
     }
     var statsCriteria = {
-        type: 'story-popularity',
         id: _.map(relevantEvents, 'id'),
     };
     return Statistics.find(db, schema, statsCriteria, 'filters').then((rows) => {

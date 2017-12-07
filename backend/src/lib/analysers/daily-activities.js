@@ -14,7 +14,7 @@ module.exports = {
             user_ids: 'user_ids',
             role_ids: 'role_ids',
             time_range: 'ptime',
-            external_object: 'external_object',
+            external_object: 'external',
         },
     },
     // additional criteria that objects must also meet to be included

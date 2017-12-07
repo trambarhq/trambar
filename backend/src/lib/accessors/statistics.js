@@ -29,7 +29,6 @@ module.exports = _.create(LiveData, {
         filters_hash: String,
         match_any: Array(Object),
     },
-    keys: [ 'type', 'filters_hash' ],
 
     /**
      * Create table in schemaroot

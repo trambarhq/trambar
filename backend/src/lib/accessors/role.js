@@ -16,6 +16,7 @@ module.exports = _.create(ExternalData, {
         hidden: Boolean,
         disabled: Boolean,
         external: Array(Object),
+        settings: Object,
     },
     criteria: {
         id: Number,
@@ -23,9 +24,6 @@ module.exports = _.create(ExternalData, {
         name: String,
         hidden: Boolean,
         disabled: Boolean,
-
-        server_id: Number,
-        external_object: Object,
     },
 
     /**
@@ -51,6 +49,7 @@ module.exports = _.create(ExternalData, {
                 disabled boolean NOT NULL DEFAULT false,
                 general boolean NOT NULL DEFAULT true,
                 external jsonb[] NOT NULL DEFAULT '{}',
+                settings jsonb NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
@@ -68,7 +67,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'external' ];
+            var propNames = [ 'deleted', 'hidden', 'disabled', 'general' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
                 var Task = require('accessors/task');
@@ -98,6 +97,7 @@ module.exports = _.create(ExternalData, {
                 if (credentials.unrestricted) {
                     object.hidden = row.hidden;
                     object.disabled = row.disabled;
+                    object.settings = row.settings;
                 } else {
                     if (row.hidden) {
                         object.hidden = row.hidden;

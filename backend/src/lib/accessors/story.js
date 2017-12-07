@@ -87,6 +87,7 @@ module.exports = _.create(ExternalData, {
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
+            CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
         `;
         //
         return db.execute(sql);
@@ -146,7 +147,7 @@ module.exports = _.create(ExternalData, {
         }
         if (criteria.bumped_after !== undefined) {
             var time = `$${params.push(criteria.bumped_after)}`
-            conds.push(`(ptime > ${time} || btime > ${time})`);
+            conds.push(`COALESCE(ptime, btime) > ${time}`);
         }
         if (criteria.url !== undefined) {
             conds.push(`details->>'url' = $${params.push(criteria.url)}`);

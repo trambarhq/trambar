@@ -232,10 +232,10 @@ module.exports = {
         if (typeof(criteria.order) === 'string') {
             var parts = _.split(criteria.order, /\s+/);
             var column = parts[0];
-            var dir = _.toLower(parts[1]);
-            if (this.columns.hasOwnProperty(column)) {
+            var dir = _.toUpper(parts[1]);
+            if (/^\w+$/.test(column)) {
                 query.order = column;
-                if (dir === 'asc' || dir === 'desc') {
+                if (dir === 'ASC' || dir === 'DESC') {
                     query.order += ' ' + dir;
                 }
             }
