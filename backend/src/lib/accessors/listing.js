@@ -167,8 +167,10 @@ module.exports = _.create(LiveData, {
                 if (credentials.user.id !== row.target_user_id) {
                     throw new HttpError(403);
                 }
-                // add new stories from list of candidates
-                this.finalize(db, schema, row);
+                if (!row.finalized) {
+                    // add new stories from list of candidates
+                    this.finalize(db, schema, row);
+                }
             });
             return objects;
         });
@@ -230,7 +232,8 @@ module.exports = _.create(LiveData, {
                 // finalize other listings now for consistency sake
                 var criteria = {
                     type: row.type,
-                    target_user_id: row.target_user_id
+                    target_user_id: row.target_user_id,
+                    finalized: false,
                 };
                 return this.find(db, schema, criteria, '*').each((otherRow) => {
                     if (otherRow.id !== row.id) {
