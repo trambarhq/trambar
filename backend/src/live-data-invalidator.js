@@ -242,7 +242,7 @@ function invalidateListings(db, schema, events) {
 function findListingsImpactedByStoryChanges(db, schema, events) {
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
-            if (event.current.published || event.current.ready) {
+            if (event.current.published && event.current.ready) {
                 return true;
             }
         }

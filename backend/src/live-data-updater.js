@@ -272,7 +272,6 @@ var listingUpdateQueues = {
  * @param {String} atime
  */
 function addToListingQueue(schema, id, atime) {
-    //console.log(`Queuing listing: ${id}`);
     var elapsed = getTimeElapsed(atime, new Date);
     var priority = 'low';
     if (elapsed < 60 * 1000) {
@@ -378,24 +377,18 @@ function updateListing(schema, id) {
             columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS time' ]);
             columns = _.uniq(columns);
             return Story.find(db, schema, criteria, columns.join(', ')).then((rows) => {
-                var candidates;
-                if (_.isEmpty(newStories)) {
-                    candidates = _.reverse(rows);
-                } else {
                     // insert into list, order by time
-                    _.each(rows, (row) => {
-                        var index = _.sortedIndexBy(newStories, row, 'time');
-                        newStories.splice(index, 0, row);
-                    });
-                    candidates = newStories;
-                }
-
+                var candidates = _.slice(newStories);
+                _.each(rows, (row) => {
+                    var index = _.sortedIndexBy(candidates, row, 'time');
+                    candidates.splice(index, 0, row);
+                });
                 if (candidates.length > maxCandidateCount) {
                     // remove older ones
                     candidates.splice(0, candidates.length - maxCandidateCount);
                 }
 
-                // retrieve data needed asynchronously
+                // asynchronously retrieve data needed to rate the candidates
                 return prepareStoryRaterContexts(db, schema, candidates, listing).then((contexts) => {
                     // calculate the rating of each candidate story
                     _.each(candidates, (candidate) => {
@@ -404,7 +397,8 @@ function updateListing(schema, id) {
 
                     // save the new candidate list
                     var details = _.assign({}, listing.details, { candidates });
-                    return Listing.unlock(db, schema, id, { details }, 'gn');
+                    var finalized = _.isEmpty(candidates);
+                    return Listing.unlock(db, schema, id, { details, finalized }, 'gn');
                 });
             }).catch((err) => {
                 return Listing.unlock(db, schema, id).throw(err);
@@ -428,9 +422,6 @@ function updateListing(schema, id) {
 function prepareStoryRaterContexts(db, schema, stories, listing) {
     var contexts = {};
     return Promise.each(storyRaters, (rater) => {
-        if (!rater.prepareContext) {
-            console.log(rater);
-        }
         return rater.prepareContext(db, schema, stories, listing).then((context) => {
             contexts[rater.name] = context;
         });
