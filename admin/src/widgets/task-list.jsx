@@ -51,7 +51,6 @@ module.exports = Relaks.createClass({
                 var criteria = {
                     server_id: this.props.server.id,
                     deleted: false,
-                    noop: false,
                     limit: 1000,
                 };
                 return db.find({ table: 'task', criteria });

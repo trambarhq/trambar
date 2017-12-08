@@ -50,8 +50,7 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
-            activeTasks: null,
-            failedTasks: null,
+            tasks: null,
 
             route: this.props.route,
             locale: this.props.locale,
@@ -68,17 +67,7 @@ module.exports = Relaks.createClass({
             };
             return db.find({ table: 'task', criteria });
         }).then((tasks) => {
-            props.activeTasks = tasks;
-            return meanwhile.show(<TaskAlertBarSync {...props} />);
-        }).then(() => {
-            var criteria = {
-                failed: true,
-                newer_than: this.state.searchStartTime,
-                limit: 10,
-            };
-            return db.find({ table: 'task', criteria });
-        }).then((tasks) => {
-            props.failedTasks = tasks;
+            props.tasks = tasks;
             return <TaskAlertBarSync {...props} />;
         });
     },
@@ -106,8 +95,7 @@ module.exports = Relaks.createClass({
 var TaskAlertBarSync = module.exports.Sync = React.createClass({
     displayName: 'TaskAlertBar.Sync',
     propTypes: {
-        activeTasks: PropTypes.arrayOf(PropTypes.object),
-        failedTasks: PropTypes.arrayOf(PropTypes.object),
+        tasks: PropTypes.arrayOf(PropTypes.object),
 
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -125,6 +113,7 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
             rendering: false,
             hidden: true,
             selectedTask: null,
+            highestTaskId: 0,
         };
     },
 
@@ -189,13 +178,25 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.activeTasks !== nextProps.activeTasks || this.props.failedTasks !== nextProps.failedTasks) {
-            var selectedTask = _.first(_.sortBy(nextProps.activeTasks, 'ctime'));
-            if (!selectedTask) {
-                selectedTask = _.last(_.sortBy(nextProps.failedTasks, 'ctime'));
+        if (this.props.tasks !== nextProps.tasks) {
+            var highestTaskId = this.state.highestTaskId;
+            var activeTasks = _.sortBy(_.filter(nextProps.tasks, { failed: false }), 'ctime');
+            var selectedTask = _.first(activeTasks);
+            if (selectedTask) {
+                if (selectedTask.id > highestTaskId) {
+                    highestTaskId = selectedTask.id;
+                }
+            } else {
+                var failedTasks = _.sortBy(_.filter(nextProps.tasks, { failed: true }, 'ctime'));
+                selectedTask = _.find(failedTasks, (task) => {
+                    // find one that's more recent than the last progress item
+                    if (task.id >= highestTaskId) {
+                        return true;
+                    }
+                });
             }
             if (selectedTask) {
-                this.setState({ selectedTask, showing: true });
+                this.setState({ selectedTask, highestTaskId, showing: true });
             } else {
                 var currentSelectedTask = this.state.selectedTask;
                 setTimeout(() => {

@@ -34,7 +34,6 @@ function last(server, action) {
     return Database.open().then((db) => {
         var criteria = {
             action,
-            noop: false,
             server_id: _.get(server, 'id'),
             order: 'id DESC',
             limit: 1,
@@ -133,10 +132,13 @@ TaskLog.prototype.abort = function(err) {
 /**
  * Preserved any unsaved progress info
  *
- * @return {Promise}
+ * @return {Promise<Task|null>}
  */
 TaskLog.prototype.save = function() {
     this.savePromise = Database.open().then((db) => {
+        if (this.noop && !this.failed) {
+            return null;
+        }
         var columns = {};
         if (!this.id) {
             columns.server_id = _.get(this.server, 'id');
@@ -147,34 +149,26 @@ TaskLog.prototype.save = function() {
         }
         columns.completion = this.completion;
         columns.details  = this.details;
-        if (this.completion === 100 || this.failed) {
-            columns.failed = this.failed;
-            if (!this.failed) {
-                columns.noop = this.noop;
-            }
+        columns.failed = this.failed;
+        if (this.completion === 100) {
             columns.etime = String('NOW()');
         }
         return Task.saveOne(db, 'global', columns).then((task) => {
-            if (!this.id) {
-                this.id = task.id;
-            }
+            this.id = task.id;
             this.saved = true;
-
-            var state = ''
-            if (task.completion < 100) {
-                if (this.failed) {
-                    state = 'aborted';
-                } else {
-                    state = `${task.completion}%`;
-                }
-            } else {
-                state = 'finished';
-                if (this.noop) {
-                    state += ' (noop)';
-                }
-            }
-            console.log(`[${task.id}] ${task.action}: ${state}`);
         });
+    }).tap(() => {
+        var state = ''
+        if (this.completion < 100) {
+            if (this.failed) {
+                state = 'aborted';
+            } else {
+                state = `${this.completion}%`;
+            }
+        } else {
+            state = 'finished';
+        }
+        console.log(`[${this.id || 'NOP'}] ${this.action}: ${state}`);
     });
     return this.savePromise;
 };
