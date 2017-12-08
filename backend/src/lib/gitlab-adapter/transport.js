@@ -14,6 +14,8 @@ exports.fetchEach = fetchEach;
 exports.post = post;
 exports.remove = remove;
 
+var PAGE_LIMIT = 1000;
+
 /**
  * Fetch data from Gitlab server
  *
@@ -47,7 +49,7 @@ function fetchAll(server, uri, query) {
         return fetch(server, uri, pageQuery).then((objects) => {
             if (objects instanceof Array) {
                 objectLists.push(objects);
-                if (objects.length === pageQuery.per_page && pageQuery.page < 100) {
+                if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
                     pageQuery.page++;
                 } else {
                     done = true;
@@ -91,7 +93,7 @@ function fetchEach(server, uri, query, callback) {
             return Promise.each(objects, (object) => {
                 return callback(object, index++, total);
             }).then(() => {
-                if (objects.length === pageQuery.per_page) {
+                if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
                     pageQuery.page++;
                 } else {
                     done = true;
@@ -363,6 +365,7 @@ function attempt(options) {
 
 var CACHE_FOLDER = process.env.CACHE_FOLDER;
 if (CACHE_FOLDER) {
+    console.log('**** USING GIT CACHE ****');
     var dynamicUrls = [
         /\/projects\/\d+\/hooks/,
     ];

@@ -43,7 +43,7 @@ function join(object, link) {
  */
 function reacquire(object, link, objectName) {
     var attachedLink = join(object, link);
-    var object = link[objectName];
+    var object = attachedLink[objectName];
     if (!object) {
         throw new Error(`Link does not contain ${objectName}`);
     }
@@ -153,14 +153,17 @@ function find(object, server) {
  *
  * @param  {Server} server
  * @param  {Object} props
+ * @param  {Object...} parentLinks
  *
  * @return {Object}
  */
-function create(server, props) {
-    return _.merge({}, {
+function create(server, props, ...parentLinks) {
+    var link = _.merge({}, {
         type: server.type,
         server_id: server.id
     }, props);
+    attachParentLinks(link, parentLinks);
+    return link;
 }
 
 /**
@@ -198,6 +201,11 @@ function merge(link, ...parentLinks) {
     if (!link.server_id) {
         throw new Error('Merging a link with missing server_id');
     }
+    attachParentLinks(link, parentLinks);
+    return link;
+}
+
+function attachParentLinks(link, parentLinks) {
     _.each(parentLinks, (parentLink) => {
         if (parentLink.type !== link.type) {
             throw new Error('Cannot merge links of different types');
@@ -213,5 +221,4 @@ function merge(link, ...parentLinks) {
             }
         });
     });
-    return link;
 }

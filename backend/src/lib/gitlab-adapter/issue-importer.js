@@ -31,22 +31,64 @@ function importEvent(db, server, repo, project, author, glEvent) {
     var repoLink = Import.Link.find(repo, server);
     return fetchIssue(server, repoLink.project.id, glEvent.target_id).then((glIssue) => {
         // the story is linked to both the issue and the repo
-        var link = _.merge({}, repoLink, {
+        var issueLink = Import.Link.create(server, {
             issue: { id: glIssue.id }
-        });
-        var storyNew = copyIssueProperties(null, author, glIssue, link);
-        return Story.insertOne(db, schema, storyNew).then((story) => {
-            return Promise.each(glIssue.assignees, (glUser) => {
-                return UserImporter.findUser(db, server, glUser).then((assignee) => {
-                    var reactionNew = copyAssignmentProperties(null, story, assignee, glIssue, link);
-                    return Reaction.saveOne(db, schema, reactionNew);
-                });
-            }).then(() => {
+        }, repoLink);
+        // find existing issue
+        var criteria = {
+            type: 'issue',
+            external_object: issueLink,
+        };
+        return Story.findOne(db, schema, criteria, '*').then((story) => {
+            var storyAfter = copyIssueProperties(story, author, glIssue, issueLink);
+            if (storyAfter) {
+                return Story.saveOne(db, schema, storyAfter);
+            } else {
+                return story;
+            }
+        }).then((story) => {
+            return importAssignments(db, server, project, repo, story, glIssue).then(() => {
                 if (glIssue.user_notes_count > 0) {
                     return CommentImporter.importComments(db, server, repo, project, story);
                 }
             }).return(story);
         });
+    });
+}
+
+/**
+ * Add assignment reactions to story
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Project} project
+ * @param  {Repo} repo
+ * @param  {Story} story
+ * @param  {Object} glIssue
+ *
+ * @return {Promise<Array<Reaction>>}
+ */
+function importAssignments(db, server, project, repo, story, glIssue) {
+    var schema = project.name;
+    var repoLink = Import.Link.find(repo, server);
+    var issueLink = Import.Link.create(server, {
+        issue: { id: glIssue.id }
+    }, repoLink);
+    // find existing assignments
+    var criteria = {
+        story_id: story.id,
+        type: 'assignment',
+        external_object: issueLink,
+    };
+    return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
+        return Promise.mapSeries(glIssue.assignees, (glUser) => {
+            return UserImporter.findUser(db, server, glUser).then((assignee) => {
+                if (!_.some(reactions, { user_id: assignee.id })) {
+                    var reactionNew = copyAssignmentProperties(null, story, assignee, glIssue, issueLink);
+                    return Reaction.saveOne(db, schema, reactionNew);
+                }
+            });
+        }).filter(Boolean);
     });
 }
 

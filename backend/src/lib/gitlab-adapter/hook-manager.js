@@ -95,6 +95,7 @@ function getRepoAssociations(db) {
         // load repos connected with project
         var criteria = {
             id: project.repo_ids,
+            type: 'gitlab',
             deleted: false,
         };
         return Repo.find(db, 'global', criteria, '*').each((repo) => {
