@@ -184,9 +184,12 @@ module.exports = _.create(LiveData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
+        if (subscription.area === 'admin') {
+            // admin console doesn't use this object currently
+            return false;
+        }
         if (LiveData.isRelevantTo(event, user, subscription)) {
             if (event.current.target_user_id === user.id) {
-                console.log(event.id, event.diff);
                 if (event.current.dirty) {
                     // the row will be updated soon
                     return false;

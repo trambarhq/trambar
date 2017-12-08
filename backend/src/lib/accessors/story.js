@@ -287,6 +287,10 @@ module.exports = _.create(ExternalData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
+        if (subscription.area === 'admin') {
+            // admin console doesn't use this object currently
+            return false;
+        }
         if (ExternalData.isRelevantTo(event, user, subscription)) {
             if (event.current.published && event.current.ready) {
                 return true;

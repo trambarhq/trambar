@@ -246,6 +246,10 @@ module.exports = _.create(ExternalData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
+        if (subscription.area === 'admin') {
+            // admin console doesn't use this object currently
+            return false;
+        }
         if (ExternalData.isRelevantTo(event, user, subscription)) {
             // reactions are relevant to all user even before they're published
             // that's used to show someone is commenting
