@@ -172,7 +172,6 @@ module.exports = React.createClass({
                             {t('comment-$user-cast-a-vote', name)}
                         </span>
                     );
-                    return ;
                 case 'task-completion':
                     return (
                         <span className="task-completion">

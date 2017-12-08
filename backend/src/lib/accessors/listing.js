@@ -155,6 +155,14 @@ module.exports = _.create(LiveData, {
      * @return {Promise<Object>}
      */
     export: function(db, schema, rows, credentials, options) {
+        _.each(rows, (row) => {
+            if (!row.finalized) {
+                if (credentials.user.id === row.target_user_id) {
+                    // add new stories from list of candidates
+                    this.finalize(db, schema, row);
+                }
+            }
+        });
         return LiveData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
             _.each(objects, (object, index) => {
                 var row = rows[index];
@@ -166,10 +174,6 @@ module.exports = _.create(LiveData, {
 
                 if (credentials.user.id !== row.target_user_id) {
                     throw new HttpError(403);
-                }
-                if (!row.finalized) {
-                    // add new stories from list of candidates
-                    this.finalize(db, schema, row);
                 }
             });
             return objects;
@@ -276,7 +280,7 @@ function chooseStories(row) {
         // remove old stories that were retrieved a while ago
         for (var i = 0; extra > 0 && oldStoryCount > 0; i++) {
             var oldStory = oldStories[i];
-            var elapsed = getTimeElapsed(oldStory.time, now)
+            var elapsed = getTimeElapsed(oldStory.rtime, now)
             if (elapsed > retention) {
                 extra--;
                 oldStoryCount--;
@@ -312,9 +316,9 @@ function chooseStories(row) {
         }
         if (newStoryCount !== newStories.length) {
             // remove lowly rate stories
-            newStories = _.orderBy(newStories, [ 'rating', 'time' ], [ 'asc', 'asc' ]);
+            newStories = _.orderBy(newStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
             newStories = _.slice(newStories, newStories.length - newStoryCount);
-            newStories = _.orderBy(newStories, [ 'time' ], [ 'asc' ]);
+            newStories = _.orderBy(newStories, [ 'btime' ], [ 'asc' ]);
         }
         // don't need the info used to calculate rating any more
         // just attach the retrieval time
@@ -322,7 +326,8 @@ function chooseStories(row) {
         newStories = _.map(newStories, (story) => {
             return {
                 id: story.id,
-                time: rtime,
+                btime: story.btime,
+                rtime: rtime,
             };
         });
         row.details.stories = _.concat(oldStories, newStories);

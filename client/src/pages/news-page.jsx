@@ -114,6 +114,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
+            listing: null,
             stories: null,
             draftStories: null,
             pendingStories: null,
@@ -184,6 +185,7 @@ module.exports = Relaks.createClass({
                     if (!listing) {
                         return [];
                     }
+                    props.listing = listing;
                     var criteria = {};
                     criteria.id = listing.story_ids;
                     return db.find({ table: 'story', criteria });
@@ -269,6 +271,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         showEditors: PropTypes.bool,
+        listing: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),

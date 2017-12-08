@@ -358,9 +358,10 @@ function updateListing(schema, id) {
             var oldStories = _.get(listing.details, 'stories', []);
             var newStories = _.get(listing.details, 'candidates', []);
             var earliest = _.reduce(oldStories, (earliest, story) => {
-                if (!earliest || story.time < earliest) {
-                    return story.time;
+                if (!earliest || story.btime < earliest) {
+                    earliest = story.btime;
                 }
+                return earliest;
             }, undefined);
             // look for new stories matching filters that aren't in the listing yet
             var filterCriteria = _.pick(listing.filters, _.keys(Story.criteria));
@@ -370,17 +371,17 @@ function updateListing(schema, id) {
                 published_version_id: null,
                 exclude: _.map(_.concat(oldStories, newStories), 'id'),
                 bumped_after: earliest,
-                order: 'time DESC',
+                order: 'btime DESC',
                 limit: maxCandidateCount,
             });
             var columns = _.flatten(_.map(storyRaters, 'columns'));
-            columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS time' ]);
+            columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
             columns = _.uniq(columns);
             return Story.find(db, schema, criteria, columns.join(', ')).then((rows) => {
-                    // insert into list, order by time
+                // insert into list, order by btime
                 var candidates = _.slice(newStories);
                 _.each(rows, (row) => {
-                    var index = _.sortedIndexBy(candidates, row, 'time');
+                    var index = _.sortedIndexBy(candidates, row, 'btime');
                     candidates.splice(index, 0, row);
                 });
                 if (candidates.length > maxCandidateCount) {
