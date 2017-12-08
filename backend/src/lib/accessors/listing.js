@@ -237,7 +237,8 @@ module.exports = _.create(LiveData, {
                         if (chooseStories(otherRow)) {
                             return this.updateOne(db, schema, {
                                 id: otherRow.id,
-                                details: otherRow.details
+                                details: otherRow.details,
+                                finalized: true,
                             });
                         }
                     }
