@@ -61,13 +61,27 @@ function listen() {
  */
 function shutdown() {
     return new Promise((resolve, reject) => {
-        listeners = null;
+        _.each(sockets, (socket) => {
+            socket.end();
+        });
+        sockets = [];
 
         if (server) {
-            server.close();
+            var resolved = false;
             server.on('close', () => {
-                resolve();
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
             });
+            server.close();
+            setTimeout(() => {
+                // just in case close isn't firing
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }, 1000);
         } else {
             resolve();
         }
@@ -136,6 +150,7 @@ function sendToWebsockets(db, messages) {
             console.log(message.body);
             socket.write(JSON.stringify(message.body));
         } else {
+            console.log('Deleting subscription due to missing socket', subscription);
             subscription.deleted = true;
             return Subscription.updateOne(db, 'global', subscription);
         }

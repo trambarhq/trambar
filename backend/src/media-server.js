@@ -67,10 +67,21 @@ function start() {
 function stop() {
     return new Promise((resolve, reject) => {
         if (server) {
-            server.close();
+            var resolved = false;
             server.on('close', () => {
-                resolve();
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
             });
+            server.close();
+            setTimeout(() => {
+                // just in case close isn't firing
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }, 1000);
         } else {
             resolve();
         }

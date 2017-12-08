@@ -85,6 +85,9 @@ function handleDatabaseChanges(events) {
 
     // see who's listening
     ListenerManager.find(db).then((listeners) => {
+        if (_.isEmpty(listeners)) {
+            console.log('No listeners');
+        }
         var messages = [];
         // send change messages (silent) first
         _.each(listeners, (listener, index) => {

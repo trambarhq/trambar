@@ -30,7 +30,9 @@ function off(callback) {
  */
 function initiate() {
     console.log('Shutting down...');
-    broadcast().then(() => {
+    broadcast().catch((err) => {
+        console.error(err);
+    }).finally(() => {
         process.exit(0);
     });
 }
