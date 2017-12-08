@@ -77,11 +77,13 @@ module.exports = Relaks.createClass({
                 }
                 var criteria = {};
                 if (pageClass === NewsPage) {
+                    var tzOffset = s.utcOffset();
                     criteria.type = 'daily-activities';
                     criteria.filters = _.map(timeRanges, (timeRange) => {
                         return {
                             // TODO: add role filters
-                            time_range: timeRange
+                            time_range: timeRange,
+                            tz_offset: tzOffset
                         };
                     });
                 } else if (pageClass === NotificationsPage) {
