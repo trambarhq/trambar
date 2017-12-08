@@ -94,7 +94,8 @@ module.exports = Relaks.createClass({
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             bookmarks: null,
-            currentUserId: null,
+            currentUser: null,
+            project: null,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -111,6 +112,13 @@ module.exports = Relaks.createClass({
         }).then((user) => {
             props.currentUser = user;
             meanwhile.check();
+        }).then(() => {
+            // load project
+            var criteria = { name: params.schema };
+            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+        }).then((project) => {
+            props.project = project;
+            return meanwhile.show(<BookmarksPageSync {...props} />);
         }).then(() => {
             // load boomarks
             var criteria = {
@@ -129,6 +137,7 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        project: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -158,6 +167,7 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
+            project: this.props.project,
 
             database: this.props.database,
             payloads: this.props.payloads,

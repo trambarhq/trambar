@@ -117,6 +117,7 @@ module.exports = Relaks.createClass({
             roles: null,
             dailyActivities: null,
             currentUser: null,
+            project: null,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -131,6 +132,13 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.currentUser = user;
+            return meanwhile.show(<PersonPageSync {...props} />);
+        }).then(() => {
+            // load project
+            var criteria = { name: params.schema };
+            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+        }).then((project) => {
+            props.project = project;
             return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             // load the selected user
@@ -244,6 +252,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
+        project: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -289,6 +298,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             stories: this.props.stories,
             currentUser: this.props.currentUser,
+            project: this.props.project,
             selectedStoryId: this.props.route.parameters.story,
 
             database: this.props.database,

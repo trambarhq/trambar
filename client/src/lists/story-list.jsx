@@ -201,6 +201,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        project: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
         selectedStoryId: PropTypes.number,
 
