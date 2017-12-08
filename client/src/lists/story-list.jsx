@@ -94,13 +94,13 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load reactions to stories
             var criteria = {
-                story_id: _.map(props.stories, 'id')
+                story_id: _.map(_.concat(props.pendingStories, props.stories), 'id')
             };
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
             // reattach blobs to unpublished reactions (lost when saved)
-            var unpunishedReactions = _.filter(reactions, { ptime: null });
-            _.each(unpunishedReactions, (reaction) => {
+            var unpublishedReactions = _.filter(reactions, { ptime: null });
+            _.each(unpublishedReactions, (reaction) => {
                 props.payloads.reattach(params.schema, reaction);
             });
             props.reactions = reactions;
