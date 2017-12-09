@@ -27,7 +27,7 @@ function loadProjectStatistics(db, projects) {
             var filters = getRangeFilters(dateRange);
             var criteria = { type: 'daily-activities', filters };
             return db.find({ schema, table: 'statistics', criteria, minimum }).then((dailyActivities) => {
-                return summarizeStatistics(dailyActivities, dateRange, project);
+                return summarizeStatistics(dailyActivities, dateRange);
             });
         });
     }).then((list) => {
@@ -74,7 +74,7 @@ function loadUserStatistics(db, project, users) {
                 var dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {
                     return (d.filters.user_ids[0] === userId);
                 });
-                results[userId] = summarizeStatistics(dailyActivities, dateRange, project);
+                results[userId] = summarizeStatistics(dailyActivities, dateRange);
             }, {});
         });
     });
@@ -124,7 +124,7 @@ function loadRepoStatistics(db, project, repos) {
                 var repo = _.find(repos, (repo) => {
                     return _.some(repo.external, link);
                 });
-                results[repo.id] = summarizeStatistics(dailyActivities, dateRange, project);
+                results[repo.id] = summarizeStatistics(dailyActivities, dateRange);
             }, {});
         });
     });
@@ -161,19 +161,17 @@ var summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) 
     var summaryLastMonth = summarizeDailyActivities(dailyActivities, lastMonth);
     var summaryThisMonth = summarizeDailyActivities(dailyActivities, thisMonth);
     var summaryToDate = summarizeDailyActivities(dailyActivities);
+    var start = dateRange.details.start_time;
+    var end = dateRange.details.end_time;
     if (summaryLastMonth.total === 0) {
-        // see if the project was created this month
-        var created = Moment(project.ctime).format('YYYY-MM');
-        if (created === thisMonth) {
+        var startMonth = start.substr(0, 7);
+        if (!(startMonth <= lastMonth)) {
             // field is not applicable
             summaryLastMonth.total = undefined;
         }
     }
     return {
-        range: {
-            start: dateRange.details.start_time,
-            end: dateRange.details.end_time,
-        },
+        range: { start, end },
         last_month: summaryLastMonth,
         this_month: summaryThisMonth,
         to_date: summaryToDate,
