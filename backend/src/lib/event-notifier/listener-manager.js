@@ -6,6 +6,7 @@ var Http = require('http');
 var SockJS = require('sockjs');
 var Crypto = Promise.promisifyAll(require('crypto'));
 var HttpError = require('errors/http-error');
+var Shutdown = require('shutdown');
 
 // accessors
 var Subscription = require('accessors/subscription');
@@ -60,32 +61,11 @@ function listen() {
  * @return {Promise}
  */
 function shutdown() {
-    return new Promise((resolve, reject) => {
-        _.each(sockets, (socket) => {
-            socket.end();
-        });
-        sockets = [];
-
-        if (server) {
-            var resolved = false;
-            server.on('close', () => {
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            });
-            server.close();
-            setTimeout(() => {
-                // just in case close isn't firing
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            }, 1000);
-        } else {
-            resolve();
-        }
+    _.each(sockets, (socket) => {
+        socket.end();
     });
+    sockets = [];
+    return Shutdown.close(server);
 }
 
 /**

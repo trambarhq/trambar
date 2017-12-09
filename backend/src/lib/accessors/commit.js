@@ -13,11 +13,13 @@ module.exports = _.create(ExternalData, {
         mtime: String,
         details: Object,
         initial_branch: String,
+        title_hash: String,
         external: Array(Object),
     },
     criteria: {
         id: Number,
         deleted: Boolean,
+        title_hash: String,
 
         external_object: Object,
     },
@@ -41,6 +43,7 @@ module.exports = _.create(ExternalData, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 initial_branch varchar(256) NOT NULL DEFAULT '{}',
+                title_hash varchar(32) NOT NULL,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );

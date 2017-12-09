@@ -10,8 +10,6 @@ var StoryTypes = require('objects/types/story-types');
 
 var Import = require('external-services/import');
 var HookManager = require('gitlab-adapter/hook-manager');
-var CommentImporter = require('gitlab-adapter/comment-importer');
-var CommentExporter = require('gitlab-adapter/comment-exporter');
 var EventImporter = require('gitlab-adapter/event-importer');
 var RepoImporter = require('gitlab-adapter/repo-importer');
 var UserImporter = require('gitlab-adapter/user-importer');
@@ -40,14 +38,16 @@ function start() {
                 var app = Express();
                 app.use(BodyParser.json());
                 app.set('json spaces', 2);
-                app.post('/gitlab/hook/:repoId/:projectId', handleHookCallback);
+                app.post('/gitlab/hook/:serverId/:repoId/:projectId', handleHookCallback);
                 server = app.listen(80, () => {
                     resolve();
                 });
             });
         }).then(() => {
             // install hooks
-            return getServerAddress(db).then((host) => {
+            // TODO: remove delay put in to keep hooks from getting zap during
+            //       nodemon restart
+            return getServerAddress(db).delay(1000).then((host) => {
                 return HookManager.installHooks(db, host);
             });
         }).then(() => {
@@ -98,37 +98,15 @@ function start() {
 }
 
 function stop() {
-    if (!database) {
-        return Promise.resolve();
-    }
-    return getServerAddress(database).then((host) => {
-        return HookManager.removeHooks(database, host);
-    }).catch((err) => {
-        console.error(err);
-    }).then(() => {
-        database.close();
-        database = null;
-        return new Promise((resolve, reject) => {
-            if (server) {
-                var resolved = false;
-                server.on('close', () => {
-                    if (!resolved) {
-                        resolved = true;
-                        resolve();
-                    }
-                });
-                server.close();
-                setTimeout(() => {
-                    // just in case close isn't firing
-                    if (!resolved) {
-                        resolved = true;
-                        resolve();
-                    }
-                }, 1000);
-            } else {
-                resolve();
-            }
-        });
+    return Shutdown.close(server).then(() => {
+        if (database) {
+            return getServerAddress(database).then((host) => {
+                return HookManager.removeHooks(database, host);
+            }).finally(() => {
+                database.close();
+                database = null;
+            })
+        }
     });
 }
 
@@ -177,6 +155,7 @@ function handleServerChangeEvent(db, event) {
                 return;
             }
             return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                console.log('import');
                 return RepoImporter.importRepositories(db, server);
             });
         });
@@ -445,34 +424,38 @@ function handleUserSyncEvent(db, event) {
  * @param  {Response} res
  */
 function handleHookCallback(req, res) {
-    var repoId = req.params.repoId;
-    var projectId = req.params.projectId;
-    var glEvent = req.body;
+    var glHookEvent = req.body;
     var db = database;
-    return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
-        return Project.findOne(db, 'global', { id: projectId }, '*').then((project) => {
-            if (!repo || !project || !_.includes(project.repo_ids, repo.id)) {
-                return;
+    var serverP = Server.findOne(db, 'global', {
+        id: parseInt(req.params.serverId),
+        deleted: false
+    }, '*');
+    var repoP = Repo.findOne(db, 'global', {
+        id: parseInt(req.params.repoId),
+        deleted: false
+    }, '*');
+    var projectP = Project.findOne(db, 'global', {
+        id: parseInt(req.params.projectId),
+        deleted: false
+    }, '*');
+    return Promise.join(serverP, repoP, projectP, (server, repo, project) => {
+        // make sure everything is in order first
+        if (!repo || !project || !server) {
+            return;
+        }
+        if (!_.includes(project.repo_ids, repo.id)) {
+            return;
+        }
+        if (!Import.Link.find(repo, server)) {
+            return;
+        }
+        return EventImporter.importHookEvent(db, server, repo, project, glHookEvent).then((story) => {
+            if (story === false) {
+                // hook event wasn't handled--scan activity log
+                return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                    return EventImporter.importEvents(db, server, repo, project);
+                });
             }
-            var repoLink = _.find(repo.external, { type: 'gitlab' });
-            return Server.findOne(db, 'global', { id: repoLink.server_id }, '*').then((server) => {
-                if (glEvent.object_kind === 'note') {
-                    // scan for new comments
-                    return taskQueue.schedule(null, () => {
-                        return CommentImporter.importCommentEvent(db, server, repo, project, glEvent)
-                    });
-                } else if (glEvent.object_kind === 'wiki_page') {
-                    // import Wiki edits
-                    return taskQueue.schedule(null, () => {
-                        return EventImporter.importWikiEvent(db, server, repo, project, glEvent);
-                    });
-                } else {
-                    // scan activity log for events
-                    return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
-                        return EventImporter.importEvents(db, server, repo, project);
-                    });
-                }
-            });
         });
     }).finally(() => {
         res.end();

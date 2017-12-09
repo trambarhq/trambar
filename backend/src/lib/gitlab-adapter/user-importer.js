@@ -202,12 +202,13 @@ function findExistingUser(db, server, users, glUser) {
  * @return {Promise<User|null>}
  */
 function findUser(db, server, glUser) {
-    var criteria = {
-        external_object: Import.Link.create(server, {
-            user: { id: glUser.id }
-        }),
-        deleted: false,
-    };
+    if (!glUser.id) {
+        return findUserByName(db, server, glUser);
+    }
+    var userLink = Import.Link.create(server, {
+        user: { id: glUser.id }
+    });
+    var criteria = { external_object: userLink };
     return User.findOne(db, 'global', criteria, '*').then((user) => {
         if (user) {
             return user;
@@ -220,6 +221,40 @@ function findUser(db, server, glUser) {
                 }
             });
         });
+    });
+}
+
+/**
+ * Look for a user when Gitlab doesn't give us only the username and not the id.
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Object} glUser
+ *
+ * @return {Promise<User|null>}
+ */
+function findUserByName(db, server, glUser) {
+    // first, try to find an user imported with that name
+    var serverLink = Import.Link.create(server);
+    var criteria = { external_object: serverLink };
+    return User.find(db, 'global', criteria, '*').then((users) => {
+        var user = _.find(users, (user) => {
+            var userLink = Import.Link.find(user, server);
+            var username = _.get(userLink, 'user.imported.username');
+            if (username === glUser.username) {
+                return true;
+            }
+        });
+        if (user) {
+            return user;
+        } else {
+            return fetchUserByName(server, glUser.username).then((glUser) => {
+                if (!glUser) {
+                    return null;
+                }
+                return findUser(db, server, glUser);
+            });
+        }
     });
 }
 
@@ -350,15 +385,34 @@ function fetchRepoMembers(server, glRepoId) {
 }
 
 /**
- * Retrieve user record from Gitlab
+ * Retrieve all user records from Gitlab
+ *
+ * @param  {Server} server
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function fetchUsers(server) {
+    var url = `/users`;
+    return Transport.fetchAll(server, url);
+}
+
+/**
+ * Retrieve user record from Gitlab by name
  *
  * @param  {Server} server
  *
  * @return {Promise<Object>}
  */
-function fetchUsers(server) {
+function fetchUserByName(server, username) {
     var url = `/users`;
-    return Transport.fetchAll(server, url);
+    var query = { username };
+    return Transport.fetch(server, url, query).then((users) => {
+        if (_.size(users) === 1) {
+            return users[0];
+        } else {
+            return null;
+        }
+    });
 }
 
 /**

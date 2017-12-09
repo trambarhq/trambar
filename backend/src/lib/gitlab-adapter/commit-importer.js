@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var Crypto = require('crypto');
 var ParseDiff = require('parse-diff');
 
 var Import = require('external-services/import');
@@ -79,6 +80,7 @@ function copyCommitProperties(commit, glCommit, glDiff, glBranch, link) {
     var commitAfter = _.cloneDeep(commit) || {};
     Import.join(commitAfter, link);
     _.set(commitAfter, 'initial_branch', glBranch);
+    _.set(commitAfter, 'title_hash', hash(glCommit.title));
     _.set(commitAfter, 'ptime', Moment(glCommit.committed_date).toISOString());
     _.set(commitAfter, 'details.status', glCommit.status);
     _.set(commitAfter, 'details.author_name', glCommit.author_name);
@@ -155,4 +157,16 @@ function countChanges(glDiff) {
             cf.modified.push(file.new_path);
         }
     }, cf);
+}
+
+/**
+ * Generate MD5 hash of text
+ *
+ * @param  {String} text
+ *
+ * @return {String}
+ */
+function hash(text) {
+    var hash = Crypto.createHash('md5').update(text);
+    return hash.digest("hex");
 }

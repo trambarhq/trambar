@@ -4,6 +4,7 @@ var Promise = require('bluebird');
 exports.on = on;
 exports.off = off;
 exports.initiate = initiate;
+exports.close = close;
 
 var listeners = [];
 
@@ -23,6 +24,41 @@ function on(callback) {
  */
 function off(callback) {
     _.pull(listeners, callback);
+}
+
+/**
+ * Close an HTTP server
+ *
+ * @param  {HttpServer|null} server
+ * @param  {Number} maxWait
+ *
+ * @return {Promise}
+ */
+function close(server, maxWait) {
+    if (maxWait === undefined) {
+        maxWait = 1000;
+    }
+    return new Promise((resolve, reject) => {
+        if (server) {
+            var resolved = false;
+            server.on('close', () => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            });
+            server.close();
+            setTimeout(() => {
+                // just in case close isn't firing
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }, maxWait);
+        } else {
+            resolve();
+        }
+    });
 }
 
 /**

@@ -180,29 +180,39 @@ module.exports = React.createClass({
                     );
                 case 'note':
                     var baseUrl = _.get(this.props.repo, 'details.web_url');
-                    var url;
-                    if (baseUrl) {
-                        var noteId = reaction.external_id;
+                    var link = _.find(reaction.external, (link) => {
+                        return !!link.note;
+                    });
+                    var url, target;
+                    if (baseUrl && link) {
+                        target = link.type;
                         switch (story.type) {
                             case 'push':
                             case 'merge':
-                                // there's no mechanism for retrieving the note id of
-                                // commit comments
-                                var commitId = this.props.reaction.details.commit_id;
-                                url = `${baseUrl}/commit/${commitId}/`;
+                                if (link.note && link.commit) {
+                                    var noteId = link.note.id;
+                                    var commitId = link.commit.id;
+                                    url = `${baseUrl}/commit/${commitId}#note_${noteId}`;
+                                }
                                 break;
                             case 'issue':
-                                var issueId = this.props.story.details.number;
-                                url = `${baseUrl}/issues/${issueId}#note_${noteId}`;
+                                if (link.note) {
+                                    var noteId = link.note.id;
+                                    var issueId = this.props.story.details.number;
+                                    url = `${baseUrl}/issues/${issueId}#note_${noteId}`;
+                                }
                                 break;
                             case 'merge-request':
-                                var mergeRequestId = this.props.story.details.number;
-                                url = `${baseUrl}/merge_requests/${mergeRequestId}#note_${noteId}`;
+                                if (link.note) {
+                                    var noteId = link.note.id;
+                                    var mergeRequestId = this.props.story.details.number;
+                                    url = `${baseUrl}/merge_requests/${mergeRequestId}#note_${noteId}`;
+                                }
                                 break;
                         }
                     }
                     return (
-                        <a className="note" href={url} target="_blank">
+                        <a className="note" href={url} target={target}>
                             {t(`comment-$user-commented-on-${story.type}`, name)}
                         </a>
                     );

@@ -47,28 +47,7 @@ function start() {
 
 function stop() {
     clearInterval(cleanUpInterval);
-
-    return new Promise((resolve, reject) => {
-        if (server) {
-            var resolved = false;
-            server.on('close', () => {
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            });
-            server.close();
-            setTimeout(() => {
-                // just in case close isn't firing
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            }, 1000);
-        } else {
-            resolve();
-        }
-    });
+    return Shutdown.close(server);
 };
 
 /**

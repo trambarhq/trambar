@@ -14,6 +14,7 @@ exports.fetchEach = fetchEach;
 exports.post = post;
 exports.remove = remove;
 
+var PAGE_SIZE = 50;
 var PAGE_LIMIT = 1000;
 
 /**
@@ -42,7 +43,7 @@ function fetchAll(server, uri, query) {
     var objectLists = [];
     var pageQuery = _.extend({
         page: 1,
-        per_page: 100
+        per_page: PAGE_SIZE
     }, query);
     var done = false;
     Async.do(() => {
@@ -79,7 +80,7 @@ function fetchAll(server, uri, query) {
 function fetchEach(server, uri, query, callback) {
     var pageQuery = _.extend({
         page: 1,
-        per_page: 100
+        per_page: PAGE_SIZE
     }, query);
     var done = false;
     var total = undefined;
