@@ -178,6 +178,8 @@ function getHookEventImporter(glHookEvent) {
     switch (objectKind) {
         case 'wiki_page': return WikiImporter;
         case 'issue': return IssueImporter;
+        case 'mergerequest':
+        case 'merge_request': return MergeRequestImporter;
     }
 }
 

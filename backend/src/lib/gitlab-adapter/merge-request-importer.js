@@ -47,7 +47,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
                 return story;
             }
         }).then((story) => {
-            //return importAssignments(db, server, project, repo, story, glMergeRequest).return(story);
+            return importAssignment(db, server, project, repo, story, glMergeRequest).return(story);
         });
     });
 }
@@ -69,9 +69,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
         // construct a glMergeRequest object from data in hook event
         var glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
         glMergeRequest.labels = _.map(glHookEvent.labels, 'title');
-        glMergeRequest.assignees = _.map(glHookEvent.object_attributes.assignee_ids, (id) => {
-            return { id };
-        });
+        glMergeRequest.assignee = { id: glHookEvent.object_attributes.assignee_id };
 
         // find existing story
         var schema = project.name;
@@ -97,7 +95,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
             if (!story) {
                 return null;
             }
-            return importAssignments(db, server, project, repo, story, glMergeRequest).return(story);
+            return importAssignment(db, server, project, repo, story, glMergeRequest).return(story);
         });
     } else {
         return Promise.resolve(false);
@@ -114,9 +112,9 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  * @param  {Story} story
  * @param  {Object} glMergeRequest
  *
- * @return {Promise<Array<Reaction>>}
+ * @return {Promise<Reaction>}
  */
-function importAssignments(db, server, project, repo, story, glMergeRequest) {
+function importAssignment(db, server, project, repo, story, glMergeRequest) {
     var schema = project.name;
     var repoLink = Import.Link.find(repo, server);
     var mergeRequestLink = Import.Link.create(server, {
@@ -129,16 +127,13 @@ function importAssignments(db, server, project, repo, story, glMergeRequest) {
         external_object: mergeRequestLink,
     };
     return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
-        /*
-        return Promise.mapSeries(glMergeRequest.assignees, (glUser) => {
-            return UserImporter.findUser(db, server, glUser).then((assignee) => {
-                if (!_.some(reactions, { user_id: assignee.id })) {
-                    var reactionNew = copyAssignmentProperties(null, story, assignee, glMergeRequest, mergeRequestLink);
-                    return Reaction.saveOne(db, schema, reactionNew);
-                }
-            });
-        }).filter(Boolean);
-        */
+        var glUser = glMergeRequest.assignee;
+        return UserImporter.findUser(db, server, glUser).then((assignee) => {
+            if (!_.some(reactions, { user_id: assignee.id })) {
+                var reactionNew = copyAssignmentProperties(null, story, assignee, glMergeRequest, mergeRequestLink);
+                return Reaction.saveOne(db, schema, reactionNew);
+            }
+        });
     });
 }
 
@@ -168,6 +163,8 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     Import.set(storyAfter, imported, 'public', !glMergeRequest.confidential);
     Import.set(storyAfter, imported, 'tags', TagScanner.findTags(glMergeRequest.description));
     Import.set(storyAfter, imported, 'details.state', glMergeRequest.state);
+    Import.set(storyAfter, imported, 'details.branch', glMergeRequest.target_branch);
+    Import.set(storyAfter, imported, 'details.source_branch', glMergeRequest.source_branch);
     Import.set(storyAfter, imported, 'details.labels', glMergeRequest.labels);
     Import.set(storyAfter, imported, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
     Import.set(storyAfter, imported, 'details.title', Import.multilingual(glMergeRequest.title));

@@ -29,8 +29,9 @@ function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
     switch (_.toLower(glEvent.note.noteable_type)) {
         case 'issue':
             return importIssueNote(db, server, repo, project, author, glEvent);
+        case 'mergerequest':
         case 'merge_request':
-            //return importMergeRequestNote(db, server, repo, project, author, glEvent);
+            return importMergeRequestNote(db, server, repo, project, author, glEvent);
         case 'commit':
             return importCommitNote(db, server, repo, project, author, glEvent, glHookEvent);
         default:
@@ -67,6 +68,40 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
         var noteLink = Import.Link.create(server, {
             note: { id: glEvent.note.id },
         }, issueLink);
+        var reactioNew = copyEventProperties(null, story, author, glEvent, noteLink);
+        return Reaction.insertOne(db, schema, reactioNew).return(story);
+    });
+}
+
+/**
+ * Add note to an merge-request story
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ * @param  {User} author
+ * @param  {Object} glEvent
+ *
+ * @return {Promise<Story|null>}
+ */
+function importMergeRequestNote(db, server, repo, project, author, glEvent) {
+    var schema = project.name;
+    var repoLink = Import.Link.find(repo, server);
+    var mergeRequestLink = Import.Link.create(server, {
+        merge_request: { id: glEvent.note.noteable_id }
+    }, repoLink);
+    var criteria = {
+        type: 'merge-request',
+        external_object: mergeRequestLink
+    };
+    return Story.findOne(db, schema, criteria, '*').then((story) => {
+        if (!story) {
+            return null;
+        }
+        var noteLink = Import.Link.create(server, {
+            note: { id: glEvent.note.id },
+        }, mergeRequestLink);
         var reactioNew = copyEventProperties(null, story, author, glEvent, noteLink);
         return Reaction.insertOne(db, schema, reactioNew).return(story);
     });

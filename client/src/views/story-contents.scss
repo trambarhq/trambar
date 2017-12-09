@@ -52,6 +52,22 @@
                 }
             }
 
+            .status-opened, .status-reopened {
+                color: #99ff66;
+            }
+
+            .status-closed {
+                color: #ff3333;
+            }
+
+            .tag {
+                font-size: 0.9em;
+                color: #ffffff;
+                background-color: #444444;
+                padding: 0.2em 0.4em 0.2em 0.4em;
+                border-radius: 0.25em;
+            }
+
             &.plain-text {
                 white-space: pre-wrap;
 
@@ -144,24 +160,6 @@
                             }
                         }
                     }
-                }
-            }
-
-            &.issue {
-                .status-opened, .status-reopened {
-                    color: #99ff66;
-                }
-
-                .status-closed {
-                    color: #ff3333;
-                }
-
-                .tag {
-                    font-size: 0.9em;
-                    color: #ffffff;
-                    background-color: #444444;
-                    padding: 0.2em 0.4em 0.2em 0.4em;
-                    border-radius: 0.25em;
                 }
             }
 

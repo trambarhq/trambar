@@ -152,7 +152,7 @@ module.exports = React.createClass({
                     {this.props.cornerPopUp}
                 </header>
                 <subheader>
-                    {this.renderStatus()}
+                    {this.renderProgress()}
                     {this.renderEmblem()}
                 </subheader>
                 <body>
@@ -233,7 +233,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderStatus: function() {
+    renderProgress: function() {
         var status = this.props.status;
         if (status) {
             var t = this.props.locale.translate;
@@ -303,6 +303,8 @@ module.exports = React.createClass({
                 return this.renderPushText();
             case 'issue':
                 return this.renderIssueText();
+            case 'merge-request':
+                return this.renderMergeRequestText();
             case 'milestone':
                 return this.renderMilestoneText();
             case 'wiki':
@@ -459,24 +461,9 @@ module.exports = React.createClass({
         var story = this.props.story;
         var number = story.details.number;
         var title = story.details.title;
-        var state = story.details.state;
         var repo = this.props.repo;
         var author = _.first(this.props.authors);
         var user = (author) ? n(author.details.name, author.details.gender) : '';
-        var tags = _.map(story.details.labels, (label, i) => {
-            var style;
-            if (repo) {
-                var index = _.indexOf(repo.details.labels, label);
-                var color = _.get(repo.details.label_colors, index);
-                if (color) {
-                    style = { backgroundColor: color };
-                }
-            }
-            return <span key={i} className="tag" style={style}>{label}</span>;
-        });
-        for (var i = 1; i < tags.length; i += 2) {
-            tags.splice(i, 0, ' ');
-        }
         var url;
         var baseUrl = _.get(this.props.repo, 'details.web_url');
         var issueLink = findLink(this.props.story, this.props.repo);
@@ -490,12 +477,8 @@ module.exports = React.createClass({
                         {t(`story-issue-$user-opened-$number-$title`, user, number, p(title))}
                     </a>
                 </p>
-                <p className={`status-${state}`}>
-                    <span>{t('story-issue-current-status')}</span>
-                    {' '}
-                    <span>{t(`story-issue-status-${state}`)}</span>
-                </p>
-                <p>{tags}</p>
+                {this.renderStatus()}
+                {this.renderTags()}
             </div>
         );
     },
@@ -509,7 +492,6 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
-        var state = story.details.state;
         var title = story.details.title;
         var dueDate = formatDate(story.details.due_date);
         var startDate = formatDate(story.details.start_date) || '-';
@@ -541,6 +523,36 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render text for merge request story
+     *
+     * @return {ReactElement}
+     */
+    renderMergeRequestText: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var branch1 = _.get(story, 'details.source_branch');
+        var branch2 = _.get(story, 'details.branch');
+        var url;
+        var baseUrl = _.get(this.props.repo, 'details.web_url');
+        var mergeRequestLink = findLink(this.props.story, this.props.repo);
+        if (baseUrl && mergeRequestLink) {
+            url = `${baseUrl}/merge_requests/${mergeRequestLink.merge_request.id}`;
+        }
+        return (
+            <div className="text merge-request">
+                <p>
+                    <a href={url} target="_blank">
+                        {t(`story-merge-request-$branch1-into-$branch2`, branch1, branch2)}
+                    </a>
+                </p>
+                {this.renderStatus()}
+                {this.renderTags()}
+            </div>
+        );
+    },
+
+    /**
      * Render text for wiki story
      *
      * @return {ReactElement}
@@ -564,7 +576,6 @@ module.exports = React.createClass({
             </div>
         );
     },
-
 
     /**
      * Render text for push story
@@ -637,6 +648,51 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
+    },
+
+    /**
+     * Render current status of issue or merge request
+     *
+     * @return {ReactElement}
+     */
+    renderStatus: function() {
+        var t = this.props.locale.translate;
+        var state = this.props.story.details.state;
+        return (
+            <p className={`status-${state}`}>
+                <span>{t('story-issue-current-status')}</span>
+                {' '}
+                <span>{t(`story-issue-status-${state}`)}</span>
+            </p>
+        );
+    },
+
+    /**
+     * Render tags for issue and merge requests
+     *
+     * @return {ReactElement|null}
+     */
+    renderTags: function() {
+        var labels = this.props.story.details.labels;
+        if (_.isEmpty(labels)) {
+            return null;
+        }
+        var repo = this.props.repo;
+        var tags = _.map(labels, (label, i) => {
+            var style;
+            if (repo) {
+                var index = _.indexOf(repo.details.labels, label);
+                var color = _.get(repo.details.label_colors, index);
+                if (color) {
+                    style = { backgroundColor: color };
+                }
+            }
+            return <span key={i} className="tag" style={style}>{label}</span>;
+        });
+        for (var i = 1; i < tags.length; i += 2) {
+            tags.splice(i, 0, ' ');
+        }
+        return <p>{tags}</p>;
     },
 
     /**

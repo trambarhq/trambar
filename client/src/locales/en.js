@@ -88,6 +88,9 @@ module.exports = function(languageCode) {
         'comment-$user-is-assigned-to-issue': (user) => {
             return `${user} was assigned to this issue`;
         },
+        'comment-$user-is-assigned-to-merge-request': (user) => {
+            return `${user} was assigned to this merge request`;
+        },
         'comment-$user-is-editing': (user) => {
             return `${user} is editing a comment...`;
         },
@@ -300,6 +303,9 @@ module.exports = function(languageCode) {
                 text += ` “${repo}”`;
             }
             return text;
+        },
+        'story-merge-request-$branch1-into-$branch2': (branch1, branch2) => {
+            return `Requested to merge branch “${branch1}” into “${branch2}”`;
         },
         'story-milestone-created-$name': (name) => {
             return `Created milestone “${name}”`;

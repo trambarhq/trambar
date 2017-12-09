@@ -218,16 +218,37 @@ module.exports = React.createClass({
                     );
                 case 'assignment':
                     var baseUrl = _.get(this.props.repo, 'details.web_url');
-                    var url;
-                    if (baseUrl) {
-                        var issueId = this.props.story.details.number;
-                        url = `${baseUrl}/issues/${issueId}`;
+                    if (story.type === 'issue') {
+                        var url, target;
+                        var link = _.find(reaction.external, (link) => {
+                            return !!link.issue;
+                        });
+                        if (baseUrl && link) {
+                            var issueId = this.props.story.details.number;
+                            url = `${baseUrl}/issues/${issueId}`;
+                            target = link.type;
+                        }
+                        return (
+                            <a className="issue-assignment" href={url} target={target}>
+                                {t('comment-$user-is-assigned-to-issue', name)}
+                            </a>
+                        );
+                    } else if (story.type === 'merge-request') {
+                        var url, target;
+                        var link = _.find(reaction.external, (link) => {
+                            return !!link.merge_request;
+                        });
+                        if (baseUrl) {
+                            var mergeRequestId = this.props.story.details.number;
+                            url = `${baseUrl}/merge_requests/${mergeRequestId}`;
+                            target = link.type;
+                        }
+                        return (
+                            <a className="issue-assignment" href={url} target={target}>
+                                {t('comment-$user-is-assigned-to-merge-request', name)}
+                            </a>
+                        );
                     }
-                    return (
-                        <a className="issue-assignment" href={url} target="_blank">
-                            {t('comment-$user-is-assigned-to-issue', name)}
-                        </a>
-                    );
             }
         } else {
             var action = (reaction.ptime) ? 'editing' : 'writing';
