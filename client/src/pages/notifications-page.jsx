@@ -179,7 +179,16 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onSelectionClear: this.handleSelectionClear,
         };
         return <NotificationList {...listProps} />;
+    },
+
+    /**
+     * Called when user has scrolled away from selected story
+     */
+    handleSelectionClear: function() {
+        this.props.route.loosen();
     },
 });

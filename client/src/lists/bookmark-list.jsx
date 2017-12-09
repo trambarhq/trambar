@@ -36,6 +36,8 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -72,6 +74,9 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onSelectionClear: this.props.onSelectionClear,
+
         };
         meanwhile.show(<BookmarkListSync {...props} />, delay);
         return db.start().then((userId) => {
@@ -199,6 +204,8 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -411,6 +418,14 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             // clear the whole list as soon as one of them come into view
             // or if we've reach the top (where the story might be null)
             this.setState({ hiddenStoryIds: [] });
+        }
+        if (this.props.selectedStoryId && storyId !== this.props.selectedStoryId) {
+            if (this.props.onSelectionClear) {
+                this.props.onSelectionClear({
+                    type: 'selectionclear',
+                    target: this,
+                });
+            }
         }
     },
 

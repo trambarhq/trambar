@@ -73,6 +73,13 @@ function Route(routeManager) {
     };
 
     /**
+     * Remove hash from current URL
+     */
+    this.loosen = function() {
+        routeManager.loosen();
+    };
+
+    /**
      * Check if the route can be changed
      *
      * @param  {Boolean} interactive

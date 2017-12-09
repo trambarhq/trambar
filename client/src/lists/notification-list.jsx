@@ -29,6 +29,8 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -53,8 +55,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onHiddenNotifications: this.props.onHiddenNotifications,
-            onTopNotificationChange: this.props.onTopNotificationChange,
+            onSelectionClear: this.props.onSelectionClear,
         };
         meanwhile.show(<NotificationListSync {...props} />, delay);
         return db.start().then((userId) => {
@@ -89,6 +90,8 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -266,6 +269,14 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         var notificationId = _.get(evt.item, 'id');
         if (!notificationId || _.includes(this.state.hiddenNotificationIds, notificationId)) {
             this.setState({ hiddenNotificationIds: [] });
+        }
+        if (this.props.selectedNotificationId && notificationId !== this.props.selectedNotificationId) {
+            if (this.props.onSelectionClear) {
+                this.props.onSelectionClear({
+                    type: 'selectionclear',
+                    target: this,
+                });
+            }
         }
     },
 

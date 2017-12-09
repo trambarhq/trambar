@@ -208,9 +208,9 @@ module.exports = React.createClass({
                     var fullUrl = `${protocol}//${host}${route.url}`;
                     if (window.location.href !== fullUrl) {
                         if (replacing) {
-                            history.replaceState({}, '', fullUrl);
+                            window.history.replaceState({}, '', fullUrl);
                         } else {
-                            history.pushState({}, '', fullUrl);
+                            window.history.pushState({}, '', fullUrl);
                         }
                     }
                 }
@@ -224,6 +224,20 @@ module.exports = React.createClass({
                 });
             } else {
                 return Promise.reject(new Error('Unable to find page'));
+            }
+        }
+    },
+
+    /**
+     * Remove hash from current URL
+     */
+    loosen: function() {
+        if (process.env.PLATFORM === 'browser') {
+            var fullUrl = window.location.href;
+            var hashIndex = fullUrl.indexOf('#');
+            if (hashIndex !== -1) {
+                var newUrl = fullUrl.substr(0, hashIndex);
+                window.history.replaceState({}, '', newUrl);
             }
         }
     },
