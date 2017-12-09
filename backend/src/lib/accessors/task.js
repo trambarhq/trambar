@@ -21,7 +21,6 @@ module.exports = _.create(Data, {
         completion: Number,
         failed: Boolean,
         user_id: Number,
-        server_id: Number,
         etime: String,
     },
     criteria: {
@@ -33,7 +32,7 @@ module.exports = _.create(Data, {
         failed: Boolean,
         deleted: Boolean,
         user_id: Number,
-        server_id: Number,
+        options: Object,
         etime: String,
 
         newer_than: String,
@@ -97,6 +96,7 @@ module.exports = _.create(Data, {
      */
     apply: function(criteria, query) {
         var special = [
+            'options',
             'newer_than',
             'older_than',
         ];
@@ -104,6 +104,9 @@ module.exports = _.create(Data, {
 
         var params = query.parameters;
         var conds = query.conditions;
+        if (criteria.options !== undefined) {
+            conds.push(`options @> $${params.push(criteria.options)}`);
+        }
         if (criteria.newer_than !== undefined) {
             conds.push(`ctime > $${params.push(criteria.newer_than)}`);
         }

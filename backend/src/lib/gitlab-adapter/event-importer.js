@@ -32,7 +32,11 @@ exports.importHookEvent = importHookEvent;
  * @return {Promise}
  */
 function importEvents(db, server, repo, project, glHookEvent) {
-    return TaskLog.last(server, 'gitlab-event-import').then((lastTask) => {
+    var options = {
+        server_id: server.id,
+        repo_id: repo.id,
+    };
+    return TaskLog.last('gitlab-event-import', options).then((lastTask) => {
         var lastEventTime = _.get(lastTask, 'details.last_event_time');
         var repoLink = Import.Link.find(repo, server);
         var url = `/projects/${repoLink.project.id}/events`;
@@ -43,7 +47,10 @@ function importEvents(db, server, repo, project, glHookEvent) {
             var dayBefore = Moment(lastEventTime).subtract(1, 'day');
             params.after = dayBefore.format('YYYY-MM-DD');
         }
-        var taskLog = TaskLog.start(server, 'gitlab-event-import', {
+        var taskLog = TaskLog.start('gitlab-event-import', {
+            server_id: server.id,
+            server: server.name,
+            repo_id: repo.id,
             repo: repo.name,
         });
         var added = [];

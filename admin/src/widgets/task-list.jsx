@@ -49,7 +49,9 @@ module.exports = Relaks.createClass({
             if (this.props.server) {
                 // load up to 1000 tasks
                 var criteria = {
-                    server_id: this.props.server.id,
+                    options: {
+                        server_id: this.props.server.id,
+                    },
                     deleted: false,
                     limit: 1000,
                 };

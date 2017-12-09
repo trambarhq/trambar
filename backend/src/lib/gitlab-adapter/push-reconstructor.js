@@ -65,7 +65,10 @@ function reconstructPush(db, server, repo, branch, headId, tailId, count) {
  * @return {Promise<Object<Commits>>}
  */
 function importCommits(db, server, repo, branch, headId, count) {
-    var taskLog = TaskLog.start(server, 'gitlab-push-import', {
+    var taskLog = TaskLog.start('gitlab-push-import', {
+        server_id: server.id,
+        server: server.name,
+        repo_id: repo.id,
         repo: repo.name,
         branch: branch,
     });

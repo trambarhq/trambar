@@ -81,7 +81,10 @@ function copyEventProperties(story, author, glEvent, link) {
  * @return {Promise<Array<User>>}
  */
 function importUsers(db, server) {
-    var taskLog = TaskLog.start(server, 'gitlab-user-import');
+    var taskLog = TaskLog.start('gitlab-user-import', {
+        server_id: server.id,
+        server: server.name,
+    });
     // find existing users connected with server (including deleted ones)
     var criteria = {
         external_object: Import.Link.create(server),

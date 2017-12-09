@@ -12,29 +12,28 @@ exports.last = last;
 /**
  * Start a task log
  *
- * @param  {Server} server
  * @param  {String} action
  * @param  {Object|undefined} options
  *
  * @return {TaskLog}
  */
-function start(server, action, options) {
-    return new TaskLog(server, action, options);
+function start(action, options) {
+    return new TaskLog(action, options);
 }
 
 /**
  * Return the last task
  *
- * @param  {Server} server
  * @param  {String} action
+ * @param  {Object|undefined} options
  *
  * @return {Promise<Task|null>}
  */
-function last(server, action) {
+function last(action, options) {
     return Database.open().then((db) => {
         var criteria = {
             action,
-            server_id: _.get(server, 'id'),
+            options,
             order: 'id DESC',
             limit: 1,
         };
@@ -43,14 +42,12 @@ function last(server, action) {
 }
 
 /**
- * @param  {Server} server
  * @param  {String} action
  * @param  {Object|undefined} options
  *
  * @constructor
  */
-function TaskLog(server, action, options) {
-    this.server = server;
+function TaskLog(action, options) {
     this.action = action;
     this.options = options;
 
@@ -141,7 +138,6 @@ TaskLog.prototype.save = function() {
         }
         var columns = {};
         if (!this.id) {
-            columns.server_id = _.get(this.server, 'id');
             columns.action = this.action;
             columns.options = this.options;
         } else {

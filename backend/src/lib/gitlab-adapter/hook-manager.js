@@ -28,7 +28,10 @@ function installHooks(db, host) {
     return getRepoAssociations(db).then((associations) => {
         var servers = _.uniqBy(_.map(associations, 'server'), 'id');
         return Promise.each(servers, (server) => {
-            var taskLog = TaskLog.start(server, 'gitlab-hook-install');
+            var taskLog = TaskLog.start('gitlab-hook-install', {
+                server_id: server.id,
+                server: server.name,
+            });
             var serverAssociations = _.filter(associations, (a) => {
                 return a.server.id === server.id;
             });
@@ -59,7 +62,10 @@ function removeHooks(db, host) {
     return getRepoAssociations(db).then((associations) => {
         var servers = _.uniqBy(_.map(associations, 'server'), 'id');
         return Promise.each(servers, (server) => {
-            var taskLog = TaskLog.start(server, 'gitlab-hook-remove');
+            var taskLog = TaskLog.start('gitlab-hook-remove', {
+                server_id: server.id,
+                server: server.name,
+            });
             var serverAssociations = _.filter(associations, (a) => {
                 return a.server.id === server.id;
             });
