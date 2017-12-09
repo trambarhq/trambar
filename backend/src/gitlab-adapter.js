@@ -155,7 +155,6 @@ function handleServerChangeEvent(db, event) {
                 return;
             }
             return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                console.log('import');
                 return RepoImporter.importRepositories(db, server);
             });
         });
@@ -453,7 +452,7 @@ function handleHookCallback(req, res) {
             if (story === false) {
                 // hook event wasn't handled--scan activity log
                 return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
-                    return EventImporter.importEvents(db, server, repo, project);
+                    return EventImporter.importEvents(db, server, repo, project, glHookEvent);
                 });
             }
         });

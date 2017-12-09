@@ -13,7 +13,6 @@ var Story = require('accessors/story');
 var Reaction = require('accessors/reaction');
 
 exports.importEvent = importEvent;
-exports.importHookEvent = importHookEvent;
 
 /**
  * @param  {Database} db
@@ -22,34 +21,21 @@ exports.importHookEvent = importHookEvent;
  * @param  {Project} project
  * @param  {User} author
  * @param  {Object} glEvent
+ * @param  {Object} glHookEvent
  *
  * @return {Promise<Story|null>}
  */
-function importEvent(db, server, repo, project, author, glEvent) {
+function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
     switch (_.toLower(glEvent.note.noteable_type)) {
         case 'issue':
             return importIssueNote(db, server, repo, project, author, glEvent);
         case 'merge_request':
             //return importMergeRequestNote(db, server, repo, project, author, glEvent);
         case 'commit':
-            return importCommitNote(db, server, repo, project, author, glEvent);
+            return importCommitNote(db, server, repo, project, author, glEvent, glHookEvent);
         default:
             return Promise.resolve(null);
     }
-}
-
-/**
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Project} project
- * @param  {User} author
- * @param  {Object} glHookEvent
- *
- * @return {Promise}
- */
-function importHookEvent(db, server, repo, project, glHookEvent) {
-    return Promise.resolve(false);
 }
 
 /**
@@ -94,13 +80,14 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
  * @param  {Repo} repo
  * @param  {Project} project
  * @param  {Object} glEvent
+ * @param  {Object} glHookEvent
  *
  * @return {Promise<Story|null>}
  */
-function importCommitNote(db, server, repo, project, author, glEvent) {
+function importCommitNote(db, server, repo, project, author, glEvent, glHookEvent) {
     // need to find the commit id first, since Gitlab doesn't include it
     // in the activity log entry
-    return findCommitId(db, server, repo, glEvent).then((commitId) => {
+    return findCommitId(db, server, repo, glEvent, glHookEvent).then((commitId) => {
         if (!commitId) {
             return null;
         }
@@ -126,10 +113,29 @@ function importCommitNote(db, server, repo, project, author, glEvent) {
     });
 }
 
-function findCommitId(db, server, repo, glEvent) {
+/**
+ * Look for the id of the commit that the note is on
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Object} glEvent
+ * @param  {Object} glHookEvent
+ *
+ * @return {Promise<String>}
+ */
+function findCommitId(db, server, repo, glEvent, glHookEvent) {
+    if (glHookEvent) {
+        // the object sent through the hook has the commit id
+        // we can use that when we're responding to a call from Gitlab
+        if (glHookEvent.object_attributes.id === glEvent.note.id) {
+            var commitId = glHookEvent.object_attributes.commit_id;
+            return Promise.resolve(commitId);
+        }
+    }
+
     var titleHash = hash(glEvent.target_title);
     var repoLink = Import.Link.find(repo, server);
-    console.log(glEvent);
     var criteria = {
         title_hash: hash(glEvent.target_title),
         external_object: repoLink,

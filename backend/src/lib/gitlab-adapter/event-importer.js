@@ -27,10 +27,11 @@ exports.importHookEvent = importHookEvent;
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
+ * @param  {Object} glHookEvent
  *
  * @return {Promise}
  */
-function importEvents(db, server, repo, project) {
+function importEvents(db, server, repo, project, glHookEvent) {
     return TaskLog.last(server, 'gitlab-event-import').then((lastTask) => {
         var lastEventTime = _.get(lastTask, 'details.last_event_time');
         var repoLink = Import.Link.find(repo, server);
@@ -55,7 +56,7 @@ function importEvents(db, server, repo, project) {
                     return;
                 }
             }
-            return importEvent(db, server, repo, project, glEvent).then((story) => {
+            return importEvent(db, server, repo, project, glEvent, glHookEvent).then((story) => {
                 if (story) {
                     added.push(glEvent.action_name);
                 }
@@ -90,10 +91,11 @@ function importEvents(db, server, repo, project) {
  * @param  {Repo} repo
  * @param  {Project} project
  * @param  {Object} glEvent
+ * @param  {Object} glHookEvent
  *
  * @return {Promise<Story|null>}
  */
-function importEvent(db, server, repo, project, glEvent) {
+function importEvent(db, server, repo, project, glEvent, glHookEvent) {
     var importer = getEventImporter(glEvent);
     if (!importer) {
         return Promise.resolve(null);
@@ -102,7 +104,7 @@ function importEvent(db, server, repo, project, glEvent) {
         if (!author) {
             return null;
         }
-        return importer.importEvent(db, server, repo, project, author, glEvent);
+        return importer.importEvent(db, server, repo, project, author, glEvent, glHookEvent);
     });
 }
 
@@ -119,10 +121,8 @@ function importEvent(db, server, repo, project, glEvent) {
  * @return {Promise<Story|false|null>}
  */
 function importHookEvent(db, server, repo, project, glHookEvent) {
-    //console.log(glHookEvent);
     var importer = getHookEventImporter(glHookEvent);
     if (!importer) {
-        //console.log('No importer for hook event');
         // not handled
         return Promise.resolve(false);
     }
@@ -176,13 +176,9 @@ function getEventImporter(glEvent) {
 function getHookEventImporter(glHookEvent) {
     var objectKind = normalizeToken(glHookEvent.object_kind);
     switch (objectKind) {
-        //case 'note': return CommentImporter;
         case 'wiki_page': return WikiImporter;
         case 'issue': return IssueImporter;
     }
-    console.warn(`Unknown hook event: object_type = ${objectKind}`);
-    console.log(glHookEvent);
-    console.log('*****************************************')
 }
 
 function normalizeToken(s) {

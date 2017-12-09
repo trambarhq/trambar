@@ -8,7 +8,7 @@ var Import = require('external-services/import');
 var Story = require('accessors/story');
 var User = require('accessors/user');
 
-exports.importEvent;
+exports.importHookEvent = importHookEvent;
 
 /**
  * Import a wiki related event
@@ -32,7 +32,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
     var criteria = {
         type: 'wiki',
         newer_than: Moment().subtract(1, 'day').toISOString(),
-        external_object: link,
+        external_object: pageLink,
     };
     return Story.findOne(db, schema, criteria, 'id').then((recentStory) => {
         if (recentStory) {
