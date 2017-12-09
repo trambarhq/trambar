@@ -196,7 +196,7 @@ module.exports = React.createClass({
      */
     change: function(url, replacing, noRedirecting) {
         if (this.state.url === url) {
-            return Promise.resolve();
+            return Promise.resolve(false);
         }
         var route = this.parse(url);
         if (route) {

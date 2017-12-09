@@ -4,7 +4,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var ComponentRefs = require('utils/component-refs');
 var HttpError = require('errors/http-error');
-var AnchorFinder = require('utils/anchor-finder');
 var CorsRewriter = require('routing/cors-rewriter');
 
 // non-visual components
@@ -181,7 +180,7 @@ module.exports = React.createClass({
             <div className="application">
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port" id="page-view-port">
-                    <div className="scroll-box">
+                    <div className="scroll-box" id="scroll-box">
                         <div className="contents">
                             {this.renderCurrentPage()}
                         </div>
@@ -411,14 +410,6 @@ module.exports = React.createClass({
 
         if (this.state.locale !== prevState.locale) {
             this.updateSubscription();
-        }
-
-        // see if there's a change in the URL hash
-        if (prevState.route !== this.state.route) {
-            if (!prevState.route || prevState.route.url !== this.state.route.url) {
-                // scroll to element with id matching hash
-                //AnchorFinder.scrollTo(this.state.route.hash);
-            }
         }
     },
 
@@ -849,7 +840,13 @@ module.exports = React.createClass({
                 var url = target.getAttribute('href') || target.getAttribute('data-url');
                 if (url && url.indexOf(':') === -1) {
                     // relative links are handled by RouteManager
-                    this.state.route.change(url);
+                    this.state.route.change(url).then(() => {
+                        // scroll back to the top when clicking on link with no hash
+                        if (!this.state.route.hash) {
+                            var scrollBoxNode = document.getElementById('scroll-box');
+                            scrollBoxNode.scrollTop = 0;
+                        }
+                    });
                     evt.preventDefault();
                     // clear focus on change
                     target.blur();
