@@ -16,7 +16,7 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             // TODO: change to false
-            alwaysAsLink: true
+            alwaysAsLink: false
         };
     },
 
@@ -52,10 +52,10 @@ module.exports = React.createClass({
                 if (props.tabIndex === undefined) {
                     props.tabIndex = 0;
                 }
+                props.onFocus = this.handleFocus;
+                props.onBlur = this.handleBlur;
             }
         }
-        props.onFocus = this.handleFocus;
-        props.onBlur = this.handleBlur;
         return (
             <a {...props}>{this.props.children}</a>
         );

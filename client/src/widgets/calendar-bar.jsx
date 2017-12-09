@@ -22,8 +22,6 @@ require('./calendar-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'CalendarBar',
     propTypes: {
-        selection: PropTypes.string,
-
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -115,6 +113,7 @@ module.exports = Relaks.createClass({
 
 var CalendarBarSync = module.exports.Sync = React.createClass({
     displayName: 'CalendarBar.Sync',
+    mixins: [ UpdateCheck ],
     propTypes: {
         projectRange: PropTypes.object,
         dailyActivities: PropTypes.arrayOf(PropTypes.object),
@@ -129,6 +128,7 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
         var multiyear = false;
         var startTime = _.get(this.props.projectRange, 'details.start_time');
         var endTime = _.get(this.props.projectRange, 'details.end_time');
+        var selectedDate = this.props.route.parameters.date;
         if (startTime && endTime) {
             var s = Moment(startTime).startOf('month');
             var e = Moment(endTime).endOf('month');
@@ -140,22 +140,9 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
                 e = endOfThisMonth;
             }
             for (var m = s.clone(); m <= e; m.add(1, 'month')) {
-                var activities = undefined;
-                if (this.props.dailyActivities) {
-                    var rangeStart = m.toISOString();
-                    var rangeEnd = m.clone().endOf('month').toISOString();
-                    var range = `[${rangeStart},${rangeEnd}]`;
-                    var stats = _.find(this.props.dailyActivities, (s) => {
-                        return s.filters.time_range === range;
-                    });
-                    if (stats) {
-                        activities = stats.details;
-                    }
-                }
                 months.push({
                     year: m.year(),
                     month: m.month() + 1,
-                    activities,
                 });
             }
         } else {
@@ -171,10 +158,9 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
                 year: month.year,
                 month: month.month,
                 showYear: multiyear,
-                selection: this.props.selection,
-                dailyActivities: month.activities,
+                selection: selectedDate,
                 locale: this.props.locale,
-                onDateClick: this.handleDateClick,
+                onDateUrl: this.handleDateUrl,
             };
             return <Calendar key={index} {...props} />;
         });
@@ -186,14 +172,25 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks on a date
+     * Called when calendar needs the URL for the
      *
-     * @param  {Object} evt
+     * @param  {[type]} evt
+     *
+     * @return {[type]}
      */
-    handleDateClick: function(evt) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.date = evt.date;
-        route.replace(route.component, params);
+    handleDateUrl: function(evt) {
+        var date = evt.date;
+        var hasActivities = _.some(this.props.dailyActivities, (stats) => {
+            if (stats.details[date]) {
+                return true;
+            }
+        });
+        if (hasActivities) {
+            var route = this.props.route;
+            var params = _.omit(route.parameters, 'date', 'roles', 'search', 'story');
+            params.date = date;
+            var url = route.find(route.component, params);
+            return url;
+        }
     },
 })

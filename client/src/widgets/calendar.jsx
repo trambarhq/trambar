@@ -12,12 +12,11 @@ module.exports = React.createClass({
         year: PropTypes.number.isRequired,
         month: PropTypes.number.isRequired,
         showYear: PropTypes.bool,
-        dailyActivities: PropTypes.object,
         selection: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
 
-        onDateClick: PropTypes.func,
+        onDateUrl: PropTypes.func,
     },
 
     /**
@@ -40,7 +39,6 @@ module.exports = React.createClass({
         var localeData = Moment.localeData(this.props.locale.languageCode);
         var year = this.props.year;
         var month = this.props.month;
-        var dailyActivities = this.props.dailyActivities;
         var selection = this.props.selection;
         var firstDay = Moment(date(year, month, 1));
         var firstDayOfWeek = localeData.firstDayOfWeek();
@@ -89,39 +87,29 @@ module.exports = React.createClass({
                 var classNames = [
                     isWeekend[index] ? 'weekend' : 'workweek'
                 ];
-                var label;
-                var activities;
-                var date;
+                var label, date, url;
                 if (day) {
                     date = `${year}-${pad(month)}-${pad(day)}`;
-                    if (dailyActivities) {
-                        activities = dailyActivities[date];
-                    }
                     label = day;
+                    url = this.getDateUrl(date);
                 } else {
                     label = '\u00a0';
                 }
                 if (selection && selection === date) {
                     classNames.push('selected');
-                } else if (!activities) {
-                    classNames.push('disabled');
                 }
                 if (date === DateTracker.today) {
                     classNames.push('today');
                 }
-                var props = {
-                    className: classNames.join(' '),
-                    'data-date': date,
-                };
                 return (
-                    <td key={index} {...props}>
-                        {label}
+                    <td key={index} className={classNames.join(' ')}>
+                        <a href={url}>{label}</a>
                     </td>
                 );
             });
         });
         return (
-            <table className="calendar" onClick={this.handleClick}>
+            <table className="calendar">
                 <thead>
                     <tr className="title">
                         <th colSpan={7}>
@@ -145,22 +133,21 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on the calendar
+     * Get URL for a date
      *
-     * @param  {Event} evt
+     * @param  {String} date
+     *
+     * @return {String|undefined}
      */
-    handleClick: function(evt) {
-        var date = evt.target.getAttribute('data-date');
-        if (date) {
-            if (this.props.onDateClick) {
-                this.props.onDateClick({
-                    type: 'dateclick',
-                    target: this,
-                    date,
-                });
-            }
+    getDateUrl: function(date) {
+        if (this.props.onDateUrl) {
+            return this.props.onDateUrl({
+                type: 'dateurl',
+                target: this,
+                date,
+            });
         }
-    },
+    }
 });
 
 function date(year, month, day) {

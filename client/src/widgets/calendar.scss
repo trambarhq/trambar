@@ -35,28 +35,43 @@
             width: 1.6em;
             height: 1.4em;
             font-size: 0.8em;
-            color: #cccccc;
+            color: #666666;
             text-align: center;
             border: 1px solid #444444;
-            cursor: pointer;
+            cursor: default;
+
+            A {
+                &:link, &:visited {
+                    text-decoration: none;
+                    color: #cccccc;
+                }
+            }
         }
 
         TD.weekend {
             background-color: #333333;
         }
 
-        TD.disabled {
-            color: #666666;
-            cursor: default;
-        }
-
         TD.today {
-            color: #eeeeee;
+            color: #ffffff;
+            background-color: #000000;
+
+            A {
+                &:link, &:visited {
+                    color: #ffffff;
+                }
+            }
         }
 
         TD.selected {
             color: #000000;
             background-color: #eeeeee;
+
+            A {
+                &:link, &:visited {
+                    color: #000000;
+                }
+            }
         }
     }
 }
