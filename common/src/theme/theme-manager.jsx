@@ -92,10 +92,13 @@ module.exports = React.createClass({
         if (params.quality !== undefined) {
             filters.push(`q${params.quality}`);
         }
-
         var versionPath = '';
         if (filters.length > 0) {
             versionPath = `/${filters.join('+')}`;
+            if (res.format === 'png' || res.format === 'gif') {
+                // use PNG to preserve alpha channel
+                versionPath += `.png`;
+            }
         }
         return `${this.props.serverAddress}${resUrl}${versionPath}`;
     },
