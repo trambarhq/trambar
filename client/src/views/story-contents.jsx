@@ -605,9 +605,17 @@ module.exports = React.createClass({
         var url;
         var baseUrl = _.get(this.props.repo, 'details.web_url');
         if (baseUrl) {
-            var commitBefore = story.details.commit_before;
-            var commitAfter = story.details.commit_after;
-            url = `${baseUrl}/compare/${commitBefore}...${commitAfter}`;
+            if (story.type === 'push' || story.type === 'merge') {
+                var commitBefore = story.details.commit_before;
+                var commitAfter = story.details.commit_after;
+                if (commitBefore) {
+                    url = `${baseUrl}/compare/${commitBefore}...${commitAfter}`;
+                } else {
+                    url = `${baseUrl}/commit/${commitAfter}`;
+                }
+            } else if (story.type === 'branch') {
+                url = `${baseUrl}/commits/${branch}`;
+            }
         }
         var text;
         if (story.type === 'push') {
