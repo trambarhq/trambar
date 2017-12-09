@@ -172,7 +172,8 @@ module.exports = React.createClass({
             session.authentication = null;
             session.authorizationPromise = null;
             session.authorization = null;
-            this.cleanCachedObjects(location);
+            this.clearRecentSearches(address);
+            this.clearCachedObjects(address);
             this.triggerExpirationEvent(address);
             return true;
         });
@@ -781,11 +782,13 @@ module.exports = React.createClass({
         }).catch((err) => {
             if (err.statusCode === 401) {
                 clearSession(address);
-                this.cleanCachedObjects(location);
+                this.clearRecentSearches(address);
+                this.clearCachedObjects(address);
                 this.triggerExpirationEvent(address);
                 this.triggerChangeEvent();
             } else if (err.statusCode == 403) {
-                this.cleanCachedObjects(location);
+                this.clearRecentSearches(address);
+                this.clearCachedObjects(address);
                 this.triggerViolationEvent(address, schema);
                 this.triggerChangeEvent();
             }
@@ -892,16 +895,16 @@ module.exports = React.createClass({
     /**
      * Deleted all cached objects originating from given server
      *
-     * @param  {Object} location
+     * @param  {String} address
      *
      * @return {Promise<Number>}
      */
-    cleanCachedObjects: function(location) {
+    clearCachedObjects: function(address) {
         var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(0);
         }
-        return cache.clean({ address: location.address });
+        return cache.clean({ address });
     },
 
     /**
@@ -985,6 +988,21 @@ module.exports = React.createClass({
                 return true;
             }
         });
+    },
+
+    /**
+     * Remove recent search performed on given server
+     *
+     * @param  {String} address
+     */
+    clearRecentSearches: function(address) {
+        var recentSearchResults = _.filter(this.state.recentSearchResults, (search) => {
+            if (search.address === address) {
+                return false;
+            }
+            return true;
+        });
+        this.setState({ recentSearchResults });
     },
 
     /**
