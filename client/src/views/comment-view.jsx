@@ -23,6 +23,7 @@ module.exports = React.createClass({
     displayName: 'CommentView',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         reaction: PropTypes.object.isRequired,
         respondent: PropTypes.object,
         story: PropTypes.object.isRequired,
@@ -267,6 +268,7 @@ module.exports = React.createClass({
      */
     renderOptionButton: function() {
         var props = {
+            access: this.props.access,
             currentUser: this.props.currentUser,
             reaction: this.props.reaction,
             story: this.props.story,

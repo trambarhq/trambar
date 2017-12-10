@@ -44,6 +44,17 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            isStationary: false
+        };
+    },
+
+    /**
      * Return initial state of component
      *
      * @return {Object}

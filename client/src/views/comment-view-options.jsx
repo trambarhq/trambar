@@ -15,6 +15,7 @@ require('./comment-view-options.scss');
 module.exports = React.createClass({
     displayName: 'CommentViewOptions',
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         currentUser: PropTypes.object.isRequired,
         reaction: PropTypes.object.isRequired,
         story: PropTypes.object.isRequired,
@@ -36,11 +37,34 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if current user can perform write action
+     *
+     * @return {Boolean}
+     */
+    canWrite: function() {
+        var access = this.props.access;
+        return (access === 'read-write');
+    },
+
+    /**
+     * Return true if current user can comment
+     *
+     * @return {Boolean}
+     */
+    canComment: function() {
+        var access = this.props.access;
+        return (access === 'read-comment' || access === 'read-write');
+    },
+
+    /**
      * Return true if reaction can be edited
      *
      * @return {Boolean}
      */
     canEditReaction: function() {
+        if (!this.canComment()) {
+            return false;
+        }
         var reaction = this.props.reaction;
         var user = this.props.currentUser;
         if (_.includes(ReactionTypes.editable, reaction.type)) {
@@ -60,6 +84,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     canRemoveReaction: function() {
+        if (!this.canComment()) {
+            return false;
+        }
         var reaction = this.props.reaction;
         var story = this.props.story;
         var user = this.props.currentUser;
@@ -87,6 +114,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     canHideReaction: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         var story = this.props.story;
         var user = this.props.currentUser;
         if (user.type !== 'guest') {

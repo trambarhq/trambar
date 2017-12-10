@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var Relaks = require('relaks');
+var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -262,6 +263,16 @@ var PersonPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return the access level
+     *
+     * @return {String}
+     */
+    getAccessLevel: function() {
+        var { project, currentUser } = this.props;
+        return ProjectSettings.getAccessLevel(project, currentUser);
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -296,6 +307,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
      */
     renderList: function() {
         var listProps = {
+            access: this.getAccessLevel(),
             stories: this.props.stories,
             currentUser: this.props.currentUser,
             project: this.props.project,

@@ -26,6 +26,7 @@ require('./bookmark-list.scss');
 module.exports = Relaks.createClass({
     displayName: 'BookmarkList',
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
@@ -66,6 +67,7 @@ module.exports = Relaks.createClass({
             repos: null,
 
             selectedStoryId: this.props.selectedStoryId,
+            access: this.props.access,
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
             project: this.props.project,
@@ -184,6 +186,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     displayName: 'BookmarkList.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         senders: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
@@ -379,12 +382,32 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object} evt
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     handleBookmarkRender: function(evt) {
-        if (evt.needed) {
-            var bookmark = evt.item;
-            var story = findStory(this.props.stories, bookmark);
+        var bookmark = evt.item;
+        var story = findStory(this.props.stories, bookmark);
+        if (!story) {
+            return null;
+        }
+
+        // see if it's being editted
+        var renderEditor = false;
+        if (story) {
+            if (this.props.access === 'read-write') {
+                if (!story.published) {
+                    renderEditor = true;
+                } else {
+                    var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
+                    if (tempCopy) {
+                        // edit the temporary copy
+                        story = tempCopy;
+                        renderEditor = true;
+                    }
+                }
+            }
+        }
+        if (renderEditor || evt.needed) {
             var senders = findSenders(this.props.senders, bookmark);
             var bookmarkProps = {
                 bookmark,
@@ -396,15 +419,66 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
+        }
+        if (renderEditor) {
+            var authors = findAuthors(this.props.draftAuthors, story);
+            var recommendations = findRecommendations(this.props.recommendations, story);
+            var recipients = findRecipients(this.props.recipients, recommendations);
+            if (!story) {
+                authors = array(this.props.currentUser);
+            }
+            var editorProps = {
+                story,
+                authors,
+                recommendations,
+                recipients,
+                currentUser: this.props.currentUser,
+                database: this.props.database,
+                payloads: this.props.payloads,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
             return (
                 <BookmarkView {...bookmarkProps}>
-                    {this.renderStory(story)}
+                    <StoryEditor {...editorProps}/>
                 </BookmarkView>
             );
         } else {
-            var height = evt.previousHeight || evt.estimatedHeight || 100;
-            return <div className="bookmark-view" style={{ height }} />
+            if (evt.needed) {
+                var reactions = findReactions(this.props.reactions, story);
+                var authors = findAuthors(this.props.authors, story);
+                var respondents = findRespondents(this.props.respondents, reactions);
+                var recommendations = findRecommendations(this.props.recommendations, story);
+                var recipients = findRecipients(this.props.recipients, recommendations);
+                var repo = findRepo(this.props.repos, story);
+                var storyProps = {
+                    access: this.props.access,
+                    story,
+                    reactions,
+                    authors,
+                    respondents,
+                    recommendations,
+                    recipients,
+                    repo,
+                    currentUser: this.props.currentUser,
+                    database: this.props.database,
+                    payloads: this.props.payloads,
+                    route: this.props.route,
+                    locale: this.props.locale,
+                    theme: this.props.theme,
+                };
+                return (
+                    <BookmarkView {...bookmarkProps}>
+                        <StoryView {...storyProps} />
+                    </BookmarkView>
+                );
+            } else {
+                var height = evt.previousHeight || evt.estimatedHeight || 100;
+                return <div className="bookmark-view" style={{ height }} />
+            }
         }
+
     },
 
     /**

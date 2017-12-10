@@ -20,6 +20,7 @@ module.exports = React.createClass({
     displayName: 'StoryComments',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
         currentUser: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
@@ -112,15 +113,19 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var access = this.props.access;
+        var canComment = (access === 'read-comment' || access === 'read-write');
         var likeButtonProps = {
             icon: 'thumbs-up',
             label: t('story-like'),
+            hidden: !canComment,
             highlighted: !!this.getCurrentUserLike(),
             onClick: this.handleLikeClick,
         };
         var commentButtonProps = {
             icon: 'comment',
             label: t('story-comment'),
+            hidden: !canComment,
             highlighted: this.getCurrentUserComments().length > 0 || this.state.editing,
             onClick: this.handleCommentClick,
         };
@@ -142,6 +147,7 @@ module.exports = React.createClass({
                 <HeaderButton {...likeButtonProps} />
                 <HeaderButton {...commentButtonProps} />
                 <HeaderButton {...showButtonProps} />
+                {'\u00a0'}
             </div>
         );
     },
@@ -163,6 +169,7 @@ module.exports = React.createClass({
             }
         }
         var listProps = {
+            access: this.props.access,
             showEditor: this.state.editing,
             story: this.props.story,
             reactions: this.props.reactions,

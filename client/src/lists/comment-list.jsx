@@ -24,6 +24,7 @@ module.exports = React.createClass({
     displayName: 'CommentList',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         showingEditor: PropTypes.bool,
         story: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
@@ -132,6 +133,7 @@ module.exports = React.createClass({
     renderView: function(reaction) {
         var respondent = findRespondent(this.props.respondents, reaction);
         var props = {
+            access: this.props.access,
             reaction,
             respondent,
             story: this.props.story,

@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 var Moment = require('moment');
 var Relaks = require('relaks');
+var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -121,7 +122,7 @@ module.exports = Relaks.createClass({
             currentUser: null,
             project: null,
 
-            showEditors: !searching,
+            acceptNewStory: !searching,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
@@ -270,7 +271,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NewsPage.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
-        showEditors: PropTypes.bool,
+        acceptNewStory: PropTypes.bool,
         listing: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
@@ -283,6 +284,16 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return the access level
+     *
+     * @return {String}
+     */
+    getAccessLevel: function() {
+        var { project, currentUser } = this.props;
+        return ProjectSettings.getAccessLevel(project, currentUser);
     },
 
     /**
@@ -304,8 +315,10 @@ var NewsPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderList: function() {
+        var access = this.getAccessLevel();
         var listProps = {
-            showEditors: this.props.showEditors,
+            access: access,
+            acceptNewStory: this.props.acceptNewStory && access === 'read-write',
             stories: this.props.stories,
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,

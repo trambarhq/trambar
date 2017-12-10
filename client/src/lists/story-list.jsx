@@ -24,7 +24,8 @@ require('./story-list.scss');
 module.exports = Relaks.createClass({
     displayName: 'StoryList',
     propTypes: {
-        showEditors: PropTypes.bool,
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        acceptNewStory: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
@@ -48,7 +49,7 @@ module.exports = Relaks.createClass({
      */
     getDefaultProps: function() {
         return {
-            showEditors: false,
+            acceptNewStory: false,
         };
     },
 
@@ -76,7 +77,8 @@ module.exports = Relaks.createClass({
             repos: null,
 
             selectedStoryId: this.props.selectedStoryId,
-            showEditors: this.props.showEditors,
+            access: this.props.access,
+            acceptNewStory: this.props.acceptNewStory,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
@@ -199,6 +201,8 @@ var StoryListSync = module.exports.Sync = React.createClass({
     displayName: 'StoryList.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        acceptNewStory: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
@@ -260,7 +264,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var stories = sortStories(this.props.stories, this.props.pendingStories, this.props.draftStories, this.props.currentUser, this.props.showEditors);
+        var stories = sortStories(this.props.stories, this.props.pendingStories, this.props.draftStories, this.props.currentUser, this.props.acceptNewStory);
         var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
         var smartListProps = {
             items: stories,
@@ -316,7 +320,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {String}
      */
     handleStoryIdentity: function(evt) {
-        if (this.props.showEditors) {
+        if (this.props.acceptNewStory) {
             // use a fixed id for the first editor, so we don't lose focus
             // when the new story acquires an id after being saved automatically
             if (evt.currentIndex === 0) {
@@ -338,14 +342,16 @@ var StoryListSync = module.exports.Sync = React.createClass({
         // see if it's being editted
         var renderEditor = false;
         if (story) {
-            if (!story.published) {
-                renderEditor = true;
-            } else {
-                var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
-                if (tempCopy) {
-                    // edit the temporary copy
-                    story = tempCopy;
+            if (this.props.access === 'read-write') {
+                if (!story.published) {
                     renderEditor = true;
+                } else {
+                    var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
+                    if (tempCopy) {
+                        // edit the temporary copy
+                        story = tempCopy;
+                        renderEditor = true;
+                    }
                 }
             }
         } else {
@@ -381,6 +387,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 var recipients = findRecipients(this.props.recipients, recommendations);
                 var repo = findRepo(this.props.repos, story);
                 var storyProps = {
+                    access: this.props.access,
                     story,
                     reactions,
                     authors,
@@ -453,7 +460,7 @@ var array = Memoize(function(object) {
     return [ object ];
 });
 
-var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser, showEditors) {
+var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser, acceptNewStory) {
     if (!_.isEmpty(pendingStories)) {
         stories = _.slice(stories);
         _.each(pendingStories, (story) => {
@@ -464,7 +471,7 @@ var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser,
     }
     stories = _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
 
-    if (showEditors) {
+    if (acceptNewStory) {
         // add new drafts (drafts includes published stories being edited)
         var newDrafts = _.filter(drafts, (story) => {
             return !story.published_version_id;

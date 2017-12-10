@@ -20,6 +20,7 @@ module.exports = React.createClass({
     propTypes: {
         inMenu: PropTypes.bool,
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
         currentUser: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
@@ -57,11 +58,34 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if current user can perform write action
+     *
+     * @return {Boolean}
+     */
+    canWrite: function() {
+        var access = this.props.access;
+        return (access === 'read-write');
+    },
+
+    /**
+     * Return true if current user can comment
+     *
+     * @return {Boolean}
+     */
+    canComment: function() {
+        var access = this.props.access;
+        return (access === 'read-comment' || access === 'read-write');
+    },
+
+    /**
      * Return true if user can hide a story
      *
      * @return {Boolean}
      */
     canHideStory: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         var story = this.props.story;
         var user = this.props.currentUser;
         if (user.type !== 'guest') {
@@ -81,6 +105,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     canEditStory: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         var story = this.props.story;
         var user = this.props.currentUser;
         if (_.includes(StoryTypes.editable, story.type)) {
@@ -100,6 +127,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     canRemoveStory: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         var story = this.props.story;
         var user = this.props.currentUser;
         if (_.includes(story.user_ids, user.id)) {
@@ -120,6 +150,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     canBumpStory: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         var story = this.props.story;
         var user = this.props.currentUser;
         if (_.includes(story.user_ids, user.id) || user.type === 'admin') {
@@ -137,6 +170,9 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     canAddIssue: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         // TODO: should check whether user has a Gitlab account
         var story = this.props.story;
         var user = this.props.currentUser;
@@ -154,6 +190,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     canSendBookmarks: function() {
+        if (!this.canWrite()) {
+            return false;
+        }
         // TODO
         return true;
     },

@@ -21,6 +21,7 @@ module.exports = React.createClass({
     displayName: 'StoryView',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
@@ -130,6 +131,7 @@ module.exports = React.createClass({
         var schema = this.props.route.parameters.schema;
         var uploadStatus = this.props.payloads.inquire(schema, this.props.story);
         var props = {
+            access: this.props.access,
             story: this.props.story,
             authors: this.props.authors,
             currentUser: this.props.currentUser,
@@ -156,6 +158,7 @@ module.exports = React.createClass({
      */
     renderComments: function() {
         var props = {
+            access: this.props.access,
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
@@ -201,6 +204,7 @@ module.exports = React.createClass({
         var props = {
             inMenu,
             section,
+            access: this.props.access,
             story: this.props.story,
             currentUser: this.props.currentUser,
             options: this.state.options,

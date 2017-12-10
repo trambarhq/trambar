@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -146,6 +147,16 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Return the access level
+     *
+     * @return {String}
+     */
+    getAccessLevel: function() {
+        var { project, currentUser } = this.props;
+        return ProjectSettings.getAccessLevel(project, currentUser);
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -165,6 +176,7 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
      */
     renderList: function() {
         var listProps = {
+            access: this.getAccessLevel(),
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
             project: this.props.project,
