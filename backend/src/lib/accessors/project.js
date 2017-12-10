@@ -180,6 +180,30 @@ module.exports = _.create(Data, {
                 throw new HttpError(409);
             }
             this.checkWritePermission(projectReceived, projectBefore, credentials);
+
+            if (projectReceived.repo_ids) {
+                var newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
+                if (!_.isEmpty(newRepoIds)) {
+                    // add users with access to repos to project
+                    var Repo = require('accessors/repo');
+                    var User = require('accessors/user');
+                    var criteria = { id: newRepoIds, deleted: false };
+                    return Repo.find(db, schema, criteria, 'user_ids').then((repos) => {
+                        var userIds = _.uniq(_.flatten(_.map(repos, 'user_ids')));
+                        var criteria = {
+                            id: userIds,
+                            disabled: false,
+                            deleted: false,
+                        };
+                        return User.find(db, schema, criteria, 'id').then((users) => {
+                            var newUserIds = _.map(users, 'id');
+                            var existingUserIds = projectReceived.user_ids || projectBefore.user_ids;
+                            projectReceived.user_ids = _.union(existingUserIds, newUserIds);
+                            return projectReceived;
+                        });
+                    });
+                }
+            }
             return projectReceived;
         });
     },

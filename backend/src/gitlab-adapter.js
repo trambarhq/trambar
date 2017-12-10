@@ -394,6 +394,8 @@ function handleHookCallback(req, res) {
                 });
             }
         });
+    }).catch((err) => {
+        console.error(err);
     }).finally(() => {
         res.end();
     });

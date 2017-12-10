@@ -42,7 +42,18 @@ function importEvent(db, server, repo, project, author, glEvent) {
     });
     var link = Import.Link.merge(userLink, repoLink);
     var storyNew = copyEventProperties(null, author, glEvent, link);
-    return Story.insertOne(db, schema, storyNew);
+    return Story.insertOne(db, schema, storyNew).then((story) => {
+        if (glEvent.action_name === 'joined') {
+            if (!_.includes(project.user_ids, author.id)) {
+                project.user_ids.push(author.id);
+            }
+        } else if (glEvent.action_name === 'left') {
+            _.pull(project.user_ids, author.id);
+        }
+        return Project.updateOne(db, 'global', _.pick(project, 'id', 'user_ids')).then((project) => {
+            return story;
+        });
+    });
 }
 
 /**

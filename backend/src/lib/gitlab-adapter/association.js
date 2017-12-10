@@ -85,14 +85,20 @@ function findOne(db, criteria) {
     return Promise.props(props).then((a) => {
         var { server, repo, project } = a;
         // make sure everything is in order first
-        if (!repo || !project || !server) {
-            return null;
+        if (!server) {
+            throw new Error(`Missing server: ${criteria.server_id}`);
+        }
+        if (!repo) {
+            throw new Error(`Missing project: ${criteria.repo_id}`);
+        }
+        if (!project) {
+            throw new Error(`Missing repository: ${criteria.project_id}`);
         }
         if (!_.includes(project.repo_ids, repo.id)) {
-            return null;
+            throw new Error(`Repository "${repo.name}" is not associated with project "${project.name}"`);
         }
         if (!Import.Link.find(repo, server)) {
-            return null;
+            throw new Error(`Missing server link: ${repo.name}`);
         }
         return a;
     });

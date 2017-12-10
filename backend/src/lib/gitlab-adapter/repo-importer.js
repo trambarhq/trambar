@@ -8,6 +8,7 @@ var Transport = require('gitlab-adapter/transport');
 var UserImporter = require('gitlab-adapter/user-importer');
 
 // accessors
+var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Story = require('accessors/story');
 
@@ -108,7 +109,14 @@ function importRepositories(db, server) {
                         }
                         if (repo) {
                             modified.push(repoAfter.name);
-                            return Repo.updateOne(db, 'global', repoAfter);
+                            return Repo.updateOne(db, 'global', repoAfter).then((repoAfter) => {
+                                var newMembers = _.filter(members, (user) => {
+                                    if (!user.disabled && !user.deleted) {
+                                        return !_.includes(repo.user_ids);
+                                    }
+                                });
+                                return addProjectMembers(db, repoAfter, newMembers).return(repoAfter);
+                            });
                         } else {
                             added.push(repoAfter.name);
                             return Repo.insertOne(db, 'global', repoAfter);
@@ -153,6 +161,28 @@ function findExistingRepo(db, server, repos, glRepo) {
     }
     return Promise.resolve(null);
 }
+
+/**
+ * Add users to projects associated with the repo
+ *
+ * @param {Database} db
+ * @param {Repo} repo
+ * @param {Array<User>} users
+ *
+ * @return {Promise<Array<Project>>}
+ */
+function addProjectMembers(db, repo, users) {
+    var newUserIds = _.map(users, 'id');
+    var criteria = {
+        repo_ids: [ repo.id ]
+    };
+    return Project.find(db, 'global', criteria, 'id, user_ids').mapSeries((project) => {
+        var existingUserIds = project.user_ids;
+        project.user_ids = _.union(existingUserIds, newUserIds);
+        return Project.updateOne(db, 'global', project);
+    });
+}
+
 /**
  * Copy details from Gitlab project object
  *

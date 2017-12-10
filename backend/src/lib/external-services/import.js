@@ -95,7 +95,7 @@ function attach(object, imported, type, resource) {
         if (currentIndex !== -1) {
             var currentRes = currentResources[currentIndex];
             var importedRes = importedResources[importedIndex];
-            if (_.isEqual(currentRes, importEd)) {
+            if (_.isEqual(currentRes, importedRes)) {
                 currentResources[currentIndex] = res;
                 importedResources[importedIndex] = res;
             } else {
