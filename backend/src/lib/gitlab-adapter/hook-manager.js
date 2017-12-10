@@ -5,11 +5,7 @@ var TaskLog = require('external-services/task-log');
 
 var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-
-// accessors
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Server = require('accessors/server');
+var Association = require('gitlab-adapter/association');
 
 exports.installHooks = installHooks;
 exports.installProjectHook = installProjectHook;
@@ -25,20 +21,19 @@ exports.removeProjectHook = removeProjectHook;
  * @return {Promise}
  */
 function installHooks(db, host) {
-    return getRepoAssociations(db).then((associations) => {
-        var servers = _.uniqBy(_.map(associations, 'server'), 'id');
+    return Association.find(db).then((associations) => {
+        var servers = _.uniq(_.map(associations, 'server'));
         return Promise.each(servers, (server) => {
             var taskLog = TaskLog.start('gitlab-hook-install', {
                 server_id: server.id,
                 server: server.name,
             });
-            var serverAssociations = _.filter(associations, (a) => {
-                return a.server.id === server.id;
-            });
+            var serverAssociations = _.filter(associations, { server });
             var added = []
             return Promise.each(serverAssociations, (sa, index, count) => {
-                return installProjectHook(host, sa.server, sa.repo, sa.project).tap(() => {
-                    added.push(sa.repo.name);
+                var { repo, project }  = sa;
+                return installProjectHook(host, server, repo, project).tap(() => {
+                    added.push(repo.name);
                     taskLog.report(index + 1, count, { added });
                 });
             }).tap(() => {
@@ -59,20 +54,19 @@ function installHooks(db, host) {
  * @return {Promise}
  */
 function removeHooks(db, host) {
-    return getRepoAssociations(db).then((associations) => {
-        var servers = _.uniqBy(_.map(associations, 'server'), 'id');
+    return Association.find(db).then((associations) => {
+        var servers = _.uniq(_.map(associations, 'server'));
         return Promise.each(servers, (server) => {
             var taskLog = TaskLog.start('gitlab-hook-remove', {
                 server_id: server.id,
                 server: server.name,
             });
-            var serverAssociations = _.filter(associations, (a) => {
-                return a.server.id === server.id;
-            });
+            var serverAssociations = _.filter(associations, { server });
             var deleted = [];
             return Promise.each(serverAssociations, (sa, index, count) => {
-                return removeProjectHook(host, sa.server, sa.repo, sa.project).then(() => {
-                    deleted.push(sa.repo.name);
+                var { repo, project } = sa;
+                return removeProjectHook(host, server, repo, project).then(() => {
+                    deleted.push(repo.name);
                     taskLog.report(index + 1, count, { deleted });
                 });
             }).tap(() => {
@@ -82,43 +76,6 @@ function removeHooks(db, host) {
             });
         });
     });
-}
-
-/**
- * Return a list of objects containing project, repo, and server
- *
- * @param  {Database} db
- *
- * @return {Array<Object>}
- */
-function getRepoAssociations(db) {
-    var list = [];
-    // load projects
-    var criteria = {
-        deleted: false
-    };
-    return Project.find(db, 'global', criteria, '*').each((project) => {
-        // load repos connected with project
-        var criteria = {
-            id: project.repo_ids,
-            type: 'gitlab',
-            deleted: false,
-        };
-        return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            // load server record
-            var repoLink = _.find(repo.external, { type: 'gitlab' });
-            var criteria = {
-                id: repoLink.server_id,
-                deleted: false,
-            };
-            return Server.findOne(db, 'global', criteria, '*').then((server) => {
-                if (!server) {
-                    return;
-                }
-                list.push({ server, repo, project });
-            });
-        });
-    }).return(list);
 }
 
 /**

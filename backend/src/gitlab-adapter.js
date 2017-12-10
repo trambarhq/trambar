@@ -9,6 +9,7 @@ var TaskQueue = require('utils/task-queue');
 var StoryTypes = require('objects/types/story-types');
 
 var Import = require('external-services/import');
+var Association = require('gitlab-adapter/association');
 var HookManager = require('gitlab-adapter/hook-manager');
 var EventImporter = require('gitlab-adapter/event-importer');
 var RepoImporter = require('gitlab-adapter/repo-importer');
@@ -69,28 +70,25 @@ function start() {
                 return db.listen(tables, 'sync', handleDatabaseSyncRequests, 0);
             });
         }).then(() => {
-            // try importing events from all projects, as events could have
-            // occurred while Trambar is down
+            // update repo lists, in case they were added while Trambar is down
             var criteria = {
+                type: 'gitlab',
                 deleted: false
             };
-            return Project.find(db, 'global', criteria, '*').each((project) => {
-                var criteria = {
-                    id: project.repo_ids,
-                    type: 'gitlab',
-                    deleted: false,
-                };
-                return Repo.find(db, 'global', criteria, '*').each((repo) => {
-                    var repoLinks = _.filter(repo.external, { type: 'gitlab' });
-                    var criteria = {
-                        id: _.map(repoLinks, 'server_id'),
-                        deleted: false,
-                    };
-                    return Server.find(db, 'global', criteria, '*').each((server) => {
-                        return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
-                            return EventImporter.importEvents(db, server, repo, project);
-                        });
+            return Server.find(db, 'global', criteria, '*').each((server) => {
+                if (hasAccessToken(server)) {
+                    return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                        return RepoImporter.importRepositories(db, server);
                     });
+                }
+            });
+        }).then(() => {
+            // try importing events from all projects, as events could have
+            // occurred while Trambar is down
+            return Association.find(db).each((a) => {
+                var { server, repo, project } = a;
+                return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
+                    return EventImporter.importEvents(db, server, repo, project);
                 });
             });
         });
@@ -149,14 +147,11 @@ function handleServerChangeEvent(db, event) {
             deleted: false,
         };
         return Server.findOne(db, 'global', criteria, '*').then((server) => {
-            var accessToken = _.get(server, 'settings.api.access_token');
-            var oauthBaseUrl = _.get(server, 'settings.oauth.base_url');
-            if (!accessToken|| !oauthBaseUrl) {
-                return;
+            if (hasAccessToken(server)) {
+                return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                    return RepoImporter.importRepositories(db, server);
+                });
             }
-            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                return RepoImporter.importRepositories(db, server);
-            });
         });
     }
 }
@@ -213,7 +208,7 @@ function connectRepositories(db, project, repoIds) {
             };
             return Server.find(db, 'global', criteria, '*').each((server) => {
                 // schedule event import
-                taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
                     // make sure the project-specific schema exists
                     return db.need(project.name).then(() => {
                         return EventImporter.importEvents(db, server, repo, project);
@@ -252,7 +247,7 @@ function disconnectRepositories(db, project, repoIds) {
                 id: _.map(repoLinks, 'server_id'),
                 deleted: false
             };
-            return Server.findONe(db, 'global', criteria, '*').each((server) => {
+            return Server.find(db, 'global', criteria, '*').each((server) => {
                 // remove hook on repo
                 return HookManager.removeProjectHook(host, server, repo, project);
             });
@@ -329,8 +324,6 @@ function handleSystemChangeEvent(db, event) {
  * @param  {Array<Object>} events
  */
 function handleDatabaseSyncRequests(events) {
-    // TODO
-    return;
     var db = database;
     Promise.each(events, (event) => {
         switch (event.table) {
@@ -350,12 +343,7 @@ function handleDatabaseSyncRequests(events) {
  * @return {Promise}
  */
 function handleProjectSyncEvent(db, event) {
-    var criteria = event.criteria;
-    return Project.find(db, 'global', criteria, '*').each((project) => {
-        return taskQueue.schedule(`import_project_member:${project.id}`, () => {
-            return UserImporter.importProjectMembers(db, project);
-        });
-    });
+    // TODO
 }
 
 /**
@@ -367,24 +355,7 @@ function handleProjectSyncEvent(db, event) {
  * @return {Promise}
  */
 function handleRepoSyncEvent(db, event) {
-    if (!event.criteria.hasOwnProperty('id')) {
-        // an open-ended search was performed--see if there're new repos on Gitlab
-        var criteria = { type: 'gitlab', deleted: false };
-        return Server.find(db, 'global', criteria, '*').each((server) => {
-            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                return RepoImporter.importRepositories(db, server);
-            });
-        });
-    } else {
-        return Repo.find(db, 'global', event.criteria, '*').each((repo) => {
-            var criteria = { id: repo.server_id, type: 'gitlab' };
-            return Server.find(db, 'global', criteria, '*').each((server) => {
-                return taskQueue.schedule(`update_repo:${repo.id}`, () => {
-                    return RepoImporter.updateRepository(db, server, repo);
-                });
-            });
-        });
-    }
+    // TODO
 }
 
 /**
@@ -396,24 +367,7 @@ function handleRepoSyncEvent(db, event) {
  * @return {Promise}
  */
 function handleUserSyncEvent(db, event) {
-    if (!event.criteria.hasOwnProperty('id')) {
-        // an open-ended search was performed--see if there're new project members
-        var criteria = { deleted: false };
-        return Project.find(db, 'global', criteria, '*').each((project) => {
-            return taskQueue.schedule(`import_project_member:$(project.id)`, () => {
-                return UserImporter.importProjectMembers(db, project);
-            });
-        });
-    } else {
-        return User.find(db, 'global', event.criteria, '*').each((user) => {
-            var criteria = { id: user.server_id, type: 'gitlab' };
-            return Server.find(db, 'global', criteria, '*').each((server) => {
-                return taskQueue.schedule(`update_user:${user.id}`, () => {
-                    return UserImporter.updateUser(db, server, user);
-                });
-            });
-        });
-    }
+    // TODO
 }
 
 /**
@@ -425,33 +379,17 @@ function handleUserSyncEvent(db, event) {
 function handleHookCallback(req, res) {
     var glHookEvent = req.body;
     var db = database;
-    var serverP = Server.findOne(db, 'global', {
-        id: parseInt(req.params.serverId),
-        deleted: false
-    }, '*');
-    var repoP = Repo.findOne(db, 'global', {
-        id: parseInt(req.params.repoId),
-        deleted: false
-    }, '*');
-    var projectP = Project.findOne(db, 'global', {
-        id: parseInt(req.params.projectId),
-        deleted: false
-    }, '*');
-    return Promise.join(serverP, repoP, projectP, (server, repo, project) => {
-        // make sure everything is in order first
-        if (!repo || !project || !server) {
-            return;
-        }
-        if (!_.includes(project.repo_ids, repo.id)) {
-            return;
-        }
-        if (!Import.Link.find(repo, server)) {
-            return;
-        }
+    var criteria = {
+        server_id: parseInt(req.params.serverId),
+        repo_id: parseInt(req.params.repoId),
+        project_id: parseInt(req.params.projectId),
+    };
+    return Association.findOne(db, criteria).then((a) => {
+        var { server, repo, project } = a;
         return EventImporter.importHookEvent(db, server, repo, project, glHookEvent).then((story) => {
             if (story === false) {
                 // hook event wasn't handled--scan activity log
-                return taskQueue.schedule(`import_repo_events:${repo.id}`, () => {
+                return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
                     return EventImporter.importEvents(db, server, repo, project, glHookEvent);
                 });
             }
@@ -459,6 +397,19 @@ function handleHookCallback(req, res) {
     }).finally(() => {
         res.end();
     });
+}
+
+/**
+ * Return true if the server object contains an access token
+ *
+ * @param  {Server}  server
+ *
+ * @return {Boolean}
+ */
+function hasAccessToken(server) {
+    var accessToken = _.get(server, 'settings.api.access_token');
+    var oauthBaseUrl = _.get(server, 'settings.oauth.base_url');
+    return (accessToken && oauthBaseUrl);
 }
 
 /**

@@ -14,6 +14,7 @@ module.exports = _.create(ExternalData, {
         details: Object,
         type: String,
         name: String,
+        user_ids: Array(Number),
         external: Array(Object),
     },
     criteria: {
@@ -21,6 +22,7 @@ module.exports = _.create(ExternalData, {
         deleted: Boolean,
         type: String,
         name: String,
+        user_ids: Array(Number),
 
         server_id: Number,
         external_object: Object,
@@ -46,6 +48,7 @@ module.exports = _.create(ExternalData, {
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(64) NOT NULL,
                 name varchar(128) NOT NULL,
+                user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
@@ -107,6 +110,7 @@ module.exports = _.create(ExternalData, {
                 var row = rows[index];
                 object.type = row.type;
                 object.name = row.name;
+                object.user_ids = row.user_ids;
             });
             return objects;
         });

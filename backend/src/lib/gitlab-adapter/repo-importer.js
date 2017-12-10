@@ -5,6 +5,7 @@ var Moment = require('moment');
 var Import = require('external-services/import');
 var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
+var UserImporter = require('gitlab-adapter/user-importer');
 
 // accessors
 var Repo = require('accessors/repo');
@@ -94,24 +95,28 @@ function importRepositories(db, server) {
             // fetch issue-tracker labels
             return fetchLabels(server, glRepo.id).then((glLabels) => {
                 // find matching repo
-                return findExistingRepo(db, server, repos, glRepo).then((repo) => {
-                    var link = Import.Link.create(server, {
-                        project: { id: glRepo.id }
+                return fetchMembers(server, glRepo.id).each((glUser) => {
+                    return UserImporter.findUser(db, server, glUser);
+                }).then((members) => {
+                    return findExistingRepo(db, server, repos, glRepo).then((repo) => {
+                        var link = Import.Link.create(server, {
+                            project: { id: glRepo.id }
+                        });
+                        var repoAfter = copyRepoDetails(repo, members, glRepo, glLabels, link);
+                        if (!repoAfter) {
+                            return repo;
+                        }
+                        if (repo) {
+                            modified.push(repoAfter.name);
+                            return Repo.updateOne(db, 'global', repoAfter);
+                        } else {
+                            added.push(repoAfter.name);
+                            return Repo.insertOne(db, 'global', repoAfter);
+                        }
                     });
-                    var repoAfter = copyRepoDetails(repo, glRepo, glLabels, link);
-                    if (!repoAfter) {
-                        return repo;
-                    }
-                    if (repo) {
-                        modified.push(repoAfter.name);
-                        return Repo.updateOne(db, 'global', repoAfter);
-                    } else {
-                        added.push(repoAfter.name);
-                        return Repo.insertOne(db, 'global', repoAfter);
-                    }
-                }).tap(() => {
-                    taskLog.report(index + 1, count, { added, deleted, modified });
                 });
+            }).tap(() => {
+                taskLog.report(index + 1, count, { added, deleted, modified });
             });
         });
     }).tap(() => {
@@ -152,17 +157,19 @@ function findExistingRepo(db, server, repos, glRepo) {
  * Copy details from Gitlab project object
  *
  * @param  {Repo|null} repo
+ * @param  {Array<User>} members
  * @param  {Object} glRepo
  * @param  {Array<Object>} glLabels
  * @param  {Object} linkCriteria
  *
  * @return {Object|null}
  */
-function copyRepoDetails(repo, glRepo, glLabels, link) {
+function copyRepoDetails(repo, members, glRepo, glLabels, link) {
     var repoAfter = _.cloneDeep(repo) || {};
     Import.join(repoAfter, link);
     _.set(repoAfter, 'type', 'gitlab');
     _.set(repoAfter, 'name', glRepo.name);
+    _.set(repoAfter, 'user_ids', _.map(members, 'id'));
     _.set(repoAfter, 'details.ssh_url', glRepo.ssh_url);
     _.set(repoAfter, 'details.http_url', glRepo.http_url);
     _.set(repoAfter, 'details.web_url', glRepo.web_url);
@@ -199,5 +206,18 @@ function fetchRepos(server) {
  */
 function fetchLabels(server, glRepoId) {
     var url = `/projects/${glRepoId}/labels`;
+    return Transport.fetchAll(server, url);
+}
+
+/**
+ * Retrieve member records from Gitlab (these are not complete user records)
+ *
+ * @param  {Server} server
+ * @param  {Number} glRepoId
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function fetchMembers(server, glRepoId) {
+    var url = `/projects/${glRepoId}/members`;
     return Transport.fetchAll(server, url);
 }

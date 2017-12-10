@@ -19,7 +19,6 @@ var User = require('accessors/user');
 
 exports.importEvent = importEvent;
 exports.importUsers = importUsers;
-exports.importProjectMembers = importProjectMembers;
 exports.findUser = findUser;
 exports.copyUserProperties = copyUserProperties;
 
@@ -319,72 +318,6 @@ function copyUserProperties(user, image, server, glUser, link) {
         return null;
     }
     return userAfter;
-}
-
-/**
- * Import members of Gitlab project into Trambar project
- *
- * @param  {Database} db
- * @param  {Project} project
- *
- * @return {Promise<Array>}
- */
-function importProjectMembers(db, project) {
-    return importProjectRepoMembers(db, project).then((members) => {
-        var newMembers = _.filter(members, (member) => {
-            return !_.includes(project.user_ids, member.id);
-        });
-        if (_.isEmpty(newMembers)) {
-            return [];
-        }
-        var newMemberIds = _.map(newMembers, 'id');
-        return Project.addMembers(db, 'global', project.id, newMemberIds).then((project) => {
-            return newMembers;
-        });
-    });
-}
-
-/**
- * Import members of Gitlab repos connected to project
- *
- * @param  {Database} db
- * @param  {Project} project
- *
- * @return {Array<User>}
- */
-function importProjectRepoMembers(db, project) {
-    var criteria = {
-        id: project.repo_ids,
-        type: 'gitlab',
-        deleted: false,
-    };
-    return Repo.find(db, 'global', criteria, '*').map((repo) => {
-        var links = _.filter(repo.external, { type: 'gitlab' });
-        var criteria = {
-            id: _.map(links, 'server_id'),
-            deleted: false,
-        };
-        return Server.find(db, 'global', criteria, '*').each((server) => {
-            return fetchRepoMembers(server, link.project.id).then((glUsers) => {
-                return importUsers(db, server, glUsers);
-            });
-        });
-    }).then((memberLists) => {
-        return _.flatten(memberLists);
-    });
-}
-
-/**
- * Retrieve member records from Gitlab (these are not complete user records)
- *
- * @param  {Server} server
- * @param  {Number} glRepoId
- *
- * @return {Promise<Array<Object>>}
- */
-function fetchRepoMembers(server, glRepoId) {
-    var url = `/projects/${glRepoId}/members`;
-    return Transport.fetchAll(server, url);
 }
 
 /**
