@@ -97,7 +97,8 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
-            stories: null,
+            project: null,
+            users: null,
             currentUserId: null,
 
             database: this.props.database,
@@ -108,14 +109,23 @@ module.exports = Relaks.createClass({
         meanwhile.show(<PeoplePageSync {...props} />, delay);
         return db.start().then((userId) => {
             // load current user
-            var criteria = {};
-            criteria.id = userId;
+            var criteria = { id: userId };
             return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.currentUser = user;
             meanwhile.check();
         }).then(() => {
+            // load project
             var criteria = {
+                name: params.schema
+            };
+            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+        }).then((project) => {
+            props.project = project;
+            return meanwhile.show(<PeoplePageSync {...props} />);
+        }).then(() => {
+            var criteria = {
+                id: props.project.user_ids,
                 hidden: false
             };
             if (!_.isEmpty(params.roles)) {
