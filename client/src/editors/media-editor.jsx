@@ -304,15 +304,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Revoke blob URL on unmount
-     */
-    componentWillUnmount: function() {
-        if (this.imageBlobUrl) {
-            URL.revokeObjectURL(this.imageBlobUrl);
-        }
-    },
-
-    /**
      * Call onChange handler
      *
      * @param  {Array<Object>} resources

@@ -34,4 +34,8 @@ function Theme(themeManager) {
     this.getAudioUrl = function(res, params) {
         return themeManager.getAudioUrl(res, params);
     };
+
+    this.getUrl = function(res, params) {
+        return themeManager.getUrl(res, params);
+    };
 }

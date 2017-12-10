@@ -132,23 +132,20 @@ module.exports = React.createClass({
      * Get URL of resource
      *
      * @param  {Object} res
+     * @param  {Object} options
      *
      * @return {Object}
      */
-    getUrl(res) {
+    getUrl(res, options) {
         switch (res.type) {
             case 'image':
-                url = this.getImageUrl(res, options);
-                break;
+                return this.getImageUrl(res, options);
             case 'video':
-                url = this.getVideoUrl(res, options);
-                break;
+                return this.getVideoUrl(res, options);
             case 'website':
-                url = res.url;
-                break;
+                return res.url;
             case 'audio':
-                url = theme.getAudioUrl(res, options);
-                return;
+                return this.getAudioUrl(res, options);
         }
     },
 

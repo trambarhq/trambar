@@ -22,7 +22,7 @@
 
             .comment {
                 &.markdown {
-                    IMG {
+                    IMG, CANVAS {
                         height: 1.5em;
                         vertical-align: middle;
                         cursor: pointer;

@@ -75,10 +75,6 @@ module.exports = React.createClass({
      */
     updateUrls: function(nextState, nextProps) {
         var imageUrlBefore = nextState.imageUrl;
-        if (/^blob:/.test(nextState.imageUrl)) {
-            URL.revokeObjectURL(nextState.imageUrl);
-        }
-
         var res = nextProps.resource;
         var theme = nextProps.theme;
         var file = theme.getImageFile(res);
@@ -162,15 +158,6 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
-
-    /**
-     * Revoke blob URL on unmount
-     */
-    componentWillUnmount: function() {
-        if (this.state.blobUrl) {
-            URL.revokeObjectURL(this.state.blobUrl)
-        }
     },
 
     triggerChangeEvent: function(res) {

@@ -239,13 +239,18 @@ module.exports = React.createClass({
         var resources = this.props.story.details.resources;
         var res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
+            var theme = this.props.theme;
             var url;
             if (evt.forImage)  {
                 // images are style at height = 1.5em
-                url = this.props.theme.getImageUrl(res, { height: 24 });
+                url = theme.getImageUrl(res, { height: 24 });
+                if (!url) {
+                    // use blob if it's attached
+                    var file = theme.getImageFile(res);
+                    url = Markdown.createBlobUrl(file, res.clip);
+                }
             } else {
-                // TODO
-                //url = this.props.theme.getUrl(res);
+                url = theme.getUrl(res);
             }
             // remember the resource and the url
             this.resourcesReferenced[url] = res;
