@@ -15,12 +15,13 @@ exports.findOne = findOne;
  * Return a list of objects containing project, repo, and server
  *
  * @param  {Database} db
+ * @param  {Object} projectCriteria
  *
  * @return {Array<Object>}
  */
-function find(db) {
+function find(db, projectCriteria) {
     // load projects
-    var criteria = { deleted: false };
+    var criteria = _.extend({ deleted: false }, projectCriteria);
     return Project.find(db, 'global', criteria, '*').then((projects) => {
         // load repos
         var repoIds = _.uniq(_.flatten(_.map(projects, 'repo_ids')));
@@ -68,6 +69,9 @@ function find(db) {
  * @return {Promise<Object>}
  */
 function findOne(db, criteria) {
+    if (!_.every(criteria)) {
+        return Promise.reject(new Error('Invalid object id'));
+    }
     var props = {
         server: Server.findOne(db, 'global', {
             id: criteria.server_id,

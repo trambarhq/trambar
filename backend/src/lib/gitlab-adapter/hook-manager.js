@@ -5,7 +5,7 @@ var TaskLog = require('external-services/task-log');
 
 var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
-var Association = require('gitlab-adapter/association');
+var RepoAssociation = require('gitlab-adapter/repo-association');
 
 exports.installHooks = installHooks;
 exports.installProjectHook = installProjectHook;
@@ -21,7 +21,7 @@ exports.removeProjectHook = removeProjectHook;
  * @return {Promise}
  */
 function installHooks(db, host) {
-    return Association.find(db).then((associations) => {
+    return RepoAssociation.find(db).then((associations) => {
         var servers = _.uniq(_.map(associations, 'server'));
         return Promise.each(servers, (server) => {
             var taskLog = TaskLog.start('gitlab-hook-install', {
@@ -54,7 +54,7 @@ function installHooks(db, host) {
  * @return {Promise}
  */
 function removeHooks(db, host) {
-    return Association.find(db).then((associations) => {
+    return RepoAssociation.find(db).then((associations) => {
         var servers = _.uniq(_.map(associations, 'server'));
         return Promise.each(servers, (server) => {
             var taskLog = TaskLog.start('gitlab-hook-remove', {

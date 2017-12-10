@@ -9,7 +9,7 @@ var TaskQueue = require('utils/task-queue');
 var StoryTypes = require('objects/types/story-types');
 
 var Import = require('external-services/import');
-var Association = require('gitlab-adapter/association');
+var RepoAssociation = require('gitlab-adapter/repo-association');
 var HookManager = require('gitlab-adapter/hook-manager');
 var EventImporter = require('gitlab-adapter/event-importer');
 var RepoImporter = require('gitlab-adapter/repo-importer');
@@ -85,7 +85,7 @@ function start() {
         }).then(() => {
             // try importing events from all projects, as events could have
             // occurred while Trambar is down
-            return Association.find(db).each((a) => {
+            return RepoAssociation.find(db).each((a) => {
                 var { server, repo, project } = a;
                 return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
                     return EventImporter.importEvents(db, server, repo, project);
@@ -384,7 +384,7 @@ function handleHookCallback(req, res) {
         repo_id: parseInt(req.params.repoId),
         project_id: parseInt(req.params.projectId),
     };
-    return Association.findOne(db, criteria).then((a) => {
+    return RepoAssociation.findOne(db, criteria).then((a) => {
         var { server, repo, project } = a;
         return EventImporter.importHookEvent(db, server, repo, project, glHookEvent).then((story) => {
             if (story === false) {
