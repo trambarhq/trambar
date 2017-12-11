@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
 var HttpError = require('errors/http-error');
+var ProjectSettings = require('objects/settings/project-settings');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -107,31 +108,26 @@ module.exports = _.create(Data, {
      */
     import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials, options).mapSeries((subscriptionReceived, index) => {
-            if (subscriptionReceived.hasOwnProperty('area')) {
-                if (subscriptionReceived.area !== credentials.area) {
-                    throw new HttpError(400);
-                }
-            }
-            if (subscriptionReceived.schema === '*') {
-                if (credentials.area !== 'admin') {
-                    throw new HttpError(400);
-                }
-            } else if (subscriptionReceived.schema !== 'global') {
-                // don't allow user to subscribe to a project that he has
-                // no access to
+            var subscriptionBefore = originals[index];
+            this.checkWritePermission(subscriptionReceived, subscriptionBefore, credentials);
+
+            if (subscriptionReceived.schema !== 'global') {
+                // don't allow user to subscribe to a project that he has no access to
                 var Project = require('accessors/project');
                 var criteria = {
                     name: subscriptionReceived.schema,
                     deleted: false,
                 };
-                return Project.findOne(db, schema, criteria, '*').then((project) => {
-                    if (!Project.checkAccess(project, credentials.user, 'read')) {
+                return Project.findOne(db, schema, criteria, 'user_ids, settings').then((project) => {
+                    var access = ProjectSettings.getUserAccessLevel(project, credentials.user);
+                    if (!access) {
                         throw new HttpError(400);
                     }
                     return subscriptionReceived;
                 });
+            } else {
+                return subscriptionReceived;
             }
-            return subscriptionReceived;
         });
     },
 
@@ -153,4 +149,27 @@ module.exports = _.create(Data, {
         }
         return false;
     },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} subscriptionReceived
+     * @param  {Object} subscriptionBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(subscriptionReceived, subscriptionBefore, credentials) {
+        // don't allow modifications
+        if (subscriptionBefore) {
+            throw new HttpError(400);
+        }
+        if (subscriptionReceived.area !== credentials.area) {
+            throw new HttpError(400);
+        }
+        // don't allow non-admin to monitor all schemas
+        if (subscriptionReceived.schema === '*') {
+            if (credentials.area !== 'admin') {
+                throw new HttpError(400);
+            }
+        }
+    }
 });

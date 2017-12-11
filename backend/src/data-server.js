@@ -8,6 +8,7 @@ var LodashExtra = require('utils/lodash-extra');
 var Database = require('database');
 var Shutdown = require('shutdown');
 var HttpError = require('errors/http-error');
+var ProjectSettings = require('objects/settings/project-settings');
 
 // global accessors
 var Authorization = require('accessors/authorization');
@@ -109,7 +110,7 @@ function handleDiscovery(req, res) {
     var table = req.params.table;
     return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
-            return fetchCredentials(db, userId, schema, 'read');
+            return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
             var criteria = _.omit(params, 'token', 'include_deleted');
             if (criteria.order) {
@@ -187,7 +188,7 @@ function handleRetrieval(req, res) {
     var table = req.params.table;
     return Database.open().then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
-            return fetchCredentials(db, userId, schema, 'read');
+            return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
             var ids;
             if (req.params.id !== undefined) {
@@ -256,7 +257,7 @@ function handleStorage(req, res) {
     // need exclusive connection for transaction
     return Database.open(true).then((db) => {
         return checkAuthorization(db, params.token).then((userId) => {
-            return fetchCredentials(db, userId, schema, 'write');
+            return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
             var objects = params.objects;
             // make sure objects are such
@@ -341,36 +342,44 @@ function checkAuthorization(db, token) {
  * @param  {Database} db
  * @param  {Number} userId
  * @param  {String} schema
- * @param  {String} access
  *
  * @return {Object}
  */
-function fetchCredentials(db, userId, schema, access) {
-    var credentials = {};
-    return User.findOne(db, 'global', { id: userId }, '*').then((user) => {
-        if (!User.checkAccess(user)) {
+function fetchCredentials(db, userId, schema) {
+    var userCriteria = {
+        id: userId,
+        deleted: false,
+        disabled: false,
+    };
+    var projectCriteria = {
+        name: schema,
+        deleted: false,
+    };
+    if (schema === 'global') {
+        projectCriteria = null;
+    }
+    var userP = User.findOne(db, 'global', userCriteria, '*');
+    var projectP = Project.findOne(db, 'global', projectCriteria, '*');
+    return Promise.join(userP, projectP, (user, project) => {
+        if (!user) {
             // credentials are invalid if the user is missing or disabled
             throw new HttpError(401);
         }
-        credentials.user = user;
-        credentials.area = area;
+        var access = 'none';
+        var unrestricted = false;
 
+        if (projectCriteria) {
+            var access = ProjectSettings.getUserAccessLevel(project, user);
+            if (!access) {
+                // user has no access to project at all
+                throw new HttpError(403);
+            }
+        }
         // indicate that the user has admin access
         if (area === 'admin' && user.type === 'admin') {
-            credentials.unrestricted = true;
+            unrestricted = true;
         }
-
-        if (schema && schema !== 'global') {
-            // apply project level access control
-            return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
-                if (!Project.checkAccess(project, user, access)) {
-                    throw new HttpError(403);
-                }
-                credentials.project = project;
-            });
-        }
-    }).then(() => {
-        return credentials;
+        return { user, project, area, unrestricted, access }
     });
 }
 

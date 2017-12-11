@@ -109,35 +109,23 @@ module.exports = _.create(Data, {
     import: function(db, schema, objects, originals, credentials, options) {
         return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((bookmarkReceived, index) => {
             var bookmarkBefore = originals[index];
+            this.checkWritePermission(bookmarkReceived, bookmarkBefore, credentials);
+
             if (bookmarkBefore) {
                 // the only operation permitted is the removal of the bookmark
-                if (bookmarkReceived.deleted) {
-                    bookmarkReceived = { id: bookmarkBefore.id };
-                    if (bookmarkBefore.target_user_id === credentials.user.id) {
-                        bookmarkReceived.deleted = true;
-                    } else if (_.includes(bookmarkBefore.user_ids, credentials.user.id)) {
-                        if (bookmarkBefore.user_ids.length === 1) {
-                            bookmarkReceived.deleted = true;
-                        } else {
-                            // someone else is recommending this story still
-                            bookmarkReceived.user_ids =_.difference(bookmarkBefore.user_ids, [ credentials.user.id ]);
-                        }
-                    } else {
-                        throw new HttpError(403);
-                    }
+                bookmarkReceived = { id: bookmarkBefore.id };
+                if (bookmarkBefore.target_user_id === credentials.user.id) {
+                    // user deleting his own bookmark or one sent to him
+                    bookmarkReceived.deleted = true;
+                } else if (bookmarkBefore.user_ids.length === 1) {
+                    // bookmark comes from only one user
+                    bookmarkReceived.deleted = true;
                 } else {
-                    throw new HttpError(400);
+                    // someone else is recommending this story still
+                    bookmarkReceived.user_ids = _.without(bookmarkBefore.user_ids, credentials.user.id);
                 }
                 return bookmarkReceived;
             } else {
-                // must be the current user
-                if (!_.isEqual(bookmarkReceived.user_ids, [ credentials.user.id ])) {
-                    throw new HttpError(403);
-                }
-                if (!bookmarkReceived.story_id || !bookmarkReceived.target_user_id) {
-                    throw new HttpError(400);
-                }
-
                 // see if there's a existing bookmark already
                 var criteria = {
                     story_id: bookmarkReceived.story_id,
@@ -178,5 +166,39 @@ module.exports = _.create(Data, {
             }
         }
         return false;
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} bookmarkReceived
+     * @param  {Object} bookmarkBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(bookmarkReceived, bookmarkBefore, credentials) {
+        if (bookmarkBefore) {
+            // the only operation permitted is the removal of the bookmark
+            if (bookmarkReceived.deleted) {
+                if (bookmarkBefore.target_user_id !== credentials.user.id) {
+                    // deleting a bookmark sent to someone else
+                    // current user must be among the senders
+                    if (!_.includes(bookmarkBefore.user_ids, credentials.user.id)) {
+                        throw new HttpError(400);
+                    }
+                }
+            } else {
+                throw new HttpError(400);
+            }
+            return bookmarkReceived;
+        } else {
+            // must be the current user
+            if (!_.isEqual(bookmarkReceived.user_ids, [ credentials.user.id ])) {
+                throw new HttpError(400);
+            }
+            // can't create bookmarks to nothing
+            if (!bookmarkReceived.story_id || !bookmarkReceived.target_user_id) {
+                throw new HttpError(400);
+            }
+        }
     },
 });

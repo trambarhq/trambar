@@ -173,6 +173,19 @@ module.exports = {
     },
 
     /**
+     * Throw if current user cannot make modifications
+     *
+     * @param  {Object} objectReceived
+     * @param  {Object} objectBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(objectReceived, objectBefore, credentials) {
+        if (!credentials.unrestricted) {
+            throw new HttpError(400);
+        }
+    },
+
+    /**
      * Upgrade table in schema to given DB version (from one version prior)
      *
      * @param  {Database} db
@@ -247,12 +260,15 @@ module.exports = {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Object} criteria
+     * @param  {Object|null} criteria
      * @param  {String} columns
      *
      * @return {Promise<Array>}
      */
     find: function(db, schema, criteria, columns) {
+        if (!criteria) {
+            return Promise.resolve([]);
+        }
         var table = this.getTableName(schema);
         var query = {
             conditions: [],
@@ -287,12 +303,15 @@ module.exports = {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Object} criteria
+     * @param  {Object|null} criteria
      * @param  {String} columns
      *
      * @return {Promise<Object>}
      */
     findOne: function(db, schema, criteria, columns) {
+        if (!criteria) {
+            return Promise.resolve(null);
+        }
         criteria = _.clone(criteria);
         criteria.limit = 1;
         return this.find(db, schema, criteria, columns).get(0).then((row) => {
@@ -320,11 +339,14 @@ module.exports = {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Object} row
+     * @param  {Object|null} row
      *
      * @return {Promise<Object>}
      */
     updateOne: function(db, schema, row) {
+        if (!row) {
+            return Promise.resolve(null);
+        }
         var table = this.getTableName(schema);
         var assignments = [];
         var columns = _.keys(this.columns);
@@ -363,12 +385,15 @@ module.exports = {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Object} criteria
+     * @param  {Object|null} criteria
      * @param  {Object} values
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
     updateMatching: function(db, schema, criteria, values) {
+        if (!criteria) {
+            return Promise.resolve([]);
+        }
         var table = this.getTableName(schema);
         var columns = _.keys(this.columns);
         var assignments = [];
@@ -489,7 +514,7 @@ module.exports = {
      */
     insertOne: function(db, schema, row) {
         if (!row) {
-            return Promise.reject(new Error('Cannot insert empty row'));
+            return Promise.resolve(null);
         }
         return this.insert(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
@@ -506,6 +531,9 @@ module.exports = {
      * @return {Promise<Array<Object>>}
      */
     save: function(db, schema, rows) {
+        if (_.isEmpty(rows)) {
+            return Promise.resolve([]);
+        }
         var updates = _.filter(rows, (row) => {
             return row.id > 0;
         });
@@ -524,11 +552,14 @@ module.exports = {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Object} rows
+     * @param  {Object|null} row
      *
      * @return {Promise<Object>}
      */
     saveOne: function(db, schema, row) {
+        if (!row) {
+            return Promise.resolve(null);
+        }
         if (row.id > 0) {
             return this.updateOne(db, schema, row);
         } else {
@@ -546,6 +577,9 @@ module.exports = {
      * @return {Promise<Array<Object>>}
      */
     remove: function(db, schema, rows) {
+        if (!_.isEmpty(rows)) {
+            return Promise.resolve([]);
+        }
         var table = this.getTableName(schema);
         var ids = _.map(rows, 'id');
         var parameters = [ ids ];
@@ -568,6 +602,9 @@ module.exports = {
      * @return {Promise<Object>}
      */
     removeOne: function(db, schema, row) {
+        if (!row) {
+            return Promise.resolve(null);
+        }
         return this.remove(db, schema, [ row ]).get(0).then((row) => {
             return row || null;
         });
@@ -580,9 +617,12 @@ module.exports = {
      * @param  {String} schema
      * @param  {Object} criteria
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
     removeMatching: function(db, schema, criteria) {
+        if (!criteria) {
+            return Promise.resolve([]);
+        }
         var table = this.getTableName(schema);
         var query = {
             conditions: [],

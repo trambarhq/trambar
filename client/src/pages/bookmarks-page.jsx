@@ -153,7 +153,7 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
      */
     getAccessLevel: function() {
         var { project, currentUser } = this.props;
-        return ProjectSettings.getAccessLevel(project, currentUser);
+        return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
     },
 
     /**

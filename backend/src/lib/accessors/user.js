@@ -436,18 +436,4 @@ module.exports = _.create(ExternalData, {
             return Story.updateUserRoles(db, project.name, userIds);
         });
     },
-
-    /**
-     * Return false if the user has no access to system
-     *
-     * @param  {User} user
-     *
-     * @return {Boolean}
-     */
-    checkAccess: function(user) {
-        if (!user || user.deleted) {
-            return false;
-        }
-        return true;
-    }
 });

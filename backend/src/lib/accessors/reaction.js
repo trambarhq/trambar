@@ -157,29 +157,7 @@ module.exports = _.create(ExternalData, {
     import: function(db, schema, objects, originals, credentials, options) {
         return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((reactionReceived, index) => {
             var reactionBefore = originals[index];
-            if (reactionBefore) {
-                if (reactionBefore.user_id !== credentials.user.id) {
-                    // can't modify an object that doesn't belong to the user
-                    throw new HttpError(403);
-                }
-                if (reactionReceived.hasOwnProperty('user_id')) {
-                    if (reactionReceived.user_id !== reactionBefore.user_id) {
-                        // cannot make someone else the author
-                        throw new HttpError(403);
-                    }
-                }
-            } else {
-                if (reactionReceived.id) {
-                    throw new HttpError(400);
-                }
-                if (!reactionReceived.hasOwnProperty('user_id')) {
-                    throw new HttpError(403);
-                }
-                if (reactionReceived.user_id !== credentials.user.id) {
-                    // the author must be the current user
-                    throw new HttpError(403);
-                }
-            }
+            this.checkWritePermission(reactionReceived, reactionBefore, credentials);
 
             // set language_codes
             if (reactionReceived.details) {
@@ -256,5 +234,41 @@ module.exports = _.create(ExternalData, {
             return true;
         }
         return false;
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} reactionReceived
+     * @param  {Object} reactionBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(reactionReceived, reactionBefore, credentials) {
+        if (credentials.access !== 'read-comment' && credentials.access !== 'read-write') {
+            throw new HttpError(400);
+        }
+        if (reactionBefore) {
+            if (reactionBefore.user_id !== credentials.user.id) {
+                // can't modify an object that doesn't belong to the user
+                throw new HttpError(400);
+            }
+            if (reactionReceived.hasOwnProperty('user_id')) {
+                if (reactionReceived.user_id !== reactionBefore.user_id) {
+                    // cannot make someone else the author
+                    throw new HttpError(400);
+                }
+            }
+        } else {
+            if (reactionReceived.id) {
+                throw new HttpError(400);
+            }
+            if (!reactionReceived.hasOwnProperty('user_id')) {
+                throw new HttpError(400);
+            }
+            if (reactionReceived.user_id !== credentials.user.id) {
+                // the author must be the current user
+                throw new HttpError(400);
+            }
+        }
     },
 });

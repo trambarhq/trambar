@@ -310,6 +310,9 @@ module.exports = _.create(ExternalData, {
      * @param  {Object} credentials
      */
     checkWritePermission: function(storyReceived, storyBefore, credentials) {
+        if (credentials.access !== 'read-write') {
+            throw new HttpError(400);
+        }
         if (storyBefore) {
             if (!_.includes(storyBefore.user_ids, credentials.user.id)) {
                 // can't modify an object that doesn't belong to the user
