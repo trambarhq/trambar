@@ -289,6 +289,7 @@ function copyUserProperties(user, image, server, glUser, link) {
     };
     var imported = Import.reacquire(userAfter, link, 'user');
     Import.set(userAfter, imported, 'username', glUser.username);
+    Import.set(userAfter, imported, 'disabled', glUser.state !== 'active');
     Import.set(userAfter, imported, 'details.name', glUser.name);
     Import.set(userAfter, imported, 'details.gitlab_url', glUser.web_url);
     Import.set(userAfter, imported, 'details.skype_username', glUser.skype || undefined);
