@@ -252,7 +252,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
         var smartListProps = {
             items: bookmarks,
-            behind: 2,
+            behind: 4,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
             offset: 20,

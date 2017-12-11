@@ -10,7 +10,10 @@ var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
-var event = process.env.npm_lifecycle_event;
+var event = 'build';
+if (process.env.npm_lifecycle_event) {
+    event = process.env.npm_lifecycle_event;
+}
 
 var folders = _.mapValues({
     src: 'src',

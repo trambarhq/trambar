@@ -116,8 +116,8 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         var selectedNotificationId = this.state.selectedNotificationId || this.props.selectedNotificationId;
         var smartListProps = {
             items: notifications,
-            behind: 10,
-            ahead: 50,
+            behind: 20,
+            ahead: 40,
             anchor: (selectedNotificationId) ? `notification-${selectedNotificationId}` : undefined,
             offset: 10,
 

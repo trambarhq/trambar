@@ -10,9 +10,15 @@ var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
-var event = process.env.npm_lifecycle_event;
-var configArgv = JSON.parse(process.env.npm_config_argv);
-var platform = configArgv.remain[0] || 'browser';
+var event = 'build';
+var platform = 'browser';
+if (process.env.npm_lifecycle_event) {
+    event = process.env.npm_lifecycle_event;
+    var argv = JSON.parse(process.env.npm_config_argv).remain;
+    if (argv[0]) {
+        platform = argv[0];
+    }
+}
 
 if (platform !== 'cordova' && platform !== 'browser') {
     console.log(`Invalid platform: ${platform}`);

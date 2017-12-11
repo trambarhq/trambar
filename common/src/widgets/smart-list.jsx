@@ -209,7 +209,7 @@ module.exports = React.createClass({
                 var estimatedHeight = Math.round(avg);
                 this.setState({ estimatedHeight })
             }
-        } else {
+        } else if (!this.scrolling) {
             // maintain the position of the anchor node
             if (this.state.currentAnchor) {
                 var anchorNode = this.itemNodes[this.state.currentAnchor];
@@ -296,6 +296,14 @@ module.exports = React.createClass({
             this.setState({ currentAnchor });
             this.triggerAnchorChangeEvent(currentAnchor);
         }
+        this.scrolling = true;
+        if (this.scrollingEndTimeout) {
+            clearTimeout(this.scrollingEndTimeout);
+        }
+        this.scrollingEndTimeout = setTimeout(() => {
+            this.scrolling = false;
+            this.scrollingEndTimeout = 0;
+        }, 500);
     },
 
     /**

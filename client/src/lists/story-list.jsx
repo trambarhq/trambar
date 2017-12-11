@@ -269,7 +269,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         var smartListProps = {
             items: stories,
             offset: 20,
-            behind: 2,
+            behind: 4,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
 

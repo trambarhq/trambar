@@ -140,7 +140,7 @@ var UserListSync = module.exports.Sync = React.createClass({
         var users = sortUsers(this.props.users, this.props.locale);
         var smartListProps = {
             items: users,
-            behind: 2,
+            behind: 4,
             ahead: 8,
 
             onIdentity: this.handleUserIdentity,
