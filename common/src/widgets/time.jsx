@@ -55,7 +55,8 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      */
     updateText: function(nextState) {
-        var time = nextState.time.clone().locale(this.props.locale.languageCode);
+        var lang = this.props.locale.languageCode;
+        var time = nextState.time.clone().locale(lang);
         var text;
         if (nextState.className === 'today') {
             text = _.capitalize(time.fromNow());

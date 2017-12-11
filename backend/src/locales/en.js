@@ -1,3 +1,9 @@
+require('moment/locale/en-au');
+require('moment/locale/en-ca');
+require('moment/locale/en-gb');
+require('moment/locale/en-ie');
+require('moment/locale/en-nz');
+
 module.exports = function(languageCode) {
     return {
         'action-contact-by-email': 'Contact by e-mail',
@@ -87,6 +93,9 @@ module.exports = function(languageCode) {
         },
         'comment-$user-is-assigned-to-issue': (user) => {
             return `${user} was assigned to this issue`;
+        },
+        'comment-$user-is-assigned-to-merge-request': (user) => {
+            return `${user} was assigned to this merge request`;
         },
         'comment-$user-is-editing': (user) => {
             return `${user} is editing a comment...`;
@@ -301,6 +310,9 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'story-merge-request-$branch1-into-$branch2': (branch1, branch2) => {
+            return `Requested to merge branch “${branch1}” into “${branch2}”`;
+        },
         'story-milestone-created-$name': (name) => {
             return `Created milestone “${name}”`;
         },
@@ -397,6 +409,13 @@ module.exports = function(languageCode) {
         },
 
         'telephone-dialog-close': 'Close',
+
+        'time-yesterday': 'Yesterday',
+
+        'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+            var files = (count === 1) ? `1 file` : `${count} files`;
+            return `Uploading ${files}, ${size} remaining`;
+        },
 
         'user-actions': 'Actions',
 

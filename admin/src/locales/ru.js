@@ -1,3 +1,5 @@
+require('moment/locale/ru');
+
 module.exports = function(languageCode) {
     return {
         'app-name': 'Трамбар',

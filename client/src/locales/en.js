@@ -1,3 +1,9 @@
+require('moment/locale/en-au');
+require('moment/locale/en-ca');
+require('moment/locale/en-gb');
+require('moment/locale/en-ie');
+require('moment/locale/en-nz');
+
 module.exports = function(languageCode) {
     return {
         'action-contact-by-email': 'Contact by e-mail',

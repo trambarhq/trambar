@@ -1,3 +1,5 @@
+require('moment/locale/nb');
+
 module.exports = function(languageCode) {
     return {
         'action-contact-by-email': 'Kontakt via e-post',

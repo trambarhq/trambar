@@ -1,3 +1,6 @@
+require('moment/locale/zh-cn');
+require('moment/locale/zh-hk');
+
 module.exports = function(languageCode) {
     var cantonese = false;
     var traditional = false;

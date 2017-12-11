@@ -1,3 +1,5 @@
+require('moment/locale/pl');
+
 module.exports = function(languageCode) {
     return {
         'action-contact-by-email': 'Skontaktuj się przez e-mail',

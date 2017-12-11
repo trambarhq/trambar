@@ -5,6 +5,7 @@ var Webpack = require('webpack');
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
+var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
@@ -123,6 +124,7 @@ module.exports = {
             filename: "[file].map",
             exclude: ["vendor.js"]
         }),
+        new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
     ],
     devServer: {
         inline: true,

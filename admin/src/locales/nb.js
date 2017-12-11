@@ -1,3 +1,5 @@
+require('moment/locale/nb');
+
 module.exports = function(languageCode) {
     return {
         'action-badge-add': 'legge til',

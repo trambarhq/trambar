@@ -1,3 +1,5 @@
+require('moment/locale/pl');
+
 module.exports = function(languageCode) {
     return {
         'activity-chart-legend-push': 'Wysłania zmian',

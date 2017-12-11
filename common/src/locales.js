@@ -192,7 +192,7 @@ module.exports = [
     },
     {
         name: 'Norsk',
-        code: 'no',
+        code: 'nb',
         script: 'latin',
         countries: {
             no: 'Norge',
