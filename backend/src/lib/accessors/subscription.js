@@ -111,7 +111,7 @@ module.exports = _.create(Data, {
             var subscriptionBefore = originals[index];
             this.checkWritePermission(subscriptionReceived, subscriptionBefore, credentials);
 
-            if (subscriptionReceived.schema !== 'global') {
+            if (subscriptionReceived.schema !== 'global' && subscriptionReceived.schema !== '*') {
                 // don't allow user to subscribe to a project that he has no access to
                 var Project = require('accessors/project');
                 var criteria = {
