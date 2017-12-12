@@ -109,7 +109,6 @@ module.exports = Relaks.createClass({
             onEntry: this.props.onEntry,
             onExit: this.props.onExit,
             onAvailableSchemas: this.props.onAvailableSchemas,
-            onOAuthEnd: this.handleOAuthEnd,
         };
         if (!this.props.canAccessServer) {
             // start authorization process--will receive system description
@@ -156,14 +155,6 @@ module.exports = Relaks.createClass({
             });
         }
     },
-
-    /**
-     * Retrieve authorization object from server
-     */
-    handleOAuthEnd: function() {
-        var db = this.props.database.use({ by: this });
-        db.checkAuthorizationStatus();
-    },
 });
 
 var StartPageSync = module.exports.Sync = React.createClass({
@@ -196,6 +187,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             transition: null,
             selectedProjectId: 0,
             newProjectNames: [],
+            errors: {},
         };
     },
 
@@ -367,14 +359,35 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var p = this.props.locale.pick;
         var name = p(provider.details.title) || t(`server-type-${provider.type}`);
         var icon = getServerIcon(provider.type);
-        return (
-            <a key={i} className="oauth-button" href={provider.url} onClick={this.handleOAuthButtonClick}>
-                <i className={`fa fa-fw fa-${icon}`}></i>
-                <span className="label">
-                    {name}
-                </span>
-            </a>
-        );
+        var props = {
+            className: 'oauth-button',
+            href: provider.url,
+            onClick: this.handleOAuthButtonClick,
+            'data-type': provider.type,
+        };
+        var error = this.state.errors[provider.type];
+        if (error) {
+            var t = this.props.locale.translate;
+            var text = t(`start-error-${error.reason}`);
+            props.className += ' error';
+            return (
+                <a key={i} {...props}>
+                    <span className="icon">
+                        <i className={`fa fa-fw fa-${icon}`}></i>
+                    </span>
+                    <span className="error">{text}</span>
+                </a>
+            );
+        } else {
+            return (
+                <a key={i} {...props}>
+                    <span className="icon">
+                        <i className={`fa fa-fw fa-${icon}`}></i>
+                    </span>
+                    <span className="label">{name}</span>
+                </a>
+            );
+        }
     },
 
     /**
@@ -610,27 +623,21 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Signal to parent component that the OAuth login process has ended
-     */
-    triggerOAuthEndEvent: function() {
-        if (this.props.onOAuthEnd) {
-            this.props.onOAuthEnd({
-                type: 'oauthended',
-                target: this,
-            });
-        }
-    },
-
-    /**
      * Called when user clicks on one of the OAuth buttons
      *
      * @param  {Event} evt
      */
     handleOAuthButtonClick: function(evt) {
         var url = evt.currentTarget.getAttribute('href');
+        var provider = evt.currentTarget.getAttribute('data-type');
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
-            this.triggerOAuthEndEvent();
+            var db = this.props.database.use({ by: this });
+            return db.checkAuthorizationStatus().catch((err) => {
+                var errors = _.clone(this.state.errors);
+                errors[provider] = err;
+                this.setState({ errors });
+            });
         });
     },
 

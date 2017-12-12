@@ -108,6 +108,10 @@ module.exports = React.createClass({
                 this.triggerAuthorizationEvent(address, authorization);
                 return true;
             } else {
+                var error = _.get(res, 'authentication.error');
+                if (error) {
+                    throw new HttpError(error.statusCode, _.omit(error, 'statusCode'));
+                }
                 return false;
             }
         }).catch((err) => {
@@ -434,6 +438,7 @@ module.exports = React.createClass({
             return this.removeLocalObjects(location, objects).then((objects) => {
                 this.removeFromRecentSearchResults(location, objects);
                 this.triggerChangeEvent();
+                return objects;
             });
         } else {
             if (process.env.NODE_ENV !== 'production') {

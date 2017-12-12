@@ -1,27 +1,41 @@
 module.exports = HttpError;
 
-function HttpError(statusCode, body) {
-    var msg;
+function HttpError(statusCode, attributes) {
     if (!statusCode) {
         statusCode = 500;
     }
-    switch (statusCode) {
-        case 400: msg = 'Bad Request'; break;
-        case 401: msg = 'Unauthorized'; break;
-        case 403: msg = 'Forbidden'; break;
-        case 404: msg = 'Not Found'; break;
-        case 409: msg = 'Conflict'; break;
-        case 410: msg = 'Gone'; break;
-        case 415: msg = 'Unsupported Media Type'; break;
-        case 500: msg = 'Internal Server Error'; break;
-        case 501: msg = 'Not Implemented'; break;
-        case 502: msg = 'Bad Gateway'; break;
-        case 503: msg = 'Service Unavailable'; break;
-        case 504: msg = 'Gateway Timeout'; break;
-    }
+    var name = httpErrorNamess[statusCode];
     this.statusCode = statusCode;
-    this.message = msg;
-    this.body = body;
+    this.name = name
+    this.message = name;
+    for (var key in attributes) {
+        this[key] = attributes[key];
+    }
 }
+
+var httpErrorNamess = {
+    400: 'Bad Request',
+    401: 'Unauthorized',
+    402: 'Payment Required',
+    403: 'Forbidden',
+    404: 'Not Found',
+    405: 'Method Not Allowed',
+    406: 'Not Acceptable',
+    407: 'Proxy Authentication Required',
+    408: 'Request Timeout',
+    409: 'Conflict',
+    410: 'Gone',
+    411: 'Length Required',
+    412: 'Precondition Failed',
+    413: 'Payload Too Large',
+    414: 'URI Too Long',
+    415: 'Unsupported Media Type',
+
+    500: 'Internal Server Error',
+    501: 'Not Implemented',
+    502: 'Bad Gateway',
+    503: 'Service Unavailable',
+    504: 'Gateway Timeout',
+};
 
 HttpError.prototype = Object.create(Error.prototype)

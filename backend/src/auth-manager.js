@@ -51,41 +51,46 @@ function stop() {
 };
 
 /**
- * Send response to browser as JSON object or HTML text
+ * Send HTML to browser
  *
  * @param  {Response} res
- * @param  {Object|String} result
+ * @param  {String} html
  */
-function sendResponse(res, result) {
-    if (typeof(result) === 'string') {
-        res.type('html').send(result);
-    } else {
-        res.json(result);
-    }
+function sendHTML(res, html) {
+    res.type('html').send(html);
 }
 
 /**
- * Send error to browser as JSON object
+ * Send JSON object to browser
  *
  * @param  {Response} res
- * @param  {Object} err
+ * @param  {Object} object
+ */
+function sendJSON(res, object) {
+    res.json(object);
+}
+
+/**
+ * Send error to browser
+ *
+ * @param  {Response} res
+ * @param  {Error} err
  */
 function sendError(res, err) {
-    if (!err) {
-        return;
-    }
-    var statusCode = err.statusCode;
-    var message = err.message;
-    console.error(err);
-    if (!statusCode) {
+    if (!err.statusCode) {
         // not an expected error
         console.error(err);
-        statusCode = 500;
+        var message = err.message;
         if (process.env.NODE_ENV === 'production') {
-            message = 'Internal server error';
+            message = 'The application has encountered an unexpect fault';
         }
+        err = new HttpError(500, { message });
     }
-    res.status(statusCode).json({ message });
+    var html = `
+        <h1>${err.statusCode} ${err.name}</h1>
+        <p>${err.message}</p>
+    `;
+    res.status(err.statusCode).type('html').send(html);
 }
 
 /**
@@ -142,8 +147,8 @@ function handleSessionStart(req, res) {
                 });
             });
         });
-    }).then((results) => {
-        sendResponse(res, results);
+    }).then((info) => {
+        sendJSON(res, info);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -168,15 +173,14 @@ function handleHttpasswdRequest(req, res) {
                 throw new HttpError(400);
             }
             var htpasswdPath = process.env.HTPASSWD_PATH;
-            if (!htpasswdPath) {
-                throw new HttpError(403);
-            }
             return FS.readFileAsync(htpasswdPath, 'utf-8').then((data) => {
                 return HtpasswdAuth.authenticate(username, password, data);
             }).catch((err) => {
                 if (err.code === 'ENOENT') {
                     // password file isn't there
-                    throw new HttpError(403);
+                    throw new HttpError(403, {
+                        reason: 'missing-password-file'
+                    });
                 } else {
                     throw err;
                 }
@@ -215,8 +219,8 @@ function handleHttpasswdRequest(req, res) {
                 });
             });
         });
-    }).then((results) => {
-        sendResponse(res, results);
+    }).then((info) => {
+        sendJSON(res, info);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -235,12 +239,16 @@ function handleSessionRetrieval(req, res) {
         var criteria = { token, deleted: false };
         return Authorization.findOne(db, 'global', criteria, 'token, user_id').then((authorization) => {
             if (!authorization) {
-                return Authentication.findOne(db, 'global', criteria, 'id').then((authentication) => {
+                return Authentication.findOne(db, 'global', criteria, 'id, details').then((authentication) => {
                     if (!authentication) {
                         throw new HttpError(404);
                     }
-                    // no authorization yet
-                    return {};
+                    // no authorization yet--return an error if there's one
+                    return {
+                        authentication: {
+                            error: authentication.details.error
+                        }
+                    };
                 });
             }
             // see which projects the user has access to
@@ -255,8 +263,8 @@ function handleSessionRetrieval(req, res) {
                 };
             });
         });
-    }).then((results) => {
-        sendResponse(res, results);
+    }).then((info) => {
+        sendJSON(res, info);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -277,10 +285,17 @@ function handleSessionTermination(req, res) {
                 throw new HttpError(404);
             }
             authorization.deleted = true;
-            return Authorization.updateOne(db, 'global', authorization).return(true);
+            return Authorization.updateOne(db, 'global', authorization).then((authorization) => {
+                return {
+                    authorization: {
+                        deleted: true,
+                        user_id: authorization.user_id,
+                    }
+                };
+            });
         });
-    }).then((results) => {
-        sendResponse(res, results);
+    }).then((info) => {
+        sendJSON(res, info);
     }).catch((err) => {
         sendError(res, err);
     });
@@ -318,13 +333,20 @@ function handleOAuthRequest(req, res, done) {
                         return authorizeUser(db, user, authentication, server.type, server.id, details);
                     });
                 });
+            }).catch((err) => {
+                // save error to authentication object
+                console.log('Error: ', err);
+                var columns = {
+                    id: authentication.id,
+                    details: _.assign({}, authentication.details, { error: err }),
+                };
+                return Authentication.updateOne(db, 'global', columns);
             });
         });
     }).then(() => {
         var html = `<script> close() </script>`;
-        sendResponse(res, html);
+        sendHTML(res, html);
     }).catch((err) => {
-        // display error
         sendError(res, err);
     });
 }
@@ -358,12 +380,9 @@ function handleOAuthTestRequest(req, res, done) {
             });
         });
     }).then(() => {
-        var html = `
-            <h1>Success</h1>
-        `;
-        sendResponse(res, html);
+        var html = `<h1>OK</h1>`;
+        sendHTML(res, html);
     }).catch((err) => {
-        // TODO: display error as HTML
         sendError(res, err);
     });
 }
@@ -403,9 +422,9 @@ function handleOAuthActivationRequest(req, res, done) {
                         isAdmin = profile.is_admin;
                     }
                     if (!isAdmin) {
-                        var name = account.profile.displayName;
                         throw new HttpError(403, {
-                            reason: `The account "${name}" does not have administrative access`,
+                            reason: 'insufficient-access-right',
+                            username: account.profile.username,
                         });
                     }
                     // save the access and refresh tokens
@@ -419,13 +438,9 @@ function handleOAuthActivationRequest(req, res, done) {
             });
         });
     }).then(() => {
-        var html = `
-            <h1>Success</h1>
-            <script> setTimeout(close, 500) </script>
-        `;
-        sendResponse(res, html);
+        var html = `<h1>OK</h1>`;
+        sendHTML(res, html);
     }).catch((err) => {
-        // TODO: display error as HTML
         sendError(res, err);
     });
 }
@@ -448,7 +463,16 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
         return Promise.reject(new HttpError(401));
     }
     if (authentication.area === 'admin' && user.type !== 'admin') {
-        return Promise.reject(new HttpError(403));
+        return Promise.reject(new HttpError(403, {
+            reason: 'restricted-area',
+            username: user.username,
+        }));
+    }
+    if (user.disabled) {
+        return Promise.reject(new HttpError(403, {
+            reason: 'account-disabled',
+            username: user.username,
+        }));
     }
     // update Authentication record
     authentication.type = authType;
@@ -551,7 +575,10 @@ function authenticateThruPassport(req, res, server, params, scope) {
             // if this callback is called, then authentication has failed, since
             // the callback passed to Strategy() resolves the promise and does
             // not invoke done()
-            reject(err);
+            reject(new HttpError(403, {
+                message: info.message,
+                reason: 'access-denied',
+            }));
         });
         auth(req, res);
     });
@@ -595,7 +622,9 @@ function findMatchingUser(db, server, account) {
     }).then((user) => {
         if (!user) {
             if (!acceptNewUser(server)) {
-                throw new HttpError(403);
+                throw new HttpError(403, {
+                    reason: 'existing-users-only',
+                });
             }
         }
         return retrieveProfileImage(profile).then((image) => {
@@ -609,7 +638,9 @@ function findMatchingUser(db, server, account) {
                 } else {
                     if (userAfter.disabled) {
                         // don't create disabled user
-                        throw new HttpError(403);
+                        throw new HttpError(403, {
+                            reason: 'existing-users-only',
+                        });
                     }
                     return User.insertUnique(db, 'global', userAfter);
                 }

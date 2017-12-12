@@ -359,6 +359,10 @@ module.exports = function(languageCode) {
             }
             return text;
         },
+        'sign-in-error-access-denied': 'Request for access rejected',
+        'sign-in-error-account-disabled': 'Account is currently disabled',
+        'sign-in-error-existing-users-only': 'Only authorized personnel can access this system',
+        'sign-in-error-restricted-area': 'User is not an administrator',
         'sign-in-password': 'Password:',
         'sign-in-submit': 'Sign in',
         'sign-in-oauth': 'Sign in through OAuth',

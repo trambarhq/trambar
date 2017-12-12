@@ -77,6 +77,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             password: '',
             submitting: false,
             problem: null,
+            errors: {},
         };
     },
 
@@ -199,24 +200,41 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthButton: function(provider, i) {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var title = p(provider.details.title) || t(`server-type-${provider.type}`);
-        var icon = getServerIcon(provider.type);
-        var buttonProps = {
-            className: 'oauth-button',
-            name: provider.name,
-            href: provider.url,
-            onClick: this.handleOAuthButtonClick,
-        };
-        return (
-            <a key={i} {...buttonProps}>
-                <i className={`fa fa-${icon}`} />
-                <span className="label">{title}</span>
-            </a>
-        );
-    },
+     renderOAuthButton: function(provider, i) {
+         var t = this.props.locale.translate;
+         var p = this.props.locale.pick;
+         var name = p(provider.details.title) || t(`server-type-${provider.type}`);
+         var icon = getServerIcon(provider.type);
+         var props = {
+             className: 'oauth-button',
+             href: provider.url,
+             onClick: this.handleOAuthButtonClick,
+             'data-type': provider.type,
+         };
+         var error = this.state.errors[provider.type];
+         if (error) {
+             var t = this.props.locale.translate;
+             var text = t(`sign-in-error-${error.reason}`);
+             props.className += ' error';
+             return (
+                 <a key={i} {...props}>
+                     <span className="icon">
+                         <i className={`fa fa-fw fa-${icon}`}></i>
+                     </span>
+                     <span className="error">{text}</span>
+                 </a>
+             );
+         } else {
+             return (
+                 <a key={i} {...props}>
+                     <span className="icon">
+                         <i className={`fa fa-fw fa-${icon}`}></i>
+                     </span>
+                     <span className="label">{name}</span>
+                 </a>
+             );
+         }
+     },
 
     /**
      * Open a popup window to OAuth provider
@@ -263,11 +281,16 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      */
     handleOAuthButtonClick: function(evt) {
         var url = evt.currentTarget.getAttribute('href');
+        var provider = evt.currentTarget.getAttribute('data-type');
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
             // retrieve authorization object from server
             var db = this.props.database.use({ by: this });
-            db.checkAuthorizationStatus();
+            return db.checkAuthorizationStatus().catch((err) => {
+                var errors = _.clone(this.state.errors);
+                errors[provider] = err;
+                this.setState({ errors });
+            });
         });
     },
 
@@ -302,7 +325,6 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         this.setState({ submitting: true }, () => {
             var db = this.props.database.use({ by: this });
             db.submitPassword(this.state.username, this.state.password).catch((err) => {
-                console.log('Cannot login: ' + err.statusCode)
                 var problem;
                 switch (err.statusCode) {
                     case 401: problem = 'incorrect-username-password'; break;

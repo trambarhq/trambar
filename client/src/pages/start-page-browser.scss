@@ -73,32 +73,44 @@
     }
 
     .oauth-button {
-        display: block;
-        font-size: 1.2em;
+        display: table;
         border: 1px solid #cccccc;
-        padding: 0.5em 0.5em 0.5em 1em;
-        max-width: 15em;
-        cursor: pointer;
+        width: 100%;
+        max-width: 20em;
         margin-top: 0.5em;
-        vertical-align: middle;
 
-        .fa {
-            font-size: 1.2em;
-            vertical-align: middle;
-            margin-left: 1.5em;
-            margin-right: 0.75em;
+        .icon {
+            width: 2em;
+            display: table-cell;
+            font-size: 2em;
+            padding: 0.26em 0 0.24em 0.25em;
+            text-align: center;
             vertical-align: middle;
         }
 
         .label {
-            display: inline-block;
-            max-width: 8.5em;
+            display: table-cell;
+            font-size: 1.25em;
+            padding-right: 2.5em;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .error {
+            display: table-cell;
+            padding-left: 1.25em;
+            padding-right: 1.5em;
             vertical-align: middle;
         }
 
         &:link, &:visited {
             text-decoration: none;
             color: #cccccc;
+        }
+
+        &.error {
+            border-color: #ff3333;
+            color: #ff3333;
         }
 
         &:hover {

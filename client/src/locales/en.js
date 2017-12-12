@@ -256,6 +256,9 @@ module.exports = function(languageCode) {
         'social-network-stackoverflow': 'Stack Overflow profile URL',
         'social-network-twitter': 'Twitter user name',
 
+        'start-error-access-denied': 'Request for access rejected',
+        'start-error-account-disabled': 'Account is currently disabled',
+        'start-error-existing-users-only': 'Only authorized personnel can access this system',
         'start-projects': 'Projects',
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',

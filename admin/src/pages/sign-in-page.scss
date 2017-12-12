@@ -13,44 +13,50 @@
         }
     }
 
-    .oauth-buttons {
+    .oauth-button {
+        display: table;
+        border: 1px solid #000000;
+        width: 100%;
         max-width: 20em;
+        margin-top: 0.5em;
 
-        .oauth-button {
-            display: block;
-            padding: 1em 1em 1em 1em;
-            margin-bottom: 0.5em;
-            width: 100%;
-            background-color: transparent;
-            border: 1px solid #000000;
-            text-align: left;
+        .icon {
+            width: 2em;
+            display: table-cell;
+            font-size: 2em;
+            padding: 0.26em 0 0.24em 0.25em;
+            text-align: center;
+            vertical-align: middle;
+        }
 
-            &:not(:disabled) {
-                &.emphasized, &:hover, &:active {
-                    background-color: #99ddff;
-                }
+        .label {
+            display: table-cell;
+            font-size: 1.25em;
+            padding-right: 2.5em;
+            text-align: center;
+            vertical-align: middle;
+        }
 
-                &:active {
-                }
-            }
+        .error {
+            display: table-cell;
+            padding-left: 1.25em;
+            padding-right: 1.5em;
+            vertical-align: middle;
+        }
 
-            &:link, &:visited {
-                text-decoration: none;
-                color: #000000;
-            }
+        &:link, &:visited {
+            text-decoration: none;
+            color: #000000;
+        }
 
-            .fa {
-                width: 1.2em;
-                margin-right: 1em;
-                text-align: center;
-                font-size: 2em;
-                vertical-align: middle;
-            }
+        &.error {
+            border-color: #990000;
+            color: #990000;
+        }
 
-            .label {
-                font-size: 1.4em;
-                vertical-align: middle;
-            }
+        &:hover, &:active {
+            background-color: #99ddff;
+            color: #000000;
         }
     }
 }
