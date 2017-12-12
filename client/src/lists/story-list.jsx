@@ -385,7 +385,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 var respondents = findRespondents(this.props.respondents, reactions);
                 var recommendations = findRecommendations(this.props.recommendations, story);
                 var recipients = findRecipients(this.props.recipients, recommendations);
-                var repo = findRepo(this.props.repos, story);
                 var storyProps = {
                     access: this.props.access,
                     story,
@@ -394,7 +393,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     respondents,
                     recommendations,
                     recipients,
-                    repo,
+                    repos: this.props.repos,
                     currentUser: this.props.currentUser,
                     database: this.props.database,
                     payloads: this.props.payloads,
@@ -541,18 +540,6 @@ var findRecipients = Memoize(function(recipients, recommendations) {
     return _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
-});
-
-var findRepo = Memoize(function(repos, story) {
-    if (story && story.external) {
-        return _.find(repos, (repo) => {
-            return _.some(repo.external, (link) => {
-                return _.some(story.external, link);
-            });
-        });
-    } else {
-        return null;
-    }
 });
 
 function getAuthorIds(stories) {

@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
@@ -413,8 +414,9 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var story = this.props.story;
         var action = story.details.action;
-        var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
-        var url = _.get(this.props.repo, 'details.web_url');
+        var repo = this.props.repo;
+        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        var url = _.get(repo, 'details.web_url');
         return (
             <div className="text repo">
                 <p>
@@ -436,8 +438,9 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var story = this.props.story;
         var action = story.details.action;
-        var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
-        var url = _.get(this.props.repo, 'details.web_url');
+        var repo = this.props.repo;
+        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        var url = _.get(repo, 'details.web_url');
         return (
             <div className="text member">
                 <p>
@@ -465,8 +468,8 @@ module.exports = React.createClass({
         var author = _.first(this.props.authors);
         var user = (author) ? n(author.details.name, author.details.gender) : '';
         var url;
-        var baseUrl = _.get(this.props.repo, 'details.web_url');
-        var issueLink = findLink(this.props.story, this.props.repo);
+        var baseUrl = _.get(repo, 'details.web_url');
+        var issueLink = findLink(this.props.story, repo);
         if (baseUrl && issueLink) {
             url = `${baseUrl}/issues/${issueLink.issue.id}`;
         }
@@ -496,8 +499,9 @@ module.exports = React.createClass({
         var dueDate = formatDate(story.details.due_date);
         var startDate = formatDate(story.details.start_date) || '-';
         var url;
-        var baseUrl = _.get(this.props.repo, 'details.web_url');
-        var milestoneLink = findLink(this.props.story, this.props.repo);
+        var repo = this.props.repo;
+        var baseUrl = _.get(repo, 'details.web_url');
+        var milestoneLink = findLink(this.props.story, repo);
         if (baseUrl && milestoneLink) {
             url = `${baseUrl}/milestones/${milestoneLink.milestone.id}`;
         }
@@ -534,8 +538,9 @@ module.exports = React.createClass({
         var branch1 = _.get(story, 'details.source_branch');
         var branch2 = _.get(story, 'details.branch');
         var url;
-        var baseUrl = _.get(this.props.repo, 'details.web_url');
-        var mergeRequestLink = findLink(this.props.story, this.props.repo);
+        var repo = this.props.repo;
+        var baseUrl = _.get(repo, 'details.web_url');
+        var mergeRequestLink = findLink(this.props.story, repo);
         if (baseUrl && mergeRequestLink) {
             url = `${baseUrl}/merge_requests/${mergeRequestLink.merge_request.id}`;
         }
@@ -589,7 +594,8 @@ module.exports = React.createClass({
         var files = _.get(this.props.story, 'details.files');
         var lines = _.get(this.props.story, 'details.lines');
         var commits = _.get(this.props.story, 'details.commit_ids.length');
-        var repoName = p(_.get(this.props.repo, 'details.title')) || _.get(this.props.repo, 'name');
+        var repo = this.props.repo;
+        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
         var branch = story.details.branch;
         var fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
         var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
@@ -614,7 +620,7 @@ module.exports = React.createClass({
             }
         }, []);
         var url;
-        var baseUrl = _.get(this.props.repo, 'details.web_url');
+        var baseUrl = _.get(repo, 'details.web_url');
         if (baseUrl) {
             if (story.type === 'push' || story.type === 'merge') {
                 var commitBefore = story.details.commit_before;

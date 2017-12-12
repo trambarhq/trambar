@@ -337,7 +337,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="form">
                 {this.renderTitleInput()}
                 {this.renderNameInput()}
-                {this.renderIssueTrackingOptions()}
+                {this.renderIssueTrackingStatus()}
             </div>
         );
     },
@@ -389,7 +389,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderIssueTrackingOptions: function() {
+    renderIssueTrackingStatus: function() {
         var t = this.props.locale.translate;
         var issueTrackStatus;
         if (this.getRepoProperty('details.issues_enabled')) {

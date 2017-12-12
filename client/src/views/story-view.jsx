@@ -1,4 +1,6 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var Memoize = require('utils/memoize');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -28,8 +30,8 @@ module.exports = React.createClass({
         respondents: PropTypes.arrayOf(PropTypes.object),
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
+        repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
-        repo: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -136,7 +138,7 @@ module.exports = React.createClass({
             authors: this.props.authors,
             currentUser: this.props.currentUser,
             reactions: this.props.reactions,
-            repo: this.props.repo,
+            repo: findRepo(this.props.repos, this.props.story),
             cornerPopUp: this.renderPopUpMenu('main'),
             status: uploadStatus,
 
@@ -162,7 +164,7 @@ module.exports = React.createClass({
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
-            repo: this.props.repo,
+            repo: findRepo(this.props.repos, this.props.story),
             currentUser: this.props.currentUser,
 
             database: this.props.database,
@@ -206,6 +208,7 @@ module.exports = React.createClass({
             section,
             access: this.props.access,
             story: this.props.story,
+            repos: this.props.repos,
             currentUser: this.props.currentUser,
             options: this.state.options,
 
@@ -436,3 +439,15 @@ var defaultOptions = {
     bumpPost: false,
     bookmarkRecipients: [],
 };
+
+var findRepo = Memoize(function(repos, story) {
+    if (story && story.external) {
+        return _.find(repos, (repo) => {
+            return _.some(repo.external, (link) => {
+                return _.some(story.external, link);
+            });
+        });
+    } else {
+        return null;
+    }
+});

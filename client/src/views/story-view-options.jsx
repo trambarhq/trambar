@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var StoryTypes = require('objects/types/story-types');
@@ -22,6 +23,7 @@ module.exports = React.createClass({
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
+        repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
 
@@ -173,13 +175,16 @@ module.exports = React.createClass({
         if (!this.canWrite()) {
             return false;
         }
-        // TODO: should check whether user has a Gitlab account
         var story = this.props.story;
         var user = this.props.currentUser;
         if (_.includes(StoryTypes.trackable, story.type)) {
-            if (user.type !== 'guest') {
-                return true;
-            }
+            return _.some(this.props.repos, (repo) => {
+                if (_.includes(repo.user_ids, user.id)) {
+                    if (repo.details.issues_enabled) {
+                        return true;
+                    }
+                }
+            });
         }
         return false;
     },
