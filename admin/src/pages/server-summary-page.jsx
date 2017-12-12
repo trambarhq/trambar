@@ -838,14 +838,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             apiAccess = t('server-summary-api-access-not-applicable');
         }
-        var apiAccessProps = {
+        var props = {
             id: 'access',
             value: apiAccess,
             locale: this.props.locale,
             readOnly: true
         };
         return (
-            <TextField {...apiAccessProps}>
+            <TextField {...props}>
                 {t('server-summary-api-access')}
             </TextField>
         );

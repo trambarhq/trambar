@@ -385,47 +385,28 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render repo
+     * Render issue tracker status
      *
-     * @return {[type]}
+     * @return {ReactElement}
      */
     renderIssueTrackingOptions: function() {
         var t = this.props.locale.translate;
-        var hasIssueTracker = !!this.getRepoProperty('details.issue_tracking');
-        var copyingCurr = this.getRepoProperty('details.issue_copying', 'current') || false;
-        var copyingPrev = this.getRepoProperty('details.issue_copying', 'original') || false;
-        var optionProps = [
-            {
-                name: 'not_available',
-                selected: true,
-                previous: true,
-                children: t('repo-summary-issue-tracker-not-available'),
-                hidden: hasIssueTracker,
-            },
-            {
-                name: 'enabled',
-                selected: copyingCurr === true,
-                previous: copyingPrev === true,
-                children: t('repo-summary-issue-tracker-import-allowed'),
-                hidden: !hasIssueTracker,
-            },
-            {
-                name: 'disabled',
-                selected: copyingCurr === false,
-                previous: copyingPrev === false,
-                children: t('repo-summary-issue-tracker-import-disallowed'),
-                hidden: !hasIssueTracker,
-            },
-        ];
-        var listProps = {
-            onOptionClick: this.handleOptionClick,
-            readOnly: !this.isEditing() || !hasIssueTracker,
+        var issueTrackStatus;
+        if (this.getRepoProperty('details.issues_enabled')) {
+            issueTrackStatus = t('repo-summary-issue-tracker-enabled');
+        } else {
+            issueTrackStatus = t('repo-summary-issue-tracker-disabled');
+        }
+        var props = {
+            id: 'issue-tracker',
+            value: issueTrackStatus,
+            locale: this.props.locale,
+            readOnly: true
         };
         return (
-            <OptionList {...listProps}>
-                <label>{t('repo-summary-issue-tracker')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
-            </OptionList>
+            <TextField {...props}>
+                {t('repo-summary-issue-tracker')}
+            </TextField>
         );
     },
 

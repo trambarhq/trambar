@@ -99,7 +99,8 @@ function findOne(db, criteria) {
             throw new Error(`Missing repository: ${criteria.project_id}`);
         }
         if (!_.includes(project.repo_ids, repo.id)) {
-            throw new Error(`Repository "${repo.name}" is not associated with project "${project.name}"`);
+            console.log(criteria);
+            throw new Error(`Repository "${repo.name}" (${repo.id}) is not associated with project "${project.name}"`);
         }
         if (!Import.Link.find(repo, server)) {
             throw new Error(`Missing server link: ${repo.name}`);
