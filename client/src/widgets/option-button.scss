@@ -2,7 +2,7 @@
     display: table;
     width: 100%;
     color: #666666;
-    margin-bottom: 0.2em;
+    margin-bottom: 0.35em;
     cursor: pointer;
 
     &:link, &:visited {
@@ -27,7 +27,6 @@
 
     .label {
         display: table-cell;
-        font-size: 0.9em;
     }
 }
 
