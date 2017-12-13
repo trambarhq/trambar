@@ -65,11 +65,18 @@ function TaskLog(action, options) {
 
     // monitor for system shutdown to ensure data is saved
     this.shutdownListener = () => {
-        if (!this.saved) {
-            this.queue.clear();
-            return this.save();
-        } else {
-            return this.savePromise;
+        if (!this.noop) {
+            if (!this.saved) {
+                if (this.completion !== 100) {
+                    this.error = new Error('Interrupted by shutdown');
+                    this.details.error = _.pick(this.error, 'message');
+                    this.failed = true;
+                }
+                this.queue.clear();
+                return this.save();
+            } else {
+                return this.savePromise;
+            }
         }
     };
     Shutdown.on(this.shutdownListener);
