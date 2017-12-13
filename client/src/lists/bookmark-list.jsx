@@ -83,38 +83,46 @@ module.exports = Relaks.createClass({
         meanwhile.show(<BookmarkListSync {...props} />, delay);
         return db.start().then((userId) => {
             // load stories
-            var criteria = {}
-            criteria.id = _.map(props.bookmarks, 'story_id');
+            var criteria = {
+                id: _.map(props.bookmarks, 'story_id')
+            };
             return db.find({ table: 'story', criteria });
         }).then((stories) => {
             props.stories = stories
         }).then(() => {
             // load authors of stories
-            var criteria = {};
-            criteria.id = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+            var criteria = {
+                id: _.uniq(_.flatten(_.map(props.stories, 'user_ids'))),
+            };
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.authors = users;
             return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
-            var criteria = {};
-            criteria.id = _.flatten(_.map(props.bookmarks, 'user_ids'));
+            var criteria = {
+                id: _.flatten(_.map(props.bookmarks, 'user_ids')),
+            };
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.senders = users;
             return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // load reactions to stories
-            var criteria = {};
-            criteria.story_id = _.map(props.stories, 'id');
+            var criteria = {
+                story_id: _.map(props.stories, 'id')
+            };
+            if (props.currentUser.type === 'guest') {
+                criteria.filters.public = true;
+            }
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
             props.reactions = reactions;
             return meanwhile.show(<BookmarkListSync {...props} />);
         }).then(() => {
             // load users of reactions
-            var criteria = {};
-            criteria.id = _.map(props.reactions, 'user_id');
+            var criteria = {
+                id: _.map(props.reactions, 'user_id')
+            };
             return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
             props.respondents = users;

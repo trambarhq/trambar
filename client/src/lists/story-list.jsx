@@ -107,6 +107,9 @@ module.exports = Relaks.createClass({
             var criteria = {
                 story_id: _.map(_.concat(props.pendingStories, props.stories), 'id')
             };
+            if (props.currentUser.type === 'guest') {
+                criteria.public = true;
+            }
             return db.find({ table: 'reaction', criteria });
         }).then((reactions) => {
             // reattach blobs to unpublished reactions (lost when saved)

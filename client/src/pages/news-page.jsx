@@ -171,6 +171,9 @@ module.exports = Relaks.createClass({
                 } else {
                     criteria.limit = 500;
                 }
+                if (props.currentUser.type === 'guest') {
+                    criteria.public = true;
+                }
                 return db.find({ table: 'story', criteria });
             } else {
                 // load story in listing
@@ -182,13 +185,22 @@ module.exports = Relaks.createClass({
                 if (!_.isEmpty(params.roles)) {
                     criteria.filters.role_ids = params.roles;
                 }
+                if (props.currentUser.type === 'guest') {
+                    criteria.filters.public = true;
+                }
                 return db.findOne({ table: 'listing', criteria }).then((listing) => {
                     if (!listing) {
                         return [];
                     }
                     props.listing = listing;
-                    var criteria = {};
-                    criteria.id = listing.story_ids;
+                    var criteria = {
+                        id: listing.story_ids
+                    };
+                    if (props.currentUser.type === 'guest') {
+                        // enforce condition here as well, as change in the listing
+                        // is going to lag behind the change in the story
+                        criteria.public = true;
+                    }
                     return db.find({ table: 'story', criteria });
                 }).then((stories) => {
                     if (params.story) {
