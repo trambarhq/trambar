@@ -884,6 +884,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            onSelectionClear: this.handleTaskSelectionClear,
         };
         return (
             <div className="task-history">
@@ -1238,6 +1239,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             }
         }
         this.setServerProperty('settings.user.role_ids', roleIds);
+    },
+
+    /**
+     * Called when user has scrolled away from selected task
+     */
+    handleTaskSelectionClear: function() {
+        this.props.route.loosen();
     },
 });
 

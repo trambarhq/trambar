@@ -24,6 +24,8 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -43,6 +45,8 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             route: this.props.route,
             theme: this.props.theme,
+
+            onSelectionClear: this.props.onSelectionClear,
         };
         meanwhile.show(<TaskListSync {...props} />);
         return db.start().then((userId) => {
@@ -73,6 +77,8 @@ var TaskListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -205,6 +211,7 @@ var TaskListSync = module.exports.Sync = React.createClass({
 
             onIdentity: this.handleTaskIdentity,
             onRender: this.handleTaskRender,
+            onAnchorChange: this.handleTaskAnchorChange,
         };
         return (
             <div className="task-list">
@@ -363,6 +370,23 @@ var TaskListSync = module.exports.Sync = React.createClass({
             expandedTaskIds.push(taskId);
         }
         this.setState({ expandedTaskIds });
+    },
+
+    /**
+     * Called when a different task is positioned at the top of the scroll box
+     *
+     * @param  {Object} evt
+     */
+    handleTaskAnchorChange: function(evt) {
+        var taskId = _.get(evt.item, 'id');
+        if (this.props.selectedTaskId && taskId !== this.props.selectedTaskId) {
+            if (this.props.onSelectionClear) {
+                this.props.onSelectionClear({
+                    type: 'selectionclear',
+                    target: this,
+                });
+            }
+        }
     },
 });
 
