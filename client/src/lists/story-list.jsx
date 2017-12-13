@@ -94,40 +94,56 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<StoryListSync {...props} />, delay);
         return db.start().then((userId) => {
-            // load authors of stories
-            var criteria = {
-                id: getAuthorIds(props.stories),
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.authors = users;
-            return meanwhile.show(<StoryListSync {...props} />);
-        }).then(() => {
-            // load reactions to stories
-            var criteria = {
-                story_id: _.map(_.concat(props.pendingStories, props.stories), 'id')
-            };
-            if (props.currentUser.type === 'guest') {
-                criteria.public = true;
+            if (!_.isEmpty(props.stories)) {
+                // load authors of stories
+                var criteria = {
+                    id: getAuthorIds(props.stories),
+                };
+                return db.find({ schema: 'global', table: 'user', criteria });
             }
-            return db.find({ table: 'reaction', criteria });
-        }).then((reactions) => {
-            // reattach blobs to unpublished reactions (lost when saved)
-            var unpublishedReactions = _.filter(reactions, { ptime: null });
-            _.each(unpublishedReactions, (reaction) => {
-                props.payloads.reattach(params.schema, reaction);
-            });
-            props.reactions = reactions;
-            return meanwhile.show(<StoryListSync {...props} />);
-        }).then(() => {
-            // load users of reactions
-            var criteria = {
-                id: _.uniq(_.map(props.reactions, 'user_id'))
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
         }).then((users) => {
-            props.respondents = users;
-            return meanwhile.show(<StoryListSync {...props} />);
+            if (users) {
+                props.authors = users;
+                return meanwhile.show(<StoryListSync {...props} />);
+            }
+        }).then(() => {
+            var stories = props.stories || [];
+            if (props.pendingStories) {
+                stories = _.concat(props.pendingStories, stories);
+            }
+            if (!_.isEmpty(stories)) {
+                // load reactions to stories
+                var criteria = {
+                    story_id: _.map(_.concat(props.pendingStories, props.stories), 'id')
+                };
+                if (props.currentUser.type === 'guest') {
+                    criteria.public = true;
+                }
+                return db.find({ table: 'reaction', criteria });
+            }
+        }).then((reactions) => {
+            if (reactions) {
+                // reattach blobs to unpublished reactions (lost when saved)
+                var unpublishedReactions = _.filter(reactions, { ptime: null });
+                _.each(unpublishedReactions, (reaction) => {
+                    props.payloads.reattach(params.schema, reaction);
+                });
+                props.reactions = reactions;
+                return meanwhile.show(<StoryListSync {...props} />);
+            }
+        }).then(() => {
+            if (!_.isEmpty(props.reactions)) {
+                // load users of reactions
+                var criteria = {
+                    id: _.uniq(_.map(props.reactions, 'user_id'))
+                };
+                return db.find({ schema: 'global', table: 'user', criteria });
+            }
+        }).then((users) => {
+            if (users) {
+                props.respondents = users;
+                return meanwhile.show(<StoryListSync {...props} />);
+            }
         }).then(() => {
             if (props.draftStories) {
                 // load other authors also working on drafts
@@ -175,8 +191,10 @@ module.exports = Relaks.createClass({
                 return db.find({ table: 'bookmark', criteria });
             }
         }).then((recommendations) => {
-            props.recommendations = recommendations;
-            return <StoryListSync {...props} />;
+            if (recommendations) {
+                props.recommendations = recommendations;
+                return <StoryListSync {...props} />;
+            }
         }).then(() => {
             // look for recipient of these bookmarks
             if (props.recommendations) {
@@ -186,15 +204,21 @@ module.exports = Relaks.createClass({
                 return db.find({ schema: 'global', table: 'user', criteria });
             }
         }).then((recipients) => {
-            props.recipients = recipients;
+            if (recipients) {
+                props.recipients = recipients;
+            }
         }).then(() => {
-            // load repos linked to project
-            var criteria = {
-                id: _.get(props.project, 'repo_ids', [])
-            };
-            return db.find({ schema: 'global', table: 'repo', criteria });
+            if (props.project) {
+                // load repos linked to project
+                var criteria = {
+                    id: _.get(props.project, 'repo_ids', [])
+                };
+                return db.find({ schema: 'global', table: 'repo', criteria });
+            }
         }).then((repos) => {
-            props.repos = repos;
+            if (repos) {
+                props.repos = repos;
+            }
             return <StoryListSync {...props} />;
         });
     },

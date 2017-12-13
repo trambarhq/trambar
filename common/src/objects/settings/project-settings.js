@@ -22,34 +22,7 @@ exports.isVisibleToUser = isVisibleToUser;
 exports.getUserAccessLevel = getUserAccessLevel;
 
 /**
- * Return the user's access level, assuming complete lack of access would
- * trigger error
- *
- * @param  {Project} project
- * @param  {User} user
- *
- * @return {String}
- */
-function getAccessLevel(project, user) {
-    if (project && user) {
-        if (!user.disabled) {
-            if (_.includes(project.user_ids, user.id)) {
-                return 'read-write';
-            } else {
-                var commentAccess = _.get(project, 'settings.access_control.grant_comment_access', false);
-                var viewAccess = _.get(project, 'settings.access_control.grant_view_access', false);
-                if (viewAccess && commentAccess) {
-                    return 'read-comment';
-                }
-            }
-        }
-    }
-    return 'read-only';
-}
-
-/**
- * Return the user's access level, assuming complete lack of access would
- * trigger error
+ * Return the user's access level to a project
  *
  * @param  {Project} project
  * @param  {User} user
@@ -59,14 +32,22 @@ function getAccessLevel(project, user) {
 function getUserAccessLevel(project, user) {
     if (project && user) {
         if (!user.disabled) {
-            if (_.includes(project.user_ids, user.id)) {
-                return 'read-write';
+            if (user.type === 'admin' || _.includes(project.user_ids, user.id)) {
+                if (!project.archived) {
+                    return 'read-write';
+                } else {
+                    return 'read-only';
+                }
             } else {
                 if (_.get(project, 'settings.access_control.grant_view_access')) {
-                    if (_.get(project, 'settings.access_control.grant_comment_access')) {
-                        return 'read-comment';
+                    if (!project.archived) {
+                        if (_.get(project, 'settings.access_control.grant_comment_access')) {
+                            return 'read-comment';
+                        } else {
+                            return 'read-only';
+                        }
                     } else {
-                        return 'read-only'
+                        return 'read-only';
                     }
                 }
             }

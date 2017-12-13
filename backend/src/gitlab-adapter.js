@@ -176,6 +176,22 @@ function handleProjectChangeEvent(db, event) {
                 return disconnectRepositories(db, project, missingRepoIds);
             });
         });
+    } else if (event.diff.archived || event.diff.deleted) {
+        var offlineBefore = event.previous.archived || event.previous.deleted;
+        var offlineAfter = event.current.archived || event.current.deleted;
+        if (offlineBefore !== offlineAfter) {
+            // remove or restore hooks
+            return getServerAddress(db).then((host) => {
+                return RepoAssociation.find(db, { id: event.id }).each((a) => {
+                    var { server, repo, project } = a;
+                    if (offlineAfter) {
+                        return HookManager.removeProjectHook(host, server, repo, project);
+                    } else {
+                        return HookManager.installProjectHook(host, server, repo, project);
+                    }
+                });
+            });
+        }
     }
 }
 

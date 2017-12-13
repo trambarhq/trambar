@@ -138,7 +138,9 @@ module.exports = Relaks.createClass({
                 return meanwhile.show(<StartPageSync {...props} />, 250);
             }).then(() => {
                 // load projects
-                var criteria = {};
+                var criteria = {
+                    archived: false
+                };
                 return db.find({ table: 'project', criteria });
             }).then((projects) => {
                 props.projects = projects;

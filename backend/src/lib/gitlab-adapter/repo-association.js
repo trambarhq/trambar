@@ -15,13 +15,18 @@ exports.findOne = findOne;
  * Return a list of objects containing project, repo, and server
  *
  * @param  {Database} db
- * @param  {Object} projectCriteria
+ * @param  {Object} criteria
  *
  * @return {Array<Object>}
  */
-function find(db, projectCriteria) {
+function find(db, criteria) {
     // load projects
-    var criteria = _.extend({ deleted: false }, projectCriteria);
+    if (!criteria) {
+        criteria = {
+            deleted: false,
+            archived: false,
+        };
+    }
     return Project.find(db, 'global', criteria, '*').then((projects) => {
         // load repos
         var repoIds = _.uniq(_.flatten(_.map(projects, 'repo_ids')));
