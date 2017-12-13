@@ -302,7 +302,7 @@ function request(server, uri, method, query, payload, userToken) {
             // throw the error if it's HTTP 4xx
             lastError = err;
             if (err instanceof HttpError) {
-                if (err.statusCode >= 400 || err.statusCode <= 499) {
+                if (err.statusCode >= 400 && err.statusCode <= 499) {
                     throw err;
                 }
             }
