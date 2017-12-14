@@ -100,8 +100,6 @@ function sendError(res, err) {
  * @param  {Response} res
  */
 function handleSessionStart(req, res) {
-    var host = req.headers['host'];
-    var protocol = req.headers['x-connection-protocol'];
     var area = req.body.area;
     Database.open().then((db) => {
         // generate a random token for tracking the authentication
@@ -121,29 +119,31 @@ function handleSessionStart(req, res) {
             // authentication token
             var criteria = { disabled: false, deleted: false };
             return Server.find(db, 'global', criteria, '*').then((servers) => {
-                var providers = _.filter(_.map(servers, (server) => {
-                    if (canProvideAccess(server, area)) {
-                        var url = `${protocol}://${host}/auth/${server.type}?sid=${server.id}&token=${authentication.token}`;
+                return getServerAddress(db, req).then((address) => {
+                    var providers = _.filter(_.map(servers, (server) => {
+                        if (canProvideAccess(server, area)) {
+                            var url = `${address}/auth/${server.type}?sid=${server.id}&token=${authentication.token}`;
+                            return {
+                                type: server.type,
+                                details: server.details,
+                                url,
+                            };
+                        }
+                    }));
+                    return System.findOne(db, 'global', criteria, '*').then((system) => {
+                        if (!system) {
+                            // in case the system object hasn't been created yet
+                            system = { details: {} };
+                        }
                         return {
-                            type: server.type,
-                            details: server.details,
-                            url,
+                            system: _.pick(system, 'details'),
+                            authentication: {
+                                token: authentication.token,
+                                expire: Moment(authentication.ctime).add(authenticationLifetime, 'hour').toISOString(),
+                            },
+                            providers,
                         };
-                    }
-                }));
-                return System.findOne(db, 'global', criteria, '*').then((system) => {
-                    if (!system) {
-                        // in case the system object hasn't been created yet
-                        system = { details: {} };
-                    }
-                    return {
-                        system: _.pick(system, 'details'),
-                        authentication: {
-                            token: authentication.token,
-                            expire: Moment(authentication.ctime).add(authenticationLifetime, 'hour').toISOString(),
-                        },
-                        providers,
-                    };
+                    });
                 });
             });
         });
@@ -322,7 +322,7 @@ function handleOAuthRequest(req, res, done) {
                     throw new HttpError(400);
                 }
                 var params = { sid: serverId, token };
-                return authenticateThruPassport(req, res, server, params).then((account) => {
+                return authenticateThruPassport(db, req, res, server, params).then((account) => {
                     return findMatchingUser(db, server, account).then((user) => {
                         // save the info from provider for potential future use
                         var details = {
@@ -376,7 +376,7 @@ function handleOAuthTestRequest(req, res, done) {
                 }
                 var params = { test: 1, sid: serverId, token };
                 var scope;
-                return authenticateThruPassport(req, res, server, params, scope);
+                return authenticateThruPassport(db, req, res, server, params, scope);
             });
         });
     }).then(() => {
@@ -415,16 +415,17 @@ function handleOAuthActivationRequest(req, res, done) {
                 if (server.type === 'gitlab') {
                     scope = [ 'api' ];
                 }
-                return authenticateThruPassport(req, res, server, params, scope).then((account) => {
+                return authenticateThruPassport(db, req, res, server, params, scope).then((account) => {
                     var profile = account.profile._json;
                     var isAdmin = false;
                     if (server.type === 'gitlab') {
                         isAdmin = profile.is_admin;
                     }
                     if (!isAdmin) {
+                        var username = account.profile.username;
                         throw new HttpError(403, {
                             reason: 'insufficient-access-right',
-                            username: account.profile.username,
+                            message: `The account "${username}" does not have administrative access`,
                         });
                     }
                     // save the access and refresh tokens
@@ -494,6 +495,28 @@ function authorizeUser(db, user, authentication, authType, serverId, details) {
 }
 
 /**
+ * Return the server location
+ *
+ * @param  {Database}
+ * @param  {Request}
+ *
+ * @return {Promise<String>}
+ */
+function getServerAddress(db, req) {
+    var criteria = { deleted: false };
+    return System.findOne(db, 'global', criteria, 'settings').then((system) => {
+        var address = _.get(system, 'settings.address');
+        if (!_.trim(address)) {
+            // use address from request
+            var host = req.headers['host'];
+            var protocol = req.headers['x-connection-protocol'];
+            address = `${protocol}://${host}`;
+        }
+        return _.trimEnd(address, ' /');
+    });
+}
+
+/**
  * Return true if server can provide access to an area
  *
  * @param  {Server} server
@@ -528,59 +551,70 @@ var plugins = {
     google: 'passport-google-oauth2',
 };
 
-function authenticateThruPassport(req, res, server, params, scope) {
-    return new Promise((resolve, reject) => {
-        // obtain info needed for callback URL from Request object
-        var host = req.headers['host'];
-        var protocol = req.headers['x-connection-protocol'];
-        var provider = req.params.provider;
-        // add params as query variables in callback URL
-        var query = _.reduce(params, (query, value, name) => {
-            if (query) {
-                query += '&';
+/**
+ * Authenticate user through one of the Passport plugins
+ *
+ * @param  {Database} db
+ * @param  {Request} req
+ * @param  {Response} res
+ * @param  {Server} server
+ * @param  {Object} params
+ * @param  {String} scope
+ *
+ * @return {Promise<Object>}
+ */
+function authenticateThruPassport(db, req, res, server, params, scope) {
+    return getServerAddress(db, req).then((address) => {
+        return new Promise((resolve, reject) => {
+            var provider = req.params.provider;
+            // add params as query variables in callback URL
+            var query = _.reduce(params, (query, value, name) => {
+                if (query) {
+                    query += '&';
+                }
+                query += name + '=' + value;
+                return query;
+            }, '');
+            var settings = {
+                clientID: server.settings.oauth.client_id,
+                clientSecret: server.settings.oauth.client_secret,
+                baseURL: server.settings.oauth.base_url,
+                callbackURL: `${address}/auth/${provider}/callback?${query}`,
+            };
+            var options = { session: false, scope };
+            if (provider === 'facebook') {
+                // ask Facebook to return these fields
+                settings.profileFields = [
+                    'id',
+                    'email',
+                    'gender',
+                    'link',
+                    'displayName',
+                    'name',
+                    'picture',
+                    'verified'
+                ];
             }
-            query += name + '=' + value;
-            return query;
-        }, '');
-        var settings = {
-            clientID: server.settings.oauth.client_id,
-            clientSecret: server.settings.oauth.client_secret,
-            baseURL: server.settings.oauth.base_url,
-            callbackURL: `${protocol}://${host}/auth/${provider}/callback?${query}`,
-        };
-        var options = { session: false, scope };
-        if (provider === 'facebook') {
-            // ask Facebook to return these fields
-            settings.profileFields = [
-                'id',
-                'email',
-                'gender',
-                'link',
-                'displayName',
-                'name',
-                'picture',
-                'verified'
-            ];
-        }
-        // create strategy object, resolving promise when we have the profile
-        var Strategy = require(plugins[server.type]);
-        var strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
-            // just resolve the promise--no need to call done() since we're not
-            // using Passport as an Express middleware
-            resolve({ accessToken, refreshToken, profile });
+            // create strategy object, resolving promise when we have the profile
+            var Strategy = require(plugins[server.type]);
+            var strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
+                // just resolve the promise--no need to call done() since we're not
+                // using Passport as an Express middleware
+                resolve({ accessToken, refreshToken, profile });
+            });
+            // trigger Passport middleware manually
+            Passport.use(strategy);
+            var auth = Passport.authenticate(server.type, options, (err, user, info) => {
+                // if this callback is called, then authentication has failed, since
+                // the callback passed to Strategy() resolves the promise and does
+                // not invoke done()
+                reject(new HttpError(403, {
+                    message: info.message,
+                    reason: 'access-denied',
+                }));
+            });
+            auth(req, res);
         });
-        // trigger Passport middleware manually
-        Passport.use(strategy);
-        var auth = Passport.authenticate(server.type, options, (err, user, info) => {
-            // if this callback is called, then authentication has failed, since
-            // the callback passed to Strategy() resolves the promise and does
-            // not invoke done()
-            reject(new HttpError(403, {
-                message: info.message,
-                reason: 'access-denied',
-            }));
-        });
-        auth(req, res);
     });
 }
 
