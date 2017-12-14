@@ -28,6 +28,10 @@ module.exports = _.create(Data, {
         user_ids: Array(Number),
         archived: Boolean,
     },
+    accessControlColumns: {
+        user_ids: Array(Number),
+        settings: Object,
+    },
 
     /**
      * Create table in schema
@@ -96,21 +100,6 @@ module.exports = _.create(Data, {
                 return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
             });
         });
-    },
-
-    /**
-     * Add conditions to SQL query based on criteria object
-     *
-     * @param  {Object} criteria
-     * @param  {Object} query
-     */
-    apply: function(criteria, query) {
-        Data.apply.call(this, criteria, query);
-
-        if (query.columns !== '*') {
-            // filter() needs these columns to work
-            query.columns += ', deleted, user_ids, settings';
-        }
     },
 
     /**

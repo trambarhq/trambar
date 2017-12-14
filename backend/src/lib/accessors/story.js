@@ -52,6 +52,9 @@ module.exports = _.create(ExternalData, {
         url: String,
         search: Object,
     },
+    accessControlColumns: {
+        public: Boolean,
+    },
 
     /**
      * Create table in schema
@@ -111,6 +114,23 @@ module.exports = _.create(ExternalData, {
                 });
             });
         });
+    },
+
+    /**
+     * Filter out rows that user doesn't have access to
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    filter: function(db, schema, rows, credentials) {
+        if (credentials.user.type === 'guest') {
+            rows = _.filter(rows, { public: true });
+        }
+        return Promise.resolve(rows);
     },
 
     /**

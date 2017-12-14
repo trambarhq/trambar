@@ -18,6 +18,8 @@ module.exports = {
         id: Number,
         deleted: Boolean,
     },
+    accessControlColumns: {        
+    },
     version: 1,
 
     /**

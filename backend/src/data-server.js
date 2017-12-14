@@ -142,7 +142,9 @@ function handleDiscovery(req, res) {
                 criteria.deleted = false;
             }
             var accessor = getAccessor(schema, table);
-            return accessor.find(db, schema, criteria, 'id, gn').catch((err) => {
+            // in addition to id and gn, we need columns used by filter() 
+            var columns = _.union([ 'id', 'gn' ], _.keys(accessor.accessControlColumns));
+            return accessor.find(db, schema, criteria, columns.join(', ')).catch((err) => {
                 if (err.code === '42P01' && schema !== 'global') {
                     // maybe the project schema hasn't been created yet
                     return db.need(schema).then(() => {
