@@ -630,11 +630,13 @@ function authenticateThruPassport(db, req, res, server, params, scope) {
 function findMatchingUser(db, server, account) {
     // look for a user with the external id
     var profile = account.profile;
+    // use the id from the raw object if it's there so we have the correct type
+    var userId = profile._json.id || profile.id;
     var criteria = {
         external_object: {
             type: server.type,
             server_id: server.id,
-            user: { id: profile.id },
+            user: { id: userId },
         },
         deleted: false,
     };
