@@ -3,17 +3,10 @@ var Promise = require('bluebird');
 
 var Statistics = require('accessors/statistics');
 
-var reactionRatings = {
-    'like': 2,
-    'comment': 4,
-    'vote': 3,
-    'task-completion': 1,
-    'note': 4,
-    'assignment': 4,
-};
+var ReactionTypeRatings = require('story-raters/ratings/reaction-type-ratings');
 
 module.exports = {
-    name: 'by-popularity',
+    type: 'by-popularity',
     columns: [ 'id' ],
     monitoring: [ 'statistics' ],
     statisticsCache: [],
@@ -61,7 +54,7 @@ module.exports = {
     calculateRating: function(context, story) {
         var details = context.popularity[story.id];
         var rating = _.reduce(details, (total, count, type) => {
-            var reactionRating = reactionRatings[type] || 0;
+            var reactionRating = ReactionTypeRatings[type] || 0;
             return total + (reactionRating * count);
         }, 0);
         return rating;

@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var FS = require('fs');
 var Database = require('database');
 var Shutdown = require('shutdown');
 
@@ -9,28 +10,20 @@ var Listing = require('accessors/listing');
 var Project = require('accessors/project');
 var Story = require('accessors/story');
 
-// analysers
-var DailyActivities = require('analysers/daily-activities');
-var DailyNotifications = require('analysers/daily-notifications');
-var ProjectDateRange = require('analysers/story-date-range');
-var StoryPopularity = require('analysers/story-popularity');
-
-// story raters
-var ByPopularity = require('story-raters/by-popularity');
-var ByRole = require('story-raters/by-role');
-var ByType = require('story-raters/by-type');
-
-var analysers = [
-    DailyActivities,
-    DailyNotifications,
-    ProjectDateRange,
-    StoryPopularity,
-];
-var storyRaters = [
-    ByPopularity,
-    ByRole,
-    ByType,
-];
+// load available analysers
+var Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (filename) => {
+    if (/\.js$/.test(filename)) {
+        var module = require(`analysers/${filename}`);
+        return module;
+    }
+}));
+// load available story raters
+var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
+    if (/\.js$/.test(filename)) {
+        var module = require(`story-raters/${filename}`);
+        return module;
+    }
+}));
 var database;
 
 function start() {
@@ -46,7 +39,7 @@ function start() {
         }).then(() => {
             // capture event for tables that the story raters are monitoring
             // (for the purpose of cache invalidation)
-            var tables = _.filter(_.uniq(_.flatten(_.map(storyRaters, 'monitoring'))));
+            var tables = _.filter(_.uniq(_.flatten(_.map(StoryRaters, 'monitoring'))));
             return db.listen(tables, 'change', handleDatabaseChanges, 0);
         });
     });
@@ -97,7 +90,7 @@ function handleCleanRequests(events) {
  */
 function handleDatabaseChanges(events) {
     _.each(events, (event) => {
-        _.each(storyRaters, (rater) => {
+        _.each(StoryRaters, (rater) => {
             if (_.includes(rater.monitoring, event.table)) {
                 rater.handleEvent(event);
             }
@@ -241,7 +234,7 @@ function updateStatistics(schema, id) {
                 return null;
             }
             // regenerate the row
-            var analyser = _.find(analysers, { type: row.type });
+            var analyser = _.find(Analysers, { type: row.type });
             if (!analyser) {
                 throw new Error('Unknown statistics type: ' + row.type);
             }
@@ -374,7 +367,7 @@ function updateListing(schema, id) {
                 order: 'btime DESC',
                 limit: maxCandidateCount,
             });
-            var columns = _.flatten(_.map(storyRaters, 'columns'));
+            var columns = _.flatten(_.map(StoryRaters, 'columns'));
             columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
             columns = _.uniq(columns);
             return Story.find(db, schema, criteria, columns.join(', ')).then((rows) => {
@@ -422,9 +415,9 @@ function updateListing(schema, id) {
  */
 function prepareStoryRaterContexts(db, schema, stories, listing) {
     var contexts = {};
-    return Promise.each(storyRaters, (rater) => {
+    return Promise.each(StoryRaters, (rater) => {
         return rater.prepareContext(db, schema, stories, listing).then((context) => {
-            contexts[rater.name] = context;
+            contexts[rater.type] = context;
         });
     }).return(contexts);
 }
@@ -438,8 +431,8 @@ function prepareStoryRaterContexts(db, schema, stories, listing) {
  * @return {Number}
  */
 function calculateStoryRating(contexts, story) {
-    var rating = _.reduce(storyRaters, (total, rater) => {
-        var rating = rater.calculateRating(contexts[rater.name], story);
+    var rating = _.reduce(StoryRaters, (total, rater) => {
+        var rating = rater.calculateRating(contexts[rater.type], story);
         return total + rating;
     }, 0);
     return rating;

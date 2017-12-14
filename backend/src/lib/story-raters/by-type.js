@@ -1,22 +1,10 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-var storyRatings = {
-    'push': 20,
-    'merge': 50,
-    'branch': 0,
-    'issue': 30,
-    'milestone': 0,
-    'wiki': 0,
-    'member': 0,
-    'repo': 0,
-    'story': 10,
-    'survey': 30,
-    'task-list': 20,
-};
+var StoryTypeRatings = require('story-raters/ratings/story-type-ratings');
 
 module.exports = {
-    name: 'by-type',
+    type: 'by-type',
     columns: [ 'type' ],
     monitoring: [],
 
@@ -25,7 +13,7 @@ module.exports = {
     },
 
     calculateRating: function(context, story) {
-        var rating = storyRatings[story.type] || 0;
+        var rating = StoryTypeRatings[story.type] || 0;
         return rating;
     },
 

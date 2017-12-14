@@ -4,7 +4,7 @@ var Promise = require('bluebird');
 var Role = require('accessors/role');
 
 module.exports = {
-    name: 'by-role',
+    type: 'by-role',
     columns: [ 'role_ids' ],
     monitoring: [ 'role' ],
     roleCache: [],
