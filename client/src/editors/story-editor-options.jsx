@@ -10,6 +10,7 @@ var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
 var OptionButton = require('widgets/option-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
+var IssueDialogBox = require('dialogs/issue-dialog-box');
 
 require('./story-editor-options.scss');
 
@@ -19,6 +20,7 @@ module.exports = React.createClass({
         inMenu: PropTypes.bool,
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
         story: PropTypes.object.isRequired,
+        repos: PropTypes.arrayOf(PropTypes.object),
         options: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -49,7 +51,9 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             selectingRecipients: false,
-            renderingDialogBox: false,
+            renderingRecipientDialogBox: false,
+            enteringIssueDetails: false,
+            renderingIssueDialogBox: false,
         };
     },
 
@@ -158,7 +162,7 @@ module.exports = React.createClass({
             };
             var addIssueProps = {
                 label: t('option-add-issue'),
-                selected: options.addIssue,
+                selected: !!options.issueDetails,
                 hidden: this.canAddIssue(),
                 onClick: this.handleAddIssueClick,
             };
@@ -174,7 +178,8 @@ module.exports = React.createClass({
                     <OptionButton {...sendBookmarkProps} />
                     <OptionButton {...addIssueProps} />
                     <OptionButton {...hidePostProps} />
-                    {this.renderUserSelectionDialogBox()}
+                    {this.renderRecipientDialogBox()}
+                    {this.renderIssueDialogBox()}
                 </div>
             );
         } else if (section === 'supplemental') {
@@ -200,9 +205,12 @@ module.exports = React.createClass({
     /**
      * Render dialog for selecting users
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
-    renderUserSelectionDialogBox: function() {
+    renderRecipientDialogBox: function() {
+        if (!this.state.renderingRecipientDialogBox) {
+            return null;
+        }
         var props = {
             show: this.state.selectingRecipients,
             selection: this.props.options.bookmarkRecipients,
@@ -216,6 +224,30 @@ module.exports = React.createClass({
             onCancel: this.handleRecipientsCancel,
         };
         return <UserSelectionDialogBox {...props} />;
+    },
+
+    /**
+     * Render dialog for entering issue details
+     *
+     * @return {ReactElement}
+     */
+    renderIssueDialogBox: function() {
+        if (!this.state.renderingIssueDialogBox) {
+            return null;
+        }
+        var props = {
+            show: this.state.enteringIssueDetails,
+            allowClearing: !!this.props.options.issueDetails,
+            issue: this.props.options.issueDetails,
+            repos: this.props.repos,
+
+            locale: this.props.locale,
+            theme: this.props.theme,
+
+            onConfirm: this.handleIssueConfirm,
+            onCancel: this.handleIssueCancel,
+        };
+        return <IssueDialogBox {...props} />;
     },
 
     /**
@@ -242,7 +274,7 @@ module.exports = React.createClass({
         if (!this.state.selectingRecipients) {
             this.setState({
                 selectingRecipients: true,
-                renderingDialogBox: true
+                renderingRecipientDialogBox: true
             });
 
             // stop menu from closing, as otherwise this component would unmount
@@ -259,7 +291,7 @@ module.exports = React.createClass({
             this.setState({ selectingRecipients: false });
             setTimeout(() => {
                 if (!this.state.selectingRecipients) {
-                    this.setState({ renderingDialogBox: false });
+                    this.setState({ renderingRecipientDialogBox: false });
                 }
             }, 1000);
 
@@ -267,6 +299,44 @@ module.exports = React.createClass({
             if (this.sendBookmakTarget) {
                 this.sendBookmakTarget.click();
                 this.sendBookmakTarget = null;
+            }
+        }
+    },
+
+    /**
+     * Open dialog box for entering issue details
+     *
+     * @param  {Event} evt
+     */
+    openIssueDialogBox: function(evt) {
+        if (!this.state.enteringIssueDetails) {
+            this.setState({
+                enteringIssueDetails: true,
+                renderingIssueDialogBox: true
+            });
+
+            // stop menu from closing, as otherwise this component would unmount
+            evt.stopPropagation();
+            this.issueDetailsTarget = evt.target;
+        }
+    },
+
+    /**
+     * Close dialog box
+     */
+    closeIssueDialogBox: function() {
+        if (this.state.enteringIssueDetails) {
+            this.setState({ enteringIssueDetails: false });
+            setTimeout(() => {
+                if (!this.state.enteringIssueDetails) {
+                    this.setState({ renderingIssueDialogBox: false });
+                }
+            }, 1000);
+
+            // fire click event to close menu
+            if (this.issueDetailsTarget) {
+                this.issueDetailsTarget.click();
+                this.issueDetailsTarget = null;
             }
         }
     },
@@ -302,9 +372,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAddIssueClick: function(evt) {
-        var options = _.clone(this.props.options);
-        options.addIssue = !options.addIssue;
-        this.triggerChangeEvent(options);
+        this.openIssueDialogBox(evt);
     },
 
     /**
@@ -337,6 +405,27 @@ module.exports = React.createClass({
      */
     handleRecipientsCancel: function(evt) {
         this.closeSelectionDialogBox();
+    },
+
+    /**
+     * Called when user finishes entering issue details
+     *
+     * @param  {Object} evt
+     */
+    handleIssueConfirm: function(evt) {
+        var options = _.clone(this.props.options);
+        options.issueDetails = evt.issue;
+        this.triggerChangeEvent(options);
+        this.closeIssueDialogBox();
+    },
+
+    /**
+     * Called when user cancel editing of issue details
+     *
+     * @param  {Object} evt
+     */
+    handleIssueCancel: function(evt) {
+        this.closeIssueDialogBox();
     },
 
     /**

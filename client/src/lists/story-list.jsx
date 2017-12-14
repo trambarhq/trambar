@@ -396,6 +396,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 authors,
                 recommendations,
                 recipients,
+                repos: this.props.repos,
                 isStationary: evt.currentIndex === 0,
                 currentUser: this.props.currentUser,
                 database: this.props.database,

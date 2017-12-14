@@ -695,6 +695,7 @@ module.exports = React.createClass({
             }
             return <span key={i} className="tag" style={style}>{label}</span>;
         });
+        // inserting actual spaces between the tags for the sake of copy-and-pasting
         for (var i = 1; i < tags.length; i += 2) {
             tags.splice(i, 0, ' ');
         }

@@ -109,6 +109,12 @@ module.exports = function(languageCode) {
 
         'image-editor-upload-in-progress': 'Upload in progress...',
 
+        'issue-cancel': 'Cancel',
+        'issue-clear': 'Clear',
+        'issue-ok': 'OK',
+        'issue-repo': 'Repository',
+        'issue-title': 'Title',
+
         'list-$count-more': (count) => {
             return `${count} more...`;
         },

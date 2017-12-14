@@ -432,7 +432,7 @@ module.exports = React.createClass({
 });
 
 var defaultOptions = {
-    addIssue: false,
+    issueDetails: null,
     hidePost: false,
     editPost: false,
     removePost: false,

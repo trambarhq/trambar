@@ -34,6 +34,7 @@ module.exports = React.createClass({
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
         isStationary: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -367,6 +368,7 @@ module.exports = React.createClass({
             story: this.state.draft,
             options: this.state.options,
 
+            repos: this.props.repos,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -754,7 +756,7 @@ module.exports = React.createClass({
 
 var defaultOptions = {
     languageCode: '',
-    addIssue: false,
+    issueDetails: null,
     hidePost: false,
     bookmarkRecipients: [],
     preview: '',
