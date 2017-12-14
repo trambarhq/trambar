@@ -2,4 +2,8 @@
     font-weight: normal;
     float: right;
     color: #cc0000;
+
+    &.warning {
+        color: #cc6600;
+    }
 }

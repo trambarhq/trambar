@@ -469,6 +469,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderNameInput()}
                 {this.renderUserOptions()}
                 {this.renderRoleSelector()}
+                {this.renderOAuthCallbackUrl()}
                 {this.renderOAuthUrlInput()}
                 {this.renderOAuthClientIdInput()}
                 {this.renderOAuthClientSecretInput()}
@@ -745,6 +746,39 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         )
+    },
+
+    /**
+     * Render read-only input for OAuth callback URL
+     *
+     * @return {[type]}
+     */
+    renderOAuthCallbackUrl: function() {
+        var t = this.props.locale.translate;
+        var serverType = this.getServerProperty('type');
+        var url, warning;
+        if (serverType) {
+            var address = _.get(this.props.system, 'settings.address');
+            var warning;
+            if (!address) {
+                warning = t('server-summary-system-address-missing');
+                address = window.location.origin;
+            }
+            url = `${address}/auth/${serverType}/callback`;
+        }
+        var props = {
+            id: 'oauth_callback',
+            value: url,
+            locale: this.props.locale,
+            readOnly: true,
+        };
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('server-summary-oauth-callback')}
+                <InputError type="warning">{warning}</InputError>
+            </TextField>
+        );
     },
 
     /**

@@ -10,9 +10,15 @@ function InputError(props) {
     if (!props.children) {
         return null;
     }
+    var className = 'input-error';
+    var icon = 'exclamation-circle';
+    if (props.type === 'warning') {
+        className += ' warning';
+        icon = 'exclamation-triangle';
+    }
     return (
-        <div className="input-error">
-            <i className="fa fa-exclamation-circle" />
+        <div className={className}>
+            <i className={`fa fa-${icon}`} />
             {' '}
             {props.children}
         </div>
