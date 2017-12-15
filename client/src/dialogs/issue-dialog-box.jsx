@@ -233,7 +233,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var repo = this.getSelectedRepo();
         var text = this.getIssueProperty('title');
-        var changed = !_.trim(text);
+        var changed = !!_.trim(text);
         if (this.props.issue) {
             if (this.state.issue) {
                 changed = !_.isEqual(this.state.issue, this.props.issue);

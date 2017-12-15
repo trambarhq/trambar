@@ -336,8 +336,8 @@ module.exports = _.create(ExternalData, {
         if (storyBefore) {
             if (!_.includes(storyBefore.user_ids, credentials.user.id)) {
                 // can't modify an object that doesn't belong to the user
-                // unless user is an admin
-                if (credentials.user.type !== 'admin') {
+                // unless user is an admin or a moderator
+                if (credentials.user.type !== 'admin' && credentials.user.type !== 'moderator') {
                     throw new HttpError(400);
                 }
             }

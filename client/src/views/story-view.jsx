@@ -381,23 +381,37 @@ module.exports = React.createClass({
     setOptions: function(options) {
         var before = this.state.options;
         this.setState({ options }, () => {
+            var story = this.props.story;
             if (options.editPost && !before.editPost) {
-                var tempCopy = _.omit(this.props.story, 'id', 'published', 'ptime');
-                tempCopy.published_version_id = this.props.story.id;
+                var tempCopy = _.omit(story, 'id', 'published', 'ptime');
+                tempCopy.published_version_id = story.id;
                 this.saveStory(tempCopy);
             }
             if (options.removePost && !before.removePost) {
-                this.removeStory(this.props.story);
+                this.removeStory(story);
             }
             if (options.bumpPost && !before.bumpPost) {
-                var story = _.clone(this.props.story);
-                story.bump = true;
-                this.saveStory(story);
+                var columns = {
+                    id: story.id,
+                    bump: true
+                };
+                this.saveStory(columns);
             }
             if (options.hidePost !== before.hidePost) {
-                var story = _.clone(this.props.story);
-                story.public = !options.hidePost;
-                this.saveStory(story);
+                var columns = {
+                    id: story.id,
+                    public: !options.hidePost
+                };
+                this.saveStory(columns);
+            }
+            if (!_.isEqual(options.issueDetails, before.issueDetails)) {
+                var columns = {
+                    id: story.id,
+                    details: _.cloneDeep(story.details),
+                    external: _.cloneDeep(story.external),
+                };
+                IssueUtils.attach(columns, options.issueDetails, this.props.currentUser, this.props.repos);
+                this.saveStory(columns);
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
                 this.sendBookmarks(this.props.story, options.bookmarkRecipients);

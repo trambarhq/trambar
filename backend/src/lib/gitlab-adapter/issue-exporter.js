@@ -4,6 +4,7 @@ var Moment = require('moment');
 
 var Export = require('external-services/export');
 var Import = require('external-services/import');
+var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
 var UserExporter = require('gitlab-adapter/user-exporter');
 
@@ -40,6 +41,9 @@ function exportStory(db, project, story) {
                 var linkAfter = Import.Link.find(storyAfter, { type: 'gitlab' });
                 _.set(linkAfter, 'issue.id', glIssue.id);
                 _.set(storyAfter, 'details.number', glIssue.iid);
+                if (_.isEqual(story, storyAfter)) {
+                    return story;
+                }
                 return Story.updateOne(db, project.name, storyAfter);
             });
         });
@@ -66,9 +70,7 @@ function copyIssueProperties(story, project, link) {
     _.set(glIssue, 'title', title || 'Untitled');
     _.set(glIssue, 'description', contents);
     _.set(glIssue, 'confidential', !story.public);
-    _.set(glIssue, 'assignee_ids', []);
-    _.set(glIssue, 'labels', story.details.labels);
-    _.set(glIssue, 'weight', story.details.weight);
+    _.set(glIssue, 'labels', _.join(story.details.labels, ','));
     return glIssue;
 }
 
@@ -87,6 +89,8 @@ function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
     var url = `/projects/${glProjectId}/issues`;
     if (glIssueNumber) {
         url += `/${glIssueNumber}`;
+        return Transport.put(server, url, glIssue, glUserId);
+    } else {
+        return Transport.post(server, url, glIssue, glUserId);
     }
-    return Transport.post(server, url, glIssue, glUserId);
 }

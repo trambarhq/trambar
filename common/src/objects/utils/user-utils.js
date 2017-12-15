@@ -22,6 +22,12 @@ function canEditStory(user, story) {
         return false;
     }
     if (_.includes(StoryTypes.editable, story.type)) {
+        if (user.type === 'admin' || user.type === 'moderator') {
+            // allow editing for two weeks
+            if (Moment() < Moment(story.ptime).add(14, 'day')) {
+                return true;
+            }
+        }
         if (_.includes(story.user_ids, user.id)) {
             // allow editing for 3 days
             if (Moment() < Moment(story.ptime).add(3, 'day')) {
@@ -114,13 +120,15 @@ function canAddIssue(user, story, repos) {
         return false;
     }
     if (_.includes(StoryTypes.trackable, story.type || 'story')) {
-        return _.some(repos, (repo) => {
-            if (_.includes(repo.user_ids, user.id)) {
-                if (repo.details.issues_enabled) {
-                    return true;
+        if (user.type === 'admin' || user.type === 'moderator' || _.includes(story.user_ids, user.id)) {
+            return _.some(repos, (repo) => {
+                if (_.includes(repo.user_ids, user.id)) {
+                    if (repo.details.issues_enabled) {
+                        return true;
+                    }
                 }
-            }
-        });
+            });
+        }
     }
     return false;
 }
