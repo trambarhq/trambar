@@ -15,9 +15,9 @@ function findTags(text) {
     if (typeof(text) === 'string') {
         tags = text.match(findRE);
     } else if(text instanceof Object) {
-        tags = _.flatten(_.map(text, (version) => {
+        tags = _.flatten(_.filter(_.map(text, (version) => {
             return String(version).match(findRE);
-        }));
+        })));
     }
     return _.map(_.uniq(tags), _.toLower).sort();
 }
