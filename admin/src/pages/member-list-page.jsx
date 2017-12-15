@@ -3,13 +3,12 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -117,7 +116,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load statistics of members
             var users = findUsers(props.users, props.project)
-            return DailyActivities.loadUserStatistics(db, props.project, users);
+            return StatisticsUtils.fetchUserDailyActivities(db, props.project, users);
         }).then((statistics) => {
             props.statistics = statistics;
             return <MemberListPageSync {...props} />;

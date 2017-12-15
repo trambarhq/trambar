@@ -3,11 +3,13 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
 
-exports.loadProjectStatistics = loadProjectStatistics;
-exports.loadUserStatistics = loadUserStatistics;
-exports.loadRepoStatistics = loadRepoStatistics;
+module.exports = {
+    fetchProjectDailyActivities,
+    fetchUserDailyActivities,
+    fetchRepoDailyActivities,
+};
 
-function loadProjectStatistics(db, projects) {
+function fetchProjectDailyActivities(db, projects) {
     return Promise.mapSeries(projects, (project) => {
         if (project.deleted) {
             return null;
@@ -36,7 +38,7 @@ function loadProjectStatistics(db, projects) {
     });
 }
 
-function loadUserStatistics(db, project, users) {
+function fetchUserDailyActivities(db, project, users) {
     if (!project) {
         return Promise.resolve(null);
     }
@@ -80,7 +82,7 @@ function loadUserStatistics(db, project, users) {
     });
 }
 
-function loadRepoStatistics(db, project, repos) {
+function fetchRepoDailyActivities(db, project, repos) {
     if (!project) {
         return Promise.resolve(null);
     }

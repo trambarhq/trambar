@@ -5,15 +5,14 @@ var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
+var StatisticsUtils = require('objects/utils/statistics-utils');
+var SlugGenerator = require('utils/slug-generator');
 
 var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 var Payloads = require('transport/payloads');
-
-var DailyActivities = require('data/daily-activities');
-var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -148,7 +147,7 @@ module.exports = Relaks.createClass({
             // load statistics if project is specified (unless we're creating a
             // new member)
             if (props.project && props.user) {
-                return DailyActivities.loadUserStatistics(db, props.project, [ props.user ]).then((hash) => {
+                return StatisticsUtils.fetchUserDailyActivities(db, props.project, [ props.user ]).then((hash) => {
                     return hash[props.user.id];
                 });
             }

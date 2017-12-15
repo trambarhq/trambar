@@ -2,13 +2,12 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
+var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -114,7 +113,7 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<RepoSummaryPageSync {...props} />);
         }).then(() => {
             // load statistics
-            return DailyActivities.loadRepoStatistics(db, props.project, [ props.repo ]).then((hash) => {
+            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, [ props.repo ]).then((hash) => {
                 return hash[props.repo.id];
             });
         }).then((statistics) => {

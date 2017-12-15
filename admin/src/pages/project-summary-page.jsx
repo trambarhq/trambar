@@ -3,15 +3,14 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var ProjectSettings = require('objects/settings/project-settings');
+var StatisticsUtils = require('objects/utils/statistics-utils');
+var SlugGenerator = require('utils/slug-generator');
 
 var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 var Payloads = require('transport/payloads');
-
-var DailyActivities = require('data/daily-activities');
-var SlugGenerator = require('utils/slug-generator');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -116,7 +115,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load project statistics (unless we're creating a new project)
             if (props.project) {
-                return DailyActivities.loadProjectStatistics(db, [ props.project ]).then((hash) => {
+                return StatisticsUtils.fetchProjectDailyActivities(db, [ props.project ]).then((hash) => {
                     return hash[props.project.id];
                 });
             }

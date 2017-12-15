@@ -11,13 +11,12 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-var DailyActivities = require('data/daily-activities');
 
 // widgets
 var PushButton = require('widgets/push-button');
@@ -127,7 +126,7 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<ProjectListPageSync {...props} />);
         }).then(() => {
             // load statistics of each project
-            return DailyActivities.loadProjectStatistics(db, props.projects);
+            return StatisticsUtils.fetchProjectDailyActivities(db, props.projects);
         }).then((statistics) => {
             props.statistics = statistics;
             return <ProjectListPageSync {...props} />;
