@@ -1,16 +1,26 @@
-exports.matchAny = function(filters, objects) {
+module.exports = {
+    matchAny,
+    hasCandidates,
+    payloadIds,
+    updatePayload,
+    checkAuthorization,
+    extendAuthorization,
+    externalIdStrings: require('./runtime').externalIdStrings
+};
+
+function matchAny(filters, objects) {
     for (var i = 0; i < objects.length; i++) {
         if (matchObject(filters, objects[i])) {
             return true;
         }
     }
     return false;
-};
-exports.matchAny.args = 'filters jsonb, objects jsonb[]';
-exports.matchAny.ret = 'boolean';
-exports.matchAny.flags = 'IMMUTABLE';
+}
+matchAny.args = 'filters jsonb, objects jsonb[]';
+matchAny.ret = 'boolean';
+matchAny.flags = 'IMMUTABLE';
 
-exports.hasCandidates = function(details, ids) {
+function hasCandidates(details, ids) {
     var candidates = details.candidates;
     if (candidates instanceof Array) {
         for (var i = 0; i < candidates.length; i++) {
@@ -23,10 +33,10 @@ exports.hasCandidates = function(details, ids) {
         }
     }
     return false;
-};
-exports.hasCandidates.args = 'details jsonb, ids int[]';
-exports.hasCandidates.ret = 'boolean';
-exports.hasCandidates.flags = 'IMMUTABLE';
+}
+hasCandidates.args = 'details jsonb, ids int[]';
+hasCandidates.ret = 'boolean';
+hasCandidates.flags = 'IMMUTABLE';
 
 /**
  * Return a list of payload ids contained in the object
@@ -35,7 +45,7 @@ exports.hasCandidates.flags = 'IMMUTABLE';
  *
  * @return {Array<Number>|null}
  */
-exports.payloadIds = function(details) {
+function payloadIds(details) {
     var payloadIds = [];
     var resources = details.resources;
     if (resources instanceof Array) {
@@ -51,10 +61,10 @@ exports.payloadIds = function(details) {
         }
     }
     return (payloadIds.length > 0) ? payloadIds : null;
-};
-exports.payloadIds.args = 'details jsonb';
-exports.payloadIds.ret = 'int[]';
-exports.payloadIds.flags = 'IMMUTABLE';
+}
+payloadIds.args = 'details jsonb';
+payloadIds.ret = 'int[]';
+payloadIds.flags = 'IMMUTABLE';
 
 /**
  * Copy properties of payload into matching resource
@@ -64,7 +74,7 @@ exports.payloadIds.flags = 'IMMUTABLE';
  *
  * @return {Object}
  */
-exports.updatePayload = function(details, payload) {
+function updatePayload(details, payload) {
     var resources = details.resources;
     if (resources) {
         for (var i = 0; i < resources.length; i++) {
@@ -83,10 +93,10 @@ exports.updatePayload = function(details, payload) {
         }
     }
     return details;
-};
-exports.updatePayload.args = 'details jsonb, payload jsonb';
-exports.updatePayload.ret = 'jsonb';
-exports.updatePayload.flags = 'IMMUTABLE';
+}
+updatePayload.args = 'details jsonb, payload jsonb';
+updatePayload.ret = 'jsonb';
+updatePayload.flags = 'IMMUTABLE';
 
 /**
  * Return user id associated with authorization token--if it's still valid
@@ -98,7 +108,7 @@ exports.updatePayload.flags = 'IMMUTABLE';
  *
  * @return {Number}
  */
-exports.checkAuthorization = function(token, area) {
+function checkAuthorization(token, area) {
     var sql = `SELECT user_id, area FROM "global"."authorization"
                WHERE token = $1
                AND (area = $2 OR $2 IS NULL)
@@ -107,10 +117,10 @@ exports.checkAuthorization = function(token, area) {
                LIMIT 1`;
     var row = plv8.execute(sql, [ token, area ])[0];
     return (row) ? row.user_id : null;
-};
-exports.checkAuthorization.args = 'token text, area text';
-exports.checkAuthorization.ret = 'int';
-exports.checkAuthorization.flags = 'SECURITY DEFINER';
+}
+checkAuthorization.args = 'token text, area text';
+checkAuthorization.ret = 'int';
+checkAuthorization.flags = 'SECURITY DEFINER';
 
 /**
  * Set the expiration date of an authorization object
@@ -120,18 +130,18 @@ exports.checkAuthorization.flags = 'SECURITY DEFINER';
  * @param  {String} token
  * @param  {String} expire
  */
-exports.extendAuthorization = function(token, expire) {
+function extendAuthorization(token, expire) {
     var sql = `UPDATE "global"."authorization"
                SET expiration_date = $2
                WHERE token = $1
                AND deleted = false`;
     plv8.execute(sql, [ token, expire ]);
-};
-exports.extendAuthorization.args = 'token text, expire date';
-exports.extendAuthorization.ret = 'void';
-exports.extendAuthorization.flags = 'SECURITY DEFINER';
+}
+extendAuthorization.args = 'token text, expire date';
+extendAuthorization.ret = 'void';
+extendAuthorization.flags = 'SECURITY DEFINER';
 
-exports.externalIdStrings = require('./runtime').externalIdStrings;
-exports.externalIdStrings.args = 'external jsonb[], type text, names text[]';
-exports.externalIdStrings.ret = 'text[]';
-exports.externalIdStrings.flags = 'IMMUTABLE';
+var externalIdStrings = module.exports.externalIdStrings;
+externalIdStrings.args = 'external jsonb[], type text, names text[]';
+externalIdStrings.ret = 'text[]';
+externalIdStrings.flags = 'IMMUTABLE';

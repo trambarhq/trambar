@@ -4,12 +4,14 @@ var FS = Promise.promisifyAll(require('fs'));
 var Request = require('request');
 var Crypto = require('crypto');
 
-exports.moveFile = moveFile;
-exports.saveFile = saveFile;
-exports.hashFile = hashFile;
-exports.downloadFile = downloadFile;
-exports.preserveFile = preserveFile;
-exports.makeTempPath = makeTempPath;
+module.exports = {
+    moveFile,
+    saveFile,
+    hashFile,
+    downloadFile,
+    preserveFile,
+    makeTempPath,
+};
 
 /**
  * Save file to cache folder, using the MD5 hash of its content as name

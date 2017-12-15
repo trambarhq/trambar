@@ -1,22 +1,25 @@
 var _ = require('lodash');
 var FS = require('fs');
 
-exports.root = '/var/cache/media';
-exports.image = `${exports.root}/images`;
-exports.video = `${exports.root}/videos`;
-exports.audio = `${exports.root}/audios`;
+var root = '/var/cache/media';
+var image = `${root}/images`;
+var video = `${root}/videos`;
+var audio = `${root}/audios`;
 
-exports.create = create;
+module.exports = exports = {
+    root,
+    image,
+    video,
+    audio,
+
+    create,
+};
 
 /**
  * Create cache folders if they don't exist yet
  */
 function create() {
-    var folders = [
-        exports.root,
-        exports.image,
-        exports.video, exports.audio
-    ];
+    var folders = [ root, image, video, audio ];
     _.each(folders, (folder) => {
         if (!FS.existsSync(folder)) {
             FS.mkdirSync(folder);

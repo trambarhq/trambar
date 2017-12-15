@@ -21,6 +21,11 @@ var VideoManager = require('media-server/video-manager');
 var WebsiteCapturer = require('media-server/website-capturer');
 var StockPhotoImporter = require('media-server/stock-photo-importer');
 
+module.exports = {
+    start,
+    stop,
+};
+
 var server;
 var cacheControl = {
     image: 'max-age=2592000, immutable',
@@ -546,9 +551,6 @@ function getFileType(path) {
         });
     });
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

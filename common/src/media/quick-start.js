@@ -2,7 +2,9 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Async = require('async-do-while');
 
-exports.process = process;
+module.exports = {
+    process,
+};
 
 /**
  * Move the MOOV atom in a QuickTime container to the beginning of the file

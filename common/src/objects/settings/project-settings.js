@@ -1,7 +1,13 @@
 var _ = require('lodash');
 
-exports.default = {
+module.exports = exports = {
+    default: {
+    },
+
+    isVisibleToUser,
+    getUserAccessLevel,
 };
+
 
 if (process.env.NODE_ENV !== 'production') {
     exports.typedef = {
@@ -17,9 +23,6 @@ if (process.env.NODE_ENV !== 'production') {
         },
     }
 }
-
-exports.isVisibleToUser = isVisibleToUser;
-exports.getUserAccessLevel = getUserAccessLevel;
 
 /**
  * Return the user's access level to a project

@@ -12,10 +12,12 @@ var Shutdown = require('shutdown');
 var Subscription = require('accessors/subscription');
 var User = require('accessors/user');
 
-exports.listen = listen;
-exports.find = find;
-exports.send = send;
-exports.shutdown = shutdown;
+module.exports = {
+    listen,
+    find,
+    send,
+    shutdown,
+};
 
 var server;
 var sockets = [];

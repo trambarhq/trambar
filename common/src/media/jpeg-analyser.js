@@ -1,3 +1,9 @@
+module.exports = {
+	getDimensions,
+	getOrientation,
+	extractPaths,
+};
+
 /**
  * Get the orientation of a JPEG image
  *
@@ -5,7 +11,7 @@
  *
  * @return {Object|undefined}
  */
-exports.getDimensions = function(bytes) {
+function getDimensions(bytes) {
 	var p = findSegment(bytes, (marker, p, length) => {
 		if (marker === 0xFFC0 || marker === 0xFFC2) {
 			return p;
@@ -26,7 +32,7 @@ exports.getDimensions = function(bytes) {
  *
  * @return {Number|undefined}
  */
-exports.getOrientation = function(bytes) {
+function getOrientation(bytes) {
 	var short = beShort;
 	var long = beLong;
 	var p = findSegment(bytes, (marker, start, length) => {
@@ -102,7 +108,7 @@ function leLong(b1, b2, b3, b4) {
  *
  * @return {Object|null}
  */
-exports.extractPaths = function(bytes) {
+function extractPaths(bytes) {
     var p = findPhotoshopSegment(bytes);
     if(p !== -1) {
         return parse8BIMData(bytes, p);

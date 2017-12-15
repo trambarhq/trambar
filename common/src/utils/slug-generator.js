@@ -1,5 +1,7 @@
-exports.fromTitle = fromTitle;
-exports.fromPersonalName = fromPersonalName;
+module.exports = {
+    fromTitle,
+    fromPersonalName,
+};
 
 function fromTitle(title) {
     if (typeof(title) === 'string') {

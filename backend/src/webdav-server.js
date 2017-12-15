@@ -31,6 +31,11 @@ var Story = require('accessors/story');
 var Notification = require('accessors/notification');
 var Task = require('accessors/task');
 
+module.exports = {
+    start,
+    stop,
+};
+
 var globalAccessors = [
     Authentication,
     Authorization,
@@ -235,9 +240,6 @@ function start() {
 function stop() {
     return Shutdown.close(server);
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

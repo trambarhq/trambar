@@ -3,7 +3,9 @@ var Promise = require('bluebird');
 var Phantom = require('phantom');
 var Moment = require('moment');
 
-exports.createScreenshot = createScreenshot;
+module.exports = {
+    createScreenshot,
+};
 
 /**
  * Make screencap of website, returning the document title

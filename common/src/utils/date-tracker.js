@@ -3,9 +3,11 @@ var Moment = require('moment');
 
 var now = Moment();
 
-exports.addEventListener = addEventListener;
-exports.removeEventListener = removeEventListener;
-exports.today = format(now);
+module.exports = exports = {
+    addEventListener,
+    removeEventListener,
+    today: format(now)
+};
 
 var listeners = [];
 

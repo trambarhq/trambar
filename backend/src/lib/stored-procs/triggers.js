@@ -1,4 +1,13 @@
-exports.indicateDataChange = function(OLD, NEW) {
+module.exports = {
+    indicateDataChange,
+    notifyDataChange,
+    indicateLiveDataChange,
+    notifyLiveDataChange,
+    updateResource,
+    coalesceResources,
+};
+
+function indicateDataChange(OLD, NEW) {
     var omit = [ 'id', 'gn', 'ctime', 'mtime' ];
     var changes = findChanges(OLD, NEW, omit);
     if (changes) {
@@ -6,21 +15,21 @@ exports.indicateDataChange = function(OLD, NEW) {
         NEW.mtime = new Date;
     }
     return NEW;
-};
-exports.indicateDataChange.args = '';
-exports.indicateDataChange.ret = 'trigger';
+}
+indicateDataChange.args = '';
+indicateDataChange.ret = 'trigger';
 
-exports.notifyDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
+function notifyDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
     var omit = [ 'id', 'gn', 'ctime', 'mtime' ];
     var changes = findChanges(OLD, NEW, omit);
     if (changes) {
         sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, OLD, NEW, changes, TG_ARGV);
     }
-};
-exports.notifyDataChange.args = '';
-exports.notifyDataChange.ret = 'trigger';
+}
+notifyDataChange.args = '';
+notifyDataChange.ret = 'trigger';
 
-exports.indicateLiveDataChange = function(OLD, NEW) {
+function indicateLiveDataChange(OLD, NEW) {
     var omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
     var changes = findChanges(OLD, NEW, omit);
     if (changes) {
@@ -29,10 +38,10 @@ exports.indicateLiveDataChange = function(OLD, NEW) {
     }
     return NEW;
 }
-exports.indicateLiveDataChange.args = '';
-exports.indicateLiveDataChange.ret = 'trigger';
+indicateLiveDataChange.args = '';
+indicateLiveDataChange.ret = 'trigger';
 
-exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
+function notifyLiveDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
     var omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];
     var changes = findChanges(OLD, NEW, omit);
     if (changes) {
@@ -58,15 +67,15 @@ exports.notifyLiveDataChange = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TAB
             }
         }
     }
-};
-exports.notifyLiveDataChange.args = '';
-exports.notifyLiveDataChange.ret = 'trigger';
+}
+notifyLiveDataChange.args = '';
+notifyLiveDataChange.ret = 'trigger';
 
 /**
  * Take results from Task table and move them into item in details.resources
  * with matching payload id
  */
-exports.updateResource = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
+function updateResource(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
     var payload = {
         id: NEW.id,
         details: NEW.details,
@@ -79,16 +88,16 @@ exports.updateResource = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAM
         WHERE "payloadIds"(details) @> $${params.push([ payload.id ])}
     `;
     plv8.execute(sql, params);
-};
-exports.updateResource.args = '';
-exports.updateResource.ret = 'trigger';
-exports.updateResource.flags = 'SECURITY DEFINER';
+}
+updateResource.args = '';
+updateResource.ret = 'trigger';
+updateResource.flags = 'SECURITY DEFINER';
 
 /**
  * Ensure that information inserted on into details.resources by updateResource()
  * doesn't get overridden by stale data
  */
-exports.coalesceResources = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
+function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
     var oldResources = (OLD) ? OLD.details.resources : undefined;
     var newResources = NEW.details.resources;
     if (!oldResources && !newResources) {
@@ -143,6 +152,6 @@ exports.coalesceResources = function(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_
     }
     return NEW;
 }
-exports.coalesceResources.args = '';
-exports.coalesceResources.ret = 'trigger';
-exports.coalesceResources.flags = 'SECURITY DEFINER';
+coalesceResources.args = '';
+coalesceResources.ret = 'trigger';
+coalesceResources.flags = 'SECURITY DEFINER';

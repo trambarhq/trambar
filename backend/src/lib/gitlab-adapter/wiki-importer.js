@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 
@@ -8,7 +9,9 @@ var Import = require('external-services/import');
 var Story = require('accessors/story');
 var User = require('accessors/user');
 
-exports.importHookEvent = importHookEvent;
+module.exports = {
+    importHookEvent,
+};
 
 /**
  * Import a wiki related event
@@ -25,10 +28,10 @@ exports.importHookEvent = importHookEvent;
 function importHookEvent(db, server, repo, project, author, glHookEvent) {
     var schema = project.name;
     // see if there's story about this page recently
-    var repoLink = Import.Link.find(repo, server);
-    var pageLink = Import.Link.create(server, {
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var pageLink = LinkUtils.extend(repoLink, {
         wiki: { id: glHookEvent.object_attributes.slug }
-    }, repoLink);
+    });
     var criteria = {
         type: 'wiki',
         newer_than: Moment().subtract(1, 'day').toISOString(),

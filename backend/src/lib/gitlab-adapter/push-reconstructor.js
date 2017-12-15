@@ -5,7 +5,9 @@ var Async = require('async-do-while');
 var TaskLog = require('external-services/task-log');
 var CommitImporter = require('gitlab-adapter/commit-importer');
 
-exports.reconstructPush = reconstructPush;
+module.exports = {
+    reconstructPush,
+};
 
 /**
  * Reconstruct a push

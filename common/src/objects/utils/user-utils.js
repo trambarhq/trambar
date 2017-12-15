@@ -2,12 +2,14 @@ var _ = require('lodash');
 var Moment = require('moment');
 var StoryTypes = require('objects/types/story-types');
 
-exports.canEditStory = canEditStory;
-exports.canHideStory = canHideStory;
-exports.canRemoveStory = canRemoveStory;
-exports.canBumpStory = canBumpStory;
-exports.canAddIssue = canAddIssue;
-exports.canSendBookmarks = canSendBookmarks;
+module.exports = {
+    canEditStory,
+    canHideStory,
+    canRemoveStory,
+    canBumpStory,
+    canAddIssue,
+    canSendBookmarks,
+};
 
 /**
  * Return true if user can edit a story

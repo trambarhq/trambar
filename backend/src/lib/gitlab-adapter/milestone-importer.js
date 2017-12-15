@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
@@ -9,7 +10,9 @@ var Transport = require('gitlab-adapter/transport');
 // accessors
 var Story = require('accessors/story');
 
-exports.importEvent = importEvent;
+module.exports = {
+    importEvent,
+};
 
 /**
  * Import an activity log entry about an issue
@@ -25,7 +28,7 @@ exports.importEvent = importEvent;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     return fetchMilestone(server, repoLink.project.id, glEvent.target_id).then((glMilestone) => {
         // the story is linked to both the issue and the repo
         var milestoneLink = {

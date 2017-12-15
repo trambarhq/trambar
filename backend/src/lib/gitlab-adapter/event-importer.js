@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var TaskLog = require('external-services/task-log');
@@ -17,8 +18,10 @@ var NoteImporter = require('gitlab-adapter/note-importer');
 // accessors
 var Story = require('accessors/story');
 
-exports.importEvents = importEvents;
-exports.importHookEvent = importHookEvent;
+module.exports = {
+    importEvents,
+    importHookEvent,
+};
 
 /**
  * Retrieve activity log entries from Gitlab server and turn them into stories
@@ -38,7 +41,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
     };
     return TaskLog.last('gitlab-event-import', options).then((lastTask) => {
         var lastEventTime = _.get(lastTask, 'details.last_event_time');
-        var repoLink = Import.Link.find(repo, server);
+        var repoLink = LinkUtils.find(repo, { server });
         var url = `/projects/${repoLink.project.id}/events`;
         var params = { sort: 'asc' };
         if (lastEventTime) {

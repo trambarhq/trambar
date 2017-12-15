@@ -1,10 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-exports.getDevices = getDevices;
-exports.hasDevice = hasDevice;
-exports.addEventListener = addEventListener;
-exports.removeEventListener = removeEventListener;
+module.exports = {
+    getDevices,
+    hasDevice,
+    addEventListener,
+    removeEventListener,
+};
 
 var availableDevices = [];
 

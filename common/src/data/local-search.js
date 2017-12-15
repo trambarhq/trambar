@@ -1,6 +1,10 @@
 var _ = require('lodash');
 
-exports.match = function(table, object, criteria) {
+module.exports = {
+    match,
+}
+
+function match(table, object, criteria) {
     var matching = true;
     for (var name in criteria) {
         var desiredValue = criteria[name];

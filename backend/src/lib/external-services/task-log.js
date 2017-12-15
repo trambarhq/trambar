@@ -6,8 +6,10 @@ var TaskQueue = require('utils/task-queue');
 
 var Task = require('accessors/task');
 
-exports.start = start;
-exports.last = last;
+module.exports ={
+    start,
+    last,
+};
 
 /**
  * Start a task log

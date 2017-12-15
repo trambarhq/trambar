@@ -1,10 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-exports.on = on;
-exports.off = off;
-exports.initiate = initiate;
-exports.close = close;
+module.exports = {
+    on,
+    off,
+    initiate,
+    close,
+};
 
 var listeners = [];
 

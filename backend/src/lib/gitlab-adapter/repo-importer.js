@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var TaskLog = require('external-services/task-log');
@@ -12,8 +13,10 @@ var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Story = require('accessors/story');
 
-exports.importEvent = importEvent;
-exports.importRepositories = importRepositories;
+module.exports = {
+    importEvent,
+    importRepositories,
+};
 
 /**
  * Import an activity log entry about an issue
@@ -29,7 +32,7 @@ exports.importRepositories = importRepositories;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     var link = repoLink;
     var storyNew = copyEventProperties(null, author, glEvent, link);
     return Story.insertOne(db, schema, storyNew);
@@ -75,9 +78,8 @@ function importRepositories(db, server) {
         server: server.name,
     });
     // find existing repos connected with server (including deleted ones)
-    var criteria = {
-        external_object: Import.Link.create(server),
-    };
+    var serverLink = LinkUtils.create(server)
+    var criteria = { external_object: serverLink };
     return Repo.find(db, 'global', criteria, '*').then((repos) => {
         var added = [];
         var deleted = [];
@@ -86,7 +88,7 @@ function importRepositories(db, server) {
         return fetchRepos(server).then((glRepos) => {
             // delete ones that no longer exists
             return Promise.each(repos, (repo) => {
-                var repoLink = Import.Link.find(repo, server);
+                var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
                 if (!_.some(glRepos, { id: repoLink.project.id })) {
                     deleted.push(repo.name);
                     return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
@@ -100,7 +102,7 @@ function importRepositories(db, server) {
                     return UserImporter.findUser(db, server, glUser);
                 }).then((members) => {
                     return findExistingRepo(db, server, repos, glRepo).then((repo) => {
-                        var link = Import.Link.create(server, {
+                        var link = LinkUtils.create(server, {
                             project: { id: glRepo.id }
                         });
                         var repoAfter = copyRepoDetails(repo, members, glRepo, glLabels, link);
@@ -146,7 +148,7 @@ function importRepositories(db, server) {
  */
 function findExistingRepo(db, server, repos, glRepo) {
     var repo = _.find(repos, (repo) => {
-        var repoLink = Import.Link.find(repo, server);
+        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
         if (repoLink.project && repoLink.project.id === glRepo.id) {
             return true;
         }

@@ -5,10 +5,12 @@ var Sharp = require('sharp');
 var Piexif = require("piexifjs");
 var Moment = require('moment');
 
-exports.applyFilters = applyFilters;
-exports.getImageMetadata = getImageMetadata;
-exports.getJPEGDescription = getJPEGDescription;
-exports.addJPEGDescription = addJPEGDescription;
+module.exports = {
+    applyFilters,
+    getImageMetadata,
+    getJPEGDescription,
+    addJPEGDescription,
+};
 
 /**
  * Return metadata of an image file

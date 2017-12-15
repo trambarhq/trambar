@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
@@ -11,8 +12,10 @@ var UserImporter = require('gitlab-adapter/user-importer');
 var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
 
-exports.importEvent = importEvent;
-exports.importHookEvent = importHookEvent;
+module.exports = {
+    importEvent,
+    importHookEvent,
+};
 
 /**
  * Import an activity log entry about an merge request
@@ -28,12 +31,12 @@ exports.importHookEvent = importHookEvent;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     return fetchMergeRequest(server, repoLink.project.id, glEvent.target_id).then((glMergeRequest) => {
         // the story is linked to both the merge request and the repo
-        var mergeRequestLink = Import.Link.create(server, {
+        var mergeRequestLink = LinkUtils.extend(repoLink, {
             merge_request: { id: glMergeRequest.id }
-        }, repoLink);
+        });
         // find existing merge request
         var criteria = {
             type: 'merge-request',
@@ -73,10 +76,10 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 
         // find existing story
         var schema = project.name;
-        var repoLink = Import.Link.find(repo, server);
-        var mergeRequestLink = Import.Link.create(server, {
+        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+        var mergeRequestLink = LinkUtils.extend(repoLink, {
             merge_request: { id: glMergeRequest.id }
-        }, repoLink);
+        });
         var criteria = {
             type: 'merge-request',
             external_object: mergeRequestLink,
@@ -116,10 +119,10 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  */
 function importAssignment(db, server, project, repo, story, glMergeRequest) {
     var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
-    var mergeRequestLink = Import.Link.create(server, {
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var mergeRequestLink = LinkUtils.extend(repoLink, {
         merge_request: { id: glMergeRequest.id }
-    }, repoLink);
+    });
     // find existing assignments
     var criteria = {
         story_id: story.id,

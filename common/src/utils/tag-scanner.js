@@ -1,7 +1,9 @@
 var _ = require('lodash');
 
-exports.findTags = findTags;
-exports.isTag = isTag;
+module.exports = {
+    findTags,
+    isTag,
+};
 
 /**
  * Find @name and #keyword tags

@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var PushReconstructor = require('gitlab-adapter/push-reconstructor');
@@ -10,7 +11,9 @@ var UserImporter = require('gitlab-adapter/user-importer');
 // accessors
 var Story = require('accessors/story');
 
-exports.importEvent = importEvent;
+module.exports = {
+    importEvent,
+};
 
 /**
  * Import an activity log entry about a push
@@ -48,12 +51,11 @@ function importEvent(db, server, repo, project, author, glEvent) {
     return PushReconstructor.reconstructPush(db, server, repo, branch, headId, tailId, count).then((push) => {
         // look for component descriptions
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
-            var repoLink = Import.Link.find(repo, server);
-            var commitLink = Import.Link.create(server, {
+            var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+            var commitLink = LinkUtils.extend(repoLink, {
                 commit: { ids: push.commitIds }
             });
-            var link = Import.Link.merge(commitLink, repoLink);
-            var storyNew = copyPushProperties(null, author, push, components, glEvent, link);
+            var storyNew = copyPushProperties(null, author, push, components, glEvent, commitLink);
             return Story.insertOne(db, schema, storyNew);
         });
     });

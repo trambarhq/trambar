@@ -1,5 +1,7 @@
-exports.extract = extract;
-exports.insert = insert;
+module.exports = {
+    extract,
+    insert,
+};
 
 /**
  * Extract server name and protocol from URL path

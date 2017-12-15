@@ -27,6 +27,12 @@ var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`)
         }
     }
 }));
+
+module.exports = {
+    start,
+    stop,
+};
+
 var database;
 
 function start() {
@@ -474,9 +480,6 @@ function getTimeElapsed(start, end) {
     var e = (typeof(end) === 'string') ? new Date(end) : end;
     return (e - s);
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

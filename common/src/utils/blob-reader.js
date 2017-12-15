@@ -1,8 +1,10 @@
 var Promise = require('bluebird');
 
-exports.loadUint8Array = loadUint8Array;
-exports.loadArrayBuffer = loadArrayBuffer;
-exports.loadText = loadText;
+module.exports = {
+    loadUint8Array,
+    loadArrayBuffer,
+    loadText,
+};
 
 function loadUint8Array(blob) {
     return loadArrayBuffer(blob).then((buffer) => {

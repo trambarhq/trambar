@@ -30,6 +30,11 @@ var Statistics = require('accessors/statistics');
 var Story = require('accessors/story');
 var Task = require('accessors/task');
 
+module.exports = {
+    start,
+    stop,
+};
+
 var area = (process.env.POSTGRES_USER === 'admin_role') ? 'admin' : 'client';
 var server;
 
@@ -142,7 +147,7 @@ function handleDiscovery(req, res) {
                 criteria.deleted = false;
             }
             var accessor = getAccessor(schema, table);
-            // in addition to id and gn, we need columns used by filter() 
+            // in addition to id and gn, we need columns used by filter()
             var columns = _.union([ 'id', 'gn' ], _.keys(accessor.accessControlColumns));
             return accessor.find(db, schema, criteria, columns.join(', ')).catch((err) => {
                 if (err.code === '42P01' && schema !== 'global') {
@@ -422,9 +427,6 @@ function getAccessor(schema, table) {
     }
     return accessor;
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

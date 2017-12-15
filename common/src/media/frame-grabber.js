@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-exports.capture = capture;
+module.exports = {
+    capture,
+}
 
 function capture(video, startTime) {
     if (!startTime) {

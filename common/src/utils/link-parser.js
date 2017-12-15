@@ -1,6 +1,8 @@
 var _ = require('lodash');
 
-exports.parse = parse;
+module.exports = {
+    parse,
+};
 
 /**
  * Parse contents of a .ini file for properties of web bookmark

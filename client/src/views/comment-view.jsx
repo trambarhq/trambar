@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
 var Memoize = require('utils/memoize');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -181,9 +182,7 @@ module.exports = React.createClass({
                     );
                 case 'note':
                     var baseUrl = _.get(this.props.repo, 'details.web_url');
-                    var link = _.find(reaction.external, (link) => {
-                        return !!link.note;
-                    });
+                    var link = LinkUtils.find(reaction, { relation: 'note' });
                     var url, target;
                     if (baseUrl && link) {
                         target = link.type;
@@ -221,9 +220,7 @@ module.exports = React.createClass({
                     var baseUrl = _.get(this.props.repo, 'details.web_url');
                     if (story.type === 'issue') {
                         var url, target;
-                        var link = _.find(reaction.external, (link) => {
-                            return !!link.issue;
-                        });
+                        var link = LinkUtils.find(reaction, { relation: 'issue' });
                         if (baseUrl && link) {
                             var issueId = this.props.story.details.number;
                             url = `${baseUrl}/issues/${issueId}`;
@@ -236,9 +233,7 @@ module.exports = React.createClass({
                         );
                     } else if (story.type === 'merge-request') {
                         var url, target;
-                        var link = _.find(reaction.external, (link) => {
-                            return !!link.merge_request;
-                        });
+                        var link = LinkUtils.find(reaction, { relation: 'merge_request' });
                         if (baseUrl) {
                             var mergeRequestId = this.props.story.details.number;
                             url = `${baseUrl}/merge_requests/${mergeRequestId}`;

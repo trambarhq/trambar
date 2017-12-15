@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-exports.format = format;
+module.exports = {
+    format,
+};
 
 function format(schema, user, notification, lang) {
     return {

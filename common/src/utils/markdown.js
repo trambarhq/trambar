@@ -8,15 +8,17 @@ var Theme = require('theme/theme');
 // widgets
 var ImageView = require('media/image-view');
 
-exports.detect = detect;
-exports.parse = parse;
-exports.parseSurvey = parseSurvey;
-exports.parseSurveyResults = parseSurveyResults;
-exports.parseTaskList = parseTaskList;
-exports.createParser = createParser;
-exports.createRenderer = createRenderer;
-exports.findReferencedResource = findReferencedResource;
-exports.createBlobUrl = createBlobUrl;
+module.exports = {
+    detect,
+    parse,
+    parseSurvey,
+    parseSurveyResults,
+    parseTaskList,
+    createParser,
+    createRenderer,
+    findReferencedResource,
+    createBlobUrl,
+};
 
 /**
  * Detect whether text appears to be Markdown

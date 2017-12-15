@@ -1,8 +1,10 @@
 var Promise = require('bluebird');
 
-exports.loadImage = loadImage;
-exports.loadVideo = loadVideo;
-exports.loadAudio = loadAudio;
+module.exports = {
+    loadImage,
+    loadVideo,
+    loadAudio,
+};
 
 function loadImage(url) {
     return new Promise((resolve, reject) => {

@@ -2,9 +2,11 @@ var _ = require('lodash');
 var React = require('react');
 var ListParser = require('utils/list-parser');
 
-exports.parseSurvey = parseSurvey;
-exports.parseSurveyResults = parseSurveyResults;
-exports.parseTaskList = parseTaskList;
+module.exports = {
+    parseSurvey,
+    parseSurveyResults,
+    parseTaskList,
+};
 
 function parseSurvey(text, answers, onChange) {
     var listTokens = ListParser.extract(text);

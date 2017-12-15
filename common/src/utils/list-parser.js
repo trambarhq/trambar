@@ -1,8 +1,10 @@
 var _ = require('lodash');
 
-exports.extract = extract;
-exports.detect = detect;
-exports.update = update;
+module.exports = {
+    extract,
+    detect,
+    update,
+};
 
 // look for in Latin x, Cyrillic х, and Greek χ
 var regExp = /^([ \t]*)\[([ xхχ]{0,3})\]([ \t]*)(.*?)([ \t]*?)$/mig;

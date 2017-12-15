@@ -27,6 +27,14 @@ var Story = require('accessors/story');
 var Notification = require('accessors/notification');
 var Task = require('accessors/task');
 
+module.exports = {
+    start,
+    stop,
+    createSchema,
+    deleteSchema,
+    renameSchema,
+};
+
 var database;
 var messageQueueInterval;
 
@@ -426,12 +434,6 @@ function cleanMessageQueue(db) {
     var sql = `DELETE FROM "message_queue" WHERE ctime + CAST($1 AS INTERVAL) < NOW()`;
     return db.execute(sql, [ lifetime ]);
 }
-
-exports.start = start;
-exports.stop = stop;
-exports.createSchema = createSchema;
-exports.deleteSchema = deleteSchema;
-exports.renameSchema = renameSchema;
 
 if (process.argv[1] === __filename) {
     start();

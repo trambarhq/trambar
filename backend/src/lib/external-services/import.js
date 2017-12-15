@@ -1,12 +1,12 @@
 var _ = require('lodash');
 
-exports.join = join;
-exports.reacquire = reacquire;
-exports.set = set;
-exports.attach = attach;
-exports.multilingual = multilingual;
-
-exports.Link = { find, create, pick, merge };
+module.exports = {
+    join,
+    reacquire,
+    set,
+    attach,
+    multilingual,
+};
 
 /**
  * Attach a link to an external object to the object
@@ -136,97 +136,3 @@ function multilingual(langText) {
 }
 
 var lang = (process.env.LANG || 'en-US').substr(0, 2);
-
-/**
- * Find a link by server
- *
- * @param  {ExternalData} object
- * @param  {Object} server
- *
- * @return {Object|undefined}
- */
-function find(object, server) {
-    var props = {};
-    if (server.type) {
-        props.type = server.type;
-    }
-    if (server.id) {
-        props.server_id = server.id;
-    }
-    return _.find(object.external, props);
-}
-
-/**
- * Create a link to a server and an object there
- *
- * @param  {Server} server
- * @param  {Object} props
- * @param  {Object...} parentLinks
- *
- * @return {Object}
- */
-function create(server, props, ...parentLinks) {
-    var link = _.merge({}, {
-        type: server.type,
-        server_id: server.id
-    }, props);
-    attachParentLinks(link, parentLinks);
-    return link;
-}
-
-/**
- * Pick a particular link from a record that links to multiple external objects
- *
- * @param  {Object} link
- * @param  {String} objectName
- *
- * @return {Object|null}
- */
-function pick(link, objectName) {
-    if (link && link[objectName]) {
-        var partial = {
-            type: link.type,
-            server_id: link.server_id,
-        };
-        partial[objectName] = link[objectName];
-        return partial;
-    }
-}
-
-/**
- * Create a link by merging multiple links
- *
- * @param  {Object} link
- * @param  {Object...} parentLinks
- *
- * @return {Object}
- */
-function merge(link, ...parentLinks) {
-    link = _.clone(link);
-    if (!link.type) {
-        throw new Error('Merging a link with missing type');
-    }
-    if (!link.server_id) {
-        throw new Error('Merging a link with missing server_id');
-    }
-    attachParentLinks(link, parentLinks);
-    return link;
-}
-
-function attachParentLinks(link, parentLinks) {
-    _.each(parentLinks, (parentLink) => {
-        if (parentLink.type !== link.type) {
-            throw new Error('Cannot merge links of different types');
-        }
-        if (parentLink.server_id !== link.server_id) {
-            throw new Error('Cannot merge links to different servers');
-        }
-        _.forIn(parentLink, (value, name) => {
-            if (value.id) {
-                link[name] = { id: value.id };
-            } else if (value.ids) {
-                link[name] = { ids: value.ids };
-            }
-        });
-    });
-}

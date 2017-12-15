@@ -14,6 +14,11 @@ var DailyNotifications = require('analysers/daily-notifications');
 var ProjectDateRange = require('analysers/story-date-range');
 var StoryPopularity = require('analysers/story-popularity');
 
+module.exports = {
+    start,
+    stop,
+};
+
 var analysers = [
     DailyActivities,
     DailyNotifications,
@@ -289,9 +294,6 @@ function findListingsImpactedByStatisticsChange(db, schema, events) {
         return _.map(rows, 'id');
     });
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

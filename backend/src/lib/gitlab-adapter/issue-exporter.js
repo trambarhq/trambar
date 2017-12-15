@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Export = require('external-services/export');
 var Import = require('external-services/import');
@@ -13,7 +14,9 @@ var Story = require('accessors/story');
 var Server = require('accessors/server');
 var User = require('accessors/user');
 
-exports.exportStory = exportStory;
+module.exports = {
+    exportStory,
+};
 
 /**
  * Export a story to issue tracker
@@ -25,21 +28,21 @@ exports.exportStory = exportStory;
  * @return {Promise<Story|null>}
  */
 function exportStory(db, project, story) {
-    var link = Import.Link.find(story, { type: 'gitlab' });
-    var criteria = { id: link.server_id, deleted: false };
+    var issueLink = LinkUtils.find(story, { type: 'gitlab', relation: 'issue' });
+    var criteria = { id: issueLink.server_id, deleted: false };
     return Server.findOne(db, 'global', criteria, '*').then((server) => {
         var criteria = { id: story.user_ids[0], deleted: false };
         return User.findOne(db, 'global', criteria, '*').then((author) => {
             if (!server || !author) {
                 return null;
             }
-            var authorLink = Import.Link.find(author, server);
-            var glIssue = copyIssueProperties(story, project, link);
+            var authorLink = LinkUtils.find(author, { server });
+            var glIssue = copyIssueProperties(story, project, issueLink);
             var glIssueNumber = story.details.number;
-            return saveIssue(server, link.project.id, glIssueNumber, glIssue, authorLink.user.id).then((glIssue) => {
+            return saveIssue(server, issueLink.project.id, glIssueNumber, glIssue, authorLink.user.id).then((glIssue) => {
                 var storyAfter = _.cloneDeep(story);
-                var linkAfter = Import.Link.find(storyAfter, { type: 'gitlab' });
-                _.set(linkAfter, 'issue.id', glIssue.id);
+                var issueLinkAfter = LinkUtils.find(storyAfter, { type: 'gitlab', relation: 'issue' });
+                _.set(issueLinkAfter, 'issue.id', glIssue.id);
                 _.set(storyAfter, 'details.number', glIssue.iid);
                 if (_.isEqual(story, storyAfter)) {
                     return story;

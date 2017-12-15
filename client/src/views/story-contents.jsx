@@ -5,6 +5,7 @@ var Memoize = require('utils/memoize');
 var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 var PlainText = require('utils/plain-text');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -469,7 +470,7 @@ module.exports = React.createClass({
         var user = (author) ? n(author.details.name, author.details.gender) : '';
         var url;
         var baseUrl = _.get(repo, 'details.web_url');
-        var issueLink = findLink(this.props.story, repo);
+        var issueLink = LinkUtils.find(this.props.story, { relation: 'issue' });
         if (baseUrl && issueLink) {
             url = `${baseUrl}/issues/${issueLink.issue.id}`;
         }
@@ -501,7 +502,7 @@ module.exports = React.createClass({
         var url;
         var repo = this.props.repo;
         var baseUrl = _.get(repo, 'details.web_url');
-        var milestoneLink = findLink(this.props.story, repo);
+        var milestoneLink = LinkUtils.find(this.props.story, { relation: 'milestone' });
         if (baseUrl && milestoneLink) {
             url = `${baseUrl}/milestones/${milestoneLink.milestone.id}`;
         }
@@ -540,7 +541,7 @@ module.exports = React.createClass({
         var url;
         var repo = this.props.repo;
         var baseUrl = _.get(repo, 'details.web_url');
-        var mergeRequestLink = findLink(this.props.story, repo);
+        var mergeRequestLink = LinkUtils.find(this.props.story, { relation: 'merge_request' });
         if (baseUrl && mergeRequestLink) {
             url = `${baseUrl}/merge_requests/${mergeRequestLink.merge_request.id}`;
         }
@@ -1082,14 +1083,3 @@ var getZoomableResources = Memoize(function(resources) {
         }
     })
 });
-
-function findLink(story, repo) {
-    if (!story || !repo) {
-        return null;
-    }
-    return _.find(story.external, (link1) => {
-        return _.some(repo.external, (link2) => {
-            return _.isMatch(link1, link2);
-        });
-    });
-}

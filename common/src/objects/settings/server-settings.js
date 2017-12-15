@@ -1,4 +1,6 @@
-exports.default = {
+module.exports = exports = {
+    default: {
+    }
 };
 
 if (process.env.NODE_ENV !== 'production') {

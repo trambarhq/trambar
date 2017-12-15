@@ -8,7 +8,9 @@ var Picture = require('accessors/picture');
 var CacheFolders = require('media-server/cache-folders');
 var ImageManager = require('media-server/image-manager');
 
-exports.importPhotos = importPhotos;
+module.exports = {
+    importPhotos,
+};
 
 function importPhotos() {
     Database.open().then((db) => {

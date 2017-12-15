@@ -1,8 +1,10 @@
 var _ = require('lodash');
 var Diff = require('diff');
 
-exports.mergeObjects = mergeObjects;
-exports.mergeStrings = mergeStrings;
+module.exports = {
+    mergeObjects,
+    mergeStrings,
+};
 
 function mergeObjects(a, b, c, resolveFns) {
     var d = {};

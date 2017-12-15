@@ -25,6 +25,11 @@ var Story = require('accessors/story');
 var System = require('accessors/system');
 var User = require('accessors/user');
 
+module.exports = {
+    start,
+    stop,
+};
+
 var server;
 var database;
 
@@ -457,9 +462,6 @@ function getServerAddress(db) {
         return _.trimEnd(address, ' /');
     });
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

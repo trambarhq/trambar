@@ -14,6 +14,7 @@ var Database = require('database');
 var Shutdown = require('shutdown');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var GitlabUserImporter = require('gitlab-adapter/user-importer');
@@ -25,6 +26,11 @@ var Project = require('accessors/project');
 var Server = require('accessors/server');
 var System = require('accessors/system');
 var User = require('accessors/user');
+
+module.exports = {
+    start,
+    stop,
+};
 
 var server;
 var authenticationLifetime = 2; // hours
@@ -630,13 +636,11 @@ function authenticateThruPassport(db, req, res, server, params, scope) {
 function findMatchingUser(db, server, account) {
     // look for a user with the external id
     var profile = account.profile;
-    // use the id from the raw object if it's there so we have the correct type
-    var userId = profile._json.id || profile.id;
     var criteria = {
         external_object: {
             type: server.type,
             server_id: server.id,
-            user: { id: userId },
+            user: { id: getProfileId(profile) },
         },
         deleted: false,
     };
@@ -664,10 +668,10 @@ function findMatchingUser(db, server, account) {
             }
         }
         return retrieveProfileImage(profile).then((image) => {
-            var link = Import.Link.create(server, {
-                user: { id: profile.id }
+            var userLink = LinkUtils.create(server, {
+                user: { id: getProfileId(profile) }
             });
-            var userAfter = copyUserProperties(user, image, server, profile, link);
+            var userAfter = copyUserProperties(user, image, server, profile, userLink);
             if(userAfter) {
                 if (user) {
                     return User.updateOne(db, 'global', userAfter);
@@ -683,6 +687,19 @@ function findMatchingUser(db, server, account) {
             }
         });
     });
+}
+
+/**
+ * Get user id from OAuth profile
+ *
+ * @param  {Object} profile
+ *
+ * @return {Number|String}
+ */
+function getProfileId(profile) {
+    // return the id from the raw object if it's there so we have the
+    // correct JS type
+    return profile._json.id || profile.id;
 }
 
 /**
@@ -842,9 +859,6 @@ function removeUnusedAuthorizationObjects() {
         return Authentication.removeMatching(db, 'global', criteria);
     });
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

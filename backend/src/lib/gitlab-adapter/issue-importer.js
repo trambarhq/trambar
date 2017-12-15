@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
@@ -11,8 +12,10 @@ var UserImporter = require('gitlab-adapter/user-importer');
 var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
 
-exports.importEvent = importEvent;
-exports.importHookEvent = importHookEvent;
+module.exports = {
+    importEvent,
+    importHookEvent,
+};
 
 /**
  * Import an activity log entry about an issue
@@ -28,13 +31,13 @@ exports.importHookEvent = importHookEvent;
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     return fetchIssue(server, repoLink.project.id, glEvent.target_id).then((glIssue) => {
         // the story is linked to both the issue and the repo
-        var issueLink = Import.Link.create(server, {
+        var issueLink = LinkUtils.extend(repoLink, {
             issue: { id: glIssue.id }
-        }, repoLink);
-        // find existing issue
+        });
+        // find existing issuerepoLink
         var criteria = {
             type: 'issue',
             external_object: issueLink,
@@ -75,10 +78,10 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 
         // find existing story
         var schema = project.name;
-        var repoLink = Import.Link.find(repo, server);
-        var issueLink = Import.Link.create(server, {
+        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+        var issueLink = LinkUtils.extend(repoLink, {
             issue: { id: glIssue.id }
-        }, repoLink);
+        });
         var criteria = {
             type: 'issue',
             external_object: issueLink,
@@ -118,10 +121,10 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  */
 function importAssignments(db, server, project, repo, story, glIssue) {
     var schema = project.name;
-    var repoLink = Import.Link.find(repo, server);
-    var issueLink = Import.Link.create(server, {
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var issueLink = LinkUtils.extend(repoLink, {
         issue: { id: glIssue.id }
-    }, repoLink);
+    });
     // find existing assignments
     var criteria = {
         story_id: story.id,

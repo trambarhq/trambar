@@ -30,6 +30,11 @@ var Story = require('accessors/story');
 var Notification = require('accessors/notification');
 var Task = require('accessors/task');
 
+module.exports = {
+    start,
+    stop,
+};
+
 var accessors = [
     Picture,
     Project,
@@ -148,9 +153,6 @@ function Message(type, listener, body) {
     this.listener = listener;
     this.body = body;
 }
-
-exports.start = start;
-exports.stop = stop;
 
 if (process.argv[1] === __filename) {
     start();

@@ -1,7 +1,10 @@
 var _ = require('lodash');
+var LinkUtils = require('objects/utils/link-utils');
 
-exports.extract = extract;
-exports.attach = attach;
+module.exports = {
+    extract,
+    attach,
+};
 
 /**
  * Extract information concerning an issue issue from a story and
@@ -16,20 +19,14 @@ function extract(story, repos) {
     if (!story) {
         return null;
     }
-    var issueLink = _.find(story.external, (link) => {
-        return !!(link.project && link.issue);
-    });
+    var issueLink = LinkUtils.find(story, { relation: 'issue' });
     if (!issueLink) {
         // not linked to an issue in issue tracker
         return null;
     }
     // find the repo in whose tracker the issue reside
     var repo = _.find(repos, (repo) => {
-        return _.some(repo.external, (link) => {
-            if (link.project) {
-                return link.project.id === issueLink.project.id;
-            }
-        });
+        return !!LinkUtils.find(story, { project: issueLink.project });
     });
     if (!repo) {
         // either the repo has gone missing or it's not loaded yet
@@ -57,27 +54,24 @@ function attach(story, issue, user, repos) {
         if (issue) {
             // find the correct repo
             var repo = _.find(repos, { id: issue.repoId });
-            var repoLink = _.find(repo.external, (link) => {
-                return !!link.project;
-            });
+            var repoLink = LinkUtils.find(repo, { relation: 'project' });
             // find the user link that matches the repo's server
             // (a user can definitely be linked to multiple servers)
-            var userLink = _.find(user.external, { server_id: repoLink.server_id });
+            var userLink = LinkUtils.find(user, { server_id: repoLink.server_id });
             // find existing issue link (when modifying existing story)
-            var issueLink = _.find(story.external, (link) => {
-                return !!(link.project && link.issue);
-            });
+            var issueLink = LinkUtils.find(story, { relation: 'issue' });
             if (issueLink) {
                 // make sure the existing link is pointing to the selected repo
-                if (issueLink.server_id !== repoLink.server_id || issueLink.project.id !== repoLink.project.id) {
+                if (_.isMatch(issueLink, repoLink)) {
                     _.pull(story.external, issueLink);
                     issueLink = null;
                 }
             }
             if (!issueLink) {
                 // an incomplete issue link--server will add the issue id
-                issueLink = _.clone(repoLink);
-                issueLink.issue = { id: 0 };
+                issueLink = LinkUtils.extend(repoLink, {
+                    issue: { id: 0 }
+                });
                 if (!story.external) {
                     story.external = [];
                 }

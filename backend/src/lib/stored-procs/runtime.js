@@ -1,7 +1,23 @@
-// inside plv8_init() this points to the global object
-var exports = exports || this;
+var exports = {
+    findChanges,
+    isEqual,
+    sendChangeNotification,
+    sendCleanNotification,
+    matchObject,
+    externalIdStrings,
+    transferProps,
+};
 
-exports.findChanges = function(before, after, omit) {
+if (typeof(module) === 'object') {
+    module.exports = exports;
+} else {
+    // inside plv8_init() this points to the global object
+    for (var name in exports) {
+        this[name] = exports[name];
+    }
+}
+
+function findChanges(before, after, omit) {
     var diff = {};
     var changes = false;
     var keys = Object.keys((before) ? before : after);
@@ -17,9 +33,9 @@ exports.findChanges = function(before, after, omit) {
         }
     }
     return (changes) ? diff : null;
-};
+}
 
-exports.isEqual = function(before, after) {
+function isEqual(before, after) {
     if (before === after) {
         return true;
     }
@@ -53,10 +69,9 @@ exports.isEqual = function(before, after) {
     } else {
         return false;
     }
-};
-var isEqual = exports.isEqual;
+}
 
-exports.sendChangeNotification = function(op, schema, table, before, after, changes, propNames) {
+function sendChangeNotification(op, schema, table, before, after, changes, propNames) {
     var id = (after) ? after.id : before.id;
     var gn = (after) ? after.gn : before.gn;
     var diff = {}, previous = {}, current = {};
@@ -96,9 +111,9 @@ exports.sendChangeNotification = function(op, schema, table, before, after, chan
             plv8.execute(sql);
         }
     }
-};
+}
 
-exports.sendCleanNotification = function(op, schema, table, after) {
+function sendCleanNotification(op, schema, table, after) {
     var id = after.id;
     var gn = after.gn;
     var atime = after.atime;
@@ -108,9 +123,9 @@ exports.sendCleanNotification = function(op, schema, table, after) {
     var msg = JSON.stringify(info);
     var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
     plv8.execute(sql);
-};
+}
 
-exports.matchObject = function(filters, object) {
+function matchObject(filters, object) {
     for (var name in filters) {
         switch (name) {
             case 'time_range':
@@ -153,9 +168,9 @@ exports.matchObject = function(filters, object) {
         }
     }
     return true;
-};
+}
 
-exports.externalIdStrings = function(external, type, names) {
+function externalIdStrings(external, type, names) {
     var strings = [];
     if (external) {
         for (var i = 0; i < external.length; i++) {
@@ -206,14 +221,14 @@ exports.externalIdStrings = function(external, type, names) {
     return (strings.length > 0) ? strings : null;
 }
 
-exports.transferProps = function(src, dst) {
+function transferProps(src, dst) {
     for (var name in src) {
         // copy property unless it's set already
         if (dst[name] == null) {
             dst[name] = src[name];
         }
     }
-};
+}
 
 function matchTimeRanges(a, b) {
     // check if start-time or end-time of B is inside A

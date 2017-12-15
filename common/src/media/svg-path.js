@@ -1,4 +1,8 @@
-exports.create = function(path, w, h) {
+module.exports = {
+	create,
+};
+
+function create(path, w, h) {
 	var commands = [];
 	for(var j = 0; j < path.length; j++) {
 		var s = path[j];

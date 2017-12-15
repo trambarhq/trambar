@@ -1,9 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-
 var HttpError = require('errors/http-error');
 
-exports.fetch = function(method, url, payload, options) {
+module.exports = {
+    fetch,
+}
+
+function fetch(method, url, payload, options) {
     var xhr = new XMLHttpRequest();
     var promise = new Promise((resolve, reject) => {
         var username = _.get(options, 'username', null);

@@ -10,7 +10,9 @@ var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
 var User = require('accessors/user');
 
-exports.generate = generate;
+module.exports = {
+    generate,
+};
 
 /**
  * Create new notification objects based on database events

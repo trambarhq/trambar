@@ -8,12 +8,14 @@ var HttpError = require('errors/http-error');
 var Database = require('database');
 var Server = require('accessors/server');
 
-exports.fetch = fetch;
-exports.fetchAll = fetchAll;
-exports.fetchEach = fetchEach;
-exports.post = post;
-exports.put = put;
-exports.remove = remove;
+module.exports = {
+    fetch,
+    fetchAll,
+    fetchEach,
+    post,
+    put,
+    remove,
+};
 
 var PAGE_SIZE = 50;
 var PAGE_LIMIT = 1000;

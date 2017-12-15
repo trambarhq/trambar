@@ -7,12 +7,14 @@ var Crypto = require('crypto');
 var CacheFolders = require('media-server/cache-folders');
 var FileManager = require('media-server/file-manager');
 
-exports.createJobId = createJobId;
-exports.startTranscodingJob = startTranscodingJob;
-exports.findTranscodingJob = findTranscodingJob;
-exports.transcodeSegment = transcodeSegment;
-exports.endTranscodingJob = endTranscodingJob;
-exports.awaitTranscodingJob = awaitTranscodingJob;
+module.exports = {
+    createJobId,
+    startTranscodingJob,
+    findTranscodingJob,
+    transcodeSegment,
+    endTranscodingJob,
+    awaitTranscodingJob,
+};
 
 /**
  * Create a random job id

@@ -4,13 +4,16 @@ var Request = require('request');
 var Ignore = require('ignore');
 var HttpError = require('errors/http-error');
 var Async = require('async-do-while');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 
 var languageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
 
-exports.retrieveDescriptions = retrieveDescriptions;
+module.exports = {
+    retrieveDescriptions,
+};
 
 /**
  * Retrieve component descriptions about a push
@@ -267,7 +270,7 @@ function findMatchingComponents(folder, path) {
  */
 function scanFolder(server, repo, commitId, folderPath) {
     console.log(`Scanning ${folderPath}`);
-    var repoLink = Import.Link.find(repo, server);
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     var url = `projects/${repoLink.project.id}/repository/tree`;
     var query = {
         path: folderPath,
@@ -298,7 +301,7 @@ function retrieveFile(server, repo, commitId, fileRecord) {
         return Promise.resolve(null);
     }
     console.log(`Retrieving file: ${fileRecord.path}`);
-    var repoLink = Import.Link.find(repo, server);
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     var url = `/projects/${repoLink.project.id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
     var query = {
         ref: commitId,

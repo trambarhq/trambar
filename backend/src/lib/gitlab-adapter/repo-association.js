@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Import = require('external-services/import');
 
@@ -8,8 +9,10 @@ var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Server = require('accessors/server');
 
-exports.find = find;
-exports.findOne = findOne;
+module.exports = {
+    find,
+    findOne,
+};
 
 /**
  * Return a list of objects containing project, repo, and server
@@ -107,7 +110,7 @@ function findOne(db, criteria) {
             console.log(criteria);
             throw new Error(`Repository "${repo.name}" (${repo.id}) is not associated with project "${project.name}"`);
         }
-        if (!Import.Link.find(repo, server)) {
+        if (!LinkUtils.find(repo, { server, relation: 'project' })) {
             throw new Error(`Missing server link: ${repo.name}`);
         }
         return a;
