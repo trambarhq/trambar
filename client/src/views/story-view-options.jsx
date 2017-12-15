@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
-var StoryTypes = require('objects/types/story-types');
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -63,149 +63,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return true if current user can perform write action
-     *
-     * @return {Boolean}
-     */
-    canWrite: function() {
-        var access = this.props.access;
-        return (access === 'read-write');
-    },
-
-    /**
-     * Return true if current user can comment
-     *
-     * @return {Boolean}
-     */
-    canComment: function() {
-        var access = this.props.access;
-        return (access === 'read-comment' || access === 'read-write');
-    },
-
-    /**
-     * Return true if user can hide a story
-     *
-     * @return {Boolean}
-     */
-    canHideStory: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (user.type !== 'guest') {
-            if (user.type === 'admin') {
-                return true;
-            }
-            if (_.includes(story.user_ids, user.id)) {
-                return true;
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if story can be edited
-     *
-     * @return {Boolean}
-     */
-    canEditStory: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (_.includes(StoryTypes.editable, story.type)) {
-            if (_.includes(story.user_ids, user.id)) {
-                // allow editing for 3 days
-                if (Moment() < Moment(story.ptime).add(3, 'day')) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if story can be removed by current user
-     *
-     * @return {Boolean}
-     */
-    canRemoveStory: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (_.includes(story.user_ids, user.id)) {
-            // allow removal for 3 days
-            if (Moment() < Moment(story.ptime).add(3, 'day')) {
-                return true;
-            }
-        }
-        if (user.type === 'admin') {
-            return true;
-        }
-        return false;
-    },
-
-    /**
-     * Return true if story can be bumped by current user
-     *
-     * @return {Boolean}
-     */
-    canBumpStory: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (_.includes(story.user_ids, user.id) || user.type === 'admin') {
-            // allow bumping after a day
-            if (Moment() > Moment(story.btime || story.ptime).add(1, 'day')) {
-                return true;
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if story can be added to tracker
-     *
-     * @return {[type]}
-     */
-    canAddIssue: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (_.includes(StoryTypes.trackable, story.type)) {
-            return _.some(this.props.repos, (repo) => {
-                if (_.includes(repo.user_ids, user.id)) {
-                    if (repo.details.issues_enabled) {
-                        return true;
-                    }
-                }
-            });
-        }
-        return false;
-    },
-
-    /**
-     * Return true if current user can send bookmark to other users
-     *
-     * @return {Boolean}
-     */
-    canSendBookmarks: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        // TODO
-        return true;
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -242,10 +99,14 @@ module.exports = React.createClass({
     renderButtons: function(section) {
         var t = this.props.locale.translate;
         var options = this.props.options;
+        var access = this.props.access;
+        var canWrite = (access === 'read-write');
+        var canComment = (canWrite || access === 'read-write');
+        var user = this.props.currentUser;
+        var story = this.props.story;
         if (section === 'main') {
-            var userId = this.props.currentUser.id;
-            var bookmarking = _.includes(options.bookmarkRecipients, userId);
-            var otherRecipients = _.without(options.bookmarkRecipients, userId);
+            var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
+            var otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
             var bookmarkProps = {
                 label: t('option-bookmark-story'),
                 selected: bookmarking,
@@ -255,37 +116,37 @@ module.exports = React.createClass({
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !this.canSendBookmarks(),
+                hidden: !(canWrite && UserUtils.canSendBookmarks(user, story)),
                 selected: !_.isEmpty(otherRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
             var addIssueProps = {
                 label: t('option-add-issue'),
-                hidden: !this.canAddIssue(),
+                hidden: !(canWrite && UserUtils.canAddIssue(user, story, this.props.repos)),
                 selected: !!options.issueDetails,
                 onClick: this.handleAddIssueClick,
             };
             var hideProps = {
                 label: t('option-hide-post'),
-                hidden: !this.canHideStory(),
+                hidden: !(canWrite && UserUtils.canHideStory(user, story)),
                 selected: options.hidePost,
                 onClick: this.handleHideClick,
             };
             var editProps = {
                 label: t('option-edit-post'),
-                hidden: !this.canEditStory(),
+                hidden: !(canWrite && UserUtils.canEditStory(user, story)),
                 selected: options.editPost,
                 onClick: this.handleEditClick,
             };
             var removeProps = {
                 label: t('option-remove-post'),
-                hidden: !this.canRemoveStory(),
+                hidden: !(canWrite && UserUtils.canRemoveStory(user, story)),
                 selected: options.removePost,
                 onClick: this.handleRemoveClick,
             };
             var bumpProps = {
                 label: t('option-bump-post'),
-                hidden: !this.canBumpStory(),
+                hidden: !(canWrite && UserUtils.canBumpStory(user, story)),
                 selected: options.bumpPost,
                 onClick: this.handleBumpClick,
             };

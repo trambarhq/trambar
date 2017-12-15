@@ -282,9 +282,10 @@ function disconnectRepositories(db, project, repoIds) {
 function handleStoryChangeEvent(db, event) {
     var exporting = false;
     if (_.includes(StoryTypes.trackable, event.current.type)) {
-        var storyLink = Import.Link.find(event.current);
-        var issueLink = Import.Link.pick(storyLink, 'issue');
         if (event.current.published && event.current.ready) {
+            var issueLink = _.find(event.current.external, (link) => {
+                return !!link.issue;
+            });
             if (issueLink) {
                 if (!issueLink.id) {
                     exporting = true;

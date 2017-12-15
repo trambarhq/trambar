@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -21,6 +22,7 @@ module.exports = React.createClass({
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
         story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
         options: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -55,54 +57,6 @@ module.exports = React.createClass({
             enteringIssueDetails: false,
             renderingIssueDialogBox: false,
         };
-    },
-
-    /**
-     * Return true if user can hide a story
-     *
-     * @return {Boolean}
-     */
-    canHideStory: function() {
-        if (this.props.currentUser) {
-            var story = this.props.story;
-            var userType = this.props.currentUser.type;
-            if (userType !== 'guest') {
-                if (userType === 'admin') {
-                    return true;
-                }
-                var userId = this.props.currentUser.id;
-                if (_.includes(story.user_ids, userId)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if story can be added to tracker
-     *
-     * @return {[type]}
-     */
-    canAddIssue: function() {
-        // TODO: should check whether user has a Gitlab account
-        if (this.props.currentUser) {
-            var userType = this.props.currentUser.type;
-            if (userType !== 'guest') {
-                return true;
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if current user can send bookmark to other users
-     *
-     * @return {Boolean}
-     */
-    canSendBookmarks: function() {
-        // TODO
-        return true;
     },
 
     /**
@@ -144,9 +98,13 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var options = this.props.options;
         if (section === 'main') {
-            var userId = _.get(this.props.currentUser, 'id');
-            var bookmarking = _.includes(options.bookmarkRecipients, userId);
-            var otherRecipients = _.without(options.bookmarkRecipients, userId);
+            var access = this.props.access;
+            var canWrite = (access === 'read-write');
+            var canComment = (canWrite || access === 'read-write');
+            var user = this.props.currentUser;
+            var story = this.props.story;
+            var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
+            var otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
             var bookmarkProps = {
                 label: t('option-bookmark-story'),
                 selected: bookmarking,
@@ -156,20 +114,20 @@ module.exports = React.createClass({
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !this.canSendBookmarks(),
+                hidden: !UserUtils.canSendBookmarks(user, story),
                 selected: !_.isEmpty(otherRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
             var addIssueProps = {
                 label: t('option-add-issue'),
                 selected: !!options.issueDetails,
-                hidden: this.canAddIssue(),
+                hidden: !UserUtils.canAddIssue(user, story, this.props.repos),
                 onClick: this.handleAddIssueClick,
             };
             var hidePostProps = {
                 label: t('option-hide-post'),
                 selected: options.hidePost,
-                hidden: this.canHideStory(),
+                hidden: !UserUtils.canHideStory(user, story),
                 onClick: this.handleHidePostClick,
             };
             return (

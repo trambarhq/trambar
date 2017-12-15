@@ -104,9 +104,9 @@ module.exports = _.create(Data, {
                         return _.mapValues(link, (value, name) => {
                             if (typeof(value) === 'object') {
                                 // export only the ids
-                                if (value.id) {
+                                if (value.hasOwnProperty('id')) {
                                     return { id: value.id };
-                                } else if (value.ids) {
+                                } else if (value.hasOwnProperty('ids')) {
                                     return { ids: value.ids };
                                 }
                             } else {

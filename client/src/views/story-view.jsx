@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
+var IssueUtils = require('objects/utils/issue-utils');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -81,6 +82,7 @@ module.exports = React.createClass({
         var options = nextState.options = _.clone(nextState.options);
         options.hidePost = !nextProps.story.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
+        options.issueDetails = IssueUtils.extract(nextProps.story, nextProps.repos);
     },
 
     /**

@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
+var IssueUtils = require('objects/utils/issue-utils');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -162,6 +163,7 @@ module.exports = React.createClass({
         options = nextState.options = _.clone(options);
         options.hidePost = !nextState.draft.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
+        options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
         if (!options.preview) {
             options.preview = this.choosePreview(nextState.draft);
         }
@@ -368,6 +370,7 @@ module.exports = React.createClass({
             story: this.state.draft,
             options: this.state.options,
 
+            currentUser: this.props.currentUser,
             repos: this.props.repos,
             database: this.props.database,
             route: this.props.route,
@@ -609,6 +612,7 @@ module.exports = React.createClass({
         });
     },
 
+
     /**
      * Called when user makes changes to the story
      *
@@ -654,6 +658,13 @@ module.exports = React.createClass({
         if (_.isEmpty(story.role_ids)) {
             var roleIds = _.map(this.props.authors, 'role_ids');
             story.role_ids = _.uniq(_.flatten(roleIds));
+        }
+        if (IssueUtils.attach(story, options.issueDetails, this.props.currentUser, this.props.repos)) {
+            // add issue labels as tags
+            var issueTags = _.map(story.details.labels, (label) => {
+                return `#${label}`;
+            });
+            story.tags = _.union(story.tags, issueTags);
         }
         story.public = !options.hidePost;
         story.published = true;
