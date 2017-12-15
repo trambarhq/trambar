@@ -21,7 +21,10 @@ var Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (fi
 var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
     if (/\.js$/.test(filename)) {
         var module = require(`story-raters/${filename}`);
-        return module;
+        // retrieval time rating cannot be applied until the listing is being retrieved
+        if (module.type !== 'by-retrieval-time') {
+            return module;
+        }
     }
 }));
 var database;

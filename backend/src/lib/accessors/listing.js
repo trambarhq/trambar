@@ -5,6 +5,8 @@ var Database = require('database');
 var HttpError = require('errors/http-error');
 var LiveData = require('accessors/live-data');
 
+var ByRetrievalTime = require('story-raters/by-retrieval-time');
+
 module.exports = _.create(LiveData, {
     schema: 'project',
     table: 'listing',
@@ -315,6 +317,12 @@ function chooseStories(row) {
             oldStories = _.slice(oldStories, oldStories.length - oldStoryCount);
         }
         if (newStoryCount !== newStories.length) {
+            // apply retrieval time rating adjustments
+            var context = ByRetrievalTime.createContext(newStories, row);
+            _.each(newStories, (story) => {
+                story.rating += ByRetrievalTime.calculateRating(context, story);
+            });
+
             // remove lowly rate stories
             newStories = _.orderBy(newStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
             newStories = _.slice(newStories, newStories.length - newStoryCount);
