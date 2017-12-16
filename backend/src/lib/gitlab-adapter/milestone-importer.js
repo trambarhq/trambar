@@ -31,12 +31,10 @@ function importEvent(db, server, repo, project, author, glEvent) {
     var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
     return fetchMilestone(server, repoLink.project.id, glEvent.target_id).then((glMilestone) => {
         // the story is linked to both the issue and the repo
-        var milestoneLink = {
-            type: 'gitlab',
+        var milestoneLink = LinkUtils.extend(repoLink, {
             milestone: { id: glMilestone.id }
-        };
-        var link = _.merge({}, repoLink, milestoneLink);
-        var storyNew = copyMilestoneProperties(null, author, glMilestone, link);
+        });
+        var storyNew = copyMilestoneProperties(null, author, glMilestone, milestoneLink);
         return Story.insertOne(db, schema, storyNew);
     });
 }
@@ -55,6 +53,7 @@ function copyMilestoneProperties(story, author, glMilestone, link) {
     var storyAfter = _.cloneDeep(story) || {};
     var milestoneLink = Import.join(storyAfter, link);
     var descriptionTags = TagScanner.findTags(glMilestone.description);
+    milestoneLink.milestone.number = glMilestone.iid;
     _.set(storyAfter, 'type', 'milestone');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
@@ -66,7 +65,6 @@ function copyMilestoneProperties(story, author, glMilestone, link) {
     _.set(storyAfter, 'tags', descriptionTags);
     _.set(storyAfter, 'details.due_date', glMilestone.due_date);
     _.set(storyAfter, 'details.start_date', glMilestone.start_date);
-    _.set(storyAfter, 'details.number', glMilestone.iid);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }

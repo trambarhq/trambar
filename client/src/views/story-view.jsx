@@ -460,7 +460,6 @@ var defaultOptions = {
 var findRepo = Memoize(function(repos, story) {
     return _.find(repos, (repo) => {
         var link = LinkUtils.find(story, {
-            relation: 'issue',
             related_to: {
                 object: repo,
                 relation: 'project',

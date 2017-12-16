@@ -8,6 +8,7 @@ module.exports = {
     canRemoveStory,
     canBumpStory,
     canAddIssue,
+    canAccessRepo,
     canSendBookmarks,
 };
 
@@ -130,6 +131,26 @@ function canAddIssue(user, story, repos) {
                     }
                 }
             });
+        }
+    }
+    return false;
+}
+
+/**
+ * Return true if user can access the repo page
+ *
+ * @param  {User} user
+ * @param  {Repo} repo
+ *
+ * @return {Boolean}
+ */
+function canAccessRepo(user,repo) {
+    if (!user || !repo) {
+        return false;
+    }
+    if (_.includes(repo.user_ids, user.id)) {
+        if (repo.details.web_url) {
+            return true;
         }
     }
     return false;

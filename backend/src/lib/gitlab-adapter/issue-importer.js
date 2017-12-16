@@ -161,6 +161,7 @@ function copyIssueProperties(story, author, glIssue, link) {
     var issueLink = Import.join(storyAfter, link);
     var descriptionTags = TagScanner.findTags(glIssue.description);
     var labelTags = _.map(glIssue.labels, (label) => { return `#${label}`; });
+    issueLink.issue.number = glIssue.iid;
     if (!storyAfter.type || storyAfter.type === 'issue') {
         _.set(storyAfter, 'type', 'issue');
         _.set(storyAfter, 'user_ids', [ author.id ]);
@@ -172,7 +173,6 @@ function copyIssueProperties(story, author, glIssue, link) {
         _.set(storyAfter, 'details.labels', glIssue.labels);
         _.set(storyAfter, 'details.state', glIssue.state);
         _.set(storyAfter, 'details.milestone', _.get(glIssue, 'milestone.title'));
-        _.set(storyAfter, 'details.number', glIssue.iid);
         if (!glIssue.confidential) {
             _.set(storyAfter, 'details.title', glIssue.title);
         } else {
@@ -204,7 +204,8 @@ function copyIssueProperties(story, author, glIssue, link) {
  */
 function copyAssignmentProperties(reaction, story, assignee, glIssue, link) {
     var reactionAfter = _.cloneDeep(reaction) || {};
-    Import.join(reactionAfter, link);
+    var assignmentLink = Import.join(reactionAfter, link);
+    assignmentLink.issue.number = glIssue.iid;
     _.set(reactionAfter, 'type', 'assignment');
     _.set(reactionAfter, 'story_id', story.id);
     _.set(reactionAfter, 'user_id', assignee.id);

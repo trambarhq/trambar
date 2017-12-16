@@ -1,6 +1,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
 var Memoize = require('utils/memoize');
+var UserUtils = require('objects/utils/user-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
@@ -181,35 +182,41 @@ module.exports = React.createClass({
                         </span>
                     );
                 case 'note':
-                    var baseUrl = _.get(this.props.repo, 'details.web_url');
-                    var link = LinkUtils.find(reaction, { relation: 'note' });
                     var url, target;
-                    if (baseUrl && link) {
-                        target = link.type;
+                    var user = this.props.currentUser;
+                    var repo = this.props.repo;
+                    if (UserUtils.canAccessRepo(user, repo)) {
                         switch (story.type) {
                             case 'push':
                             case 'merge':
-                                if (link.note && link.commit) {
+                                var link = LinkUtils.find(reaction, { relation: [ 'note', 'commit' ] });
+                                if (link) {
                                     var noteId = link.note.id;
                                     var commitId = link.commit.id;
-                                    url = `${baseUrl}/commit/${commitId}#note_${noteId}`;
+                                    url = `${repo.details.web_url}/commit/${commitId}#note_${noteId}`;
+                                    target = link.type;
                                 }
                                 break;
                             case 'issue':
-                                if (link.note) {
+                                var link = LinkUtils.find(reaction, { relation: [ 'note', 'issue' ] });
+                                if (link) {
                                     var noteId = link.note.id;
-                                    var issueId = this.props.story.details.number;
-                                    url = `${baseUrl}/issues/${issueId}#note_${noteId}`;
+                                    var issueNumber = link.issue.number;
+                                    url = `${repo.details.web_url}/issues/${issueNumber}#note_${noteId}`;
+                                    target = link.type;
                                 }
                                 break;
                             case 'merge-request':
-                                if (link.note) {
+                                var link = LinkUtils.find(reaction, { relation: [ 'note', 'merge_request' ] });
+                                if (link) {
                                     var noteId = link.note.id;
-                                    var mergeRequestId = this.props.story.details.number;
-                                    url = `${baseUrl}/merge_requests/${mergeRequestId}#note_${noteId}`;
+                                    var mergeRequestNumber = link.merge_request.number;
+                                    url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}#note_${noteId}`;
+                                    target = link.type;
                                 }
                                 break;
                         }
+
                     }
                     return (
                         <a className="note" href={url} target={target}>
@@ -217,14 +224,17 @@ module.exports = React.createClass({
                         </a>
                     );
                 case 'assignment':
-                    var baseUrl = _.get(this.props.repo, 'details.web_url');
+                    var user = this.props.currentUser;
+                    var repo = this.props.repo;
                     if (story.type === 'issue') {
                         var url, target;
-                        var link = LinkUtils.find(reaction, { relation: 'issue' });
-                        if (baseUrl && link) {
-                            var issueId = this.props.story.details.number;
-                            url = `${baseUrl}/issues/${issueId}`;
-                            target = link.type;
+                        if (UserUtils.canAccessRepo(user, repo)) {
+                            var link = LinkUtils.find(reaction, { relation: 'issue' });
+                            if (link) {
+                                var issueNumber = link.issue.number;
+                                url = `${repo.details.web_url}/issues/${issueNumber}`;
+                                target = link.type;
+                            }
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
@@ -233,11 +243,13 @@ module.exports = React.createClass({
                         );
                     } else if (story.type === 'merge-request') {
                         var url, target;
-                        var link = LinkUtils.find(reaction, { relation: 'merge_request' });
-                        if (baseUrl) {
-                            var mergeRequestId = this.props.story.details.number;
-                            url = `${baseUrl}/merge_requests/${mergeRequestId}`;
-                            target = link.type;
+                        if (UserUtils.canAccessRepo(user, repo)) {
+                            var link = LinkUtils.find(reaction, { relation: 'merge_request' });
+                            if (link) {
+                                var mergeRequestNumber = link.merge_request.number;
+                                url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}`;
+                                target = link.type;
+                            }
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>

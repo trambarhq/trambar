@@ -103,12 +103,10 @@ module.exports = _.create(Data, {
                     object.external = _.map(row.external, (link) => {
                         return _.mapValues(link, (value, name) => {
                             if (typeof(value) === 'object') {
-                                // export only the ids
-                                if (value.hasOwnProperty('id')) {
-                                    return { id: value.id };
-                                } else if (value.hasOwnProperty('ids')) {
-                                    return { ids: value.ids };
-                                }
+                                return _.pickBy(value, (value, name) => {
+                                    // don't send property with _ prefix
+                                    return (name.charAt(0) !== '_');
+                                });
                             } else {
                                 return value;
                             }

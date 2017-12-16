@@ -296,10 +296,14 @@ module.exports = function(languageCode) {
         'story-comment': 'Comment',
         'story-drop-files-here': 'Drag and drop media files here',
         'story-file': 'File',
-        'story-issue-current-status': 'Current status:',
         'story-issue-$user-opened-$number-$title': (user, number, title) => {
-            return `Opened issue ${number}: ${title}`;
+            var text = `Opened issue ${number}`;
+            if (title) {
+                text += `: ${title}`;
+            }
+            return text;
         },
+        'story-issue-current-status': 'Current status:',
         'story-issue-status-closed': 'Closed',
         'story-issue-status-opened': 'Open',
         'story-issue-status-reopened': 'Reopened',

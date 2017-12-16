@@ -158,6 +158,7 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     var mergeRequestLink = Import.join(storyAfter, link);
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
     var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${label}`; });
+    mergeRequestLink.merge_request.number = glMergeRequest.iid;
     _.set(storyAfter, 'type', 'merge-request');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
@@ -170,8 +171,7 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     _.set(storyAfter, 'details.source_branch', glMergeRequest.source_branch);
     _.set(storyAfter, 'details.labels', glMergeRequest.labels);
     _.set(storyAfter, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
-    _.set(storyAfter, 'details.title', Import.multilingual(glMergeRequest.title));
-    _.set(storyAfter, 'details.number', glMergeRequest.iid);
+    _.set(storyAfter, 'details.title', glMergeRequest.title);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }

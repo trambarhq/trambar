@@ -5,6 +5,7 @@ var Memoize = require('utils/memoize');
 var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 var PlainText = require('utils/plain-text');
+var UserUtils = require('objects/utils/user-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
@@ -463,21 +464,24 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var n = this.props.locale.name;
         var story = this.props.story;
-        var number = story.details.number;
         var title = story.details.title;
         var repo = this.props.repo;
         var author = _.first(this.props.authors);
         var user = (author) ? n(author.details.name, author.details.gender) : '';
-        var url;
-        var baseUrl = _.get(repo, 'details.web_url');
+        var url, target;
         var issueLink = LinkUtils.find(this.props.story, { relation: 'issue' });
-        if (baseUrl && issueLink) {
-            url = `${baseUrl}/issues/${issueLink.issue.id}`;
+        if (UserUtils.canAccessRepo(user, repo)) {
+            if (issueLink) {
+                var issueNumber = issueLink.issue.number;
+                url = `${repo.details.web_url}/issues/${issueNumber}`;
+                target = issueLink.type;
+            }
         }
+        var number = (issueLink) ? issueLink.issue.number : '';
         return (
             <div className="text issue">
                 <p>
-                    <a href={url} target="_blank">
+                    <a href={url} target={target}>
                         {t(`story-issue-$user-opened-$number-$title`, user, number, p(title))}
                     </a>
                 </p>
@@ -496,15 +500,16 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
+        var repo = this.props.repo;
         var title = story.details.title;
         var dueDate = formatDate(story.details.due_date);
         var startDate = formatDate(story.details.start_date) || '-';
         var url;
-        var repo = this.props.repo;
-        var baseUrl = _.get(repo, 'details.web_url');
-        var milestoneLink = LinkUtils.find(this.props.story, { relation: 'milestone' });
-        if (baseUrl && milestoneLink) {
-            url = `${baseUrl}/milestones/${milestoneLink.milestone.id}`;
+        if (UserUtils.canAccessRepo(user, repo)) {
+            var milestoneLink = LinkUtils.find(this.props.story, { relation: 'milestone' });
+            if (milestoneLink) {
+                url = `${repo.details.web_url}/milestones/${milestoneLink.milestone.id}`;
+            }
         }
         return (
             <div className="text milestone">
@@ -535,15 +540,17 @@ module.exports = React.createClass({
     renderMergeRequestText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var user = this.props.currentUser;
         var story = this.props.story;
+        var repo = this.props.repo;
         var branch1 = _.get(story, 'details.source_branch');
         var branch2 = _.get(story, 'details.branch');
         var url;
-        var repo = this.props.repo;
-        var baseUrl = _.get(repo, 'details.web_url');
-        var mergeRequestLink = LinkUtils.find(this.props.story, { relation: 'merge_request' });
-        if (baseUrl && mergeRequestLink) {
-            url = `${baseUrl}/merge_requests/${mergeRequestLink.merge_request.id}`;
+        if (UserUtils.canAccessRepo(user, repo)) {
+            var mergeRequestLink = LinkUtils.find(this.props.story, { relation: 'merge_request' });
+            if (mergeRequestLink) {
+                url = `${repo.details.web_url}/merge_requests/${mergeRequestLink.merge_request.id}`;
+            }
         }
         return (
             <div className="text merge-request">
@@ -591,6 +598,7 @@ module.exports = React.createClass({
     renderPushText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var user = this.props.currentUser;
         var story = this.props.story;
         var files = _.get(this.props.story, 'details.files');
         var lines = _.get(this.props.story, 'details.lines');
@@ -621,18 +629,17 @@ module.exports = React.createClass({
             }
         }, []);
         var url;
-        var baseUrl = _.get(repo, 'details.web_url');
-        if (baseUrl) {
+        if (UserUtils.canAccessRepo(user, repo)) {
             if (story.type === 'push' || story.type === 'merge') {
                 var commitBefore = story.details.commit_before;
                 var commitAfter = story.details.commit_after;
                 if (commitBefore) {
-                    url = `${baseUrl}/compare/${commitBefore}...${commitAfter}`;
+                    url = `${repo.details.web_url}/compare/${commitBefore}...${commitAfter}`;
                 } else {
-                    url = `${baseUrl}/commit/${commitAfter}`;
+                    url = `${repo.details.web_url}/commit/${commitAfter}`;
                 }
             } else if (story.type === 'branch') {
-                url = `${baseUrl}/commits/${branch}`;
+                url = `${repo.details.web_url}/commits/${branch}`;
             }
         }
         var text;

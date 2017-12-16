@@ -26,7 +26,13 @@ function find(object, criteria) {
                 case 'type':
                     return link.type === value;
                 case 'relation':
-                    return link.hasOwnProperty(value);
+                    if (value instanceof Array) {
+                        return _.every(value, (name) => {
+                            return link.hasOwnProperty(name);
+                        });
+                    } else {
+                        return link.hasOwnProperty(value);
+                    }
                 case 'related_to':
                     var rel = link[value.relation];
                     if (rel) {

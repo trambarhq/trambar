@@ -38,12 +38,12 @@ function exportStory(db, project, story) {
             }
             var authorLink = LinkUtils.find(author, { server });
             var glIssue = copyIssueProperties(story, project, issueLink);
-            var glIssueNumber = story.details.number;
+            var glIssueNumber = issueLink.issue.number;
             return saveIssue(server, issueLink.project.id, glIssueNumber, glIssue, authorLink.user.id).then((glIssue) => {
                 var storyAfter = _.cloneDeep(story);
                 var issueLinkAfter = LinkUtils.find(storyAfter, { type: 'gitlab', relation: 'issue' });
                 _.set(issueLinkAfter, 'issue.id', glIssue.id);
-                _.set(storyAfter, 'details.number', glIssue.iid);
+                _.set(issueLinkAfter, 'issue.number', glIssue.iid);
                 if (_.isEqual(story, storyAfter)) {
                     return story;
                 }
