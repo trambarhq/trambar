@@ -499,6 +499,7 @@ module.exports = React.createClass({
     renderMilestoneText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
+        var user = this.props.currentUser;
         var story = this.props.story;
         var repo = this.props.repo;
         var title = story.details.title;
