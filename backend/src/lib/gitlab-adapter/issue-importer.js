@@ -39,7 +39,6 @@ function importEvent(db, server, repo, project, author, glEvent) {
         });
         // find existing issuerepoLink
         var criteria = {
-            type: 'issue',
             external_object: issueLink,
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
@@ -83,7 +82,6 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
             issue: { id: glIssue.id }
         });
         var criteria = {
-            type: 'issue',
             external_object: issueLink,
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
@@ -160,20 +158,33 @@ function importAssignments(db, server, project, repo, story, glIssue) {
  */
 function copyIssueProperties(story, author, glIssue, link) {
     var storyAfter = _.cloneDeep(story) || {};
-    var imported = Import.reacquire(storyAfter, link, 'issue');
-    _.set(storyAfter, 'type', 'issue');
-    _.set(storyAfter, 'user_ids', [ author.id ]);
-    _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'published', true);
-    _.set(storyAfter, 'ptime', Moment(new Date(glIssue.created_at)).toISOString());
-    Import.set(storyAfter, imported, 'public', !glIssue.confidential);
-    Import.set(storyAfter, imported, 'tags', TagScanner.findTags(glIssue.description));
-    Import.set(storyAfter, imported, 'details.state', glIssue.state);
-    Import.set(storyAfter, imported, 'details.labels', glIssue.labels);
-    Import.set(storyAfter, imported, 'details.milestone', _.get(glIssue, 'milestone.title'));
-    Import.set(storyAfter, imported, 'details.title', Import.multilingual(glIssue.title));
-    Import.set(storyAfter, imported, 'details.number', glIssue.iid);
-    Import.set(storyAfter, imported, 'details.url', glIssue.web_url);
+    var issueLink = Import.join(storyAfter, link);
+    var descriptionTags = TagScanner.findTags(glIssue.description);
+    var labelTags = _.map(glIssue.labels, (label) => { return `#${label}`; });
+    if (!storyAfter.type || storyAfter.type === 'issue') {
+        _.set(storyAfter, 'type', 'issue');
+        _.set(storyAfter, 'user_ids', [ author.id ]);
+        _.set(storyAfter, 'role_ids', author.role_ids);
+        _.set(storyAfter, 'published', true);
+        _.set(storyAfter, 'ptime', Moment(new Date(glIssue.created_at)).toISOString());
+        _.set(storyAfter, 'public', !glIssue.confidential);
+        _.set(storyAfter, 'details.title', glIssue.title);
+        _.set(storyAfter, 'details.labels', glIssue.labels);
+        _.set(storyAfter, 'details.state', glIssue.state);
+        _.set(storyAfter, 'details.milestone', _.get(glIssue, 'milestone.title'));
+        _.set(storyAfter, 'details.number', glIssue.iid);
+        if (!glIssue.confidential) {
+            _.set(storyAfter, 'details.title', glIssue.title);
+        } else {
+            // titles are not imported for confidential issues
+            _.set(storyAfter, 'details.title', undefined);
+        }
+    } else {
+        // a post exported to issue tracker--keep only certain props
+        _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
+        _.set(storyAfter, 'details.title', glIssue.title);
+        _.set(storyAfter, 'details.labels', glIssue.labels);
+    }
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
@@ -215,6 +226,56 @@ function copyAssignmentProperties(reaction, story, assignee, glIssue, link) {
  * @return {Object}
  */
 function fetchIssue(server, glProjectId, glIssueId) {
-    var url = `/projects/${glProjectId}/issues/${glIssueId}`;
+    // Gitlab wants the issue IID or issue number, which unfortunately isn't
+    // included in the activity log entry
+    return getIssueNumber(server, glProjectId, glIssueId).then((glIssueNumber) => {
+        var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
+        return Transport.fetch(server, url);
+    });
+}
+
+/**
+ * Return the issue number given an issue id, fetching the full issue list to
+ * find the mapping
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glIssueId
+ *
+ * @return {Promise<Number>}
+ */
+function getIssueNumber(server, glProjectId, glIssueId) {
+    var baseUrl = _.get(server, 'settings.oauth.base_url');
+    var issueNumber = _.get(issueNumberCache, [ baseUrl, glProjectId, glIssueId ]);
+    if (issueNumber) {
+        return Promise.resolve(issueNumber);
+    }
+    var url = `/projects/${glProjectId}/issues`;
+    return Transport.fetchEach(server, url, {}, (glIssue) => {
+        var issueId = glIssue.id;
+        var issueNumber = glIssue.iid;
+        _.set(issueNumberCache, [ baseUrl, glProjectId, glIssueId ], issueNumber);
+    }).then(() => {
+        var issueNumber = _.get(issueNumberCache, [ baseUrl, glProjectId, glIssueId ]);
+        if (!issueNumber) {
+            return Promise.reject(new HttpError(404));
+        }
+        return issueNumber;
+    });
+}
+
+var issueNumberCache = {};
+
+/**
+ * Retrieve issue from Gitlab by issue number
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glIssueId
+ *
+ * @return {Object}
+ */
+function fetchIssueByNumber(server, glProjectId, glIssueNumber) {
+    var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
     return Transport.fetch(server, url);
 }

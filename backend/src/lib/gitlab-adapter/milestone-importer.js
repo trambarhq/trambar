@@ -53,19 +53,20 @@ function importEvent(db, server, repo, project, author, glEvent) {
  */
 function copyMilestoneProperties(story, author, glMilestone, link) {
     var storyAfter = _.cloneDeep(story) || {};
-    var imported = Import.reacquire(storyAfter, link, 'milestone');
+    var milestoneLink = Import.join(storyAfter, link);
+    var descriptionTags = TagScanner.findTags(glMilestone.description);
     _.set(storyAfter, 'type', 'milestone');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
     _.set(storyAfter, 'public', true);
     _.set(storyAfter, 'published', true);
     _.set(storyAfter, 'ptime', Moment(glMilestone.created_at).toISOString());
-    Import.set(storyAfter, imported, 'details.state', glMilestone.state);
-    Import.set(storyAfter, imported, 'details.title', Import.multilingual(glMilestone.title));
-    Import.set(storyAfter, imported, 'tags', TagScanner.findTags(glMilestone.description));
-    Import.set(storyAfter, imported, 'details.due_date', glMilestone.due_date);
-    Import.set(storyAfter, imported, 'details.start_date', glMilestone.start_date);
-    Import.set(storyAfter, imported, 'details.number', glMilestone.iid);
+    _.set(storyAfter, 'details.state', glMilestone.state);
+    _.set(storyAfter, 'details.title', glMilestone.title);
+    _.set(storyAfter, 'tags', descriptionTags);
+    _.set(storyAfter, 'details.due_date', glMilestone.due_date);
+    _.set(storyAfter, 'details.start_date', glMilestone.start_date);
+    _.set(storyAfter, 'details.number', glMilestone.iid);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }

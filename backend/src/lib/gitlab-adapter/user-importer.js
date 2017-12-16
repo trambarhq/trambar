@@ -290,16 +290,19 @@ function copyUserProperties(user, image, server, glUser, link) {
         role_ids: _.get(server, 'settings.user.role_ids', []),
         settings: UserSettings.default,
     };
-    var imported = Import.reacquire(userAfter, link, 'user');
-    Import.set(userAfter, imported, 'username', glUser.username);
-    Import.set(userAfter, imported, 'disabled', glUser.state !== 'active');
-    Import.set(userAfter, imported, 'details.name', glUser.name);
-    Import.set(userAfter, imported, 'details.gitlab_url', glUser.web_url);
-    Import.set(userAfter, imported, 'details.skype_username', glUser.skype || undefined);
-    Import.set(userAfter, imported, 'details.twitter_username', glUser.twitter || undefined);
-    Import.set(userAfter, imported, 'details.linkedin_username', glUser.linkedin_name || undefined);
-    Import.set(userAfter, imported, 'details.email', glUser.email);
-    Import.attach(userAfter, imported, 'image', image);
+    var userLink = Import.join(userAfter, link);
+    if (!userAfter.username || (userLink.user.username === userAfter.username)) {
+        _.set(userAfter, 'username', glUser.username);
+    }
+    userLink.user.username = glUser.username;
+    _.set(userAfter, 'disabled', glUser.state !== 'active');
+    _.set(userAfter, 'details.name', glUser.name);
+    _.set(userAfter, 'details.gitlab_url', glUser.web_url);
+    _.set(userAfter, 'details.skype_username', glUser.skype || undefined);
+    _.set(userAfter, 'details.twitter_username', glUser.twitter || undefined);
+    _.set(userAfter, 'details.linkedin_username', glUser.linkedin_name || undefined);
+    _.set(userAfter, 'details.email', glUser.email);
+    Import.attach(userAfter, 'image', image);
 
     // set user type
     var mapping = _.get(server, 'settings.user.mapping', {});

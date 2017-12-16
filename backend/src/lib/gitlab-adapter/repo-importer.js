@@ -98,8 +98,10 @@ function importRepositories(db, server) {
             // fetch issue-tracker labels
             return fetchLabels(server, glRepo.id).then((glLabels) => {
                 // find matching repo
-                return fetchMembers(server, glRepo.id).each((glUser) => {
-                    return UserImporter.findUser(db, server, glUser);
+                return fetchMembers(server, glRepo.id).then((glUsers) => {
+                    return Promise.mapSeries(glUsers, (glUser) => {
+                        return UserImporter.findUser(db, server, glUser);
+                    }).filter(Boolean);
                 }).then((members) => {
                     return findExistingRepo(db, server, repos, glRepo).then((repo) => {
                         var link = LinkUtils.create(server, {

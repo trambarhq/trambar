@@ -61,7 +61,6 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
         issue: { id: glEvent.note.noteable_id }
     });
     var criteria = {
-        type: 'issue',
         external_object: issueLink
     };
     return Story.findOne(db, schema, criteria, '*').then((story) => {
@@ -95,7 +94,6 @@ function importMergeRequestNote(db, server, repo, project, author, glEvent) {
         merge_request: { id: glEvent.note.noteable_id }
     });
     var criteria = {
-        type: 'merge-request',
         external_object: mergeRequestLink
     };
     return Story.findOne(db, schema, criteria, '*').then((story) => {
@@ -135,7 +133,6 @@ function importCommitNote(db, server, repo, project, author, glEvent, glHookEven
             commit: { id: commitId }
         });
         var criteria = {
-            type: 'push',
             external_object: commitLink
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {

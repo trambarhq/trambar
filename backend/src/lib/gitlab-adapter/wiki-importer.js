@@ -33,7 +33,6 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
         wiki: { id: glHookEvent.object_attributes.slug }
     });
     var criteria = {
-        type: 'wiki',
         newer_than: Moment().subtract(1, 'day').toISOString(),
         external_object: pageLink,
     };

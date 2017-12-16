@@ -28,37 +28,22 @@ module.exports = {
  */
 function importCommit(db, server, repo, glBranch, glCommitId) {
     // first, check if the commit was previously imported
+    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var commitLink = LinkUtils.extend(repoLink, {
+        commit: { id: glCommitId }
+    });
     var criteria = {
-        external_object: {
-            commit: { id: glCommitId }
-        }
+        external_object: commitLink
     };
     return Commit.findOne(db, 'global', criteria, '*').then((commit) => {
-        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
         if (commit) {
-            // make sure the commit is linked properly, in case the commit
-            // originated from a different server
-            var existingCommitLink = _.find(commit.external, criteria.external_object);
-            // commits are also linked to the Gitlab project
-            var commitLink = LinkUtils.extend(repoLink, {
-                commit: existingCommitLink.commit
-            });
-            var commitAfter = _.cloneDeep(commit);
-            Import.join(commitAfter, commitLink);
-            if (!_.isEqual(commit, commitAfter)) {
-                return Commit.updateOne(db, 'global', commitAfter);
-            }
             return commit;
         }
         console.log(`Retriving commit ${glCommitId}`);
         return fetchCommit(server, repoLink.project.id, glCommitId).then((glCommit) => {
             return fetchDiff(server, repoLink.project.id, glCommit.id).then((glDiff) => {
-                var commitLink = LinkUtils.extend(repoLink, {
-                    commit: {
-                        id: glCommit.id,
-                        parent_ids: glCommit.parent_ids
-                    }
-                });
+                // add parent ids
+                commitLink.commit.parent_ids = glCommit.parent_ids;
                 var commitNew = copyCommitProperties(null, glCommit, glDiff, glBranch, commitLink);
                 return Commit.insertOne(db, 'global', commitNew);
             });

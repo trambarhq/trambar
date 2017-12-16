@@ -21,7 +21,6 @@ exports.editable = [
 
 exports.trackable = [
     'story',
-    'task-list',
 ];
 
 exports.git = [

@@ -39,7 +39,6 @@ function importEvent(db, server, repo, project, author, glEvent) {
         });
         // find existing merge request
         var criteria = {
-            type: 'merge-request',
             external_object: mergeRequestLink,
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
@@ -81,7 +80,6 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
             merge_request: { id: glMergeRequest.id }
         });
         var criteria = {
-            type: 'merge-request',
             external_object: mergeRequestLink,
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
@@ -157,22 +155,23 @@ function importAssignment(db, server, project, repo, story, glMergeRequest) {
  */
 function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     var storyAfter = _.cloneDeep(story) || {};
-    var imported = Import.reacquire(storyAfter, link, 'merge_request');
+    var mergeRequestLink = Import.join(storyAfter, link);
+    var descriptionTags = TagScanner.findTags(glMergeRequest.description);
+    var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${label}`; });
     _.set(storyAfter, 'type', 'merge-request');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
     _.set(storyAfter, 'published', true);
     _.set(storyAfter, 'ptime', Moment(new Date(glMergeRequest.created_at)).toISOString());
-    Import.set(storyAfter, imported, 'public', !glMergeRequest.confidential);
-    Import.set(storyAfter, imported, 'tags', TagScanner.findTags(glMergeRequest.description));
-    Import.set(storyAfter, imported, 'details.state', glMergeRequest.state);
-    Import.set(storyAfter, imported, 'details.branch', glMergeRequest.target_branch);
-    Import.set(storyAfter, imported, 'details.source_branch', glMergeRequest.source_branch);
-    Import.set(storyAfter, imported, 'details.labels', glMergeRequest.labels);
-    Import.set(storyAfter, imported, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
-    Import.set(storyAfter, imported, 'details.title', Import.multilingual(glMergeRequest.title));
-    Import.set(storyAfter, imported, 'details.number', glMergeRequest.iid);
-    Import.set(storyAfter, imported, 'details.url', glMergeRequest.web_url);
+    _.set(storyAfter, 'public', !glMergeRequest.confidential);
+    _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
+    _.set(storyAfter, 'details.state', glMergeRequest.state);
+    _.set(storyAfter, 'details.branch', glMergeRequest.target_branch);
+    _.set(storyAfter, 'details.source_branch', glMergeRequest.source_branch);
+    _.set(storyAfter, 'details.labels', glMergeRequest.labels);
+    _.set(storyAfter, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
+    _.set(storyAfter, 'details.title', Import.multilingual(glMergeRequest.title));
+    _.set(storyAfter, 'details.number', glMergeRequest.iid);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
