@@ -1137,6 +1137,16 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user has added or removed users from author list
+     *
+     * @param  {Object} evt
+     */
+    handleCoauthorSelect: function(evt) {
+        var draft = _.decoupleSet(this.state.draft, 'user_ids', evt.selection);
+        this.saveDraft(draft, true);
+    },
+
+    /**
      * Called when user add new resources or adjusted image cropping
      *
      * @param  {Object} evt

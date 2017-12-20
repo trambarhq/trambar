@@ -123,7 +123,7 @@ module.exports = React.createClass({
             this.props.onSelect({
                 type: 'select',
                 target: this,
-                user_ids: evt.selection
+                selection: evt.selection
             });
         }
         this.setState({ selecting: false });
