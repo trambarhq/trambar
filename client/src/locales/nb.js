@@ -53,40 +53,6 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'Mennesker',
         'bottom-nav-settings': 'Innstillinger',
 
-        'comment-$user-cast-a-vote': (user) => {
-            return `${user} stemte`;
-        },
-        'comment-$user-commented-on-branch': (user) => {
-            return `${user} kommenterte denne branchen`;
-        },
-        'comment-$user-commented-on-issue': (user) => {
-            return `${user} kommenterte dette problemet`;
-        },
-        'comment-$user-commented-on-merge': (user) => {
-            return `${user} kommenterte denne mergen`;
-        },
-        'comment-$user-commented-on-merge-request': (user) => {
-            return `${user} kommenterte denne merge-requesten`;
-        },
-        'comment-$user-commented-on-push': (user) => {
-            return `${user} kommenterte denne pushen`;
-        },
-        'comment-$user-completed-a-task': (user) => {
-            return `${user} fullførte en oppgave`;
-        },
-        'comment-$user-is-assigned-to-issue': (user) => {
-            return `${user} ble tildelt dette problemet`;
-        },
-        'comment-$user-is-editing': (user) => {
-            return `${user} redigerer en kommentar...`;
-        },
-        'comment-$user-is-writing': (user) => {
-            return `${user} skriver en kommentar...`;
-        },
-        'comment-$user-likes-this': (user) => {
-            return `${user} liker dette`;
-        },
-
         'image-editor-upload-in-progress': 'Opplasting pågår...',
 
         'list-$count-more': (count) => {
@@ -197,6 +163,40 @@ module.exports = function(languageCode) {
         'project-panel-manage': 'Endre listen',
         'project-panel-mobile-set-up': 'Mobil oppsett',
         'project-panel-sign-out': 'Logg ut',
+
+        'reaction-$user-cast-a-vote': (user) => {
+            return `${user} stemte`;
+        },
+        'reaction-$user-commented-on-branch': (user) => {
+            return `${user} kommenterte denne branchen`;
+        },
+        'reaction-$user-commented-on-issue': (user) => {
+            return `${user} kommenterte dette problemet`;
+        },
+        'reaction-$user-commented-on-merge': (user) => {
+            return `${user} kommenterte denne mergen`;
+        },
+        'reaction-$user-commented-on-merge-request': (user) => {
+            return `${user} kommenterte denne merge-requesten`;
+        },
+        'reaction-$user-commented-on-push': (user) => {
+            return `${user} kommenterte denne pushen`;
+        },
+        'reaction-$user-completed-a-task': (user) => {
+            return `${user} fullførte en oppgave`;
+        },
+        'reaction-$user-is-assigned-to-issue': (user) => {
+            return `${user} ble tildelt dette problemet`;
+        },
+        'reaction-$user-is-editing': (user) => {
+            return `${user} redigerer en kommentar...`;
+        },
+        'reaction-$user-is-writing': (user) => {
+            return `${user} skriver en kommentar...`;
+        },
+        'reaction-$user-likes-this': (user) => {
+            return `${user} liker dette`;
+        },
 
         'role-filter-no-roles': 'Ingen roller definert',
 

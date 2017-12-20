@@ -8,26 +8,18 @@ var PlainText = require('utils/plain-text');
 var UserUtils = require('objects/utils/user-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
-var Database = require('data/database');
-var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-var StoryTypes = require('objects/types/story-types');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var StorySection = require('widgets/story-section');
-var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MediaDialogBox = require('dialogs/media-dialog-box');
-var MultipleUserNames = require('widgets/multiple-user-names');
 var AppComponent = require('views/app-component');
 var AppComponentDialogBox = require('dialogs/app-component-dialog-box');
 var Scrollable = require('widgets/scrollable');
-var Time = require('widgets/time');
 var PushButton = require('widgets/push-button');
 
 require('./story-contents.scss');
@@ -41,11 +33,6 @@ module.exports = React.createClass({
         currentUser: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         repo: PropTypes.object,
-        status: PropTypes.object,
-        cornerPopUp: PropTypes.element,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
@@ -148,136 +135,12 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <StorySection className="contents">
-                <header>
-                    {this.renderProfileImage()}
-                    {this.renderAuthorNames()}
-                    {this.props.cornerPopUp}
-                </header>
-                <subheader>
-                    {this.renderProgress()}
-                    {this.renderEmblem()}
-                </subheader>
-                <body>
-                    {this.renderText()}
-                    {this.renderMedia()}
-                    {this.renderReferencedMediaDialog()}
-                    {this.renderAppComponents()}
-                </body>
-                <footer>
-                    {this.renderButtons()}
-                </footer>
-            </StorySection>
-        );
-    },
-
-    /**
-     * Render the author's profile image
-     *
-     * @return {ReactElement}
-     */
-    renderProfileImage: function() {
-        var leadAuthor = _.get(this.props.authors, 0);
-        var props = {
-            user: leadAuthor,
-            theme: this.props.theme,
-            size: 'medium',
-        };
-        if (leadAuthor) {
-            var url = this.props.route.find(require('pages/person-page'), {
-                schema: this.props.route.parameters.schema,
-                user: leadAuthor.id,
-            });
-        }
-        return <a href={url}><ProfileImage {...props} /></a>;
-    },
-
-    /**
-     * Render the names of the author and co-authors
-     *
-     * @return {ReactElement}
-     */
-    renderAuthorNames: function() {
-        var t = this.props.locale.translate;
-        var n = this.props.locale.name;
-        var authors = this.props.authors;
-        var names = _.map(authors, (author) => {
-            return n(author.details.name, author.details.gender);
-        });
-        var contents;
-        switch (_.size(authors)) {
-            // the list can be empty during loading
-            case 0:
-                contents = '\u00a0';
-                break;
-            case 1:
-                contents = `${names[0]}`;
-                break;
-            case 2:
-                contents = t('story-author-$name1-and-$name2', names[0], names[1]);
-                break;
-            default:
-                var coauthors = _.slice(authors, 1);
-                var props = {
-                    users: coauthors,
-                    label: t('story-author-$count-others', coauthors.length),
-                    title: t('story-coauthors'),
-                    locale: this.props.locale,
-                    theme: this.props.theme,
-                };
-                var users = <MultipleUserNames key={1} {...props} />
-                contents = t('story-author-$name-and-$users', names[0], users, coauthors.length);
-        }
-        return <span className="name">{contents}</span>;
-    },
-
-    /**
-     * Render upload status or the publication time
-     *
-     * @return {ReactElement}
-     */
-    renderProgress: function() {
-        var status = this.props.status;
-        if (status) {
-            var t = this.props.locale.translate;
-            return (
-                <span className="status">
-                    {t(`story-status-${status.action}-$progress`, status.progress)}
-                </span>
-            );
-        } else {
-            var props = {
-                time: this.props.story.ptime,
-                locale: this.props.locale,
-            };
-            return <Time {...props} />
-        }
-    },
-
-    /**
-     * Render emblem
-     *
-     * @return {[type]}
-     */
-    renderEmblem: function() {
-        var type = this.props.story.type;
-        var className = 'graphic';
-        if (_.includes(StoryTypes.git, type)) {
-            className += ' git';
-        } else {
-            return null;
-        }
-        var Icon = StoryTypes.icons[type];
-        if (type === 'issue') {
-            var state = this.props.story.details.state;
-            Icon = StoryTypes.icons[type + '.' + state];
-        }
-        if (!Icon) {
-            return null;
-        }
-        return (
-            <div className={className}>
-                <Icon className={type} />
+            <div className="story-contents">
+                {this.renderText()}
+                {this.renderMedia()}
+                {this.renderReferencedMediaDialog()}
+                {this.renderAppComponents()}
+                {this.renderButtons()}
             </div>
         );
     },

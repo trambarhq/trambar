@@ -2,63 +2,24 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Chartist = require('widgets/chartist');
 var Moment = require('moment');
-var DateTracker = require('utils/date-tracker');
 var Memoize = require('utils/memoize');
+var DateTracker = require('utils/date-tracker');
+var StoryTypes = require('objects/types/story-types');
 
-var Database = require('data/database');
-var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
-
-// widgets
-var UserSection = require('widgets/user-section');
-var HeaderButton = require('widgets/header-button');
 
 require('./user-statistics.scss');
 
 module.exports = React.createClass({
     displayName: 'UserStatistics',
     propTypes: {
+        chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
         user: PropTypes.object,
         dailyActivities: PropTypes.object,
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        // use state from previous instance (unmounted due to on-demand rendering)
-        if (this.props.user) {
-            var previousState = previousStates[this.props.user.id];
-            if (previousState) {
-                return previousState;
-            }
-        }
-        return {
-            chartType: 'bar',
-            showingContents: false,
-        };
-    },
-
-    /**
-     * Return true if contents isn't collapsed
-     *
-     * @return {Boolean}
-     */
-    isShowingContents: function() {
-        if (!this.state.showingContents) {
-            if (this.props.theme.mode === 'columns-1') {
-                return false;
-            }
-        }
-        return true;
     },
 
     /**
@@ -68,49 +29,9 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <UserSection className="statistics">
-                <header>
-                    {this.renderButtons()}
-                </header>
-                <body>
-                    {this.renderLegend()}
-                    {this.renderChart()}
-                </body>
-            </UserSection>
-        );
-    },
-
-    /**
-     * Render header buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var showingContents = this.isShowingContents();
-        var barChartProps = {
-            label: t('statistics-bar'),
-            icon: 'bar-chart',
-            highlighted: (showingContents && this.state.chartType === 'bar'),
-            onClick: this.handleBarChartClick,
-        };
-        var lineChartProps = {
-            label: t('statistics-line'),
-            icon: 'line-chart',
-            highlighted: (showingContents && this.state.chartType === 'line'),
-            onClick: this.handleLineChartClick,
-        };
-        var pieChartProps = {
-            label: t('statistics-pie'),
-            icon: 'pie-chart',
-            highlighted: (showingContents && this.state.chartType === 'pie'),
-            onClick: this.handlePieChartClick,
-        };
-        return (
-            <div>
-                <HeaderButton {...barChartProps} />
-                <HeaderButton {...lineChartProps} />
-                <HeaderButton {...pieChartProps} />
+            <div className="user-statistics">
+                {this.renderLegend()}
+                {this.renderChart()}
             </div>
         );
     },
@@ -121,9 +42,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderLegend: function() {
-        if (!this.isShowingContents()) {
-            return null;
-        }
         var t = this.props.locale.translate;
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
@@ -147,10 +65,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderChart: function() {
-        if (!this.isShowingContents()) {
-            return null;
-        }
-        switch (this.state.chartType) {
+        switch (this.props.chartType) {
             case 'bar': return this.renderBarChart();
             case 'line': return this.renderLineChart();
             case 'pie': return this.renderPieChart();
@@ -235,82 +150,7 @@ module.exports = React.createClass({
         };
         return <Chartist {...chartProps} />;
     },
-
-    /**
-     * Listen for date change over
-     */
-    componentDidMount: function() {
-        DateTracker.addEventListener('change', this.handleDateChange);
-    },
-
-    /**
-     * Remove event listener and save state
-     */
-    componentWillUnmount: function() {
-        DateTracker.removeEventListener('change', this.handleDateChange);
-        if (this.props.user) {
-            previousStates[this.props.user.id] = this.state;
-        }
-    },
-
-    /**
-     * Called when user click bar chart button
-     *
-     * @param  {Event} evt
-     */
-    handleBarChartClick: function(evt) {
-        var show = true;
-        if (this.props.theme.mode === 'columns-1') {
-            // allow toggling in single-column mode
-            if (this.state.chartType === 'bar') {
-                show = !this.state.showingContents;
-            }
-        }
-        this.setState({ chartType: 'bar', showingContents: show });
-    },
-
-    /**
-     * Called when user click line chart button
-     *
-     * @param  {Event} evt
-     */
-    handleLineChartClick: function(evt) {
-        var show = true;
-        if (this.props.theme.mode === 'columns-1') {
-            if (this.state.chartType === 'line') {
-                show = !this.state.showingContents;
-            }
-        }
-        this.setState({ chartType: 'line', showingContents: show });
-    },
-
-    /**
-     * Called when user click pie chart button
-     *
-     * @param  {Event} evt
-     */
-    handlePieChartClick: function(evt) {
-        var show = true;
-        if (this.props.theme.mode === 'columns-1') {
-            if (this.state.chartType === 'pie') {
-                show = !this.state.showingContents;
-            }
-        }
-        this.setState({ chartType: 'pie', showingContents: show });
-    },
-
-    /**
-     * Called at midnight local time
-     *
-     * @param  {Object} evt
-     */
-    handleDateChange: function(evt) {
-        // TODO: this should happen at the list level, since we need new data
-        this.forceUpdate();
-    },
 });
-
-var previousStates = {};
 
 var getDates = function(today, count) {
     var m = Moment(today);
@@ -321,17 +161,6 @@ var getDates = function(today, count) {
     });
     return _.reverse(dates);
 }
-
-var storyTypes = [
-    'push',
-    'merge',
-    'issue',
-    'wiki',
-    'milestone',
-    'story',
-    'survey',
-    'task-list',
-];
 
 var getActivityIndices = Memoize(function(activities, dates) {
     var present = {};
@@ -344,7 +173,7 @@ var getActivityIndices = Memoize(function(activities, dates) {
         });
     });
     var indices = {};
-    _.each(storyTypes, (type, index) => {
+    _.each(StoryTypes, (type, index) => {
         if (present[type]) {
             indices[type] = index;
         }
@@ -353,7 +182,7 @@ var getActivityIndices = Memoize(function(activities, dates) {
 });
 
 var getActivitySeries = Memoize(function(activities, dates) {
-    return _.map(storyTypes, (type) => {
+    return _.map(StoryTypes, (type) => {
         // don't include series that are completely empty
         var empty = true;
         var series = _.map(dates, (date) => {

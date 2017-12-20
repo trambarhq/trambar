@@ -76,31 +76,6 @@ var traditionalPhrases = {
     'bottom-nav-people': '人們',
     'bottom-nav-settings': '設置',
 
-    'comment-$user-cast-a-vote': (user) => {
-        return `${user}投票`;
-    },
-    'comment-$user-commented-on-issue': (user) => {
-        return `${user}評論了這個問題`;
-    },
-    'comment-$user-commented-on-merge-request': (user) => {
-        return `${user}評論了這個合併請求`;
-    },
-    'comment-$user-commented-on-push': (user) => {
-        return `${user}評論了這個提交`;
-    },
-    'comment-$user-completed-a-task': (user) => {
-        return `${user}完成了一個任務`;
-    },
-    'comment-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到這個問題`;
-    },
-    'comment-$user-is-typing': (user) => {
-        return `${user}正在寫評論⋯⋯`;
-    },
-    'comment-$user-likes-this': (user) => {
-        return `${user}喜歡這個`;
-    },
-
     'list-$count-more': (count) => {
         var num = cardinal(count);
         return `還有${num}個⋯⋯`;
@@ -165,6 +140,31 @@ var traditionalPhrases = {
     'photo-capture-cancel': '取消',
     'photo-capture-retake': '重拍',
     'photo-capture-snap': '拍照',
+
+    'reaction-$user-cast-a-vote': (user) => {
+        return `${user}投了票`;
+    },
+    'reaction-$user-commented-on-issue': (user) => {
+        return `${user}評論了這個問題`;
+    },
+    'reaction-$user-commented-on-merge-request': (user) => {
+        return `${user}評論了這個合併請求`;
+    },
+    'reaction-$user-commented-on-push': (user) => {
+        return `${user}評論了這個提交`;
+    },
+    'reaction-$user-completed-a-task': (user) => {
+        return `${user}完成了一個任務`;
+    },
+    'reaction-$user-is-assigned-to-issue': (user) => {
+        return `${user}被分配到這個問題`;
+    },
+    'reaction-$user-is-typing': (user) => {
+        return `${user}正在寫評論⋯⋯`;
+    },
+    'reaction-$user-likes-this': (user) => {
+        return `${user}喜歡這個`;
+    },
 
     'selection-cancel': '取消',
     'selection-ok': '接受',
@@ -335,31 +335,6 @@ var cantonesePhrases = {
         return [ `你加咗呢個書籤（`, users, `推薦）` ];
     },
 
-    'comment-$user-cast-a-vote': (user) => {
-        return `${user}投咗一票`;
-    },
-    'comment-$user-commented-on-issue': (user) => {
-        return `${user}評論咗呢個問題`;
-    },
-    'comment-$user-commented-on-merge-request': (user) => {
-        return `${user}評論咗呢個合併請求`;
-    },
-    'comment-$user-commented-on-push': (user) => {
-        return `${user}評論咗呢個push`;
-    },
-    'comment-$user-completed-a-task': (user) => {
-        return `${user}完成咗一個任務`;
-    },
-    'comment-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到呢個問題`;
-    },
-    'comment-$user-is-typing': (user) => {
-        return `${user}現在寫緊評論⋯⋯`;
-    },
-    'comment-$user-likes-this': (user) => {
-        return `${user}鍾意呢個`;
-    },
-
     'list-$count-more': (count) => {
         var num = cardinal(count);
         return `重有${num}個⋯⋯`;
@@ -407,6 +382,31 @@ var cantonesePhrases = {
     'option-send-bookmarks-to-$count-users': (count) => {
         var num = cardinal(count);
         return `發送書籤畀${num}個人`;
+    },
+
+    'reaction-$user-cast-a-vote': (user) => {
+        return `${user}投咗一票`;
+    },
+    'reaction-$user-commented-on-issue': (user) => {
+        return `${user}評論咗呢個問題`;
+    },
+    'reaction-$user-commented-on-merge-request': (user) => {
+        return `${user}評論咗呢個合併請求`;
+    },
+    'reaction-$user-commented-on-push': (user) => {
+        return `${user}評論咗呢個push`;
+    },
+    'reaction-$user-completed-a-task': (user) => {
+        return `${user}完成咗一個任務`;
+    },
+    'reaction-$user-is-assigned-to-issue': (user) => {
+        return `${user}被分配到呢個問題`;
+    },
+    'reaction-$user-is-typing': (user) => {
+        return `${user}現在寫緊評論⋯⋯`;
+    },
+    'reaction-$user-likes-this': (user) => {
+        return `${user}鍾意呢個`;
     },
 
     'story-author-$name-and-$users': (name, users, count) => {

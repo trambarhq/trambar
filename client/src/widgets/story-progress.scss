@@ -1,0 +1,15 @@
+.story-progress {
+    color: #666666;
+    font-size: 0.9em;
+    margin-left: 3.75em;
+
+    .time {
+        &.today {
+            color: #aaaaaa;
+        }
+
+        &.yesterday {
+            color: #999999;
+        }
+    }
+}

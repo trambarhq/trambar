@@ -1,39 +1,95 @@
 .story-view {
     background-color: #362a2a;
     border: 2px solid #211a1a;
-    margin: 1em 1em 1em 1em;
-}
+    width: 100%;
 
-.story-view.columns-1 {
-    margin: 0.8em 0.5em 0.8em 0.5em;
-}
+    .header {
+        background-color: #211a1a;
 
-.story-view.columns-2 {
-    display: flex;
-    flex-direction: row;
+        .column-1, .column-2, .column-3 {
+            padding: 0.25em 0.25em 0.25em 0.5em;
+        }
 
-    .column-1 {
-        flex: 1;
+        .profile-image {
+            position: relative;
+            height: 0.8em;
+            vertical-align: top;
+            margin-top: 0.1em;
+            margin-right: 0.5em;
+            overflow: visible;
+
+            IMG, svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
     }
 
-    .column-2 {
-        flex: 1;
+    .body {
+        .column-1, .column-2, .column-3 {
+            padding: 0.25em 0.25em 0.25em 0.5em;
+        }
+
+        .column-2 {
+            position: relative;
+
+            .scrollable {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                right: 0;
+            }
+        }
     }
-}
 
-.story-view.columns-3 {
-    display: flex;
-    flex-direction: row;
+    &.single-col {
+        margin-bottom: 0.5em;
 
-    .column-1 {
-        flex: 5;
+        .column-2 {
+            &:empty {
+                display :none;
+            }
+        }
     }
 
-    .column-2 {
-        flex: 5;
+    &.double-col, &.triple-col {
+        display: table;
+        margin-bottom: 1em;
+
+        .header {
+            display: table-row;
+        }
+
+        .body {
+            display: table-row;
+        }
+
+        .column-1, .column-2, .column-3 {
+            display: table-cell;
+            vertical-align: top;
+        }
     }
 
-    .column-3 {
-        flex: 5;
+    &.double-col {
+        .column-1 {
+            width: 50%;
+        }
+        .column-2 {
+            width: 50%;
+        }
+    }
+
+    &.triple-col {
+        .column-1 {
+            width: 40%;
+        }
+        .column-2 {
+            width: 40%;
+        }
+        .column-3 {
+            width: 20%;
+        }
     }
 }

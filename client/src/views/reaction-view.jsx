@@ -17,12 +17,12 @@ var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MediaDialogBox = require('dialogs/media-dialog-box');
 var Time = require('widgets/time');
-var CommentViewOptions = require('views/comment-view-options');
+var ReactionViewOptions = require('views/reaction-view-options');
 
-require('./comment-view.scss');
+require('./reaction-view.scss');
 
 module.exports = React.createClass({
-    displayName: 'CommentView',
+    displayName: 'ReactionView',
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
@@ -90,7 +90,7 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <div className="comment-view">
+            <div className="reaction-view">
                 <div className="profile-image-column">
                     {this.renderProfileImage()}
                 </div>
@@ -119,12 +119,12 @@ module.exports = React.createClass({
             size: 'small'
         };
         if (this.props.respondent) {
-            var url = this.props.route.find(require('pages/person-page'), {
+            props.url = this.props.route.find(require('pages/person-page'), {
                 schema: this.props.route.parameters.schema,
                 user: this.props.respondent.id,
             });
         }
-        return <a href={url}><ProfileImage {...props} /></a>;
+        return <ProfileImage {...props} />;
     },
 
     /**
@@ -144,7 +144,7 @@ module.exports = React.createClass({
                 case 'like':
                     return (
                         <span className="like">
-                            {t('comment-$user-likes-this', name)}
+                            {t('reaction-$user-likes-this', name)}
                         </span>
                     );
                 case 'comment':
@@ -172,13 +172,13 @@ module.exports = React.createClass({
                 case 'vote':
                     return (
                         <span className="vote">
-                            {t('comment-$user-cast-a-vote', name)}
+                            {t('reaction-$user-cast-a-vote', name)}
                         </span>
                     );
                 case 'task-completion':
                     return (
                         <span className="task-completion">
-                            {t('comment-$user-completed-a-task', name)}
+                            {t('reaction-$user-completed-a-task', name)}
                         </span>
                     );
                 case 'note':
@@ -220,7 +220,7 @@ module.exports = React.createClass({
                     }
                     return (
                         <a className="note" href={url} target={target}>
-                            {t(`comment-$user-commented-on-${story.type}`, name)}
+                            {t(`reaction-$user-commented-on-${story.type}`, name)}
                         </a>
                     );
                 case 'assignment':
@@ -238,7 +238,7 @@ module.exports = React.createClass({
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
-                                {t('comment-$user-is-assigned-to-issue', name)}
+                                {t('reaction-$user-is-assigned-to-issue', name)}
                             </a>
                         );
                     } else if (story.type === 'merge-request') {
@@ -253,7 +253,7 @@ module.exports = React.createClass({
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
-                                {t('comment-$user-is-assigned-to-merge-request', name)}
+                                {t('reaction-$user-is-assigned-to-merge-request', name)}
                             </a>
                         );
                     }
@@ -262,7 +262,7 @@ module.exports = React.createClass({
             var action = (reaction.ptime) ? 'editing' : 'writing';
             return (
                 <span className="in-progress">
-                    {t(`comment-$user-is-${action}`, name)}
+                    {t(`reaction-$user-is-${action}`, name)}
                 </span>
             );
         }
@@ -284,7 +284,7 @@ module.exports = React.createClass({
             options: this.state.options,
             onChange: this.handleOptionsChange,
         };
-        return <CommentViewOptions {...props} />;
+        return <ReactionViewOptions {...props} />;
     },
 
     /**

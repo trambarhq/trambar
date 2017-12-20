@@ -7,7 +7,7 @@ module.exports = ProfileImage;
 require('./profile-image.scss');
 
 function ProfileImage(props) {
-    var classNames = [ 'profile-image', props.size ];
+    var className = `profile-image ${props.size}`;
     var imageUrl;
     if (props.user) {
         var resources = _.get(props.user, 'details.resources');
@@ -17,12 +17,14 @@ function ProfileImage(props) {
             imageUrl = props.theme.getImageUrl(profileImage, { width: width, height: width });
         }
     }
+    var contents
     if (imageUrl) {
-        return <img className={classNames.join(' ')} src={imageUrl} />;
+        contents = <img src={imageUrl} />;
     } else {
         var Icon = require('octicons/build/svg/person.svg');
-        return <Icon className={classNames.join(' ')} />;
+        contents = <Icon />;
     }
+    return <a className={className} href={props.href}>{contents}</a>;
 }
 
 ProfileImage.propTypes = {

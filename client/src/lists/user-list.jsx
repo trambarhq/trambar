@@ -1,8 +1,9 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
 var Moment = require('moment');
+var Memoize = require('utils/memoize');
+var DateTracker = require('utils/date-tracker');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -68,10 +69,9 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<UserListSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
-            var now = Moment();
-            var end = now.clone().endOf('month');
-            var start = now.clone().startOf('month').subtract(1, 'month');
-            var range = `[${start.toISOString()},${end.toISOString()}]`;
+            var end = DateTracker.endOfMonthISO;
+            var start = DateTracker.startOfMonthISO;
+            var range = `[${start},${end}]`;
             var criteria = {
                 type: 'daily-activities',
                 filters: _.map(props.users, (user) => {
@@ -101,7 +101,10 @@ module.exports = Relaks.createClass({
             props.listings = listings;
         }).then(() => {
             // load stories in listings
-            var storyIds = _.flatten(_.map(props.listings, 'story_ids'));
+            var storyIds = _.flatten(_.map(props.listings, (listing) => {
+                // return only the five latest
+                return _.slice(listing.story_ids, -5);
+            }));
             var criteria = {
                 id: _.uniq(storyIds)
             };
@@ -129,6 +132,17 @@ var UserListSync = module.exports.Sync = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         loading: PropTypes.bool,
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            chartSelection: {}
+        };
     },
 
     /**
@@ -171,22 +185,43 @@ var UserListSync = module.exports.Sync = React.createClass({
             var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
             var listing = findListing(this.props.listings, user);
             var stories = findStories(this.props.stories, listing);
+            var chartType = this.state.chartSelection[user.id];
             var userProps = {
                 user,
                 roles,
                 dailyActivities,
                 stories,
+                chartType,
                 currentUser: this.props.currentUser,
                 database: this.props.database,
                 route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
+
+                onChartSelect: this.handleChartSelect,
             };
             return <UserView {...userProps} />;
         } else {
             var height = evt.previousHeight || evt.estimatedHeight || 100;
             return <div className="user-view" style={{ height }} />;
         }
+    },
+
+    /**
+     * Called when the user select a chart type
+     *
+     * @param  {Object} evt
+     */
+    handleChartSelect: function(evt) {
+        // storing chart selection at this level to avoid loss of state
+        // due to on-demand rendering
+        var chartSelection = _.clone(this.state.chartSelection);
+        if (chartSelection[evt.user.id] !== evt.chart) {
+            chartSelection[evt.user.id] = evt.chart;
+        } else {
+            delete chartSelection[evt.user.id];
+        }
+        this.setState({ chartSelection });
     },
 });
 

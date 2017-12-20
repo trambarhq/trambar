@@ -24,7 +24,7 @@ var ProfileImage = require('widgets/profile-image');
 var DropZone = require('widgets/drop-zone');
 var MediaEditor = require('editors/media-editor');
 
-require('./comment-editor.scss');
+require('./reaction-editor.scss');
 
 const AUTOSAVE_DURATION = 5000;
 
@@ -107,7 +107,7 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <div className="comment-editor">
+            <div className="reaction-editor">
                 <div className="profile-image-column">
                     {this.renderProfileImage()}
                 </div>

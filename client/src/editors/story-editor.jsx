@@ -3,6 +3,11 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
+var ListParser = require('utils/list-parser');
+var Markdown = require('utils/markdown');
+var PlainText = require('utils/plain-text');
+var TagScanner = require('utils/tag-scanner');
+var ComponentRefs = require('utils/component-refs');
 var IssueUtils = require('objects/utils/issue-utils');
 
 var Database = require('data/database');
@@ -15,9 +20,17 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var StoryTextEditor = require('editors/story-text-editor');
-var StoryMediaPreview = require('editors/story-media-preview');
-var StoryTextPreview = require('editors/story-text-preview');
+var AuthorNames = require('widgets/author-names');
+var ProfileImage = require('widgets/profile-image');
+var CoauthoringButton = require('widgets/coauthoring-button');
+var PushButton = require('widgets/push-button');
+var AutosizeTextArea = require('widgets/autosize-text-area');
+var MediaToolbar = require('widgets/media-toolbar');
+var TextToolbar = require('widgets/text-toolbar');
+var HeaderButton = require('widgets/header-button');
+var DropZone = require('widgets/drop-zone');
+var MediaEditor = require('editors/media-editor');
+var MediaPlaceholder = require('widgets/media-placeholder');
 var StoryEditorOptions = require('editors/story-editor-options');
 var CornerPopUp = require('widgets/corner-pop-up');
 var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
@@ -62,6 +75,10 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            mediaEditor: MediaEditor,
+        });
+        this.resourcesReferenced = {};
         var nextState = {
             options: defaultOptions,
             selectedResourceIndex: undefined,
@@ -213,81 +230,270 @@ module.exports = React.createClass({
         return languageCode;
     },
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
+
     render: function() {
-        if (this.props.theme.mode === 'columns-1') {
-            return (
-                <div className="story-view columns-1">
-                    {this.renderTextEditor()}
-                    {this.renderSupplementalEditor()}
-                    {this.renderConfirmationDialogBox()}
-                </div>
-            );
-        } else if (this.props.theme.mode === 'columns-2') {
-            return (
-                <div className="story-view columns-2">
-                    <div className="column-1">
-                        {this.renderTextEditor()}
-                    </div>
-                    <div className="column-2">
-                        {this.renderSupplementalEditor()}
-                    </div>
-                    {this.renderConfirmationDialogBox()}
-                </div>
-            );
-        } else if (this.props.theme.mode === 'columns-3') {
-            return (
-                <div className="story-view columns-3">
-                    <div className="column-1">
-                        {this.renderTextEditor()}
-                    </div>
-                    <div className="column-2">
-                        {this.renderSupplementalEditor()}
-                    </div>
-                    <div className="column-3">
-                        {this.renderOptions()}
-                    </div>
-                    {this.renderConfirmationDialogBox()}
-                </div>
-            );
+        switch (this.props.theme.mode) {
+            case 'single-col':
+                return this.renderSingleColumn();
+            case 'double-col':
+                return this.renderDoubleColumn();
+            case 'triple-col':
+                return this.renderTripleColumn();
         }
     },
 
     /**
-     * Render editor for entering text
+     * Render single-column view
      *
      * @return {ReactElement}
      */
-    renderTextEditor: function() {
-        var props = {
-            story: this.state.draft,
-            authors: this.props.authors,
-            coauthoring: this.isCoauthoring(),
-            options: this.state.options,
-            cornerPopUp: this.renderPopUpMenu('main'),
+    renderSingleColumn: function() {
+        return (
+            <div className="story-editor single-col">
+                <div className="header">
+                    <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderAuthorNames()}
+                        {this.renderPopUpMenu('main')}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderCoauthoringButton()}
+                        {this.renderTextArea()}
+                        {this.renderButtons()}
+                    </div>
+                </div>
+                <div className="header">
+                    <div className="column-2">
+                        {this.renderToolbar()}
+                        {this.renderPopUpMenu('preview')}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-2">
+                        {this.renderPreview()}
+                    </div>
+                </div>
+                {this.renderConfirmationDialogBox()}
+            </div>
+        );
+    },
 
+    /**
+     * Render double-column view
+     *
+     * @return {ReactElement}
+     */
+    renderDoubleColumn: function() {
+        return (
+            <div className="story-editor double-col">
+                <div className="header">
+                    <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderAuthorNames()}
+                        {this.renderPopUpMenu('main')}
+                    </div>
+                    <div className="column-2">
+                        {this.renderToolbar()}
+                        {this.renderPopUpMenu('preview')}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderCoauthoringButton()}
+                        {this.renderTextArea()}
+                        {this.renderButtons()}
+                    </div>
+                    <div className="column-2">
+                        {this.renderPreview()}
+                    </div>
+                </div>
+                {this.renderConfirmationDialogBox()}
+            </div>
+        );
+    },
+
+    /**
+     * Render triple-column view
+     *
+     * @return {ReactElement}
+     */
+    renderTripleColumn: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="story-editor triple-col">
+                <div className="header">
+                    <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderAuthorNames()}
+                    </div>
+                    <div className="column-2">
+                        {this.renderToolbar()}
+                    </div>
+                    <div className="column-3">
+                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderCoauthoringButton()}
+                        {this.renderTextArea()}
+                        {this.renderButtons()}
+                    </div>
+                    <div className="column-2">
+                        {this.renderPreview()}
+                    </div>
+                    <div className="column-3">
+                        {this.renderOptions()}
+                    </div>
+                </div>
+                {this.renderConfirmationDialogBox()}
+            </div>
+        );
+    },
+
+    /**
+     * Render profile image
+     *
+     * @return {ReactElement}
+     */
+    renderProfileImage: function() {
+        var props = {
+            user: _.get(this.props.authors, 0),
+            theme: this.props.theme,
+            size: 'medium',
+        };
+        return <ProfileImage {...props} />;
+    },
+
+    /**
+     * Render the names of the author and co-authors
+     *
+     * @return {ReactElement}
+     */
+    renderAuthorNames: function() {
+        var props = {
+            authors: this.props.authors,
+            locale: this.props.locale,
+        };
+        return <AuthorNames {...props} />;
+    },
+
+    /**
+     * Render button that opens coauthor selection dialog box
+     *
+     * @return {ReactElement}
+     */
+    renderCoauthoringButton: function() {
+        var props = {
+            coauthoring: this.isCoauthoring(),
+            story: this.state.draft,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onChange: this.handleChange,
-            onPublish: this.handlePublish,
-            onCancel: this.handleCancel,
+            onSelect: this.handleCoauthorSelect,
+            onRemove: this.handleCancelClick,
         };
-        return <StoryTextEditor {...props} />;
+        return <CoauthoringButton {...props} />;
     },
 
     /**
-     * Render one of the supplemental editors
+     * Render the control for text entry
+     *
+     * @return {ReactElement}
+     */
+    renderTextArea: function() {
+        var languageCode = this.state.options.languageCode;
+        var lang = languageCode.substr(0, 2);
+        var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
+        var props = {
+            value: langText,
+            lang: lang,
+            onChange: this.handleTextChange,
+        };
+        return <AutosizeTextArea {...props} />;
+    },
+
+    /**
+     * Render cancel and post buttons
+     *
+     * @return {ReactElement}
+     */
+    renderButtons: function() {
+        var t = this.props.locale.translate;
+        var draft = this.state.draft;
+        var noText = _.isEmpty(_.get(draft, 'details.text'));
+        var noResources = _.isEmpty(_.get(draft, 'details.resources'));
+        var publishing = _.get(draft, 'published', false);
+        var cancelButtonProps = {
+            label: t('story-cancel'),
+            onClick: this.handleCancelClick,
+            disabled: (noText && noResources) || publishing,
+        };
+        var postButtonProps = {
+            label: t('story-post'),
+            onClick: this.handlePublishClick,
+            emphasized: true,
+            disabled: (noText && noResources) || publishing,
+        };
+        return (
+            <div className="buttons">
+                <PushButton {...cancelButtonProps} />
+                <PushButton {...postButtonProps} />
+            </div>
+        );
+    },
+
+    /**
+     * Render text or media preview
      *
      * @return {ReactElement|null}
      */
-    renderSupplementalEditor: function() {
+    renderToolbar: function() {
+        if (this.state.options.preview === 'text') {
+            return this.renderTextToolbar();
+        } else {
+            return this.renderMediaToolbar();
+        }
+    },
+
+    /**
+     * Render buttons in title bar
+     *
+     * @return {ReactElement}
+     */
+    renderTextToolbar: function() {
+        var props = {
+            story: this.state.draft,
+            locale: this.props.locale,
+            onAction: this.handleAction,
+        };
+        return <TextToolbar {...props} />;
+    },
+
+    /**
+     * Render buttons for ataching media
+     *
+     * @return {ReactElement}
+     */
+    renderMediaToolbar: function() {
+        var props = {
+            story: this.state.draft,
+            locale: this.props.locale,
+            onAction: this.handleAction,
+        };
+        return <MediaToolbar {...props} />;
+    },
+
+    /**
+     * Render text or media preview
+     *
+     * @return {ReactElement|null}
+     */
+    renderPreview: function() {
         if (this.state.options.preview === 'text') {
             return this.renderTextPreview();
         } else {
@@ -301,21 +507,96 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderTextPreview: function() {
-        var props = {
-            story: this.state.draft,
-            options: this.state.options,
-            cornerPopUp: this.renderPopUpMenu('supplemental'),
+        var contents;
+        switch (this.state.draft.type) {
+            case undefined:
+            case '':
+            case 'story':
+                contents = this.renderRegularPost();
+                break;
+            case 'task-list':
+                contents = this.renderTaskListText();
+                break;
+            case 'survey':
+                contents = this.renderSurveyText();
+                break;
+        }
+        return <div className="story-contents">{contents}</div>;
+    },
 
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+    /**
+     * Render text for regular post
+     *
+     * @return {ReactElement}
+     */
+    renderRegularPost: function() {
+        var p = this.props.locale.pick;
+        var className = 'text story';
+        var draft = this.state.draft;
+        var text = p(draft.details.text);
+        if (draft.details.markdown) {
+            text = Markdown.parse(text, this.handleReference);
+            className += ' markdown';
+        } else {
+            className += ' plain-text';
+        }
+        return (
+            <div className={className} onClick={this.handleTextClick}>
+                {text}
+            </div>
+        );
+    },
 
-            onChange: this.handleChange,
-            onResourceClick: this.handleResourceClick,
-        };
-        return <StoryTextPreview {...props} />
+    /**
+     * Render task list
+     *
+     * @return {ReactElement}
+     */
+    renderTaskListText: function() {
+        var p = this.props.locale.pick;
+        var className = 'text task-list';
+        var draft = this.state.draft;
+        var text = p(draft.details.text);
+        var list;
+        if (draft.details.markdown) {
+            // answers are written to the text itself, so there's no need to
+            // provide user answers to Markdown.parseTaskList()
+            list = Markdown.parseTaskList(text, null, this.handleItemChange, this.handleReference);
+            className += ' markdown';
+        } else {
+            list = PlainText.parseTaskList(text, null, this.handleItemChange);
+            className += ' plain-text';
+        }
+        return (
+            <div className={className} onClick={this.handleTextClick}>
+                {list}
+            </div>
+        );
+    },
+
+    /**
+     * Render survey choices or results depending whether user has voted
+     *
+     * @return {ReactElement}
+     */
+    renderSurveyText: function() {
+        var p = this.props.locale.pick;
+        var className = 'text survey';
+        var draft = this.state.draft;
+        var text = p(draft.details.text);
+        var survey;
+        if (draft.details.markdown) {
+            survey = Markdown.parseSurvey(text, null, this.handleItemChange, this.handleReference);
+            className += ' markdown';
+        } else {
+            survey = PlainText.parseSurvey(text, null, this.handleItemChange);
+            className += ' plain-text';
+        }
+        return (
+            <div className={className} onClick={this.handleTextClick}>
+                {survey}
+            </div>
+        );
     },
 
     /**
@@ -324,22 +605,28 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderMediaPreview: function() {
-        var props = {
-            story: this.state.draft,
-            cornerPopUp: this.renderPopUpMenu('supplemental'),
-            selectedResourceIndex: this.state.selectedResourceIndex,
-            options: this.state.options,
-            showHints: this.props.showHints,
-
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
+        var editorProps = {
+            ref: this.components.setters.mediaEditor,
+            resources: _.get(this.state.draft, 'details.resources'),
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onChange: this.handleChange,
+            payloads: this.props.payloads,
+            initialResourceIndex: this.props.selectedResourceIndex,
+            onChange: this.handleResourcesChange,
+            onEmbed: this.handleResourceEmbed,
         };
-        return <StoryMediaPreview {...props} />
+        var placeholderProps = {
+            showHints: this.props.isStationary,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return (
+            <DropZone onDrop={this.handleDrop}>
+                <MediaEditor {...editorProps}>
+                    <MediaPlaceholder {...placeholderProps} />
+                </MediaEditor>
+            </DropZone>
+        );
     },
 
     /**
@@ -348,12 +635,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPopUpMenu: function(section) {
-        if (this.props.theme.mode === 'columns-3') {
-            return null;
-        }
         return (
             <CornerPopUp>
-                {this.renderOptions(true, section)}
+                {this.renderOptions(section)}
             </CornerPopUp>
         );
     },
@@ -361,11 +645,12 @@ module.exports = React.createClass({
     /**
      * Render editor options
      *
+     * @param  {String} section
+     *
      * @return {ReactElement}
      */
-    renderOptions: function(inMenu, section) {
+    renderOptions: function(section) {
         var props = {
-            inMenu,
             section,
             story: this.state.draft,
             options: this.state.options,
@@ -443,6 +728,22 @@ module.exports = React.createClass({
             this.setState({ options }, () => {
                 resolve(options);
             });
+        });
+    },
+
+    /**
+     * Set current draft and initiate autosave
+     *
+     * @param  {Story} draft
+     * @param  {Boolean} immediate
+     *
+     * @return {Promise<Story>}
+     */
+    saveDraft: function(draft, immediate) {
+        return this.changeDraft(draft).then((story) => {
+            var delay = (immediate) ? 0 : AUTOSAVE_DURATION;
+            this.autosaveStory(story, delay);
+            return story;
         });
     },
 
@@ -612,33 +913,38 @@ module.exports = React.createClass({
         });
     },
 
-
     /**
-     * Called when user makes changes to the story
+     * Publish the story
      *
-     * @param  {Object} evt
-     *
-     * @return {Promise<Story>}
+     * @return {[type]}
      */
-    handleChange: function(evt) {
-        return this.changeDraft(evt.story).then((story) => {
-            var delay;
-            switch (evt.path) {
-                case 'details.resources':
-                    // upload resources immediately
-                    if (hasUnsentFiles(story.details.resources)) {
-                        delay = 0;
-                    }
-                    break;
-                case 'user_ids':
-                    // make story available to other users immediately
-                    delay = 0;
-                    break;
-                default:
-                    delay = AUTOSAVE_DURATION;
-            }
-            this.autosaveStory(story, delay);
-            return null;
+    publishStory: function() {
+        var draft = _.clone(this.state.draft);
+        var options = this.state.options;
+        if (!draft.type) {
+            draft.type = 'story';
+        }
+        if (_.isEmpty(draft.role_ids)) {
+            var roleIds = _.map(this.props.authors, 'role_ids');
+            draft.role_ids = _.uniq(_.flatten(roleIds));
+        }
+        if (IssueUtils.attach(draft, options.issueDetails, this.props.currentUser, this.props.repos)) {
+            // add issue labels as tags
+            var issueTags = _.map(draft.details.labels, (label) => {
+                return `#${label}`;
+            });
+            draft.tags = _.union(draft.tags, issueTags);
+        }
+        draft.public = !options.hidePost;
+        draft.published = true;
+
+        return this.saveDraft(draft, true).then((story) => {
+            return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
+                if (this.props.isStationary) {
+                    var blank = createBlankStory(this.props.currentUser);
+                    return this.changeDraft(blank);
+                }
+            });
         });
     },
 
@@ -646,38 +952,49 @@ module.exports = React.createClass({
      * Called when user clicks the Post button
      *
      * @param  {Event} evt
-     *
-     * @return {Promise<Story>}
      */
-    handlePublish: function(evt) {
-        var story = _.clone(this.state.draft);
-        var options = this.state.options;
-        if (!story.type) {
-            story.type = 'story';
-        }
-        if (_.isEmpty(story.role_ids)) {
-            var roleIds = _.map(this.props.authors, 'role_ids');
-            story.role_ids = _.uniq(_.flatten(roleIds));
-        }
-        if (IssueUtils.attach(story, options.issueDetails, this.props.currentUser, this.props.repos)) {
-            // add issue labels as tags
-            var issueTags = _.map(story.details.labels, (label) => {
-                return `#${label}`;
-            });
-            story.tags = _.union(story.tags, issueTags);
-        }
-        story.public = !options.hidePost;
-        story.published = true;
-
-        return this.changeDraft(story).then(() => {
-            return this.saveStory(story).then((story) => {
-                return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                    var draft = createBlankStory(this.props.currentUser);
-                    return this.changeDraft(draft);
-                });
-            });
-        });
+    handlePublishClick: function(evt) {
+        this.publishStory();
     },
+
+    /**
+     * Called when user changes the text
+     *
+     * @param  {Event} evt
+     */
+    handleTextChange: function(evt) {
+        var langText = evt.currentTarget.value;
+        var languageCode = this.state.options.languageCode;
+        var lang = languageCode.substr(0, 2);
+        var path = `details.text.${lang}`;
+        var draft = _.decoupleSet(this.state.draft, path, langText);
+
+        // remove zero-length text
+        draft.details.text = _.pickBy(draft.details.text, 'length');
+        if (_.isEmpty(draft.details.text)) {
+            // remove the text object altogether
+            draft.details = _.omit(draft.details, 'text');
+        }
+
+        // automatically enable Markdown formatting
+        if (draft.details.markdown === undefined) {
+            if (Markdown.detect(langText)) {
+                draft.details.markdown = true;
+            }
+        }
+
+        // automatically set story type to task list
+        if (!draft.type) {
+            if (ListParser.detect(draft.details.text)) {
+                draft.type = 'task-list';
+            }
+        }
+
+        // look for tags
+        draft.tags = TagScanner.findTags(draft.details.text);
+        this.saveDraft(draft);
+    },
+
 
     /**
      * Called when user click Cancel button
@@ -686,7 +1003,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    handleCancel: function(evt) {
+    handleCancelClick: function(evt) {
         var action;
         if (this.isCoauthoring()) {
             action = 'remove-self';
@@ -708,20 +1025,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on an image referenced by Markdown
-     *
-     * @param  {Object} evt
-     *
-     * @return {[type]}
-     */
-    handleResourceClick: function(evt) {
-        var resources = this.state.draft.details.resources;
-        var selectedResourceIndex = _.indexOf(resources, evt.resource);
-        var options = _.decoupleSet(this.state.options, 'preview', 'media');
-        this.setState({ selectedResourceIndex, options });
-    },
-
-    /**
      * Called when user cancel an action
      *
      * @param  {Event} evt
@@ -737,21 +1040,90 @@ module.exports = React.createClass({
      */
     handleCancelConfirm: function(evt) {
         this.setState({ confirming: false });
-        var story = this.state.draft;
+        var draft = this.state.draft;
         if (this.props.isStationary) {
             // when it's the top editor, create a blank story first, since this
             // instance of the component will be reused
-            var draft = createBlankStory(this.props.currentUser);
-            this.changeDraft(draft).then(() => {
-                if (story.id) {
-                    return this.removeStory(story);
+            var blank = createBlankStory(this.props.currentUser);
+            this.changeDraft(blank).then(() => {
+                if (draft.id) {
+                    return this.removeStory(draft);
                 } else {
-                    return story;
+                    return draft;
                 }
             });
         } else {
-            this.removeStory(story);
+            this.removeStory(draft);
         }
+    },
+
+    /**
+     * Called when Markdown text references a resource
+     *
+     * @param  {Object} evt
+     */
+    handleReference: function(evt) {
+        var resources = this.state.draft.details.resources;
+        var res = Markdown.findReferencedResource(resources, evt.name);
+        if (res) {
+            var theme = this.props.theme;
+            var url;
+            if (evt.forImage)  {
+                // images are style at height = 1.5em
+                url = theme.getImageUrl(res, { height: 24 });
+                if (!url) {
+                    // use blob if it's attached
+                    var file = theme.getImageFile(res);
+                    url = Markdown.createBlobUrl(file, res.clip);
+                }
+            } else {
+                url = theme.getUrl(res);
+            }
+            // remember the resource and the url
+            this.resourcesReferenced[url] = res;
+            return {
+                href: url,
+                title: undefined
+            };
+        }
+    },
+
+    /**
+     * Called when user clicks on the text contents
+     *
+     * @param  {Event} evt
+     */
+    handleTextClick: function(evt) {
+        var target = evt.target;
+        if (target.tagName === 'IMG') {
+            var src = target.getAttribute('src');
+            var res = this.resourcesReferenced[src];
+            if (res) {
+                var resources = this.state.draft.details.resources;
+                var selectedResourceIndex = _.indexOf(resources, evt.resource);
+                var options = _.decoupleSet(this.state.options, 'preview', 'media');
+                this.setState({ selectedResourceIndex, options });
+            }
+        }
+    },
+
+    /**
+     * Called when user click a checkbox or radio button in the preview
+     *
+     * @param  {Event} evt
+     */
+    handleItemChange: function(evt) {
+        // update the text of the story to reflect the selection
+        var target = evt.currentTarget;
+        var list = target.name;
+        var item = target.value;
+        var selected = target.checked;
+        var draft = _.decouple(this.state.draft, 'details');
+        var clearOthers = (draft.type === 'survey');
+        draft.details.text = _.mapValues(draft.details.text, (langText) => {
+            return ListParser.update(langText, list, item, selected, clearOthers);
+        });
+        this.saveDraft(draft);
     },
 
     /**
@@ -763,6 +1135,103 @@ module.exports = React.createClass({
         this.setState({ confirming: false });
         this.removeSelf();
     },
+
+    /**
+     * Called when user add new resources or adjusted image cropping
+     *
+     * @param  {Object} evt
+     *
+     * @return {Promise}
+     */
+    handleResourcesChange: function(evt) {
+        var path = 'details.resources';
+        var draft = _.decoupleSet(this.state.draft, path, evt.resources);
+        var immediate = hasUnsentFiles(draft.details.resources);
+        return this.saveDraft(draft, immediate);
+    },
+
+    /**
+     * Called when user wants to embed a resource into Markdown text
+     *
+     * @param  {Object} evt
+     */
+    handleResourceEmbed: function(evt) {
+        var resource = evt.resource;
+        var draft = _.decouple(this.state.draft, 'details');
+        var resources = draft.details.resources;
+        var resourcesOfType = _.filter(resources, { type: resource.type });
+        var index = _.indexOf(resourcesOfType, resource);
+        if (index !== -1) {
+            var tag = `![${resource.type}-${index+1}]`;
+            var languageCode = this.state.options.languageCode;
+            var lang = languageCode.substr(0, 2);
+            var langText = _.get(draft, `details.text.${lang}`, '') + tag;
+            _.set(draft, `details.text.${lang}`, langText);
+            _.set(draft, `details.markdown`, true);
+            this.saveDraft(draft);
+        }
+    },
+
+    /**
+     * Called when user drops an item over the editor
+     *
+     * @param  {Event} evt
+     */
+    handleDrop: function(evt) {
+        this.components.mediaEditor.importFiles(evt.files);
+        this.components.mediaEditor.importDataItems(evt.items);
+        return null;
+    },
+
+    /**
+     * Called when user initiates an action
+     *
+     * @param  {Object} evt
+     */
+    handleAction: function(evt) {
+        switch (evt.action) {
+            case 'markdown-set':
+                var draft = _.decouple(this.state.draft, 'details');
+                draft.details.markdown = evt.value;
+                this.saveDraft(draft);
+                break;
+            case 'story-type-set':
+                var draft = _.decouple(this.state.draft, 'details');
+                draft.type = evt.value;
+                // attach a list template to the story if there's no list yet
+                if (draft.type === 'task-list' || draft.type === 'survey') {
+                    var text = draft.details.text || {};
+                    if (!ListParser.detect(text)) {
+                        var t = this.props.locale.translate;
+                        var lang = this.props.locale.lang;
+                        var langText = text[lang] || '';
+                        if (_.trimEnd(langText)) {
+                            langText = _.trimEnd(langText) + '\n\n';
+                        }
+                        var items = _.map(_.range(1, 4), (number) => {
+                            var label = t(`${draft.type}-item-$number`, number);
+                            return `[ ] ${label}`;
+                        });
+                        langText += items.join('\n');
+                        _.set(draft, `details.text.${lang}`, langText);
+                    }
+                }
+                this.saveDraft(draft);
+                break;
+            case 'photo-capture':
+                this.components.mediaEditor.capture('image');
+                break;
+            case 'video-capture':
+                this.components.mediaEditor.capture('video');
+                break;
+            case 'audio-capture':
+                this.components.mediaEditor.capture('audio');
+                break;
+            case 'file-import':
+                this.components.mediaEditor.importFiles(evt.files);
+                break;
+        }
+    }
 });
 
 var defaultOptions = {

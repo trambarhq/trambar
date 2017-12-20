@@ -9,8 +9,6 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var StorySection = require('widgets/story-section');
-var HeaderButton = require('widgets/header-button');
 var OptionButton = require('widgets/option-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
 var IssueDialogBox = require('dialogs/issue-dialog-box');
@@ -20,8 +18,7 @@ require('./story-view-options.scss');
 module.exports = React.createClass({
     displayName: 'StoryViewOptions',
     propTypes: {
-        inMenu: PropTypes.bool,
-        section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
+        section: PropTypes.oneOf([ 'main', 'both' ]),
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
@@ -43,7 +40,6 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            inMenu: false,
             section: 'both',
         }
     },
@@ -68,25 +64,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        if (this.props.inMenu) {
-            return (
-                <div className="view-options in-menu">
-                    {this.renderButtons(this.props.section)}
-                </div>
-            );
-        } else {
-            var t = this.props.locale.translate;
-            return (
-                <StorySection className="view-options">
-                    <header>
-                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
-                    </header>
-                    <body>
-                        {this.renderButtons('main')}
-                    </body>
-                </StorySection>
-            );
-        }
+        var t = this.props.locale.translate;
+        return (
+            <div className="story-view-options">
+                {this.renderButtons('main')}
+            </div>
+        );
     },
 
     /**
@@ -117,13 +100,13 @@ module.exports = React.createClass({
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
                 hidden: !(canWrite && UserUtils.canSendBookmarks(user, story)),
-                selected: !_.isEmpty(otherRecipients),
+                selected: !_.isEmpty(otherRecipients) || this.state.selectingRecipients,
                 onClick: this.handleSendBookmarkClick,
             };
             var addIssueProps = {
                 label: t('option-add-issue'),
                 hidden: !(canWrite && UserUtils.canAddIssue(user, story, this.props.repos)),
-                selected: !!options.issueDetails,
+                selected: !!options.issueDetails || this.state.enteringIssueDetails,
                 onClick: this.handleAddIssueClick,
             };
             var hideProps = {

@@ -1,12 +1,8 @@
 .media-editor {
-    display: flex;
     position: relative;
-    vertical-align: top;
+    width: 100%;
     max-width: 600px;
-
-    &.inactive {
-        max-width: none;
-    }
+    margin: auto;
 
     .navigation {
         position: absolute;
@@ -27,5 +23,10 @@
         &.hidden {
             opacity: 0;
         }
+    }
+
+    &.empty {
+        position: static;
+        max-width: none;
     }
 }

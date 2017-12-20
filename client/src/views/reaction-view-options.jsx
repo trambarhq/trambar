@@ -10,10 +10,10 @@ var Theme = require('theme/theme');
 var PopUpMenu = require('widgets/pop-up-menu');
 var OptionButton = require('widgets/option-button');
 
-require('./comment-view-options.scss');
+require('./reaction-view-options.scss');
 
 module.exports = React.createClass({
-    displayName: 'CommentViewOptions',
+    displayName: 'ReactViewOptions',
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         currentUser: PropTypes.object.isRequired,
@@ -140,7 +140,7 @@ module.exports = React.createClass({
                   || this.canRemoveReaction()
                   || this.canHideReaction();
         var props = {
-            className: 'comment-view-options',
+            className: 'reaction-view-options',
             disabled: !active,
             popOut: true,
             onOpen: this.handleOpen,

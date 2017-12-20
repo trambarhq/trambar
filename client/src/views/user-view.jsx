@@ -9,7 +9,10 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var UserSummary = require('views/user-summary');
+var ProfileImage = require('widgets/profile-image');
+var ChartToolbar = require('widgets/chart-toolbar');
+var HeaderButton = require('widgets/header-button');
+var UserActivityList = require('lists/user-activity-list');
 var UserStatistics = require('views/user-statistics');
 var UserViewOptions = require('views/user-view-options');
 var CornerPopUp = require('widgets/corner-pop-up');
@@ -23,13 +26,16 @@ module.exports = React.createClass({
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
+        chartType: PropTypes.string,
         dailyActivities: PropTypes.object,
+        currentUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChartSelect: PropTypes.func,
     },
 
     /**
@@ -38,29 +44,110 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        if (this.props.theme.mode === 'columns-1') {
-            return (
-                <div className="story-view columns-1">
-                    {this.renderSummary()}
-                    {this.renderStatistics()}
-                </div>
-            );
-        } else if (this.props.theme.mode === 'columns-2') {
-            return (
-                <div className="story-view columns-2">
+        switch (this.props.theme.mode) {
+            case 'single-col':
+                return this.renderSingleColumn();
+            case 'double-col':
+                return this.renderDoubleColumn();
+            case 'triple-col':
+                return this.renderTripleColumn();
+        }
+    },
+
+    /**
+     * Render single-column view
+     *
+     * @return {ReactElement}
+     */
+    renderSingleColumn: function() {
+        return (
+            <div className="user-view single-col">
+                <div className="header">
                     <div className="column-1">
-                        {this.renderSummary()}
+                        {this.renderProfileImage()}
+                        {this.renderRoles()}
+                        {this.renderPopUpMenu('main')}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderName()}
+                        {this.renderTag()}
+                        {this.renderRecentActivities()}
+                    </div>
+                </div>
+                <div className="header">
+                    <div className="column-2">
+                        {this.renderChartToolbar()}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-2">
+                        {this.renderStatistics()}
+                    </div>
+                </div>
+            </div>
+        );
+    },
+
+    /**
+     * Render double-column view
+     *
+     * @return {ReactElement}
+     */
+    renderDoubleColumn: function() {
+        return (
+            <div className="user-view double-col">
+                <div className="header">
+                    <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderRoles()}
+                        {this.renderPopUpMenu('main')}
+                    </div>
+                    <div className="column-2">
+                        {this.renderChartToolbar()}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderName()}
+                        {this.renderTag()}
+                        {this.renderRecentActivities()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
                     </div>
                 </div>
-            );
-        } else if (this.props.theme.mode === 'columns-3') {
-            return (
-                <div className="story-view columns-3">
+            </div>
+        );
+    },
+
+    /**
+     * Render triple-column view
+     *
+     * @return {ReactElement}
+     */
+    renderTripleColumn: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="user-view triple-col">
+                <div className="header">
                     <div className="column-1">
-                        {this.renderSummary()}
+                        {this.renderProfileImage()}
+                        {this.renderRoles()}
+                    </div>
+                    <div className="column-2">
+                        {this.renderChartToolbar()}
+                    </div>
+                    <div className="column-3">
+                        <HeaderButton icon="chevron-circle-right" label={t('user-actions')} disabled />
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderName()}
+                        {this.renderTag()}
+                        {this.renderRecentActivities()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -69,30 +156,113 @@ module.exports = React.createClass({
                         {this.renderOptions()}
                     </div>
                 </div>
-            );
-        }
+            </div>
+        );
     },
 
-    renderSummary: function() {
+    /**
+     * Render the user's profile image
+     *
+     * @return {ReactElement}
+     */
+    renderProfileImage: function() {
         var props = {
             user: this.props.user,
-            roles: this.props.roles,
-            stories: this.props.stories,
-            cornerPopUp: this.renderPopUpMenu('main'),
+            theme: this.props.theme,
+            size: 'large',
+        };
+        return <ProfileImage {...props} />;
+    },
 
-            database: this.props.database,
+    /**
+     * Render the user's roles
+     *
+     * @return {ReactElement}
+     */
+    renderRoles: function() {
+        var p = this.props.locale.pick;
+        var names = _.map(this.props.roles, (role) => {
+            return p(role.details.title) || role.name;
+        });
+        return (
+            <span className="roles">
+                {names.join(', ') || '\u00a0'}
+            </span>
+        );
+    },
+
+    /**
+     * Render toolbar for changing chart type
+     *
+     * @return {ReactElement}
+     */
+    renderChartToolbar: function() {
+        var props = {
+            chartType: this.props.chartType,
+            locale: this.props.locale,
+            onAction: this.handleAction,
+        };
+        return <ChartToolbar {...props} />;
+    },
+
+    /**
+     * Render name of user
+     *
+     * @return {ReactElement}
+     */
+    renderName: function() {
+        var user = this.props.user;
+        var p = this.props.locale.pick;
+        var name = (user) ? p(user.details.name) : '\u00a0';
+        return <h2 className="name">{name}</h2>;
+    },
+
+    /**
+     * Render username
+     *
+     * @return {ReactElement}
+     */
+    renderTag: function() {
+        var t = this.props.locale.translate;
+        var user = this.props.user;
+        var tag = (user) ? `@${user.username}` : '\u00a0';
+        return <h3 className="tag">{tag}</h3>;
+    },
+
+    /**
+     * Render recent activity list
+     *
+     * @return {ReactElement}
+     */
+    renderRecentActivities: function() {
+        var props = {
+            stories: this.props.stories,
+            user: this.props.user,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        return <UserSummary {...props} />;
+        return <UserActivityList {...props} />;
     },
 
+    /**
+     * Render a chart showing daily activities
+     *
+     * @return {ReactElement}
+     */
     renderStatistics: function() {
+        var chartType = this.props.chartType;
+        if (!chartType) {
+            // always show statistics in double and triple column mode
+            if (this.props.theme.mode !== 'single-col') {
+                chartType = 'bar';
+            }
+        }
         var props = {
             user: this.props.user,
             story: this.props.story,
             dailyActivities: this.props.dailyActivities,
+            chartType: chartType,
 
             database: this.props.database,
             route: this.props.route,
@@ -110,12 +280,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPopUpMenu: function(section) {
-        if (this.props.theme.mode === 'columns-3') {
-            return null;
-        }
         return (
             <CornerPopUp>
-                {this.renderOptions(true, section)}
+                {this.renderOptions(section)}
             </CornerPopUp>
         );
     },
@@ -123,22 +290,37 @@ module.exports = React.createClass({
     /**
      * Render options pane or simply the list of options when it's in a menu
      *
-     * @param  {Boolean} inMenu
      * @param  {String} section
      *
      * @return {ReactElement}
      */
-    renderOptions: function(inMenu, section) {
+    renderOptions: function(section) {
         var props = {
-            inMenu,
             section,
             user: this.props.user,
-
-            database: this.props.database,
-            route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
         return <UserViewOptions {...props} />;
+    },
+
+    /**
+     * Called when user clicks on one of the chart buttons
+     *
+     * @param  {Object} evt
+     */
+    handleAction: function(evt) {
+        switch (evt.action) {
+            case 'chart-type-set':
+                if (this.props.onChartSelect) {
+                    this.props.onChartSelect({
+                        type: 'chartselect',
+                        target: this,
+                        chart: evt.value,
+                        user: this.props.user,
+                    });
+                }
+                break;
+        }
     },
 });

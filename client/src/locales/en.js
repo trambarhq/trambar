@@ -70,43 +70,6 @@ module.exports = function(languageCode) {
         'confirmation-cancel': 'Cancel',
         'confirmation-confirm': 'Confirm',
 
-        'comment-$user-cast-a-vote': (user) => {
-            return `${user} cast a vote`;
-        },
-        'comment-$user-commented-on-branch': (user) => {
-            return `${user} commented on this branch`;
-        },
-        'comment-$user-commented-on-issue': (user) => {
-            return `${user} commented on this issue`;
-        },
-        'comment-$user-commented-on-merge': (user) => {
-            return `${user} commented on a commit`;
-        },
-        'comment-$user-commented-on-merge-request': (user) => {
-            return `${user} commented on this merge request`;
-        },
-        'comment-$user-commented-on-push': (user) => {
-            return `${user} commented on this push`;
-        },
-        'comment-$user-completed-a-task': (user) => {
-            return `${user} completed a task`;
-        },
-        'comment-$user-is-assigned-to-issue': (user) => {
-            return `${user} was assigned to this issue`;
-        },
-        'comment-$user-is-assigned-to-merge-request': (user) => {
-            return `${user} was assigned to this merge request`;
-        },
-        'comment-$user-is-editing': (user) => {
-            return `${user} is editing a comment...`;
-        },
-        'comment-$user-is-writing': (user) => {
-            return `${user} is writing a comment...`;
-        },
-        'comment-$user-likes-this': (user) => {
-            return `${user} likes this`;
-        },
-
         'image-editor-upload-in-progress': 'Upload in progress...',
 
         'issue-cancel': 'Cancel',
@@ -229,6 +192,43 @@ module.exports = function(languageCode) {
         'project-panel-mobile-set-up': 'Mobile set up',
         'project-panel-sign-out': 'Sign out',
         'project-panel-sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
+
+        'reaction-$user-cast-a-vote': (user) => {
+            return `${user} cast a vote`;
+        },
+        'reaction-$user-commented-on-branch': (user) => {
+            return `${user} commented on this branch`;
+        },
+        'reaction-$user-commented-on-issue': (user) => {
+            return `${user} commented on this issue`;
+        },
+        'reaction-$user-commented-on-merge': (user) => {
+            return `${user} commented on a commit`;
+        },
+        'reaction-$user-commented-on-merge-request': (user) => {
+            return `${user} commented on this merge request`;
+        },
+        'reaction-$user-commented-on-push': (user) => {
+            return `${user} commented on this push`;
+        },
+        'reaction-$user-completed-a-task': (user) => {
+            return `${user} completed a task`;
+        },
+        'reaction-$user-is-assigned-to-issue': (user) => {
+            return `${user} was assigned to this issue`;
+        },
+        'reaction-$user-is-assigned-to-merge-request': (user) => {
+            return `${user} was assigned to this merge request`;
+        },
+        'reaction-$user-is-editing': (user) => {
+            return `${user} is editing a comment...`;
+        },
+        'reaction-$user-is-writing': (user) => {
+            return `${user} is writing a comment...`;
+        },
+        'reaction-$user-likes-this': (user) => {
+            return `${user} likes this`;
+        },
 
         'role-filter-no-roles': 'No roles defined',
 
@@ -417,6 +417,7 @@ module.exports = function(languageCode) {
         'survey-item-$number': (number) => {
             return `choice ${number}`;
         },
+
         'task-list-item-$number': (number) => {
             return `task ${number}`;
         },
@@ -442,6 +443,7 @@ module.exports = function(languageCode) {
 
         'user-statistics-legend-issue': 'Issues',
         'user-statistics-legend-merge': 'Code merges',
+        'user-statistics-legend-merge-request': 'Merge requests',
         'user-statistics-legend-milestone': 'Milestones',
         'user-statistics-legend-push': 'Code pushes',
         'user-statistics-legend-story': 'Posts',
@@ -449,22 +451,37 @@ module.exports = function(languageCode) {
         'user-statistics-legend-task-list': 'Task lists',
         'user-statistics-legend-wiki': 'Wiki edits',
 
-        'user-summary-$name-created-a-milestone': 'Created a milestone',
-        'user-summary-$name-created-repo': 'Created a git project',
-        'user-summary-$name-edited-wiki-page': 'Edited a wiki page',
-        'user-summary-$name-joined-repo': 'Joined a git project',
-        'user-summary-$name-left-repo': 'Left a git project',
-        'user-summary-$name-merged-code': 'Performed a code merge',
-        'user-summary-$name-opened-an-issue': 'Opened an issue',
-        'user-summary-$name-posted-a-link': 'Posted a link to a website',
-        'user-summary-$name-posted-a-picture': 'Posted a picture',
-        'user-summary-$name-posted-a-video-clip': 'Posted a video clip',
-        'user-summary-$name-posted-an-audio-clip': 'Posted an audio clip',
-        'user-summary-$name-pushed-code': 'Pushed code to repo',
-        'user-summary-$name-started-survey': 'Started a survey',
-        'user-summary-$name-started-task-list': 'Started a task list',
-        'user-summary-$name-wrote-a-post': 'Wrote a post',
-        'user-summary-more': 'More...',
+        'user-activity-$name-created-branch': 'Created a new branch',
+        'user-activity-$name-created-merge-request': 'Made a merge request',
+        'user-activity-$name-created-milestone': 'Created a milestone',
+        'user-activity-$name-created-repo': 'Created a git project',
+        'user-activity-$name-edited-wiki-page': 'Edited a wiki page',
+        'user-activity-$name-joined-repo': 'Joined a git project',
+        'user-activity-$name-left-repo': 'Left a git project',
+        'user-activity-$name-merged-code': 'Performed a code merge',
+        'user-activity-$name-opened-issue': 'Opened an issue',
+        'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+            var audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
+            return `Posted ${audios}`;
+        },
+        'user-activity-$name-posted-$count-links': (name, count) => {
+            var links = (count === 1) ? `a link` : `links`;
+            var website = (count === 1) ? `a website` : `${count} websites`;
+            return `Posted ${links} to ${website}`
+        },
+        'user-activity-$name-posted-$count-pictures': (name, count) => {
+            var pictures = (count === 1) ? `a picture` : `${count} pictures`;
+            return `Posted ${pictures}`;
+        },
+        'user-activity-$name-posted-$count-video-clips': (name, count) => {
+            var videos = (count === 1) ? `a video clip` : `${count} video clips`;
+            return `Posted ${videos}`;
+        },
+        'user-activity-$name-pushed-code': 'Pushed code to repo',
+        'user-activity-$name-started-survey': 'Started a survey',
+        'user-activity-$name-started-task-list': 'Started a task list',
+        'user-activity-$name-wrote-post': 'Wrote a post',
+        'user-activity-more': 'More...',
 
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',

@@ -14,8 +14,15 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
+var ProfileImage = require('widgets/profile-image');
+var AuthorNames = require('widgets/author-names');
+var StoryProgress = require('widgets/story-progress');
+var StoryEmblem = require('widgets/story-emblem');
+var Scrollable = require('widgets/scrollable');
+var ReactionToolbar = require('widgets/reaction-toolbar');
+var ReactionList = require('lists/reaction-list');
+var HeaderButton = require('widgets/header-button');
 var StoryContents = require('views/story-contents');
-var StoryComments = require('views/story-comments');
 var StoryViewOptions = require('views/story-view-options');
 var CornerPopUp = require('widgets/corner-pop-up');
 
@@ -49,10 +56,39 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         var nextState = {
-            options: defaultOptions
+            options: defaultOptions,
+            commentsExpanded: this.shouldExpandComments(this.props),
+            addingComment: _.some(this.props.reactions, {
+                user_id: this.props.currentUserId,
+                published: false
+            }),
         };
         this.updateOptions(nextState, this.props);
         return nextState;
+    },
+
+
+    /**
+     * Return true if comment should be expanded automatically
+     *
+     * @param  {Object} props
+     *
+     * @return {Boolean|undefined}
+     */
+    shouldExpandComments: function(props) {
+        if (!props.reactions || !props.respondents) {
+            return;
+        }
+        // expand automatically when it's the current user's story
+        var currentUserId = _.get(this.props.currentUser, 'id');
+        if (_.includes(props.story.user_ids, currentUserId)) {
+            return true;
+        }
+        // expand automatically when the current user has reacted to story
+        if (_.some(props.reactions, { user_id: currentUserId })) {
+            return true;
+        }
+        return false;
     },
 
     /**
@@ -92,39 +128,204 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        if (this.props.theme.mode === 'columns-1') {
-            return (
-                <div className="story-view columns-1">
-                    {this.renderContents()}
-                    {this.renderComments()}
-                </div>
-            );
-        } else if (this.props.theme.mode === 'columns-2') {
-            return (
-                <div className="story-view columns-2">
+        switch (this.props.theme.mode) {
+            case 'single-col':
+                return this.renderSingleColumn();
+            case 'double-col':
+                return this.renderDoubleColumn();
+            case 'triple-col':
+                return this.renderTripleColumn();
+        }
+    },
+
+    /**
+     * Render single-column view
+     *
+     * @return {ReactElement}
+     */
+    renderSingleColumn: function() {
+        return (
+            <div className="story-view single-col">
+                <div className="header">
                     <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderAuthorNames()}
+                        {this.renderPopUpMenu('main')}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderProgress()}
+                        {this.renderEmblem()}
+                        {this.renderContents()}
+                    </div>
+                </div>
+                <div className="header">
+                    <div className="column-2">
+                        {this.renderReactionToolbar()}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-2">
+                        {this.renderReactionAudioPlayer()}
+                        {this.renderReactions()}
+                    </div>
+                </div>
+            </div>
+        );
+    },
+
+    /**
+     * Render double-column view
+     *
+     * @return {ReactElement}
+     */
+    renderDoubleColumn: function() {
+        return (
+            <div className="story-view double-col">
+                <div className="header">
+                    <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderAuthorNames()}
+                        {this.renderPopUpMenu('main')}
+                    </div>
+                    <div className="column-2">
+                        {this.renderReactionToolbar()}
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderProgress()}
+                        {this.renderEmblem()}
                         {this.renderContents()}
                     </div>
                     <div className="column-2">
-                        {this.renderComments()}
+                        {this.renderReactionAudioPlayer()}
+                        {this.renderReactions()}
                     </div>
                 </div>
-            );
-        } else if (this.props.theme.mode === 'columns-3') {
-            return (
-                <div className="story-view columns-3">
+            </div>
+        );
+    },
+
+    /**
+     * Render triple-column view
+     *
+     * @return {ReactElement}
+     */
+    renderTripleColumn: function() {
+        var t = this.props.locale.translate;
+        return (
+            <div className="story-view triple-col">
+                <div className="header">
                     <div className="column-1">
+                        {this.renderProfileImage()}
+                        {this.renderAuthorNames()}
+                    </div>
+                    <div className="column-2">
+                        {this.renderReactionToolbar()}
+                    </div>
+                    <div className="column-3">
+                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="column-1">
+                        {this.renderProgress()}
+                        {this.renderEmblem()}
                         {this.renderContents()}
                     </div>
                     <div className="column-2">
-                        {this.renderComments()}
+                        {this.renderReactionAudioPlayer()}
+                        {this.renderReactions()}
                     </div>
                     <div className="column-3">
                         {this.renderOptions()}
                     </div>
                 </div>
-            );
+            </div>
+        );
+    },
+
+    /**
+     * Render the author's profile image
+     *
+     * @return {ReactElement}
+     */
+    renderProfileImage: function() {
+        var leadAuthor = _.get(this.props.authors, 0);
+        var props = {
+            user: leadAuthor,
+            theme: this.props.theme,
+            size: 'medium',
+        };
+        if (leadAuthor) {
+            props.href = this.props.route.find(require('pages/person-page'), {
+                schema: this.props.route.parameters.schema,
+                user: leadAuthor.id,
+            });
         }
+        return <ProfileImage {...props} />;
+    },
+
+    /**
+     * Render the names of the author and co-authors
+     *
+     * @return {ReactElement}
+     */
+    renderAuthorNames: function() {
+        var props = {
+            authors: this.props.authors,
+            locale: this.props.locale,
+        };
+        return <AuthorNames {...props} />;
+    },
+
+    /**
+     * Render link and comment buttons on title bar
+     *
+     * @return {ReactElement}
+     */
+    renderReactionToolbar: function() {
+        var props = {
+            access: this.props.access,
+            currentUser: this.props.currentUser,
+            reactions: this.props.reactions,
+            respondents: this.props.respondents,
+            addingComment: this.state.addingComment,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onAction: this.handleAction,
+        };
+        return <ReactionToolbar {...props} />;
+    },
+
+    /**
+     * Render upload status or the publication time
+     *
+     * @return {ReactElement}
+     */
+    renderProgress: function() {
+        var schema = this.props.route.parameters.schema;
+        var uploadStatus = this.props.payloads.inquire(schema, this.props.story);
+        var props = {
+            status: this.props.status,
+            story: this.props.story,
+            locale: this.props.locale,
+        };
+        return <StoryProgress {...props} />;
+    },
+
+    /**
+     * Render emblem
+     *
+     * @return {[type]}
+     */
+    renderEmblem: function() {
+        var props = {
+            story: this.props.story,
+        };
+        return <StoryEmblem {...props} />
     },
 
     /**
@@ -133,20 +334,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderContents: function() {
-        var schema = this.props.route.parameters.schema;
-        var uploadStatus = this.props.payloads.inquire(schema, this.props.story);
         var props = {
-            access: this.props.access,
             story: this.props.story,
             authors: this.props.authors,
             currentUser: this.props.currentUser,
             reactions: this.props.reactions,
             repo: findRepo(this.props.repos, this.props.story),
-            cornerPopUp: this.renderPopUpMenu('main'),
-            status: uploadStatus,
-
-            database: this.props.database,
-            route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
 
@@ -157,26 +350,78 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render comments panel
+     * Render reactions to story
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
-    renderComments: function() {
-        var props = {
+    renderReactions: function() {
+        if (this.props.theme.mode === 'single-col') {
+            if (!this.state.commentsExpanded) {
+                return null;
+            }
+        }
+        if (!this.state.addingComment) {
+            if (_.isEmpty(this.props.reactions)) {
+                return null;
+            }
+        }
+        var listProps = {
             access: this.props.access,
+            showEditor: this.state.addingComment,
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
-            repo: findRepo(this.props.repos, this.props.story),
+            repo: this.props.repo,
             currentUser: this.props.currentUser,
-
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            onFinish: this.handleCommentFinish,
         };
-        return <StoryComments {...props} />;
+        return (
+            <Scrollable>
+                <ReactionList {...listProps} />
+            </Scrollable>
+        );
+    },
+
+    renderReactionSpacer: function() {
+        if (this.props.theme.mode === 'single-col') {
+            if (!this.state.commentsExpanded) {
+                return null;
+            }
+        }
+        var count = _.size(this.props.reactions);
+        if (this.state.addingComment) {
+            count += 2;
+        }
+        if (count > 10) {
+            count = 10;
+        }
+        if (count === 0) {
+            return null;
+        }
+        var height = (count * 1.5) + 'em';
+        return <div style={{ height }} />;
+    },
+
+    /**
+     * Render audio player for audio in comments
+     *
+     * @return {ReactElement|null}
+     */
+    renderReactionAudioPlayer: function() {
+        var url = this.state.selectedAudioUrl;
+        if (!url) {
+            return null;
+        }
+        return (
+            <div className="audio-container">
+                <audio src={url} controls />
+            </div>
+        )
     },
 
     /**
@@ -187,12 +432,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPopUpMenu: function(section) {
-        if (this.props.theme.mode === 'columns-3') {
-            return null;
-        }
         return (
             <CornerPopUp>
-                {this.renderOptions(true, section)}
+                {this.renderOptions(section)}
             </CornerPopUp>
         );
     },
@@ -200,14 +442,12 @@ module.exports = React.createClass({
     /**
      * Render options pane or simply the list of options when it's in a menu
      *
-     * @param  {Boolean} inMenu
      * @param  {String} section
      *
      * @return {ReactElement}
      */
-    renderOptions: function(inMenu, section) {
+    renderOptions: function(section) {
         var props = {
-            inMenu,
             section,
             access: this.props.access,
             story: this.props.story,
@@ -298,6 +538,21 @@ module.exports = React.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
+        });
+    },
+
+    /**
+     * Remove a reaction from remote database
+     *
+     * @param  {Reaction} reaction
+     *
+     * @return {Promise<Reaction>}
+     */
+    removeReaction: function(reaction) {
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        return db.start().then(() => {
+            return db.removeOne({ table: 'reaction' }, reaction);
         });
     },
 
@@ -446,6 +701,58 @@ module.exports = React.createClass({
     handleOptionsChange: function(evt) {
         this.setOptions(evt.options);
     },
+
+    /**
+     * Called when comment editing has ended
+     *
+     * @param  {Object} evt
+     */
+    handleCommentFinish: function(evt) {
+        var hasDraft = _.some(this.props.reactions, (r) => {
+            if (!r.published) {
+                if (r.user_id === this.props.currentUser.id) {
+                    return true;
+                }
+            }
+        });
+        if (!hasDraft) {
+            this.setState({ addingComment: false });
+        }
+    },
+
+    /**
+     * Called when user initiates an action
+     *
+     * @param  {Object} evt
+     */
+    handleAction: function(evt) {
+        switch (evt.action) {
+            case 'like-add':
+                var like = {
+                    type: 'like',
+                    story_id: this.props.story.id,
+                    user_id: this.props.currentUser.id,
+                    published: true,
+                    public: true,
+                };
+                this.saveReaction(like);
+                break;
+            case 'like-remove':
+                this.removeReaction(evt.like);
+                break;
+            case 'reaction-add':
+                this.setState({
+                    addingComment: true,
+                    commentsExpanded: true
+                });
+                break;
+            case 'reaction-expand':
+                this.setState({
+                    commentsExpanded: true
+                });
+                break;
+        }
+    }
 });
 
 var defaultOptions = {

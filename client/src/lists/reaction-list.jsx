@@ -14,14 +14,13 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var CommentView = require('views/comment-view');
-var CommentEditor = require('editors/comment-editor');
-var Scrollable = require('widgets/scrollable');
+var ReactionView = require('views/reaction-view');
+var ReactionEditor = require('editors/reaction-editor');
 
-require('./comment-list.scss');
+require('./reaction-list.scss');
 
 module.exports = React.createClass({
-    displayName: 'CommentList',
+    displayName: 'ReactionList',
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
@@ -59,10 +58,8 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <div className="comment-list">
-                <Scrollable>
-                    {this.renderReactions()}
-                </Scrollable>
+            <div className="reaction-list">
+                {this.renderReactions()}
             </div>
         );
     },
@@ -144,7 +141,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        return <CommentView key={reaction.id} {...props} />
+        return <ReactionView key={reaction.id} {...props} />
     },
 
     /**
@@ -171,7 +168,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
             onFinish: this.props.onFinish,
         };
-        return <CommentEditor key={key} {...props} />
+        return <ReactionEditor key={key} {...props} />
     },
 
     /**

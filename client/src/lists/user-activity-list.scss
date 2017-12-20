@@ -1,0 +1,40 @@
+.user-activity-list {
+    margin-top: 0.5em;
+
+    .activity {
+        margin-bottom: 0.15em;
+
+        .time {
+            float: right;
+            color: #666666;
+            font-size: 0.9em;
+
+            &.today, &.yesterday {
+                color: #cccccc;
+            }
+        }
+    }
+
+    A {
+        color: #999999;
+        cursor: pointer;
+
+        &:link, &:visited {
+            color: #999999;
+            text-decoration: none;
+        }
+
+        &.recent {
+            color: #cccccc;
+        }
+
+        &:hover {
+            color: #eeeeee;
+        }
+    }
+
+    .more {
+        margin-top: 0.5em;
+        text-align: right;
+    }
+}

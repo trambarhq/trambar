@@ -1,0 +1,10 @@
+.reaction-list {
+    display: flex;
+    flex-direction: column-reverse;
+    padding-right: 0.25em;
+
+    .reaction-view, .reaction-editor {
+        flex-grow: 0;
+        flex-shrink: 0;
+    }
+}

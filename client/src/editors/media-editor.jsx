@@ -145,18 +145,24 @@ module.exports = React.createClass({
      * @return {ReactELement}
      */
     render: function() {
-        var className = 'media-editor';
         var index = this.getSelectedResourceIndex();
         if (index === -1) {
-            className += ' inactive';
+            // render placeholder
+            return (
+                <div className="media-editor empty">
+                    {this.props.children}
+                    {this.renderDialogBox()}
+                </div>
+            );
+        } else {
+            return (
+                <div className="media-editor">
+                    {this.renderResource()}
+                    {this.renderNavigation()}
+                    {this.renderDialogBox()}
+                </div>
+            );
         }
-        return (
-            <div className={className}>
-                {this.renderResource()}
-                {this.renderNavigation()}
-                {this.renderDialogBox()}
-            </div>
-        );
     },
 
     /**
@@ -166,10 +172,6 @@ module.exports = React.createClass({
      */
     renderResource: function(res) {
         var index = this.getSelectedResourceIndex();
-        if (index === -1) {
-            // render placeholder
-            return this.props.children;
-        }
         var props = {
             resource: this.props.resources[index],
             locale: this.props.locale,

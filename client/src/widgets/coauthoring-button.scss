@@ -1,0 +1,14 @@
+.coauthoring-button {
+    font-size: 0.9em;
+    color: #666666;
+    cursor: pointer;
+    margin-left: 4em;
+
+    .label {
+        margin-left: 0.2em;
+    }
+
+    &:hover {
+        color: #eeeeee;
+    }
+}

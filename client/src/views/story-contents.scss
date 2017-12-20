@@ -1,217 +1,177 @@
-.story-section.contents {
-    .header {
-        .profile-image {
-            float: left;
-            margin: 0 0.5em 0.4em 0;
+.story-contents {
+    .text {
+        color: #cccccc;
+
+        A {
+            &:link, &:visited {
+                text-decoration: none;
+                color: #cccccc;
+
+                &:hover {
+                    color: #ffffff;
+                }
+            }
         }
 
-        .name {
-            color: #eeeeee;
+        .status-opened, .status-reopened {
+            color: #99ff66;
         }
-    }
 
-    .subheader {
-        .time, .status {
-            color: #666666;
+        .status-closed {
+            color: #ff3333;
+        }
+
+        .tag {
             font-size: 0.9em;
+            color: #ffffff;
+            background-color: #444444;
+            padding: 0.2em 0.4em 0.2em 0.4em;
+            border-radius: 0.25em;
         }
 
-        .time {
-            &.today {
-                color: #aaaaaa;
-            }
+        &.plain-text {
+            white-space: pre-wrap;
 
-            &.yesterday {
-                color: #999999;
+            .list-item {
+                &.vote-count {
+                    width: 100%;
+                }
+            }
+        }
+
+        &.markdown {
+            IMG, CANVAS {
+                vertical-align: top;
+                height: 1.5em;
+                cursor: pointer;
             }
         }
 
-        .graphic {
-            float: right;
+        &.survey, &.task-list {
+            .list-item, .vote-count {
+                margin-bottom: 0.2em;
 
-            svg {
-                fill: #211a1a;
-                margin-top: 0.2em;
-                height: 3em;
+                // take out margin when it's in a list-item
+                H1, H2, H3, H4, H5, H6 {
+                    display: inline-block;
+                    margin-top: 0;
+                    margin-bottom: 0;
+                }
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
             }
         }
-    }
 
-    .body {
-        .text {
-            padding-left: 0.3em;
+        &.survey {
+            .vote-count {
+                .label {
+                    display: block;
+                    margin-bottom: 0.1em;
+                }
 
-            A {
-                &:link, &:visited {
-                    text-decoration: none;
-                    color: #cccccc;
+                .bar {
+                    display: block;
+                    position: relative;
+                    border: 1px solid #aaaaaa;
+                    font-size: 0.8em;
+                    height: 1.5em;
+                    margin-bottom: 0.4em;
 
-                    &:hover {
-                        color: #ffffff;
+                    .percent {
+                        position: absolute;
+                        display: block;
+                        left: 0.2em;
+                        top: 0.1em;
+                        color: #333333;
+                    }
+
+                    .count {
+                        position: absolute;
+                        display: block;
+                        right: 0.2em;
+                        top: 0.1em;
+                        color: #cccccc;
+                    }
+
+                    .filled {
+                        display: block;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        bottom: 0;
+                        $series-colors: (
+                            #d70206,
+                            #f05b4f,
+                            #f4c63d,
+                            #d17905,
+                            #59922b,
+                            #f05b4f,
+                            #dda458,
+                            #eacf7d,
+                            #b2c326,
+                            #6188e2,
+                        );
+
+                        @for $i from 0 to length($series-colors) {
+                          &.color-#{$i} {
+                            background-color: nth($series-colors, $i + 1);
+                          }
+                        }
                     }
                 }
             }
+        }
 
-            .status-opened, .status-reopened {
+        &.milestone {
+            .start-date {
                 color: #99ff66;
             }
-
-            .status-closed {
+            .due-date {
                 color: #ff3333;
-            }
-
-            .tag {
-                font-size: 0.9em;
-                color: #ffffff;
-                background-color: #444444;
-                padding: 0.2em 0.4em 0.2em 0.4em;
-                border-radius: 0.25em;
-            }
-
-            &.plain-text {
-                white-space: pre-wrap;
-
-                .list-item {
-                    &.vote-count {
-                        width: 100%;
-                    }
-                }
-            }
-
-            &.markdown {
-                IMG, CANVAS {
-                    vertical-align: top;
-                    height: 1.5em;
-                    cursor: pointer;
-                }
-            }
-
-            &.survey, &.task-list {
-                .list-item, .vote-count {
-                    margin-bottom: 0.2em;
-
-                    // take out margin when it's in a list-item
-                    H1, H2, H3, H4, H5, H6 {
-                        display: inline-block;
-                        margin-top: 0;
-                        margin-bottom: 0;
-                    }
-
-                    &:last-child {
-                        margin-bottom: 0;
-                    }
-                }
-            }
-
-            &.survey {
-                .vote-count {
-                    .label {
-                        display: block;
-                        margin-bottom: 0.1em;
-                    }
-
-                    .bar {
-                        display: block;
-                        position: relative;
-                        border: 1px solid #aaaaaa;
-                        font-size: 0.8em;
-                        height: 1.5em;
-                        margin-bottom: 0.4em;
-
-                        .percent {
-                            position: absolute;
-                            display: block;
-                            left: 0.2em;
-                            top: 0.1em;
-                            color: #333333;
-                        }
-
-                        .count {
-                            position: absolute;
-                            display: block;
-                            right: 0.2em;
-                            top: 0.1em;
-                            color: #cccccc;
-                        }
-
-                        .filled {
-                            display: block;
-                            position: absolute;
-                            left: 0;
-                            top: 0;
-                            bottom: 0;
-                            $series-colors: (
-                                #d70206,
-                                #f05b4f,
-                                #f4c63d,
-                                #d17905,
-                                #59922b,
-                                #f05b4f,
-                                #dda458,
-                                #eacf7d,
-                                #b2c326,
-                                #6188e2,
-                            );
-
-                            @for $i from 0 to length($series-colors) {
-                              &.color-#{$i} {
-                                background-color: nth($series-colors, $i + 1);
-                              }
-                            }
-                        }
-                    }
-                }
-            }
-
-            &.milestone {
-                .start-date {
-                    color: #99ff66;
-                }
-                .due-date {
-                    color: #ff3333;
-                }
-            }
-
-            &.push {
-                .files, .lines {
-                    display: inline-block;
-                    list-style-type: none;
-                    vertical-align: top;
-                    margin: 0;
-                    padding: 0;
-
-                    .added {
-                        color: #99ee66;
-                    }
-
-                    .deleted {
-                        color: #ee3333;
-                    }
-
-                    .modified {
-                        color: #66aaff;
-                    }
-
-                    .renamed {
-                        color: #eeee66;
-                    }
-                }
-
-                .files {
-                    margin-right: 2em;
-                }
             }
         }
 
-        .impact {
-            .message {
-                padding-left: 0.3em;
+        &.push {
+            .files, .lines {
+                display: inline-block;
+                list-style-type: none;
+                vertical-align: top;
+                margin: 0;
+                padding: 0;
+
+                .added {
+                    color: #99ee66;
+                }
+
+                .deleted {
+                    color: #ee3333;
+                }
+
+                .modified {
+                    color: #66aaff;
+                }
+
+                .renamed {
+                    color: #eeee66;
+                }
             }
 
-            .scrollable {
-                margin: -0.3em 0.2em 0.3em 0.3em;
-                max-height: 15em;
+            .files {
+                margin-right: 2em;
             }
+        }
+    }
+
+    .impact {
+        .message {
+            padding-left: 0.3em;
+        }
+
+        .scrollable {
+            margin: -0.3em 0.2em 0.3em 0.3em;
+            max-height: 15em;
         }
     }
 

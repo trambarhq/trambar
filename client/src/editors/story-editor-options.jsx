@@ -7,7 +7,6 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var StorySection = require('widgets/story-section');
 var HeaderButton = require('widgets/header-button');
 var OptionButton = require('widgets/option-button');
 var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
@@ -18,8 +17,7 @@ require('./story-editor-options.scss');
 module.exports = React.createClass({
     displayName: 'StoryEditorOptions',
     propTypes: {
-        inMenu: PropTypes.bool,
-        section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
+        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
         story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
@@ -40,7 +38,6 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            inMenu: false,
             section: 'both',
         }
     },
@@ -65,24 +62,19 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        if (this.props.inMenu) {
+        if (this.props.section === 'both') {
             return (
-                <div className="editor-options in-menu">
-                    {this.renderButtons(this.props.section)}
+                <div className="story-editor-options">
+                    {this.renderButtons('main')}
+                    <div className="border" />
+                    {this.renderButtons('preview')}
                 </div>
             );
         } else {
-            var t = this.props.locale.translate;
             return (
-                <StorySection className="editor-options">
-                    <header>
-                        <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
-                    </header>
-                    <body>
-                        {this.renderButtons('main')}
-                        {this.renderButtons('supplemental')}
-                    </body>
-                </StorySection>
+                <div className="story-editor-options">
+                    {this.renderButtons(this.props.section)}
+                </div>
             );
         }
     },
@@ -140,7 +132,7 @@ module.exports = React.createClass({
                     {this.renderIssueDialogBox()}
                 </div>
             );
-        } else if (section === 'supplemental') {
+        } else if (section === 'preview') {
             var mediaProps = {
                 label: t('option-show-media-preview'),
                 selected: options.preview === 'media' || !options.preview,

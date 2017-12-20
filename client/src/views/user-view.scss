@@ -1,0 +1,104 @@
+.user-view {
+    background-color: #362a2a;
+    border: 2px solid #211a1a;
+    width: 100%;
+
+    .header {
+        background-color: #211a1a;
+
+        .column-1, .column-2, .column-3 {
+            padding: 0.25em 0.25em 0.25em 0.5em;
+        }
+
+        .profile-image {
+            position: relative;
+            height: 0.8em;
+            vertical-align: top;
+            margin-top: 0.1em;
+            margin-right: 0.5em;
+            overflow: visible;
+
+            IMG, svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
+
+        .roles {
+            color: #eeeeee;
+        }
+    }
+
+    .body {
+        .column-1, .column-2, .column-3 {
+            padding: 0.25em 0.25em 0.25em 0.5em;
+        }
+
+        .name {
+            font-size: 1.5em;
+            margin-left: 4.35em;
+            margin-top: 0.4em;
+            margin-bottom: 0.2em;
+            color: #eeeeee;
+        }
+
+        .tag {
+            font-size: 1.1em;
+            margin-left: 5.9em;
+            margin-top: 0.2em;
+            margin-bottom: 0.4em;
+            color: #666666;
+            display: inline-block;
+        }
+    }
+
+    &.single-col {
+        margin-bottom: 0.5em;
+
+        .column-2 {
+            &:empty {
+                display :none;
+            }
+        }
+    }
+
+    &.double-col, &.triple-col {
+        display: table;
+        margin-bottom: 1em;
+
+        .header {
+            display: table-row;
+        }
+
+        .body {
+            display: table-row;
+        }
+
+        .column-1, .column-2, .column-3 {
+            display: table-cell;
+            vertical-align: top;
+        }
+    }
+
+    &.double-col {
+        .column-1 {
+            width: 50%;
+        }
+        .column-2 {
+            width: 50%;
+        }
+    }
+
+    &.triple-col {
+        .column-1 {
+            width: 40%;
+        }
+        .column-2 {
+            width: 40%;
+        }
+        .column-3 {
+            width: 20%;
+        }
+    }
+}

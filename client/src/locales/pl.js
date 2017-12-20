@@ -65,45 +65,6 @@ module.exports = function(languageCode) {
         'bottom-nav-people': 'Ludzie',
         'bottom-nav-settings': 'Ustawienia',
 
-        'comment-$user-cast-a-vote': (user) => {
-            var e = verbPastTenseEnding(user);
-            return `${user} głosował${e}`;
-        },
-        'comment-$user-commented-on-issue': (user) => {
-            var e = verbPastTenseEnding(user);
-            return `${user} skomentował${e} to zgłoszenie`;
-        },
-        'comment-$user-commented-on-merge': (user) => {
-            var e = verbPastTenseEnding(user);
-            return `${user} skomentował${e} zmiany w tym scalaniu`;
-        },
-        'comment-$user-commented-on-merge-request': (user) => {
-            var e = verbPastTenseEnding(user);
-            return `${user} skomentował${e} tę prośbę o scalanie`;
-        },
-        'comment-$user-commented-on-push': (user) => {
-            var e = verbPastTenseEnding(user);
-            return `${user} skomentował${e} zmiany w tym wgrywaniu`;
-        },
-        'comment-$user-completed-a-task': (user) => {
-            var e = verbPastTenseEnding(user);
-            return `${user} wykonał${a} zadanie`;
-        },
-        'comment-$user-is-assigned-to-issue': (user) => {
-            var ve = verbPastTenseEnding(user);
-            var ae = (ve === 'a') ? 'a' : 'y';
-            return `${user} został${ve} przydzielon${ae} do tego problemu`;
-        },
-        'comment-$user-is-editing': (user) => {
-            return `${user} edytuje komentarz...`;
-        },
-        'comment-$user-is-writing': (user) => {
-            return `${user} pisze komentarz...`;
-        },
-        'comment-$user-likes-this': (user) => {
-            return `${user} lubi to`;
-        },
-
         'list-$count-more': (count) => {
             return `${count} więcej...`;
         },
@@ -182,6 +143,45 @@ module.exports = function(languageCode) {
         'photo-capture-cancel': 'Anuluj',
         'photo-capture-retake': 'Przerób',
         'photo-capture-snap': 'Zrób',
+
+        'reaction-$user-cast-a-vote': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} głosował${e}`;
+        },
+        'reaction-$user-commented-on-issue': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} to zgłoszenie`;
+        },
+        'reaction-$user-commented-on-merge': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} zmiany w tym scalaniu`;
+        },
+        'reaction-$user-commented-on-merge-request': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} tę prośbę o scalanie`;
+        },
+        'reaction-$user-commented-on-push': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} skomentował${e} zmiany w tym wgrywaniu`;
+        },
+        'reaction-$user-completed-a-task': (user) => {
+            var e = verbPastTenseEnding(user);
+            return `${user} wykonał${a} zadanie`;
+        },
+        'reaction-$user-is-assigned-to-issue': (user) => {
+            var ve = verbPastTenseEnding(user);
+            var ae = (ve === 'a') ? 'a' : 'y';
+            return `${user} został${ve} przydzielon${ae} do tego problemu`;
+        },
+        'reaction-$user-is-editing': (user) => {
+            return `${user} edytuje komentarz...`;
+        },
+        'reaction-$user-is-writing': (user) => {
+            return `${user} pisze komentarz...`;
+        },
+        'reaction-$user-likes-this': (user) => {
+            return `${user} lubi to`;
+        },
 
         'role-filter-no-roles': 'Nie ma żadnych ról',
 

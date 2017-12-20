@@ -28,9 +28,13 @@
     .label {
         display: table-cell;
     }
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 }
 
-.in-menu {
+.pop-up-menu {
     .option-button {
         &.selected, &:hover {
             color: #000000;

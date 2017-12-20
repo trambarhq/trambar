@@ -1,13 +1,10 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
-var Database = require('data/database');
-var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var UserSection = require('widgets/user-section');
-var HeaderButton = require('widgets/header-button');
 var OptionButton = require('widgets/option-button');
 var TelephoneNumberDialogBox = require('dialogs/telephone-number-dialog-box');
 
@@ -16,12 +13,8 @@ require('./user-view-options.scss');
 module.exports = React.createClass({
     displayName: 'UserViewOptions',
     propTypes: {
-        inMenu: PropTypes.bool,
         section: PropTypes.oneOf([ 'main', 'supplemental', 'both' ]),
         user: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
@@ -35,7 +28,6 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            inMenu: false,
             section: 'both',
         }
     },
@@ -58,27 +50,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        if (this.props.inMenu) {
-            return (
-                <div className="view-options in-menu">
-                    {this.renderButtons(this.props.section)}
-                    {this.renderPhoneDialog()}
-                </div>
-            );
-        } else {
-            var t = this.props.locale.translate;
-            return (
-                <UserSection className="view-options">
-                    <header>
-                        <HeaderButton icon="chevron-circle-right" label={t('user-actions')} disabled />
-                    </header>
-                    <body>
-                        {this.renderButtons('main')}
-                        {this.renderPhoneDialog()}
-                    </body>
-                </UserSection>
-            );
-        }
+        return (
+            <div className="view-options">
+                {this.renderButtons('main')}
+                {this.renderPhoneDialog()}
+            </div>
+        );
     },
 
     /**

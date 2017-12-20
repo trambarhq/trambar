@@ -290,9 +290,9 @@ module.exports = React.createClass({
             ref: setters.themeManager,
             database: this.state.database,
             modes: {
-                'columns-1': 0,
-                'columns-2': 700,
-                'columns-3': 1300,
+                'single-col': 0,
+                'double-col': 700,
+                'triple-col': 1300,
             },
             serverAddress: serverAddress,
             onChange: this.handleThemeChange,

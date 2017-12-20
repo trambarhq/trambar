@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
+var DateTracker = require('utils/date-tracker');
 
 var Locale = require('locale/locale');
 
@@ -20,7 +21,7 @@ module.exports = React.createClass({
         var time = Moment(this.props.time);
         var nextState = {
             time: time,
-            day: time.clone().startOf('day'),
+            date: getDate(time),
         };
         this.updateClassName(nextState);
         this.updateText(nextState);
@@ -35,10 +36,9 @@ module.exports = React.createClass({
     updateClassName: function(nextState) {
         var className;
         if (nextState.time.isValid()) {
-            var elapsedDays = (lastRecordedDay - nextState.day) / (24 * 60 * 60 * 1000);
-            if (elapsedDays === 0) {
+            if (nextState.date === DateTracker.today) {
                 className = 'today';
-            } else if (elapsedDays === 1) {
+            } else if (nextState.date === DateTracker.yesterday) {
                 className = 'yesterday';
             } else {
                 className = 'older';
@@ -93,7 +93,7 @@ module.exports = React.createClass({
         var nextState = _.clone(this.state);
         var time = Moment(nextProps.time);
         nextState.time = time;
-        nextState.day = time.clone().startOf('day');
+        nextState.date = getDate(time);
         this.updateClassName(nextState);
         this.updateText(nextState);
         var diff = _.shallowDiff(nextState, this.state);
@@ -144,19 +144,15 @@ module.exports = React.createClass({
 })
 
 var relativeTimeComponents = [];
-var lastRecordedTime, lastRecordedDay;
 
-function recordTime() {
-    lastRecordedTime = Moment();
-    lastRecordedDay = lastRecordedTime.clone().startOf('day');
+function getDate(m) {
+    return m.format('YYYY-MM-DD')
 }
 
 function updateTime() {
-    recordTime();
     _.each(relativeTimeComponents, (component) => {
         component.update();
     });
 }
 
-setInterval(updateTime, 30 * 1000);
-recordTime();
+setInterval(updateTime, 15 * 1000);

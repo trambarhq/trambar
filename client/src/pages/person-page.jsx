@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var Relaks = require('relaks');
 var ProjectSettings = require('objects/settings/project-settings');
+var DateTracker = require('utils/date-tracker');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -159,10 +160,9 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
-            var now = Moment();
-            var end = now.clone().endOf('month');
-            var start = now.clone().startOf('month').subtract(1, 'month');
-            var range = `[${start.toISOString()},${end.toISOString()}]`;
+            var end = DateTracker.endOfMonthISO;
+            var start = DateTracker.startOfMonthISO;
+            var range = `[${start},${end}]`;
             var criteria = {
                 type: 'daily-activities',
                 filters: {

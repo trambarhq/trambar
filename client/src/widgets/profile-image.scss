@@ -1,5 +1,15 @@
 .profile-image {
+    display: inline-block;
     vertical-align: middle;
+    overflow: hidden;
+
+    IMG, svg {
+        width: 100%;
+    }
+
+    svg {
+        background-color: #999999;
+    }
 
     &.small {
         width: 1.5em;
@@ -15,8 +25,4 @@
         width: 6em;
         height: 6em;
     }
-}
-
-svg.profile-image {
-    background-color: #999999;
 }
