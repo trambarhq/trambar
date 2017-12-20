@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 
@@ -9,6 +10,7 @@ module.exports = React.createClass({
         ahead: PropTypes.number,
         anchor: PropTypes.string,
         offset: PropTypes.number,
+        inverted: PropTypes.bool,
 
         onIdentity: PropTypes.func.isRequired,
         onRender: PropTypes.func.isRequired,
@@ -124,6 +126,9 @@ module.exports = React.createClass({
         // remember the range where we have fully rendered the items
         this.startIndex = startIndex;
         this.endIndex = endIndex;
+        if (this.props.inverted) {
+            _.reverse(children);
+        }
         return <div className="smart-list">{children}</div>;
     },
 
@@ -211,17 +216,42 @@ module.exports = React.createClass({
             }
         } else if (!this.scrolling) {
             // maintain the position of the anchor node
+            var anchorNode, anchorOffset;
             if (this.state.currentAnchor) {
-                var anchorNode = this.itemNodes[this.state.currentAnchor];
-                var anchorOffset = this.anchorOffset;
+                anchorNode = this.itemNodes[this.state.currentAnchor];
+                anchorOffset = this.anchorOffset;
+            } else if (this.props.inverted) {
+                // scroll down all the way to the bottom
+                anchorNode = this.container.lastChild;
+                anchorOffset = Infinity;
+            }
+            if (anchorNode) {
                 if (anchorNode && anchorOffset !== undefined) {
                     var containerOffsetTop = this.scrollContainer.offsetTop;
-                    var top = anchorNode.offsetTop - containerOffsetTop;
-                    var actualOffset = top - this.scrollContainer.scrollTop;
-                    if (actualOffset !== anchorOffset) {
-                        // don't reposition when it's at the top
-                        var newScrollTop = top - anchorOffset;
-                        this.scrollContainer.scrollTop = Math.max(0, newScrollTop);
+                    var containerScrollTop = this.scrollContainer.scrollTop;
+                    var anchorTop = anchorNode.offsetTop - containerOffsetTop;
+                    if (!this.props.inverted) {
+                        var actualOffset = anchorTop - containerScrollTop;
+                        if (actualOffset !== anchorOffset) {
+                            // don't reposition when it's at the top
+                            var newScrollTop = Math.max(0, anchorTop - anchorOffset);
+                            this.scrollContainer.scrollTop = newScrollTop;
+                        }
+                    } else {
+                        // calculate the equivalent of offsetTop and scrollTop,
+                        // measured from the bottom of the container
+                        var containerScrollHeight = this.scrollContainer.scrollHeight;
+                        var containerOffsetHeight = this.scrollContainer.offsetHeight;
+                        var containerScrollBottom = containerScrollHeight - containerScrollTop - containerOffsetHeight;
+                        var anchorHeight = anchorNode.offsetHeight;
+                        var anchorBottom = containerScrollHeight - anchorTop - anchorHeight;
+
+                        var actualOffset = anchorBottom - containerScrollBottom;
+                        if (actualOffset !== anchorOffset) {
+                            var newScrollBottom = Math.max(0, anchorBottom - anchorOffset);
+                            var newScrollTop = containerScrollHeight - newScrollBottom - containerOffsetHeight
+                            this.scrollContainer.scrollTop = newScrollTop;
+                        }
                     }
                 }
             }
@@ -277,21 +307,48 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleScroll: function(evt) {
-        var scrollTop = this.scrollContainer.scrollTop;
+        var containerScrollTop = this.scrollContainer.scrollTop;
         var containerOffsetTop = this.scrollContainer.offsetTop;
-        var anchorNode, anchorTop;
-        if (scrollTop > 0) {
+        var anchorNode;
+        if (!this.props.inverted) {
             // release the anchor when user scrolls to the very top
-            for (var id in this.itemNodes) {
-                anchorNode = this.itemNodes[id];
-                anchorTop = anchorNode.offsetTop - containerOffsetTop;
-                if (anchorTop > scrollTop) {
-                    break;
+            var anchorTop;
+            if (containerScrollTop > 0) {
+                var ids = _.keys(this.itemNodes);
+                for (var i = 0; i < ids.length; i++) {
+                    var id = ids[i];
+                    anchorNode = this.itemNodes[id];
+                    anchorTop = anchorNode.offsetTop - containerOffsetTop;
+                    if (anchorTop > containerScrollTop) {
+                        break;
+                    }
                 }
             }
+            this.anchorOffset = (anchorNode) ? anchorTop - containerScrollTop : undefined;
+        } else {
+            var containerScrollHeight = this.scrollContainer.scrollHeight;
+            var containerOffsetHeight = this.scrollContainer.offsetHeight;
+            var containerScrollBottom = containerScrollHeight - containerScrollTop - containerOffsetHeight;
+
+            var anchorBottom;
+            // release the anchor when user scrolls to the very bottom
+            if (containerScrollBottom > 0) {
+                var ids = _.keys(this.itemNodes);
+                for (var i = ids.length - 1; i >= 0; i--) {
+                    var id = ids[i];
+                    anchorNode = this.itemNodes[id];
+                    var anchorTop = anchorNode.offsetTop - containerOffsetTop;
+                    var anchorHeight = anchorNode.offsetHeight;
+                    var anchorBottom = containerScrollHeight - anchorTop - anchorHeight;
+                    if (anchorBottom > containerScrollBottom) {
+                        break;
+                    }
+                }
+            }
+            this.anchorOffset = (anchorNode) ? anchorBottom - containerScrollBottom : undefined;
         }
+
         var currentAnchor = (anchorNode) ? anchorNode.id : undefined;
-        this.anchorOffset = (anchorNode) ? anchorTop - scrollTop : undefined;
         if (this.state.currentAnchor !== currentAnchor) {
             this.setState({ currentAnchor });
             this.triggerAnchorChangeEvent(currentAnchor);

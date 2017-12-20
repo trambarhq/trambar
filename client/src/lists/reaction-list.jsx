@@ -16,6 +16,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var ReactionView = require('views/reaction-view');
 var ReactionEditor = require('editors/reaction-editor');
+var SmartList = require('widgets/smart-list');
 
 require('./reaction-list.scss');
 
@@ -24,12 +25,13 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        showingEditor: PropTypes.bool,
+        acceptNewReaction: PropTypes.bool,
         story: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
         repo: PropTypes.object,
         currentUser: PropTypes.object,
+        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -38,6 +40,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onFinish: PropTypes.func,
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -47,7 +50,18 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            showingEditor: true
+            acceptNewReaction: false,
+        };
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            hiddenReactionIds: [],
         };
     },
 
@@ -57,25 +71,8 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        return (
-            <div className="reaction-list">
-                {this.renderReactions()}
-            </div>
-        );
-    },
-
-    /**
-     * Render reactions
-     *
-     * @return {Array<ReactElement}
-     */
-    renderReactions: function() {
         var reactions = sortReactions(this.props.reactions, this.props.currentUser);
-        // remove temporary copies
-        reactions = _.filter(reactions, (r) => {
-            return !r.published_version_id;
-        });
-        if (this.props.showEditor) {
+        if (this.props.acceptNewReaction) {
             // see if there's an unpublished reaction belonging to the current user
             var hasUserDraft = _.some(this.props.reactions, (r) => {
                 if (r.user_id === this.props.currentUser.id) {
@@ -89,19 +86,54 @@ module.exports = React.createClass({
                 reactions.unshift(null);
             }
         }
-        return _.map(reactions, this.renderReaction);
+        var anchorId = this.props.selectedReactionId;
+        var props = {
+            items: reactions,
+            behind: 5,
+            ahead: 10,
+            anchor: (anchorId) ? `reaction-${anchorId}` : undefined,
+            offset: 4,
+            inverted: true,
+
+            onIdentity: this.handleReactionIdentity,
+            onRender: this.handleReactionRender,
+            onAnchorChange: this.handleReactionAnchorChange,
+            onBeforeAnchor: this.handleReactionBeforeAnchor,
+        }
+        return (
+            <div className="reaction-list">
+                <SmartList {...props} />
+            </div>
+        );
     },
 
     /**
-     * Render a reaction
+     * Called when SmartList wants an item's id
      *
-     * @param  {Reaction|null} reaction
-     * @param  {Number} index
-     * @param  {Array} list
+     * @param  {Object} evt
      *
-     * @return {ReactElement|null}
+     * @return {String}
      */
-    renderReaction: function(reaction, index, list) {
+    handleReactionIdentity: function(evt) {
+        if (this.props.acceptNewStory) {
+            // use a fixed id for the first editor, so we don't lose focus
+            // when the new reaction acquires an id after being saved automatically
+            if (evt.currentIndex === 0) {
+                return 'reaction-top';
+            }
+        }
+        return `reaction-${evt.item.id}`;
+    },
+
+    /**
+     * Called when SmartList wants to render an item
+     *
+     * @param  {Object} evt
+     *
+     * @return {ReactElement}
+     */
+    handleReactionRender: function(evt) {
+        var reaction = evt.item;
         var isUserDraft = false;
         var isNewComment = false;
         if (!reaction) {
@@ -116,76 +148,71 @@ module.exports = React.createClass({
             }
         }
         if (isUserDraft) {
-            return this.renderEditor(reaction, isNewComment);
+            // always use 0 as the key for new comment by current user, so
+            // the keyboard focus isn't taken away when autosave occurs
+            // (and the comment gains an id)
+            var key = (isNewComment) ? 0 : reaction.id;
+            var props = {
+                reaction,
+                story: this.props.story,
+                currentUser: this.props.currentUser,
+                database: this.props.database,
+                payloads: this.props.payloads,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+                onFinish: this.props.onFinish,
+            };
+            return <ReactionEditor key={key} {...props} />
         } else {
-            return this.renderView(reaction);
+            var respondent = findRespondent(this.props.respondents, reaction);
+            var props = {
+                access: this.props.access,
+                reaction,
+                respondent,
+                story: this.props.story,
+                repo: this.props.repo,
+                currentUser: this.props.currentUser,
+                database: this.props.database,
+                route: this.props.route,
+                locale: this.props.locale,
+                theme: this.props.theme,
+            };
+            return <ReactionView key={reaction.id} {...props} />
         }
     },
 
     /**
-     * Render comment view
+     * Called when a different story is positioned at the top of the viewport
      *
-     * @type {ReactElement}
+     * @param  {Object} evt
      */
-    renderView: function(reaction) {
-        var respondent = findRespondent(this.props.respondents, reaction);
-        var props = {
-            access: this.props.access,
-            reaction,
-            respondent,
-            story: this.props.story,
-            repo: this.props.repo,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <ReactionView key={reaction.id} {...props} />
-    },
-
-    /**
-     * Render coment editor
-     *
-     * @param  {Reaction} reaction
-     * @param  {Boolean} isNewComment
-     *
-     * @return {ReactElement|null}
-     */
-    renderEditor: function(reaction, isNewComment) {
-        // always use 0 as the key for new comment by current user, so
-        // the keyboard focus isn't taken away when autosave occurs
-        // (and the comment gains an id)
-        var key = (isNewComment) ? 0 : reaction.id;
-        var props = {
-            reaction,
-            story: this.props.story,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            onFinish: this.props.onFinish,
-        };
-        return <ReactionEditor key={key} {...props} />
-    },
-
-    /**
-     * Direct keyboard focus to newly created textarea
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate: function(prevProps, prevState) {
-        var node = ReactDOM.findDOMNode(this);
-        var textAreas = node.getElementsByTagName('TEXTAREA');
-        textAreas = _.filter(textAreas, { readOnly: false });
-        var newTextArea = _.first(_.difference(textAreas, this.textAreas));
-        if (newTextArea) {
-            newTextArea.focus();
+    handleReactionAnchorChange: function(evt) {
+        var reactionId = _.get(evt.item, 'id');
+        if (!reactionId || _.includes(this.state.hiddenReactionIds, reactionId)) {
+            // clear the whole list as soon as one of them come into view
+            // or if we've reach the bottom (where the reaction might be null)
+            this.setState({ hiddenReactionIds: [] });
         }
-        this.textAreas = textAreas;
+        if (this.props.selectedReactionId && reactionId !== this.props.selectedReactionId) {
+            if (this.props.onSelectionClear) {
+                this.props.onSelectionClear({
+                    type: 'selectionclear',
+                    target: this,
+                });
+            }
+        }
+    },
+
+    /**
+     * Called when SmartList notice new items were rendered off screen
+     *
+     * @param  {Object} evt
+     */
+    handleReactionBeforeAnchor: function(evt) {
+        var reactionIds = _.map(evt.items, 'id');
+        var hiddenReactionIds = _.union(reactionIds, this.state.hiddenReactionIds);
+        this.setState({ hiddenReactionIds });
     },
 });
 

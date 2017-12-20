@@ -1,10 +1,13 @@
 .reaction-list {
-    display: flex;
-    flex-direction: column-reverse;
     padding-right: 0.25em;
+    max-height: 16em;
 
-    .reaction-view, .reaction-editor {
-        flex-grow: 0;
-        flex-shrink: 0;
+    &.abs {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        max-height: none;
     }
 }

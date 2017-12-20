@@ -368,7 +368,7 @@ module.exports = React.createClass({
         }
         var listProps = {
             access: this.props.access,
-            showEditor: this.state.addingComment,
+            acceptNewReaction: this.state.addingComment,
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,

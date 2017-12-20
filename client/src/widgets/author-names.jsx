@@ -25,15 +25,15 @@ function AuthorNames(props) {
             contents = '\u00a0';
             break;
         case 1:
-            contents = <span className="sole author">{names[0]}</span>;
+            contents = <span key={1} className="sole author">{names[0]}</span>;
             break;
         case 2:
-            var name1 = <span className="lead author">{names[0]}</span>;
-            var name2 = <span className="co author">{names[1]}</span>
+            var name1 = <span key={1} className="lead author">{names[0]}</span>;
+            var name2 = <span key={3} className="co author">{names[1]}</span>
             contents = t('story-author-$name1-and-$name2', name1, name2);
             break;
         default:
-            var name1 = <span className="lead author">{names[0]}</span>;
+            var name1 = <span key={1} className="lead author">{names[0]}</span>;
             var coauthors = _.slice(authors, 1);
             var props = {
                 users: coauthors,
@@ -42,7 +42,7 @@ function AuthorNames(props) {
                 locale: props.locale,
                 theme: props.theme,
             };
-            var others = <MultipleUserNames key={1} {...props} />
+            var others = <MultipleUserNames key={3} {...props} />
             contents = t('story-author-$name1-and-$name2', name1, others);
     }
     return <span className="author-names">{contents}</span>;
