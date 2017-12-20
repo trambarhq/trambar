@@ -1,3 +1,23 @@
 .author-names {
     color: #eeeeee;
+
+    .author {
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        vertical-align: bottom;
+
+        &.sole {
+            max-width: calc(100% - 5em);
+        }
+
+        &.lead {
+            max-width: calc(60% - 4em);
+        }
+
+        &.co {
+            max-width: calc(40% - 4em);
+        }
+    }
 }

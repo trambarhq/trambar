@@ -4,7 +4,7 @@ var ReactDOM = require('react-dom');
 require('./overlay.scss');
 
 module.exports = React.createClass({
-    display: 'OverlayProxy',
+    displayName: 'OverlayProxy',
     propTypes: {
         className: PropTypes.string,
         show: PropTypes.bool,

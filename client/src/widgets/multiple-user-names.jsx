@@ -20,8 +20,8 @@ module.exports = React.createClass({
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
         popupLimit: PropTypes.number,
 
-        locale: PropTypes.instanceOf(Locale),
-        theme: PropTypes.instanceOf(Theme),
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
     getDefaultProps: function() {
@@ -49,12 +49,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var classNames = [ 'multiple-user-names' ];
+        var className = 'multiple-user-names';
         if (this.props.className) {
-            classNames.push(this.props.className);
+            className += ` ${this.props.className}`;
         }
         var containerProps = {
-            className: classNames.join(' '),
+            className: className,
             onMouseEnter: this.handleMouseEnter,
             onMouseLeave: this.handleMouseLeave,
         };
@@ -191,7 +191,6 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleClick: function(evt) {
-        if (evt.target)
         this.setState({
             showingPopUp: false,
             showingDialogBox: true,

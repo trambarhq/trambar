@@ -30,7 +30,7 @@ function ProfileImage(props) {
 ProfileImage.propTypes = {
     user: PropTypes.object,
     size: PropTypes.oneOf([ 'small', 'medium', 'large' ]),
-    theme: PropTypes.instanceOf(Theme),
+    theme: PropTypes.instanceOf(Theme).isRequired,
 };
 
 ProfileImage.defaultProps = {

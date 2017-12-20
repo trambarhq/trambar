@@ -50,7 +50,7 @@ module.exports = function(languageCode) {
             return `${name} recommends this`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name) => {
-            return `${name1} and ${name2} recommend this`;
+            return [ name1, ' and ', name2, ' recommend this' ];
         },
         'bookmark-recommendations': 'Recommendations',
         'bookmark-you-bookmarked-it': 'You bookmarked this',
@@ -284,11 +284,8 @@ module.exports = function(languageCode) {
         'story-author-$count-others': (count) => {
             return `${count} others`;
         },
-        'story-author-$name-and-$users': (name, users, count) => {
-            return [ name, ' and ', users ];
-        },
         'story-author-$name1-and-$name2': (name1, name2) => {
-            return `${name1} and ${name2}`;
+            return [ name1, ' and ', name2 ];
         },
         'story-cancel': 'Cancel',
         'story-cancel-are-you-sure': 'Are you sure you want to abandon this post?',

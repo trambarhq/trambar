@@ -20,17 +20,13 @@
             box-shadow: 2px 2px 2px 0px rgba(0,0,0,0.50);
 
             .user {
+                display: block;
                 margin-bottom: 0.2em;
 
                 .name {
                     color: #333;
                     margin-left: 0.2em;
                     vertical-align: middle;
-                }
-
-                .profile-image {
-                    float: none;
-                    margin: 0;
                 }
             }
 

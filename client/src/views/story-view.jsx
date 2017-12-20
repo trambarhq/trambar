@@ -277,6 +277,7 @@ module.exports = React.createClass({
         var props = {
             authors: this.props.authors,
             locale: this.props.locale,
+            theme: this.props.theme,
         };
         return <AuthorNames {...props} />;
     },
