@@ -23,6 +23,12 @@
     }
 
     .body {
+        .column-1 {
+            .media-view {
+                max-width: 500px;
+            }
+        }
+
         .column-2 {
             position: relative;
 

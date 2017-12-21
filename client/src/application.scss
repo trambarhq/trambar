@@ -71,3 +71,22 @@ body {
         }
     }
 }
+
+SELECT {
+    -webkit-appearance: none;
+    border-radius: 0;
+    background-color: #eeeeee;
+    border: 1px solid #444444;
+
+    OPTION {
+        padding: 2px 2px 2px 4px;
+    }
+}
+
+TEXTAREA, INPUT[type=text] {
+    -webkit-appearance: none;
+    border-radius: 0;
+    background-color: #eeeeee;
+    border: 1px solid #444444;
+    padding: 2px 2px 2px 4px;
+}

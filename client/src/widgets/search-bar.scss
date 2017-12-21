@@ -7,14 +7,14 @@
         margin-right: 0.35em;
     }
 
-    input {
+    input[type=text] {
         font-size: 1em;
         min-width: 20em;
         max-width: 40em;
         width: 28%;
         color: #eeeeee;
         background-color: #333333;
-        border: 1px inset #444444;
-        padding: 4px 3px 3px 3px;
+        border: 0;
+        padding: 3px 3px 3px 3px;
     }
 }
