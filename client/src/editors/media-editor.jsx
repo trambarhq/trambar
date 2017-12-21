@@ -170,8 +170,10 @@ module.exports = React.createClass({
         } else {
             return (
                 <div className="media-editor">
-                    {this.renderResource()}
-                    {this.renderNavigation()}
+                    <div className="resource">
+                        {this.renderResource()}
+                        {this.renderNavigation()}
+                    </div>
                     {this.renderDialogBox()}
                 </div>
             );

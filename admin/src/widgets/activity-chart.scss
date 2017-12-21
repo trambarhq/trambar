@@ -40,8 +40,7 @@
         clear: both;
 
         .contents {
-            flex-grow: 0;
-            flex-shrink: 0;
+            flex: 0 0 auto;
             min-width: 100%;
         }
     }

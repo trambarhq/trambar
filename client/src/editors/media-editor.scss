@@ -4,10 +4,16 @@
     max-width: 600px;
     margin: auto;
 
+    .resource {
+        position: relative;
+        padding: 0.25em 0.25em 0.25em 0.25em;
+    }
+
     .navigation {
         position: absolute;
-        width: 100%;
-        bottom: 0;
+        left: 0.25em;
+        right: 0.25em;
+        bottom: 0.25em;
         background-color: rgba(0, 0, 0, 0.75);
         opacity: 1;
         transition: opacity .5s;

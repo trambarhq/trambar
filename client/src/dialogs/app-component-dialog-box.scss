@@ -11,8 +11,7 @@
     padding: 0.5em 0.5em 0.5em 0.5em;
 
     .contents {
-        flex-grow: 1;
-        flex-shrink: 1;
+        flex: 1 1 auto;
         overflow: auto;
         padding: 0.5em 0.5em 0.25em 0.5em;
         margin-bottom: 0.25em;
@@ -72,8 +71,7 @@
     }
 
     .buttons {
-        flex-grow: 0;
-        flex-shrink: 0;
+        flex: 0 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
         text-align: right;
         border-top: 1px solid #666666;

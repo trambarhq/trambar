@@ -8,6 +8,7 @@
     padding: 0.4em 0.5em 0.4em 0.5em;
 
     .contents {
+        flex: 1 1 auto;
         padding-bottom: 0.5em;
 
         .qr-code {
@@ -24,9 +25,7 @@
     }
 
     .buttons {
-        flex-grow: 0;
-        flex-shrink: 0;
-        flex-basis: auto;
+        flex: 0 0 auto;
         padding: 0.5em 0 0.2em 0.2em;
         border-top: 1px solid #666666;
         text-align: right;
