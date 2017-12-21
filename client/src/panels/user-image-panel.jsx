@@ -162,16 +162,21 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButtons: function() {
+        var t = this.props.locale.translate;
+        var resources = this.getUserProperty('details.resources');
+        var hasPicture = _.some(resources, { type: 'image' });
         var removeProps = {
-            label: 'Remove',
+            label: t('user-image-panel-remove'),
+            hidden: !hasPicture,
             onClick: this.handleRemoveClick,
         };
         var takeProps = {
-            label: 'Take picture',
+            label: t('user-image-panel-snap'),
             onClick: this.handleTakeClick,
         };
         var selectProps = {
-            label: 'Select picture',
+            label: t('user-image-panel-select'),
+            highlighted: !hasPicture,
             onChange: this.handleFileChange,
         };
         return (

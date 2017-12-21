@@ -480,6 +480,10 @@ module.exports = function(languageCode) {
         'user-activity-$name-wrote-post': 'Wrote a post',
         'user-activity-more': 'More...',
 
+        'user-image-panel-remove': 'Remove',
+        'user-image-panel-select': 'Select',
+        'user-image-panel-snap': 'Snap',
+
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',
         'video-capture-pause': 'Pause',
