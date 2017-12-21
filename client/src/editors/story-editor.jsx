@@ -43,13 +43,14 @@ module.exports = React.createClass({
     displayName: 'StoryEditor',
     mixins: [ UpdateCheck ],
     propTypes: {
+        isStationary: PropTypes.bool,
+        selected: PropTypes.bool,
         story: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
         recommendations: PropTypes.arrayOf(PropTypes.object),
         recipients: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
-        isStationary: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -90,6 +91,19 @@ module.exports = React.createClass({
         this.updateOptions(nextState, this.props);
         this.updateLeadAuthor(nextState, this.props);
         return nextState;
+    },
+
+    /**
+     * Return class name, possibly with modifiers
+     *
+     * @return {String}
+     */
+    getClassName: function() {
+        var className = 'story-editor';
+        if (this.props.selected) {
+            className += ' selected';
+        }
+        return className;
     },
 
     /**
@@ -249,7 +263,7 @@ module.exports = React.createClass({
      */
     renderSingleColumn: function() {
         return (
-            <div className="story-editor">
+            <div className={this.getClassName()}>
                 <div className="header">
                     <div className="column-1 padded">
                         {this.renderProfileImage()}
@@ -287,7 +301,7 @@ module.exports = React.createClass({
      */
     renderDoubleColumn: function() {
         return (
-            <div className="story-editor">
+            <div className={this.getClassName()}>
                 <div className="header">
                     <div className="column-1 padded">
                         {this.renderProfileImage()}
@@ -322,7 +336,7 @@ module.exports = React.createClass({
     renderTripleColumn: function() {
         var t = this.props.locale.translate;
         return (
-            <div className="story-editor">
+            <div className={this.getClassName()}>
                 <div className="header">
                     <div className="column-1 padded">
                         {this.renderProfileImage()}

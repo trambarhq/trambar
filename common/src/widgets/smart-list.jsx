@@ -28,6 +28,7 @@ module.exports = React.createClass({
             behind: 5,
             ahead: 10,
             offset: 0,
+            inverted: false,
         };
     },
 
@@ -142,7 +143,7 @@ module.exports = React.createClass({
     componentDidMount: function() {
         // find the list's DOM node and its scroll container
         this.container = ReactDOM.findDOMNode(this);
-        for (var p = this.container.parentNode; p; p = p.offsetParent) {
+        for (var p = this.container.parentNode; p; p = p.parentNode) {
             var style = getComputedStyle(p);
             if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
                 this.scrollContainer = p;

@@ -33,6 +33,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        selected: PropTypes.bool,
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
@@ -41,6 +42,7 @@ module.exports = React.createClass({
         recipients: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
+        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -67,6 +69,18 @@ module.exports = React.createClass({
         return nextState;
     },
 
+    /**
+     * Return class name, possibly with modifiers
+     *
+     * @return {String}
+     */
+    getClassName: function() {
+        var className = 'story-view';
+        if (this.props.selected) {
+            className += ' selected';
+        }
+        return className;
+    },
 
     /**
      * Return true if comment should be expanded automatically
@@ -87,6 +101,13 @@ module.exports = React.createClass({
         // expand automatically when the current user has reacted to story
         if (_.some(props.reactions, { user_id: currentUserId })) {
             return true;
+        }
+
+        // expand if the reaction is selected
+        if (props.selectedReactionId) {
+            if (_.some(props.reactions, { id: props.selectedReactionId })) {
+                return true;
+            }
         }
         return false;
     },
@@ -145,7 +166,7 @@ module.exports = React.createClass({
      */
     renderSingleColumn: function() {
         return (
-            <div className="story-view">
+            <div className={this.getClassName()}>
                 <div className="header">
                     <div className="column-1 padded">
                         {this.renderProfileImage()}
@@ -182,7 +203,7 @@ module.exports = React.createClass({
      */
     renderDoubleColumn: function() {
         return (
-            <div className="story-view">
+            <div className={this.getClassName()}>
                 <div className="header">
                     <div className="column-1 padded">
                         {this.renderProfileImage()}
@@ -216,7 +237,7 @@ module.exports = React.createClass({
     renderTripleColumn: function() {
         var t = this.props.locale.translate;
         return (
-            <div className="story-view">
+            <div className={this.getClassName()}>
                 <div className="header">
                     <div className="column-1 padded">
                         {this.renderProfileImage()}
@@ -379,7 +400,7 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            selectedReactionId: this.props.route.parameters.reaction,
+            selectedReactionId: this.props.selectedReactionId,
             onFinish: this.handleCommentFinish,
         };
         return (

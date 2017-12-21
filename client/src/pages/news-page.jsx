@@ -332,6 +332,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
      */
     renderList: function() {
         var access = this.getAccessLevel();
+        var params = this.props.route.parameters;
         var listProps = {
             access: access,
             acceptNewStory: this.props.acceptNewStory && access === 'read-write',
@@ -340,7 +341,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
             project: this.props.project,
-            selectedStoryId: this.props.route.parameters.story,
+            selectedStoryId: params.story,
+            selectedReactionId: params.reaction,
 
             database: this.props.database,
             payloads: this.props.payloads,

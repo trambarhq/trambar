@@ -32,6 +32,7 @@ module.exports = Relaks.createClass({
         currentUser: PropTypes.object,
         project: PropTypes.object,
         selectedStoryId: PropTypes.number,
+        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -77,6 +78,7 @@ module.exports = Relaks.createClass({
             repos: null,
 
             selectedStoryId: this.props.selectedStoryId,
+            selectedReactionId: this.props.selectedReactionId,
             access: this.props.access,
             acceptNewStory: this.props.acceptNewStory,
             stories: this.props.stories,
@@ -244,6 +246,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         project: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
         selectedStoryId: PropTypes.number,
+        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -367,24 +370,26 @@ var StoryListSync = module.exports.Sync = React.createClass({
     handleStoryRender: function(evt) {
         var story = evt.item;
         // see if it's being editted
-        var renderEditor = false;
+        var isDraft = false;
+        var selected = false;
         if (story) {
             if (this.props.access === 'read-write') {
                 if (!story.published) {
-                    renderEditor = true;
+                    isDraft = true;
                 } else {
                     var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
                     if (tempCopy) {
                         // edit the temporary copy
                         story = tempCopy;
-                        renderEditor = true;
+                        isDraft = true;
                     }
                 }
             }
+            selected = (story.id === this.props.selectedStoryId);
         } else {
-            renderEditor = true;
+            isDraft = true;
         }
-        if (renderEditor) {
+        if (isDraft) {
             var authors = findAuthors(this.props.draftAuthors, story);
             var recommendations = findRecommendations(this.props.recommendations, story);
             var recipients = findRecipients(this.props.recipients, recommendations);
@@ -392,6 +397,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 authors = array(this.props.currentUser);
             }
             var editorProps = {
+                selected,
                 story,
                 authors,
                 recommendations,
@@ -414,6 +420,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 var recommendations = findRecommendations(this.props.recommendations, story);
                 var recipients = findRecipients(this.props.recipients, recommendations);
                 var storyProps = {
+                    selected,
                     access: this.props.access,
                     story,
                     reactions,
@@ -421,6 +428,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     respondents,
                     recommendations,
                     recipients,
+                    selectedReactionId: (selected) ? this.props.selectedReactionId : undefined,
                     repos: this.props.repos,
                     currentUser: this.props.currentUser,
                     database: this.props.database,

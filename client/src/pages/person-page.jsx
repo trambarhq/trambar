@@ -310,12 +310,14 @@ var PersonPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderList: function() {
+        var params = this.props.route.parameters;
         var listProps = {
             access: this.getAccessLevel(),
             stories: this.props.stories,
             currentUser: this.props.currentUser,
             project: this.props.project,
-            selectedStoryId: this.props.route.parameters.story,
+            selectedStoryId: params.story,
+            selectedReactionId: params.reaction,
 
             database: this.props.database,
             payloads: this.props.payloads,

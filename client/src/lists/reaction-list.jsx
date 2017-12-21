@@ -134,16 +134,20 @@ module.exports = React.createClass({
         var reaction = evt.item;
         var isUserDraft = false;
         var isNewComment = false;
+        var selected = false;
         if (!reaction) {
             isUserDraft = true;
             isNewComment = true;
-        } else if (!reaction.published) {
-            if (reaction.user_id === this.props.currentUser.id) {
-                isUserDraft = true;
-                if (!reaction.ptime) {
-                    isNewComment = true;
+        } else {
+            if (!reaction.published) {
+                if (reaction.user_id === this.props.currentUser.id) {
+                    isUserDraft = true;
+                    if (!reaction.ptime) {
+                        isNewComment = true;
+                    }
                 }
             }
+            selected = (reaction.id === this.props.selectedReactionId);
         }
         if (isUserDraft) {
             // always use 0 as the key for new comment by current user, so
@@ -151,6 +155,7 @@ module.exports = React.createClass({
             // (and the comment gains an id)
             var key = (isNewComment) ? 0 : reaction.id;
             var props = {
+                selected,
                 reaction,
                 story: this.props.story,
                 currentUser: this.props.currentUser,
@@ -166,6 +171,7 @@ module.exports = React.createClass({
             var respondent = findRespondent(this.props.respondents, reaction);
             var props = {
                 access: this.props.access,
+                selected,
                 reaction,
                 respondent,
                 story: this.props.story,

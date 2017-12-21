@@ -1,9 +1,10 @@
 .reaction-view {
     display: flex;
     flex-direction: row;
-    padding: 0.1em 0.1em 0.1em 0.1em;
-    margin-right: -0.5em;   // negate padding on CommentViewOptions
     color: #cccccc;
+    margin: -1px 0 -1px 0;
+    padding: 2px 0 2px 0;
+    border: 1px solid rgba(0, 0, 0, 0);
 
     A:link, A:visited {
         color: #cccccc;
@@ -27,7 +28,7 @@
         flex-shrink: 1;
 
         .text {
-            padding: 0.25em 0.25em 0.25em 0;
+            padding: 0.25em 0.25em 0 0;
 
             .comment {
                 &.markdown {
@@ -65,13 +66,23 @@
             float: right;
             color: #666666;
             font-size: 0.9em;
-            margin-bottom: 0.5em;
             margin-left: 0.5em;
         }
 
         .media {
-            padding: 0.5em 1em 1em 1em;
+            padding: 0.5em 1em 0.5em 1em;
             max-width: 300px;
+        }
+    }
+
+    &.selected {
+        animation: flash normal 5s 1 ease-in-out;
+        animation-delay: 1.5s;
+
+        @keyframes flash {
+            25% {
+                border-color: #fc6d26;
+            }
         }
     }
 }

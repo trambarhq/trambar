@@ -27,11 +27,16 @@
             position: relative;
 
             .scrollable {
-                position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                right: 0;
+                max-height: 20em;
+
+                &.abs {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    max-height: none;
+                }
             }
         }
     }
@@ -79,6 +84,16 @@
         }
         .column-3 {
             width: 20%;
+        }
+    }
+
+    &.selected {
+        animation: flash normal 5s 1 ease-in-out;
+
+        @keyframes flash {
+            25% {
+                border-color: #fc6d26;
+            }
         }
     }
 }

@@ -26,6 +26,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        selected: PropTypes.bool,
         reaction: PropTypes.object.isRequired,
         respondent: PropTypes.object,
         story: PropTypes.object.isRequired,
@@ -52,6 +53,19 @@ module.exports = React.createClass({
         };
         this.updateOptions(nextState, this.props);
         return nextState;
+    },
+
+    /**
+     * Return class name, possibly with modifiers
+     *
+     * @return {String}
+     */
+    getClassName: function() {
+        var className = 'reaction-view';
+        if (this.props.selected) {
+            className += ' selected';
+        }
+        return className;
     },
 
     /**
@@ -90,7 +104,7 @@ module.exports = React.createClass({
      */
     render: function() {
         return (
-            <div className="reaction-view">
+            <div className={this.getClassName()}>
                 <div className="profile-image-column">
                     {this.renderProfileImage()}
                 </div>
@@ -154,7 +168,7 @@ module.exports = React.createClass({
                         // parse the Markdown text
                         var paragraphs = Markdown.parse(p(text), this.handleReference);
                         // if there first paragraph is a P tag, turn it into a SPAN
-                        if (paragraphs[0].type === 'p') {
+                        if (paragraphs[0] && paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
                         }
                         return (
