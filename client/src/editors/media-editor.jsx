@@ -38,6 +38,8 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
 
+        onCaptureStart: PropTypes.func,
+        onCaptureEnd: PropTypes.func,
         onChange: PropTypes.func.isRequired,
         onEmbed: PropTypes.func,
     },
@@ -61,6 +63,13 @@ module.exports = React.createClass({
      */
     capture: function(type) {
         this.setState({ capturing: type });
+        if (this.props.onCaptureStart) {
+            this.props.onCaptureStart({
+                type: 'capturestart',
+                target: this,
+                mediaType: type,
+            });
+        }
     },
 
     /**
@@ -402,6 +411,7 @@ module.exports = React.createClass({
                         width: image.naturalWidth,
                         height: image.naturalHeight,
                         clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
+                        imported: true,
                     };
                 });
             } else if (/^video\//.test(file.type)) {
@@ -427,6 +437,7 @@ module.exports = React.createClass({
                                 height: video.videoHeight,
                                 clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
                                 duration: Math.round(video.duration * 1000),
+                                imported: true,
                             };
                         });
                     });
@@ -443,6 +454,7 @@ module.exports = React.createClass({
                         file: file,
                         stream: stream,
                         duration: Math.round(audio.duration * 1000),
+                        imported: true,
                     };
                 });
             } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
@@ -474,7 +486,7 @@ module.exports = React.createClass({
     handlePhotoCapture: function(evt) {
         var res = _.clone(evt.image);
         res.type = 'image';
-        res.filename = getFilenameFromTime('.jpg') ;
+        res.filename = getFilenameFromTime('.jpg');
         res.clip = getDefaultClippingRect(res.width, res.height);
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
@@ -514,6 +526,13 @@ module.exports = React.createClass({
      */
     handleCaptureCancel: function(evt) {
         this.setState({ capturing: null });
+        if (this.props.onCaptureEnd) {
+            this.props.onCaptureEnd({
+                type: 'captureend',
+                target: this,
+                mediaType: this.state.capturing,
+            });
+        }
     },
 
     /**

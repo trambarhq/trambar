@@ -12,6 +12,7 @@ module.exports = React.createClass({
     displayName: 'MediaToolbar',
     propTypes: {
         story: PropTypes.object.isRequired,
+        capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
         locale: PropTypes.instanceOf(Locale).isRequired,
         onAction: PropTypes.func,
     },
@@ -29,34 +30,66 @@ module.exports = React.createClass({
     },
 
     /**
+     * Count the type of resources attached to story
+     *
+     * @return {Object}
+     */
+    getResourceCounts: function() {
+        var counts = {
+            photo: 0,
+            video: 0,
+            audio: 0,
+            file: 0,
+        };
+        var resources = _.get(this.props.story, 'details.resources');
+        _.each(resources, (res) => {
+            if (res.imported) {
+                counts.file++;
+            } else {
+                switch (res.type) {
+                    case 'image': counts.photo++; break;
+                    case 'video': counts.video++; break;
+                    case 'audio': counts.audio++; break;
+                }
+            }
+        });
+        return counts;
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render: function() {
         var t = this.props.locale.translate;
+        var counts = this.getResourceCounts();
         var photoButtonProps = {
             label: t('story-photo'),
             icon: 'camera',
-            hidden: !this.state.hasCamera,
+            hidden: !counts.photo && !this.state.hasCamera,
+            highlighted: (counts.photo > 0 || this.props.capturing === 'image'),
             onClick: this.handlePhotoClick,
         };
         var videoButtonProps = {
             label: t('story-video'),
             icon: 'video-camera',
-            hidden: !this.state.hasCamera,
+            hidden: !counts.video && !this.state.hasCamera,
+            highlighted: (counts.video > 0 || this.props.capturing === 'video'),
             onClick: this.handleVideoClick,
         };
         var audioButtonProps = {
             label: t('story-audio'),
             icon: 'microphone',
-            hidden: !this.state.hasMicrophone,
+            hidden: !counts.audio && !this.state.hasMicrophone,
+            highlighted: (counts.audio > 0 || this.props.capturing === 'audio'),
             onClick: this.handleAudioClick,
         };
         var selectButtonProps = {
             label: t('story-file'),
             icon: 'file',
             multiple: true,
+            highlighted: (counts.file > 0),
             onChange: this.handleFileSelect,
         }
         return (

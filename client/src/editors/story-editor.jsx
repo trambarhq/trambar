@@ -85,6 +85,7 @@ module.exports = React.createClass({
             selectedResourceIndex: undefined,
             draft: null,
             confirming: false,
+            capturing: null,
             action: null,
         };
         this.updateDraft(nextState, this.props);
@@ -497,6 +498,7 @@ module.exports = React.createClass({
     renderMediaToolbar: function() {
         var props = {
             story: this.state.draft,
+            capturing: this.state.capturing,
             locale: this.props.locale,
             onAction: this.handleAction,
         };
@@ -627,6 +629,8 @@ module.exports = React.createClass({
             theme: this.props.theme,
             payloads: this.props.payloads,
             initialResourceIndex: this.props.selectedResourceIndex,
+            onCaptureStart: this.handleCaptureStart,
+            onCaptureEnd: this.handleCaptureEnd,
             onChange: this.handleResourcesChange,
             onEmbed: this.handleResourceEmbed,
         };
@@ -1206,6 +1210,24 @@ module.exports = React.createClass({
         this.components.mediaEditor.importFiles(evt.files);
         this.components.mediaEditor.importDataItems(evt.items);
         return null;
+    },
+
+    /**
+     * Called when MediaEditor opens one of the capture dialog boxes
+     *
+     * @param  {Object} evt
+     */
+    handleCaptureStart: function(evt) {
+        this.setState({ capturing: evt.mediaType });
+    },
+
+    /**
+     * Called when MediaEditor stops rendering a media capture dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleCaptureEnd: function(evt) {
+        this.setState({ capturing: null });
     },
 
     /**
