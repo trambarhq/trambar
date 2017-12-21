@@ -6,10 +6,6 @@
     .header {
         background-color: #211a1a;
 
-        .column-1, .column-2, .column-3 {
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
         .column-1 > .profile-image {
             position: relative;
             height: 0.8em;
@@ -27,10 +23,6 @@
     }
 
     .body {
-        .column-1, .column-2, .column-3 {
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
         .column-2 {
             position: relative;
 
@@ -44,17 +36,16 @@
         }
     }
 
-    &.single-col {
-        margin-bottom: 0.5em;
-
-        .column-2 {
-            &:empty {
-                display :none;
-            }
-        }
+    .padded {
+        padding: 0.25em 0.25em 0.25em 0.5em;
     }
 
-    &.double-col, &.triple-col {
+    .single-col & {
+        margin-bottom: 0.5em;
+    }
+
+    .double-col &,
+    .triple-col & {
         display: table;
         margin-bottom: 1em;
 
@@ -66,25 +57,23 @@
             display: table-row;
         }
 
-        .column-1, .column-2, .column-3 {
+        .column-1,
+        .column-2,
+        .column-3 {
             display: table-cell;
             vertical-align: top;
         }
     }
 
-    &.double-col {
-        .column-1 {
-            width: 50%;
-        }
+    .double-col & {
+        .column-1,
         .column-2 {
             width: 50%;
         }
     }
 
-    &.triple-col {
-        .column-1 {
-            width: 40%;
-        }
+    .triple-col & {
+        .column-1,
         .column-2 {
             width: 40%;
         }

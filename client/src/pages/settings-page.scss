@@ -1,5 +1,4 @@
 .settings-page {
-
     .panels {
         position: absolute;
         left: 0;
@@ -7,10 +6,17 @@
         top: 0;
         margin: auto;
 
-        padding: 1em 1em 1em 1em;
-        column-fill: balance;
-        column-width: 25em;
-        column-gap: 1em;
-        max-width: 110em;
+        .single-col & {
+            padding: 0.5em 0.5em 0.5em 0.5em;
+        }
+
+        .double-col &,
+        .triple-col & {
+            padding: 1em 1em 1em 1em;
+            column-fill: balance;
+            column-width: 25em;
+            column-gap: 1em;
+            max-width: 110em;
+        }
     }
 }

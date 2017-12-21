@@ -22,9 +22,17 @@ function ProfileImage(props) {
         contents = <img src={imageUrl} />;
     } else {
         var Icon = require('octicons/build/svg/person.svg');
-        contents = <Icon />;
+        contents = (
+            <div className="placeholder">
+                <Icon />
+            </div>
+        );
     }
-    return <a className={className} href={props.href}>{contents}</a>;
+    if (props.href) {
+        return <a className={className} href={props.href}>{contents}</a>;
+    } else {
+        return <span className={className}>{contents}</span>;
+    }
 }
 
 ProfileImage.propTypes = {

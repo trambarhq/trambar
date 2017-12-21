@@ -9,7 +9,7 @@ var Locale = require('locale/locale');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var SettingsSection = require('widgets/settings-section');
+var SettingsPanel = require('widgets/settings-panel');
 var OptionButton = require('widgets/option-button');
 
 require('./language-panel.scss');
@@ -49,14 +49,14 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="language">
+            <SettingsPanel className="language">
                 <header>
                     <i className="fa fa-language" /> {t('settings-language')}
                 </header>
                 <body>
                     {this.renderList()}
                 </body>
-            </SettingsSection>
+            </SettingsPanel>
         );
     },
 

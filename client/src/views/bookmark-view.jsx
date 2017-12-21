@@ -31,7 +31,7 @@ module.exports = React.createClass({
                     {this.renderSenderNames()}
                     {this.renderCloseButton()}
                 </div>
-                <div className="contents">
+                <div className="story">
                     {this.props.children}
                 </div>
             </div>

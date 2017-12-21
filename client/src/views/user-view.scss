@@ -6,10 +6,6 @@
     .header {
         background-color: #211a1a;
 
-        .column-1, .column-2, .column-3 {
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
         .profile-image {
             position: relative;
             height: 0.8em;
@@ -31,10 +27,6 @@
     }
 
     .body {
-        .column-1, .column-2, .column-3 {
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
         .name {
             font-size: 1.5em;
             margin-left: 4.35em;
@@ -53,7 +45,11 @@
         }
     }
 
-    &.single-col {
+    .padded {
+        padding: 0.25em 0.25em 0.25em 0.5em;
+    }
+
+    .single-col & {
         margin-bottom: 0.5em;
 
         .column-2 {
@@ -63,7 +59,8 @@
         }
     }
 
-    &.double-col, &.triple-col {
+    .double-col &,
+    .triple-col & {
         display: table;
         margin-bottom: 1em;
 
@@ -75,13 +72,15 @@
             display: table-row;
         }
 
-        .column-1, .column-2, .column-3 {
+        .column-1,
+        .column-2,
+        .column-3 {
             display: table-cell;
             vertical-align: top;
         }
     }
 
-    &.double-col {
+    .double-col & {
         .column-1 {
             width: 50%;
         }
@@ -90,7 +89,7 @@
         }
     }
 
-    &.triple-col {
+    .triple-col & {
         .column-1 {
             width: 40%;
         }

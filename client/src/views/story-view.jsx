@@ -145,23 +145,23 @@ module.exports = React.createClass({
      */
     renderSingleColumn: function() {
         return (
-            <div className="story-view single-col">
+            <div className="story-view">
                 <div className="header">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProfileImage()}
                         {this.renderAuthorNames()}
                         {this.renderPopUpMenu('main')}
                     </div>
                 </div>
                 <div className="body">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProgress()}
                         {this.renderEmblem()}
                         {this.renderContents()}
                     </div>
                 </div>
                 <div className="header">
-                    <div className="column-2">
+                    <div className="column-2 padded">
                         {this.renderReactionToolbar()}
                     </div>
                 </div>
@@ -182,19 +182,19 @@ module.exports = React.createClass({
      */
     renderDoubleColumn: function() {
         return (
-            <div className="story-view double-col">
+            <div className="story-view">
                 <div className="header">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProfileImage()}
                         {this.renderAuthorNames()}
                         {this.renderPopUpMenu('main')}
                     </div>
-                    <div className="column-2">
+                    <div className="column-2 padded">
                         {this.renderReactionToolbar()}
                     </div>
                 </div>
                 <div className="body">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProgress()}
                         {this.renderEmblem()}
                         {this.renderContents()}
@@ -216,21 +216,21 @@ module.exports = React.createClass({
     renderTripleColumn: function() {
         var t = this.props.locale.translate;
         return (
-            <div className="story-view triple-col">
+            <div className="story-view">
                 <div className="header">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProfileImage()}
                         {this.renderAuthorNames()}
                     </div>
-                    <div className="column-2">
+                    <div className="column-2 padded">
                         {this.renderReactionToolbar()}
                     </div>
-                    <div className="column-3">
+                    <div className="column-3 padded">
                         <HeaderButton icon="chevron-circle-right" label={t('story-options')} disabled />
                     </div>
                 </div>
                 <div className="body">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProgress()}
                         {this.renderEmblem()}
                         {this.renderContents()}
@@ -239,7 +239,7 @@ module.exports = React.createClass({
                         {this.renderReactionAudioPlayer()}
                         {this.renderReactions()}
                     </div>
-                    <div className="column-3">
+                    <div className="column-3 padded">
                         {this.renderOptions()}
                     </div>
                 </div>

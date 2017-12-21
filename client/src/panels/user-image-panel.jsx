@@ -12,7 +12,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var SettingsSection = require('widgets/settings-section');
+var SettingsPanel = require('widgets/settings-panel');
 var PushButton = require('widgets/push-button');
 var ImageEditor = require('editors/image-editor');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
@@ -96,7 +96,7 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="user-image">
+            <SettingsPanel className="user-image">
                 <header>
                     <i className="fa fa-image" /> {t('settings-profile-image')}
                 </header>
@@ -107,7 +107,7 @@ module.exports = React.createClass({
                 <footer>
                     {this.renderButtons()}
                 </footer>
-            </SettingsSection>
+            </SettingsPanel>
         );
     },
 
@@ -119,6 +119,7 @@ module.exports = React.createClass({
     renderProfilePicture: function() {
         var resources = this.getUserProperty('details.resources');
         var image = _.find(resources, { type: 'image' });
+        var contents;
         if (image) {
             var props = {
                 resource: image,
@@ -128,15 +129,16 @@ module.exports = React.createClass({
                 previewHeight: 256,
                 onChange: this.handleImageChange,
             };
-            return <ImageEditor {...props} />;
+            contents = <ImageEditor {...props} />;
         } else {
             var Icon = require('octicons/build/svg/person.svg');
-            return (
+            contents = (
                 <div className="no-image">
                     <Icon className="" />
                 </div>
             );
         }
+        return <div className="image-container">{contents}</div>;
     },
 
     /**

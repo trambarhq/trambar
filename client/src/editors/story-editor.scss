@@ -6,10 +6,6 @@
     .header {
         background-color: #211a1a;
 
-        .column-1, .column-2, .column-3 {
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
         .column-1 > .profile-image {
             position: relative;
             height: 0.8em;
@@ -18,7 +14,7 @@
             margin-right: 0.5em;
             overflow: visible;
 
-            IMG, svg {
+            IMG, .placeholder {
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -27,10 +23,6 @@
     }
 
     .body {
-        .column-1, .column-2, .column-3 {
-            padding: 0.25em 0.25em 0.25em 0.5em;
-        }
-
         .autosize-text-area {
             margin-top: 0.7em;
             margin-bottom: 0.1em;
@@ -53,18 +45,14 @@
         .buttons {
             text-align: right;
         }
-
-
     }
 
-    &.single-col {
-        margin-bottom: 0.5em;
+    .padded {
+        padding: 0.25em 0.25em 0.25em 0.5em;
+    }
 
-        .column-2 {
-            &:empty {
-                display :none;
-            }
-        }
+    .single-col & {
+        margin-bottom: 0.5em;
 
         .body {
             .autosize-text-area {
@@ -75,11 +63,14 @@
         }
     }
 
-    &.double-col, &.triple-col {
+    .double-col &,
+    .triple-col & {
         display: table;
         margin-bottom: 1em;
 
-        .column-1, .column-2, .column-3 {
+        .column-1,
+        .column-2,
+        .column-3 {
             display: table-cell;
             vertical-align: top;
         }
@@ -100,19 +91,15 @@
         }
     }
 
-    &.double-col {
-        .column-1 {
-            width: 50%;
-        }
+    .double-col & {
+        .column-1,
         .column-2 {
             width: 50%;
         }
     }
 
-    &.triple-col {
-        .column-1 {
-            width: 40%;
-        }
+    .triple-col & {
+        .column-1,
         .column-2 {
             width: 40%;
         }

@@ -146,11 +146,15 @@ module.exports = React.createClass({
      */
     render: function() {
         var index = this.getSelectedResourceIndex();
+        var placeholder;
+        if (this.props.theme.mode !== 'single-col') {
+            placeholder = this.props.children;
+        }
         if (index === -1) {
             // render placeholder
             return (
                 <div className="media-editor empty">
-                    {this.props.children}
+                    {placeholder}
                     {this.renderDialogBox()}
                 </div>
             );

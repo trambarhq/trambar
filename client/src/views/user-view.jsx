@@ -39,6 +39,22 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return the selected chart type, applying default selection where appropriate
+     *
+     * @return {String}
+     */
+    getChartType: function() {
+        var chartType = this.props.chartType;
+        if (!chartType) {
+            // always show statistics in double and triple column mode
+            if (this.props.theme.mode !== 'single-col') {
+                chartType = 'bar';
+            }
+        }
+        return chartType;
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -61,23 +77,23 @@ module.exports = React.createClass({
      */
     renderSingleColumn: function() {
         return (
-            <div className="user-view single-col">
+            <div className="user-view">
                 <div className="header">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProfileImage()}
                         {this.renderRoles()}
                         {this.renderPopUpMenu('main')}
                     </div>
                 </div>
                 <div className="body">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderName()}
                         {this.renderTag()}
                         {this.renderRecentActivities()}
                     </div>
                 </div>
                 <div className="header">
-                    <div className="column-2">
+                    <div className="column-2 padded">
                         {this.renderChartToolbar()}
                     </div>
                 </div>
@@ -97,19 +113,19 @@ module.exports = React.createClass({
      */
     renderDoubleColumn: function() {
         return (
-            <div className="user-view double-col">
+            <div className="user-view">
                 <div className="header">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProfileImage()}
                         {this.renderRoles()}
                         {this.renderPopUpMenu('main')}
                     </div>
-                    <div className="column-2">
+                    <div className="column-2 padded">
                         {this.renderChartToolbar()}
                     </div>
                 </div>
                 <div className="body">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderName()}
                         {this.renderTag()}
                         {this.renderRecentActivities()}
@@ -132,19 +148,19 @@ module.exports = React.createClass({
         return (
             <div className="user-view triple-col">
                 <div className="header">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderProfileImage()}
                         {this.renderRoles()}
                     </div>
-                    <div className="column-2">
+                    <div className="column-2 padded">
                         {this.renderChartToolbar()}
                     </div>
-                    <div className="column-3">
+                    <div className="column-3 padded">
                         <HeaderButton icon="chevron-circle-right" label={t('user-actions')} disabled />
                     </div>
                 </div>
                 <div className="body">
-                    <div className="column-1">
+                    <div className="column-1 padded">
                         {this.renderName()}
                         {this.renderTag()}
                         {this.renderRecentActivities()}
@@ -152,7 +168,7 @@ module.exports = React.createClass({
                     <div className="column-2">
                         {this.renderStatistics()}
                     </div>
-                    <div className="column-3">
+                    <div className="column-3 padded">
                         {this.renderOptions()}
                     </div>
                 </div>
@@ -198,7 +214,7 @@ module.exports = React.createClass({
      */
     renderChartToolbar: function() {
         var props = {
-            chartType: this.props.chartType,
+            chartType: this.getChartType(),
             locale: this.props.locale,
             onAction: this.handleAction,
         };
@@ -251,18 +267,11 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderStatistics: function() {
-        var chartType = this.props.chartType;
-        if (!chartType) {
-            // always show statistics in double and triple column mode
-            if (this.props.theme.mode !== 'single-col') {
-                chartType = 'bar';
-            }
-        }
         var props = {
             user: this.props.user,
             story: this.props.story,
             dailyActivities: this.props.dailyActivities,
-            chartType: chartType,
+            chartType: this.getChartType(),
 
             database: this.props.database,
             route: this.props.route,

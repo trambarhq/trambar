@@ -1,20 +1,20 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
-require('./settings-section.scss');
+require('./settings-panel.scss');
 
 module.exports = React.createClass({
-    displayName: 'SettingsSection',
+    displayName: 'SettingsPanel',
     propTypes: {
     },
 
     render: function() {
-        var classNames = [ 'settings-section' ];
+        var className = 'settings-panel';
         if (this.props.className) {
-            classNames.push(this.props.className)
+            className += ` ${this.props.className}`;
         }
         return (
-            <div className={classNames.join(' ')}>
+            <div className={className}>
                 {this.renderPart('header')}
                 {this.renderPart('subheader')}
                 {this.renderPart('body')}

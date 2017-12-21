@@ -1,4 +1,4 @@
-.settings-section.user-image {
+.settings-panel.user-image {
     .no-image {
         position: relative;
         background-color: #999999;
@@ -15,6 +15,11 @@
             height: 80%;
             margin:auto;
         }
+    }
+
+    .image-container {
+        max-width: 500px;
+        margin: auto;
     }
 
     .buttons {

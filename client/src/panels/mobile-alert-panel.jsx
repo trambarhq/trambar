@@ -9,7 +9,7 @@ var Locale = require('locale/locale');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var SettingsSection = require('widgets/settings-section');
+var SettingsPanel = require('widgets/settings-panel');
 var OptionButton = require('widgets/option-button');
 
 require('./mobile-alert-panel.scss');
@@ -51,14 +51,14 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="mobile-alert">
+            <SettingsPanel className="mobile-alert">
                 <header>
                     <i className="fa fa-tablet" /> {t('settings-mobile-alert')}
                 </header>
                 <body>
                     {this.renderOptions()}
                 </body>
-            </SettingsSection>
+            </SettingsPanel>
         );
     },
 

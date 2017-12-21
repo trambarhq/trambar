@@ -9,7 +9,7 @@ var Locale = require('locale/locale');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var SettingsSection = require('widgets/settings-section');
+var SettingsPanel = require('widgets/settings-panel');
 var PushButton = require('widgets/push-button');
 var TextField = require('widgets/text-field');
 
@@ -63,7 +63,7 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="user-info">
+            <SettingsPanel className="user-info">
                 <header>
                     <i className="fa fa-user-circle" /> {t('settings-user-information')}
                 </header>
@@ -73,7 +73,7 @@ module.exports = React.createClass({
                     {this.renderPhoneInput()}
                     {this.renderGenderSelector()}
                 </body>
-            </SettingsSection>
+            </SettingsPanel>
         );
     },
 

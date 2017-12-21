@@ -11,7 +11,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var SettingsSection = require('widgets/settings-section');
+var SettingsPanel = require('widgets/settings-panel');
 var PushButton = require('widgets/push-button');
 var ProjectDescriptionDialogBox = require('dialogs/project-description-dialog-box');
 var MobileSetupDialogBox = require('dialogs/mobile-setup-dialog-box');
@@ -52,7 +52,7 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="project">
+            <SettingsPanel className="project">
                 <header>
                     <i className="fa fa-database" /> {t('settings-projects')}
                 </header>
@@ -63,7 +63,7 @@ module.exports = React.createClass({
                 <footer>
                     {this.renderButtons()}
                 </footer>
-            </SettingsSection>
+            </SettingsPanel>
         );
     },
 

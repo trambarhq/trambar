@@ -1,7 +1,6 @@
 .bookmark-view {
     border: 2px solid #111;
     background-color: #111;
-    margin: 1em 1em 1em 1em;
 
     .title {
         color: #eeeeee;
@@ -20,12 +19,21 @@
         }
     }
 
-    .contents {
+    .story {
         clear: both;
 
         .story-view {
             margin: 0;
             border: 0;
         }
+    }
+
+    .single-col & {
+        margin-bottom: 0.5em;
+    }
+
+    .double-col &,
+    .triple-col & {
+        margin-bottom: 1em;
     }
 }

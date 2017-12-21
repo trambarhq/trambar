@@ -3,12 +3,26 @@
     vertical-align: middle;
     overflow: hidden;
 
-    IMG, svg {
+    IMG, .placeholder {
         width: 100%;
     }
 
-    svg {
+    .placeholder {
+        position: relative;
+        padding-top: 50%;
+        padding-bottom: 50%;
         background-color: #999999;
+        overflow: hidden;
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            margin: auto;
+        }
     }
 
     &.small {

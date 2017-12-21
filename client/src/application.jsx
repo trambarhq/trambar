@@ -176,12 +176,13 @@ module.exports = React.createClass({
             // keep the navs hidden when the start page is shown
             topNavProps.hidden = bottomNavProps.hidden = true;
         }
+        var contentsClassName = `contents ${this.state.theme.mode}`;
         return (
             <div className="application">
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port" id="page-view-port">
                     <div className="scroll-box" id="scroll-box">
-                        <div className="contents">
+                        <div className={contentsClassName}>
                             {this.renderCurrentPage()}
                         </div>
                     </div>

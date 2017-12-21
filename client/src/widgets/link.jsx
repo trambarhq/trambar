@@ -16,7 +16,7 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             // TODO: change to false
-            alwaysAsLink: false
+            alwaysAsLink: true,
         };
     },
 

@@ -39,9 +39,12 @@ module.exports = React.createClass({
     /**
      * Render legend for data series
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderLegend: function() {
+        if (!this.props.chartType) {
+            return null;
+        }
         var t = this.props.locale.translate;
         var details = _.get(this.props.dailyActivities, 'details', {});
         var dates = getDates(DateTracker.today, 14);
@@ -62,13 +65,14 @@ module.exports = React.createClass({
     /**
      * Render currently selected chart type
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderChart: function() {
         switch (this.props.chartType) {
             case 'bar': return this.renderBarChart();
             case 'line': return this.renderLineChart();
             case 'pie': return this.renderPieChart();
+            default: return null;
         }
     },
 

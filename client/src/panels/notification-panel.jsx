@@ -9,7 +9,7 @@ var Locale = require('locale/locale');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var SettingsSection = require('widgets/settings-section');
+var SettingsPanel = require('widgets/settings-panel');
 var OptionButton = require('widgets/option-button');
 
 require('./notification-panel.scss');
@@ -51,14 +51,14 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         return (
-            <SettingsSection className="notification">
+            <SettingsPanel className="notification">
                 <header>
                     <i className="fa fa-exclamation-circle" /> {t('settings-notification')}
                 </header>
                 <body>
                     {this.renderOptions()}
                 </body>
-            </SettingsSection>
+            </SettingsPanel>
         );
     },
 
