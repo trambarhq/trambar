@@ -131,6 +131,10 @@ function Route(routeManager) {
     };
 }
 
+Route.prototype.toString = function() {
+    return this.url;
+};
+
 Route.match = function(url, patterns, f) {
     for (var i = 0; i < patterns.length; i++) {
         var regExp = parseURLPattern(patterns[i]);
@@ -156,9 +160,43 @@ Route.match = function(url, patterns, f) {
     }
 };
 
-Route.prototype.toString = function() {
-    return this.url;
-};
+/**
+ * Obtain a list of numeric ids from a string, using '+' as the delimiter
+ *
+ * @param  {String} s
+ *
+ * @return {Array<Number>|undefined}
+ */
+Route.parseIdList = function(s) {
+    if (s == undefined) {
+        return undefined;
+    }
+    var tokens = _.split(params.roles, '+');
+    return _.map(tokens, _.strictParseInt);
+}
+
+/**
+ * Obtain an id from a string. If a regexp is provided, use that to search for
+ * a matching substring
+ *
+ * @param  {String} s
+ * @param  {RegExp|undefined} pattern
+ *
+ * @return {Number|undefined}
+ */
+Route.parseId = function(s, pattern) {
+    if (s == undefined) {
+        return undefined;
+    }
+    if (pattern instanceof RegExp) {
+        var m = pattern.exec(s);
+        if (!m) {
+            return undefined;
+        }
+        s = m[1];
+    }
+    return _.strictParseInt(s);
+}
 
 var regExpCache = {};
 
