@@ -45,8 +45,9 @@ module.exports = Relaks.createClass({
                 '/:schema/people/:role/:user/:date/?',
                 '/:schema/people/:role/:user/?',
             ], (params) => {
-                params.user = _.strictParseInt(params.user);
-                params.story = (hash) ? parseInt(_.replace(hash, /\D/g, '')) : undefined
+                params.user = Route.parseId(params.user);
+                params.story = Route.parseId(hash, /S(\d+)/i);
+                params.reaction = Route.parseId(hash, /R(\d+)/i);
                 return params;
             });
         },
@@ -73,7 +74,10 @@ module.exports = Relaks.createClass({
                 query = { search: params.search };
             }
             if (params.story) {
-                hash = `story-${params.story}`;
+                hash = `S${params.story}`;
+                if (params.reaction) {
+                    hash += `R${params.reaction}`;
+                }
             }
             return { path, query, hash };
         },

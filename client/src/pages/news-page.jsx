@@ -45,9 +45,10 @@ module.exports = Relaks.createClass({
                 '/:schema/news/:roles/?',
                 '/:schema/news/?',
             ], (params) => {
-                params.roles = _.filter(_.map(_.split(params.roles, '+'), parseInt));
+                params.roles = Route.parseIdList(params.roles);
                 params.search = query.search;
-                params.story = hash ? parseInt(_.replace(hash, /\D/g, '')) : undefined;
+                params.story = Route.parseId(hash, /S(\d+)/i);
+                params.reaction = Route.parseId(hash, /R(\d+)/i);
                 return params;
             });
         },
@@ -73,7 +74,10 @@ module.exports = Relaks.createClass({
                 query = { search: params.search };
             }
             if (params.story) {
-                hash = `story-${params.story}`;
+                hash = `S${params.story}`;
+                if (params.reaction) {
+                    hash += `R${params.reaction}`;
+                }
             }
             return { path, query, hash };
         },
@@ -111,7 +115,7 @@ module.exports = Relaks.createClass({
      */
     renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
-        var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
+        var searching = !!(params.date || params.roles || params.search);
         var db = this.props.database.use({ schema: params.schema, by: this });
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
@@ -159,7 +163,7 @@ module.exports = Relaks.createClass({
                     var range = `[${rangeStart},${rangeEnd}]`;
                     criteria.time_range = range;
                 }
-                if (!_.isEmpty(params.roles)) {
+                if (params.roles) {
                     criteria.role_ids = params.roles;
                 }
                 if (params.search) {
@@ -182,7 +186,7 @@ module.exports = Relaks.createClass({
                     target_user_id: props.currentUser.id,
                     filters: {},
                 };
-                if (!_.isEmpty(params.roles)) {
+                if (params.roles) {
                     criteria.filters.role_ids = params.roles;
                 }
                 if (props.currentUser.type === 'guest') {

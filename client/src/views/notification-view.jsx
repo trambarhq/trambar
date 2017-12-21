@@ -223,11 +223,13 @@ function getNotificationUrl(notification, route) {
         case 'survey':
         case 'issue':
             params.story = notification.story_id;
+            params.reaction = notification.reaction_id;
             return route.find(require('pages/news-page'), params);
         case 'bookmark':
             params.story = notification.story_id;
             return route.find(require('pages/bookmarks-page'), params);
         case 'join_request':
+            // TODO
             return `/admin`;
     }
 }

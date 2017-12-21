@@ -115,12 +115,10 @@ module.exports = React.createClass({
      * @return {String}
      */
     handleReactionIdentity: function(evt) {
-        if (this.props.acceptNewStory) {
-            // use a fixed id for the first editor, so we don't lose focus
-            // when the new reaction acquires an id after being saved automatically
-            if (evt.currentIndex === 0) {
-                return 'reaction-top';
-            }
+        // use a fixed id for the first editor, so we don't lose focus
+        // when the new reaction acquires an id after being saved automatically
+        if (!evt.item) {
+            return 'reaction-top';
         }
         return `reaction-${evt.item.id}`;
     },

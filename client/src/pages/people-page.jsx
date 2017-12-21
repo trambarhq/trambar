@@ -37,7 +37,7 @@ module.exports = Relaks.createClass({
                 '/:schema/people/:roles/?',
                 '/:schema/people/?',
             ], (params) => {
-                params.roles = _.filter(_.map(_.split(params.roles, '+'), parseInt));
+                params.roles = Route.parseIdList(params.roles);
                 params.search = query.search;
                 return params;
             });

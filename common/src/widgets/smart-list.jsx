@@ -87,13 +87,17 @@ module.exports = React.createClass({
                     // the state directly
                     anchorIndex = newAnchorIndex;
                     this.state.currentAnchor = ids[newAnchorIndex];
-                    this.triggerAnchorChangeEvent(ids[newAnchorIndex]);
+                    setImmediate(() => {
+                        this.triggerAnchorChangeEvent(ids[newAnchorIndex]);
+                    });
                     break;
                 }
             }
             if (anchorIndex === -1) {
                 this.state.currentAnchor = undefined;
-                this.triggerAnchorChangeEvent(undefined);
+                setImmediate(() => {
+                    this.triggerAnchorChangeEvent(undefined);
+                });
             }
         }
         // render some items behind (i.e. above) the anchored item

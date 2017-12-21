@@ -379,6 +379,7 @@ module.exports = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            selectedReactionId: this.props.route.parameters.reaction,
             onFinish: this.handleCommentFinish,
         };
         return (
