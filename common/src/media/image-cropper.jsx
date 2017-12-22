@@ -155,6 +155,10 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleMouseDown: function(evt) {
+        if (evt.button !== 0) {
+            // not the primary mouse button (usually left)
+            return;
+        }
         var image = this.components.image;
         var container = this.components.container;
         if (!image || !container || !this.state.clippingRect) {
