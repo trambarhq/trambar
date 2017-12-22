@@ -33,7 +33,9 @@ module.exports = React.createClass({
                 return false;
             }
             if (typeof(HTMLCanvasElement.prototype.toBlob) !== 'function') {
-                return false;
+                if (typeof(HTMLCanvasElement.prototype.toDataURL) !== 'function') {
+                    return false;
+                }
             }
             return true;
         },
@@ -301,6 +303,17 @@ module.exports = React.createClass({
     },
 
     /**
+     * Change the video's source object when user changes camera
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        if (this.videoNode) {
+            if (prevState.liveVideoStream !== this.state.liveVideoStream) {
+                this.videoNode.srcObject = this.state.liveVideoStream;
+            }
+        }
+    },
+
+    /**
      * Destroy live video stream when component unmounts
      */
     componentWillUnmount: function() {
@@ -372,9 +385,19 @@ module.exports = React.createClass({
             canvas.width = width;
             canvas.height = height;
             context.drawImage(video, 0, 0, width, height);
-            canvas.toBlob((file) => {
+            // use toBlob() if browser supports it,
+            // otherwise fallback to toDataURL()
+            if (typeof(canvas.toBlob) === 'function') {
+                canvas.toBlob((file) => {
+                    resolve({ format, file, width, height });
+                }, 'image/jpeg', 90);
+            } else {
+                var B64toBlob = require('b64-to-blob');
+                var dataUrl = canvas.toDataURL('image/jpeg');
+                var base64Data = dataUrl.replace('data:image/jpeg;base64,', '');
+                var file = B64toBlob(base64Data, 'image/jpeg');
                 resolve({ format, file, width, height });
-            }, 'image/jpeg', 90);
+            }
         });
     },
 
@@ -407,7 +430,7 @@ module.exports = React.createClass({
                 previewUrl: url,
             });
         }).catch((err) => {
-            console.error(err)
+            console.error(err);
         });
     },
 

@@ -355,6 +355,17 @@ module.exports = React.createClass({
     },
 
     /**
+     * Change the video's source object when user changes camera
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        if (this.videoNode) {
+            if (prevState.liveVideoStream !== this.state.liveVideoStream) {
+                this.videoNode.srcObject = this.state.liveVideoStream;
+            }
+        }
+    },
+
+    /**
      * Destroy live video stream when component unmounts
      */
     componentWillUnmount: function() {
