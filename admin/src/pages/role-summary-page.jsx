@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
@@ -85,6 +86,7 @@ module.exports = Relaks.createClass({
         var props = {
             system: null,
             role: null,
+            users: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -104,6 +106,16 @@ module.exports = Relaks.createClass({
             }
         }).then((role) => {
             props.role = role;
+            meanwhile.show(<RoleSummaryPageSync {...props} />);
+        }).then(() => {
+            // load all users (not deleted or disabled)
+            var criteria = {
+                deleted: false,
+                disabled: false,
+            };
+            return db.find({ table: 'user', criteria });
+        }).then((users) => {
+            props.users = users;
             return <RoleSummaryPageSync {...props} />;
         });
     }
@@ -114,6 +126,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         system: PropTypes.object,
         role: PropTypes.object,
+        users: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -135,6 +148,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             hasChanges: false,
             saving: false,
             adding: false,
+            removeList: [],
+            addList: [],
             problems: {},
         };
     },
@@ -189,7 +204,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         var hasChanges = true;
         if (_.isEqual(newRole, this.props.role)) {
             newRole = null;
-            hasChanges = false;
+            hasChanges = !_.isEmpty(this.state.addList) || !_.isEmpty(this.state.removeList);
         }
         this.setState({ newRole, hasChanges });
     },
@@ -296,6 +311,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             this.setState({
                 newRole: null,
                 hasChanges: false,
+                addList: [],
+                removeList: [],
             });
         } else {
             this.setState({ problems: {} });
@@ -391,6 +408,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderTitleInput()}
                 {this.renderNameInput()}
                 {this.renderDescriptionInput()}
+                {this.renderUserSelector()}
             </div>
         );
     },
@@ -460,6 +478,38 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             <MultilingualTextField {...props}>
                 {t('role-summary-description')}
             </MultilingualTextField>
+        );
+    },
+
+    renderUserSelector: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var roleId = this.getRoleProperty('id');
+        var users = sortUsers(this.props.users, this.props.locale);
+        var optionProps = _.map(users, (user) => {
+            var selectedBefore = _.includes(user.role_ids, roleId);
+            var selectedAfter;
+            if (selectedBefore) {
+                selectedAfter = !_.includes(this.state.removeList, user.id);
+            } else {
+                selectedAfter = _.includes(this.state.addList, user.id);
+            }
+            return {
+                name: String(user.id),
+                selected: selectedAfter,
+                previous: selectedBefore,
+                children: p(user.details.name) || p.username
+            }
+        });
+        var listProps = {
+            onOptionClick: this.handleUserOptionClick,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>{t('role-summary-users')}</label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
         );
     },
 
@@ -601,6 +651,27 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
             var db = this.props.database.use({ schema: 'global', by: this });
             return db.start().then((userId) => {
                 return db.saveOne({ table: 'role' }, role).then((role) => {
+                    // change role_ids of selected/deselected users
+                    var userChanges = [];
+                    _.each(this.state.addList, (userId) => {
+                        var user = _.find(this.props.users, { id: userId });
+                        userChanges.push({
+                            id: user.id,
+                            role_ids: _.union(user.role_ids, [ role.id ]),
+                        });
+                    });
+                    _.each(this.state.removeList, (userId) => {
+                        var user = _.find(this.props.users, { id: userId });
+                        userChanges.push({
+                            id: user.id,
+                            role_ids: _.difference(user.role_ids, [ role.id ]),
+                        });
+                    });
+                    if (_.isEmpty(userChanges)) {
+                        return role;
+                    }
+                    return db.save({ table: 'user' }, userChanges).return(role);
+                }).then((role) => {
                     this.setState({ hasChanges: false, saving: false }, () => {
                         return this.setEditability(false, role);
                     });
@@ -646,6 +717,45 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     handleDescriptionChange: function(evt) {
         this.setRoleProperty(`details.description`, evt.target.value);
     },
+
+    /**
+     * Called when user clicks on one of the users in list
+     *
+     * @param  {Object} evt
+     */
+    handleUserOptionClick: function(evt) {
+        var userId = parseInt(evt.name);
+        var user = _.find(this.props.users, { id: userId });
+        var roleId = this.getRoleProperty('id');
+        var addList = _.slice(this.state.addList);
+        var removeList = _.slice(this.state.removeList);
+        if (_.includes(user.role_ids, roleId)) {
+            if (_.includes(removeList, user.id)) {
+                _.pull(removeList, user.id);
+            } else {
+                removeList.push(user.id);
+            }
+        } else {
+            if (_.includes(addList, user.id)) {
+                _.pull(addList, user.id);
+            } else {
+                addList.push(user.id);
+            }
+        }
+        var hasChanges = true;
+        if (!this.state.newRole) {
+            hasChanges = !_.isEmpty(addList) || !_.isEmpty(removeList);
+        }
+        this.setState({ addList, removeList, hasChanges });
+    },
+});
+
+var sortUsers = Memoize(function(users, locale) {
+    var p = locale.pick;
+    var name = (user) => {
+        return p(user.details.name) || user.username;
+    };
+    return _.sortBy(users, name);
 });
 
 var emptyRole = {

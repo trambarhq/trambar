@@ -266,6 +266,7 @@ module.exports = function(languageCode) {
         'role-summary-return': 'Return to role list',
         'role-summary-save': 'Save role',
         'role-summary-title': 'Name',
+        'role-summary-users': 'Users',
 
         'role-tooltip-$count-others': (count) => {
             return (count === 1) ? `1 other` : `${count} others`;

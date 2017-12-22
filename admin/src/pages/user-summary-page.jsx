@@ -665,7 +665,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 <label>{t('user-summary-roles')}</label>
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
-        )
+        );
     },
 
     /**
@@ -720,7 +720,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {' '}
                 <i className={`fa fa-${iconName}`} />
             </h2>
-        )
+        );
     },
 
     /**
