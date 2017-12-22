@@ -72,9 +72,9 @@ function copyEventProperties(story, author, glHookEvent, link) {
     _.set(storyAfter, 'type', 'wiki');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'public', true);
     _.set(storyAfter, 'published', true);
     _.set(storyAfter, 'ptime', Moment().toISOString());
+    _.set(storyAfter, 'public', true);
     _.set(storyAfter, 'details.url', glHookEvent.object_attributes.url);
     _.set(storyAfter, 'details.title', glHookEvent.object_attributes.title);
     _.set(storyAfter, 'details.action', glHookEvent.object_attributes.action);

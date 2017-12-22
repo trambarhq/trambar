@@ -54,9 +54,9 @@ function copyEventProperties(story, author, glEvent, link) {
     _.set(storyAfter, 'type', 'repo');
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'public', true);
     _.set(storyAfter, 'published', true);
     _.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    _.set(storyAfter, 'public', true);
     _.set(storyAfter, 'details.action', glEvent.action_name);
     if (_.isEqual(story, storyAfter)) {
         return null;

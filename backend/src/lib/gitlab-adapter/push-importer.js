@@ -89,6 +89,7 @@ function copyPushProperties(story, author, push, components, glEvent, link) {
     _.set(storyAfter, 'role_ids', author.role_ids);
     _.set(storyAfter, 'published', true);
     _.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    _.set(storyAfter, 'public', true);
     _.set(storyAfter, 'details.commit_before', push.tailId);
     _.set(storyAfter, 'details.commit_after', push.headId);
     _.set(storyAfter, 'details.lines', _.pickBy(push.lines));   // don't include 0's
