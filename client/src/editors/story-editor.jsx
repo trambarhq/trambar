@@ -555,6 +555,7 @@ module.exports = React.createClass({
             text = Markdown.parse(text, this.handleReference);
             className += ' markdown';
         } else {
+            text = <p>{text}</p>;
             className += ' plain-text';
         }
         return (
@@ -582,6 +583,7 @@ module.exports = React.createClass({
             className += ' markdown';
         } else {
             list = PlainText.parseTaskList(text, null, this.handleItemChange);
+            list = <p>{list}</p>;
             className += ' plain-text';
         }
         return (
@@ -607,6 +609,7 @@ module.exports = React.createClass({
             className += ' markdown';
         } else {
             survey = PlainText.parseSurvey(text, null, this.handleItemChange);
+            survey = <p>{survey}</p>;
             className += ' plain-text';
         }
         return (

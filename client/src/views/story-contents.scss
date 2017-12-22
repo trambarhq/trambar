@@ -16,6 +16,16 @@
             }
         }
 
+        P {
+            &:first-child {
+                margin-top: 0;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
         .status-opened, .status-reopened {
             color: #99ff66;
         }
