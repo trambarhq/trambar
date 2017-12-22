@@ -29,6 +29,26 @@ module.exports = React.createClass({
         onCapture: PropTypes.func,
     },
 
+    statics: {
+        /**
+         * Return true if the browser has the necessary functionalities
+         *
+         * @return {Boolean}
+         */
+        isAvailable: function() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                return false;
+            }
+            if (typeof(MediaRecorder) !== 'function') {
+                return false;
+            }
+            if (typeof(AudioContext) !== 'function') {
+                return false;
+            }
+            return true;
+        },
+    },
+
     /**
      * Return initial state of component
      *
@@ -41,7 +61,6 @@ module.exports = React.createClass({
             liveAudioProcessor: null,
             liveAudioSource: null,
             liveAudioLevel: 0,
-            liveAudioUrl: null,
             liveAudioError : null,
             liveAudioRecorder: null,
             mediaRecorder: null,
@@ -121,9 +140,6 @@ module.exports = React.createClass({
      * @param  {MediaStream} stream
      */
     setLiveAudioState: function(err, stream) {
-        if (this.state.liveAudioUrl) {
-            URL.revokeObjectURL(this.state.liveAudioUrl);
-        }
         if (this.state.liveAudioProcessor) {
             // disconnect
             this.state.liveAudioSource.disconnect(this.state.liveAudioProcessor);
@@ -132,8 +148,6 @@ module.exports = React.createClass({
 
         var url, audioCtx, audioProcessor, audioSource;
         if (stream) {
-            url = URL.createObjectURL(stream);
-
             // use Web Audio API to capture PCM data
             var audioCtx = new AudioContext();
             var audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
@@ -161,11 +175,22 @@ module.exports = React.createClass({
             liveAudioContext: audioCtx,
             liveAudioProcessor: audioProcessor,
             liveAudioSource: audioSource,
-            liveAudioUrl: url,
             liveAudioError: err,
         });
         if (err) {
             console.error(err);
+        }
+    },
+
+    /**
+     * Set the video node and apply live video stream to it
+     *
+     * @param  {HTMLAudioElement} node
+     */
+    setLiveAudioNode: function(node) {
+        this.audioNode = node;
+        if (this.audioNode) {
+            this.audioNode.srcObject = this.state.liveAudioStream;
         }
     },
 
@@ -202,7 +227,7 @@ module.exports = React.createClass({
     renderView: function() {
         if (this.state.capturedAudio) {
             return this.renderCapturedAudio();
-        } else if (this.state.liveAudioUrl) {
+        } else if (this.state.liveAudioStream) {
             return this.renderLiveAudio();
         } else {
             return this.renderPlaceholder();
@@ -229,8 +254,7 @@ module.exports = React.createClass({
      */
     renderLiveAudio: function() {
         var audioProps = {
-            ref: 'audio',
-            src: this.state.liveAudioUrl,
+            ref: this.setLiveAudioNode,
             autoPlay: true,
             muted: true,
         };

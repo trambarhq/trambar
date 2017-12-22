@@ -26,6 +26,23 @@ module.exports = React.createClass({
         onCapture: PropTypes.func,
     },
 
+    statics: {
+        /**
+         * Return true if the browser has the necessary functionalities
+         *
+         * @return {Boolean}
+         */
+        isAvailable: function() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                return false;
+            }
+            if (typeof(MediaRecorder) !== 'function') {
+                return false;
+            }
+            return true;
+        },
+    },
+
     /**
      * Return initial state of component
      *
@@ -34,7 +51,6 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             liveVideoStream: null,
-            liveVideoUrl: null,
             liveVideoError : null,
             mediaRecorder: null,
             capturedVideo: null,
@@ -94,9 +110,15 @@ module.exports = React.createClass({
      */
     initializeCamera: function() {
         return this.createLiveVideoStream().then((stream) => {
-            this.setLiveVideoState(null, stream);
+            this.setState({
+                liveVideoStream: stream,
+                liveVideoError: null,
+            });
         }).catch((err) => {
-            this.setLiveVideoState(err, null);
+            this.setState({
+                liveVideoStream: null,
+                liveVideoError: err,
+            });
         });
     },
 
@@ -105,7 +127,10 @@ module.exports = React.createClass({
      */
     shutdownCamera: function() {
         this.destroyLiveVideoStream().then(() => {
-            this.setLiveVideoState(null, null);
+            this.setState({
+                liveVideoStream: null,
+                liveVideoError: null,
+            });
         });
     },
 
@@ -119,26 +144,14 @@ module.exports = React.createClass({
     },
 
     /**
-     * Update state of component depending on whether we have a video stream
+     * Set the video node and apply live video stream to it
      *
-     * @param  {Error} err
-     * @param  {MediaStream} stream
+     * @param  {HTMLVideoElement} node
      */
-    setLiveVideoState: function(err, stream) {
-        if (this.state.liveVideoUrl) {
-            URL.revokeObjectURL(this.state.liveVideoUrl);
-        }
-        var url;
-        if (stream) {
-            url = URL.createObjectURL(stream);
-        }
-        this.setState({
-            liveVideoStream: stream,
-            liveVideoUrl: url,
-            liveVideoError: err,
-        });
-        if (err) {
-            console.error(err);
+    setLiveVideoNode: function(node) {
+        this.videoNode = node;
+        if (this.videoNode) {
+            this.videoNode.srcObject = this.state.liveVideoStream;
         }
     },
 
@@ -176,7 +189,7 @@ module.exports = React.createClass({
     renderView: function() {
         if (this.state.capturedVideo) {
             return this.renderCapturedVideo();
-        } else if (this.state.liveVideoUrl) {
+        } else if (this.state.liveVideoStream) {
             return this.renderLiveVideo();
         } else {
             return this.renderPlaceholder();
@@ -203,8 +216,7 @@ module.exports = React.createClass({
      */
     renderLiveVideo: function() {
         var videoProps = {
-            ref: 'video',
-            src: this.state.liveVideoUrl,
+            ref: this.setLiveVideoNode,
             autoPlay: true,
             muted: true,
         };
@@ -409,7 +421,7 @@ module.exports = React.createClass({
             var type = 'image/jpeg';
             var canvas = document.createElement('CANVAS');
             var context = canvas.getContext('2d');
-            var video = this.refs.video;
+            var video = this.videoNode;
             var width = video.videoWidth;
             var height = video.videoHeight;
             canvas.width = width;
@@ -530,6 +542,8 @@ module.exports = React.createClass({
                 duration: 0,
             });
             return null;
+        }).catch((err) => {
+            console.error(err);
         });
     },
 

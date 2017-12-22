@@ -5,6 +5,9 @@ var Locale = require('locale/locale');
 
 // widgets
 var HeaderButton = require('widgets/header-button');
+var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
+var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
+var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 
 require('./media-toolbar.scss');
 
@@ -64,24 +67,30 @@ module.exports = React.createClass({
     render: function() {
         var t = this.props.locale.translate;
         var counts = this.getResourceCounts();
+        var canCaptureStaticImage = this.state.hasCamera && PhotoCaptureDialogBox.isAvailable();
+        var canCaptureVideo = this.state.hasCamera && VideoCaptureDialogBox.isAvailable();
+        var canCaptureAudio = this.state.hasMicrophone && AudioCaptureDialogBox.isAvailable();
         var photoButtonProps = {
             label: t('story-photo'),
             icon: 'camera',
-            hidden: !counts.photo && !this.state.hasCamera,
+            hidden: !counts.photo && !canCaptureStaticImage,
+            disabled: !canCaptureStaticImage,
             highlighted: (counts.photo > 0 || this.props.capturing === 'image'),
             onClick: this.handlePhotoClick,
         };
         var videoButtonProps = {
             label: t('story-video'),
             icon: 'video-camera',
-            hidden: !counts.video && !this.state.hasCamera,
+            hidden: !counts.video && !canCaptureVideo,
+            disabled: !canCaptureVideo,
             highlighted: (counts.video > 0 || this.props.capturing === 'video'),
             onClick: this.handleVideoClick,
         };
         var audioButtonProps = {
             label: t('story-audio'),
             icon: 'microphone',
-            hidden: !counts.audio && !this.state.hasMicrophone,
+            hidden: !counts.audio && !canCaptureAudio,
+            disabled: !canCaptureAudio,
             highlighted: (counts.audio > 0 || this.props.capturing === 'audio'),
             onClick: this.handleAudioClick,
         };
