@@ -255,7 +255,7 @@ function getIssueNumber(server, glProjectId, glIssueId) {
     return Transport.fetchEach(server, url, {}, (glIssue) => {
         var issueId = glIssue.id;
         var issueNumber = glIssue.iid;
-        _.set(issueNumberCache, [ baseUrl, glProjectId, glIssueId ], issueNumber);
+        _.set(issueNumberCache, [ baseUrl, glProjectId, issueId ], issueNumber);
     }).then(() => {
         var issueNumber = _.get(issueNumberCache, [ baseUrl, glProjectId, glIssueId ]);
         if (!issueNumber) {
