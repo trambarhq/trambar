@@ -134,10 +134,16 @@ module.exports = Relaks.createClass({
         DateTracker.addEventListener('change', this.handleDateChange);
     },
 
+    /**
+     * Remove event listener
+     */
     componentWillUnmount: function() {
         DateTracker.removeEventListener('change', this.handleDateChange);
     },
 
+    /**
+     * Force rerendering by setting today's date (which isn't actually used anywhere)
+     */
     handleDateChange: function() {
         // force rerendering
         this.setState({ today: DateTracker.today });
