@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 
 var RetrievalTimeRatings = require('story-raters/ratings/retrieval-time-ratings');
 
