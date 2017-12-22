@@ -96,7 +96,7 @@ module.exports = React.createClass({
         };
         var selectButtonProps = {
             label: t('story-file'),
-            icon: 'file',
+            icon: 'file-photo-o',
             multiple: true,
             highlighted: (counts.file > 0),
             onChange: this.handleFileSelect,
