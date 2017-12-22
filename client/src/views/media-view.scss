@@ -22,6 +22,7 @@
         align-items: center;
         justify-content: center;
         z-index: 0;
+        color: #000000;
 
         .icon {
             font-size: 10em;
@@ -35,7 +36,7 @@
             opacity: 0;
 
             &:hover {
-                opacity: 0.5;
+                opacity: 0.6;
             }
         }
     }
