@@ -9,14 +9,19 @@ var StoryTypes = require('objects/types/story-types');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 require('./user-statistics.scss');
 
 module.exports = React.createClass({
     displayName: 'UserStatistics',
+    mixins: [ UpdateCheck ],
     propTypes: {
         chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
         user: PropTypes.object,
         dailyActivities: PropTypes.object,
+        today: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,

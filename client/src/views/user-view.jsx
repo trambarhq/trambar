@@ -29,6 +29,7 @@ module.exports = React.createClass({
         chartType: PropTypes.string,
         dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
+        today: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -272,6 +273,7 @@ module.exports = React.createClass({
             story: this.props.story,
             dailyActivities: this.props.dailyActivities,
             chartType: this.getChartType(),
+            today: this.props.today,
 
             database: this.props.database,
             route: this.props.route,

@@ -32,6 +32,17 @@ module.exports = Relaks.createClass({
     },
 
     /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            today: DateTracker.today,
+        };
+    },
+
+    /**
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
@@ -55,6 +66,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            today: this.state.today,
         };
         meanwhile.show(<UserListSync {...props} />, delay);
         return db.start().then((userId) => {
@@ -113,7 +125,23 @@ module.exports = Relaks.createClass({
             props.stories = stories;
             return <UserListSync {...props} />;
         });
-    }
+    },
+
+    /**
+     * Listen for date change event
+     */
+    componentDidMount: function() {
+        DateTracker.addEventListener('change', this.handleDateChange);
+    },
+
+    componentWillUnmount: function() {
+        DateTracker.removeEventListener('change', this.handleDateChange);
+    },
+
+    handleDateChange: function() {
+        // force rerendering
+        this.setState({ today: DateTracker.today });
+    },
 });
 
 var UserListSync = module.exports.Sync = React.createClass({
@@ -126,6 +154,7 @@ var UserListSync = module.exports.Sync = React.createClass({
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
+        today: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -197,6 +226,7 @@ var UserListSync = module.exports.Sync = React.createClass({
                 route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
+                today: this.props.today,
 
                 onChartSelect: this.handleChartSelect,
             };
