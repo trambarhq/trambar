@@ -71,10 +71,12 @@ module.exports = React.createClass({
         var text = p(this.props.component.text);
         var elements = MarkGor.parse(text);
         return (
-            <div className="text">
-                <div className="text-contents">
+            <div className="description">
+                <div className="description-contents">
                     {elements}
-                    <div className="ellipsis">...</div>
+                    <div className="ellipsis">
+                        <i className="fa fa-ellipsis-h" />
+                    </div>
                 </div>
             </div>
         );

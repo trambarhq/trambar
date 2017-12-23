@@ -35,7 +35,7 @@
         }
     }
 
-    .text {
+    .description {
         flex: 1 1 auto;
         color: #333333;
         font-size: 1em;
@@ -43,7 +43,7 @@
         overflow: hidden;
         height: calc(3em + 9px);
 
-        .text-contents {
+        .description-contents {
             width: calc(100% - 1em);
             position: relative;
             display: block;
@@ -52,8 +52,9 @@
             .ellipsis {
                 position: absolute;
                 right: -1em;
-                top: calc(6em + 6px - 100%);
+                top: calc(6.9em - 100%);
                 text-align: left;
+                vertical-align: bottom;
             }
 
             H1, H2, H3, H4, H5 {

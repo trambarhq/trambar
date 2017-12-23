@@ -474,7 +474,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
                     <div className="description">
                         <div className="contents">
                             {description}
-                            <div className="ellipsis">...</div>
+                            <div className="ellipsis">
+                                <i className="fa fa-ellipsis-h" />
+                            </div>
                         </div>
                     </div>
                 </div>
