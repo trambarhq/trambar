@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
+var DateUtils = require('utils/date-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -36,6 +37,7 @@ module.exports = Relaks.createClass({
      */
     renderAsync: function(meanwhile) {
         var pageClass = this.props.route.component;
+        var pageOptions = pageClass.getOptions(this.props.route);
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var currentUserId;
@@ -62,48 +64,20 @@ module.exports = Relaks.createClass({
             // load daily-activities statistics
             var startTime = _.get(props.projectRange, 'details.start_time');
             var endTime = _.get(props.projectRange, 'details.end_time');
-            if (startTime && endTime) {
-                // TODO: need to handle timezone
-                var s = Moment(startTime).startOf('month');
-                var e = Moment(endTime).endOf('month');
-                var timeRanges = [];
-                for (var m = s.clone(); m <= e; m.add(1, 'month')) {
-                    var rangeStart = m.toISOString();
-                    var rangeEnd = m.clone().endOf('month').toISOString();
-                    var range = `[${rangeStart},${rangeEnd}]`;
-                    timeRanges.push(range);
-                }
-                var criteria = {};
-                if (pageClass === NewsPage) {
-                    var tzOffset = s.utcOffset();
-                    criteria.type = 'daily-activities';
-                    criteria.filters = _.map(timeRanges, (timeRange) => {
-                        return {
-                            // TODO: add role filters
-                            time_range: timeRange,
-                            tz_offset: tzOffset
-                        };
-                    });
-                } else if (pageClass === NotificationsPage) {
-                    criteria.type = 'daily-notifications';
-                    criteria.filters = _.map(timeRanges, (timeRange) => {
-                        return {
-                            target_user_id: currentUserId,
-                            time_range: timeRange
-                        };
-                    });
-                } else if (pageClass === PersonPage) {
-                    var userId = parseInt(route.parameters.userId);
-                    criteria.type = 'daily-activities';
-                    criteria.filters =  _.map(timeRanges, (timeRange) => {
-                        return {
-                            user_ids: [ userId ],
-                            time_range: timeRange
-                        };
-                    });
-                }
-                return db.find({ table: 'statistics', criteria });
-            }
+            var timeRanges = DateUtils.getMonthRanges(startTime, endTime);
+            var tzOffset = DateUtils.getTimeZoneOffset();
+            var calParams = pageOptions.navigation.top.dateSelection;
+            var criteria = {
+                type: calParams.statistics.type,
+                target_user_id: currentUserId,
+                filters: _.map(timeRanges, (timeRange) => {
+                    return _.extend({
+                        time_range: timeRange,
+                        tz_offset: tzOffset
+                    }, calParams.statistics.filters);
+                }),
+            };
+            return db.find({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <CalendarBarSync {...props} />;

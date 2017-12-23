@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
+var DateUtils = require('utils/date-utils');
 
 module.exports = {
     fetchProjectDailyActivities,
@@ -26,7 +27,14 @@ function fetchProjectDailyActivities(db, projects) {
             if (!isValidRange(dateRange)) {
                 return;
             }
-            var filters = getRangeFilters(dateRange);
+            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            var filters = _.map(timeRanges, (timeRange) => {
+                return {
+                    external_object: dateRange.filters.external_object,
+                    time_range: timeRange,
+                    tz_offset: tzOffset,
+                };
+            });
             var criteria = { type: 'daily-activities', filters };
             return db.find({ schema, table: 'statistics', criteria, minimum }).then((dailyActivities) => {
                 return summarizeStatistics(dailyActivities, dateRange);
@@ -59,10 +67,13 @@ function fetchUserDailyActivities(db, project, users) {
         dateRanges = _.filter(dateRanges, isValidRange);
         // load daily-activities statistics
         var filterLists = _.map(dateRanges, (dateRange) => {
-            // attach user id
-            return _.map(getRangeFilters(dateRange), (f) => {
-                f.user_ids = dateRange.filters.user_ids;
-                return f;
+            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            return _.map(timeRanges, (timeRange) => {
+                return {
+                    user_ids: dateRange.filters.user_ids,
+                    time_range: timeRange,
+                    tz_offset: tzOffset,
+                };
             });
         });
         var filters = _.flatten(filterLists);
@@ -104,10 +115,13 @@ function fetchRepoDailyActivities(db, project, repos) {
         dateRanges = _.filter(dateRanges, isValidRange);
         // load daily-activities statistics
         var filterLists = _.map(dateRanges, (dateRange) => {
-            // attach repo id
-            return _.map(getRangeFilters(dateRange), (f) => {
-                f.external_object = dateRange.filters.external_object;
-                return f;
+            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            return _.map(timeRanges, (timeRange) => {
+                return {
+                    external_object: dateRange.filters.external_object,
+                    time_range: timeRange,
+                    tz_offset: tzOffset,
+                };
             });
         });
         var filters = _.flatten(filterLists);
@@ -134,26 +148,6 @@ function fetchRepoDailyActivities(db, project, repos) {
 
 function isValidRange(dateRange) {
     return dateRange && !!dateRange.details.start_time && !!dateRange.details.end_time;
-}
-
-function getRangeFilters(dateRange) {
-    // get time range of each month (local time)
-    var s = Moment(dateRange.details.start_time).startOf('month');
-    var e = Moment(dateRange.details.end_time).endOf('month');
-    var tzOffset = s.utcOffset();
-    var timeRanges = [];
-    for (var m = s.clone(); m < e; m.add(1, 'month')) {
-        var rangeStart = m.toISOString();
-        var rangeEnd = m.clone().endOf('month').toISOString();
-        var range = `[${rangeStart},${rangeEnd}]`;
-        timeRanges.push(range);
-    }
-    return _.map(timeRanges, (timeRange) => {
-        return {
-            time_range: timeRange,
-            tz_offset: tzOffset,
-        };
-    });
 }
 
 var summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) {

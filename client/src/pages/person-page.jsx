@@ -2,8 +2,8 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var Relaks = require('relaks');
-var ProjectSettings = require('objects/settings/project-settings');
 var DateTracker = require('utils/date-tracker');
+var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -93,7 +93,14 @@ module.exports = Relaks.createClass({
             return {
                 navigation: {
                     top: {
-                        dateSelection: true,
+                        dateSelection: {
+                            statistics: {
+                                type: 'daily-activities',
+                                filters: {
+                                    user_ids: [ route.parameters.user ],
+                                },
+                            },
+                        },
                         roleSelection: false,
                         textSearch: true,
                     },

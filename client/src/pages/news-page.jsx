@@ -93,7 +93,12 @@ module.exports = Relaks.createClass({
             return {
                 navigation: {
                     top: {
-                        dateSelection: true,
+                        dateSelection: {
+                            statistics: {
+                                type: 'daily-activities',
+                                filters: {},
+                            },
+                        },
                         roleSelection: true,
                         textSearch: true,
                     },
