@@ -24,10 +24,6 @@ function TextField(props) {
         inputProps.spellCheck = false;
     }
     inputProps.value = inputProps.value || '';
-    if (inputProps.value && inputProps.spellCheck === false) {
-        // force redraw by adding zero-width no-break space
-        inputProps.value += '\ufeff';
-    }
     return (
         <div className={classNames.join(' ')}>
             <label htmlFor={props.id}>{props.children}</label>
