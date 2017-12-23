@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var Moment = require('moment');
 var Memoize = require('utils/memoize');
 
 var Database = require('data/database');

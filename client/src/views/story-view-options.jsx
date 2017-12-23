@@ -1,6 +1,5 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
 var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');

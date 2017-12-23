@@ -1,6 +1,5 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Locale = require('locale/locale');
