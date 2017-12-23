@@ -111,7 +111,7 @@ module.exports = Relaks.createClass({
             var criteria = {
                 story_id: _.map(props.stories, 'id')
             };
-            if (props.currentUser.type === 'guest') {
+            if (props.currentUser && props.currentUser.type === 'guest') {
                 criteria.filters.public = true;
             }
             return db.find({ table: 'reaction', criteria });
