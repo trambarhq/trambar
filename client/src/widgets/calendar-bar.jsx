@@ -23,6 +23,7 @@ require('./calendar-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'CalendarBar',
     propTypes: {
+        options: PropTypes.object.isRequired,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -36,8 +37,6 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var pageClass = this.props.route.component;
-        var pageOptions = pageClass.getOptions(this.props.route);
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var currentUserId;
@@ -66,14 +65,14 @@ module.exports = Relaks.createClass({
             var endTime = _.get(props.projectRange, 'details.end_time');
             var timeRanges = DateUtils.getMonthRanges(startTime, endTime);
             var tzOffset = DateUtils.getTimeZoneOffset();
-            var calParams = pageOptions.navigation.top.dateSelection;
+            var stats = this.props.options.statistics;
             var criteria = {
-                type: calParams.statistics.type,
+                type: stats.type,
                 filters: _.map(timeRanges, (timeRange) => {
                     return _.extend({
                         time_range: timeRange,
                         tz_offset: tzOffset
-                    }, calParams.statistics.filters);
+                    }, stats.filters);
                 }),
             };
             return db.find({ table: 'statistics', criteria });

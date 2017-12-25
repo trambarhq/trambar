@@ -44,7 +44,9 @@ module.exports = Relaks.createClass({
                 '/global/settings/?',
                 '/:schema/settings/?',
             ], (params) => {
-                return params;
+                return {
+                    schema: params.schema
+                };
             });
         },
 
@@ -63,18 +65,16 @@ module.exports = Relaks.createClass({
         /**
          * Generate a URL of this page based on given parameters
          *
-         * @param  {Object} params
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
+        getOptions: function(currentRoute) {
+            var route = {
+                parameters: _.pick(currentRoute.parameters, 'schema', 'user')
+            };
             return {
-                navigation: {
-                    top: {},
-                    bottom: {
-                        section: 'settings',
-                    }
-                },
+                navigation: { route, section: 'settings' }
             };
         },
     },

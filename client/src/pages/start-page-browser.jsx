@@ -49,8 +49,9 @@ module.exports = Relaks.createClass({
                     // there's extra stuff--not a match
                     return null;
                 }
-                params.add = !!query.add;
-                return params;
+                return {
+                    add: !!query.add
+                };
             });
         },
 
@@ -72,13 +73,17 @@ module.exports = Relaks.createClass({
         /**
          * Generate a URL of this page based on given parameters
          *
-         * @param  {Object} params
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
+        getOptions: function(currentRoute) {
             return {
-            }
+                navigation: {
+                    top: false,
+                    bottom: false,
+                },
+            };
         },
     },
 

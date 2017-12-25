@@ -42,13 +42,17 @@ module.exports = Relaks.createClass({
          */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
-                '/:schema/people/:role/:user/:date/?',
-                '/:schema/people/:role/:user/?',
+                '/:schema/people/:user/:date/?',
+                '/:schema/people/:user/?',
             ], (params) => {
-                params.user = Route.parseId(params.user);
-                params.story = Route.parseId(hash, /S(\d+)/i);
-                params.reaction = Route.parseId(hash, /R(\d+)/i);
-                return params;
+                console.log('match');
+                return {
+                    schema: params.schema,
+                    user: Route.parseId(params.user),
+                    search: query.search,
+                    story: Route.parseId(hash, /S(\d+)/i),
+                    reaction: Route.parseId(hash, /R(\d+)/i),
+                };
             });
         },
 
@@ -60,18 +64,12 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getUrl: function(params) {
-            var path = `/${params.schema}/people/`, query, hash;
-            if (!_.isEmpty(params.roles)) {
-                path += `${params.roles.join('+')}/`;
-            } else {
-                path += `all/`;
+            var path = `/${params.schema}/people/${params.user}/`, query = {}, hash;
+            if (params.date != undefined) {
+                path += `${params.date || 'date'}/`
             }
-            path += `${params.user}/`;
-            if (params.date) {
-                path += `${params.date}/`
-            }
-            if (params.search) {
-                query = { search: params.search };
+            if (params.search != undefined) {
+                query.search = params.search;
             }
             if (params.story) {
                 hash = `S${params.story}`;
@@ -85,29 +83,24 @@ module.exports = Relaks.createClass({
         /**
          * Generate a URL of this page based on given parameters
          *
-         * @param  {Object} params
+         * @param  {Object} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
-            return {
-                navigation: {
-                    top: {
-                        dateSelection: {
-                            statistics: {
-                                type: 'daily-activities',
-                                filters: {
-                                    user_ids: [ route.parameters.user ],
-                                },
-                            },
-                        },
-                        roleSelection: false,
-                        textSearch: true,
-                    },
-                    bottom: {
-                        section: 'people'
-                    }
+        getOptions: function(currentRoute) {
+            var route = {
+                parameters: _.pick(currentRoute.parameters, 'schema', 'user')
+            };
+            var statistics = {
+                type: 'daily-activities',
+                filters: {
+                    user_ids: [ route.parameters.user ]
                 },
+            };
+            return {
+                calendar: { route, statistics },
+                search: { route, statistics },
+                navigation: { route, section: 'people' }
             };
         },
     },

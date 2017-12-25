@@ -41,15 +41,17 @@ module.exports = Relaks.createClass({
          */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
-                '/:schema/news/:roles/:date/?',
-                '/:schema/news/:roles/?',
+                '/:schema/news/:date/?',
                 '/:schema/news/?',
             ], (params) => {
-                params.roles = Route.parseIdList(params.roles);
-                params.search = query.search;
-                params.story = Route.parseId(hash, /S(\d+)/i);
-                params.reaction = Route.parseId(hash, /R(\d+)/i);
-                return params;
+                return {
+                    schema: params.schema,
+                    date: Route.parseDate(params.date),
+                    roles: Route.parseIdList(query.roles),
+                    search: query.search,
+                    story: Route.parseId(hash, /S(\d+)/i),
+                    reaction: Route.parseId(hash, /R(\d+)/i),
+                };
             });
         },
 
@@ -61,21 +63,19 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getUrl: function(params) {
-            var path = `/${params.schema}/news/`, query, hash;
-            if (!_.isEmpty(params.roles)) {
-                path += `${params.roles.join('+')}/`;
-            } else if (params.date) {
-                path += `all/`;
+            var path = `/${params.schema}/news/`, query = {}, hash;
+            if (params.date != undefined) {
+                path += `${params.date || 'date'}/`
             }
-            if (params.date) {
-                path += `${params.date}/`
+            if (params.roles != undefined) {
+                query.roles = params.roles.join('+');
             }
-            if (params.search) {
-                query = { search: params.search };
+            if (params.search != undefined) {
+                query.search = params.search;
             }
-            if (params.story) {
+            if (params.story != undefined) {
                 hash = `S${params.story}`;
-                if (params.reaction) {
+                if (params.reaction != undefined) {
                     hash += `R${params.reaction}`;
                 }
             }
@@ -85,27 +85,23 @@ module.exports = Relaks.createClass({
         /**
          * Obtain page options
          *
-         * @param  {Route} route
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
+        getOptions: function(currentRoute) {
+            var route = {
+                parameters: _.pick(currentRoute.parameters, 'schema')
+            };
+            var statistics = {
+                type: 'daily-activities',
+                filters: {},
+            };
             return {
-                navigation: {
-                    top: {
-                        dateSelection: {
-                            statistics: {
-                                type: 'daily-activities',
-                                filters: {},
-                            },
-                        },
-                        roleSelection: true,
-                        textSearch: true,
-                    },
-                    bottom: {
-                        section: 'news'
-                    }
-                },
+                calendar: { route, statistics },
+                filter: { route },
+                search: { route, statistics },
+                navigation: { route, section: 'news' }
             };
         },
     },
@@ -120,7 +116,7 @@ module.exports = Relaks.createClass({
      */
     renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
-        var searching = !!(params.date || params.roles || params.search);
+        var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
         var db = this.props.database.use({ schema: params.schema, by: this });
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
@@ -172,7 +168,7 @@ module.exports = Relaks.createClass({
                     var range = `[${rangeStart},${rangeEnd}]`;
                     criteria.time_range = range;
                 }
-                if (params.roles) {
+                if (!_.isEmpty(params.roles)) {
                     criteria.role_ids = params.roles;
                 }
                 if (params.search) {

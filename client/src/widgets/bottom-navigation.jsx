@@ -29,7 +29,7 @@ module.exports = React.createClass({
     displayName: 'BottomNavigation',
     mixins: [ UpdateCheck ],
     propTypes: {
-        hidden: PropTypes.bool,
+        options: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -37,10 +37,49 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {[type]}
+     */
     getInitialState: function() {
         return {
-            height: (this.props.hidden) ? 0 : 'auto',
+            height: this.isHidden() ? 0 : 'auto',
         };
+    },
+
+    /**
+     * Return true if bottom nav is supposed to be hidden
+     *
+     * @param  {Object|undefined} options
+     *
+     * @return {Boolean}
+     */
+    isHidden: function(options) {
+        if (!options) {
+            options = this.props.options;
+        }
+        return !_.get(options, 'navigation.bottom', true);
+    },
+
+    /**
+     * Return a URL that points to the given page.
+     *
+     * @param  {ReactClass} pageClass
+     * @param  {Route|undefined} route
+     *
+     * @return {String|null}
+     */
+    getPageUrl: function(pageClass, route) {
+        if (!route) {
+            route = this.props.route;
+        }
+        var options = (pageClass.getOptions) ? pageClass.getOptions(route) : null;
+        var params = _.get(options, 'navigation.route.parameters');
+        if (!params) {
+            return null;
+        }
+        return route.find(pageClass, params);
     },
 
     /**
@@ -49,17 +88,19 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.hidden !== nextProps.hidden) {
+        var hiddenBefore = this.isHidden();
+        var hiddenAfter = this.isHidden(nextProps.options);
+        if (hiddenBefore !== hiddenAfter) {
             var container = this.refs.container;
             var contentHeight = container.offsetHeight;
-            if (nextProps.hidden) {
+            if (hiddenAfter) {
                 // hiding navigation:
                 //
                 // render with height = contentHeight, then
                 // render with height = 0 immediately
                 this.setState({ height: contentHeight });
                 setTimeout(() => {
-                    if (this.props.hidden) {
+                    if (this.isHidden()) {
                         this.setState({ height: 0 });
                     }
                 }, 0);
@@ -70,7 +111,7 @@ module.exports = React.createClass({
                 // render with height = auto after a second
                 this.setState({ height: contentHeight });
                 setTimeout(() => {
-                    if (!this.props.hidden) {
+                    if (!this.isHidden()) {
                         this.setState({ height: 'auto' });
                     }
                 }, 1000);
@@ -100,42 +141,40 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var route = this.props.route;
-        var params = _.pick(route.parameters, 'schema');
-        var options = route.component.getOptions(route);
-        var section = _.get(options, 'navigation.bottom.section');
+        var section = _.get(this.props.options, 'navigation.section');
         var newsProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
-            url: route.find(NewsPage, params),
+            url: this.getPageUrl(NewsPage),
             onClick: this.handleButtonClick,
         };
         var notificationsProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
-            url: route.find(NotificationsPage, params),
+            url: this.getPageUrl(NotificationsPage),
             onClick: this.handleButtonClick,
         };
         var bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
-            url: route.find(BookmarksPage, params),
+            url: this.getPageUrl(BookmarksPage),
             onClick: this.handleButtonClick,
         };
         var peopleProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
-            url: route.find(PeoplePage, params),
+            url: this.getPageUrl(PeoplePage),
             onClick: this.handleButtonClick,
         };
         var settingsProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
-            url: route.find(SettingsPage, params),
+            url: this.getPageUrl(SettingsPage),
             onClick: this.handleButtonClick,
         };
         var newNotiifcationProps = {

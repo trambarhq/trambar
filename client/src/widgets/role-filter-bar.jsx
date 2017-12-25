@@ -19,6 +19,8 @@ require('./role-filter-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'RoleFilterBar',
     propTypes: {
+        options: PropTypes.object.isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -40,6 +42,7 @@ module.exports = Relaks.createClass({
             users: null,
             project: null,
 
+            options: this.props.options,
             locale: this.props.locale,
             route: this.props.route,
             theme: this.props.theme,
@@ -78,6 +81,7 @@ module.exports = Relaks.createClass({
 var RoleFilterBarSync = module.exports.Sync = React.createClass({
     displayName: 'RoleFilterBar.Sync',
     propTypes: {
+        options: PropTypes.object.isRequired,
         project: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         users: PropTypes.arrayOf(PropTypes.object),
@@ -85,17 +89,6 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return role ids in the URL
-     *
-     * @return {Array<Number>}
-     */
-    getRoleIds: function() {
-        var route = this.props.route;
-        var roleIds = _.map(_.split(route.parameters.roles, '+'), Number);
-        return _.filter(roleIds);
     },
 
     /**
@@ -140,36 +133,26 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderButton: function(role) {
-        var roleIds = this.getRoleIds();
         var users = findUsers(this.props.users, role);
+        var route = this.props.route;
+        var roleIds = route.parameters.roles;
+        var params = _.clone(this.props.options.route.parameters);
+        if (_.includes(roleIds, role.id)) {
+            params.roles = _.without(roleIds, role.id);
+        } else {
+            params.roles = _.concat(roleIds, role.id);
+        }
+        var url = route.find(route.component, params);
         var props = {
             role,
             users,
+            url,
             locale: this.props.locale,
             theme: this.props.theme,
             selected: _.includes(roleIds, role.id),
             onRoleClick: this.handleRoleClick,
         };
         return <RoleFilterButton key={role.id} {...props} />;
-    },
-
-    /**
-     * Called when user clicks on a role button
-     *
-     * @param  {Event} evt
-     */
-    handleRoleClick: function(evt) {
-        var role = evt.role;
-        var roleIds = this.getRoleIds();
-        if (_.includes(roleIds, role.id)) {
-            _.pull(roleIds, role.id);
-        } else {
-            roleIds.push(role.id);
-        }
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.roles = roleIds;
-        route.replace(route.component, params);
     },
 });
 

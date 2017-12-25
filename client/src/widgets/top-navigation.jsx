@@ -7,6 +7,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
+var Link = require('widgets/link');
 var CollapsibleContainer = require('widgets/collapsible-container');
 var CalendarBar = require('widgets/calendar-bar');
 var RoleFilterBar = require('widgets/role-filter-bar');
@@ -17,7 +18,7 @@ require('./top-navigation.scss');
 module.exports = React.createClass({
     displayName: 'TopNavigation',
     propTypes: {
-        hidden: PropTypes.bool,
+        options: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -31,12 +32,24 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        var control = this.getRequiredControl(this.props.route);
+        var hidden = !_.get(this.props.options, 'navigation.top', true);
         return {
-            selectedControl: control,
-            expanded: !!control,
             height: (this.props.hidden) ? 0 : 'auto',
         };
+    },
+
+    /**
+     * Return true if top nav is supposed to be hidden
+     *
+     * @param  {Object|undefined} options
+     *
+     * @return {Boolean}
+     */
+    isHidden: function(options) {
+        if (!options) {
+            options = this.props.options;
+        }
+        return !_.get(options, 'navigation.top', true);
     },
 
     /**
@@ -46,16 +59,50 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getRequiredControl: function(route) {
+    getSelectedControl: function(route) {
+        if (!route) {
+            route = this.props.route;
+        }
         var params = route.parameters;
-        if (params.search) {
+        if (params.search != undefined) {
             return 'search';
-        } else if (params.date) {
+        } else if (params.date != undefined) {
             return 'calendar';
-        } else if (params.roles !== undefined) {
+        } else if (params.roles != undefined) {
             return 'filter';
         }
         return null;
+    },
+
+    /**
+     * Return URL for activating/deactivating control
+     *
+     * @param  {String} control
+     *
+     * @return {String|null}
+     */
+    getControlUrl: function(control) {
+        var selected = this.getSelectedControl();
+        var controlOptions = _.get(this.props.options, control);
+        if (!controlOptions) {
+            return null;
+        }
+        var params = _.clone(controlOptions.route.parameters);
+        if (control !== selected) {
+            // add empty parameters to trigger the control's activation
+            switch (control) {
+                case 'search':
+                    params.search = '';
+                    break;
+                case 'calendar':
+                    params.date = '';
+                    break;
+                case 'filter':
+                    params.roles = [];
+                    break;
+            }
+        }
+        return this.props.route.find(this.props.route.component, params);
     },
 
     /**
@@ -64,17 +111,19 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.hidden !== nextProps.hidden) {
+        var hiddenBefore = this.isHidden();
+        var hiddenAfter = this.isHidden(nextProps.options);
+        if (hiddenBefore !== hiddenAfter) {
             var container = this.refs.container;
             var contentHeight = container.offsetHeight;
-            if (nextProps.hidden) {
+            if (hiddenAfter) {
                 // hiding navigation:
                 //
                 // render with height = contentHeight, then
                 // render with height = 0 immediately
                 this.setState({ height: contentHeight });
                 setTimeout(() => {
-                    if (this.props.hidden) {
+                    if (this.isHidden()) {
                         this.setState({ height: 0 });
                     }
                 }, 0);
@@ -85,16 +134,10 @@ module.exports = React.createClass({
                 // render with height = auto after a second
                 this.setState({ height: contentHeight });
                 setTimeout(() => {
-                    if (!this.props.hidden) {
+                    if (!this.isHidden()) {
                         this.setState({ height: 'auto' });
                     }
                 }, 1000);
-            }
-        }
-        if (this.props.route !== nextProps.route) {
-            var control = this.getRequiredControl(nextProps.route);
-            if (this.state.selectedControl !== control) {
-                this.setState({ selectedControl: control, expanded: true });
             }
         }
     },
@@ -133,29 +176,27 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButtonBar: function() {
-        var options = this.props.route.component.getOptions();
-        var params = _.get(options, 'navigation.top', {});
-        var selected = (this.state.expanded) ? this.state.selectedControl : '';
+        var selected = this.getSelectedControl();
         var calendarProps = {
             icon: 'calendar',
             className: 'calendar-btn',
-            disabled: !params.dateSelection,
+            url: this.getControlUrl('calendar'),
             active: selected === 'calendar',
-            onClick: this.handleCalendarClick,
+            onClick: this.handleButtonClick,
         };
         var filterProps = {
             icon: 'filter',
             className: 'filter-btn',
-            disabled: !params.roleSelection,
+            url: this.getControlUrl('filter'),
             active: selected === 'filter',
-            onClick: this.handleFilterClick,
+            onClick: this.handleButtonClick,
         };
         var searchProps = {
             icon: 'search',
             className: 'search-btn',
-            disabled: !params.textSearch,
+            url: this.getControlUrl('search'),
             active: selected === 'search',
-            onClick: this.handleSearchClick,
+            onClick: this.handleButtonClick,
         };
         return (
             <div>
@@ -172,8 +213,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderCollapsibleControl: function() {
+        var selected = this.getSelectedControl();
         return (
-            <CollapsibleContainer open={this.state.expanded}>
+            <CollapsibleContainer open={!!selected}>
                 {this.renderControl()}
             </CollapsibleContainer>
         );
@@ -185,7 +227,8 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderControl: function() {
-        switch (this.state.selectedControl) {
+        var selected = this.getSelectedControl();
+        switch (selected) {
             case 'calendar': return this.renderCalendarBar();
             case 'filter': return this.renderRoleFilterBar();
             case 'search': return this.renderSearchBar();
@@ -199,10 +242,10 @@ module.exports = React.createClass({
      */
     renderCalendarBar: function() {
         var props = {
+            options: this.props.options.calendar,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
-            onSelect: this.handleCalendarSelect,
         };
         return <CalendarBar {...props} />;
     },
@@ -214,6 +257,7 @@ module.exports = React.createClass({
      */
     renderRoleFilterBar: function() {
         var props = {
+            options: this.props.options.filter,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -229,6 +273,7 @@ module.exports = React.createClass({
      */
     renderSearchBar: function() {
         var props = {
+            options: this.props.options.search,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -237,74 +282,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Expand/Collapse control
-     *
-     * @param  {String} name
-     */
-    toggleControl: function(name) {
-        if (this.state.expanded && name === this.state.selectedControl) {
-            this.setState({ expanded: false }, () => {
-                this.clearRouteParameters();
-            });
-        } else {
-            this.setState({ selectedControl: name, expanded: true });
-        }
-    },
-
-    /**
-     * Remove parameters that the top nav provides, as well as hash
-     * variables
-     */
-    clearRouteParameters: function() {
-        var route = this.props.route;
-        var params = _.omit(route.parameters, 'date', 'roles', 'search', 'story');
-        route.replace(route.component, params);
-    },
-
-    /**
-     * Called when user clicks the calendar icon
+     * Called when user clicks one of the icons
      *
      * @param  {Event} evt
      */
-    handleCalendarClick: function(evt) {
-        this.toggleControl('calendar');
-    },
-
-    /**
-     * Called when user clicks the filter icon
-     *
-     * @param  {Event} evt
-     */
-    handleFilterClick: function(evt) {
-        this.toggleControl('filter');
-    },
-
-    /**
-     * Called when user clicks the search icon
-     *
-     * @param  {Event} evt
-     */
-    handleSearchClick: function(evt) {
-        this.toggleControl('search');
+    handleButtonClick: function(evt) {
     },
 });
 
 function Button(props) {
-    var classes = [ 'button' ];
+    var className = 'button';
     var clickHandler = props.onClick;
     if (props.className) {
-        classes.push(props.className);
+        className += ` ${props.className}`;
     }
     if (props.active) {
-        classes.push('active');
+        className += ` active`;
     }
-    if (props.disabled) {
-        classes.push('disabled');
+    if (!props.url) {
+        className += ` disabled`;
         clickHandler = null;
     }
     return (
-        <div className={classes.join(' ')} onClick={clickHandler}>
+        <Link className={className} href={props.url} onClick={clickHandler}>
             <i className={`fa fa-${props.icon}`} />
-        </div>
+        </Link>
     );
 }

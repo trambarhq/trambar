@@ -22,7 +22,7 @@ module.exports = Relaks.createClass({
     displayName: 'UserList',
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
-        stories: PropTypes.arrayOf(PropTypes.object).isRequired,
+        stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -225,7 +225,7 @@ var UserListSync = module.exports.Sync = React.createClass({
             var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
             var stories;
             if (this.props.listings) {
-                listing = findListing(this.props.listings, user);
+                var listing = findListing(this.props.listings, user);
                 stories = findListingStories(this.props.stories, listing);
             } else {
                 stories = findUserStories(this.props.stories, user);

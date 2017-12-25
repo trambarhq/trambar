@@ -159,22 +159,23 @@ module.exports = React.createClass({
         }
         var options = this.state.route.component.getOptions(this.state.route);
         var topNavProps = {
+            options: options,
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
-            hidden: !_.get(options, 'navigation.top'),
         };
         var bottomNavProps = {
+            options: options,
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
-            hidden: !_.get(options, 'navigation.bottom'),
         };
         if (this.isShowingStartPage()) {
             // keep the navs hidden when the start page is shown
-            topNavProps.hidden = bottomNavProps.hidden = true;
+            _.set(options, 'navigation.top', false);
+            _.set(options, 'navigation.bottom', false);
         }
         var className = `application ${this.state.theme.mode}`;
         return (

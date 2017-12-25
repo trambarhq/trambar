@@ -202,6 +202,23 @@ Route.parseId = function(s, pattern) {
     return _.strictParseInt(s);
 }
 
+/**
+ * Return the given string if it's YYYY-MM-DD; otherwise return an empty string
+ *
+ * @param  {String} s
+ *
+ * @return {String|undefined}
+ */
+Route.parseDate = function(s) {
+    if (s == undefined) {
+        return undefined;
+    }
+    if (/\d{4}-\d{2}-\d{2}/.test(s)) {
+        return s;
+    }
+    return '';
+}
+
 var regExpCache = {};
 
 function parseURLPattern(pattern) {

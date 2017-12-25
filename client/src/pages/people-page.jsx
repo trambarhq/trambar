@@ -34,12 +34,13 @@ module.exports = Relaks.createClass({
          */
         parseUrl: function(path, query, hash) {
             return Route.match(path, [
-                '/:schema/people/:roles/?',
                 '/:schema/people/?',
             ], (params) => {
-                params.roles = Route.parseIdList(params.roles);
-                params.search = query.search;
-                return params;
+                return {
+                    schema: params.schema,
+                    roles: Route.parseIdList(query.roles),
+                    search: query.search,
+                };
             });
         },
 
@@ -51,12 +52,12 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getUrl: function(params) {
-            var path = `/${params.schema}/people/`, query, hash;
-            if (!_.isEmpty(params.roles)) {
-                url += `${params.roles.join('+')}/`;
+            var path = `/${params.schema}/people/`, query = {}, hash;
+            if (params.roles != undefined) {
+                query.roles = params.roles.join('+');
             }
-            if (params.search) {
-                query = { search: params.search };
+            if (params.search != undefined) {
+                query.search = params.search;
             }
             return { path, query, hash };
         },
@@ -64,22 +65,22 @@ module.exports = Relaks.createClass({
         /**
          * Generate a URL of this page based on given parameters
          *
-         * @param  {Object} params
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
+        getOptions: function(currentRoute) {
+            var route = {
+                parameters: _.pick(currentRoute.parameters, 'schema')
+            };
+            var statistics = {
+                type: 'daily-activities',
+                filters: {},
+            };
             return {
-                navigation: {
-                    top: {
-                        dateSelection: false,
-                        roleSelection: true,
-                        textSearch: true,
-                    },
-                    bottom: {
-                        section: 'people'
-                    }
-                },
+                filter: { route },
+                search: { route, statistics },
+                navigation: { route, section: 'people' }
             };
         },
     },

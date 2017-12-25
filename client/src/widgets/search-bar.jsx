@@ -18,6 +18,7 @@ require('./search-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'SearchBar',
     propTypes: {
+        options: PropTypes.object.isRequired,
         database: PropTypes.instanceOf(Database),
         route: PropTypes.instanceOf(Route),
         locale: PropTypes.instanceOf(Locale),
@@ -31,14 +32,13 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        var pageClass = this.props.route.component;
-        var pageOptions = pageClass.getOptions(this.props.route);
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var currentUserId;
         var props = {
             dailyActivities: null,
 
+            options: this.props.options,
             route: this.props.route,
             locale: this.props.locale,
         };
@@ -49,13 +49,14 @@ module.exports = Relaks.createClass({
             var end = DateTracker.endOfMonth;
             var timeRanges = DateUtils.getMonthRanges(start, end);
             var tzOffset = DateUtils.getTimeZoneOffset();
+            var stats = this.props.options.statistics;
             var criteria = {
-                type: 'daily-activities',
+                type: stats.type,
                 filters: _.map(timeRanges, (timeRange) => {
-                    return {
+                    return _.extend({
                         time_range: timeRange,
                         tz_offset: tzOffset,
-                    };
+                    }, stats.filters);
                 }),
             };
             return db.find({ table: 'statistics', criteria });
@@ -69,6 +70,7 @@ module.exports = Relaks.createClass({
 var SearchBarSync = module.exports.Sync = React.createClass({
     displayName: 'SearchBar.Sync',
     propTypes: {
+        options: PropTypes.object.isRequired,
         dailyActivities: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route),
         locale: PropTypes.instanceOf(Locale),
@@ -100,7 +102,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.route !== nextProps.route) {
             var route = nextProps.route;
-            var keywordsBefore = this.state.keyboards;
+            var keywordsBefore = this.state.keywords;
             var keywordsAfter = route.query.search || '';
             if (!_.isEqual(normalize(keywordsBefore), normalize(keywordsAfter))) {
                 this.setState({
@@ -168,15 +170,20 @@ var SearchBarSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderHashTag: function(tag, index) {
+        var route = this.props.route;
+        var params = _.clone(this.props.options.route.parameters);
+        params.search = tag.name;
+        var url = route.find(route.component, params);
         var props = {
             className: 'tag',
             onClick: this.handleHashTagClick,
             'data-tag': tag.name,
+            href: url
         };
         if (_.includes(this.state.selectedHashTags, _.toLower(tag.name))) {
             props.className += ' selected'
         }
-        return <span key={index} {...props}>{tag.name}</span>;
+        return <a key={index} {...props}>{tag.name}</a>;
     },
 
     /**
@@ -245,7 +252,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         var params = _.clone(route.parameters);
         params.search = normalize(this.state.keywords);
-        route.replace(route.component, params);
+        route.push(route.component, params);
     },
 
     /**
@@ -283,12 +290,10 @@ var SearchBarSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleHashTagClick: function(evt) {
-        var tag = evt.target.getAttribute('data-tag');
-        var keywords = tag;
-        var selectedHashTags = [ _.toLower(tag) ];
-        this.setState({ keywords, selectedHashTags }, () => {
-            this.performSearch();
-        });
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
     },
 
     /**

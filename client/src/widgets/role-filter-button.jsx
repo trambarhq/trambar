@@ -15,11 +15,10 @@ module.exports = React.createClass({
         role: PropTypes.object,
         users: PropTypes.arrayOf(PropTypes.object),
         selected: PropTypes.bool,
+        url: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onRoleClick: PropTypes.func,
     },
 
     /**
@@ -36,14 +35,14 @@ module.exports = React.createClass({
             className += ' no-roles';
         }
         return (
-            <div className={className} onClick={this.handleClick}>
+            <a className={className} href={this.props.url}>
                 <div className="contents">
                     {this.renderImageRow(0, 4)}
                     {this.renderImageRow(0, 0)}
                     {this.renderImageRow(4, 4)}
                     {this.renderTitle()}
                 </div>
-            </div>
+            </a>
         );
     },
 
@@ -130,23 +129,5 @@ module.exports = React.createClass({
                 <span className="number">{count}</span>
             </div>
         );
-    },
-
-    /**
-     * Called when user clicks on button
-     *
-     * @param  {Event} evt
-     */
-    handleClick: function(evt) {
-        if (!this.props.role) {
-            return null;
-        }
-        if (this.props.onRoleClick) {
-            this.props.onRoleClick({
-                type: 'roleclick',
-                target: this,
-                role: this.props.role,
-            });
-        }
     },
 });

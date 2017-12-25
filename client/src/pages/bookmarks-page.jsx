@@ -38,8 +38,10 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/:schema/bookmarks/?',
             ], (params) => {
-                params.story = Route.parseId(hash, /S(\d+)/i);
-                return params;
+                return {
+                    schema: params.schema,
+                    story: Route.parseId(hash, /S(\d+)/i),
+                };
             });
         },
 
@@ -61,22 +63,16 @@ module.exports = Relaks.createClass({
         /**
          * Generate a URL of this page based on given parameters
          *
-         * @param  {Object} params
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
+        getOptions: function(currentRoute) {
+            var route = {
+                parameters: _.pick(currentRoute.parameters, 'schema')
+            };
             return {
-                navigation: {
-                    top: {
-                        dateSelection: false,
-                        roleSelection: false,
-                        textSearch: false,
-                    },
-                    bottom: {
-                        section: 'bookmarks'
-                    }
-                },
+                navigation: { route, section: 'bookmarks' }
             };
         },
     },

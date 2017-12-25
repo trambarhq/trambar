@@ -37,8 +37,10 @@ module.exports = Relaks.createClass({
                 '/:schema/notifications/:date/?',
                 '/:schema/notifications/?'
             ], (params) => {
-                params.search = query.search;
-                return params;
+                return {
+                    schema: params.schema,
+                    date: Route.parseDate(params.date),
+                };
             })
         },
 
@@ -51,11 +53,8 @@ module.exports = Relaks.createClass({
          */
         getUrl: function(params) {
             var path = `/${params.schema}/notifications/`, query, hash;
-            if (params.date) {
-                path += `${params.date}/`;
-            }
-            if (params.search) {
-                query = { search: params.search };
+            if (params.date != undefined) {
+                path += `${params.date || 'date'}/`;
             }
             return { path, query, hash };
         },
@@ -63,26 +62,21 @@ module.exports = Relaks.createClass({
         /**
          * Generate a URL of this page based on given parameters
          *
-         * @param  {Object} params
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(route) {
+        getOptions: function(currentRoute) {
+            var route = {
+                parameters: _.pick(currentRoute.parameters, 'schema')
+            };
+            var statistics = {
+                type: 'daily-notifications',
+                filters: {},
+            };
             return {
-                navigation: {
-                    top: {
-                        dateSelection: {
-                            statistics: {
-                                type: 'daily-notifications',
-                                filters: {},
-                            },
-                        },
-                        roleSelection: false,
-                    },
-                    bottom: {
-                        section: 'notifications'
-                    }
-                },
+                calendar: { route, statistics },
+                navigation: { route, section: 'notifications' }
             };
         },
     },
