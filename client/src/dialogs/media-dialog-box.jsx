@@ -137,8 +137,8 @@ module.exports = React.createClass({
             var viewport = document.body.parentNode;
             var viewportWidth = viewport.clientWidth;
             var viewportHeight = viewport.clientHeight;
-            if (this.props.theme.mode === 'columns-1') {
-                viewportWidth -= 20;
+            if (this.props.theme.mode === 'single-col') {
+                viewportWidth -= 10;
                 viewportHeight -= 100;
             } else {
                 viewportWidth -= 100;
@@ -173,7 +173,7 @@ module.exports = React.createClass({
                     maxHeight = Math.round(maxWidth / maxAspect);
                 }
             }
-            var style = { width: maxWidth, height: maxHeight };
+            var style = { maxWidth: maxWidth, maxHeight: maxHeight };
             var contents;
             switch (res.type) {
                 case 'image':
@@ -201,18 +201,21 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function(res, maxWidth, maxHeight) {
-        var width, height;
-        if (res.width > maxWidth) {
-            width = maxWidth;
-        } else if (res.height > maxHeight) {
-            height = maxHeight;
-        }
         var theme = this.props.theme;
         var image = _.omit(res, 'clip');
-        var props = {
-            src: theme.getImageUrl(image, { width, height })
-        };
-        return <img {...props} />;
+        var url;
+        if (res.format === 'gif') {
+            url = theme.getImageUrl(image);
+        } else {
+            var width, height;
+            if (res.width > maxWidth) {
+                width = maxWidth;
+            } else if (res.height > maxHeight) {
+                height = maxHeight;
+            }
+            url = theme.getImageUrl(image, { width, height })
+        }
+        return <img src={url} />;
     },
 
     /**
