@@ -29,7 +29,7 @@ module.exports = React.createClass({
     displayName: 'BottomNavigation',
     mixins: [ UpdateCheck ],
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -51,15 +51,15 @@ module.exports = React.createClass({
     /**
      * Return true if bottom nav is supposed to be hidden
      *
-     * @param  {Object|undefined} options
+     * @param  {Object|undefined} settings
      *
      * @return {Boolean}
      */
-    isHidden: function(options) {
-        if (!options) {
-            options = this.props.options;
+    isHidden: function(settings) {
+        if (!settings) {
+            settings = this.props.settings;
         }
-        return !_.get(options, 'navigation.bottom', true);
+        return !_.get(settings, 'navigation.bottom', true);
     },
 
     /**
@@ -74,8 +74,8 @@ module.exports = React.createClass({
         if (!route) {
             route = this.props.route;
         }
-        var options = (pageClass.getOptions) ? pageClass.getOptions(route) : null;
-        var params = _.get(options, 'navigation.route.parameters');
+        var settings = (pageClass.configureUI) ? pageClass.configureUI(route) : null;
+        var params = _.get(settings, 'navigation.route.parameters');
         if (!params) {
             return null;
         }
@@ -89,7 +89,7 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         var hiddenBefore = this.isHidden();
-        var hiddenAfter = this.isHidden(nextProps.options);
+        var hiddenAfter = this.isHidden(nextProps.settings);
         if (hiddenBefore !== hiddenAfter) {
             var container = this.refs.container;
             var contentHeight = container.offsetHeight;
@@ -141,7 +141,7 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var route = this.props.route;
-        var section = _.get(this.props.options, 'navigation.section');
+        var section = _.get(this.props.settings, 'navigation.section');
         var newsProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',

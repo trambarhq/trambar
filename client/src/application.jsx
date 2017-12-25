@@ -157,16 +157,16 @@ module.exports = React.createClass({
         if (!this.isReady()) {
             return null;
         }
-        var options = this.state.route.component.getOptions(this.state.route);
+        var settings = this.state.route.component.configureUI(this.state.route);
         var topNavProps = {
-            options: options,
+            settings: settings,
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
         };
         var bottomNavProps = {
-            options: options,
+            settings: settings,
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
@@ -174,8 +174,8 @@ module.exports = React.createClass({
         };
         if (this.isShowingStartPage()) {
             // keep the navs hidden when the start page is shown
-            _.set(options, 'navigation.top', false);
-            _.set(options, 'navigation.bottom', false);
+            _.set(settings, 'navigation.top', false);
+            _.set(settings, 'navigation.bottom', false);
         }
         var className = `application ${this.state.theme.mode}`;
         return (

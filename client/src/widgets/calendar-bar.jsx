@@ -23,7 +23,7 @@ require('./calendar-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'CalendarBar',
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -65,7 +65,7 @@ module.exports = Relaks.createClass({
             var endTime = _.get(props.projectRange, 'details.end_time');
             var timeRanges = DateUtils.getMonthRanges(startTime, endTime);
             var tzOffset = DateUtils.getTimeZoneOffset();
-            var stats = this.props.options.statistics;
+            var stats = this.props.settings.statistics;
             var criteria = {
                 type: stats.type,
                 filters: _.map(timeRanges, (timeRange) => {

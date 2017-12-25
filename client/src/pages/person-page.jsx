@@ -45,7 +45,6 @@ module.exports = Relaks.createClass({
                 '/:schema/people/:user/:date/?',
                 '/:schema/people/:user/?',
             ], (params) => {
-                console.log('match');
                 return {
                     schema: params.schema,
                     user: Route.parseId(params.user),
@@ -81,13 +80,13 @@ module.exports = Relaks.createClass({
         },
 
         /**
-         * Generate a URL of this page based on given parameters
+         * Return configuration info for global UI elements
          *
-         * @param  {Object} currentRoute
+         * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(currentRoute) {
+        configureUI: function(currentRoute) {
             var route = {
                 parameters: _.pick(currentRoute.parameters, 'schema', 'user')
             };

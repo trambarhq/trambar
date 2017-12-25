@@ -83,13 +83,13 @@ module.exports = Relaks.createClass({
         },
 
         /**
-         * Obtain page options
+         * Return configuration info for global UI elements
          *
          * @param  {Route} currentRoute
          *
          * @return {Object}
          */
-        getOptions: function(currentRoute) {
+        configureUI: function(currentRoute) {
             var route = {
                 parameters: _.pick(currentRoute.parameters, 'schema')
             };

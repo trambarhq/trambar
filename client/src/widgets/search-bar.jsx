@@ -18,7 +18,7 @@ require('./search-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'SearchBar',
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
         database: PropTypes.instanceOf(Database),
         route: PropTypes.instanceOf(Route),
         locale: PropTypes.instanceOf(Locale),
@@ -38,7 +38,7 @@ module.exports = Relaks.createClass({
         var props = {
             dailyActivities: null,
 
-            options: this.props.options,
+            settings: this.props.settings,
             route: this.props.route,
             locale: this.props.locale,
         };
@@ -49,7 +49,7 @@ module.exports = Relaks.createClass({
             var end = DateTracker.endOfMonth;
             var timeRanges = DateUtils.getMonthRanges(start, end);
             var tzOffset = DateUtils.getTimeZoneOffset();
-            var stats = this.props.options.statistics;
+            var stats = this.props.settings.statistics;
             var criteria = {
                 type: stats.type,
                 filters: _.map(timeRanges, (timeRange) => {
@@ -70,7 +70,7 @@ module.exports = Relaks.createClass({
 var SearchBarSync = module.exports.Sync = React.createClass({
     displayName: 'SearchBar.Sync',
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
         dailyActivities: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route),
         locale: PropTypes.instanceOf(Locale),
@@ -171,7 +171,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
      */
     renderHashTag: function(tag, index) {
         var route = this.props.route;
-        var params = _.clone(this.props.options.route.parameters);
+        var params = _.clone(this.props.settings.route.parameters);
         params.search = tag.name;
         var url = route.find(route.component, params);
         var props = {

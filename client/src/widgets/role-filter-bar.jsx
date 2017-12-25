@@ -19,7 +19,7 @@ require('./role-filter-bar.scss');
 module.exports = Relaks.createClass({
     displayName: 'RoleFilterBar',
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -42,7 +42,7 @@ module.exports = Relaks.createClass({
             users: null,
             project: null,
 
-            options: this.props.options,
+            settings: this.props.settings,
             locale: this.props.locale,
             route: this.props.route,
             theme: this.props.theme,
@@ -81,7 +81,7 @@ module.exports = Relaks.createClass({
 var RoleFilterBarSync = module.exports.Sync = React.createClass({
     displayName: 'RoleFilterBar.Sync',
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
         project: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         users: PropTypes.arrayOf(PropTypes.object),
@@ -136,7 +136,7 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
         var users = findUsers(this.props.users, role);
         var route = this.props.route;
         var roleIds = route.parameters.roles;
-        var params = _.clone(this.props.options.route.parameters);
+        var params = _.clone(this.props.settings.route.parameters);
         if (_.includes(roleIds, role.id)) {
             params.roles = _.without(roleIds, role.id);
         } else {

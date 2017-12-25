@@ -18,7 +18,7 @@ require('./top-navigation.scss');
 module.exports = React.createClass({
     displayName: 'TopNavigation',
     propTypes: {
-        options: PropTypes.object.isRequired,
+        settings: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -32,7 +32,7 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        var hidden = !_.get(this.props.options, 'navigation.top', true);
+        var hidden = !_.get(this.props.settings, 'navigation.top', true);
         return {
             height: (this.props.hidden) ? 0 : 'auto',
         };
@@ -41,15 +41,15 @@ module.exports = React.createClass({
     /**
      * Return true if top nav is supposed to be hidden
      *
-     * @param  {Object|undefined} options
+     * @param  {Object|undefined} settings
      *
      * @return {Boolean}
      */
-    isHidden: function(options) {
-        if (!options) {
-            options = this.props.options;
+    isHidden: function(settings) {
+        if (!settings) {
+            settings = this.props.settings;
         }
-        return !_.get(options, 'navigation.top', true);
+        return !_.get(settings, 'navigation.top', true);
     },
 
     /**
@@ -83,11 +83,11 @@ module.exports = React.createClass({
      */
     getControlUrl: function(control) {
         var selected = this.getSelectedControl();
-        var controlOptions = _.get(this.props.options, control);
-        if (!controlOptions) {
+        var settings = _.get(this.props.settings, control);
+        if (!settings) {
             return null;
         }
-        var params = _.clone(controlOptions.route.parameters);
+        var params = _.clone(settings.route.parameters);
         if (control !== selected) {
             // add empty parameters to trigger the control's activation
             switch (control) {
@@ -112,7 +112,7 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         var hiddenBefore = this.isHidden();
-        var hiddenAfter = this.isHidden(nextProps.options);
+        var hiddenAfter = this.isHidden(nextProps.settings);
         if (hiddenBefore !== hiddenAfter) {
             var container = this.refs.container;
             var contentHeight = container.offsetHeight;
@@ -242,7 +242,7 @@ module.exports = React.createClass({
      */
     renderCalendarBar: function() {
         var props = {
-            options: this.props.options.calendar,
+            settings: this.props.settings.calendar,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -257,7 +257,7 @@ module.exports = React.createClass({
      */
     renderRoleFilterBar: function() {
         var props = {
-            options: this.props.options.filter,
+            settings: this.props.settings.filter,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -273,7 +273,7 @@ module.exports = React.createClass({
      */
     renderSearchBar: function() {
         var props = {
-            options: this.props.options.search,
+            settings: this.props.settings.search,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
