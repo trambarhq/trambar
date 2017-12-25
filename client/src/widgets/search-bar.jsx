@@ -110,34 +110,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
             }
         }
         if (this.props.dailyActivities !== nextProps.dailyActivities) {
-            var hashTags = [];
-            var dailyActivities = _.transform(nextProps.dailyActivities, (counts, da) => {
-                _.assign(counts, da.details);
-            }, {});
-            _.each(dailyActivities, (activities, date) => {
-                _.each(activities, (count, key) => {
-                    // more recent usage count for more
-                    var multiplier;
-                    if (date >= DateTracker.oneWeekAgo) {
-                        multiplier = 1;
-                    } else if (date >= DateTracker.twoWeeksAgo) {
-                        multiplier = 0.5;
-                    } else {
-                        multiplier = 0.25;
-                    }
-                    if (/^#/.test(key)) {
-                        var hash = _.find(hashTags, { name: key });
-                        if (hash) {
-                            hash.score += count * multiplier;
-                        } else {
-                            hashTags.push({
-                                name: key,
-                                score: count * multiplier,
-                            });
-                        }
-                    }
-                });
-            });
+            var hashTags = extractTags(nextProps.dailyActivities);
             this.setState({ hashTags });
         }
     },
@@ -254,7 +227,6 @@ var SearchBarSync = module.exports.Sync = React.createClass({
                 if (tag) {
                     var node = nodes[tag.name];
                     node.style.display = 'none';
-                    console.log('Hidding', node);
                 } else {
                     break;
                 }
@@ -349,4 +321,65 @@ function isWrapping(nodes) {
             return true;
         }
     });
+}
+
+function extractTags(dailyActivities) {
+    // merge stats from the months
+    var details = _.transform(dailyActivities, (counts, da) => {
+        _.assign(counts, da.details);
+    }, {});
+    // score the tags based on how often they are used
+    var scores = {}, frequency = {};
+    _.each(details, (activities, date) => {
+        _.each(activities, (count, key) => {
+            // more recent usage count for more
+            var multiplier;
+            if (date === DateTracker.today) {
+                multiplier = 4;
+            } else if (date === DateTracker.yesterday) {
+                multiplier = 2;
+            } else if (date >= DateTracker.oneWeekAgo) {
+                multiplier = 1;
+            } else if (date >= DateTracker.twoWeeksAgo) {
+                multiplier = 0.5;
+            } else {
+                multiplier = 0.25;
+            }
+            if (/^#/.test(key)) {
+                var score = count * multiplier;
+                scores[key] = (scores[key] || 0) + score;
+                frequency[key] = (frequency[key] || 0) + count;
+            }
+        });
+    });
+    // compare tags that only differ in case
+    var nameLists = {};
+    var scoresLC = {};
+    _.each(scores, (score, name) => {
+        var nameLC = _.toLower(name);
+        var names = nameLists[nameLC];
+        if (!names) {
+            names = nameLists[nameLC] = [];
+        }
+        names.push(name);
+        scoresLC[nameLC] = (scoresLC[nameLC] || 0) + score;
+    });
+    var scoresMC = {};
+    _.each(scoresLC, (score, nameLC) => {
+        var names = nameLists[nameLC];
+        if (names.length > 1) {
+            // choice the more frequently used name
+            names = _.orderBy(names, (name) => {
+                return frequency[name];
+            }, 'desc');
+        }
+        var name = names[0];
+        scoresMC[name] = score;
+    });
+
+    var hashTags = _.transform(scoresMC, (list, score, name) => {
+        list.push({ name, score });
+    }, []);
+    // sort in case-sensitive manner, as it's done in Gitlab
+    return _.sortBy(hashTags, 'name');
 }

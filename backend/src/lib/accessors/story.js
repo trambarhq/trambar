@@ -94,6 +94,7 @@ module.exports = _.create(ExternalData, {
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} USING gin(user_ids);
+            CREATE INDEX ON ${table} USING gin(("lowerCase"(tags))) WHERE cardinality(tags) <> 0; 
         `;
         //
         return db.execute(sql);

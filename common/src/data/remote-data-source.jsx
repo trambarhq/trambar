@@ -842,14 +842,18 @@ module.exports = React.createClass({
      *
      * @param  {Object} search
      *
-     * @return {Promise<Array<Object>>}
+     * @return {Promise<Boolean>}
      */
     searchLocalCache: function(search) {
         var cache = this.props.cache;
         if (!cache) {
-            return false;
+            return Promise.resolve(false);
         }
         var query = getSearchQuery(search);
+        if (search.remote) {
+            search.results = [];
+            return Promise.resolve(true);
+        }
         return cache.find(search).then((objects) => {
             search.results = objects;
             return true;
@@ -1234,7 +1238,7 @@ function getSearchLocation(search) {
  * @return {Object}
  */
 function getSearchQuery(search) {
-    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected');
+    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote');
 }
 
 var sessions = {};

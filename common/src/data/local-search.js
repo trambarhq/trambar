@@ -48,6 +48,9 @@ function match(table, object, criteria) {
                 if (_.includes(desiredValue, object.id)) {
                     matching = false;
                 }
+            } else if (name === 'search') {
+                // never match against cached records
+                matching = false;
             } else {
                 // assume it matches
             }

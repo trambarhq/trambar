@@ -1,4 +1,5 @@
 module.exports = {
+    lowerCase,
     matchAny,
     hasCandidates,
     payloadIds,
@@ -7,6 +8,23 @@ module.exports = {
     extendAuthorization,
     externalIdStrings: require('./runtime').externalIdStrings
 };
+
+/**
+ * Convert strings in an array to lower case
+ *
+ * @param  {Array<String>} strings
+ *
+ * @return {Array<String>}
+ */
+function lowerCase(strings) {
+    for (var i = 0; i < strings.length; i++) {
+        strings[i] = strings[i].toLowerCase();
+    }
+    return strings;
+}
+lowerCase.args = 'strings text[]';
+lowerCase.ret = 'text[]';
+lowerCase.flags = 'IMMUTABLE';
 
 function matchAny(filters, objects) {
     for (var i = 0; i < objects.length; i++) {

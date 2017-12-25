@@ -160,6 +160,7 @@ module.exports = Relaks.createClass({
             if (searching) {
                 // load story matching filters
                 var criteria = {};
+                var remote;
                 if (params.date) {
                     var s = Moment(params.date);
                     var e = s.clone().endOf('day');
@@ -177,13 +178,15 @@ module.exports = Relaks.createClass({
                         text: params.search,
                     };
                     criteria.limit = 100;
+                    // don't scan local cache
+                    remote = true;
                 } else {
                     criteria.limit = 500;
                 }
                 if (props.currentUser.type === 'guest') {
                     criteria.public = true;
                 }
-                return db.find({ table: 'story', criteria });
+                return db.find({ table: 'story', criteria, remote });
             } else {
                 // load story in listing
                 var criteria = {

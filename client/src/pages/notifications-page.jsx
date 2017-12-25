@@ -78,7 +78,6 @@ module.exports = Relaks.createClass({
                             },
                         },
                         roleSelection: false,
-                        textSearch: true,
                     },
                     bottom: {
                         section: 'notifications'

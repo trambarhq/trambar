@@ -18,7 +18,7 @@ module.exports = {
         id: Number,
         deleted: Boolean,
     },
-    accessControlColumns: {        
+    accessControlColumns: {
     },
     version: 1,
 
@@ -770,7 +770,8 @@ module.exports = {
     applyTextSearch(db, schema, search, query) {
         var ts = parseSearchQuery(search.text);
         if (!_.isEmpty(ts.tags)) {
-            query.conditions.push(`tags @> $${query.parameters.push(ts.tags)}`);
+            query.conditions.push(`cardinality(tags) <> 0`);
+            query.conditions.push(`"lowerCase"(tags) @> $${query.parameters.push(ts.tags)}`);
         }
         if (!ts.query) {
             return Promise.resolve();
