@@ -21,7 +21,7 @@ function findTags(text) {
             return String(version).match(findRE);
         })));
     }
-    return _.map(_.uniq(tags), _.toLower).sort();
+    return _.uniq(tags).sort();
 }
 
 function isTag(text) {

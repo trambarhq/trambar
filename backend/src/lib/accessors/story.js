@@ -50,7 +50,9 @@ module.exports = _.create(ExternalData, {
         older_than: String,
         bumped_after: String,
         url: String,
+        has_tags: Boolean,
         search: Object,
+        per_user_limit: Number,
     },
     accessControlColumns: {
         public: Boolean,
@@ -91,6 +93,7 @@ module.exports = _.create(ExternalData, {
             );
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
+            CREATE INDEX ON ${table} USING gin(user_ids);
         `;
         //
         return db.execute(sql);
@@ -150,7 +153,9 @@ module.exports = _.create(ExternalData, {
             'older_than',
             'bumped_after',
             'url',
+            'has_tags',
             'search',
+            'per_user_limit',
         ];
         ExternalData.apply.call(this, _.omit(criteria, special), query);
 
@@ -172,10 +177,38 @@ module.exports = _.create(ExternalData, {
         if (criteria.url !== undefined) {
             conds.push(`details->>'url' = $${params.push(criteria.url)}`);
         }
-        if (criteria.search) {
-            return this.applyTextSearch(db, schema, criteria.search, query);
+        if (criteria.has_tags !== undefined) {
+            if (criteria.has_tags) {
+                conds.push(`CARDINALITY(tags) <> 0`);
+            } else {
+                conds.push(`CARDINALITY(tags) = 0`);
+            }
         }
-        return Promise.resolve();
+        var promise;
+        if (criteria.search) {
+            promise = this.applyTextSearch(db, schema, criteria.search, query);
+        }
+        return Promise.resolve(promise).then(() => {
+            if (typeof(criteria.per_user_limit) === 'number') {
+                // use a lateral join to limit the number of results per user
+                // apply conditions on sub-query
+                var user = require('accessor/user').getTableName('global');
+                var story = this.getTableName(schema);
+                var conditions = _.concat(`${user}.id = ANY(user_ids)`, query.conditions);
+                var subquery = `
+                    SELECT DISTINCT top_story.id
+                    FROM ${user} JOIN LATERAL (
+                        SELECT * FROM ${story}
+                        WHERE ${condition.join(' AND ')}
+                        AND type = 'push'
+                        ORDER BY ptime DESC
+                        LIMIT ${criteria.per_user_limit}
+                    ) top_story ON true
+                `;
+                var condition = `id IN (${subquery})`
+                query.conditions = [ condition ];
+            }
+        });
     },
 
     /**

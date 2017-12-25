@@ -40,6 +40,12 @@ var dateTransforms = {
     endOfMonth: (m) => {
         return m.endOf('month');
     },
+    startOfLastMonth: (m) => {
+        return m.subtract(1, 'month').startOf('month');
+    },
+    endOfLastMonth: (m) => {
+        return m.subtract(1, 'month').endOf('month');
+    },
     startOfYear: (m) => {
         return m.startOf('year');
     },

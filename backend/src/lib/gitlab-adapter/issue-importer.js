@@ -164,6 +164,7 @@ function copyIssueProperties(story, author, glIssue, link) {
     issueLink.issue.number = glIssue.iid;
     if (!storyAfter.type || storyAfter.type === 'issue') {
         _.set(storyAfter, 'type', 'issue');
+        _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
         _.set(storyAfter, 'user_ids', [ author.id ]);
         _.set(storyAfter, 'role_ids', author.role_ids);
         _.set(storyAfter, 'published', true);

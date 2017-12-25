@@ -30,6 +30,7 @@ module.exports = {
         story: [
             'type',
             'ptime',
+            'tags',
         ],
     },
 
@@ -40,19 +41,26 @@ module.exports = {
         _.assign(criteria, _.omit(filters, 'timezone'));
 
         // load the stories
-        return Story.find(db, schema, criteria, 'type, ptime').then((rows) => {
+        return Story.find(db, schema, criteria, 'type, tags, ptime').then((rows) => {
             var tzOffset = _.get(filters, 'tz_offset', 0);
-
             var activities = {};
-            _.each(rows, (row) => {
-                // get the date, taking into consideration the timezone requested
-                var date = Moment(row.ptime).utcOffset(tzOffset).format('YYYY-MM-DD');
+            var count = function(date, key) {
                 var counts = activities[date];
                 if (!counts) {
                     counts = activities[date] = {};
                 }
-                // increment the count for story type
-                counts[row.type] = (counts[row.type] || 0) + 1;
+                // increment the count for key
+                counts[key] = (counts[key] || 0) + 1;
+            };
+            _.each(rows, (row) => {
+                // get the date, taking into consideration the timezone requested
+                var date = Moment(row.ptime).utcOffset(tzOffset).format('YYYY-MM-DD');
+                // count the story type
+                count(date, row.type);
+                // count the tags as well
+                _.each(row.tags, (tag) => {
+                    count(date, tag);
+                });
             });
             return {
                 details: activities,

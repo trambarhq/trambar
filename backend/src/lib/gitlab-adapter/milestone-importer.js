@@ -55,6 +55,7 @@ function copyMilestoneProperties(story, author, glMilestone, link) {
     var descriptionTags = TagScanner.findTags(glMilestone.description);
     milestoneLink.milestone.number = glMilestone.iid;
     _.set(storyAfter, 'type', 'milestone');
+    _.set(storyAfter, 'tags', descriptionTags);
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
     _.set(storyAfter, 'public', true);
@@ -62,7 +63,6 @@ function copyMilestoneProperties(story, author, glMilestone, link) {
     _.set(storyAfter, 'ptime', Moment(glMilestone.created_at).toISOString());
     _.set(storyAfter, 'details.state', glMilestone.state);
     _.set(storyAfter, 'details.title', glMilestone.title);
-    _.set(storyAfter, 'tags', descriptionTags);
     _.set(storyAfter, 'details.due_date', glMilestone.due_date);
     _.set(storyAfter, 'details.start_date', glMilestone.start_date);
     if (_.isEqual(story, storyAfter)) {

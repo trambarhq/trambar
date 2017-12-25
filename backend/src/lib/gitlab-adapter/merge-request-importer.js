@@ -160,12 +160,12 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${label}`; });
     mergeRequestLink.merge_request.number = glMergeRequest.iid;
     _.set(storyAfter, 'type', 'merge-request');
+    _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
     _.set(storyAfter, 'user_ids', [ author.id ]);
     _.set(storyAfter, 'role_ids', author.role_ids);
     _.set(storyAfter, 'published', true);
     _.set(storyAfter, 'ptime', Moment(new Date(glMergeRequest.created_at)).toISOString());
     _.set(storyAfter, 'public', !glMergeRequest.confidential);
-    _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
     _.set(storyAfter, 'details.state', glMergeRequest.state);
     _.set(storyAfter, 'details.branch', glMergeRequest.target_branch);
     _.set(storyAfter, 'details.source_branch', glMergeRequest.source_branch);

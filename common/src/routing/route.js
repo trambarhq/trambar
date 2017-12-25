@@ -171,8 +171,12 @@ Route.parseIdList = function(s) {
     if (s == undefined) {
         return undefined;
     }
-    var tokens = _.split(params.roles, '+');
-    return _.map(tokens, _.strictParseInt);
+    if (s) {
+        var tokens = _.split(s, '+');
+        return _.map(tokens, _.strictParseInt);
+    } else {
+        return [];
+    }
 }
 
 /**

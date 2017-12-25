@@ -1,20 +1,49 @@
 .search-bar {
-    padding: 4px 9px 8px 4px;
-    text-align: right;
 
-    label {
-        color: #999999;
-        margin-right: 0.35em;
+    .text-input {
+        padding: 0.1em 0.25em 0.25em 0.25em;
+
+        input[type=text] {
+            font-size: 1em;
+            width: 100%;
+            color: #eeeeee;
+            background-color: #333333;
+            border: 0;
+            padding: 3px 3px 3px 3px;
+
+            &::placeholder {
+                color: #666666;
+                text-align: center;
+            }
+
+        }
+
+        .single-col & {
+            padding-bottom: 0.1em;
+        }
+
+        .double-col &,
+        .triple-col & {
+            float: right;
+            width: 40em;
+        }
     }
 
-    input[type=text] {
-        font-size: 1em;
-        min-width: 20em;
-        max-width: 40em;
-        width: 28%;
-        color: #eeeeee;
-        background-color: #333333;
-        border: 0;
-        padding: 3px 3px 3px 3px;
+    .tags {
+        overflow: hidden;
+        padding: 0.25em 0.25em 0.25em 0.25em;
+        text-align: right;
+        height: 2em;
+
+        .tag {
+            display: inline-block;
+            margin: 0.25em 0.25em 0.25em 0.25em;
+            color: #666666;
+            cursor: pointer;
+
+            &.selected {
+                border-bottom: 1px solid #444444;
+            }
+        }
     }
 }

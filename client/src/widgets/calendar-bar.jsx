@@ -69,7 +69,6 @@ module.exports = Relaks.createClass({
             var calParams = pageOptions.navigation.top.dateSelection;
             var criteria = {
                 type: calParams.statistics.type,
-                target_user_id: currentUserId,
                 filters: _.map(timeRanges, (timeRange) => {
                     return _.extend({
                         time_range: timeRange,

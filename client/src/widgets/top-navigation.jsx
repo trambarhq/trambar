@@ -52,7 +52,7 @@ module.exports = React.createClass({
             return 'search';
         } else if (params.date) {
             return 'calendar';
-        } else if (!_.isEmpty(params.roles)) {
+        } else if (params.roles !== undefined) {
             return 'filter';
         }
         return null;
@@ -123,6 +123,7 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderSpacerBar: function() {
+        // TODO
         return null;
     },
 
@@ -178,6 +179,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render one of the controls
+     *
+     * @return {ReactElement}
+     */
     renderControl: function() {
         switch (this.state.selectedControl) {
             case 'calendar': return this.renderCalendarBar();
@@ -223,12 +229,18 @@ module.exports = React.createClass({
      */
     renderSearchBar: function() {
         var props = {
+            database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
         };
         return <SearchBar {...props} />;
     },
 
+    /**
+     * Expand/Collapse control
+     *
+     * @param  {String} name
+     */
     toggleControl: function(name) {
         if (this.state.expanded && name === this.state.selectedControl) {
             this.setState({ expanded: false }, () => {
