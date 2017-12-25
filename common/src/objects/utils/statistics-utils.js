@@ -28,6 +28,7 @@ function fetchProjectDailyActivities(db, projects) {
                 return;
             }
             var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            var tzOffset = DateUtils.getTimeZoneOffset();
             var filters = _.map(timeRanges, (timeRange) => {
                 return {
                     external_object: dateRange.filters.external_object,
@@ -68,6 +69,7 @@ function fetchUserDailyActivities(db, project, users) {
         // load daily-activities statistics
         var filterLists = _.map(dateRanges, (dateRange) => {
             var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            var tzOffset = DateUtils.getTimeZoneOffset();
             return _.map(timeRanges, (timeRange) => {
                 return {
                     user_ids: dateRange.filters.user_ids,

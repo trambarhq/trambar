@@ -208,8 +208,6 @@ function copyRepoDetails(repo, members, glRepo, glLabels, link) {
     _.set(repoAfter, 'type', 'gitlab');
     _.set(repoAfter, 'name', glRepo.name);
     _.set(repoAfter, 'user_ids', _.map(members, 'id'));
-    _.set(repoAfter, 'details.ssh_url', glRepo.ssh_url);
-    _.set(repoAfter, 'details.http_url', glRepo.http_url);
     _.set(repoAfter, 'details.web_url', glRepo.web_url);
     _.set(repoAfter, 'details.issues_enabled', glRepo.issues_enabled);
     _.set(repoAfter, 'details.archived', glRepo.archived);

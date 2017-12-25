@@ -104,38 +104,54 @@ var TaskListSync = module.exports.Sync = React.createClass({
         if (task.completion === 100) {
             switch (task.action) {
                 case 'gitlab-repo-import':
-                    var count = _.size(task.details.added);
-                    return t('task-imported-$count-repos', count);
+                    var added = _.size(task.details.added);
+                    var deleted = _.size(task.details.deleted);
+                    var modified = _.size(task.details.modified);
+                    if (added) {
+                        return t('task-imported-$count-repos', added);
+                    } else if (deleted) {
+                        return t('task-removed-$count-repos', deleted);
+                    } else if (modified) {
+                        return t('task-updated-$count-repos', modified);
+                    }
                 case 'gitlab-user-import':
-                    var count = _.size(task.details.added);
-                    return t('task-imported-$count-users', count);
+                    var added = _.size(task.details.added);
+                    var deleted = _.size(task.details.deleted);
+                    var modified = _.size(task.details.modified);
+                    if (added) {
+                        return t('task-imported-$count-users', added);
+                    } else if (deleted) {
+                        return t('task-removed-$count-users', deleted);
+                    } else if (modified) {
+                        return t('task-updated-$count-users', modified);
+                    }
                 case 'gitlab-hook-install':
-                    var count = _.size(task.details.added);
-                    return t('task-installed-$count-hooks', count);
+                    var added = _.size(task.details.added);
+                    return t('task-installed-$count-hooks', added);
                 case 'gitlab-hook-remove':
-                    var count = _.size(task.details.deleted);
-                    return t('task-removed-$count-hooks', count);
+                    var deleted = _.size(task.details.deleted);
+                    return t('task-removed-$count-hooks', deleted);
                 case 'gitlab-event-import':
-                    var count = _.size(task.details.added);
+                    var added = _.size(task.details.added);
                     var repo = task.options.repo;
-                    return t('task-imported-$count-events-from-$repo', count, repo);
+                    return t('task-imported-$count-events-from-$repo', added, repo);
                 case 'gitlab-push-import':
-                    var count = _.size(task.details.added);
+                    var added = _.size(task.details.added);
                     var repo = task.options.repo;
                     var branch = task.options.branch;
-                    return t('task-imported-push-with-$count-commits-from-$repo-$branch', count, repo, branch);
+                    return t('task-imported-push-with-$count-commits-from-$repo-$branch', added, repo, branch);
                 case 'gitlab-commit-comment-import':
-                    var count = _.size(task.details.added);
+                    var added = _.size(task.details.added);
                     var repo = task.options.repo;
-                    return t('task-imported-$count-commit-comments-from-$repo', count, repo);
+                    return t('task-imported-$count-commit-comments-from-$repo', added, repo);
                 case 'gitlab-issue-comment-import':
-                    var count = _.size(task.details.added);
+                    var added = _.size(task.details.added);
                     var repo = task.options.repo;
-                    return t('task-imported-$count-issue-comments-from-$repo', count, repo);
+                    return t('task-imported-$count-issue-comments-from-$repo', added, repo);
                 case 'gitlab-merge-request-comment-import':
-                    var count = _.size(task.details.added);
+                    var added = _.size(task.details.added);
                     var repo = task.options.repo;
-                    return t('task-imported-$count-merge-request-comments-from-$repo', count, repo);
+                    return t('task-imported-$count-merge-request-comments-from-$repo', added, repo);
                 default:
                     return '';
             }

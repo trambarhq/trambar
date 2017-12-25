@@ -447,11 +447,28 @@ module.exports = function(languageCode) {
             return `Installed ${hooks}`;
         },
         'task-installing-hooks': 'Installing hooks',
+
         'task-removed-$count-hooks': (count) => {
             var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
             return `Removed ${hooks}`;
         },
+        'task-removed-$count-repos': (count) => {
+            var repos = (count === 1) ? `1 repository` : `${count} repositories`;
+            return `Removed ${repos}`;
+        },
+        'task-removed-$count-users': (count) => {
+            var users = (count === 1) ? `1 user` : `${count} users`;
+            return `Removed ${users}`;
+        },
         'task-removing-hooks': 'Uninstalling hooks',
+        'task-updated-$count-repos': (count) => {
+            var repos = (count === 1) ? `1 repository` : `${count} repositories`;
+            return `Updated ${repos}`;
+        },
+        'task-updated-$count-users': (count) => {
+            var users = (count === 1) ? `1 user` : `${count} users`;
+            return `Updated ${users}`;
+        },
 
         'text-field-placeholder-none': 'none',
 
