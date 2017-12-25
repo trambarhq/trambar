@@ -159,7 +159,10 @@ module.exports = Relaks.createClass({
         }).then(() => {
             if (searching) {
                 // load story matching filters
-                var criteria = {};
+                var criteria = {
+                    published: true,
+                    ready: true,
+                };
                 var remote;
                 if (params.date) {
                     var s = Moment(params.date);

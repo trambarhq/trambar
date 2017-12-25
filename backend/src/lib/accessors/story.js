@@ -94,7 +94,7 @@ module.exports = _.create(ExternalData, {
             CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} USING gin(user_ids);
-            CREATE INDEX ON ${table} USING gin(("lowerCase"(tags))) WHERE cardinality(tags) <> 0; 
+            CREATE INDEX ON ${table} USING gin(("lowerCase"(tags))) WHERE cardinality(tags) <> 0;
         `;
         //
         return db.execute(sql);
@@ -193,16 +193,15 @@ module.exports = _.create(ExternalData, {
             if (typeof(criteria.per_user_limit) === 'number') {
                 // use a lateral join to limit the number of results per user
                 // apply conditions on sub-query
-                var user = require('accessor/user').getTableName('global');
+                var user = require('accessors/user').getTableName('global');
                 var story = this.getTableName(schema);
                 var conditions = _.concat(`${user}.id = ANY(user_ids)`, query.conditions);
                 var subquery = `
                     SELECT DISTINCT top_story.id
                     FROM ${user} JOIN LATERAL (
                         SELECT * FROM ${story}
-                        WHERE ${condition.join(' AND ')}
-                        AND type = 'push'
-                        ORDER BY ptime DESC
+                        WHERE ${conditions.join(' AND ')}
+                        ORDER BY COALESCE(ptime, btime) DESC
                         LIMIT ${criteria.per_user_limit}
                     ) top_story ON true
                 `;

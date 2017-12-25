@@ -22,6 +22,7 @@ module.exports = Relaks.createClass({
     displayName: 'UserList',
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
+        stories: PropTypes.arrayOf(PropTypes.object).isRequired,
         currentUser: PropTypes.object.isRequired,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -97,29 +98,34 @@ module.exports = Relaks.createClass({
             props.dailyActivities = statistics;
             return meanwhile.show(<UserListSync {...props} />);
         }).then(() => {
-            // load story listings, one per user
-            var criteria = {
-                type: 'news',
-                target_user_id: props.currentUser.id,
-                filters: _.map(props.users, (user) => {
-                    return {
-                        user_ids: [ user.id ]
+            if (!this.props.stories) {
+                // load story listings, one per user
+                var criteria = {
+                    type: 'news',
+                    target_user_id: props.currentUser.id,
+                    filters: _.map(props.users, (user) => {
+                        return {
+                            user_ids: [ user.id ]
+                        };
+                    }),
+                };
+                return db.find({ table: 'listing', criteria }).then((listings) => {
+                    props.listings = listings;
+                }).then(() => {
+                    // load stories in listings
+                    var storyIds = _.flatten(_.map(props.listings, (listing) => {
+                        // return only the five latest
+                        return _.slice(listing.story_ids, -5);
+                    }));
+                    var criteria = {
+                        id: _.uniq(storyIds)
                     };
-                }),
-            };
-            return db.find({ table: 'listing', criteria });
-        }).then((listings) => {
-            props.listings = listings;
-        }).then(() => {
-            // load stories in listings
-            var storyIds = _.flatten(_.map(props.listings, (listing) => {
-                // return only the five latest
-                return _.slice(listing.story_ids, -5);
-            }));
-            var criteria = {
-                id: _.uniq(storyIds)
-            };
-            return db.find({ table: 'story', criteria });
+                    return db.find({ table: 'story', criteria });
+                });
+            } else {
+                // we already got the stories from search
+                return this.props.stories;
+            }
         }).then((stories) => {
             props.stories = stories;
             return <UserListSync {...props} />;
@@ -217,8 +223,13 @@ var UserListSync = module.exports.Sync = React.createClass({
             var user = evt.item;
             var roles = findRoles(this.props.roles, user);
             var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
-            var listing = findListing(this.props.listings, user);
-            var stories = findStories(this.props.stories, listing);
+            var stories;
+            if (this.props.listings) {
+                listing = findListing(this.props.listings, user);
+                stories = findListingStories(this.props.stories, listing);
+            } else {
+                stories = findUserStories(this.props.stories, user);
+            }
             var chartType = this.state.chartSelection[user.id];
             var userProps = {
                 user,
@@ -300,7 +311,7 @@ var findListing = Memoize(function(listings, user) {
     }
 });
 
-var findStories = Memoize(function(stories, listing) {
+var findListingStories = Memoize(function(stories, listing) {
     if (listing) {
         var hash = _.keyBy(stories, 'id');
         return _.filter(_.map(listing.story_ids, (id) => {
@@ -309,4 +320,10 @@ var findStories = Memoize(function(stories, listing) {
     } else {
         return [];
     }
+});
+
+var findUserStories = Memoize(function(stories, user) {
+    return _.filter(stories, (story) => {
+        return _.includes(story.user_ids, user.id);
+    });
 });

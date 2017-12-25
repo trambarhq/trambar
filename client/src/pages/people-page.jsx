@@ -99,7 +99,8 @@ module.exports = Relaks.createClass({
         var props = {
             project: null,
             users: null,
-            currentUserId: null,
+            stories: null,
+            currentUser: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -124,18 +125,40 @@ module.exports = Relaks.createClass({
             props.project = project;
             return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
-            var criteria = {
-                id: props.project.user_ids,
-                hidden: false
-            };
-            if (!_.isEmpty(params.roles)) {
-                criteria.role_ids = params.roles;
-            }
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
             if (params.search) {
-                users = findMatchingUsers(users, params.search);
+                // search for matching stories
+                var criteria = {
+                    published: true,
+                    ready: true,
+                    search: {
+                        lang: this.props.locale.lang,
+                        text: params.search,
+                    },
+                    per_user_limit: 5
+                };
+                if (!_.isEmpty(params.roles)) {
+                    criteria.role_ids = params.roles;
+                }
+                return db.find({ table: 'story', criteria, remote: true }).then((stories) => {
+                    props.stories = stories;
+                    var userIds = _.uniq(_.flatten(_.map(stories, 'user_ids')));
+                    var criteria = {
+                        id: userIds,
+                        hidden: false
+                    };
+                    return db.find({ schema: 'global', table: 'user', criteria });
+                });
+            } else {
+                var criteria = {
+                    id: props.project.user_ids,
+                    hidden: false
+                };
+                if (!_.isEmpty(params.roles)) {
+                    criteria.role_ids = params.roles;
+                }
+                return db.find({ schema: 'global', table: 'user', criteria });
             }
+        }).then((users) => {
             props.users = users;
             return <PeoplePageSync {...props} />;
         });
@@ -180,6 +203,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         }
         var listProps = {
             users: this.props.users,
+            stories: this.props.stories,
             currentUser: this.props.currentUser,
 
             database: this.props.database,
@@ -190,37 +214,3 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         return <UserList {...listProps} />
     },
 });
-
-var findMatchingUsers = Memoize(function(users, search) {
-    var searchWords = _.split(_.toLower(search), /\+/);
-    return _.filter(users, (user) => {
-        // not using a short-circuited construct here for easier debugging
-        if (match(user.details.name, searchWords)) {
-            return true;
-        }
-        if (match(user.username, searchWords)) {
-            return true;
-        }
-        if (match(user.details.email, searchWords)) {
-            return true;
-        }
-    });
-});
-
-function match(text, searchWords) {
-    if (text instanceof Object) {
-        for (var lang in text) {
-            if (match(text[lang], searchWords)) {
-                return true;
-            }
-        }
-    }
-    var words = _.split(_.toLower(_.trim(text)), /\s+/);
-    // require matching of every search word
-    return _.every(searchWords, (searchWord) => {
-        // it's a match when the string starts with the search word
-        return _.some(words, (word) => {
-            return _.startsWith(word, searchWord);
-        });
-    });
-}
