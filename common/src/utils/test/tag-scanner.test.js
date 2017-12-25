@@ -13,10 +13,6 @@ describe('TagScanner', function() {
             var result = TagScanner.findTags('#hello #world');
             expect(result).to.deep.equal([ '#hello', '#world' ]);
         })
-        it('should find convert upper case tags to lowercase', function() {
-            var result = TagScanner.findTags('#HELLO #World');
-            expect(result).to.deep.equal([ '#hello', '#world' ]);
-        })
         it('should find tags in multilingual text object', function() {
             var text = {
                 en: '#hello #world',
@@ -25,6 +21,16 @@ describe('TagScanner', function() {
             var result = TagScanner.findTags(text);
             expect(result).to.deep.equal([ '#hello', '#world' ]);
         })
+        it('ignore the hash portion of URL', function() {
+            var url = `Here's a URL: https://en.wikipedia.org/wiki/Iron_Man_in_other_media#Live-action from Wikipedia`;
+            var result = TagScanner.findTags(url);
+            expect(result).to.deep.equal([]);
+        });
+        it('ignore e-mail address', function() {
+            var url = `Here's an email address: someone@somewhere.net. It's bogus`;
+            var result = TagScanner.findTags(url);
+            expect(result).to.deep.equal([]);
+        });
     })
     describe('#isTag', function() {
         it('should return true when given a tag', function() {
