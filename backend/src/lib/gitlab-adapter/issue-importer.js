@@ -186,6 +186,11 @@ function copyIssueProperties(story, author, glIssue, link) {
         _.set(storyAfter, 'details.title', glIssue.title);
         _.set(storyAfter, 'details.labels', glIssue.labels);
     }
+    if (story) {
+        if (story.details.state !== storyAfter.details.state) {
+            storyAfter.btime = new String('NOW()');
+        }
+    }
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
