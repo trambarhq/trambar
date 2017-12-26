@@ -430,7 +430,8 @@ module.exports = React.createClass({
                     }
                     var blobUrl = BlobManager.manage(blob);
                     return MediaLoader.loadVideo(blobUrl).then((video) => {
-                        return FrameGrabber.capture(video).then((poster) => {
+                        return FrameGrabber.capture(video).then((posterBlob) => {
+                            var posterBlobUrl = BlobManager.manage(posterBlob);
                             // upload file in small chunks
                             var stream = new BlobStream;
                             stream.pipe(blob);
@@ -440,7 +441,7 @@ module.exports = React.createClass({
                                 filename: file.name,
                                 file: blobUrl,
                                 stream: stream,
-                                poster_file: poster,
+                                poster_file: posterBlobUrl,
                                 width: video.videoWidth,
                                 height: video.videoHeight,
                                 clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
