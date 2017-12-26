@@ -32,6 +32,7 @@ module.exports = React.createClass({
     displayName: 'MediaEditor',
     mixins: [ UpdateCheck ],
     propTypes: {
+        allowEmbedding: PropTypes.bool,
         resources: PropTypes.arrayOf(PropTypes.object),
         initialResourceIndex: PropTypes.number,
 
@@ -226,6 +227,7 @@ module.exports = React.createClass({
         var embedProps = {
             label: t('media-editor-embed'),
             icon: 'code',
+            hidden: !this.props.allowEmbedding,
             onClick: this.handleEmbedClick,
         };
         var shiftProps = {

@@ -630,6 +630,7 @@ module.exports = React.createClass({
     renderMediaPreview: function() {
         var editorProps = {
             ref: this.components.setters.mediaEditor,
+            allowEmbedding: true,
             resources: _.get(this.state.draft, 'details.resources'),
             locale: this.props.locale,
             theme: this.props.theme,

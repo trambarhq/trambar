@@ -22,7 +22,7 @@ var PushButton = require('widgets/push-button');
 var HeaderButton = require('widgets/header-button');
 var ProfileImage = require('widgets/profile-image');
 var DropZone = require('widgets/drop-zone');
-var MediaToolbar = require('widgets/media-toolbar');
+var ReactionMediaToolbar = require('widgets/reaction-media-toolbar');
 var MediaEditor = require('editors/media-editor');
 
 require('./reaction-editor.scss');
@@ -62,13 +62,6 @@ module.exports = React.createClass({
         };
         this.updateDraft(nextState, this.props)
         return nextState;
-    },
-
-    /**
-     * Monitor connection of video or audio recordign devices
-     */
-    componentWillMount: function() {
-        DeviceManager.addEventListener('change', this.handleDeviceChange);
     },
 
     /**
@@ -118,7 +111,7 @@ module.exports = React.createClass({
                             {this.renderTextArea()}
                         </div>
                         <div className="buttons">
-                            {this.renderMediaButtons()}
+                            {this.renderMediaToolbar()}
                             {this.renderActionButtons()}
                         </div>
                     </div>
@@ -168,47 +161,14 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderMediaButtons: function() {
-        var t = this.props.locale.translate;
-        var photoButtonProps = {
-            tooltip: t('story-photo'),
-            icon: 'camera',
-            hidden: !this.state.hasCamera,
-            onClick: this.handlePhotoClick,
+    renderMediaToolbar: function() {
+        var props = {
+            reaction: this.state.draft,
+            capturing: this.state.capturing,
+            locale: this.props.locale,
+            onAction: this.handleAction,
         };
-        var videoButtonProps = {
-            tooltip: t('story-video'),
-            icon: 'video-camera',
-            hidden: !this.state.hasCamera,
-            onClick: this.handleVideoClick,
-        };
-        var audioButtonProps = {
-            tooltip: t('story-audio'),
-            icon: 'microphone',
-            hidden: !this.state.hasMicrophone,
-            onClick: this.handleAudioClick,
-        };
-        var selectButtonProps = {
-            tooltip: t('story-file'),
-            icon: 'file',
-            onChange: this.handleFileSelect,
-        }
-        var markdown = _.get(this.state.draft, 'details.markdown', false);
-        var markdownProps = {
-            tooltip: t('story-markdown'),
-            icon: 'pencil-square',
-            highlighted: markdown,
-            onClick: this.handleMarkdownClick,
-        };
-        return (
-            <div className="media-buttons">
-                <HeaderButton {...photoButtonProps} />
-                <HeaderButton {...videoButtonProps} />
-                <HeaderButton {...audioButtonProps} />
-                <HeaderButton.File {...selectButtonProps} />
-                <HeaderButton {...markdownProps} />
-            </div>
-        );
+        return <ReactionMediaToolbar {...props} />;
     },
 
     /**
@@ -253,18 +213,13 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
+            onCaptureStart: this.handleCaptureStart,
+            onCaptureEnd: this.handleCaptureEnd,
             onChange: this.handleResourcesChange,
         };
         return (
             <MediaEditor {...editorProps} />
         );
-    },
-
-    /**
-     * Remove event handler on unmount
-     */
-    componentWillUnmount: function() {
-        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
 
     /**
@@ -289,6 +244,22 @@ module.exports = React.createClass({
             this.setState({ draft }, () => {
                 resolve(draft);
             });
+        });
+    },
+
+    /**
+     * Set current draft and initiate autosave
+     *
+     * @param  {Reaction} draft
+     * @param  {Boolean} immediate
+     *
+     * @return {Promise<Reaction>}
+     */
+    saveDraft: function(draft, immediate) {
+        return this.changeDraft(draft).then((reaction) => {
+            var delay = (immediate) ? 0 : AUTOSAVE_DURATION;
+            this.autosaveReaction(reaction, delay);
+            return reaction;
         });
     },
 
@@ -400,11 +371,7 @@ module.exports = React.createClass({
 
         // look for tags
         draft.tags = TagScanner.findTags(draft.details.text);
-
-        return this.changeDraft(draft).then(() => {
-            this.autosaveReaction(draft, AUTOSAVE_DURATION);
-            return null;
-        });
+        return this.saveDraft(draft);
     },
 
     /**
@@ -417,10 +384,7 @@ module.exports = React.createClass({
     handlePublishClick: function(evt) {
         var reaction = _.clone(this.state.draft);
         reaction.published = true;
-
-        return this.changeDraft(reaction).then(() => {
-            return this.saveReaction(reaction);
-        }).then(() => {
+        return this.saveDraft(reaction, true).then(() => {
             this.triggerFinishEvent();
         });
     },
@@ -456,44 +420,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user click on photo button
-     *
-     * @param  {Event} evt
-     */
-    handlePhotoClick: function(evt) {
-        this.components.mediaEditor.capture('image');
-    },
-
-    /**
-     * Called when user click on video button
-     *
-     * @param  {Event} evt
-     */
-    handleVideoClick: function(evt) {
-        this.components.mediaEditor.capture('video');
-    },
-
-    /**
-     * Called when user click on audio button
-     *
-     * @param  {Event} evt
-     */
-    handleAudioClick: function(evt) {
-        this.components.mediaEditor.capture('audio');
-    },
-
-    /**
-     * Called after user has selected a file
-     *
-     * @param  {Event} evt
-     */
-    handleFileSelect: function(evt) {
-        var files = evt.target.files;
-        this.components.mediaEditor.importFiles(files);
-        return null;
-    },
-
-    /**
      * Called when user add or remove a resource or adjusted image cropping
      *
      * @param  {Object} evt
@@ -503,31 +429,26 @@ module.exports = React.createClass({
     handleResourcesChange: function(evt) {
         var path = `details.resources`;
         var draft = _.decoupleSet(this.state.draft, path, evt.resources);
-        return this.changeDraft(draft).then((draft) => {
-            var delay = AUTOSAVE_DURATION;
-            if (hasUnsentFiles(evt.resources)) {
-                delay = 0;
-            }
-            this.autosaveReaction(draft, delay);
-            return null;
-        });
+        var immediate = hasUnsentFiles(evt.resources);
+        return this.saveDraft(draft, immediate);
     },
 
     /**
-     * Called when user clicks the Markdown button
+     * Called when MediaEditor opens one of the capture dialog boxes
      *
-     * @param  {Event} evt
-     *
-     * @return {Promise}
+     * @param  {Object} evt
      */
-    handleMarkdownClick: function(evt) {
-        var path = `details.markdown`;
-        var markdown = !_.get(this.state.draft, path, false);
-        var draft = _.decoupleSet(this.state.draft, path, markdown);
-        return this.changeDraft(draft).then((draft) => {
-            this.autosaveReaction(draft, AUTOSAVE_DURATION);
-            return null;
-        });
+    handleCaptureStart: function(evt) {
+        this.setState({ capturing: evt.mediaType });
+    },
+
+    /**
+     * Called when MediaEditor stops rendering a media capture dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleCaptureEnd: function(evt) {
+        this.setState({ capturing: null });
     },
 
     /**
@@ -554,15 +475,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when the list of media devices changes
+     * Called when user initiates an action
      *
      * @param  {Object} evt
      */
-    handleDeviceChange: function(evt) {
-        this.setState({
-            hasCamera: DeviceManager.hasDevice('videoinput'),
-            hasMicrophone: DeviceManager.hasDevice('audioinput'),
-        });
+    handleAction: function(evt) {
+        switch (evt.action) {
+            case 'markdown-set':
+                var draft = _.decouple(this.state.draft, 'details');
+                draft.details.markdown = evt.value;
+                this.saveDraft(draft);
+                break;
+            case 'photo-capture':
+                this.components.mediaEditor.capture('image');
+                break;
+            case 'video-capture':
+                this.components.mediaEditor.capture('video');
+                break;
+            case 'audio-capture':
+                this.components.mediaEditor.capture('audio');
+                break;
+            case 'file-import':
+                this.components.mediaEditor.importFiles(evt.files);
+                break;
+        }
     },
 });
 
