@@ -22,6 +22,7 @@ var PushButton = require('widgets/push-button');
 var HeaderButton = require('widgets/header-button');
 var ProfileImage = require('widgets/profile-image');
 var DropZone = require('widgets/drop-zone');
+var MediaToolbar = require('widgets/media-toolbar');
 var MediaEditor = require('editors/media-editor');
 
 require('./reaction-editor.scss');
@@ -206,7 +207,6 @@ module.exports = React.createClass({
                 <HeaderButton {...audioButtonProps} />
                 <HeaderButton.File {...selectButtonProps} />
                 <HeaderButton {...markdownProps} />
-                {this.props.cornerPopUp}
             </div>
         );
     },
@@ -269,13 +269,11 @@ module.exports = React.createClass({
 
     /**
      * Set keyboard focus on text area
-     *
-     * @return {[type]}
      */
     focus: function() {
-        var component = this.refs.textarea;
-        if (component) {
-            component.focus();
+        var textarea = this.refs.textarea;
+        if (textarea) {
+            textarea.focus();
         }
     },
 

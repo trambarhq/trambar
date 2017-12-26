@@ -155,6 +155,7 @@ module.exports = React.createClass({
             id: 'title',
             value: this.getIssueProperty('title'),
             locale: this.props.locale,
+            autofocus: true,
             onChange: this.handleTitleChange,
         };
         return <TextField {...props}>{t('issue-title')}</TextField>;

@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 var IssueUtils = require('objects/utils/issue-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
@@ -57,6 +58,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            reactionList: ReactionList
+        });
         var nextState = {
             options: defaultOptions,
             commentsExpanded: this.shouldExpandComments(this.props),
@@ -387,6 +391,7 @@ module.exports = React.createClass({
                 return null;
             }
         }
+        var setters = this.components.setters;
         var listProps = {
             access: this.props.access,
             acceptNewReaction: this.state.addingComment,
@@ -405,7 +410,7 @@ module.exports = React.createClass({
         };
         return (
             <Scrollable>
-                <ReactionList {...listProps} />
+                <ReactionList ref={setters.reactionList} {...listProps} />
             </Scrollable>
         );
     },
@@ -764,10 +769,14 @@ module.exports = React.createClass({
                 this.removeReaction(evt.like);
                 break;
             case 'reaction-add':
-                this.setState({
-                    addingComment: true,
-                    commentsExpanded: true
-                });
+                if (!this.state.addingComment) {
+                    this.setState({
+                        addingComment: true,
+                        commentsExpanded: true
+                    });
+                } else {
+                    this.components.reactionList.focus();
+                }
                 break;
             case 'reaction-expand':
                 this.setState({

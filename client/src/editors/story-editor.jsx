@@ -78,6 +78,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         this.components = ComponentRefs({
             mediaEditor: MediaEditor,
+            textArea: HTMLTextAreaElement,
         });
         this.resourcesReferenced = {};
         var nextState = {
@@ -422,6 +423,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderTextArea: function() {
+        var setters = this.components.setters;
         var languageCode = this.state.options.languageCode;
         var lang = languageCode.substr(0, 2);
         var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
@@ -431,7 +433,7 @@ module.exports = React.createClass({
             autofocus: !!_.get(this.state.draft, 'id'),
             onChange: this.handleTextChange,
         };
-        return <AutosizeTextArea {...props} />;
+        return <AutosizeTextArea ref={setters.textArea} {...props} />;
     },
 
     /**
@@ -1201,7 +1203,9 @@ module.exports = React.createClass({
             var langText = _.get(draft, `details.text.${lang}`, '') + tag;
             _.set(draft, `details.text.${lang}`, langText);
             _.set(draft, `details.markdown`, true);
-            this.saveDraft(draft);
+            this.saveDraft(draft).then(() => {
+                this.components.textArea.focus();
+            });
         }
     },
 
