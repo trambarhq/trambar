@@ -196,7 +196,7 @@ module.exports = _.create(LiveData, {
             // admin console doesn't use this object currently
             return false;
         }
-        if (LiveData.isRelevantTo(event, user, subscription)) {
+        if (LiveData.isRelevantTo.call(this, event, user, subscription)) {
             if (event.current.target_user_id === user.id) {
                 if (event.current.dirty) {
                     // the row will be updated soon

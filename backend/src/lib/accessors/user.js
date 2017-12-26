@@ -253,7 +253,7 @@ module.exports = _.create(ExternalData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        if (ExternalData.isRelevantTo(event, user, subscription)) {
+        if (ExternalData.isRelevantTo.call(this, event, user, subscription)) {
             var columns = _.keys(event.diff);
             var publicColumns = _.without(columns, 'settings');
             if (!_.isEmpty(publicColumns)) {

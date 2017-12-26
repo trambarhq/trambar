@@ -156,7 +156,7 @@ module.exports = _.create(LiveData, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        if (LiveData.isRelevantTo(event, user, subscription)) {
+        if (LiveData.isRelevantTo.call(this, event, user, subscription)) {
             switch (event.current.type) {
                 case 'story-popularity':
                     // used for ranking stories only

@@ -248,7 +248,7 @@ module.exports = _.create(ExternalData, {
             // admin console doesn't use this object currently
             return false;
         }
-        if (ExternalData.isRelevantTo(event, user, subscription)) {
+        if (ExternalData.isRelevantTo.call(this, event, user, subscription)) {
             // reactions are relevant to all user even before they're published
             // that's used to show someone is commenting
             return true;

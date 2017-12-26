@@ -267,7 +267,6 @@ module.exports = _.create(ExternalData, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        console.log('Story.import()', objects);
         var storiesPublished = [];
         return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((storyReceived, index) => {
             // make sure current user has permission to modify the object
@@ -347,7 +346,7 @@ module.exports = _.create(ExternalData, {
             // admin console doesn't use this object currently
             return false;
         }
-        if (ExternalData.isRelevantTo(event, user, subscription)) {
+        if (ExternalData.isRelevantTo.call(this, event, user, subscription)) {
             if (event.current.published && event.current.ready) {
                 return true;
             }

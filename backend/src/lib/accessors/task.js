@@ -184,7 +184,7 @@ module.exports = _.create(Data, {
      * @return {Boolean}
      */
     isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo(event, user, subscription)) {
+        if (Data.isRelevantTo.call(this, event, user, subscription)) {
             if (event.current.user_id) {
                 if (event.current.user_id === user.id) {
                     return true;
