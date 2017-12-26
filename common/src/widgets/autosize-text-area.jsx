@@ -5,6 +5,20 @@ require('./autosize-text-area.scss');
 
 module.exports = React.createClass({
     displayName: 'AutosizeTextArea',
+    propTypes: {
+        autofocus: PropTypes.bool,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            autofocus: false
+        };
+    },
 
     /**
      * Return initial state of component
@@ -31,7 +45,7 @@ module.exports = React.createClass({
         var style = _.extend({
             height: this.state.requiredHeight,
         }, this.props.style);
-        var props = _.omit(this.props, 'style');
+        var props = _.omit(this.props, 'style', 'autofocus');
         return (
             <div className="autosize-text-area">
                 <textarea ref={setters.shadow} style={style} className="shadow" value={props.value} readOnly />
@@ -48,6 +62,9 @@ module.exports = React.createClass({
     componentDidMount: function() {
         window.removeEventListener('resize', this.handleDocumentResize);
         this.updateSize();
+        if (this.props.autofocus) {
+            this.components.actual.focus();
+        }
     },
 
     /**

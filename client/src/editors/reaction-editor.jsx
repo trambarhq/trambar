@@ -156,6 +156,7 @@ module.exports = React.createClass({
             ref: 'textarea',
             value: langText,
             lang: lang,
+            autofocus: true,
             onChange: this.handleTextChange,
         };
         return <AutosizeTextArea {...textareaProps} />

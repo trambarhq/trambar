@@ -428,6 +428,7 @@ module.exports = React.createClass({
         var props = {
             value: langText,
             lang: lang,
+            autofocus: !!_.get(this.state.draft, 'id'),
             onChange: this.handleTextChange,
         };
         return <AutosizeTextArea {...props} />;
