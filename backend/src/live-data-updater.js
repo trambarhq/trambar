@@ -401,8 +401,7 @@ function updateListing(schema, id) {
                     // save the new candidate list
                     var details = _.assign({}, listing.details, { candidates });
                     var finalized = _.isEmpty(candidates);
-                    var utime = new String('NOW()');
-                    return Listing.unlock(db, schema, id, { details, finalized, utime }, 'gn');
+                    return Listing.unlock(db, schema, id, { details, finalized }, 'gn');
                 });
             }).catch((err) => {
                 return Listing.unlock(db, schema, id).throw(err);

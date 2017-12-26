@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 var Moment = require('moment');
 var Relaks = require('relaks');
+var DateTracker = require('utils/date-tracker');
 var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
@@ -262,13 +263,22 @@ module.exports = Relaks.createClass({
                 return meanwhile.show(<NewsPageSync {...props} />);
             }
         }).then(() => {
-            if (!searching && props.listing) {
+            if (!searching) {
                 // look for pending stories, those written by the user but
                 // is too recent to be included in the listing
-                var userStoryIds = _.map(props.stories, 'id');
+                var recentUserStories = _.filter(props.stories, (story) => {
+                    if (_.includes(story.user_ids, props.currentUser.id)) {
+                        if (story.ptime > DateTracker.yesterdayISO) {
+                            return true;
+                        }
+                    }
+                });
+                var recentUserStoryIds = _.map(recentUserStories, 'id');
                 var criteria = {
                     published: true,
-                    newer_than: props.listing.utime,
+                    exclude: recentUserStoryIds,
+                    user_ids: [ props.currentUser.id ],
+                    newer_than: DateTracker.yesterdayISO,
                 };
                 return db.find({ table: 'story', criteria });
             }
