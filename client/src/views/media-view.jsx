@@ -102,10 +102,13 @@ module.exports = React.createClass({
     render: function() {
         return (
             <div className="media-view">
-                {this.renderResource()}
-                {this.renderNavigation()}
-                {this.renderAudioPlayer()}
-                {this.renderDialogBox()}
+                <div className="spacer" />
+                <div className="container">
+                    {this.renderResource()}
+                    {this.renderNavigation()}
+                    {this.renderAudioPlayer()}
+                    {this.renderDialogBox()}
+                </div>
             </div>
         );
     },

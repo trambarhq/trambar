@@ -1,81 +1,95 @@
 .media-view {
     position: relative;
 
-    IMG, CANVAS {
-        display: block;
-        width: 100%;
-        height: auto;
+    .spacer {
+        padding-top: 100%;
     }
 
-    .image, .video, .audio, .website {
-        cursor: pointer;
-    }
-
-    .overlay {
+    .container {
         position: absolute;
-        top: 0;
         left: 0;
+        top: 0;
         bottom: 0;
         right: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 0;
-        color: #000000;
 
-        .icon {
-            font-size: 10em;
-        }
-
-        .duration {
-            font-size: 2em;
-        }
-
-        &.hidden {
-            opacity: 0;
-
-            &:hover {
-                opacity: 0.6;
-            }
-        }
-    }
-
-    .website {
-        A {
+        IMG, CANVAS {
             display: block;
+            width: 100%;
+            height: auto;
+            top: 0;
+            left: 0;
+        }
 
-            &:link, &:visited {
-                color: #000000;
+        .image, .video, .audio, .website {
+            cursor: pointer;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+            color: #000000;
+
+            .icon {
+                font-size: 10em;
+            }
+
+            .duration {
+                font-size: 2em;
+            }
+
+            &.hidden {
+                opacity: 0;
+
+                &:hover {
+                    opacity: 0.6;
+                }
             }
         }
-    }
 
-    .audio {
-        padding-top: 50%;
-        padding-bottom: 50%;
-        background-color: #111111;
-    }
+        .website {
+            A {
+                display: block;
 
-    .navigation {
-        position: absolute;
-        width: 100%;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-
-        .left {
-            float: left;
+                &:link, &:visited {
+                    color: #000000;
+                }
+            }
         }
 
-        .right {
-            float: right;
+        .audio {
+            padding-top: 50%;
+            padding-bottom: 50%;
+            background-color: #111111;
         }
-    }
 
-    audio {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
+        .navigation {
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+
+            .left {
+                float: left;
+            }
+
+            .right {
+                float: right;
+            }
+        }
+
+        audio {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
     }
 }

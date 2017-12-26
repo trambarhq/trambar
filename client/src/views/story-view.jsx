@@ -59,6 +59,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         this.components = ComponentRefs({
+            reactionContainer: HTMLDivElement,
             reactionList: ReactionList
         });
         var nextState = {
@@ -68,6 +69,7 @@ module.exports = React.createClass({
                 user_id: this.props.currentUserId,
                 published: false
             }),
+            isTall: false,
         };
         this.updateOptions(nextState, this.props);
         return nextState;
@@ -192,7 +194,6 @@ module.exports = React.createClass({
                 </div>
                 <div className="body">
                     <div className="column-2">
-                        {this.renderReactionAudioPlayer()}
                         {this.renderReactions()}
                     </div>
                 </div>
@@ -225,7 +226,6 @@ module.exports = React.createClass({
                         {this.renderContents()}
                     </div>
                     <div className="column-2">
-                        {this.renderReactionAudioPlayer()}
                         {this.renderReactions()}
                     </div>
                 </div>
@@ -261,7 +261,6 @@ module.exports = React.createClass({
                         {this.renderContents()}
                     </div>
                     <div className="column-2">
-                        {this.renderReactionAudioPlayer()}
                         {this.renderReactions()}
                     </div>
                     <div className="column-3 padded">
@@ -408,48 +407,38 @@ module.exports = React.createClass({
             selectedReactionId: this.props.selectedReactionId,
             onFinish: this.handleCommentFinish,
         };
+        var className = 'scrollable';
+        if (this.state.isTall && this.props.theme.mode !== 'single-col') {
+            className += ' abs';
+        }
         return (
-            <Scrollable>
+            <div ref={setters.reactionContainer} className={className}>
                 <ReactionList ref={setters.reactionList} {...listProps} />
-            </Scrollable>
+            </div>
         );
-    },
-
-    renderReactionSpacer: function() {
-        if (this.props.theme.mode === 'single-col') {
-            if (!this.state.commentsExpanded) {
-                return null;
-            }
-        }
-        var count = _.size(this.props.reactions);
-        if (this.state.addingComment) {
-            count += 2;
-        }
-        if (count > 10) {
-            count = 10;
-        }
-        if (count === 0) {
-            return null;
-        }
-        var height = (count * 1.5) + 'em';
-        return <div style={{ height }} />;
     },
 
     /**
-     * Render audio player for audio in comments
-     *
-     * @return {ReactElement|null}
+     * Check the height of the cell containing the reaction scroll box. If it's
+     * taller than the scroll box's max height, then we use absolute positioning
+     * instead so there's no gap at the bottom.
      */
-    renderReactionAudioPlayer: function() {
-        var url = this.state.selectedAudioUrl;
-        if (!url) {
-            return null;
+    adjustReactionContainer: function() {
+        if (this.props.theme.mode !== 'single-col') {
+            var container = this.components.reactionContainer;
+            if (container) {
+                var cell = container.parentNode;
+                if (!reactionContainerMaxHeight) {
+                    // calculate this once
+                    var containerStyle = getComputedStyle(container);
+                    reactionContainerMaxHeight = parseInt(containerStyle.maxHeight);
+                }
+                var isTall = (cell.offsetHeight > reactionContainerMaxHeight);
+                if (this.state.isTall !== isTall) {
+                    this.setState({ isTall });
+                }
+            }
         }
-        return (
-            <div className="audio-container">
-                <audio src={url} controls />
-            </div>
-        );
     },
 
     /**
@@ -491,6 +480,23 @@ module.exports = React.createClass({
             onChange: this.handleOptionsChange,
         };
         return <StoryViewOptions {...props} />;
+    },
+
+    /**
+     * Adjust height of reaction container on mount
+     */
+    componentDidMount: function() {
+        this.adjustReactionContainer();
+    },
+
+    /**
+     * Adjust height of reaction container on update
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        this.adjustReactionContainer();
     },
 
     /**
@@ -786,6 +792,8 @@ module.exports = React.createClass({
         }
     }
 });
+
+var reactionContainerMaxHeight;
 
 var defaultOptions = {
     issueDetails: null,
