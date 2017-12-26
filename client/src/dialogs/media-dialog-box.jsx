@@ -202,20 +202,23 @@ module.exports = React.createClass({
      */
     renderImage: function(res, maxWidth, maxHeight) {
         var theme = this.props.theme;
-        var image = _.omit(res, 'clip');
+        var width = res.width;
+        var height = res.height;
         var url;
+        // don't resize when it's a GIF since it might be animated
         if (res.format === 'gif') {
-            url = theme.getImageUrl(image);
+            url = theme.getImageUrl(res, { clip: null });
         } else {
-            var width, height;
-            if (res.width > maxWidth) {
+            if (width > maxWidth) {
                 width = maxWidth;
-            } else if (res.height > maxHeight) {
+                height = Math.round(height * (maxWidth / width));
+            } else if (height > maxHeight) {
                 height = maxHeight;
+                width = Math.round(width * (maxHeight / height));
             }
-            url = theme.getImageUrl(image, { width, height })
+            url = theme.getImageUrl(res, { width, height, clip: null })
         }
-        return <img src={url} />;
+        return <img src={url} width={width} height={height} />;
     },
 
     /**

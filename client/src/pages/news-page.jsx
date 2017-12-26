@@ -258,10 +258,6 @@ module.exports = Relaks.createClass({
             }
         }).then((stories) => {
             if (stories) {
-                // reattach blobs (lost when saved)
-                _.each(stories, (story) => {
-                    props.payloads.reattach(params.schema, story);
-                });
                 props.draftStories = stories;
                 return meanwhile.show(<NewsPageSync {...props} />);
             }
@@ -279,10 +275,6 @@ module.exports = Relaks.createClass({
             }
         }).then((stories) => {
             if (stories) {
-                // reattach blobs (lost when saved)
-                _.each(stories, (story) => {
-                    props.payloads.reattach(params.schema, story);
-                });
                 props.pendingStories = stories;
             }
             return <NewsPageSync {...props} />;

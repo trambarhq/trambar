@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var DeviceManager = require('media/device-manager');
+var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 
@@ -51,7 +52,6 @@ module.exports = React.createClass({
             liveVideoStream: null,
             liveVideoError : null,
             capturedImage: null,
-            previewUrl: null,
             videoDevices: DeviceManager.getDevices('videoinput'),
             selectedDeviceId: null,
         };
@@ -75,27 +75,14 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
-                this.clearCapturedImage();
+                this.setState({ capturedImage: null });
                 this.initializeCamera();
             } else {
                 setTimeout(() => {
                     this.shutdownCamera();
-                    this.clearCapturedImage();
+                    this.setState({ capturedImage: null });
                 }, 500);
             }
-        }
-    },
-
-    /**
-     * Removed image that was captured earlier
-     */
-    clearCapturedImage: function() {
-        if (this.state.capturedImage) {
-            URL.revokeObjectURL(this.state.previewUrl);
-            this.setState({
-                capturedImage: null,
-                previewUrl: null,
-            });
         }
     },
 
@@ -223,7 +210,7 @@ module.exports = React.createClass({
      */
     renderCapturedImage: function() {
         var props = {
-            src: this.state.previewUrl,
+            src: this.state.capturedImage.file,
         };
         return (
             <div className="container">
@@ -318,7 +305,6 @@ module.exports = React.createClass({
      */
     componentWillUnmount: function() {
         this.destroyLiveVideoStream();
-        this.clearCapturedImage();
         DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
 
@@ -388,14 +374,16 @@ module.exports = React.createClass({
             // use toBlob() if browser supports it,
             // otherwise fallback to toDataURL()
             if (typeof(canvas.toBlob) === 'function') {
-                canvas.toBlob((file) => {
+                canvas.toBlob((blob) => {
+                    var file = BlobManager.manage(blob);
                     resolve({ format, file, width, height });
                 }, 'image/jpeg', 90);
             } else {
                 var B64toBlob = require('b64-to-blob');
                 var dataUrl = canvas.toDataURL('image/jpeg');
                 var base64Data = dataUrl.replace('data:image/jpeg;base64,', '');
-                var file = B64toBlob(base64Data, 'image/jpeg');
+                var blob = B64toBlob(base64Data, 'image/jpeg');
+                var file = BlobManager.manage(blob);
                 resolve({ format, file, width, height });
             }
         });
@@ -424,11 +412,7 @@ module.exports = React.createClass({
      */
     handleSnapClick: function(evt) {
         this.captureImage().then((image) => {
-            var url = URL.createObjectURL(image.file);
-            this.setState({
-                capturedImage: image,
-                previewUrl: url,
-            });
+            this.setState({ capturedImage: image });
         }).catch((err) => {
             console.error(err);
         });
@@ -440,7 +424,8 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleRetakeClick: function(evt) {
-        this.clearCapturedImage();
+        BlobManager.remove(this.state.capturedImage.file);
+        this.setState({ capturedImage: null });
     },
 
     /**

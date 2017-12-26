@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var HttpRequest = require('transport/http-request');
 var BlobStream = require('transport/blob-stream');
+var BlobManager = require('transport/blob-manager');
 var Async = require('async-do-while');
 
 var Database = require('data/database');
@@ -80,7 +81,7 @@ module.exports = React.createClass({
         switch (res.type) {
             case 'image':
                 if (!res.url) {
-                    if (res.file instanceof Blob) {
+                    if (res.file) {
                         // a local file
                         return 'image-upload';
                     } else if (res.external_url) {
@@ -93,7 +94,7 @@ module.exports = React.createClass({
                 if (!res.url) {
                     if (res.stream) {
                         return 'audio-upload-transcode';
-                    } else if (res.file instanceof Blob) {
+                    } else if (res.file) {
                         return 'audio-upload-transcode';
                     } else if (res.external_url) {
                         return 'audio-copy-transcode';
@@ -104,7 +105,7 @@ module.exports = React.createClass({
                 if (!res.url) {
                     if (res.stream) {
                         return 'video-upload-transcode';
-                    } else if (res.file instanceof Blob) {
+                    } else if (res.file) {
                         return 'video-upload-transcode';
                     } else if (res.external_url) {
                         return 'video-copy-transcode';
@@ -186,12 +187,12 @@ module.exports = React.createClass({
         };
         if (!payload.stream && payload.file) {
             // upload progress for streams is handled differently
-            var file = payload.file;
+            var blob = BlobManager.get(payload.file);
             options.onUploadProgress = (evt) => {
-                var bytesSent = (evt.total) ? Math.round(file.size * (evt.loaded / evt.total)) : 0;
+                var bytesSent = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
                 this.updatePayloadStatus(payloadId, {
                     transferred: bytesSent,
-                    total: file.size,
+                    total: blob.size,
                 });
             };
         }
@@ -217,13 +218,13 @@ module.exports = React.createClass({
             // start the stream before we send the form data
             props.stream = this.stream(payload.stream);
         } else if (payload.file) {
-            props.file = payload.file;
+            props.file = BlobManager.get(payload.file);
         } else if (payload.external_url) {
             props.external_url = payload.external_url;
         }
         // poster
         if (payload.poster_file) {
-            props.poster_file = payload.poster_file;
+            props.poster_file = BlobManager.get(payload.poster_file);
         } else if (payload.external_poster_url) {
             props.external_poster_url = payload.external_poster_url;
         }
@@ -433,7 +434,8 @@ module.exports = React.createClass({
             if (total === 0) {
                 // hasn't started yet
                 if (payload.file) {
-                    total = payload.file.size;
+                    var blob = BlobManager.get(payload.file);
+                    total = blob.size;
                 } else if (payload.stream) {
                     total = payload.stream.size;
                 }

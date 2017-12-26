@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -43,61 +44,96 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        var nextState = {};
-        this.updateUrls(nextState, this.props);
-        return nextState;
+        return {
+            fullImageUrl: null,
+            previewImageUrl: null,
+        };
     },
 
     /**
-     * Update state when
-     *
-     * @param  {[type]} nextProps
-     *
-     * @return {[type]}
+     * Prepare the image on mount
      */
-    componentWillReceiveProps: function(nextProps) {
-        var nextState = _.clone(this.state);
-        if (this.props.resource !== nextProps.resource) {
-            this.updateUrls(nextState, nextProps);
-        }
-        var changes = _.shallowDiff(nextState, this.state);
-        if (!_.isEmpty(changes)) {
-            this.setState(changes);
-        }
+    componentWillMount: function() {
+        this.prepareImage(this.props.resource);
     },
 
     /**
-     * Update URLs in state using props.resource
+     * Prepare the image when it changes
      *
-     * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateUrls: function(nextState, nextProps) {
-        var imageUrlBefore = nextState.imageUrl;
-        var res = nextProps.resource;
-        var theme = nextProps.theme;
-        var file = theme.getImageFile(res);
-        if (file) {
-            // don't download files that we'd earlier uploaded
-            nextState.imageUrl = URL.createObjectURL(file);
-            nextState.previewUrl = null;
-        } else {
-            // download the original file, unclipped
-            nextState.imageUrl = theme.getImageUrl(res, {
-                clip: null
-            });
-            // show a smaller, clipped image in the meantime
-            nextState.previewUrl = theme.getImageUrl(res, {
-                width: this.props.previewWidth,
-                height: this.props.previewHeight,
-                clip: res.clip || getDefaultClippingRect(res.width, res.height),
-            });
-        }
-        if (nextState.imageUrl !== imageUrlBefore) {
-            nextState.imageLoaded = loaded[nextState.imageUrl];
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.resource !== nextProps.resource) {
+            this.prepareImage(nextProps.resource);
         }
     },
 
+    /**
+     * Return URL to full image
+     *
+     * @param  {Object} res
+     *
+     * @return {String|null}
+     */
+    getFullImageUrl: function(res) {
+        // use file we had uploaded earlier if it's there
+        var theme = this.props.theme;
+        var fileUrl = theme.getImageFile(res);
+        if (fileUrl && BlobManager.get(fileUrl)) {
+            return fileUrl;
+        }
+        return theme.getImageUrl(res, { clip: null });
+    },
+
+    /**
+     * Return URL to preview image
+     *
+     * @param  {Object} res
+     *
+     * @return {String|null}
+     */
+    getPreviewImageUrl: function(res) {
+        var theme = this.props.theme;
+        var previewUrl = theme.getImageUrl(res, {
+            width: this.props.previewWidth,
+            height: this.props.previewHeight,
+            clip: res.clip || getDefaultClippingRect(res.width, res.height),
+        });
+    },
+
+    /**
+     * Load the image if it isn't available locally
+     *
+     * @param  {Object} res
+     */
+    prepareImage: function(res) {
+        var fullImageUrl = this.getFullImageUrl(res);
+        var previewImageUrl = null;
+        var blobUrl = BlobManager.find(fullImageUrl);
+        if (blobUrl) {
+            fullImageUrl = blobUrl;
+        } else {
+            previewImageUrl = this.getPreviewImageUrl(res);
+            if (this.state.fullImageUrl !== fullImageUrl) {
+                // load it
+                BlobManager.fetch(fullImageUrl).then((blobUrl) => {
+                    this.setState({
+                        fullImageUrl: blobUrl,
+                        previewImageUrl: null
+                    });
+                });
+            }
+        }
+        if (this.state.fullImageUrl !== fullImageUrl || this.state.previewImageUrl !== previewImageUrl) {
+            this.setState({ fullImageUrl, previewImageUrl });
+        }
+    },
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return (
             <div className="image-editor">
@@ -115,10 +151,10 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderPreview: function() {
-        if (!this.state.previewUrl || this.state.imageLoaded) {
+        if (!this.state.previewImageUrl) {
             return null;
         }
-        return <img className="preview" src={this.state.previewUrl} />;
+        return <img className="preview" src={this.state.previewImageUrl} />;
     },
 
     /**
@@ -127,15 +163,14 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderImageCropper: function() {
-        if (!this.state.imageUrl) {
+        if (!this.state.fullImageUrl || this.state.previewImageUrl) {
             return null;
         }
         var res = this.props.resource;
         var props = {
-            url: this.state.imageUrl,
+            url: this.state.fullImageUrl,
             clippingRect: res.clip || getDefaultClippingRect(res.width, res.height),
             onChange: this.handleClipRectChange,
-            onLoad: this.handleImageLoad,
         };
         return <ImageCropper {...props} />;
     },
@@ -146,7 +181,7 @@ module.exports = React.createClass({
      * @return {ReactELement|null}
      */
     renderPlaceholder: function() {
-        if (this.state.imageUrl) {
+        if (this.state.fullImageUrl || this.state.previewImageUrl) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -181,23 +216,7 @@ module.exports = React.createClass({
         res.clip = evt.rect;
         return this.triggerChangeEvent(res);
     },
-
-    /**
-     * Called when ImageCropper has loaded the image
-     *
-     * @param  {Object} evt
-     *
-     */
-    handleImageLoad: function(evt) {
-        var url = evt.target.props.url;
-        if (this.state.imageUrl === url) {
-            this.setState({ imageLoaded: true });
-        }
-        loaded[url] = true;
-    },
 });
-
-var loaded = {};
 
 /**
  * Return a square clipping rect

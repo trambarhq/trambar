@@ -8,6 +8,7 @@ var LinkParser = require('utils/link-parser');
 var FrameGrabber = require('media/frame-grabber');
 var QuickStart = require('media/quick-start');
 var BlobStream = require('transport/blob-stream');
+var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -398,41 +399,46 @@ module.exports = React.createClass({
      * @return {Promise<Number|null>}
      */
     importFiles: function(files) {
+        // create a copy of the array so it doesn't disappear during
+        // asynchronous operation
         files = _.slice(files);
-        var urls = [];
         return Promise.map(files, (file, index) => {
-            var format = _.last(_.split(file.type, '/'));
-            if (/^image\//.test(file.type)) {
-                var url = urls[index] = URL.createObjectURL(file);
-                return MediaLoader.loadImage(url).then((image) => {
+            var parts = _.split(file.type, '/');
+            var type = parts[0];
+            var format = parts[1];
+            if (type === 'image') {
+                var blobUrl = BlobManager.manage(file);
+                return MediaLoader.loadImage(blobUrl).then((image) => {
                     return {
                         type: 'image',
                         format: format,
                         filename: file.name,
-                        file: file,
+                        file: blobUrl,
                         width: image.naturalWidth,
                         height: image.naturalHeight,
                         clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
                         imported: true,
                     };
                 });
-            } else if (/^video\//.test(file.type)) {
+            } else if (type === 'video') {
+                // if file is in a QuickTime container, make sure metadata is
+                // at the beginning of the file
                 return QuickStart.process(file).then((blob) => {
                     if (!blob) {
                         // if video wasn't processed, use the original file
                         blob = file;
                     }
-                    var url = urls[index] = URL.createObjectURL(blob);
-                    return MediaLoader.loadVideo(url).then((video) => {
+                    var blobUrl = BlobManager.manage(blob);
+                    return MediaLoader.loadVideo(blobUrl).then((video) => {
                         return FrameGrabber.capture(video).then((poster) => {
-                            // upload large files in small chunks
+                            // upload file in small chunks
                             var stream = new BlobStream;
                             stream.pipe(blob);
                             return {
                                 type: 'video',
                                 format: format,
                                 filename: file.name,
-                                file: blob,
+                                file: blobUrl,
                                 stream: stream,
                                 poster_file: poster,
                                 width: video.videoWidth,
@@ -444,22 +450,22 @@ module.exports = React.createClass({
                         });
                     });
                 });
-            } else if (/^audio\//.test(file.type)) {
-                var url = urls[index] = URL.createObjectURL(file);
-                return MediaLoader.loadAudio(url).then((audio) => {
+            } else if (type === 'audio') {
+                var blobUrl = BlobManager.manage(file);
+                return MediaLoader.loadAudio(blobUrl).then((audio) => {
                     var stream = new BlobStream;
                     stream.pipe(file);
                     return {
                         type: 'audio',
                         format: format,
                         filename: file.name,
-                        file: file,
+                        file: blobUrl,
                         stream: stream,
                         duration: Math.round(audio.duration * 1000),
                         imported: true,
                     };
                 });
-            } else if (/^application\/(x-mswinurl|x-desktop)/.test(file.type)) {
+            } else if (type === 'application' && /x-mswinurl|x-desktop/.test(format)) {
                 return BlobReader.loadText(file).then((text) => {
                     var link = LinkParser.parse(text);
                     if (link) {
@@ -473,10 +479,6 @@ module.exports = React.createClass({
             }
         }).then((resources) => {
             return this.addResources(_.filter(resources));
-        }).finally(() => {
-            _.each(urls, (url) => {
-                URL.revokeObjectURL(url);
-            })
         });
     },
 

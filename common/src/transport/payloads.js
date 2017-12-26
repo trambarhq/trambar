@@ -51,30 +51,6 @@ function Payloads(payloadManager) {
     };
 
     /**
-     * Reattach blobs that were filtered out when objects are saved
-     *
-     * @param  {String} schema
-     * @param  {Object} object
-     */
-    this.reattach = function(schema, object) {
-        var resources = _.get(object, 'details.resources', []);
-        _.each(resources, (res) => {
-            // these properties also exist in the corresponding payload objects
-            // find payload with one of them
-            var criteria = _.pick(res, 'payload_id', 'url', 'poster_url');
-            var payload = this.find(schema, criteria);
-            if (payload) {
-                // add properties that are blobs
-                _.forIn(payload, (value, name) => {
-                    if (value instanceof Blob) {
-                        res[name] = value;
-                    }
-                });
-            }
-        });
-    };
-
-    /**
      * Scan an object's resource array and queue blobs for uploading
      *
      * @param  {String} schema

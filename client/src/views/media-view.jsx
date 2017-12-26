@@ -297,16 +297,15 @@ module.exports = React.createClass({
             height = Math.round(width * res.height / res.width)
         }
         var url = theme.getImageUrl(res, { width, height });
-        var file = theme.getImageFile(res);
         if (url) {
             return <img src={url} width={width} height={height} />;
         }
 
         // image isn't done uploading yet
-        if (file instanceof Blob) {
-            // use ImageView, which handles orientation
-            url = URL.createObjectURL(file);
-            return <ImageView url={url} clippingRect={clip} />;
+        var fileUrl = theme.getImageFile(res);
+        if (fileUrl && BlobManager.get(fileUrl)) {
+            // use ImageView, which handles orientation and clipping
+            return <ImageView url={fileUrl} clippingRect={clip} />;
         } else {
             // TODO: placeholder for pending images
             return null;

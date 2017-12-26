@@ -1,4 +1,6 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var BlobManager = require('transport/blob-manager');
+var ImageView = require('media/image-view');
 
 var Theme = require('theme/theme');
 
@@ -8,30 +10,37 @@ require('./profile-image.scss');
 
 function ProfileImage(props) {
     var className = `profile-image ${props.size}`;
-    var imageUrl;
+    var image;
     if (props.user) {
         var resources = _.get(props.user, 'details.resources');
         var profileImage = _.find(resources, { type: 'image' });
+        var imageUrl;
         if (profileImage) {
             var width = imageResolutions[props.size];
-            imageUrl = props.theme.getImageUrl(profileImage, { width: width, height: width });
+            var imageUrl = props.theme.getImageUrl(profileImage, { width: width, height: width });
+            if (imageUrl) {
+                image = <img src={imageUrl} />;
+            } else {
+                var fileUrl = profileImage.file;
+                var clip = profileImage.clip;
+                if (BlobManager.get(fileUrl)) {
+                    image = <ImageView url={fileUrl} clippingRect={clip} />;
+                }
+            }
         }
     }
-    var contents
-    if (imageUrl) {
-        contents = <img src={imageUrl} />;
-    } else {
+    if (!image) {
         var Icon = require('octicons/build/svg/person.svg');
-        contents = (
+        image = (
             <div className="placeholder">
                 <Icon />
             </div>
         );
     }
     if (props.href) {
-        return <a className={className} href={props.href}>{contents}</a>;
+        return <a className={className} href={props.href}>{image}</a>;
     } else {
-        return <span className={className}>{contents}</span>;
+        return <span className={className}>{image}</span>;
     }
 }
 

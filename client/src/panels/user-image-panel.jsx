@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var BlobManager = require('transport/blob-manager');
 var MediaLoader = require('media/media-loader');
 
 var Locale = require('locale/locale');
@@ -257,21 +258,19 @@ module.exports = React.createClass({
         var file = evt.target.files[0];
         if (file) {
             var format = _.last(_.split(file.type, '/'));
-            var url = URL.createObjectURL(file);
-            return MediaLoader.loadImage(url).then((image) => {
+            var blobUrl = BlobManager.manage(file);
+            return MediaLoader.loadImage(blobUrl).then((image) => {
                 var resource = {
                     type: 'image',
                     format: format,
                     filename: file.name,
-                    file: file,
+                    file: blobUrl,
                     width: image.naturalWidth,
                     height: image.naturalHeight,
                     clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
                 };
                 this.setImage(resource);
                 return null;
-            }).finally(() => {
-                URL.revokeObjectURL(url);
             });
         }
     }

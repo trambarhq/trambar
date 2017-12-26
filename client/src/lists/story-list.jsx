@@ -125,11 +125,6 @@ module.exports = Relaks.createClass({
             }
         }).then((reactions) => {
             if (reactions) {
-                // reattach blobs to unpublished reactions (lost when saved)
-                var unpublishedReactions = _.filter(reactions, { ptime: null });
-                _.each(unpublishedReactions, (reaction) => {
-                    props.payloads.reattach(params.schema, reaction);
-                });
                 props.reactions = reactions;
                 return meanwhile.show(<StoryListSync {...props} />);
             }

@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var DeviceManager = require('media/device-manager');
+var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
@@ -438,7 +439,8 @@ module.exports = React.createClass({
             canvas.width = width;
             canvas.height = height;
             context.drawImage(video, 0, 0, width, height);
-            canvas.toBlob((file) => {
+            canvas.toBlob((blob) => {
+                var file = BlobManager.manage(blob);
                 resolve({ type, file, width, height });
             }, type, 90);
         });

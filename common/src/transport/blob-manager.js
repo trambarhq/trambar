@@ -5,8 +5,10 @@ var HttpRequest = require('transport/http-request');
 module.exports = {
     manage,
     find,
+    get,
     associate,
     fetch,
+    remove,
 };
 
 var list = [];
@@ -20,11 +22,11 @@ var list = [];
  * @return {String}
  */
 function manage(blob) {
-    var localUrl = URL.createObjectUrl(blob);
+    var localUrl = URL.createObjectURL(blob);
     var remoteUrl;
     var atime = new Date;
     list.push({ blob, localUrl, remoteUrl, atime });
-    return localURL;
+    return localUrl;
 }
 
 /**
@@ -32,20 +34,32 @@ function manage(blob) {
  *
  * @param  {String} url
  *
- * @return {Blob|null}
+ * @return {String|null}
  */
 function find(url) {
     var entry = _.find(list, { localUrl: url });
     if (!entry) {
         entry = _.find(list, { remoteUrl: url });
-        if (!entry) {
-            var entry = _.find(list, { altLocalUrl: url });
-        }
     }
     if (!entry) {
         return null;
     }
     entry.atime = new Date;
+    return entry.localUrl;
+}
+
+/**
+ * Return the actual blob from its local URL
+ *
+ * @param  {String} localUrl
+ *
+ * @return {Blob}
+ */
+function get(localUrl) {
+    var entry = _.find(list, { localUrl });
+    if (!entry) {
+        return null;
+    }
     return entry.blob;
 }
 
@@ -72,22 +86,31 @@ function associate(target, remoteUrl) {
 }
 
 /**
- * Load a blob from remote location if local copy doesn't exist
+ * Load a blob from remote location
  *
- * @param  {String} localUrl
  * @param  {String} remoteUrl
  *
  * @return {Promise<String>}
  */
-function fetch(localUrl, remoteUrl) {
-    if (localUrl && find(localUrl)) {
-        return Promise.resolve(localUrl);
-    }
+function fetch(remoteUrl) {
     var options = { responseType: 'blob' };
     return HttpRequest.fetch('GET', remoteUrl, null, options).then((blob) => {
-        var newLocalUrl = manage(blob);
-        var entry = _.find(list, { blob });
-        entry.altLocalUrl = localUrl;
-        return newLocalUrl;
+        var localUrl = manage(blob);
+        associate(localUrl, remoteUrl);
+        return localUrl;
     });
+}
+
+/**
+ * Release a blob
+ *
+ * @param  {String} localUrl
+ */
+function remove(localUrl) {
+    var index = _.findIndex(list, { localUrl });
+    if (index !== -1) {
+        var entry = list[index];
+        list.splice(index, 1);
+        URL.revokeObjectURL(entry.localUrl);
+    }
 }

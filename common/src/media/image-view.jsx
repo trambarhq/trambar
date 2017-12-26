@@ -9,19 +9,7 @@ module.exports = React.createClass({
     propTypes: {
         url: PropTypes.string,
         clippingRect: PropTypes.object,
-        revokeBlobUrl: PropTypes.bool,
         onLoad: PropTypes.func,
-    },
-
-    /**
-     * Return initial props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            revokeBlobUrl: true
-        };
     },
 
     /**
@@ -50,9 +38,6 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.url !== nextProps.url) {
-            if (this.props.revokeBlobUrl) {
-                revokeUrl(this.props.url);
-            }
             this.load(nextProps.url);
         }
         if (this.clippingRect !== nextProps.clippingRect) {
@@ -69,7 +54,7 @@ module.exports = React.createClass({
      */
     render: function() {
         var setters = this.components.setters;
-        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect', 'revokeBlobUrl');
+        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
         return <canvas ref={setters.canvas} {...props} />
     },
 
@@ -80,12 +65,6 @@ module.exports = React.createClass({
         if (this.image && this.redrawNeeded) {
             // image was loaded before first render
             this.drawImage(this.props.clippingRect);
-        }
-    },
-
-    componentWillUnmount: function() {
-        if (this.props.revokeBlobUrl) {
-            revokeUrl(this.props.url);
         }
     },
 
@@ -312,12 +291,4 @@ function transformRect(m, r) {
 		left: Math.min(c2[0], c1[0]),
 		top: Math.min(c2[1], c1[1]),
 	};
-}
-
-
-function revokeUrl(url) {
-    if (/^blob:/.test(url)) {
-        URL.revokeObjectURL(url);
-        console.log('Revoking: ' + url);
-    }
 }
