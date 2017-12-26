@@ -267,6 +267,7 @@ module.exports = _.create(ExternalData, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
+        console.log('Story.import()', objects);
         var storiesPublished = [];
         return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((storyReceived, index) => {
             // make sure current user has permission to modify the object
@@ -295,34 +296,36 @@ module.exports = _.create(ExternalData, {
             }
 
             if (storyReceived.published_version_id) {
-                // load the published versions
-                var criteria = { id: storyReceived.published_version_id, deleted: false };
-                return this.findOne(db, schema, criteria, '*').then((storyPublished) => {
-                    if (storyPublished) {
-                        // update the original row with properties from the temp copy
-                        var updates = {};
-                        updates.id = storyPublished.id;
-                        updates.details = storyReceived.details;
-                        updates.type = storyReceived.type;
-                        updates.user_ids = storyReceived.user_ids;
-                        updates.role_ids  = storyReceived.role_ids;
-                        updates.public = storyReceived.public;
+                if (storyReceived.published) {
+                    // load the published versions
+                    var criteria = { id: storyReceived.published_version_id, deleted: false };
+                    return this.findOne(db, schema, criteria, '*').then((storyPublished) => {
+                        if (storyPublished) {
+                            // update the original row with properties from the temp copy
+                            var updates = {};
+                            updates.id = storyPublished.id;
+                            updates.details = storyReceived.details;
+                            updates.type = storyReceived.type;
+                            updates.user_ids = storyReceived.user_ids;
+                            updates.role_ids  = storyReceived.role_ids;
+                            updates.public = storyReceived.public;
 
-                        // stick contents of the original row into the temp copy
-                        // so we can retrieve them later potentially
-                        storyReceived.details = storyPublished.details;
-                        storyReceived.type = storyPublished.type;
-                        storyReceived.user_ids = storyPublished.user_ids;
-                        storyReceived.role_ids  = storyPublished.role_ids;
-                        storyReceived.public = storyPublished.public;
-                        storyReceived.deleted = true;
+                            // stick contents of the original row into the temp copy
+                            // so we can retrieve them later potentially
+                            storyReceived.details = storyPublished.details;
+                            storyReceived.type = storyPublished.type;
+                            storyReceived.user_ids = storyPublished.user_ids;
+                            storyReceived.role_ids  = storyPublished.role_ids;
+                            storyReceived.public = storyPublished.public;
+                            storyReceived.deleted = true;
 
-                        // check permission again (just in case)
-                        this.checkWritePermission(updates, storyPublished, credentials);
-                        storiesPublished.push(updates);
-                    }
-                    return storyReceived;
-                });
+                            // check permission again (just in case)
+                            this.checkWritePermission(updates, storyPublished, credentials);
+                            storiesPublished.push(updates);
+                        }
+                        return storyReceived;
+                    });
+                }
             }
             return storyReceived;
         }).then((storiesReceived) => {

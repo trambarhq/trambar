@@ -444,7 +444,7 @@ module.exports = React.createClass({
             <div className="audio-container">
                 <audio src={url} controls />
             </div>
-        )
+        );
     },
 
     /**
