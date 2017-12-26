@@ -91,6 +91,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            freshRoute: this.props.route !== prevProps.route,
 
             onSelectionClear: this.props.onSelectionClear,
         };
@@ -242,6 +243,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         repos: PropTypes.arrayOf(PropTypes.object),
         selectedStoryId: PropTypes.number,
         selectedReactionId: PropTypes.number,
+        freshRoute: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -265,17 +267,38 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Make sure hiddenStoryIds contain valid ids
+     * Update state on prop changes
      *
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.stories !== nextProps.stories) {
-            if (!_.isEmpty(this.state.hiddenStoryIds)) {
-                var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
-                    return _.some(nextProps.stories, { id });
-                });
-                this.setState({ hiddenStoryIds });
+            // when we receive a new list of stories, we need to know if
+            //
+            // (a) it's the previous list with new stories added, in which case
+            //     we want to maintain the scroll position
+            //
+            // (b) the user has apply new conditions (e.g. role filter), in which
+            //     case we want to reset the scroll position
+            //
+            // we can tell by looking at the route; if we get new stories without
+            // a route change, it's (a); otherwise it's (b)
+            //
+            // the route check has to be done by the async component, since the
+            // sync component could receive the route change first, then the
+            // story list change in a subsequent rerender
+            this.freshList = this.props.freshRoute;
+
+            if (this.props.freshRoute) {
+                this.setState({ hiddenStoryIds: [] });
+            } else {
+                // make sure hiddenStoryIds contain valid ids
+                if (!_.isEmpty(this.state.hiddenStoryIds)) {
+                    var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
+                        return _.some(nextProps.stories, { id });
+                    });
+                    this.setState({ hiddenStoryIds });
+                }
             }
         }
         if (this.props.route !== nextProps.route) {
@@ -297,12 +320,14 @@ var StoryListSync = module.exports.Sync = React.createClass({
             behind: 4,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
+            fresh: this.freshList,
 
             onIdentity: this.handleStoryIdentity,
             onRender: this.handleStoryRender,
             onAnchorChange: this.handleStoryAnchorChange,
             onBeforeAnchor: this.handleStoryBeforeAnchor,
         };
+        this.freshList = false;
         return (
             <div className="story-list">
                 <SmartList {...smartListProps} />

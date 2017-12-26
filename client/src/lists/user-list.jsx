@@ -67,6 +67,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             today: this.state.today,
+            freshRoute: this.props.route !== prevProps.route,
         };
         meanwhile.show(<UserListSync {...props} />, delay);
         return db.start().then((userId) => {
@@ -166,6 +167,7 @@ var UserListSync = module.exports.Sync = React.createClass({
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         today: PropTypes.string,
+        freshRoute: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -186,6 +188,18 @@ var UserListSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Update state on prop changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.users !== nextProps.users) {
+            // see explanation in story-list.jsx
+            this.freshList = this.props.freshRoute;
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -196,6 +210,7 @@ var UserListSync = module.exports.Sync = React.createClass({
             items: users,
             behind: 4,
             ahead: 8,
+            fresh: this.freshList,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,

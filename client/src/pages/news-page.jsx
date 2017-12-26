@@ -194,7 +194,7 @@ module.exports = Relaks.createClass({
                     target_user_id: props.currentUser.id,
                     filters: {},
                 };
-                if (params.roles) {
+                if (!_.isEmpty(params.roles)) {
                     criteria.filters.role_ids = params.roles;
                 }
                 if (props.currentUser.type === 'guest') {

@@ -6,6 +6,7 @@ module.exports = React.createClass({
     displayName: 'SmartList',
     propTypes: {
         items: PropTypes.arrayOf(PropTypes.object),
+        fresh: PropTypes.bool,
         behind: PropTypes.number,
         ahead: PropTypes.number,
         anchor: PropTypes.string,
@@ -25,6 +26,7 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
+            fresh: false,
             behind: 5,
             ahead: 10,
             offset: 0,
@@ -56,6 +58,19 @@ module.exports = React.createClass({
         if (this.props.anchor !== nextProps.anchor) {
             this.setState({ currentAnchor: nextProps.anchor });
             this.anchorOffset = nextProps.offset;
+        }
+        if (this.props.fresh) {
+            this.stillFresh = true;
+            // reset the anchor
+            this.setState({ currentAnchor: nextProps.anchor });
+            this.anchorOffset = nextProps.offset;
+
+            if (this.scrollContainer) {
+                // make sure we're at the top when rendering a branch new list
+                if (this.scrollContainer.scrollTop > 0) {
+                    this.scrollContainer.scrollTop = 0;
+                }
+            }
         }
     },
 
@@ -163,21 +178,24 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        var updatingList = !_.isEmpty(this.itemNodes);
-        var newItemIndices = this.scanItemNodes();
-        if (this.state.currentAnchor && updatingList) {
-            // see which new items are behind (i.e. above) the anchor element
-            var ids = _.keys(this.itemNodes);
-            var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
-            var items = _.transform(newItemIndices, (list, index) => {
-                if (index < anchorIndex) {
-                    list.push(this.props.items[index]);
+        if (!this.stillFresh) {
+            var updatingList = !_.isEmpty(this.itemNodes);
+            var newItemIndices = this.scanItemNodes();
+            if (this.state.currentAnchor && updatingList) {
+                // see which new items are behind (i.e. above) the anchor element
+                var ids = _.keys(this.itemNodes);
+                var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
+                var items = _.transform(newItemIndices, (list, index) => {
+                    if (index < anchorIndex) {
+                        list.push(this.props.items[index]);
+                    }
+                }, []);
+                if (!_.isEmpty(items)) {
+                    this.triggerBeforeAnchorEvent(items);
                 }
-            }, []);
-            if (!_.isEmpty(items)) {
-                this.triggerBeforeAnchorEvent(items);
             }
         }
+        this.stillFresh = false;
     },
 
     /**
