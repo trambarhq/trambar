@@ -35,24 +35,38 @@ function match(table, object, criteria) {
         } else {
             // if field is not in the object then check if it's a special
             // search criteria
-            if (name === 'time_range') {
-                if (desiredValue) {
-                    var times = desiredValue.substr(1, desiredValue.length - 2).split(',');
-                    var start = times[0];
-                    var end = times[1];
-                    if (!(start <= object.ptime && object.ptime < end)) {
+            switch (name) {
+                case 'time_range':
+                    if (desiredValue) {
+                        var times = desiredValue.substr(1, desiredValue.length - 2).split(',');
+                        var start = times[0];
+                        var end = times[1];
+                        if (!(start <= object.ptime && object.ptime < end)) {
+                            matching = false;
+                        }
+                    }
+                    break;
+                case 'exclude':
+                    if (_.includes(desiredValue, object.id)) {
                         matching = false;
                     }
-                }
-            } else if (name === 'exclude') {
-                if (_.includes(desiredValue, object.id)) {
+                    break;
+                case 'newer_than':
+                    if (!(object.ptime > desiredValue)) {
+                        matching = false;
+                    }
+                    break;
+                case 'older_than':
+                    if (!(object.ptime < desiredValue)) {
+                        matching = false;
+                    }
+                    break;
+                case 'search':
+                    // never match against cached records
                     matching = false;
-                }
-            } else if (name === 'search') {
-                // never match against cached records
-                matching = false;
-            } else {
-                // assume it matches
+                    break;
+                default:
+                    // assume it matches
             }
         }
     }

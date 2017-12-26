@@ -262,14 +262,13 @@ module.exports = Relaks.createClass({
                 return meanwhile.show(<NewsPageSync {...props} />);
             }
         }).then(() => {
-            if (!searching) {
+            if (!searching && props.listing) {
                 // look for pending stories, those written by the user but
-                // haven't found themselves into the listing yet
+                // is too recent to be included in the listing
                 var userStoryIds = _.map(props.stories, 'id');
                 var criteria = {
                     published: true,
-                    exclude: userStoryIds,
-                    user_ids: [ props.currentUser.id ],
+                    newer_than: props.listing.utime,
                 };
                 return db.find({ table: 'story', criteria });
             }

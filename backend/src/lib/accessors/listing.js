@@ -19,6 +19,7 @@ module.exports = _.create(LiveData, {
         details: Object,
         atime: String,
         ltime: String,
+        utime: String,
         dirty: Boolean,
         finalized: Boolean,
         type: String,
@@ -59,6 +60,7 @@ module.exports = _.create(LiveData, {
                 details jsonb NOT NULL DEFAULT '{}',
                 atime timestamp,
                 ltime timestamp,
+                utime timestamp,
                 dirty boolean NOT NULL DEFAULT false,
                 finalized boolean NOT NULL DEFAULT true,
                 type varchar(32) NOT NULL DEFAULT '',
@@ -172,6 +174,7 @@ module.exports = _.create(LiveData, {
                 object.target_user_id = row.target_user_id;
                 object.filters = row.filters;
                 object.story_ids = _.map(row.details.stories, 'id');
+                object.utime = row.utime;
                 object.details = undefined;
 
                 if (credentials.user.id !== row.target_user_id) {
