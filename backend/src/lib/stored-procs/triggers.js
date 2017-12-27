@@ -80,6 +80,7 @@ function updateResource(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV
         id: NEW.id,
         details: NEW.details,
         completion: NEW.completion,
+        etime: NEW.etime,
     };
     var params = [];
     var sql = `
@@ -142,6 +143,9 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
                     var newRes = newResources[i];
                     delete newRes.ready;
                     delete newRes.payload_id;
+                    delete newRes.file;
+                    delete newRes.poster_file;
+                    delete newRes.stream;
                 }
             }
         }

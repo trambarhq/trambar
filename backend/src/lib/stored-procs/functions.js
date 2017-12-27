@@ -93,13 +93,16 @@ payloadIds.flags = 'IMMUTABLE';
  * @return {Object}
  */
 function updatePayload(details, payload) {
+    // use etime to determine if resource is ready, since progress can get
+    // rounded to 100 before the final step
+    var ready = (payload.completion === 100 && payload.etime !== null);
     var resources = details.resources;
     if (resources) {
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
             if (res.payload_id === payload.id) {
                 transferProps(payload.details, res);
-                res.ready = (payload.completion === 100);
+                res.ready = ready;
             }
         }
     } else {
@@ -107,7 +110,7 @@ function updatePayload(details, payload) {
         var res = details;
         if (res.payload_id === payload.id) {
             transferProps(payload.details, res);
-            res.ready = (payload.completion === 100);
+            res.ready = ready;
         }
     }
     return details;

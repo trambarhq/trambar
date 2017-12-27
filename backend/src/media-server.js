@@ -500,18 +500,24 @@ function checkTaskToken(schema, taskId, token) {
  */
 function saveTaskProgress(schema, taskId, details, completion) {
     return Database.open().then((db) => {
-        return Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
-            if (completion) {
-                task.completion = completion;
-                if (completion === 100) {
-                    task.etime = Object('NOW()');
+        if (details) {
+            // merge with existing details
+            return Task.findOne(db, schema, { id: taskId }, 'id, details').then((task) => {
+                if (!task) {
+                    return;
                 }
-            }
-            if (details) {
+                if (completion) {
+                    task.completion = completion;
+                }
                 _.assign(task.details, details);
+                return Task.updateOne(db, schema, task);
+            });
+        } else {
+            // just set completion
+            if (completion) {
+                return Task.updateOne(db, schema, { id: taskId, completion });
             }
-            return Task.updateOne(db, schema, task);
-        });
+        }
     });
 }
 
@@ -525,7 +531,21 @@ function saveTaskProgress(schema, taskId, details, completion) {
  * @return {Promise}
  */
 function saveTaskOutcome(schema, taskId, details) {
-    return saveTaskProgress(schema, taskId, details, 100);
+    return Database.open().then((db) => {
+        var completion = 100, etime = Object('NOW()');
+        if (details) {
+            // merge with existing details
+            return Task.findOne(db, schema, { id: taskId }, 'id, details').then((task) => {
+                task.completion = completion;
+                task.etime = etime;
+                _.assign(task.details, details);
+                return Task.updateOne(db, schema, task);
+            });
+        } else {
+            // just set completion and etime
+            return Task.updateOne(db, schema, { id: taskId, completion, etime });
+        }
+    });
 }
 
 /**
