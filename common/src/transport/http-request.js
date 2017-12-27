@@ -7,7 +7,7 @@ module.exports = {
 }
 
 function fetch(method, url, payload, options) {
-    var xhr = new XMLHTTPRequest();
+    var xhr = new XMLHttpRequest();
     var promise = new Promise((resolve, reject) => {
         var username = _.get(options, 'username', null);
         var password = _.get(options, 'password', null);
