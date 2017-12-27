@@ -5,6 +5,7 @@
  */
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -40,11 +41,15 @@ module.exports = React.createClass({
     /**
      * Return initial state of component
      *
-     * @return {[type]}
+     * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            container: HTMLDivElement,
+        });
         return {
             height: this.isHidden() ? 0 : 'auto',
+            stacking: false,
         };
     },
 
@@ -91,7 +96,7 @@ module.exports = React.createClass({
         var hiddenBefore = this.isHidden();
         var hiddenAfter = this.isHidden(nextProps.settings);
         if (hiddenBefore !== hiddenAfter) {
-            var container = this.refs.container;
+            var container = this.components.container;
             var contentHeight = container.offsetHeight;
             if (hiddenAfter) {
                 // hiding navigation:
@@ -140,6 +145,7 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
+        var setters = this.components.setters;
         var route = this.props.route;
         var section = _.get(this.props.settings, 'navigation.section');
         var newsProps = {
@@ -153,6 +159,7 @@ module.exports = React.createClass({
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
+            stacking: this.state.stacking,
             url: this.getPageUrl(NotificationsPage),
             onClick: this.handleButtonClick,
         };
@@ -177,15 +184,16 @@ module.exports = React.createClass({
             url: this.getPageUrl(SettingsPage),
             onClick: this.handleButtonClick,
         };
-        var newNotiifcationProps = {
+        var newNotificationProps = {
+            stacking: this.state.stacking,
             database: this.props.database,
             route: this.props.route,
         };
         return (
-            <div ref="container" className="container">
+            <div ref={setters.container} className="container">
                 <Button {...newsProps} />
                 <Button {...notificationsProps}>
-                    <NewNotificationsBadge {...newNotiifcationProps} />
+                    <NewNotificationsBadge {...newNotificationProps} />
                 </Button>
                 <Button {...bookmarksProps} />
                 <Button {...peopleProps} />
@@ -193,29 +201,80 @@ module.exports = React.createClass({
             </div>
         );
     },
+
+    /**
+     * Perform stacking check on mount and add resize handler
+     */
+    componentDidMount: function() {
+        this.detectStacking();
+        window.addEventListener('resize', this.handleWindowResize);
+    },
+
+    /**
+     * Remove resize listener
+     */
+    componentWillUnmount: function() {
+        window.removeEventListener('resize', this.handleWindowResize);
+    },
+
+    /**
+     * Check if icon and text labels are on top of each other
+     */
+    detectStacking: function() {
+        var container = this.components.container;
+        if (container) {
+            var icon = container.getElementsByClassName('fa')[1];
+            var label = container.getElementsByClassName('label')[1];
+            var stacking = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
+            if (this.state.stacking !== stacking) {
+                this.setState({ stacking });
+            }
+        }
+    },
+
+    /**
+     * Called when user resize the browser window
+     *
+     * @param  {Event} evt
+     */
+    handleWindowResize: function(evt) {
+        this.detectStacking();
+    },
 });
 
 function Button(props) {
-    var classes = [ 'button' ];
+    var className = 'button';
     if (props.className) {
-        classes.push(props.className);
+        className += ` ${props.className}`;
     }
     if (props.active) {
-        classes.push('active');
+        className += ' active';
     }
-    return (
-        <Link className={classes.join(' ')} url={props.url}>
-            <i className={`fa fa-${props.icon}`} />
-            {' '}
-            <span className="label">{props.label}</span>
-            {props.children}
-        </Link>
-    );
+    if (props.stacking) {
+        return (
+            <Link className={className} url={props.url}>
+                <i className={`fa fa-${props.icon}`} />
+                    {props.children}
+                    {' '}
+                <span className="label">{props.label}</span>
+            </Link>
+        );
+    } else {
+        return (
+            <Link className={className} url={props.url}>
+                <i className={`fa fa-${props.icon}`} />
+                {' '}
+                <span className="label">{props.label}</span>
+                {props.children}
+            </Link>
+        );
+    }
 }
 
 var NewNotificationsBadge = Relaks.createClass({
     displayName: 'NewNotificationsBadge',
     propTypes: {
+        stacking: PropTypes.bool,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
     },
@@ -233,15 +292,6 @@ var NewNotificationsBadge = Relaks.createClass({
             return null;
         }
         var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
-            currentUser: null,
-            notifications: null,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
         return db.start().then((userId) => {
             var criteria = {
                 target_user_id: userId,
@@ -255,8 +305,12 @@ var NewNotificationsBadge = Relaks.createClass({
             if (!count) {
                 return null;
             }
+            var className = 'badge';
+            if (this.props.stacking) {
+                className += ' stacking';
+            }
             return (
-                <span className="badge">
+                <span className={className}>
                     <span className="number">{count}</span>
                 </span>
             )
