@@ -35,7 +35,6 @@
             align-items: center;
             justify-content: center;
             z-index: 0;
-            color: #000000;
 
             .icon {
                 font-size: 10em;
@@ -64,10 +63,20 @@
             }
         }
 
+        .video {
+            .overlay {
+                color: #111111;
+            }
+        }
+
         .audio {
             padding-top: 50%;
             padding-bottom: 50%;
             background-color: #111111;
+
+            .overlay {
+                color: #eeeeee;
+            }
         }
 
         .navigation {
