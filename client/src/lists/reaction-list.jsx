@@ -87,7 +87,7 @@ module.exports = React.createClass({
             });
             if (!hasUserDraft) {
                 // add editor for blank comment
-                reactions.unshift(null);
+                reactions = _.concat(null, reactions);
             }
         }
         var anchorId = this.props.selectedReactionId;

@@ -400,7 +400,7 @@ module.exports = React.createClass({
         return Promise.try(() => {
             this.cancelAutosave();
             var reaction = this.props.reaction;
-            if (reaction.id) {
+            if (reaction && reaction.id) {
                 if (reaction.ptime) {
                     // reaction was published before--publish it again
                     reaction = _.clone(reaction);
