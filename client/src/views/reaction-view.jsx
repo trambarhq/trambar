@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
 var Memoize = require('utils/memoize');

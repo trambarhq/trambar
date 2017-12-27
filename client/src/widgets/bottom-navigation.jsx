@@ -3,6 +3,7 @@
  *
  * Buttons at the bottom of the screen for going from section to section.
  */
+ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');

@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var BlobManager = require('transport/blob-manager');
 var ImageView = require('media/image-view');

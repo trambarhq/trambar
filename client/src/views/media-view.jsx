@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var HTTPRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
@@ -61,7 +62,7 @@ module.exports = React.createClass({
      */
     getSelectedResourceIndex: function() {
         var maxIndex = this.getResourceCount() - 1;
-        var index = _.min([ this.state.selectedIndex, maxIndex ]);
+        var index = Math.min(this.state.selectedIndex, maxIndex);
         return index;
     },
 
@@ -124,7 +125,7 @@ module.exports = React.createClass({
         if (count <= 1) {
             return null;
         }
-        var index = _.min([ count - 1, this.state.selectedIndex ]);
+        var index = Math.min(count - 1, this.state.selectedIndex);
         var directionProps = {
             index,
             count,
@@ -191,7 +192,7 @@ module.exports = React.createClass({
      */
     renderResource: function() {
         var count = this.props.resources.length;
-        var index = _.min([ count - 1, this.state.selectedIndex ]);
+        var index = Math.min(count - 1, this.state.selectedIndex);
         var res = this.props.resources[index];
         switch (res.type) {
             case 'image': return this.renderImage(res);

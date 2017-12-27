@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var CollapsibleContainer = require('widgets/collapsible-container');

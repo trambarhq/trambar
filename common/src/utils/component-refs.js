@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 module.exports = ComponentRefs;
 
 function ComponentRefs(specs) {

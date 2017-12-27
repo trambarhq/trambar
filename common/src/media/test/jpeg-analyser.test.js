@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Chai = require('chai'), expect = Chai.expect;
 
 var JPEGAnalyser = require('media/jpeg-analyser');

@@ -313,7 +313,8 @@ module.exports = React.createClass({
                     console.error(err);
                 });
             } else if (process.env.PLATFORM === 'cordova') {
-                this.change('/', true).catch((err) => {
+                var url = '/http/localhost/test/news/'
+                this.change(url, true).catch((err) => {
                     console.error(err);
                 });
             }

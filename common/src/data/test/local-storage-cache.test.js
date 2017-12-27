@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react');
 var Chai = require('chai'), expect = Chai.expect;
