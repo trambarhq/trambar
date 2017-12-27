@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Request = require('request');
 var Ignore = require('ignore');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var Async = require('async-do-while');
 var LinkUtils = require('objects/utils/link-utils');
 
@@ -277,7 +277,7 @@ function scanFolder(server, repo, commitId, folderPath) {
         ref: commitId,
     };
     return Transport.fetchAll(server, url, query).catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof HTTPError) {
             if (err.statusCode === 404) {
                 return [];
             }
@@ -349,7 +349,7 @@ function importImage(file) {
         };
         Request.post(options, (err, resp, body) => {
             if (!err && resp && resp.statusCode >= 400) {
-                err = new HttpError(resp.statusCode);
+                err = new HTTPError(resp.statusCode);
             }
             if (!err) {
                 resolve(body);

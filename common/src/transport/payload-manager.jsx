@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
-var HttpRequest = require('transport/http-request');
+var HTTPRequest = require('transport/http-request');
 var BlobStream = require('transport/blob-stream');
 var BlobManager = require('transport/blob-manager');
 var Async = require('async-do-while');
@@ -192,7 +192,7 @@ module.exports = React.createClass({
                 },
             };
             var url = this.getURL(payload);
-            return HttpRequest.fetch('POST', url, formData, options);
+            return HTTPRequest.fetch('POST', url, formData, options);
         });
         payload.promise = promise;
         return;
@@ -346,7 +346,7 @@ module.exports = React.createClass({
                             }
                         };
                     }
-                    return HttpRequest.fetch('POST', url, formData, options).then((response) => {
+                    return HTTPRequest.fetch('POST', url, formData, options).then((response) => {
                         if (!stream.id) {
                             stream.id = response.id;
                             // resolve promise when stream is obtained

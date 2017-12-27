@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Async = require('async-do-while');
-var HttpRequest = require('transport/http-request');
+var HTTPRequest = require('transport/http-request');
 
 module.exports = React.createClass({
     displayName: 'PushNotifier',
@@ -108,7 +108,7 @@ module.exports = React.createClass({
                 responseType: 'json',
                 contentType: 'json',
             };
-            return HttpRequest.fetch('POST', url, payload, options).then((info) => {
+            return HTTPRequest.fetch('POST', url, payload, options).then((info) => {
                 if (attempt === this.registrationAttempt) {
                     this.registrationAttempt = null;
                     this.setState({ info: _.omit(info, 'token'), registered: true });

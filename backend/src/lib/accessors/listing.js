@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Crypto = require('crypto')
 var Database = require('database');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var LiveData = require('accessors/live-data');
 
 var ByRetrievalTime = require('story-raters/by-retrieval-time');
@@ -175,7 +175,7 @@ module.exports = _.create(LiveData, {
                 object.details = undefined;
 
                 if (credentials.user.id !== row.target_user_id) {
-                    throw new HttpError(403);
+                    throw new HTTPError(403);
                 }
             });
             return objects;

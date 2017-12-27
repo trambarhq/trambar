@@ -9,7 +9,7 @@ var Moment = require('moment');
 var Request = require('request');
 var HtpasswdAuth = require('htpasswd-auth');
 var Async = require('async-do-while');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var Database = require('database');
 var Shutdown = require('shutdown');
 var UserTypes = require('objects/types/user-types');
@@ -44,7 +44,7 @@ function start() {
     app.post('/auth/session', handleSessionStart);
     app.get('/auth/session/:token', handleSessionRetrieval);
     app.post('/auth/session/:token/end', handleSessionTermination);
-    app.post('/auth/htpasswd', handleHttpasswdRequest);
+    app.post('/auth/htpasswd', handleHTTPasswdRequest);
     app.get('/auth/:provider/:callback?', handleOAuthTestRequest, handleOAuthActivationRequest, handleOAuthRequest);
     server = app.listen(80);
 
@@ -90,7 +90,7 @@ function sendError(res, err) {
         if (process.env.NODE_ENV === 'production') {
             message = 'The application has encountered an unexpect fault';
         }
-        err = new HttpError(500, { message });
+        err = new HTTPError(500, { message });
     }
     var html = `
         <h1>${err.statusCode} ${err.name}</h1>
@@ -113,7 +113,7 @@ function handleSessionStart(req, res) {
         // an authorization token
         return Crypto.randomBytesAsync(24).then((buffer) => {
             if (!(area === 'client' || area === 'admin')) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             var authentication = {
                 area,
@@ -166,17 +166,17 @@ function handleSessionStart(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleHttpasswdRequest(req, res) {
+function handleHTTPasswdRequest(req, res) {
     var token = req.body.token;
     var username = _.trim(_.lowerCase(req.body.username));
     var password = _.trim(req.body.password);
     Database.open().then((db) => {
         return Authentication.findOne(db, 'global', { token }, '*').then((authentication) => {
             if (!authentication) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (!username || !password) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             var htpasswdPath = process.env.HTPASSWD_PATH;
             return FS.readFileAsync(htpasswdPath, 'utf-8').then((data) => {
@@ -184,7 +184,7 @@ function handleHttpasswdRequest(req, res) {
             }).catch((err) => {
                 if (err.code === 'ENOENT') {
                     // password file isn't there
-                    throw new HttpError(403, {
+                    throw new HTTPError(403, {
                         reason: 'missing-password-file'
                     });
                 } else {
@@ -247,7 +247,7 @@ function handleSessionRetrieval(req, res) {
             if (!authorization) {
                 return Authentication.findOne(db, 'global', criteria, 'id, details').then((authentication) => {
                     if (!authentication) {
-                        throw new HttpError(404);
+                        throw new HTTPError(404);
                     }
                     // no authorization yet--return an error if there's one
                     return {
@@ -288,7 +288,7 @@ function handleSessionTermination(req, res) {
         var criteria = { token, deleted: false };
         return Authorization.findOne(db, 'global', criteria, 'id').then((authorization) => {
             if (!authorization) {
-                throw new HttpError(404);
+                throw new HTTPError(404);
             }
             authorization.deleted = true;
             return Authorization.updateOne(db, 'global', authorization).then((authorization) => {
@@ -320,12 +320,12 @@ function handleOAuthRequest(req, res, done) {
     Database.open().then((db) => {
         return Authentication.findOne(db, 'global', { token }, '*').then((authentication) => {
             if (!authentication) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             var criteria = { id: serverId, deleted: false };
             return Server.findOne(db, 'global', criteria, '*').then((server) => {
                 if (!server) {
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
                 var params = { sid: serverId, token };
                 return authenticateThruPassport(db, req, res, server, params).then((account) => {
@@ -378,7 +378,7 @@ function handleOAuthTestRequest(req, res, done) {
             var criteria = { id: serverId, deleted: false };
             return Server.findOne(db, 'global', criteria, '*').then((server) => {
                 if (!server) {
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
                 var params = { test: 1, sid: serverId, token };
                 var scope;
@@ -414,7 +414,7 @@ function handleOAuthActivationRequest(req, res, done) {
             var criteria = { id: serverId, deleted: false };
             return Server.findOne(db, 'global', criteria, '*').then((server) => {
                 if (!server) {
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
                 var params = { activation: 1, sid: serverId, token };
                 var scope;
@@ -429,7 +429,7 @@ function handleOAuthActivationRequest(req, res, done) {
                     }
                     if (!isAdmin) {
                         var username = account.profile.username;
-                        throw new HttpError(403, {
+                        throw new HTTPError(403, {
                             reason: 'insufficient-access-right',
                             message: `The account "${username}" does not have administrative access`,
                         });
@@ -467,16 +467,16 @@ function handleOAuthActivationRequest(req, res, done) {
  */
 function authorizeUser(db, user, authentication, authType, serverId, details) {
     if (!user) {
-        return Promise.reject(new HttpError(401));
+        return Promise.reject(new HTTPError(401));
     }
     if (authentication.area === 'admin' && user.type !== 'admin') {
-        return Promise.reject(new HttpError(403, {
+        return Promise.reject(new HTTPError(403, {
             reason: 'restricted-area',
             username: user.username,
         }));
     }
     if (user.disabled) {
-        return Promise.reject(new HttpError(403, {
+        return Promise.reject(new HTTPError(403, {
             reason: 'account-disabled',
             username: user.username,
         }));
@@ -614,7 +614,7 @@ function authenticateThruPassport(db, req, res, server, params, scope) {
                 // if this callback is called, then authentication has failed, since
                 // the callback passed to Strategy() resolves the promise and does
                 // not invoke done()
-                reject(new HttpError(403, {
+                reject(new HTTPError(403, {
                     message: info.message,
                     reason: 'access-denied',
                 }));
@@ -662,7 +662,7 @@ function findMatchingUser(db, server, account) {
     }).then((user) => {
         if (!user) {
             if (!acceptNewUser(server)) {
-                throw new HttpError(403, {
+                throw new HTTPError(403, {
                     reason: 'existing-users-only',
                 });
             }
@@ -678,7 +678,7 @@ function findMatchingUser(db, server, account) {
                 } else {
                     if (userAfter.disabled) {
                         // don't create disabled user
-                        throw new HttpError(403, {
+                        throw new HTTPError(403, {
                             reason: 'existing-users-only',
                         });
                     }

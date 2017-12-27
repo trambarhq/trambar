@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var ExternalData = require('accessors/external-data');
 
 module.exports = _.create(ExternalData, {
@@ -366,14 +366,14 @@ module.exports = _.create(ExternalData, {
      */
     checkWritePermission: function(storyReceived, storyBefore, credentials) {
         if (credentials.access !== 'read-write') {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         if (storyBefore) {
             if (!_.includes(storyBefore.user_ids, credentials.user.id)) {
                 // can't modify an object that doesn't belong to the user
                 // unless user is an admin or a moderator
                 if (credentials.user.type !== 'admin' && credentials.user.type !== 'moderator') {
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
             }
             if (storyReceived.hasOwnProperty('user_ids')) {
@@ -382,25 +382,25 @@ module.exports = _.create(ExternalData, {
                         // a coauthor can remove himself only
                         var withoutCurrentUser = _.without(storyBefore.user_ids, credentials.user.id);
                         if (!_.isEqual(storyReceived.user_ids, withoutCurrentUser)) {
-                            throw new HttpError(400);
+                            throw new HTTPError(400);
                         }
                     }
                     if (storyReceived.user_ids[0] !== storyBefore.user_ids[0]) {
                         // cannot make someone else the lead author
-                        throw new HttpError(400);
+                        throw new HTTPError(400);
                     }
                 }
             }
         } else {
             if (storyReceived.id) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (!storyReceived.hasOwnProperty('user_ids')) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (storyReceived.user_ids[0] !== credentials.user.id) {
                 // the lead author must be the current user
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
         }
     },

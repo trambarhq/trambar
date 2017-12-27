@@ -1,6 +1,6 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-var HttpRequest = require('transport/http-request');
+var HTTPRequest = require('transport/http-request');
 var JPEGAnalyser = require('media/jpeg-analyser');
 var ComponentRefs = require('utils/component-refs');
 
@@ -229,7 +229,7 @@ function loadBytes(url) {
     var options = {
         responseType: 'arraybuffer'
     };
-    return HttpRequest.fetch('GET', url, null, options).then((result) => {
+    return HTTPRequest.fetch('GET', url, null, options).then((result) => {
         var bytes = new Uint8Array(result);
         return bytes;
     });

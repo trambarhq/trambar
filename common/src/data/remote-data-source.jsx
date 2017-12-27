@@ -3,8 +3,8 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 
-var HttpRequest = require('transport/http-request');
-var HttpError = require('errors/http-error');
+var HTTPRequest = require('transport/http-request');
+var HTTPError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
 var SessionStartTime = require('data/session-start-time');
 
@@ -68,7 +68,7 @@ module.exports = React.createClass({
         if (!session.authorizationPromise) {
             var url = `${address}/auth/session`;
             var options = { responseType: 'json', contentType: 'json' };
-            session.authorizationPromise = HttpRequest.fetch('POST', url, { area }, options).then((res) => {
+            session.authorizationPromise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
                 session.authentication = res.authentication;
                 // return login information to caller
                 return {
@@ -101,7 +101,7 @@ module.exports = React.createClass({
         var token = session.authentication.token;
         var url = `${address}/auth/session/${token}`;
         var options = { responseType: 'json' };
-        return HttpRequest.fetch('GET', url, {}, options).then((res) => {
+        return HTTPRequest.fetch('GET', url, {}, options).then((res) => {
             var authorization = res.authorization;
             if (authorization) {
                 session.authorization = authorization;
@@ -110,7 +110,7 @@ module.exports = React.createClass({
             } else {
                 var error = _.get(res, 'authentication.error');
                 if (error) {
-                    throw new HttpError(error.statusCode, _.omit(error, 'statusCode'));
+                    throw new HTTPError(error.statusCode, _.omit(error, 'statusCode'));
                 }
                 return false;
             }
@@ -140,7 +140,7 @@ module.exports = React.createClass({
         var url = `${address}/auth/htpasswd`;
         var payload = { token, username, password };
         var options = { responseType: 'json', contentType: 'json' };
-        return HttpRequest.fetch('POST', url, payload, options).then((res) => {
+        return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
             var authorization = res.authorization;
             if (authorization) {
                 session.authorization = authorization;
@@ -172,7 +172,7 @@ module.exports = React.createClass({
         var token = session.authorization.token;
         var url = `${address}/auth/session/${token}/end`;
         var options = { responseType: 'json', contentType: 'json' };
-        return HttpRequest.fetch('POST', url, {}, options).then(() => {
+        return HTTPRequest.fetch('POST', url, {}, options).then(() => {
             session.authentication = null;
             session.authorizationPromise = null;
             session.authorization = null;
@@ -257,7 +257,7 @@ module.exports = React.createClass({
             if (session.authorization) {
                 return session.authorization.user_id;
             } else {
-                throw new HttpError(401);
+                throw new HTTPError(401);
             }
         });
     },
@@ -370,7 +370,7 @@ module.exports = React.createClass({
             return search.promise.then((results) => {
                 if (results.length < query.expected) {
                     this.triggerStupefactionEvent(query, results);
-                    throw new HttpError(404);
+                    throw new HTTPError(404);
                 }
                 return results;
             });
@@ -786,7 +786,7 @@ module.exports = React.createClass({
             contentType: 'json',
             responseType: 'json',
         };
-        return HttpRequest.fetch('POST', url, payload, options).then((result) => {
+        return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
             return result;
         }).catch((err) => {
             if (err.statusCode === 401) {

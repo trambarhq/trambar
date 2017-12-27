@@ -2,10 +2,10 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
 var BodyParser = require('body-parser');
-var Http = require('http');
+var HTTP = require('http');
 var SockJS = require('sockjs');
 var Crypto = Promise.promisifyAll(require('crypto'));
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var Shutdown = require('shutdown');
 
 // accessors
@@ -51,7 +51,7 @@ function listen() {
             });
         });
 
-        server = Http.createServer(app);
+        server = HTTP.createServer(app);
         sockJS.installHandlers(server, { prefix:'/socket' });
         server.listen(80, '0.0.0.0');
     });

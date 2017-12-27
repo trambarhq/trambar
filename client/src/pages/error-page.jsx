@@ -1,5 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -67,7 +67,7 @@ module.exports = React.createClass({
      */
     render: function() {
         var params = this.props.route.parameters;
-        var error = new HttpError(params.code)
+        var error = new HTTPError(params.code)
         var Unicorn = require('unicorn.svg');
         var message;
         if (params.code === 404) {

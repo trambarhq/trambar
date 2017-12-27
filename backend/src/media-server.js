@@ -12,7 +12,7 @@ var FileType = require('file-type');
 var Database = require('database');
 var Shutdown = require('shutdown');
 var Task = require('accessors/task');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 
 var CacheFolders = require('media-server/cache-folders');
 var FileManager = require('media-server/file-manager');
@@ -129,7 +129,7 @@ function sendStaticFile(res, path, cc, filename) {
             }
         });
     }).catch((err) => {
-        sendError(res, new HttpError(404));
+        sendError(res, new HTTPError(404));
     });
 }
 
@@ -227,7 +227,7 @@ function handleWebsiteScreenshot(req, res) {
     var url = req.body.url;
     return checkTaskToken(schema, taskId, token).then(() => {
         if (!url) {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.png');
         WebsiteCapturer.createScreenshot(url, tempPath).then((title) => {
@@ -271,7 +271,7 @@ function handleImageUpload(req, res) {
     return checkTaskToken(schema, taskId, req.query.token).then(() => {
         return FileManager.preserveFile(file, url, CacheFolders.image).then((imageFile) => {
             if (!imageFile) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             var url = `/media/images/${imageFile.hash}`;
             ImageManager.getImageMetadata(imageFile.path).then((metadata) => {
@@ -301,7 +301,7 @@ function handleImageImport(req, res) {
     var url = req.body.external_url;
     return FileManager.preserveFile(file, url, CacheFolders.image).then((imageFile) => {
         if (!imageFile) {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         return ImageManager.getImageMetadata(imageFile.path).then((metadata) => {
             var url = `/media/images/${imageFile.hash}`;
@@ -357,7 +357,7 @@ function handleMediaUpload(req, res, type) {
             // handle streaming upload
             var job = VideoManager.findTranscodingJob(streamId);
             if (!job) {
-                throw new HttpError(404);
+                throw new HTTPError(404);
             }
             job.onProgress = (evt) => {
                 var progress = evt.target.progress;
@@ -377,7 +377,7 @@ function handleMediaUpload(req, res, type) {
             var dstFolder = CacheFolders[type];
             return FileManager.preserveFile(file, url, dstFolder).then((mediaFile) => {
                 if (!mediaFile) {
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
                 var url = `/media/${type}s/${srcHash}`;
                 var job = VideoManager.startTranscodingJob(mediaFile.path, type, mediaFile.hash);
@@ -424,11 +424,11 @@ function handleStreamCreate(req, res) {
     return VideoManager.createJobId().then((jobId) => {
         var file = req.file;
         if (!file) {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         var type = _.first(_.split(file.mimetype, '/'));
         if (type !== 'video' && type !== 'audio') {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         var inputStream = FS.createReadStream(file.path);
         var job = VideoManager.startTranscodingJob(null, type, jobId);
@@ -452,7 +452,7 @@ function handleStreamAppend(req, res) {
         var file = req.file;
         var job = VideoManager.findTranscodingJob(req.params.jobId);
         if (!job) {
-            throw new HttpError(404);
+            throw new HTTPError(404);
         }
         if (file) {
             var inputStream = FS.createReadStream(file.path);
@@ -480,7 +480,7 @@ function checkTaskToken(schema, taskId, token) {
     return Database.open().then((db) => {
         return Task.findOne(db, schema, { id: taskId }, 'token').then((task) => {
             if (!task || task.token !== token) {
-                throw new HttpError(403);
+                throw new HTTPError(403);
             }
             return task;
         });

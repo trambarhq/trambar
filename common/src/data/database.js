@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 
 module.exports = Database;
 

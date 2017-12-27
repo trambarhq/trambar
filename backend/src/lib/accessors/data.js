@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var TagScanner = require('utils/tag-scanner');
 
 module.exports = {
@@ -183,7 +183,7 @@ module.exports = {
      */
     checkWritePermission: function(objectReceived, objectBefore, credentials) {
         if (!credentials.unrestricted) {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
     },
 

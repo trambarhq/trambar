@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var HttpRequest = require('transport/http-request');
+var HTTPRequest = require('transport/http-request');
 
 var Database = require('data/database');
 var Route = require('routing/route');

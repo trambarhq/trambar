@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var Data = require('accessors/data');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 
 module.exports = _.create(Data, {
     schema: 'both',

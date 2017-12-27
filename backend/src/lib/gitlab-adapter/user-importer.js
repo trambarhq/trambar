@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var Request = require('request');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 var LinkUtils = require('objects/utils/link-utils');
@@ -392,7 +392,7 @@ function importProfileImage(glUser) {
     return new Promise((resolve, reject) => {
         Request.post(options, (err, resp, body) => {
             if (!err && resp && resp.statusCode >= 400) {
-                err = new HttpError(resp.statusCode);
+                err = new HTTPError(resp.statusCode);
             }
             if (!err) {
                 resolve(body);

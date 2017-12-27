@@ -265,7 +265,7 @@ function getIssueNumber(server, glProjectId, glIssueId) {
     }).then(() => {
         var issueNumber = _.get(issueNumberCache, [ baseURL, glProjectId, glIssueId ]);
         if (!issueNumber) {
-            return Promise.reject(new HttpError(404));
+            return Promise.reject(new HTTPError(404));
         }
         return issueNumber;
     });

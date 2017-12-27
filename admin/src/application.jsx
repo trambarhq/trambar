@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var ComponentRefs = require('utils/component-refs');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var CorsRewriter = require('routing/cors-rewriter');
 
 // non-visual components

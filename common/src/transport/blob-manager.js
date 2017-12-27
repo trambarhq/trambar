@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var HttpRequest = require('transport/http-request');
+var HTTPRequest = require('transport/http-request');
 
 module.exports = {
     manage,
@@ -94,7 +94,7 @@ function associate(target, remoteURL) {
  */
 function fetch(remoteURL) {
     var options = { responseType: 'blob' };
-    return HttpRequest.fetch('GET', remoteURL, null, options).then((blob) => {
+    return HTTPRequest.fetch('GET', remoteURL, null, options).then((blob) => {
         var localURL = manage(blob);
         associate(localURL, remoteURL);
         return localURL;

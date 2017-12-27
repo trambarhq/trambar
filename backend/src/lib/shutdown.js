@@ -31,7 +31,7 @@ function off(callback) {
 /**
  * Close an HTTP server
  *
- * @param  {HttpServer|null} server
+ * @param  {HTTPServer|null} server
  * @param  {Number} maxWait
  *
  * @return {Promise}

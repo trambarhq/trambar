@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var ProjectSettings = require('objects/settings/project-settings');
 
 module.exports = _.create(Data, {
@@ -121,7 +121,7 @@ module.exports = _.create(Data, {
                 return Project.findOne(db, schema, criteria, 'user_ids, settings').then((project) => {
                     var access = ProjectSettings.getUserAccessLevel(project, credentials.user);
                     if (!access) {
-                        throw new HttpError(400);
+                        throw new HTTPError(400);
                     }
                     return subscriptionReceived;
                 });
@@ -160,15 +160,15 @@ module.exports = _.create(Data, {
     checkWritePermission: function(subscriptionReceived, subscriptionBefore, credentials) {
         // don't allow modifications
         if (subscriptionBefore) {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         if (subscriptionReceived.area !== credentials.area) {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         // don't allow non-admin to monitor all schemas
         if (subscriptionReceived.schema === '*') {
             if (credentials.area !== 'admin') {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
         }
     }

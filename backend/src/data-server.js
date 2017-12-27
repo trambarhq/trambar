@@ -7,7 +7,7 @@ var Moment = require('moment');
 var LodashExtra = require('utils/lodash-extra');
 var Database = require('database');
 var Shutdown = require('shutdown');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var ProjectSettings = require('objects/settings/project-settings');
 
 // global accessors
@@ -124,7 +124,7 @@ function handleDiscovery(req, res) {
                 _.each(clauses, (clause) => {
                     var m = /^(\w+)\s+(asc|desc)/i.exec(clause);
                     if (!m) {
-                        throw new HttpError(400);
+                        throw new HTTPError(400);
                     }
                 });
             } else {
@@ -133,7 +133,7 @@ function handleDiscovery(req, res) {
             if (criteria.limit) {
                 criteria.limit = parseInt(criteria.limit);
                 if (criteria.limit > 5000) {
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
             } else {
                 criteria.limit = 5000;
@@ -141,7 +141,7 @@ function handleDiscovery(req, res) {
             if (params.include_deleted) {
                 if (area !== 'admin') {
                     // only admin can see deleted objects
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
             } else {
                 criteria.deleted = false;
@@ -210,10 +210,10 @@ function handleRetrieval(req, res) {
                 }
             }
             if (!(ids instanceof Array)) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (ids.length > 5000) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
 
             var options = {
@@ -269,10 +269,10 @@ function handleStorage(req, res) {
             var objects = params.objects;
             // make sure objects are such
             if (!_.isArray(objects) || _.isEmpty(objects)) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (!_.every(objects, _.isObjectLike)) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
 
             var options = {
@@ -299,7 +299,7 @@ function handleStorage(req, res) {
                     }).then((rows) => {
                         if (!_.every(rows, _.isObjectLike)) {
                             // an update failed
-                            throw new HttpError(404);
+                            throw new HTTPError(404);
                         }
                         return accessor.associate(db, schema, objects, originals, rows, credentials).return(rows);
                     }).then((rows) => {
@@ -336,7 +336,7 @@ function handleStorage(req, res) {
 function checkAuthorization(db, token) {
     return Authorization.check(db, token, area).then((userId) => {
         if (!userId) {
-            throw new HttpError(401);
+            throw new HTTPError(401);
         }
         var days = (area === 'client') ? 30 : 1;
         return Authorization.extend(db, token, days).return(userId);
@@ -370,7 +370,7 @@ function fetchCredentials(db, userId, schema) {
     return Promise.join(userP, projectP, (user, project) => {
         if (!user) {
             // credentials are invalid if the user is missing or disabled
-            throw new HttpError(401);
+            throw new HTTPError(401);
         }
         var access = 'none';
         var unrestricted = false;
@@ -379,7 +379,7 @@ function fetchCredentials(db, userId, schema) {
             var access = ProjectSettings.getUserAccessLevel(project, user);
             if (!access) {
                 // user has no access to project at all
-                throw new HttpError(403);
+                throw new HTTPError(403);
             }
         }
         // indicate that the user has admin access
@@ -423,7 +423,7 @@ function getAccessor(schema, table) {
     var accessors = (schema === 'global') ? globalAccessors : projectAccessors;
     var accessor = _.find(accessors, { table });
     if (!accessor) {
-        throw new HttpError(404);
+        throw new HTTPError(404);
     }
     return accessor;
 }

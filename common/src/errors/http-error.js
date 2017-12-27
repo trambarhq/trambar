@@ -1,6 +1,6 @@
-module.exports = HttpError;
+module.exports = HTTPError;
 
-function HttpError(statusCode, attributes) {
+function HTTPError(statusCode, attributes) {
     if (!statusCode) {
         statusCode = 500;
     }
@@ -38,4 +38,4 @@ var httpErrorNamess = {
     504: 'Gateway Timeout',
 };
 
-HttpError.prototype = Object.create(Error.prototype)
+HTTPError.prototype = Object.create(Error.prototype)

@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var ProjectSettings = require('objects/settings/project-settings');
 
 module.exports = _.create(Data, {
@@ -169,10 +169,10 @@ module.exports = _.create(Data, {
         return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((projectReceived, index) => {
             var projectBefore = originals[index];
             if (projectReceived.name === 'global' || projectReceived.name === 'admin') {
-                throw new HttpError(409); // 409 conflict
+                throw new HTTPError(409); // 409 conflict
             }
             if (!/^[\w\-]+$/.test(projectReceived.name)) {
-                return new HttpError(400);
+                return new HTTPError(400);
             }
             this.checkWritePermission(projectReceived, projectBefore, credentials);
 

@@ -1,13 +1,13 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 
 module.exports = {
     fetch,
 }
 
 function fetch(method, url, payload, options) {
-    var xhr = new XMLHttpRequest();
+    var xhr = new XMLHTTPRequest();
     var promise = new Promise((resolve, reject) => {
         var username = _.get(options, 'username', null);
         var password = _.get(options, 'password', null);
@@ -49,7 +49,7 @@ function fetch(method, url, payload, options) {
         }
         xhr.onload = function(evt) {
             if (xhr.status >= 400) {
-                var error = new HttpError(xhr.status, xhr.response);
+                var error = new HTTPError(xhr.status, xhr.response);
                 reject(error);
             } else {
                 var result = xhr.response;

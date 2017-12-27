@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var HttpRequest = require('transport/http-request');
+var HTTPRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
 
 var Database = require('data/database');

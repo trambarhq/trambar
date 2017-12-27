@@ -4,7 +4,7 @@ var Request = require('request');
 var FS = Promise.promisifyAll(require('fs'));
 var Path = require('path');
 var Async = require('async-do-while');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var Database = require('database');
 var Server = require('accessors/server');
 
@@ -247,7 +247,7 @@ function refresh(server) {
     return attempt(options).then((response) => {
         return updateAccessTokens(server, response);
     }).catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof HTTPError) {
             if (err.statusCode === 401) {
                 // TODO: reactivate this after more testing
                 //return updateAccessTokens(server, {}).throw(err);
@@ -299,7 +299,7 @@ function request(server, uri, method, query, payload, userToken) {
     } else if (oauthToken) {
         headers = { Authorization: `Bearer ${oauthToken}` };
     } else {
-        return Promise.reject(new HttpError(401));
+        return Promise.reject(new HTTPError(401));
     }
     var options = {
         json: true,
@@ -322,7 +322,7 @@ function request(server, uri, method, query, payload, userToken) {
         }).catch((err) => {
             // throw the error if it's HTTP 4xx
             lastError = err;
-            if (err instanceof HttpError) {
+            if (err instanceof HTTPError) {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
                     throw err;
                 }
@@ -348,7 +348,7 @@ function request(server, uri, method, query, payload, userToken) {
         return result;
     });
     return Async.end().catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof HTTPError) {
             if (err.statusCode === 401 || err.statusCode === 467) {
                 if (!userToken) {
                     // refresh access token
@@ -374,7 +374,7 @@ function attempt(options) {
     return new Promise((resolve, reject) => {
         Request(options, (err, resp, body) => {
             if (!err && resp && resp.statusCode >= 400) {
-                err = new HttpError(resp.statusCode);
+                err = new HTTPError(resp.statusCode);
             }
             if (!err) {
                 resolve(body);

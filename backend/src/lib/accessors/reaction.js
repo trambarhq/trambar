@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var HttpError = require('errors/http-error');
+var HTTPError = require('errors/http-error');
 var ExternalData = require('accessors/external-data');
 
 module.exports = _.create(ExternalData, {
@@ -265,29 +265,29 @@ module.exports = _.create(ExternalData, {
      */
     checkWritePermission: function(reactionReceived, reactionBefore, credentials) {
         if (credentials.access !== 'read-comment' && credentials.access !== 'read-write') {
-            throw new HttpError(400);
+            throw new HTTPError(400);
         }
         if (reactionBefore) {
             if (reactionBefore.user_id !== credentials.user.id) {
                 // can't modify an object that doesn't belong to the user
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (reactionReceived.hasOwnProperty('user_id')) {
                 if (reactionReceived.user_id !== reactionBefore.user_id) {
                     // cannot make someone else the author
-                    throw new HttpError(400);
+                    throw new HTTPError(400);
                 }
             }
         } else {
             if (reactionReceived.id) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (!reactionReceived.hasOwnProperty('user_id')) {
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
             if (reactionReceived.user_id !== credentials.user.id) {
                 // the author must be the current user
-                throw new HttpError(400);
+                throw new HTTPError(400);
             }
         }
     },
