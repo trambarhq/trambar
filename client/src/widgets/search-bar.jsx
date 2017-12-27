@@ -222,17 +222,12 @@ var SearchBarSync = module.exports.Sync = React.createClass({
                 var tag = node.getAttribute('data-tag');
                 nodes[tag] = node;
             });
-            var isHidden = {};
             var tagsByPopularity = _.sortBy(this.state.hashTags, 'score');
             while (isWrapping(nodes)) {
-                var tag = _.find(tagsByPopularity, (tag) => {
-                    if (!isHidden[tag.name]) {
-                        isHidden[tag.name] = true;
-                        return true;
-                    }
-                });
+                var tag = tagsByPopularity.shift();
                 if (tag) {
                     var node = nodes[tag.name];
+                    delete nodes[tag.name];
                     node.style.display = 'none';
                 } else {
                     break;
