@@ -63,21 +63,21 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    getImageUrl: function(res, params) {
+    getImageURL: function(res, params) {
         if (!params) {
             params = {};
         }
-        var resUrl;
+        var resURL;
         switch(res.type) {
             case 'video':
             case 'audio':
             case 'website':
-                resUrl = res.poster_url;
+                resURL = res.poster_url;
                 break;
             default:
-                resUrl = res.url;
+                resURL = res.url;
         }
-        if (!resUrl) {
+        if (!resURL) {
             return;
         }
 
@@ -120,7 +120,7 @@ module.exports = React.createClass({
                 versionPath += `.png`;
             }
         }
-        return `${this.props.serverAddress}${resUrl}${versionPath}`;
+        return `${this.props.serverAddress}${resURL}${versionPath}`;
     },
 
     /**
@@ -151,7 +151,7 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getVideoUrl: function(res, options) {
+    getVideoURL: function(res, options) {
         if (!res.url) {
             return null;
         }
@@ -171,8 +171,8 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getAudioUrl: function(res, options) {
-        return this.getVideoUrl(res, options);
+    getAudioURL: function(res, options) {
+        return this.getVideoURL(res, options);
     },
 
     /**
@@ -183,16 +183,16 @@ module.exports = React.createClass({
      *
      * @return {Object}
      */
-    getUrl(res, options) {
+    getURL(res, options) {
         switch (res.type) {
             case 'image':
-                return this.getImageUrl(res, options);
+                return this.getImageURL(res, options);
             case 'video':
-                return this.getVideoUrl(res, options);
+                return this.getVideoURL(res, options);
             case 'website':
                 return res.url;
             case 'audio':
-                return this.getAudioUrl(res, options);
+                return this.getAudioURL(res, options);
         }
     },
 

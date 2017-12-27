@@ -207,7 +207,7 @@ module.exports = React.createClass({
         var url;
         // don't resize when it's a GIF since it might be animated
         if (res.format === 'gif') {
-            url = theme.getImageUrl(res, { clip: null });
+            url = theme.getImageURL(res, { clip: null });
         } else {
             if (width > maxWidth) {
                 height = Math.round(maxWidth * (height / width));
@@ -216,7 +216,7 @@ module.exports = React.createClass({
                 width = Math.round(maxHeight * (width / height));
                 height = maxHeight;
             }
-            url = theme.getImageUrl(res, { width, height, clip: null })
+            url = theme.getImageURL(res, { width, height, clip: null })
         }
         return <img src={url} width={width} height={height} />;
     },
@@ -237,10 +237,10 @@ module.exports = React.createClass({
         var dims = getVideoVersionDimensions(res, version);
         var props = {
             ref: 'video',
-            src: theme.getVideoUrl(video, { version }),
+            src: theme.getVideoURL(video, { version }),
             controls: true,
             autoPlay: true,
-            poster: theme.getImageUrl(video, { width: dims.width, height: dims.height, clip: null, quality: 60 }),
+            poster: theme.getImageURL(video, { width: dims.width, height: dims.height, clip: null, quality: 60 }),
         };
         return <video {...props} />;
     },
@@ -255,7 +255,7 @@ module.exports = React.createClass({
         var theme = this.props.theme;
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
-            var url = this.props.theme.getImageUrl(res, { width: 28, height: 28 });
+            var url = this.props.theme.getImageURL(res, { width: 28, height: 28 });
             var props = {
                 className: 'thumbnail',
                 'data-index': index,
@@ -329,8 +329,8 @@ module.exports = React.createClass({
             var theme = this.props.theme;
             var url;
             switch (res.type) {
-                case 'image': url = theme.getImageUrl(res, { clip: null }); break;
-                case 'video': url = theme.getVideoUrl(res); break;
+                case 'image': url = theme.getImageURL(res, { clip: null }); break;
+                case 'video': url = theme.getVideoURL(res); break;
             }
             link.href = url;
             link.download = res.filename || true;   // only works when it's same origin

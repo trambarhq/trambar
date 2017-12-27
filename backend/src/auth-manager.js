@@ -817,7 +817,7 @@ function toSimpleLatin(s) {
  * @return {Promise<Object>}
  */
 function retrieveProfileImage(profile) {
-    var url = profile.avatarUrl;
+    var url = profile.avatarURL;
     if (!url) {
         url = _.get(profile.photos, '0.value')
     }

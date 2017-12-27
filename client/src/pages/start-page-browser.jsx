@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
@@ -41,7 +42,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object|null}
          */
-        parseUrl: function(path, query, hash) {
+        parseURL: function(path, query, hash) {
             return Route.match(path, [
                 '/:extra?'
             ], (params) => {
@@ -62,7 +63,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object}
          */
-        getUrl: function(params) {
+        getURL: function(params) {
             var path = `/`, query, hash;
             if (params && params.add) {
                 query = { add: 1 };
@@ -275,8 +276,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
             var resources = _.get(this.props.system, 'details.resources');
             var backgroundImage = _.find(resources, { type: 'image' });
             if (backgroundImage) {
-                var imageUrl = this.props.theme.getImageUrl(backgroundImage, { width: 1024, quality: 40 });
-                style = { backgroundImage: `url(${imageUrl})` };
+                var imageURL = this.props.theme.getImageURL(backgroundImage, { width: 1024, quality: 40 });
+                style = { backgroundImage: `url(${imageURL})` };
             }
         }
         var classNames = [ 'start-page' ];
@@ -434,8 +435,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var resources = _.get(project, 'details.resources');
         var projectImage = _.find(resources, { type: 'image' });
         if (projectImage) {
-            var imageUrl = this.props.theme.getImageUrl(projectImage, { width: 56, height: 56 });
-            icon = <img src={imageUrl} />;
+            var imageURL = this.props.theme.getImageURL(projectImage, { width: 56, height: 56 });
+            icon = <img src={imageURL} />;
         } else {
             // use logo, with alternating background color
             var Logo = require('trambar-logo.svg');

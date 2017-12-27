@@ -48,7 +48,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object|null}
          */
-        parseUrl: function(path, query, hash) {
+        parseURL: function(path, query, hash) {
             return Route.match(path, [
                 '/servers/:server/?'
             ], (params) => {
@@ -68,7 +68,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object}
          */
-        getUrl: function(params) {
+        getURL: function(params) {
             var path = `/servers/${params.server}/`, query, hash;
             if (params.edit) {
                 query = { edit: 1 };
@@ -469,8 +469,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderNameInput()}
                 {this.renderUserOptions()}
                 {this.renderRoleSelector()}
-                {this.renderOAuthCallbackUrl()}
-                {this.renderOAuthUrlInput()}
+                {this.renderOAuthCallbackURL()}
+                {this.renderOAuthURLInput()}
                 {this.renderOAuthClientIdInput()}
                 {this.renderOAuthClientSecretInput()}
                 {this.renderAPIStatus()}
@@ -753,7 +753,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {[type]}
      */
-    renderOAuthCallbackUrl: function() {
+    renderOAuthCallbackURL: function() {
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
         var url, warning;
@@ -786,14 +786,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthUrlInput: function() {
+    renderOAuthURLInput: function() {
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
         var props = {
             id: 'oauth_token',
             value: this.getServerProperty('settings.oauth.base_url'),
             locale: this.props.locale,
-            onChange: this.handleOAuthUrlChange,
+            onChange: this.handleOAuthURLChange,
             readOnly: !this.isEditing(),
         };
         var problems = this.state.problems;
@@ -1011,7 +1011,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     openOAuthPopup: function(type) {
         var db = this.props.database.use({ by: this });
         var server = this.getServer();
-        var url = db.getOAuthUrl(server, type);
+        var url = db.getOAuthURL(server, type);
 
         var width = 800;
         var height = 600;
@@ -1166,7 +1166,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleOAuthUrlChange: function(evt) {
+    handleOAuthURLChange: function(evt) {
         this.setServerProperty(`settings.oauth.base_url`, evt.target.value);
     },
 

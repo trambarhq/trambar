@@ -8,7 +8,7 @@
   "scripts": {
     "watch": "webpack --watch && exit 0",
     "build": "webpack && exit 0",
-    "start": "webpack-dev-server",
+    "start": "webpack-dev-server && exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {},

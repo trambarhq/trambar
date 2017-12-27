@@ -4,7 +4,7 @@ var Promise = require('bluebird');
 module.exports = Route;
 
 function Route(routeManager) {
-    this.url = routeManager.getUrl();
+    this.url = routeManager.getURL();
     this.path = _.replace(this.url, /[?#].*/, '');
     this.component = routeManager.getComponent();
     this.parameters = routeManager.getParameters();

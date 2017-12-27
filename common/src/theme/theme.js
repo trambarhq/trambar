@@ -19,23 +19,23 @@ function Theme(themeManager) {
         return !this.isAboveMode(mode);
     };
 
-    this.getImageUrl = function(res, params) {
-        return themeManager.getImageUrl(res, params);
+    this.getImageURL = function(res, params) {
+        return themeManager.getImageURL(res, params);
     };
 
     this.getImageFile = function(res) {
         return themeManager.getImageFile(res);
     };
 
-    this.getVideoUrl = function(res, params) {
-        return themeManager.getVideoUrl(res, params);
+    this.getVideoURL = function(res, params) {
+        return themeManager.getVideoURL(res, params);
     };
 
-    this.getAudioUrl = function(res, params) {
-        return themeManager.getAudioUrl(res, params);
+    this.getAudioURL = function(res, params) {
+        return themeManager.getAudioURL(res, params);
     };
 
-    this.getUrl = function(res, params) {
-        return themeManager.getUrl(res, params);
+    this.getURL = function(res, params) {
+        return themeManager.getURL(res, params);
     };
 }

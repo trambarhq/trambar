@@ -191,7 +191,7 @@ module.exports = React.createClass({
                     this.updatePayloadStatus(payloadId, { transferred });
                 },
             };
-            var url = this.getUrl(payload);
+            var url = this.getURL(payload);
             return HttpRequest.fetch('POST', url, formData, options);
         });
         payload.promise = promise;
@@ -270,7 +270,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getUrl: function(payload) {
+    getURL: function(payload) {
         var schema = payload.schema;
         var url = payload.address;
         var id = payload.payload_id;

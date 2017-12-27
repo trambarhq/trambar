@@ -192,7 +192,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getOAuthUrl: function(location, oauthServer, type) {
+    getOAuthURL: function(location, oauthServer, type) {
         var address = this.getServerAddress(location);
         var session = getSession(address);
         if (!session.authorization) {

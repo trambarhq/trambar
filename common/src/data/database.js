@@ -214,8 +214,8 @@ function Database(remoteDataSource, context) {
      *
      * @return {String}
      */
-    this.getOAuthUrl = function(oauthServer, type) {
-        return remoteDataSource.getOAuthUrl(context, oauthServer, type);
+    this.getOAuthURL = function(oauthServer, type) {
+        return remoteDataSource.getOAuthURL(context, oauthServer, type);
     };
 }
 

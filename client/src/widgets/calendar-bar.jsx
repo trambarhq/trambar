@@ -132,7 +132,7 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
                 showYear: multiyear,
                 selection: selectedDate,
                 locale: this.props.locale,
-                onDateUrl: this.handleDateUrl,
+                onDateURL: this.handleDateURL,
             };
             return <Calendar key={index} {...props} />;
         });
@@ -150,7 +150,7 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
      *
      * @return {[type]}
      */
-    handleDateUrl: function(evt) {
+    handleDateURL: function(evt) {
         var date = evt.date;
         var hasActivities = _.some(this.props.dailyActivities, (stats) => {
             if (stats.details[date]) {

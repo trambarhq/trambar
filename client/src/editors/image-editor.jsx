@@ -45,8 +45,8 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            fullImageUrl: null,
-            previewImageUrl: null,
+            fullImageURL: null,
+            previewImageURL: null,
         };
     },
 
@@ -75,14 +75,14 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getFullImageUrl: function(res) {
+    getFullImageURL: function(res) {
         // use file we had uploaded earlier if it's there
         var theme = this.props.theme;
-        var fileUrl = theme.getImageFile(res);
-        if (fileUrl && BlobManager.get(fileUrl)) {
-            return fileUrl;
+        var fileURL = theme.getImageFile(res);
+        if (fileURL && BlobManager.get(fileURL)) {
+            return fileURL;
         }
-        return theme.getImageUrl(res, { clip: null });
+        return theme.getImageURL(res, { clip: null });
     },
 
     /**
@@ -92,9 +92,9 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getPreviewImageUrl: function(res) {
+    getPreviewImageURL: function(res) {
         var theme = this.props.theme;
-        var previewUrl = theme.getImageUrl(res, {
+        var previewURL = theme.getImageURL(res, {
             width: this.props.previewWidth,
             height: this.props.previewHeight,
             clip: res.clip || getDefaultClippingRect(res.width, res.height),
@@ -107,25 +107,25 @@ module.exports = React.createClass({
      * @param  {Object} res
      */
     prepareImage: function(res) {
-        var fullImageUrl = this.getFullImageUrl(res);
-        var previewImageUrl = null;
-        var blobUrl = BlobManager.find(fullImageUrl);
-        if (blobUrl) {
-            fullImageUrl = blobUrl;
+        var fullImageURL = this.getFullImageURL(res);
+        var previewImageURL = null;
+        var blobURL = BlobManager.find(fullImageURL);
+        if (blobURL) {
+            fullImageURL = blobURL;
         } else {
-            previewImageUrl = this.getPreviewImageUrl(res);
-            if (this.state.fullImageUrl !== fullImageUrl) {
+            previewImageURL = this.getPreviewImageURL(res);
+            if (this.state.fullImageURL !== fullImageURL) {
                 // load it
-                BlobManager.fetch(fullImageUrl).then((blobUrl) => {
+                BlobManager.fetch(fullImageURL).then((blobURL) => {
                     this.setState({
-                        fullImageUrl: blobUrl,
-                        previewImageUrl: null
+                        fullImageURL: blobURL,
+                        previewImageURL: null
                     });
                 });
             }
         }
-        if (this.state.fullImageUrl !== fullImageUrl || this.state.previewImageUrl !== previewImageUrl) {
-            this.setState({ fullImageUrl, previewImageUrl });
+        if (this.state.fullImageURL !== fullImageURL || this.state.previewImageURL !== previewImageURL) {
+            this.setState({ fullImageURL, previewImageURL });
         }
     },
 
@@ -151,10 +151,10 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderPreview: function() {
-        if (!this.state.previewImageUrl) {
+        if (!this.state.previewImageURL) {
             return null;
         }
-        return <img className="preview" src={this.state.previewImageUrl} />;
+        return <img className="preview" src={this.state.previewImageURL} />;
     },
 
     /**
@@ -163,12 +163,12 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderImageCropper: function() {
-        if (!this.state.fullImageUrl || this.state.previewImageUrl) {
+        if (!this.state.fullImageURL || this.state.previewImageURL) {
             return null;
         }
         var res = this.props.resource;
         var props = {
-            url: this.state.fullImageUrl,
+            url: this.state.fullImageURL,
             clippingRect: res.clip || getDefaultClippingRect(res.width, res.height),
             onChange: this.handleClipRectChange,
         };
@@ -181,7 +181,7 @@ module.exports = React.createClass({
      * @return {ReactELement|null}
      */
     renderPlaceholder: function() {
-        if (this.state.fullImageUrl || this.state.previewImageUrl) {
+        if (this.state.fullImageURL || this.state.previewImageURL) {
             return null;
         }
         var t = this.props.locale.translate;

@@ -34,7 +34,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object|null}
          */
-        parseUrl: function(path, query, hash) {
+        parseURL: function(path, query, hash) {
             return Route.match(path, [
                 '/:schema/bookmarks/?',
             ], (params) => {
@@ -52,7 +52,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object}
          */
-        getUrl: function(params) {
+        getURL: function(params) {
             var path = `/${params.schema}/bookmarks/`, query, hash;
             if (params.story) {
                 hash = `S${params.story}`;

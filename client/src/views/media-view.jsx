@@ -41,7 +41,7 @@ module.exports = React.createClass({
             selectedIndex: 0,
             renderingDialogBox: false,
             showingDialogBox: false,
-            audioUrl: null,
+            audioURL: null,
         };
     },
 
@@ -146,12 +146,12 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     renderAudioPlayer: function() {
-        if (!this.state.audioUrl) {
+        if (!this.state.audioURL) {
             return null;
         }
         var audioProps = {
             ref: this.components.setters.audioPlayer,
-            src: this.state.audioUrl,
+            src: this.state.audioURL,
             autoPlay: true,
             controls: true,
             onEnded: this.handleAudioEnded,
@@ -300,16 +300,16 @@ module.exports = React.createClass({
         } else {
             height = Math.round(width * res.height / res.width)
         }
-        var url = theme.getImageUrl(res, { width, height });
+        var url = theme.getImageURL(res, { width, height });
         if (url) {
             return <img src={url} width={width} height={height} />;
         }
 
         // image isn't done uploading yet
-        var fileUrl = theme.getImageFile(res);
-        if (fileUrl && BlobManager.get(fileUrl)) {
+        var fileURL = theme.getImageFile(res);
+        if (fileURL && BlobManager.get(fileURL)) {
             // use ImageView, which handles orientation and clipping
-            return <ImageView url={fileUrl} clippingRect={clip} />;
+            return <ImageView url={fileURL} clippingRect={clip} />;
         } else {
             // TODO: placeholder for pending images
             return null;
@@ -383,8 +383,8 @@ module.exports = React.createClass({
     handleAudioClick: function(evt) {
         var res = this.getSelectedResource();
         var version = chooseAudioVersion(res);
-        var audioUrl = this.props.theme.getAudioUrl(res, { version });
-        this.setState({ audioUrl });
+        var audioURL = this.props.theme.getAudioURL(res, { version });
+        this.setState({ audioURL });
     },
 
     /**
@@ -393,7 +393,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAudioEnded: function(evt) {
-        this.setState({ audioUrl: null });
+        this.setState({ audioURL: null });
     },
 
     /**

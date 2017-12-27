@@ -9,7 +9,7 @@ function format(schema, user, notification, lang) {
     return {
         schema: schema,
         title: getNotificationText(user, notification, lang),
-        profile_image: getProfileImageUrl(user),
+        profile_image: getProfileImageURL(user),
         type: notification.type,
         notification_id: notification.id,
         user_id: notification.user_id,
@@ -106,9 +106,9 @@ function pick(versions, lang) {
  *
  * @return {String|undefined}
  */
-function getProfileImageUrl(user) {
+function getProfileImageURL(user) {
     var image = _.find(user.details.resources, { type: 'image' });
-    var imageUrl;
+    var imageURL;
     if (image && image.url) {
         // form the URL
         return applyClippingRectangle(image.url, image.clip, 192, 192, 75);
@@ -122,7 +122,7 @@ function getProfileImageUrl(user) {
  *
  * @return {String|undefined}
  */
-function getReactionImageUrl(reaction) {
+function getReactionImageURL(reaction) {
     var res = _.first(reaction.details.resources);
     if (res) {
         var url;

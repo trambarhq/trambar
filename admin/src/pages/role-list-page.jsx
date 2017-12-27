@@ -40,7 +40,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object|null}
          */
-        parseUrl: function(path, query, hash) {
+        parseURL: function(path, query, hash) {
             return Route.match(path, [
                 '/roles/?',
             ], (params) => {
@@ -56,7 +56,7 @@ module.exports = Relaks.createClass({
          *
          * @return {String}
          */
-        getUrl: function(params) {
+        getURL: function(params) {
             var path = `/roles/`, query, hash;
             if (params.edit) {
                 query = { edit: 1 };

@@ -12,13 +12,13 @@ function MockPage(url, params) {
     this.parameters = params;
 }
 
-MockPage.prototype.parseUrl = function(path, query, hash) {
+MockPage.prototype.parseURL = function(path, query, hash) {
     if (path === this.path) {
         return _.extend({ match: this.path }, this.parameters);
     }
 };
 
-MockPage.prototype.getUrl = function(params) {
+MockPage.prototype.getURL = function(params) {
     return { path: this.path, query: undefined, hash: undefined };
 };
 
@@ -31,7 +31,7 @@ var pages = [
 
 describe('RouteManager', function() {
     // set the browser location to the base URL
-    var startUrl = location.href;
+    var startURL = location.href;
     history.replaceState({}, '', '/test/');
 
     var changeCount = 0;
@@ -71,7 +71,7 @@ describe('RouteManager', function() {
     })
     it('should have redirected to the home page', function() {
         return managerReady.then((manager) => {
-            expect(manager.getUrl()).to.equal('/home/');
+            expect(manager.getURL()).to.equal('/home/');
             expect(location.pathname).to.equal('/home/');
         });
     })
@@ -80,7 +80,7 @@ describe('RouteManager', function() {
         it('should not fire onChange() where called with the current URL', function() {
             return managerReady.then((manager) => {
                 var prevChangeCount = changeCount;
-                return manager.change(manager.getUrl()).then(() => {
+                return manager.change(manager.getURL()).then(() => {
                     expect(changeCount).to.equal(prevChangeCount);
                 });
             });
@@ -90,7 +90,7 @@ describe('RouteManager', function() {
                 return Promise.each([1, 2, 3], (index) => {
                     var page = pages[index];
                     return manager.change(page.path).then(() => {
-                        expect(manager.getUrl()).to.equal(page.path);
+                        expect(manager.getURL()).to.equal(page.path);
                         expect(manager.getParameters()).to.deep.equal(page.parameters);
                     });
                 });

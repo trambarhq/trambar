@@ -195,19 +195,19 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         var width = Math.round(image.width * height / image.height);
         var style = { height, width };
         if (image.url) {
-            var url = this.props.theme.getImageUrl(image, { height, width });
+            var url = this.props.theme.getImageURL(image, { height, width });
             return (
                 <div key={i} {...props}>
                     <img src={url} style={style} />
                 </div>
             );
         } else if (image.file) {
-            var imageUrl = URL.createObjectURL(image.file);
+            var imageURL = URL.createObjectURL(image.file);
             props.className += ' disabled';
             props.onClick = null;
             return (
                 <div key={i} {...props}>
-                    <ImageView url={imageUrl} style={style} />
+                    <ImageView url={imageURL} style={style} />
                 </div>
             );
         }

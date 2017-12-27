@@ -54,7 +54,7 @@ module.exports = React.createClass({
     renderPicture: function() {
         var component = this.props.component;
         if (component.image) {
-            var url = this.props.theme.getImageUrl(component.image);
+            var url = this.props.theme.getImageURL(component.image);
             return (
                 <div className="picture">
                     <img src={url} />

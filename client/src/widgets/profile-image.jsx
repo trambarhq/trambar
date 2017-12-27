@@ -14,17 +14,17 @@ function ProfileImage(props) {
     if (props.user) {
         var resources = _.get(props.user, 'details.resources');
         var profileImage = _.find(resources, { type: 'image' });
-        var imageUrl;
+        var imageURL;
         if (profileImage) {
             var width = imageResolutions[props.size];
-            var imageUrl = props.theme.getImageUrl(profileImage, { width: width, height: width });
-            if (imageUrl) {
-                image = <img src={imageUrl} />;
+            var imageURL = props.theme.getImageURL(profileImage, { width: width, height: width });
+            if (imageURL) {
+                image = <img src={imageURL} />;
             } else {
-                var fileUrl = profileImage.file;
+                var fileURL = profileImage.file;
                 var clip = profileImage.clip;
-                if (BlobManager.get(fileUrl)) {
-                    image = <ImageView url={fileUrl} clippingRect={clip} />;
+                if (BlobManager.get(fileURL)) {
+                    image = <ImageView url={fileURL} clippingRect={clip} />;
                 }
             }
         }

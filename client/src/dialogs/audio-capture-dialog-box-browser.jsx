@@ -65,7 +65,7 @@ module.exports = React.createClass({
             liveAudioRecorder: null,
             mediaRecorder: null,
             capturedAudio: null,
-            previewUrl: null,
+            previewURL: null,
             startTime: null,
             duration: 0,
         };
@@ -105,10 +105,10 @@ module.exports = React.createClass({
      */
     clearCapturedAudio: function() {
         if (this.state.capturedAudio) {
-            URL.revokeObjectURL(this.state.previewUrl);
+            URL.revokeObjectURL(this.state.previewURL);
             this.setState({
                 capturedAudio: null,
-                previewUrl: null,
+                previewURL: null,
             });
         }
     },
@@ -291,7 +291,7 @@ module.exports = React.createClass({
      */
     renderCapturedAudio: function() {
         var props = {
-            src: this.state.previewUrl,
+            src: this.state.previewURL,
             controls: true
         };
         return <audio {...props} />;
@@ -568,7 +568,7 @@ module.exports = React.createClass({
             audio.duration = this.state.duration + elapsed;
             this.setState({
                 capturedAudio: audio,
-                previewUrl: url,
+                previewURL: url,
                 capturedImage: null,
                 mediaRecorder: null
             });

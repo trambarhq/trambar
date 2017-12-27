@@ -351,7 +351,7 @@ function handleMediaUpload(req, res, type) {
     var file = _.get(req.files, 'file.0');
     var url = req.body.external_url;
     var posterFile = _.get(req.files, 'poster_file.0');
-    var posterUrl = req.poster_external_url;
+    var posterURL = req.poster_external_url;
     return checkTaskToken(schema, taskId, token).then(() => {
         if (streamId) {
             // handle streaming upload
@@ -392,18 +392,18 @@ function handleMediaUpload(req, res, type) {
             })
         }
     }).then((results) => {
-        return FileManager.preserveFile(posterFile, posterUrl, CacheFolders.image).then((poster) => {
+        return FileManager.preserveFile(posterFile, posterURL, CacheFolders.image).then((poster) => {
             if (poster) {
-                var posterUrl = `/media/images/${poster.hash}`;
+                var posterURL = `/media/images/${poster.hash}`;
                 ImageManager.getImageMetadata(poster.path).then((metadata) => {
                     var details = {
-                        poster_url: posterUrl,
+                        poster_url: posterURL,
                         width: metadata.width,
                         height: metadata.height,
                     };
                     return saveTaskProgress(schema, taskId, details);
                 });
-                results.poster_url = posterUrl;
+                results.poster_url = posterURL;
             }
             return results;
         });

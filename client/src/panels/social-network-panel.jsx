@@ -73,10 +73,10 @@ module.exports = React.createClass({
                     {this.renderSlackIdInput()}
                     {this.renderIChatInput()}
                     {this.renderTwitterInput()}
-                    {this.renderGithubUrlInput()}
-                    {this.renderGitlabUrlInput()}
-                    {this.renderLinkedInUrlInput()}
-                    {this.renderStackoverflowUrlInput()}
+                    {this.renderGithubURLInput()}
+                    {this.renderGitlabURLInput()}
+                    {this.renderLinkedInURLInput()}
+                    {this.renderStackoverflowURLInput()}
                 </body>
             </SettingsPanel>
         );
@@ -167,13 +167,13 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderGithubUrlInput: function() {
+    renderGithubURLInput: function() {
         var t = this.props.locale.translate;
         var props = {
             id: 'github',
             value: this.getUserProperty('details.github_url'),
             locale: this.props.locale,
-            onChange: this.handleGitHubUrlChange,
+            onChange: this.handleGitHubURLChange,
         };
         return <TextField {...props}>{t('social-network-github')}</TextField>;
     },
@@ -183,13 +183,13 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderGitlabUrlInput: function() {
+    renderGitlabURLInput: function() {
         var t = this.props.locale.translate;
         var props = {
             id: 'github',
             value: this.getUserProperty('details.gitlab_url'),
             locale: this.props.locale,
-            onChange: this.handleGitlabUrlChange,
+            onChange: this.handleGitlabURLChange,
         };
         return <TextField {...props}>{t('social-network-gitlab')}</TextField>;
     },
@@ -199,13 +199,13 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderLinkedInUrlInput: function() {
+    renderLinkedInURLInput: function() {
         var t = this.props.locale.translate;
         var props = {
             id: 'linkedin',
             value: this.getUserProperty('details.linkedin_url'),
             locale: this.props.locale,
-            onChange: this.handleLinkedinUrlChange,
+            onChange: this.handleLinkedinURLChange,
         };
         return <TextField {...props}>{t('social-network-linkedin')}</TextField>;
     },
@@ -215,13 +215,13 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderStackoverflowUrlInput: function() {
+    renderStackoverflowURLInput: function() {
         var t = this.props.locale.translate;
         var props = {
             id: 'stackoverflow',
             value: this.getUserProperty('details.stackoverflow_url'),
             locale: this.props.locale,
-            onChange: this.handleStackoverflowUrlChange,
+            onChange: this.handleStackoverflowURLChange,
         };
         return <TextField {...props}>{t('social-network-stackoverflow')}</TextField>;
     },
@@ -281,7 +281,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleLinkedinUrlChange: function(evt) {
+    handleLinkedinURLChange: function(evt) {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.linkedin_url`, url);
     },
@@ -291,7 +291,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleGitHubUrlChange: function(evt) {
+    handleGitHubURLChange: function(evt) {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.github_url`, url);
     },
@@ -301,7 +301,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleGitlabUrlChange: function(evt) {
+    handleGitlabURLChange: function(evt) {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.gitlab_url`, url);
     },
@@ -311,7 +311,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleStackoverflowUrlChange: function(evt) {
+    handleStackoverflowURLChange: function(evt) {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.stackoverflow_url`, url);
     },

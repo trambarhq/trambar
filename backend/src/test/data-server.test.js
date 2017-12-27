@@ -264,8 +264,8 @@ describe('DataServer', function() {
 })
 
 function retrieveProtectedData(url, payload, credentials) {
-    var authUrl = 'http://localhost/api/authorization/'
-    return retrieveData(authUrl, credentials).then((resp) => {
+    var authURL = 'http://localhost/api/authorization/'
+    return retrieveData(authURL, credentials).then((resp) => {
         if (resp.statusCode === 200) {
             // add token to payload
             payload.token = resp.body.token;

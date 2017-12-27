@@ -444,8 +444,8 @@ function handleHookCallback(req, res) {
  */
 function hasAccessToken(server) {
     var accessToken = _.get(server, 'settings.api.access_token');
-    var oauthBaseUrl = _.get(server, 'settings.oauth.base_url');
-    return (accessToken && oauthBaseUrl);
+    var oauthBaseURL = _.get(server, 'settings.oauth.base_url');
+    return (accessToken && oauthBaseURL);
 }
 
 /**

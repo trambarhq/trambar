@@ -17,7 +17,7 @@ module.exports = {
     createParser,
     createRenderer,
     findReferencedResource,
-    createBlobUrl,
+    createBlobURL,
 };
 
 /**
@@ -344,7 +344,7 @@ function findReferencedResource(resources, name) {
     return null;
 }
 
-function createBlobUrl(blob, clip) {
+function createBlobURL(blob, clip) {
     if (blob) {
         var url = URL.createObjectURL(blob);
         if (clip) {

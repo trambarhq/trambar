@@ -8,17 +8,17 @@ require('./profile-image.scss');
 
 function ProfileImage(props) {
     var classNames = [ 'profile-image', props.size ];
-    var imageUrl;
+    var imageURL;
     if (props.user) {
         var resources = _.get(props.user, 'details.resources');
         var profileImage = _.find(resources, { type: 'image' });
         if (profileImage) {
             var width = imageResolutions[props.size];
-            imageUrl = props.theme.getImageUrl(profileImage, { width: width, height: width });
+            imageURL = props.theme.getImageURL(profileImage, { width: width, height: width });
         }
     }
-    if (imageUrl) {
-        return <img className={classNames.join(' ')} src={imageUrl} />;
+    if (imageURL) {
+        return <img className={classNames.join(' ')} src={imageURL} />;
     } else {
         var Icon = require('octicons/build/svg/person.svg');
         return <Icon className={classNames.join(' ')} />;

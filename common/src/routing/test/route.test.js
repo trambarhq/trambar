@@ -24,13 +24,13 @@ describe('Route', function() {
     })
     describe('#change', function() {
         it('should try to change the URL through RouteManager', function() {
-            var newUrl = '/before/'
+            var newURL = '/before/'
             var routeManager = {
                 change: function(url) {
-                    newUrl = url;
+                    newURL = url;
                     return Promise.delay(50);
                 },
-                getUrl: function(url) { return newUrl },
+                getURL: function(url) { return newURL },
                 getComponent: function() { return null },
                 getParameters: function() { return {} },
                 getQuery: function() { return {} },
@@ -39,7 +39,7 @@ describe('Route', function() {
             var url = '/after/';
             var route = new Route(routeManager);
             return route.change(url).then(() => {
-                expect(newUrl).to.equal(url);
+                expect(newURL).to.equal(url);
             })
         })
     })

@@ -75,7 +75,7 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getPageUrl: function(pageClass, route) {
+    getPageURL: function(pageClass, route) {
         if (!route) {
             route = this.props.route;
         }
@@ -152,7 +152,7 @@ module.exports = React.createClass({
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
-            url: this.getPageUrl(NewsPage),
+            url: this.getPageURL(NewsPage),
             onClick: this.handleButtonClick,
         };
         var notificationsProps = {
@@ -160,28 +160,28 @@ module.exports = React.createClass({
             icon: 'comments',
             active: (section === 'notifications'),
             stacking: this.state.stacking,
-            url: this.getPageUrl(NotificationsPage),
+            url: this.getPageURL(NotificationsPage),
             onClick: this.handleButtonClick,
         };
         var bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
-            url: this.getPageUrl(BookmarksPage),
+            url: this.getPageURL(BookmarksPage),
             onClick: this.handleButtonClick,
         };
         var peopleProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
-            url: this.getPageUrl(PeoplePage),
+            url: this.getPageURL(PeoplePage),
             onClick: this.handleButtonClick,
         };
         var settingsProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
-            url: this.getPageUrl(SettingsPage),
+            url: this.getPageURL(SettingsPage),
             onClick: this.handleButtonClick,
         };
         var newNotificationProps = {

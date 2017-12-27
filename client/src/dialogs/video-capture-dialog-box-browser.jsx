@@ -56,7 +56,7 @@ module.exports = React.createClass({
             mediaRecorder: null,
             capturedVideo: null,
             capturedImage: null,
-            previewUrl: null,
+            previewURL: null,
             videoDevices: DeviceManager.getDevices('videoinput'),
             selectedDeviceId: null,
             startTime: null,
@@ -98,10 +98,10 @@ module.exports = React.createClass({
      */
     clearCapturedVideo: function() {
         if (this.state.capturedVideo) {
-            URL.revokeObjectURL(this.state.previewUrl);
+            URL.revokeObjectURL(this.state.previewURL);
             this.setState({
                 capturedVideo: null,
-                previewUrl: null,
+                previewURL: null,
             });
         }
     },
@@ -231,7 +231,7 @@ module.exports = React.createClass({
      */
     renderCapturedVideo: function() {
         var props = {
-            src: this.state.previewUrl,
+            src: this.state.previewURL,
             controls: true
         };
         return (
@@ -603,7 +603,7 @@ module.exports = React.createClass({
             video.duration = this.state.duration + elapsed;
             this.setState({
                 capturedVideo: video,
-                previewUrl: url,
+                previewURL: url,
                 capturedImage: null,
                 mediaRecorder: null
             });

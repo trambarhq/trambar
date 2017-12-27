@@ -240,7 +240,7 @@ function refresh(server) {
     var options = {
         json: true,
         body: payload,
-        baseUrl: server.settings.oauth.base_url,
+        baseURL: server.settings.oauth.base_url,
         uri: '/oauth/token',
         method: 'post',
     };
@@ -291,7 +291,7 @@ function updateAccessTokens(server, response) {
  * @return {Promise<Object>}
  */
 function request(server, uri, method, query, payload, userToken) {
-    var baseUrl = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
+    var baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
     var oauthToken = server.settings.api.access_token;
     var headers;
     if (userToken) {
@@ -305,7 +305,7 @@ function request(server, uri, method, query, payload, userToken) {
         json: true,
         qs: query,
         body: payload,
-        baseUrl,
+        baseURL,
         uri,
         method,
         headers,
@@ -388,7 +388,7 @@ function attempt(options) {
 var CACHE_FOLDER = process.env.CACHE_FOLDER;
 if (CACHE_FOLDER) {
     console.log('**** USING GIT CACHE ****');
-    var dynamicUrls = [
+    var dynamicURLs = [
         /\/projects\/\d+\/hooks/,
     ];
 
@@ -397,13 +397,13 @@ if (CACHE_FOLDER) {
         var cacheable = true;
         if (options.method !== 'get') {
             cacheable = false
-        } else if (_.some(dynamicUrls, (re) => { return re.test(options.uri) })) {
+        } else if (_.some(dynamicURLs, (re) => { return re.test(options.uri) })) {
             cacheable = false;
         }
         if (!cacheable) {
             return Request(options, callback);
         }
-        var cacheFilePath = getCachePath(options.baseUrl, options.uri, options.qs);
+        var cacheFilePath = getCachePath(options.baseURL, options.uri, options.qs);
         FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
             var data = JSON.parse(json);
             callback(null, null, data);
@@ -433,8 +433,8 @@ if (CACHE_FOLDER) {
         });
     }
 
-    function getCachePath(baseUrl, uri, query) {
-        var m = /^https?:\/\/([^\/:]+)/.exec(baseUrl);
+    function getCachePath(baseURL, uri, query) {
+        var m = /^https?:\/\/([^\/:]+)/.exec(baseURL);
         var domain = m[1];
         var path = _.trimEnd(uri, '/');
         if (!_.startsWith(path, '/')) {

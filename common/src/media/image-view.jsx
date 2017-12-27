@@ -1,7 +1,7 @@
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
-var JpegAnalyser = require('media/jpeg-analyser');
+var JPEGAnalyser = require('media/jpeg-analyser');
 var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
@@ -90,7 +90,7 @@ module.exports = React.createClass({
     load: function(url) {
         if (url) {
             return Promise.join(loadImage(url), loadBytes(url), (image, bytes) => {
-                var orientation = JpegAnalyser.getOrientation(bytes) || 1;
+                var orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
                 this.image = image;
                 this.orientation = orientation;

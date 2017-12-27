@@ -380,8 +380,8 @@ module.exports = React.createClass({
                 }, 'image/jpeg', 90);
             } else {
                 var B64toBlob = require('b64-to-blob');
-                var dataUrl = canvas.toDataURL('image/jpeg');
-                var base64Data = dataUrl.replace('data:image/jpeg;base64,', '');
+                var dataURL = canvas.toDataURL('image/jpeg');
+                var base64Data = dataURL.replace('data:image/jpeg;base64,', '');
                 var blob = B64toBlob(base64Data, 'image/jpeg');
                 var file = BlobManager.manage(blob);
                 resolve({ format, file, width, height });

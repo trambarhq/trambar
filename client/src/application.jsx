@@ -277,7 +277,7 @@ module.exports = React.createClass({
             ref: setters.routeManager,
             pages: pageClasses,
             database: this.state.database,
-            rewrite: this.rewriteUrl,
+            rewrite: this.rewriteURL,
             onChange: this.handleRouteChange,
             onRedirectionRequest: this.handleRedirectionRequest,
         };
@@ -593,7 +593,7 @@ module.exports = React.createClass({
      * @param  {Object} params
      * @param  {String} op
      */
-    rewriteUrl: function(urlParts, params, op) {
+    rewriteURL: function(urlParts, params, op) {
         if (op === 'parse') {
             CorsRewriter.extract(urlParts, params);
         } else {
@@ -916,7 +916,7 @@ module.exports = React.createClass({
             reaction_id: alert.reaction_id,
             story_id: alert.story_id,
         };
-        var url = NotificationView.getNotificationUrl(notification, this.state.route);
+        var url = NotificationView.getNotificationURL(notification, this.state.route);
         var target = NotificationView.getNotificationTarget(notification);
         if (target) {
             // create a link and click it to open a new tab

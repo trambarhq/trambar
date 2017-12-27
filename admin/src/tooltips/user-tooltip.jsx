@@ -61,13 +61,13 @@ module.exports = React.createClass({
                 </div>
             );
         });
-        var listUrl;
+        var listURL;
         if (this.props.project) {
-            listUrl = route.find(require('pages/member-list-page'), {
+            listURL = route.find(require('pages/member-list-page'), {
                 project: this.props.project.id,
             });
         } else {
-            listUrl = route.find(require('pages/user-list-page'));
+            listURL = route.find(require('pages/user-list-page'));
         }
         return (
             <Tooltip className="user" disabled={list.length === 0}>
@@ -76,7 +76,7 @@ module.exports = React.createClass({
                     {list}
                     {ellipsis}
                     <div className="bottom">
-                        <a href={listUrl}>{t('tooltip-more')}</a>
+                        <a href={listURL}>{t('tooltip-more')}</a>
                     </div>
                 </window>
             </Tooltip>

@@ -159,7 +159,7 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
      *
      * @return {String|null}
      */
-    getUrl: function() {
+    getURL: function() {
         var task = this.state.selectedTask;
         var url = null;
         var serverId = _.get(task, 'options.server_id');
@@ -237,7 +237,7 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
 
     renderMessage: function() {
         var message = this.getMessage(this.state.selectedTask);
-        var url = this.getUrl(this.state.selectedTask);
+        var url = this.getURL(this.state.selectedTask);
         return (
             <a href={url}>{message}</a>
         );

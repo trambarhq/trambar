@@ -38,7 +38,7 @@ module.exports = React.createClass({
     render: function() {
         var props = {
             className: `notification-view ${this.props.theme.mode}`,
-            url: this.getNotificationUrl(),
+            url: this.getNotificationURL(),
             target: this.getNotificationTarget(),
             onClick: this.handleClick,
         };
@@ -110,8 +110,8 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getNotificationUrl: function() {
-        return getNotificationUrl(this.props.notification, this.props.route);
+    getNotificationURL: function() {
+        return getNotificationURL(this.props.notification, this.props.route);
     },
 
     /**
@@ -204,10 +204,10 @@ module.exports = React.createClass({
 });
 
 // these functions are needed for handling web and push alerts
-module.exports.getNotificationUrl = getNotificationUrl;
+module.exports.getNotificationURL = getNotificationURL;
 module.exports.getNotificationTarget = getNotificationTarget;
 
-function getNotificationUrl(notification, route) {
+function getNotificationURL(notification, route) {
     var params = _.clone(route.parameters);
     switch (notification.type) {
         case 'like':

@@ -50,7 +50,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getUrl: function() {
+    getURL: function() {
         return this.state.url;
     },
 
@@ -99,7 +99,7 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     goTo: function(location, replacing) {
-        var url = getLocationUrl(location);
+        var url = getLocationURL(location);
         return this.change(url, replacing);
     },
 
@@ -109,7 +109,7 @@ module.exports = React.createClass({
      */
     find: function(page, params) {
         params = _.clone(params) || {};
-        var urlParts = page.getUrl(params);
+        var urlParts = page.getURL(params);
         var basePath = this.state.basePath;
         if (basePath) {
             urlParts.path = basePath + urlParts.path;
@@ -140,7 +140,7 @@ module.exports = React.createClass({
      * @return {Object|null}
      */
     parse: function(url) {
-        var urlParts = parseUrl(url);
+        var urlParts = parseURL(url);
         var rewriteParams = {};
         if (this.props.rewrite) {
             this.props.rewrite(urlParts, rewriteParams, 'parse');
@@ -157,18 +157,18 @@ module.exports = React.createClass({
         var matchLength = 0;
         try {
             _.each(this.props.pages, (page) => {
-                if (typeof(page.parseUrl) !== 'function') {
+                if (typeof(page.parseURL) !== 'function') {
                     var pageName = _.get(page, 'displayName', 'Page')
-                    throw new Error(`${pageName} does not implement the static function parseUrl()`);
+                    throw new Error(`${pageName} does not implement the static function parseURL()`);
                 }
-                var params = page.parseUrl(urlParts.path, urlParts.query, urlParts.hash);
+                var params = page.parseURL(urlParts.path, urlParts.query, urlParts.hash);
                 if (params) {
                     // use the one with the longest match
                     if (params.match.length > matchLength) {
                         var routeParams = _.assign(_.omit(params, 'match'), rewriteParams);
-                        var canonicalUrl = this.find(page, routeParams);
+                        var canonicalURL = this.find(page, routeParams);
                         route = {
-                            url: canonicalUrl,
+                            url: canonicalURL,
                             component: page,
                             parameters: routeParams,
                             query: urlParts.query,
@@ -205,12 +205,12 @@ module.exports = React.createClass({
                     // set the browser location
                     var protocol = window.location.protocol;
                     var host = window.location.host;
-                    var fullUrl = `${protocol}//${host}${route.url}`;
-                    if (window.location.href !== fullUrl) {
+                    var fullURL = `${protocol}//${host}${route.url}`;
+                    if (window.location.href !== fullURL) {
                         if (replacing) {
-                            window.history.replaceState({}, '', fullUrl);
+                            window.history.replaceState({}, '', fullURL);
                         } else {
-                            window.history.pushState({}, '', fullUrl);
+                            window.history.pushState({}, '', fullURL);
                         }
                     }
                 }
@@ -219,8 +219,8 @@ module.exports = React.createClass({
             return Promise.resolve(true);
         } else {
             if (!noRedirecting) {
-                return this.triggerRedirectionRequest(url).then((newUrl) => {
-                    return this.change(newUrl, replacing, true);
+                return this.triggerRedirectionRequest(url).then((newURL) => {
+                    return this.change(newURL, replacing, true);
                 });
             } else {
                 return Promise.reject(new Error('Unable to find page'));
@@ -233,11 +233,11 @@ module.exports = React.createClass({
      */
     loosen: function() {
         if (process.env.PLATFORM === 'browser') {
-            var fullUrl = window.location.href;
-            var hashIndex = fullUrl.indexOf('#');
+            var fullURL = window.location.href;
+            var hashIndex = fullURL.indexOf('#');
             if (hashIndex !== -1) {
-                var newUrl = fullUrl.substr(0, hashIndex);
-                window.history.replaceState({}, '', newUrl);
+                var newURL = fullURL.substr(0, hashIndex);
+                window.history.replaceState({}, '', newURL);
             }
         }
     },
@@ -335,20 +335,19 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePopState: function(evt) {
-        if (process.env.PLATFORM !== 'browser') {
-            return;
-        }
-        var url = getLocationUrl(window.location);
-        var route = this.parse(url);
-        if (route) {
-            this.setState(route, () => {
-                this.triggerChangeEvent();
-            });
+        if (process.env.PLATFORM === 'browser') {
+            var url = getLocationURL(window.location);
+            var route = this.parse(url);
+            if (route) {
+                this.setState(route, () => {
+                    this.triggerChangeEvent();
+                });
+            }
         }
     },
 });
 
-function parseUrl(url) {
+function parseURL(url) {
     var path = url;
     var hash = '';
     var hashIndex = path.indexOf('#');
@@ -378,6 +377,6 @@ function parseQueryString(queryString) {
     return values;
 }
 
-function getLocationUrl(location) {
+function getLocationURL(location) {
     return location.pathname + location.search + location.hash;
 }

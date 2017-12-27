@@ -81,7 +81,7 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getControlUrl: function(control) {
+    getControlURL: function(control) {
         var selected = this.getSelectedControl();
         var settings = _.get(this.props.settings, control);
         if (!settings) {
@@ -180,21 +180,21 @@ module.exports = React.createClass({
         var calendarProps = {
             icon: 'calendar',
             className: 'calendar-btn',
-            url: this.getControlUrl('calendar'),
+            url: this.getControlURL('calendar'),
             active: selected === 'calendar',
             onClick: this.handleButtonClick,
         };
         var filterProps = {
             icon: 'filter',
             className: 'filter-btn',
-            url: this.getControlUrl('filter'),
+            url: this.getControlURL('filter'),
             active: selected === 'filter',
             onClick: this.handleButtonClick,
         };
         var searchProps = {
             icon: 'search',
             className: 'search-btn',
-            url: this.getControlUrl('search'),
+            url: this.getControlURL('search'),
             active: selected === 'search',
             onClick: this.handleButtonClick,
         };

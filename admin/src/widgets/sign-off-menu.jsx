@@ -30,7 +30,7 @@ module.exports = Relaks.createClass({
         }).then((user) => {
             var t = this.props.locale.translate;
             var p = this.props.locale.pick;
-            var url = require('pages/user-summary-page').getUrl({ userId: user.id });
+            var url = require('pages/user-summary-page').getURL({ userId: user.id });
             return (
                 <div className="sign-off-menu">
                     <a href={url}>

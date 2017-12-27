@@ -258,13 +258,13 @@ module.exports = React.createClass({
         var file = evt.target.files[0];
         if (file) {
             var format = _.last(_.split(file.type, '/'));
-            var blobUrl = BlobManager.manage(file);
-            return MediaLoader.loadImage(blobUrl).then((image) => {
+            var blobURL = BlobManager.manage(file);
+            return MediaLoader.loadImage(blobURL).then((image) => {
                 var resource = {
                     type: 'image',
                     format: format,
                     filename: file.name,
-                    file: blobUrl,
+                    file: blobURL,
                     width: image.naturalWidth,
                     height: image.naturalHeight,
                     clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),

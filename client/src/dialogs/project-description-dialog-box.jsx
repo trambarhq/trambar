@@ -55,8 +55,8 @@ module.exports = React.createClass({
         var projectImage = _.find(project.details.resources, { type: 'image' });
         var image;
         if (projectImage) {
-            var imageUrl = this.props.theme.getImageUrl(projectImage, { width: 160 });
-            image = <img src={imageUrl} />;
+            var imageURL = this.props.theme.getImageURL(projectImage, { width: 160 });
+            image = <img src={imageURL} />;
         }
         return (
             <Scrollable>

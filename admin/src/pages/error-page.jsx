@@ -18,7 +18,7 @@ module.exports = React.createClass({
     },
 
     statics: {
-        parseUrl: function(path, query, hash) {
+        parseURL: function(path, query, hash) {
             return Route.match(path, [
                 '/error/:code',
             ], (params) => {
@@ -27,7 +27,7 @@ module.exports = React.createClass({
             });
         },
 
-        getUrl: function(params) {
+        getURL: function(params) {
             var code = params.code;
             if (params.error) {
                 code = params.error.statusCode;

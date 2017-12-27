@@ -36,7 +36,7 @@ module.exports = React.createClass({
      *
      * @return {[type]}
      */
-    getUrl: function(story) {
+    getURL: function(story) {
         var route = this.props.route;
         var params = _.pick(route.parameters, 'schema', 'date', 'search');
         params.user = this.props.user.id;
@@ -72,7 +72,7 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var url = this.getUrl();
+        var url = this.getURL();
         return (
             <div className="more">
                 <Link url={url}>{t('user-activity-more')}</Link>
@@ -89,7 +89,7 @@ module.exports = React.createClass({
      */
     renderActivity: function(story) {
         var text = this.renderText(story);
-        var url = this.getUrl(story);
+        var url = this.getURL(story);
         var linkClass;
         var time = story.btime || story.ptime;
         if (time >= DateTracker.todayISO || time >= DateTracker.yesterdayISO) {

@@ -38,8 +38,8 @@ describe('MediaServer', function() {
         return uploadFiles([ path ], url, 'images', 'image/jpeg').then((resp) => {
             var results = JSON.parse(resp.body);
             var file = _.first(results.files);
-            var imageUrl = `http://localhost${file.url}`;
-            return retrieveFile(imageUrl).then((resp) => {
+            var imageURL = `http://localhost${file.url}`;
+            return retrieveFile(imageURL).then((resp) => {
                 var buffer = resp.body;
                 expect(buffer.length).to.be.above(1000);
             });
@@ -56,8 +56,8 @@ describe('MediaServer', function() {
                 'gray',
                 'quality90'
             ];
-            var imageUrl = `http://localhost${file.url}/${filters.join('+')}`;
-            return retrieveFile(imageUrl).then((resp) => {
+            var imageURL = `http://localhost${file.url}/${filters.join('+')}`;
+            return retrieveFile(imageURL).then((resp) => {
                 var image = Sharp(resp.body);
                 return Promise.resolve(image.metadata()).then((metadata) => {
                     expect(metadata).to.have.property('width', 400);
@@ -75,8 +75,8 @@ describe('MediaServer', function() {
             var filters = [
                 'width400',
             ];
-            var imageUrl = `http://localhost${file.url}/${filters.join('+')}.png`;
-            return retrieveFile(imageUrl).then((resp) => {
+            var imageURL = `http://localhost${file.url}/${filters.join('+')}.png`;
+            return retrieveFile(imageURL).then((resp) => {
                 var image = Sharp(resp.body);
                 return Promise.resolve(image.metadata()).then((metadata) => {
                     expect(metadata).to.have.property('format', 'png');
@@ -91,8 +91,8 @@ describe('MediaServer', function() {
         };
         return retrieveData(url, payload).then((resp) => {
             var screenshot = resp.body;
-            var screenshotUrl = `http://localhost${screenshot.url}`;
-            return retrieveFile(screenshotUrl).then((resp) => {
+            var screenshotURL = `http://localhost${screenshot.url}`;
+            return retrieveFile(screenshotURL).then((resp) => {
                 var image = Sharp(resp.body);
                 return Promise.resolve(image.metadata()).then((metadata) => {
                     expect(metadata).to.have.property('format', 'jpeg');

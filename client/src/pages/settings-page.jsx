@@ -39,7 +39,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object|null}
          */
-        parseUrl: function(path, query, url) {
+        parseURL: function(path, query, url) {
             return Route.match(path, [
                 '/global/settings/?',
                 '/:schema/settings/?',
@@ -57,7 +57,7 @@ module.exports = Relaks.createClass({
          *
          * @return {Object}
          */
-        getUrl: function(params) {
+        getURL: function(params) {
             var path = `/${params.schema || 'global'}/settings/`, query, hash;
             return { path, query, hash };
         },

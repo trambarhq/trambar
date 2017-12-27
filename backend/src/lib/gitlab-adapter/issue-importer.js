@@ -252,8 +252,8 @@ function fetchIssue(server, glProjectId, glIssueId) {
  * @return {Promise<Number>}
  */
 function getIssueNumber(server, glProjectId, glIssueId) {
-    var baseUrl = _.get(server, 'settings.oauth.base_url');
-    var issueNumber = _.get(issueNumberCache, [ baseUrl, glProjectId, glIssueId ]);
+    var baseURL = _.get(server, 'settings.oauth.base_url');
+    var issueNumber = _.get(issueNumberCache, [ baseURL, glProjectId, glIssueId ]);
     if (issueNumber) {
         return Promise.resolve(issueNumber);
     }
@@ -261,9 +261,9 @@ function getIssueNumber(server, glProjectId, glIssueId) {
     return Transport.fetchEach(server, url, {}, (glIssue) => {
         var issueId = glIssue.id;
         var issueNumber = glIssue.iid;
-        _.set(issueNumberCache, [ baseUrl, glProjectId, issueId ], issueNumber);
+        _.set(issueNumberCache, [ baseURL, glProjectId, issueId ], issueNumber);
     }).then(() => {
-        var issueNumber = _.get(issueNumberCache, [ baseUrl, glProjectId, glIssueId ]);
+        var issueNumber = _.get(issueNumberCache, [ baseURL, glProjectId, glIssueId ]);
         if (!issueNumber) {
             return Promise.reject(new HttpError(404));
         }

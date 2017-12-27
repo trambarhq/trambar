@@ -16,7 +16,7 @@ module.exports = React.createClass({
 
         locale: PropTypes.instanceOf(Locale).isRequired,
 
-        onDateUrl: PropTypes.func,
+        onDateURL: PropTypes.func,
     },
 
     /**
@@ -91,7 +91,7 @@ module.exports = React.createClass({
                 if (day) {
                     date = `${year}-${pad(month)}-${pad(day)}`;
                     label = day;
-                    url = this.getDateUrl(date);
+                    url = this.getDateURL(date);
                 } else {
                     label = '\u00a0';
                 }
@@ -139,9 +139,9 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    getDateUrl: function(date) {
-        if (this.props.onDateUrl) {
-            return this.props.onDateUrl({
+    getDateURL: function(date) {
+        if (this.props.onDateURL) {
+            return this.props.onDateURL({
                 type: 'dateurl',
                 target: this,
                 date,

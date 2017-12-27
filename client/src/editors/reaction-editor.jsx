@@ -463,9 +463,9 @@ module.exports = React.createClass({
             var url;
             if (evt.forImage)  {
                 // images are style at height = 1.5em
-                url = this.props.theme.getImageUrl(res, { height: 24 });;
+                url = this.props.theme.getImageURL(res, { height: 24 });;
             } else {
-                url = this.props.theme.getUrl(res);
+                url = this.props.theme.getURL(res);
             }
             return {
                 href: url,

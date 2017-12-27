@@ -409,13 +409,13 @@ module.exports = React.createClass({
             var type = parts[0];
             var format = parts[1];
             if (type === 'image') {
-                var blobUrl = BlobManager.manage(file);
-                return MediaLoader.loadImage(blobUrl).then((image) => {
+                var blobURL = BlobManager.manage(file);
+                return MediaLoader.loadImage(blobURL).then((image) => {
                     return {
                         type: 'image',
                         format: format,
                         filename: file.name,
-                        file: blobUrl,
+                        file: blobURL,
                         width: image.naturalWidth,
                         height: image.naturalHeight,
                         clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
@@ -430,10 +430,10 @@ module.exports = React.createClass({
                         // if video wasn't processed, use the original file
                         blob = file;
                     }
-                    var blobUrl = BlobManager.manage(blob);
-                    return MediaLoader.loadVideo(blobUrl).then((video) => {
+                    var blobURL = BlobManager.manage(blob);
+                    return MediaLoader.loadVideo(blobURL).then((video) => {
                         return FrameGrabber.capture(video).then((posterBlob) => {
-                            var posterBlobUrl = BlobManager.manage(posterBlob);
+                            var posterBlobURL = BlobManager.manage(posterBlob);
                             // upload file in small chunks
                             var stream = new BlobStream;
                             stream.pipe(blob);
@@ -441,9 +441,9 @@ module.exports = React.createClass({
                                 type: 'video',
                                 format: format,
                                 filename: file.name,
-                                file: blobUrl,
+                                file: blobURL,
                                 stream: stream,
-                                poster_file: posterBlobUrl,
+                                poster_file: posterBlobURL,
                                 width: video.videoWidth,
                                 height: video.videoHeight,
                                 clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
@@ -454,15 +454,15 @@ module.exports = React.createClass({
                     });
                 });
             } else if (type === 'audio') {
-                var blobUrl = BlobManager.manage(file);
-                return MediaLoader.loadAudio(blobUrl).then((audio) => {
+                var blobURL = BlobManager.manage(file);
+                return MediaLoader.loadAudio(blobURL).then((audio) => {
                     var stream = new BlobStream;
                     stream.pipe(file);
                     return {
                         type: 'audio',
                         format: format,
                         filename: file.name,
-                        file: blobUrl,
+                        file: blobURL,
                         stream: stream,
                         duration: Math.round(audio.duration * 1000),
                         imported: true,

@@ -1096,14 +1096,14 @@ module.exports = React.createClass({
             var url;
             if (evt.forImage)  {
                 // images are style at height = 1.5em
-                url = theme.getImageUrl(res, { height: 24 });
+                url = theme.getImageURL(res, { height: 24 });
                 if (!url) {
                     // use blob if it's attached
                     var file = theme.getImageFile(res);
-                    url = Markdown.createBlobUrl(file, res.clip);
+                    url = Markdown.createBlobURL(file, res.clip);
                 }
             } else {
-                url = theme.getUrl(res);
+                url = theme.getURL(res);
             }
             // remember the resource and the url
             this.resourcesReferenced[url] = res;

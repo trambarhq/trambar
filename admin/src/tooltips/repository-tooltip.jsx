@@ -50,7 +50,7 @@ module.exports = React.createClass({
                 </div>
             );
         });
-        var listUrl = route.find(require('pages/repo-list-page'), {
+        var listURL = route.find(require('pages/repo-list-page'), {
             project: this.props.project.id,
         });
         return (
@@ -59,7 +59,7 @@ module.exports = React.createClass({
                 <window>
                     {list}
                     <div className="bottom">
-                        <a href={listUrl}>{t('tooltip-more')}</a>
+                        <a href={listURL}>{t('tooltip-more')}</a>
                     </div>
                 </window>
             </Tooltip>
