@@ -242,8 +242,8 @@ function getRelativePosition(node, container) {
     var left = node.offsetLeft;
     var top = node.offsetTop;
     for (var p = node.offsetParent; p && p !== container; p = p.offsetParent) {
-        left += p.offsetLeft;
-        top += p.offsetTop;
+        left += p.offsetLeft - p.scrollLeft;
+        top += p.offsetTop - p.scrollTop;
     }
     return { left, top };
 }
