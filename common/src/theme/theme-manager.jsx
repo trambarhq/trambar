@@ -12,6 +12,11 @@ module.exports = React.createClass({
         onChange: PropTypes.func,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
             mode: this.selectMode(),
@@ -20,10 +25,20 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Return the current mode, selected based on screen width
+     *
+     * @return {String}
+     */
     getMode: function() {
         return this.state.mode;
     },
 
+    /**
+     * Return possible modes
+     *
+     * @return {Array<String>}
+     */
     getModes: function() {
         // make sure the list is ordered by widths
         var pairs = _.sortBy(_.toPairs(this.props.modes), 1);
@@ -31,6 +46,11 @@ module.exports = React.createClass({
         return _.keys(this.props.modes);
     },
 
+    /**
+     * Return details object (unused)
+     *
+     * @return {Object}
+     */
     getDetails: function() {
         return this.state.details;
     },
@@ -103,19 +123,38 @@ module.exports = React.createClass({
         return `${this.props.serverAddress}${resUrl}${versionPath}`;
     },
 
+    /**
+     * Return blob URL to local image file. URL might not be valid. Need to call
+     * BlobManager.get() to valididate the blob's existence on running system.
+     *
+     * @param  {Object} res
+     * @param  {Object} options
+     *
+     * @return {String|null}
+     */
     getImageFile: function(res) {
         switch(res.type) {
             case 'video':
             case 'audio':
             case 'website':
-                return res.poster_file;
-                break;
+                return res.poster_file || null;
             default:
-                return res.file;
+                return res.file || null;
         }
     },
 
+    /**
+     * Return URL to video resource
+     *
+     * @param  {Object} res
+     * @param  {Object} options
+     *
+     * @return {String|null}
+     */
     getVideoUrl: function(res, options) {
+        if (!res.url) {
+            return null;
+        }
         var url = `${this.props.serverAddress}${res.url}`;
         if (options && options.version) {
             var version = res.versions[options.version];
@@ -124,6 +163,14 @@ module.exports = React.createClass({
         return url;
     },
 
+    /**
+     * Return URL to audio resource
+     *
+     * @param  {Object} res
+     * @param  {Object} options
+     *
+     * @return {String|null}
+     */
     getAudioUrl: function(res, options) {
         return this.getVideoUrl(res, options);
     },
@@ -167,6 +214,13 @@ module.exports = React.createClass({
         return selected;
     },
 
+    /**
+     * Change certain details about the UI (not used currently)
+     *
+     * @param  {Object} details
+     *
+     * @return {Promise<Boolean>}
+     */
     change: function(details) {
         if (_.isEqual(this.state.details, details)) {
             return Promise.resolve(true);
@@ -177,20 +231,31 @@ module.exports = React.createClass({
         return Promise.resolve(true);
     },
 
+    /**
+     * Add window resize handler on mount
+     */
     componentWillMount: function() {
         window.addEventListener('resize', this.handleWindowResize);
     },
 
+    /**
+     * Render function
+     *
+     * @return {null}
+     */
     render: function() {
         return null;
     },
 
+    /**
+     * Initialize theme
+     */
     componentDidMount: function() {
         this.change(defaultTheme);
     },
 
     /**
-     * Get the theme object that was last used
+     * Get the theme object that was last used (not being used for now)
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState
@@ -211,10 +276,16 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Remove resize handler on unmount
+     */
     componentWillUnmount: function() {
         window.removeEventListener('resize', this.handleWindowResize);
     },
 
+    /**
+     * Inform parent component that theme has changed
+     */
     triggerChangeEvent: function() {
         if (this.props.onChange) {
             this.props.onChange({
@@ -224,6 +295,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when user resizes browser window
+     *
+     * @param  {Event} evt
+     */
     handleWindowResize: function(evt) {
         var nextState = {};
         var mode = this.selectMode();

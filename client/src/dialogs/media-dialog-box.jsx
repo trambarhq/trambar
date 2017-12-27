@@ -173,7 +173,7 @@ module.exports = React.createClass({
                     maxHeight = Math.round(maxWidth / maxAspect);
                 }
             }
-            var style = { maxWidth: maxWidth, maxHeight: maxHeight };
+            var style = { width: maxWidth, height: maxHeight };
             var contents;
             switch (res.type) {
                 case 'image':
@@ -210,11 +210,11 @@ module.exports = React.createClass({
             url = theme.getImageUrl(res, { clip: null });
         } else {
             if (width > maxWidth) {
+                height = Math.round(maxWidth * (height / width));
                 width = maxWidth;
-                height = Math.round(height * (maxWidth / width));
             } else if (height > maxHeight) {
+                width = Math.round(maxHeight * (width / height));
                 height = maxHeight;
-                width = Math.round(width * (maxHeight / height));
             }
             url = theme.getImageUrl(res, { width, height, clip: null })
         }
@@ -250,18 +250,25 @@ module.exports = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderThumbnails: function() {
+    renderThumbnails: function(index) {
         var t = this.props.locale.translate;
         var theme = this.props.theme;
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
+            var url = this.props.theme.getImageUrl(res, { width: 28, height: 28 });
             var props = {
-                url: this.props.theme.getImageUrl(res, { width: 28, height: 28 }),
-                selected: (index === selectedIndex),
+                className: 'thumbnail',
                 'data-index': index,
                 onClick: this.handleThumbnailClick,
             };
-            return <Thumbnail key={index} {...props} />;
+            if (index === selectedIndex) {
+                props.className += ' selected';
+            }
+            return (
+                <div key={index} {...props}>
+                    <img src={url} />
+                </div>
+            );
         });
         return <div className="links">{thumbnails}</div>;
     },
@@ -356,18 +363,6 @@ module.exports = React.createClass({
         }
     },
 });
-
-function Thumbnail(props) {
-    var classNames = [ 'thumbnail' ];
-    if (props.selected) {
-        classNames.push('selected');
-    }
-    return (
-        <div className={classNames.join(' ')} id={props.id} onClick={props.onClick}>
-            <img src={props.url} />
-        </div>
-    )
-}
 
 /**
  * Calculate the actual dimension of one version of the video
