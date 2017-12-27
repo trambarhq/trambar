@@ -392,10 +392,10 @@ module.exports = function(languageCode) {
         'story-remove-yourself': 'Remove yourself',
         'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
         'story-status-transcoding-$progress': (progress) => {
-            return `transcoding (${progress}%)`;
+            return `Transcoding (${progress}%)`;
         },
         'story-status-uploading-$progress': (progress) => {
-            return `uploading (${progress}%)`;
+            return `Uploading (${progress}%)`;
         },
         'story-survey': 'Survey',
         'story-task-list': 'Task list',
