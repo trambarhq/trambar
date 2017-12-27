@@ -88,7 +88,7 @@ payloadIds.flags = 'IMMUTABLE';
  * Copy properties of payload into matching resource
  *
  * @param  {Object} details
- * @param  {Number} payload
+ * @param  {Object} payload
  *
  * @return {Object}
  */

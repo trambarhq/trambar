@@ -81,6 +81,25 @@ function start() {
             ]
             return db.listen(tables, 'change', handleDatabaseChanges, 0);
         }).then(() => {
+            if (process.env.NODE_ENV !== 'production') {
+                // listen for console messages from stored procs
+                var types = [
+                    'info',
+                    'log',
+                    'warn',
+                    'error',
+                    'debug',
+                ];
+                return Promise.each(types, (event) => {
+                    var f = function(events) {
+                        _.each(events, (args) => {
+                            console[event].apply(console, args);
+                        });
+                    };
+                    return db.listen([ 'console' ], event, f, 0);
+                });
+            }
+        }).then(() => {
             messageQueueInterval = setInterval(() => {
                 cleanMessageQueue(db);
             }, 5 * 60 * 1000);

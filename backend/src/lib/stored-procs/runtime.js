@@ -1,4 +1,11 @@
 var exports = {
+    console: {
+        info: broadcastLogMessage.bind(null, 'warn'),
+        log: broadcastLogMessage.bind(null, 'log'),
+        warn: broadcastLogMessage.bind(null, 'warn'),
+        error: broadcastLogMessage.bind(null, 'error'),
+        debug: broadcastLogMessage.bind(null, 'debug'),
+    },
     findChanges,
     isEqual,
     sendChangeNotification,
@@ -71,27 +78,7 @@ function isEqual(before, after) {
     }
 }
 
-function sendChangeNotification(op, schema, table, before, after, changes, propNames) {
-    var id = (after) ? after.id : before.id;
-    var gn = (after) ? after.gn : before.gn;
-    var diff = {}, previous = {}, current = {};
-    // indicate which property is different
-    for (var name in changes) {
-        diff[name] = true;
-    }
-    for (var i = 0; i < propNames.length; i++) {
-        var name = propNames[i];
-        if (after) {
-            current[name] = after[name];
-        }
-        if (diff[name]) {
-            if (before) {
-                previous[name] = before[name];
-            }
-        }
-    }
-    var info = { op, schema, table, id, gn, diff, previous, current };
-    var channel = table + '_change';
+function sendNotification(channel, info) {
     try {
         var msg = JSON.stringify(info);
         var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
@@ -113,6 +100,30 @@ function sendChangeNotification(op, schema, table, before, after, changes, propN
     }
 }
 
+function sendChangeNotification(op, schema, table, before, after, changes, propNames) {
+    var id = (after) ? after.id : before.id;
+    var gn = (after) ? after.gn : before.gn;
+    var diff = {}, previous = {}, current = {};
+    // indicate which property is different
+    for (var name in changes) {
+        diff[name] = true;
+    }
+    for (var i = 0; i < propNames.length; i++) {
+        var name = propNames[i];
+        if (after) {
+            current[name] = after[name];
+        }
+        if (diff[name]) {
+            if (before) {
+                previous[name] = before[name];
+            }
+        }
+    }
+    var info = { op, schema, table, id, gn, diff, previous, current };
+    var channel = table + '_change';
+    sendNotification(channel, info);
+}
+
 function sendCleanNotification(op, schema, table, after) {
     var id = after.id;
     var gn = after.gn;
@@ -120,9 +131,7 @@ function sendCleanNotification(op, schema, table, after) {
     var sample_count = after.sample_count || 0;
     var info = { op, schema, table, id, gn, atime, sample_count };
     var channel = table + '_clean';
-    var msg = JSON.stringify(info);
-    var sql = `NOTIFY ${channel}, ${plv8.quote_literal(msg)}`;
-    plv8.execute(sql);
+    sendNotification(channel, info);
 }
 
 function matchObject(filters, object) {
@@ -268,4 +277,9 @@ function matchScalars(a, b) {
         }
     }
     return false;
+}
+
+function broadcastLogMessage(type, ...args) {
+    var channel = `console_${type}`;
+    sendNotification(channel, args);
 }
