@@ -49,19 +49,19 @@ module.exports = React.createClass({
         // create a task object on the server-side to track
         // backend processing of the payload
         return this.createTask(schema, action, options).then((task) => {
-            var params = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
+            var sources = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
             var payload = _.assign({
                 payload_id: task.id,
                 action: task.action,
                 token: task.token,
                 start: Moment(),
                 transferred: 0,
-                total: 0,
+                total: this.getPayloadSize(sources),
                 backendProgress: 0,
                 address: address,
                 schema: schema,
                 promise: null
-            }, params);
+            }, sources);
             var payloads = _.concat(this.state.payloads, payload);
             this.setState({ payloads }, () => {
                 this.triggerChangeEvent();
@@ -182,21 +182,15 @@ module.exports = React.createClass({
             // already started
             return;
         }
-        var options = {
-            responseType: 'json',
-        };
-        if (!payload.stream && payload.file) {
-            // upload progress for streams is handled differently
-            var blob = BlobManager.get(payload.file);
-            options.onUploadProgress = (evt) => {
-                var bytesSent = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
-                this.updatePayloadStatus(payloadId, {
-                    transferred: bytesSent,
-                    total: blob.size,
-                });
-            };
-        }
         var promise = this.createFormData(payload).then((formData) => {
+            var options = {
+                responseType: 'json',
+                onUploadProgress: (evt) => {
+                    // scale value to total we had determined easlier
+                    var transferred = (evt.total) ? Math.round(payload.total * (evt.loaded / evt.total)) : 0;
+                    this.updatePayloadStatus(payloadId, { transferred });
+                },
+            };
             var url = this.getUrl(payload);
             return HttpRequest.fetch('POST', url, formData, options);
         });
@@ -237,6 +231,36 @@ module.exports = React.createClass({
                 formData.append(name, value);
             }, new FormData);
         });
+    },
+
+    /**
+     * Return the size of a payload
+     *
+     * @param  {Object} payload
+     *
+     * @return {Number}
+     */
+    getPayloadSize: function(payload) {
+        var size = 0;
+        if (payload.stream) {
+            // count only the stream
+            size += payload.stream.size;
+        } else {
+            if (payload.file) {
+                var blob = BlobManager.get(payload.file);
+                if (blob) {
+                    size += blob.size;
+                }
+            }
+            if (payload.poster_file) {
+                var blob = BlobManager.get(payload.poster_file);
+                if (blob) {
+                    size += blob.size;
+                }
+            }
+        }
+        console.log(size);
+        return size;
     },
 
     /**
@@ -316,11 +340,9 @@ module.exports = React.createClass({
                             if (payload) {
                                 // evt.loaded and evt.total are encoded sizes,
                                 // which are slightly larger than the blob size
-                                var bytesSent = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
-                                this.updatePayloadStatus(payload.id, {
-                                    transferred: uploadedChunkSize + bytesSent,
-                                    total: stream.size,
-                                });
+                                var bytesSentFromChunk = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
+                                var transferred = uploadedChunkSize + bytesSentFromChunk;
+                                this.updatePayloadStatus(payload.payload_id, { transferred });
                             }
                         };
                     }

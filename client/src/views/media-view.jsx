@@ -2,6 +2,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var HttpRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');

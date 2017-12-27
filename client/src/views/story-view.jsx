@@ -331,10 +331,14 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderProgress: function() {
-        var schema = this.props.route.parameters.schema;
-        var uploadStatus = this.props.payloads.inquire(schema, this.props.story);
+        var uploadStatus;
+        if (this.props.story.ready === false) {
+            var schema = this.props.route.parameters.schema;
+            uploadStatus = this.props.payloads.inquire(schema, this.props.story);
+            console.log(uploadStatus);
+        }
         var props = {
-            status: this.props.status,
+            status: uploadStatus,
             story: this.props.story,
             locale: this.props.locale,
         };
