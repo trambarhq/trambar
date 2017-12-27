@@ -34,7 +34,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         var hidden = !_.get(this.props.settings, 'navigation.top', true);
         return {
-            height: (this.props.hidden) ? 0 : 'auto',
+            height: (hidden) ? 0 : 'auto',
         };
     },
 
