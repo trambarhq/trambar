@@ -1070,8 +1070,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             return payloads.prepare(schema, user).then(() => {
                 return db.start().then((userId) => {
                     return db.saveOne({ table: 'user' }, user).then((user) => {
-                        // reattach blob, if any
-                        payloads.reattach(schema, user);
                         return payloads.dispatch(schema, user).then(() => {
                             this.setState({ hasChanges: false, saving: false }, () => {
                                 return this.setEditability(false, user);

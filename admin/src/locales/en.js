@@ -83,6 +83,7 @@ module.exports = function(languageCode) {
         },
 
         'image-album-cancel': 'Cancel',
+        'image-album-done': 'Done',
         'image-album-manage': 'Manage album',
         'image-album-remove': 'Remove selected',
         'image-album-select': 'Use selected',

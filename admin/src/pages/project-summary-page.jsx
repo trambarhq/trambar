@@ -780,8 +780,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             return payloads.prepare(schema, project).then(() => {
                 return db.start().then((userId) => {
                     return db.saveOne({ table: 'project' }, project).then((project) => {
-                        // reattach blob, if any
-                        payloads.reattach(schema, project);
                         return payloads.dispatch(schema, project).then(() => {
                             this.setState({ hasChanges: false, saving: false }, () => {
                                 this.setEditability(false, project);

@@ -489,8 +489,6 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             return payloads.prepare(schema, system).then(() => {
                 return db.start().then((userId) => {
                     return db.saveOne({ table: 'system' }, system).then((system) => {
-                        // reattach blob, if any
-                        payloads.reattach(schema, system);
                         return payloads.dispatch(schema, system).then(() => {
                             this.setState({ hasChanges: false, saving: false }, () => {
                                 this.setEditability(false);

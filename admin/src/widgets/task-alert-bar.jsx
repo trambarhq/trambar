@@ -64,6 +64,7 @@ module.exports = Relaks.createClass({
                 deleted: false,
                 newer_than: this.state.searchStartTime,
                 limit: 10,
+                user_id: null,
             };
             return db.find({ table: 'task', criteria });
         }).then((tasks) => {

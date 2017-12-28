@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
 var ImageView = require('media/image-view');
+var BlobManager = require('transport/blob-manager');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -171,12 +172,10 @@ module.exports = React.createClass({
                         </a>
                     </div>
                 );
-            } else if (image.file) {
-                // need to use ImageView, which handles JPEG orientation
-                var url = URL.createObjectURL(image.file);
+            } else if (image.file && BlobManager.get(image.file)) {
                 return (
                     <div className="image">
-                        <ImageView url={url} clippingRect={clip} style={{ width, height }} />
+                        <ImageView url={image.file} clippingRect={clip} style={{ width, height }} />
                     </div>
                 );
             }
@@ -376,18 +375,16 @@ module.exports = React.createClass({
     handleUploadChange: function(evt) {
         var file = evt.target.files[0];
         if (file) {
-            var url = URL.createObjectURL(file);
-            return MediaLoader.loadImage(url).then((img) => {
+            var blobURL = BlobManager.manage(file);
+            return MediaLoader.loadImage(blobURL).then((img) => {
                 var image = {
                     format: _.last(_.split(file.type, '/')),
                     width: img.naturalWidth,
                     height: img.naturalHeight,
                     type: 'image',
-                    file,
+                    file: blobURL,
                 };
                 return this.setImage(image);
-            }).finally(() => {
-                URL.revokeObjectURL(url);
             });
         }
     },

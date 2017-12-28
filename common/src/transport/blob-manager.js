@@ -93,6 +93,17 @@ function associate(target, remoteURL) {
  * @return {Promise<String>}
  */
 function fetch(remoteURL) {
+    var blob = get(remoteURL);
+    if (blob) {
+        // we were actually given a blob URL
+        return Promise.resolve(remoteURL);
+    }
+    var localURL = find(remoteURL);
+    if (localURL) {
+        // download the file before
+        return Promise.resolve(localURL);
+    }
+
     var options = { responseType: 'blob' };
     return HTTPRequest.fetch('GET', remoteURL, null, options).then((blob) => {
         var localURL = manage(blob);

@@ -5,6 +5,7 @@ var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var MediaLoader = require('media/media-loader');
 var ImageView = require('media/image-view');
+var BlobManager = require('transport/blob-manager');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -83,7 +84,8 @@ module.exports = Relaks.createClass({
             // load pictures for given purpose if we're showing the dialog box
             if (this.props.show || this.state.shown) {
                 var criteria = {
-                    purpose: this.props.purpose
+                    purpose: this.props.purpose,
+                    deleted: false,
                 };
                 return db.find({ table: 'picture', criteria });
             }
@@ -201,13 +203,12 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                     <img src={url} style={style} />
                 </div>
             );
-        } else if (image.file) {
-            var imageURL = URL.createObjectURL(image.file);
+        } else if (image.file && BlobManager.get(image.file)) {
             props.className += ' disabled';
             props.onClick = null;
             return (
                 <div key={i} {...props}>
-                    <ImageView url={imageURL} style={style} />
+                    <ImageView url={image.file} style={style} />
                 </div>
             );
         }
@@ -228,27 +229,27 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                 multiple: true,
                 onChange: this.handleUploadChange,
             };
-            var cancelProps = {
-                className: 'cancel',
-                onClick: this.handleCancelClick,
-            };
             var removeProps = {
                 className: 'remove',
                 disabled: _.isEmpty(this.state.deletionCandidateIds),
                 onClick: this.handleRemoveClick,
             };
+            var doneProps = {
+                className: 'done',
+                onClick: this.handleDoneClick,
+            };
             return (
                 <div key="manage" className="buttons">
                     <div className="left">
+                        <PushButton {...removeProps}>{t('image-album-remove')}</PushButton>
+                        {' '}
                         <label className="push-button">
                             {t('image-album-upload')}
                             <input {...inputProps} />
                         </label>
                     </div>
                     <div className="right">
-                        <PushButton {...cancelProps}>{t('image-album-cancel')}</PushButton>
-                        {' '}
-                        <PushButton {...removeProps}>{t('image-album-remove')}</PushButton>
+                        <PushButton {...doneProps}>{t('image-album-done')}</PushButton>
                     </div>
                 </div>
             );
@@ -311,43 +312,42 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         files = _.filter(files, (file) => {
             return /^image\//.test(file.type);
         });
-        var db = this.props.database.use({ schema: 'global', by: this });
+        var schema = 'global';
+        var db = this.props.database.use({ schema, by: this });
         var payloads = this.props.payloads;
         return db.start().then((userId) => {
-            var urls = [];
             return Promise.mapSeries(files, (file, index) => {
-                var url = urls[index] = URL.createObjectURL(file);
-                return MediaLoader.loadImage(url).then((img) => {
+                var [ type, format ] = _.split(file.type, '/');
+                if (type !== 'image') {
+                    return null;
+                }
+                var blobURL = BlobManager.manage(file);
+                // load the image to determine its dimension
+                return MediaLoader.loadImage(blobURL).then((img) => {
+                    // add to payload queue
                     var res = {
-                        format: _.last(_.split(file.type, '/')),
+                        format: format,
                         width: img.naturalWidth,
                         height: img.naturalHeight,
-                        file: file,
+                        file: blobURL,
                         type: 'image',
                     };
-                    return payloads.queue(res).then((payloadId) => {
+                    return payloads.queue(schema, res).then((payloadId) => {
                         res.payload_id = payloadId;
                         return {
                             purpose: this.props.purpose,
-                            user_id: currentUserId,
+                            user_id: userId,
                             details: _.omit(res, 'type'),
                         };
                     });
                 });
             }).then((pictures) => {
-                return db.save({ table: 'picture' }, pictures).mapSeries((picture) => {
-                    // reattach blob
-                    var payloadId = picture.details.payload_id;
-                    var criteria = { payload_id: payloadId };
-                    var payload = payloads.find(criteria);
-                    picture.details.file = payload.file;
+                // save picture objects
+                return db.save({ table: 'picture' }, pictures).each((picture) => {
                     // send the file
-                    payloads.send(payloadId);
-                    return picture;
-                });
-            }).finally(() => {
-                _.each(urls, (url) => {
-                    URL.revokeObjectURL(url);
+                    var payloadId = picture.details.payload_id;
+                    payloads.send(schema, payloadId);
+                    return null;
                 });
             });
         });
@@ -370,7 +370,13 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         }
         var db = this.props.database.use({ schema: 'global', by: this });
         return db.start().then((userId) => {
-            return db.remove({ table: 'picture' }, pictures);
+            var changes = _.map(pictures, (picture) => {
+                return {
+                    id: picture.id,
+                    deleted: true,
+                };
+            });
+            return db.save({ table: 'picture' }, changes);
         });
     },
 
@@ -415,19 +421,24 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
+    handleDoneClick: function(evt) {
+        this.setState({
+            managingImages: false,
+            deletionCandidateIds: []
+        });
+    },
+
+    /**
+     * Called when user clicks cancel button
+     *
+     * @param  {Event} evt
+     */
     handleCancelClick: function(evt) {
-        if (this.state.managingImages) {
-            this.setState({
-                managingImages: false,
-                deletionCandidateIds: []
+        if (this.props.onCancel) {
+            this.props.onCancel({
+                type: 'cancel',
+                target: this,
             });
-        } else {
-            if (this.props.onCancel) {
-                this.props.onCancel({
-                    type: 'cancel',
-                    target: this,
-                });
-            }
         }
     },
 

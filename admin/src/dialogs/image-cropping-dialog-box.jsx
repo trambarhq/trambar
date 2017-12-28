@@ -39,11 +39,23 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Change zoom level image by fractional amount
+     *
+     * @param  {Number} amount
+     */
     zoom: function(amount) {
         var clippingRect = this.resizeClippingRect(amount);
         this.setState({ clippingRect })
     },
 
+    /**
+     * Return true if it's possible to zoom out
+     *
+     * @param  {Number} amount
+     *
+     * @return {Boolean}
+     */
     canZoom: function(amount) {
         var clippingRect = this.resizeClippingRect(amount);
         return !_.isEqual(clippingRect, this.state.clippingRect);
@@ -106,8 +118,12 @@ module.exports = React.createClass({
      */
     renderImage: function() {
         var image = this.props.image;
+        var imageURL = this.props.theme.getImageURL(image, { clip: null });
+        if (!imageURL) {
+            imageURL = image.file;
+        }
         var props = {
-            url: this.props.theme.getImageURL(image, { clip: null }),
+            url: imageURL,
             clippingRect: this.state.clippingRect,
             aspectRatio: this.props.desiredWidth / this.props.desiredHeight,
             onChange: this.handleChange,

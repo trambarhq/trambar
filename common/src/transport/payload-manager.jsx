@@ -259,7 +259,6 @@ module.exports = React.createClass({
                 }
             }
         }
-        console.log(size);
         return size;
     },
 
