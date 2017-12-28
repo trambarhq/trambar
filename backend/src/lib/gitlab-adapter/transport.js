@@ -305,13 +305,13 @@ function request(server, uri, method, query, payload, userToken) {
         json: true,
         qs: query,
         body: payload,
-        baseURL,
+        baseUrl: baseURL,
         uri,
         method,
         headers,
     };
     var succeeded = false;
-    var attempts = 0;
+    var attempts = 1;
     var result = null;
     var delayInterval = 500;
     var lastError;
@@ -334,7 +334,7 @@ function request(server, uri, method, query, payload, userToken) {
             if (attempts < 10) {
                 // try again after a delay
                 return Promise.delay(delayInterval).then(() => {
-                    console.log(`Retrying (${attempts}/10)...`);
+                    console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/10)...`);
                     attempts++;
                     delayInterval *= 2;
                     return true;

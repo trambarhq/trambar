@@ -115,7 +115,7 @@ var programmingErrors = {
 
 Database.prototype.execute = function(sql, parameters) {
     if (!this.client) {
-        return Promise.reject('Connection was closed: ' + sql.substr(0, 20) + '...');
+        return Promise.reject(new Error('Connection was closed: ' + sql.substr(0, 20) + '...'));
     }
     // convert promise to Bluebird variety
     return Promise.resolve(this.client.query(sql, parameters)).catch((err) => {
