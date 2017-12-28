@@ -52,21 +52,6 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Attach triggers to the table.
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     *
-     * @return {Promise<Boolean>}
-     */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'purpose', 'user_id' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
-
-    /**
      * Attach triggers to this table, also add trigger on task so details
      * are updated when tasks complete
      *
@@ -76,10 +61,13 @@ module.exports = _.create(Data, {
      * @return {Promise<Boolean>}
      */
     watch: function(db, schema) {
-        return Data.watch.call(this, db, schema).then(() => {
-            return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
+        return this.createChangeTrigger(db, schema).then(() => {
+            var propNames = [ 'deleted', 'purpose', 'user_id' ];
+            return this.createNotificationTriggers(db, schema, propNames).then(() => {
+                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+                    var Task = require('accessors/task');
+                    return Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
+                });
             });
         });
     },
