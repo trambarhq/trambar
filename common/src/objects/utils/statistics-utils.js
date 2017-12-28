@@ -118,6 +118,7 @@ function fetchRepoDailyActivities(db, project, repos) {
         // load daily-activities statistics
         var filterLists = _.map(dateRanges, (dateRange) => {
             var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            var tzOffset = DateUtils.getTimeZoneOffset();
             return _.map(timeRanges, (timeRange) => {
                 return {
                     external_object: dateRange.filters.external_object,
