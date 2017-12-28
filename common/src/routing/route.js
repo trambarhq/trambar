@@ -18,16 +18,18 @@ function Route(routeManager) {
      * Change the route
      *
      * @param  {String} url
+     * @param  {Boolean} replacing
+     * @param  {String|undefined} displayURL
      *
      * @return {Promise}
      */
-    this.change = function(url, replacing) {
+    this.change = function(url, replacing, displayURL) {
         if (typeof(url) !== 'string') {
             throw new Error('Invalid argument')
         }
         return self.ask(url, true).then((ok) => {
             if (ok) {
-                return routeManager.change(url, replacing);
+                return routeManager.change(url, replacing, displayURL);
             } else {
                 return false;
             }

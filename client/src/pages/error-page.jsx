@@ -29,10 +29,13 @@ module.exports = React.createClass({
          */
         parseURL: function(path, query, hash) {
             return Route.match(path, [
+                '/:schema/error/:code',
                 '/error/:code',
             ], (params) => {
-                params.code = parseInt(params.code);
-                return params;
+                return {
+                    schema: params.schema,
+                    code: parseInt(params.code)
+                };
             });
         },
 
@@ -45,6 +48,9 @@ module.exports = React.createClass({
          */
         getURL: function(params) {
             var path = `/error/${params.code}`, query, hash;
+            if (params.schema) {
+                path = `/${params.schema}` + path;
+            }
             return { path, query, hash };
         },
 
@@ -56,7 +62,13 @@ module.exports = React.createClass({
          * @return {Object}
          */
         configureUI: function(currentRoute) {
-            return {};
+            var hasSchema = !!currentRoute.parameters.schema;
+            return {
+                navigation: {
+                    top: hasSchema,
+                    bottom: hasSchema,
+                }
+            };
         },
     },
 

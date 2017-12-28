@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
@@ -190,42 +191,38 @@ module.exports = React.createClass({
      *
      * @param  {String} url
      * @param  {Boolean} replacing
-     * @param  {Boolean} noRedirecting
+     * @param  {String} displayURL
      *
      * @return {Promise<Boolean>}
      */
-    change: function(url, replacing, noRedirecting) {
+    change: function(url, replacing, displayURL) {
         if (this.state.url === url) {
             return Promise.resolve(false);
         }
         var route = this.parse(url);
-        if (route) {
-            this.setState(route, () => {
-                if (process.env.PLATFORM === 'browser') {
-                    // set the browser location
-                    var protocol = window.location.protocol;
-                    var host = window.location.host;
-                    var fullURL = `${protocol}//${host}${route.url}`;
-                    if (window.location.href !== fullURL) {
-                        if (replacing) {
-                            window.history.replaceState({}, '', fullURL);
-                        } else {
-                            window.history.pushState({}, '', fullURL);
-                        }
+        if (!route) {
+            return this.triggerRedirectionRequest(url, replacing);
+        }
+        this.setState(route, () => {
+            if (process.env.PLATFORM === 'browser') {
+                if (!displayURL) {
+                    displayURL = route.url;
+                }
+                // set the browser location
+                var protocol = window.location.protocol;
+                var host = window.location.host;
+                var fullURL = `${protocol}//${host}${displayURL}`;
+                if (window.location.href !== fullURL) {
+                    if (replacing) {
+                        window.history.replaceState({}, '', fullURL);
+                    } else {
+                        window.history.pushState({}, '', fullURL);
                     }
                 }
-                this.triggerChangeEvent();
-            });
-            return Promise.resolve(true);
-        } else {
-            if (!noRedirecting) {
-                return this.triggerRedirectionRequest(url).then((newURL) => {
-                    return this.change(newURL, replacing, true);
-                });
-            } else {
-                return Promise.reject(new Error('Unable to find page'));
             }
-        }
+            this.triggerChangeEvent();
+        });
+        return Promise.resolve(true);
     },
 
     /**
@@ -259,11 +256,12 @@ module.exports = React.createClass({
      * any route
      *
      * @param  {String} url
+     * @param  {Boolean} replacing
      *
      * @return {Promise<String>}
      */
-    triggerRedirectionRequest: function(url) {
-        if (this.props.onRedirectionRequest) {
+    triggerRedirectionRequest: function(url, replacing) {
+        if (this.props.onRedirectionRequest && !this.redirecting) {
             var basePath = this.state.basePath;
             if (basePath && _.startsWith(url, basePath)) {
                 url = url.substr(basePath.length);
@@ -271,11 +269,17 @@ module.exports = React.createClass({
                     url = '/' + url;
                 }
             }
-            return this.props.onRedirectionRequest({
-                type: 'route_request',
-                target: this,
-                url: url,
-            });
+            this.redirecting = true;
+            Promise.try(() => {
+                return this.props.onRedirectionRequest({
+                    type: 'redirection',
+                    target: this,
+                    url,
+                    replacing,
+                });
+            }).finally(() => {
+                this.redirecting = false;
+            })
         } else {
             return Promise.reject(new Error('Unable to route URL to a page: ' + url))
         }
@@ -313,8 +317,7 @@ module.exports = React.createClass({
                     console.error(err);
                 });
             } else if (process.env.PLATFORM === 'cordova') {
-                var url = '/http/localhost/test/news/'
-                this.change(url, true).catch((err) => {
+                this.change('/init', true).catch((err) => {
                     console.error(err);
                 });
             }

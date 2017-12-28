@@ -375,7 +375,9 @@ module.exports = React.createClass({
         if (!this.state.subscriptionId) {
             if (this.state.canAccessServer) {
                 if (this.state.connectionId) {
-                    this.createSubscription();
+                    if (!this.state.subscriptionError) {
+                        this.createSubscription();
+                    }
                 } else {
                     if (Notifier === PushNotifier) {
                         // PushNotifier needs the address to the relay
@@ -439,11 +441,15 @@ module.exports = React.createClass({
             } else if (Notifier === PushNotifier) {
                 address = this.state.pushRelay;
             }
+            var schema = this.state.route.parameters.schema;
+            if (!schema || !this.state.canAccessSchema) {
+                schema = 'global';
+            }
             var subscription = {
                 user_id: userId,
                 address: address,
                 token: this.state.connectionId,
-                schema: this.state.route.parameters.schema || 'global',
+                schema: schema,
                 area: 'client',
                 locale: this.state.locale.languageCode,
                 details: {
@@ -679,7 +685,19 @@ module.exports = React.createClass({
      */
     handleStupefaction: function(evt) {
         var route = this.state.route;
-        route.replace(require('pages/error-page'), { code: 404 });
+        var originalURL = route.url;
+        var schema = route.parameters.schema;
+        if (schema) {
+            // if we failed to find the project itself, then the schema isn't
+            // valid and the bottom nav bar shouldn't be shown
+            if (evt.query.table === 'project') {
+                if (evt.query.criteria.name === schema) {
+                    schema = null;
+                }
+            }
+        }
+        var url = route.find(ErrorPage, { code: 404, schema });
+        route.change(url, true, originalURL);
     },
 
     /**
@@ -825,8 +843,15 @@ module.exports = React.createClass({
      */
     handleRedirectionRequest: function(evt) {
         var routeManager = evt.target;
+        if (process.env.PLATFORM === 'cordova') {
+
+        }
+
+        // show error page
+        var originalURL = evt.url;
+        var replacing = evt.replacing;
         var url = routeManager.find(ErrorPage, { code: 404 });
-        return Promise.resolve(url);
+        return routeManager.change(url, replacing, originalURL);
     },
 
     /**

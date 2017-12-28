@@ -612,7 +612,7 @@ module.exports = React.createClass({
     triggerStupefactionEvent: function(query, results) {
         if (this.props.onStupefaction) {
             this.props.onStupefaction({
-                type: 'missingobject',
+                type: 'stupefaction',
                 target: this,
                 query,
                 results,

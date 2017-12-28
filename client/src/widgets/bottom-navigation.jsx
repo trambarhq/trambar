@@ -7,6 +7,7 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
+var HTTPError = require('errors/http-error');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -281,6 +282,17 @@ var NewNotificationsBadge = Relaks.createClass({
     },
 
     /**
+     * Return initial state
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            failedSchemas: []
+        };
+    },
+
+    /**
      * Render component asynchronously
      *
      * @param  {Meanwhile} meanwhile
@@ -290,6 +302,9 @@ var NewNotificationsBadge = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         if (!params.schema) {
+            return null;
+        }
+        if (_.includes(this.state.failedSchemas, params.schema)) {
             return null;
         }
         var db = this.props.database.use({ schema: params.schema, by: this });
@@ -315,6 +330,10 @@ var NewNotificationsBadge = Relaks.createClass({
                     <span className="number">{count}</span>
                 </span>
             )
+        }).catch(HTTPError, (err) => {
+            // don't try again when a failure occurs
+            var failedSchemas = _.union(this.state.failedSchemas, [ params.schema ]);
+            this.setState({ failedSchemas });
         });
     },
 
