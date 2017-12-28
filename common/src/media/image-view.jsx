@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-var HTTPRequest = require('transport/http-request');
+var BlobManager = require('transport/blob-manager');
+var BlobReader = require('utils/blob-reader');
+var MediaLoader = require('media/media-loader');
 var JPEGAnalyser = require('media/jpeg-analyser');
 var ComponentRefs = require('utils/component-refs');
 
@@ -90,30 +92,35 @@ module.exports = React.createClass({
      */
     load: function(url) {
         if (url) {
-            return Promise.join(loadImage(url), loadBytes(url), (image, bytes) => {
-                var orientation = JPEGAnalyser.getOrientation(bytes) || 1;
+            return BlobManager.fetch(url).then((blobURL) => {
+                // load the image and its bytes
+                var imageP = MediaLoader.loadImage(blobURL);
+                var bytesP = BlobReader.loadUint8Array(BlobManager.get(blobURL));
+                return Promise.join(imageP, bytesP, (image, bytes) => {
+                    var orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
-                this.image = image;
-                this.orientation = orientation;
-                if (orientation < 5) {
-                    this.naturalWidth = image.naturalWidth;
-                    this.naturalHeight = image.naturalHeight;
-                } else {
-                    this.naturalWidth = image.naturalHeight;
-                    this.naturalHeight = image.naturalWidth;
-                }
+                    this.image = image;
+                    this.orientation = orientation;
+                    if (orientation < 5) {
+                        this.naturalWidth = image.naturalWidth;
+                        this.naturalHeight = image.naturalHeight;
+                    } else {
+                        this.naturalWidth = image.naturalHeight;
+                        this.naturalHeight = image.naturalWidth;
+                    }
 
-                var rect = this.props.clippingRect;
-                if (!rect) {
-                    rect = {
-                        left: 0,
-                        top: 0,
-                        width: this.naturalWidth,
-                        height: this.naturalHeight
-                    };
-                }
-                this.drawImage(rect);
-                this.triggerLoadEvent();
+                    var rect = this.props.clippingRect;
+                    if (!rect) {
+                        rect = {
+                            left: 0,
+                            top: 0,
+                            width: this.naturalWidth,
+                            height: this.naturalHeight
+                        };
+                    }
+                    this.drawImage(rect);
+                    this.triggerLoadEvent();
+                });
             });
         } else {
             this.clearCanvas();
@@ -212,29 +219,6 @@ module.exports = React.createClass({
         this.orientation = undefined;
     },
 });
-
-function loadImage(url) {
-    return new Promise((resolve, reject) => {
-        var image = document.createElement('IMG');
-        image.src = url;
-        image.onload = function(evt) {
-            resolve(image);
-        };
-        image.onerror = function(evt) {
-            reject(new Error(`Unable to load ${url}`));
-        };
-    });
-}
-
-function loadBytes(url) {
-    var options = {
-        responseType: 'arraybuffer'
-    };
-    return HTTPRequest.fetch('GET', url, null, options).then((result) => {
-        var bytes = new Uint8Array(result);
-        return bytes;
-    });
-}
 
 /**
  * Calculate inverse of affine matrix
