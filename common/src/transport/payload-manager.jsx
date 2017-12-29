@@ -191,7 +191,7 @@ module.exports = React.createClass({
                     this.updatePayloadStatus(payloadId, { transferred });
                 },
             };
-            var url = this.getURL(payload);
+            var url = this.getDestinationURL(payload);
             return HTTPRequest.fetch('POST', url, formData, options);
         });
         payload.promise = promise;
@@ -269,7 +269,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getURL: function(payload) {
+    getDestinationURL: function(payload) {
         var schema = payload.schema;
         var url = payload.address;
         var id = payload.payload_id;
@@ -420,11 +420,22 @@ module.exports = React.createClass({
                 payloads = _.map(payloads, (payload) => {
                     if (_.includes(schemaPayloads, payload)) {
                         var task = _.find(tasks, { id: payload.payload_id });
-                        if (task && task.completion !== payload.backendProgress) {
-                            var payloadAfter = _.clone(payload);
-                            payloadAfter.backendProgress = task.completion;
-                            changed = true;
-                            return payloadAfter;
+                        if (task) {
+                            // associate remote URL with blob
+                            if (task.details.url) {
+                                var url = `${payload.address}${task.details.url}`;
+                                BlobManager.associate(payload.file, url);
+                            }
+                            if (task.details.poster_url) {
+                                var url = `${payload.address}${task.details.poster_url}`;
+                                BlobManager.associate(payload.poster_file, url);
+                            }
+                            if (task.completion !== payload.backendProgress) {
+                                var payloadAfter = _.clone(payload);
+                                payloadAfter.backendProgress = task.completion;
+                                changed = true;
+                                return payloadAfter;
+                            }
                         }
                     }
                     return payload;
