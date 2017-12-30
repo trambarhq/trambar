@@ -382,7 +382,8 @@ module.exports = React.createClass({
                     if (Notifier === PushNotifier) {
                         // PushNotifier needs the address to the relay
                         if (this.state.pushRelay === null) {
-                            this.discoverPushRelay();
+                            // TODO: reeanble once the push relay is up
+                            // this.discoverPushRelay();
                         }
                     }
                 }
@@ -843,13 +844,16 @@ module.exports = React.createClass({
      */
     handleRedirectionRequest: function(evt) {
         var routeManager = evt.target;
+        var originalURL = evt.url;
+        var replacing = evt.replacing;
         if (process.env.PLATFORM === 'cordova') {
-
+            if (originalURL === '/bootstrap') {
+                var url = '/';
+                return routeManager.change(url, replacing);
+            }
         }
 
         // show error page
-        var originalURL = evt.url;
-        var replacing = evt.replacing;
         var url = routeManager.find(ErrorPage, { code: 404 });
         return routeManager.change(url, replacing, originalURL);
     },

@@ -193,6 +193,8 @@ module.exports = function(languageCode) {
         'project-panel-sign-out': 'Sign out',
         'project-panel-sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
 
+        'qr-scanner-cancel': 'Cancel',
+
         'reaction-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;
         },

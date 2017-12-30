@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Path = require('path');
+var FS = require('fs');
 var Webpack = require('webpack');
 
 // plugins
@@ -12,11 +13,15 @@ var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var event = 'build';
 var platform = 'browser';
+var os;
 if (process.env.npm_lifecycle_event) {
     event = process.env.npm_lifecycle_event;
     var argv = JSON.parse(process.env.npm_config_argv).remain;
     if (argv[0]) {
         platform = argv[0];
+    }
+    if (argv[1]) {
+        os = argv[1];
     }
 }
 
@@ -27,14 +32,26 @@ if (platform !== 'cordova' && platform !== 'browser') {
     process.exit();
 }
 
+var targetFolder = 'www';
+if (platform === 'cordova') {
+    targetFolder += '-cordova';
+    if (os) {
+        targetFolder += `-${os}`;
+    }
+}
+
 var folders = _.mapValues({
     src: 'src',
-    www: (platform === 'cordova') ? 'www-cordova' : 'www',
+    www: targetFolder,
     assets: 'assets',
     includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
 console.log(`Platform: ${platform}`);
 console.log(`Output folder: ${folders.www}`);
+if (FS.lstatSync(folders.www).isSymbolicLink()) {
+    var actualFolder = FS.readlinkSync(folders.www);
+    console.log(`Actual output folder: ${actualFolder}`);
+}
 
 var env = {
     PLATFORM: platform,
@@ -139,6 +156,7 @@ module.exports = {
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
     ],
+    devtool: 'inline-source-map',
     devServer: {
         inline: true,
         historyApiFallback: {

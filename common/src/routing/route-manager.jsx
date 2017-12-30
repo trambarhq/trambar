@@ -270,7 +270,7 @@ module.exports = React.createClass({
                 }
             }
             this.redirecting = true;
-            Promise.try(() => {
+            return Promise.try(() => {
                 return this.props.onRedirectionRequest({
                     type: 'redirection',
                     target: this,
@@ -317,7 +317,7 @@ module.exports = React.createClass({
                     console.error(err);
                 });
             } else if (process.env.PLATFORM === 'cordova') {
-                this.change('/init', true).catch((err) => {
+                this.change('/bootstrap', true).catch((err) => {
                     console.error(err);
                 });
             }
