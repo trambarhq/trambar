@@ -51,7 +51,7 @@ describe('RouteManager', function() {
             },
             onRedirectionRequest: (evt) => {
                 redirectionCount++;
-                return Promise.resolve(pages[0].path);
+                return evt.target.change(pages[0].path);
             },
         };
         var wrapper = Enzyme.mount(<RouteManager {...props} />);
@@ -64,7 +64,7 @@ describe('RouteManager', function() {
     it('should call onChange() at some point', function() {
         return managerReady;
     })
-    it('should have call onRedirectionRequest() since no page maps to /', function() {
+    it('should have called onRedirectionRequest() since no page maps to /test/', function() {
         return managerReady.then((manager) => {
             expect(redirectionCount).to.be.above(0);
         });
