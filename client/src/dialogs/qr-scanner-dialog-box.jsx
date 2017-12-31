@@ -19,6 +19,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         show: PropTypes.bool,
+        invalid: PropTypes.bool,
         locale: PropTypes.instanceOf(Locale),
         onCancel: PropTypes.func,
         onResult: PropTypes.func,
@@ -32,7 +33,6 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             available: false,
-            scanning: false
         };
     },
 
@@ -62,7 +62,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Update or remove the camera overlay depending on props.show and state.scanning
+     * Update or remove the camera overlay depending on props.show and state.available
      *
      * @param  {Object} prevProps
      * @param  {Object]} prevState
@@ -101,8 +101,9 @@ module.exports = React.createClass({
                             }
                             return null;
                         }).catch((err) => {
+                            console.log(err)
                             if (err.name !== 'SCAN_CANCELED') {
-                                console.err(err);
+                                console.error(err);
                             }
                         });
                     });
@@ -131,13 +132,20 @@ module.exports = React.createClass({
             emphasized: true,
             onClick: this.handleCancelClick
         };
+        var error;
+        if (this.props.invalid) {
+            error = t('qr-scanner-invalid-qr-code');
+        }
         var element = (
             <CameraOverlay>
                 <top>
                     {this.props.children}
                 </top>
                 <bottom>
-                    <PushButton {...cancelProps} />
+                    <div className="error">{error}</div>
+                    <div className="buttons">
+                        <PushButton {...cancelProps} />
+                    </div>
                 </bottom>
             </CameraOverlay>
         );

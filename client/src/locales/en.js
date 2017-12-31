@@ -98,6 +98,9 @@ module.exports = function(languageCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
+        'mobile-setup-address': 'Server address',
+        'mobile-setup-code': 'Authorization code',
+
         'notification-option-assignment': 'When you are assigned to an issue',
         'notification-option-bookmark': 'When someone sends you a bookmark',
         'notification-option-coauthor': 'When someone invites you to jointly edit a post',
@@ -194,6 +197,7 @@ module.exports = function(languageCode) {
         'project-panel-sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
 
         'qr-scanner-cancel': 'Cancel',
+        'qr-scanner-invalid-qr-code': 'Invalid QR code',
 
         'reaction-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;

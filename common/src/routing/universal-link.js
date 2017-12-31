@@ -24,17 +24,18 @@ function form(address, path, query, hash) {
     return url;
 }
 
-var regExp = new RegExp(baseURL + '(/https?/[^/]*)([^?]*)([^#]*)?(#(.*))?');
+var regExp = new RegExp('^' + baseURL + '((/https?/[^/]*)([^?]*)([^#]*)?(#(.*))?)');
 
 function parse(url) {
     var m = regExp.exec(url);
     if (!m) {
         return null;
     }
-    var hostPath = m[1];
+    var url = m[1];
+    var hostPath = m[2];
     var address = _.replace(hostPath.substr(1), '/', '://');
-    var path = m[2];
-    var queryString = m[3];
+    var path = m[3];
+    var queryString = m[4];
     var query;
     if (queryString) {
         query = {};
@@ -46,6 +47,6 @@ function parse(url) {
             query[name] = value;
         });
     }
-    var hash = m[5];
-    return { address, path, query, hash };
+    var hash = m[6];
+    return { address, path, query, hash, url };
 }

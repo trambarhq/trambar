@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var UniversalLink = require('routing/universal-link');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -41,14 +42,15 @@ module.exports = Relaks.createClass({
          */
         parseURL: function(path, query, hash) {
             return Route.match(path, [
-                '/:extra?'
+                '/:extra?',
             ], (params) => {
                 if (_.trimEnd(params.extra, '/')) {
                     // there's extra stuff--not a match
                     return null;
                 }
                 return {
-                    add: !!query.add
+                    add: !!query.add,
+                    activationCode: query.ac,
                 };
             });
         },
@@ -61,9 +63,11 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/`, query, hash;
+            var path = `/`, query = {}, hash;
             if (params && params.add) {
-                query = { add: 1 };
+                query.add = 1;
+            } else if (params && params.activationCode) {
+                query.ac = params.activationCode;
             }
             return { path, query, hash };
         },
@@ -94,7 +98,9 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile, prevProps) {
+        var params = this.props.route.parameters;
         var props = {
+            activating: !!params.activationCode,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -111,6 +117,7 @@ module.exports = Relaks.createClass({
 var StartPageSync = module.exports.Sync = React.createClass({
     displayName: 'StartPage',
     propTypes: {
+        activating: PropTypes.bool,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -128,7 +135,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      */
     getInitialState: function() {
         return {
-            scanningQR: false,
+            receivedInvalidQRCode: false,
+            scanningQRCode: false,
         };
     },
 
@@ -155,8 +163,12 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderQRScannerDialogBox: function() {
+        if (this.props.activating) {
+            return null
+        }
         var props = {
-            show: this.state.scanningQR,
+            show: this.state.scanningQRCode,
+            invalid: this.state.receivedInvalidQRCode,
             locale: this.props.locale,
             onCancel: this.handleCancelScan,
             onResult: this.handleScanResult,
@@ -174,7 +186,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleScanClick: function(evt) {
-        this.setState({ scanningQR: true });
+        this.setState({ scanningQRCode: true, receivedInvalidQRCode: false });
     },
 
     /**
@@ -183,7 +195,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleCancelScan: function(evt) {
-        this.setState({ scanningQR: false });
+        this.setState({ scanningQRCode: false });
+        if (this.invalidCodeTimeout) {
+            clearTimeout(this.invalidCodeTimeout);
+        }
     },
 
     /**
@@ -192,7 +207,21 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleScanResult: function(evt) {
-        console.log(evt.result);
-        this.handleCancelScan();
+        if (this.invalidCodeTimeout) {
+            clearTimeout(this.invalidCodeTimeout);
+        }
+        // see if the URL is a valid activation link
+        var link = UniversalLink.parse(evt.result);
+        var StartPage = require('pages/start-page');
+        debugger;
+        var params = (link) ? StartPage.parseURL(link.path, link.query, link.hash) : null;
+        if (params && params.activationCode) {
+            this.props.route.change(link.url);
+        } else {
+            this.setState({ receivedInvalidQRCode: true });
+            this.invalidCodeTimeout = setTimeout(() => {
+                this.setState({ receivedInvalidQRCode: false })
+            }, 5000);
+        }
     },
 })

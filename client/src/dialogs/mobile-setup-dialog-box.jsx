@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var UniversalLink = require('routing/universal-link');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -15,12 +16,24 @@ module.exports = React.createClass({
     displayName: 'MobileSetupDialogBox',
     propTypes: {
         show: PropTypes.bool,
+        activationCode: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
         onClose: PropTypes.func,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            activationCode: '0123456789ABCDEF'
+        };
     },
 
     /**
@@ -49,13 +62,25 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderContents: function() {
+        var t = this.props.locale.translate;
         var number = this.props.number;
-        var url = `https://`;
+        var route = this.props.route;
+        var url;
+        var address = route.parameters.address;
+        var activationCode = this.props.activationCode;
+        if (activationCode) {
+            var StartPage = require('pages/start-page');
+            var urlParts = StartPage.getURL({ activationCode });
+            url = UniversalLink.form(address, urlParts.path, urlParts.query);
+        }
         return (
             <div className="contents">
                 <QRCode text={url} scale={6} />
                 <div className="info">
-                    Something
+                    <div className="label">{t('mobile-setup-address')}</div>
+                    <div className="value">{address}</div>
+                    <div className="label">{t('mobile-setup-code')}</div>
+                    <div className="value">{insertSpacers(activationCode)}</div>
                 </div>
             </div>
         );
@@ -79,3 +104,11 @@ module.exports = React.createClass({
         );
     },
 });
+
+function insertSpacers(s) {
+    if (!s) {
+        return s;
+    }
+    var parts = s.match(/.{1,4}/g);
+    return parts.join('-');
+}

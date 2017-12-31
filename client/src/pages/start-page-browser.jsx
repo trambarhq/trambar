@@ -51,7 +51,8 @@ module.exports = Relaks.createClass({
                     return null;
                 }
                 return {
-                    add: !!query.add
+                    add: !!query.add,
+                    activationCode: query.ac,
                 };
             });
         },
@@ -64,9 +65,11 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/`, query, hash;
+            var path = `/`, query = {}, hash;
             if (params && params.add) {
-                query = { add: 1 };
+                query.add = 1;
+            } else if (params && params.activationCode) {
+                query.ac = params.activationCode;
             }
             return { path, query, hash };
         },

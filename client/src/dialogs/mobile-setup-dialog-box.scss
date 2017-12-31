@@ -19,8 +19,21 @@
 
         .info {
             overflow: hidden;
-            padding: 0.5em 0.25em 0.25em 0.5em;
-            font-size: 3em;
+            padding: 0.5em 0.5em 0 1em;
+
+            .label {
+                white-space: nowrap;
+                font-size: 0.9em;
+                color: #cccccc;
+            }
+
+            .value {
+                white-space: nowrap;
+                font-size: 1.5em;
+                color: #eeeeee;
+                margin-top: 0.25em;
+                margin-bottom: 0.5em;
+            }
         }
     }
 
