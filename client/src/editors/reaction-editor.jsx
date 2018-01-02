@@ -143,13 +143,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderTextArea: function() {
-        var languageCode = this.props.locale.languageCode;
-        var lang = languageCode.substr(0, 2);
+        var lang = this.props.locale.languageCode;
         var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
         var textareaProps = {
             ref: 'textarea',
             value: langText,
-            lang: lang,
+            lang: this.props.locale.localeCode,
             autofocus: true,
             onChange: this.handleTextChange,
         };
@@ -357,8 +356,7 @@ module.exports = React.createClass({
      */
     handleTextChange: function(evt) {
         var langText = evt.currentTarget.value;
-        var languageCode = this.props.locale.languageCode;
-        var lang = languageCode.substr(0, 2);
+        var lang = this.props.locale.languageCode;
         var path = `details.text.${lang}`;
         var draft = _.decoupleSet(this.state.draft, path, langText);
 

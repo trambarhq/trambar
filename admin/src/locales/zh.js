@@ -1,7 +1,7 @@
 require('moment/locale/zh-cn');
 require('moment/locale/zh-hk');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     return {
         'app-name': '電車吧',
         'app-title': '電車吧—管理控制台',

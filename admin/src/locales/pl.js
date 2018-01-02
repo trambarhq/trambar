@@ -1,6 +1,6 @@
 require('moment/locale/pl');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     return {
         'activity-chart-legend-push': 'Wysłania zmian',
         'activity-chart-legend-issue': 'Zgłoszenia problemu',

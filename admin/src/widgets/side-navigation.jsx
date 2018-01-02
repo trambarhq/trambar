@@ -55,7 +55,7 @@ module.exports = React.createClass({
      */
     getLanguage: function(code) {
         if (!code) {
-            code = this.props.locale.lang;
+            code = this.props.locale.languageCode;
         }
         var languages = this.props.locale.directory;
         return _.find(languages, { code });
@@ -117,7 +117,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderLanguageButton: function() {
-        var selected = this.getLanguage(this.props.locale.lang);
+        var selected = this.getLanguage(this.props.locale.languageCode);
         var languages = _.filter(this.props.locale.directory, { locales: { admin: true } });
         var items = _.map(languages, (language, i) => {
             var props = {
@@ -161,7 +161,7 @@ module.exports = React.createClass({
         if (_.size(language.countries) <= 1) {
             return null;
         }
-        var countryCode = _.last(_.split(this.props.locale.languageCode, '-'));
+        var countryCode = this.props.locale.countryCode;
         if (!countryCode) {
             countryCode = language.defaultCountry;
         }

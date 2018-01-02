@@ -132,7 +132,7 @@ module.exports = Relaks.createClass({
                     published: true,
                     ready: true,
                     search: {
-                        lang: this.props.locale.lang,
+                        lang: this.props.locale.languageCode,
                         text: params.search,
                     },
                     per_user_limit: 5

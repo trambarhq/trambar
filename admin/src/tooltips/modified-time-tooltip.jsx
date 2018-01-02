@@ -45,7 +45,7 @@ module.exports = React.createClass({
         var m;
         if (props.time) {
             m = Moment(props.time);
-            m.locale(props.locale.languageCode);
+            m.locale(props.locale.localeCode);
         };
         var state = {
             relativeTime: m ? m.fromNow() : null,

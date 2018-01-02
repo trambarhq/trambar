@@ -45,7 +45,7 @@ module.exports = React.createClass({
         // choose initial language
         var existing = _.keys(this.props.value);
         var available = this.props.availableLanguageCodes;
-        var current = this.props.locale.lang;
+        var current = this.props.locale.languageCode;
         var selected;
         if (_.includes(existing, current)) {
             // if there's existing text of the current language, use it
@@ -83,7 +83,7 @@ module.exports = React.createClass({
         var available = this.props.availableLanguageCodes;
         var codes = _.union(available, existing);
         if (codes.length === 0) {
-            codes.push(this.props.locale.lang);
+            codes.push(this.props.locale.languageCode);
         }
         var hash = _.keyBy(this.props.locale.directory, 'code');
         return _.filter(_.map(codes, (code) => {
@@ -95,7 +95,7 @@ module.exports = React.createClass({
         if (this.props.locale !== nextProps.locale) {
             // which to the language of the new locale if it's
             // one of the available languages
-            var lang = nextProps.locale.lang;
+            var lang = nextProps.locale.languageCode;
             var available = this.props.availableLanguageCodes;
             if (_.includes(available, lang)) {
                 this.setState({ selectedLanguageCode: lang });

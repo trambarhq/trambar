@@ -1,13 +1,13 @@
 require('moment/locale/zh-cn');
 require('moment/locale/zh-hk');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     var cantonese = false;
     var traditional = false;
-    if (/\-(mo|hk)$/.test(languageCode)) {
+    if (/\-(mo|hk)$/.test(localeCode)) {
         cantonese = true;
         traditional = true;
-    } else if (/\-(tw)$/.test(languageCode)) {
+    } else if (/\-(tw)$/.test(localeCode)) {
         traditional = true;
     }
     if (traditional) {

@@ -91,7 +91,7 @@ module.exports = React.createClass({
         var dates = getDates(DateTracker.today, 14);
         var series = getActivitySeries(details, dates);
         var upperRange = getUpperRange(series, true);
-        var labels = getDateLabel(dates, this.props.locale.languageCode);
+        var labels = getDateLabel(dates, this.props.locale.localeCode);
         var chartProps = {
             type: 'bar',
             data: { labels, series },
@@ -119,7 +119,7 @@ module.exports = React.createClass({
         var dates = getDates(DateTracker.today, 14);
         var series = getActivitySeries(details, dates);
         var upperRange = getUpperRange(series, false);
-        var labels = getDateLabel(dates, this.props.locale.languageCode);
+        var labels = getDateLabel(dates, this.props.locale.localeCode);
         var chartProps = {
             type: 'line',
             data: { labels, series },
@@ -234,9 +234,9 @@ var getUpperRange = Memoize(function(series, additive) {
     }
 });
 
-var getDateLabel = Memoize(function(dates, languageCode) {
+var getDateLabel = Memoize(function(dates, localeCode) {
     return _.map(dates, (date) => {
-        return Moment(date).format('dd');
+        return Moment(date).locale(localeCode).format('dd');
     });
 });
 

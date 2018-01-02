@@ -3,41 +3,42 @@ var _ = require('lodash');
 module.exports = Theme;
 
 function Theme(themeManager) {
-    this.mode = themeManager.getMode();
-    this.modes = themeManager.getModes();
-    this.details = themeManager.getDetails();
-
-    this.change = function(details) {
-        return themeManager.change(details);
-    };
-
-    this.isAboveMode = function(mode) {
-        var indexReq = _.indexOf(this.modes, mode);
-        var indexCur = _.indexOf(this.modes, this.mode);
-        return indexCur >= indexReq;
-    };
-
-    this.isBelowMode = function(mode) {
-        return !this.isAboveMode(mode);
-    };
-
-    this.getImageURL = function(res, params) {
-        return themeManager.getImageURL(res, params);
-    };
-
-    this.getImageFile = function(res) {
-        return themeManager.getImageFile(res);
-    };
-
-    this.getVideoURL = function(res, params) {
-        return themeManager.getVideoURL(res, params);
-    };
-
-    this.getAudioURL = function(res, params) {
-        return themeManager.getAudioURL(res, params);
-    };
-
-    this.getURL = function(res, params) {
-        return themeManager.getURL(res, params);
-    };
+    this.themeManager = themeManager;
+    this.mode = this.themeManager.getMode();
+    this.modes = this.themeManager.getModes();
+    this.details = this.themeManager.getDetails();
 }
+
+Theme.prototype.change = function(details) {
+    return this.themeManager.change(details);
+};
+
+Theme.prototype.isAboveMode = function(mode) {
+    var indexReq = _.indexOf(this.modes, mode);
+    var indexCur = _.indexOf(this.modes, this.mode);
+    return indexCur >= indexReq;
+};
+
+Theme.prototype.isBelowMode = function(mode) {
+    return !this.isAboveMode(mode);
+};
+
+Theme.prototype.getImageURL = function(res, params) {
+    return this.themeManager.getImageURL(res, params);
+};
+
+Theme.prototype.getImageFile = function(res) {
+    return this.themeManager.getImageFile(res);
+};
+
+Theme.prototype.getVideoURL = function(res, params) {
+    return this.themeManager.getVideoURL(res, params);
+};
+
+Theme.prototype.getAudioURL = function(res, params) {
+    return this.themeManager.getAudioURL(res, params);
+};
+
+Theme.prototype.getURL = function(res, params) {
+    return this.themeManager.getURL(res, params);
+};

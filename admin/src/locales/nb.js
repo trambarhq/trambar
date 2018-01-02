@@ -1,6 +1,6 @@
 require('moment/locale/nb');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     return {
         'action-badge-add': 'legge til',
         'action-badge-approve': 'godkjenne',

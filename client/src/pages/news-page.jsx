@@ -174,7 +174,7 @@ module.exports = Relaks.createClass({
                 }
                 if (params.search) {
                     criteria.search = {
-                        lang: this.props.locale.lang,
+                        lang: this.props.locale.languageCode,
                         text: params.search,
                     };
                     criteria.limit = 100;

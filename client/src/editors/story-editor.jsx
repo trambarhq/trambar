@@ -200,8 +200,8 @@ module.exports = React.createClass({
         if (!options.preview) {
             options.preview = this.choosePreview(nextState.draft);
         }
-        if (!options.languageCode) {
-            options.languageCode = this.chooseLanguage(nextState.draft, nextProps.locale);
+        if (!options.localeCode) {
+            options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
         }
     },
 
@@ -225,28 +225,40 @@ module.exports = React.createClass({
     },
 
     /**
-     * Choose language based on selected locale and story contents
+     * Choose locale based on selected locale and story contents
      *
      * @param  {Story} story
      *
      * @return {String}
      */
-    chooseLanguage: function(story, locale) {
-        var languageCode = locale.languageCode;
+    chooseLocale: function(story, locale) {
+        var localeCode;
         var text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
-            // use the first language of the text object, but only if it's
-            // different from the selected locale so that the country code
-            // is kept when it's the same
-            var firstLanguage = _.first(_.keys(text));
-            if (languageCode.substr(0, 2) !== firstLanguage) {
-                languageCode = firstLanguage;
+            var languageCode = _.first(_.keys(text));
+            if (languageCode === locale.languageCode) {
+                localeCode = locale.languageCode;
+            } else {
+                var entry = _.find(locale.directory, { code: languageCode });
+                if (entry) {
+                    // use the first country
+                    var countryCode = _.keys(entry.countries);
+                    localeCode = `${languageCode}-${countryCode}`;
+                } else {
+                    localeCode = languageCode;
+                }
             }
+        } else {
+            localeCode = locale.languageCode;
         }
-        return languageCode;
+        return localeCode;
     },
 
-
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         switch (this.props.theme.mode) {
             case 'single-col':
@@ -424,12 +436,12 @@ module.exports = React.createClass({
      */
     renderTextArea: function() {
         var setters = this.components.setters;
-        var languageCode = this.state.options.languageCode;
-        var lang = languageCode.substr(0, 2);
+        var loc = this.state.options.localeCode;
+        var lang = loc.substr(0, 2);
         var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
         var props = {
             value: langText,
-            lang: lang,
+            lang: loc,
             autofocus: !!_.get(this.state.draft, 'id'),
             onChange: this.handleTextChange,
         };
@@ -990,8 +1002,8 @@ module.exports = React.createClass({
      */
     handleTextChange: function(evt) {
         var langText = evt.currentTarget.value;
-        var languageCode = this.state.options.languageCode;
-        var lang = languageCode.substr(0, 2);
+        var loc = this.state.options.localeCode;
+        var lang = loc.substr(0, 2);
         var path = `details.text.${lang}`;
         var draft = _.decoupleSet(this.state.draft, path, langText);
 
@@ -1199,8 +1211,8 @@ module.exports = React.createClass({
         var index = _.indexOf(resourcesOfType, resource);
         if (index !== -1) {
             var tag = `![${resource.type}-${index+1}]`;
-            var languageCode = this.state.options.languageCode;
-            var lang = languageCode.substr(0, 2);
+            var loc = this.state.options.localeCode;
+            var lang = loc.substr(0, 2);
             var langText = _.get(draft, `details.text.${lang}`, '') + tag;
             _.set(draft, `details.text.${lang}`, langText);
             _.set(draft, `details.markdown`, true);
@@ -1291,7 +1303,7 @@ module.exports = React.createClass({
 });
 
 var defaultOptions = {
-    languageCode: '',
+    localeCode: '',
     issueDetails: null,
     hidePost: false,
     bookmarkRecipients: [],

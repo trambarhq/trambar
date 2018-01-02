@@ -1,6 +1,6 @@
 require('moment/locale/pl');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     return {
         'action-contact-by-email': 'Skontaktuj się przez e-mail',
         'action-contact-by-ichat': 'Skontaktuj się przez iChat',

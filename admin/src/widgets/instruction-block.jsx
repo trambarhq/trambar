@@ -36,7 +36,7 @@ module.exports = React.createClass({
     },
 
     render: function() {
-        var markdown = this.getText(this.props.topic, this.props.locale.lang);
+        var markdown = this.getText(this.props.topic, this.props.locale.languageCode);
         var contents = MarkGor.parse(markdown);
         var classNames = [ 'instruction-block' ];
         if (this.props.hidden) {

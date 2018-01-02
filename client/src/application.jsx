@@ -452,7 +452,7 @@ module.exports = React.createClass({
                 token: this.state.connectionId,
                 schema: schema,
                 area: 'client',
-                locale: this.state.locale.languageCode,
+                locale: this.state.locale.localeCode,
                 details: {
                     user_agent: navigator.userAgent
                 }
@@ -484,7 +484,7 @@ module.exports = React.createClass({
             var subscription = {
                 id: this.state.subscriptionId,
                 schema: this.state.route.parameters.schema || 'global',
-                locale: this.state.locale.languageCode,
+                locale: this.state.locale.localeCode,
             };
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
                 this.setState({ subscriptionId: subscription.id })
@@ -735,7 +735,7 @@ module.exports = React.createClass({
      * @return {Promise<Module>}
      */
     handleLanguageModuleRequest: function(evt) {
-        var languageCode = evt.languageCode.substr(0, 2);
+        var languageCode = evt.languageCode;
         return new Promise((resolve, reject) => {
             // list the modules here so Webpack can code-split them
             //

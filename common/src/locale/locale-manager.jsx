@@ -13,34 +13,61 @@ module.exports = React.createClass({
         onModuleRequest: PropTypes.func,
     },
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
             defaultLanguageCode: 'en',
         };
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         return {
-            languageCode: '',
+            localeCode: '',
             phraseTable: {},
             missingPhrases: [],
         };
     },
 
-    getLanguageCode: function() {
-        return this.state.languageCode;
+    /**
+     * Return the current locale
+     *
+     * @return {String}
+     */
+    getLocaleCode: function() {
+        return this.state.localeCode;
     },
 
+    /**
+     * Return the locale directory
+     *
+     * @return {Array<Object>}
+     */
     getDirectory: function() {
         return this.props.directory;
     },
 
-    translate: function(phrase) {
+    /**
+     * Look up a phrase in phrase dictionary
+     *
+     * @param  {String} phrase
+     * @param  {*} ...args
+     *
+     * @return {String}
+     */
+    translate: function(phrase, ...args) {
         var entry = this.state.phraseTable[phrase];
         if (entry != null) {
             if (typeof(entry) === 'function') {
                 try {
-                    var args = _.slice(arguments, 1);
                     var results = entry.apply(this, args);
                     return results;
                 } catch (err) {
@@ -55,12 +82,20 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Pick language text from a text object
+     *
+     * @param  {Object|String} languageVersions
+     * @param  {String} overrideLanguageCode
+     *
+     * @return {String}
+     */
     pick: function(languageVersions, overrideLanguageCode) {
         if (typeof(languageVersions) === 'string') {
             return languageVersions;
         }
         // no support for country-specific versions
-        var currentLanguageCode = this.state.languageCode.substr(0, 2);
+        var currentLanguageCode = this.state.localeCode.substr(0, 2);
         if (overrideLanguageCode) {
             currentLanguageCode = overrideLanguageCode.substr(0, 2);
         }
@@ -70,14 +105,14 @@ module.exports = React.createClass({
         var defaultLanguagePhrase = '';
         for (var key in languageVersions) {
             var phrase = languageVersions[key];
-            var languageCode = _.toLower(key);
-            if (languageCode === currentLanguageCode) {
+            var localeCode = _.toLower(key);
+            if (localeCode === currentLanguageCode) {
                 matchingPhrase = phrase;
             }
             if (!firstNonEmptyPhrase) {
                 firstNonEmptyPhrase = phrase;
             }
-            if (languageCode === defaultLanguageCode) {
+            if (localeCode === defaultLanguageCode) {
                 defaultLanguagePhrase = phrase;
             }
         }
@@ -90,19 +125,26 @@ module.exports = React.createClass({
         }
     },
 
-    change: function(languageCode) {
-        languageCode = _.toLower(languageCode);
-        if (languageCode === this.state.languageCode) {
+    /**
+     * Switch to a different locale
+     *
+     * @param  {String} localeCode
+     *
+     * @return {Promise<Boolean>}
+     */
+    change: function(localeCode) {
+        localeCode = _.toLower(localeCode);
+        if (localeCode === this.state.localeCode) {
             return Promise.resolve(true);
         }
-        return this.load(languageCode).then((module) => {
+        return this.load(localeCode).then((module) => {
             var phraseTable;
             if (typeof(module) === 'function') {
-                phraseTable = module(languageCode);
+                phraseTable = module(localeCode);
             } else {
                 phraseTable = module;
             }
-            var newState = { languageCode, phraseTable };
+            var newState = { localeCode, phraseTable };
             this.setState(newState, () => {
                 this.triggerChangeEvent();
             });
@@ -110,7 +152,15 @@ module.exports = React.createClass({
         });
     },
 
-    load: function(languageCode) {
+    /**
+     * Load a localization module
+     *
+     * @param  {String} localeCode
+     *
+     * @return {Promise<Function>}
+     */
+    load: function(localeCode) {
+        var languageCode = localeCode.substr(0, 2);
         var module = languageModules[languageCode];
         if (module) {
             return Promise.resolve(module);
@@ -121,6 +171,9 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Inform parent component that the locale has changed
+     */
     triggerChangeEvent: function() {
         if (this.props.onChange) {
             this.props.onChange({
@@ -150,6 +203,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render function
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         return null;
     },

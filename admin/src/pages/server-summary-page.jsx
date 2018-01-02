@@ -203,7 +203,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             var autoTitleAfter = t(`server-type-${newServer.type}`);
             var title = p(server.details.title);
             if (!title || title === autoTitleBefore) {
-                var lang = this.props.locale.lang;
+                var lang = this.props.locale.languageCode;
                 newServer = _.decoupleSet(newServer, `details.title.${lang}`, autoTitleAfter);
             }
         }

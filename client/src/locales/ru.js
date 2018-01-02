@@ -1,6 +1,6 @@
 require('moment/locale/ru');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     return {
         'app-name': 'Трамбар',
         'bottom-nav-bookmarks': 'Закладки',

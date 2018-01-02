@@ -22,26 +22,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render the langauge portion of the language code
-     *
-     * @return {String}
-     */
-    getSelectedLanguageCode: function() {
-        var parts = _.split(this.props.locale.languageCode, '-');
-        return _.lowerCase(parts[0]);
-    },
-
-    /**
-     * Render the country portion of the language code
-     *
-     * @return {String}
-     */
-    getSelectedCountryCode: function() {
-        var parts = _.split(this.props.locale.languageCode, '-');
-        return _.lowerCase(parts[1]);
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -78,10 +58,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButton: function(language) {
-        var languageCode = this.getSelectedLanguageCode();
         var buttonProps = {
             label: [ language.name, this.renderCountrySelect(language) ],
-            selected: (language.code === languageCode),
+            selected: (language.code === this.props.locale.languageCode),
             onClick: this.handleLanguageClick,
             id: language.code,
         };
@@ -96,8 +75,8 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderCountrySelect: function(language) {
-        var languageCode = this.getSelectedLanguageCode();
-        var countryCode = this.getSelectedCountryCode();
+        var languageCode = this.props.locale.languageCode;
+        var countryCode = this.props.locale.countryCode;
         if (!countryCode) {
             countryCode = language.defaultCountry;
         }
@@ -123,7 +102,7 @@ module.exports = React.createClass({
      */
     handleLanguageClick: function(evt) {
         var code = evt.currentTarget.id;
-        if (code !== this.getSelectedLanguageCode()) {
+        if (code !== this.props.locale.languageCode) {
             var language = _.find(this.props.locale.directory, { code });
             var dialectCode = language.code + '-' + language.defaultCountry;
             this.props.locale.change(dialectCode);
@@ -137,10 +116,10 @@ module.exports = React.createClass({
      */
     handleCountryChange: function(evt) {
         var code = evt.currentTarget.value;
-        if (code !== this.getSelectedCountryCode()) {
-            var languageCode = this.getSelectedLanguageCode();
-            var dialectCode = languageCode + '-' + code;
-            this.props.locale.change(dialectCode);
+        if (code !== this.props.locale.countryCode) {
+            var languageCode = this.props.locale.languageCode;
+            var localeCode = languageCode + '-' + code;
+            this.props.locale.change(localeCode);
         }
     },
 });
