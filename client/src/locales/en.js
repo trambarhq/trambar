@@ -271,6 +271,7 @@ module.exports = function(localeCode) {
         'start-error-access-denied': 'Request for access rejected',
         'start-error-account-disabled': 'Account is currently disabled',
         'start-error-existing-users-only': 'Only authorized personnel can access this system',
+        'start-error-undefined': 'Unexpected error',
         'start-projects': 'Projects',
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',

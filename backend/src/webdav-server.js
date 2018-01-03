@@ -10,14 +10,14 @@ var Database = require('database');
 var Shutdown = require('shutdown');
 
 // accessors
-var Authentication = require('accessors/authentication');
-var Authorization = require('accessors/authorization');
 var Commit = require('accessors/commit');
+var Device = require('accessors/device');
 var Picture = require('accessors/picture');
 var Project = require('accessors/project');
 var Repo = require('accessors/repo');
 var Role = require('accessors/role');
 var Server = require('accessors/server');
+var Session = require('accessors/session');
 var Subscription = require('accessors/subscription');
 var System = require('accessors/system');
 var User = require('accessors/user');
@@ -37,15 +37,15 @@ module.exports = {
 };
 
 var globalAccessors = [
-    Authentication,
-    Authorization,
     Commit,
+    Device,
     Notification,
     Picture,
     Project,
     Repo,
     Role,
     Server,
+    Session,
     Subscription,
     System,
     Task,

@@ -58,6 +58,7 @@ module.exports = Relaks.createClass({
                 return {
                     add: !!query.add,
                     activationCode: query.ac,
+                    schema: query.p,
                 };
             });
         },
@@ -71,10 +72,16 @@ module.exports = Relaks.createClass({
          */
         getURL: function(params) {
             var path = `/`, query = {}, hash;
-            if (params && params.add) {
-                query.add = 1;
-            } else if (params && params.activationCode) {
-                query.ac = params.activationCode;
+            if (params) {
+                if (params.add) {
+                    query.add = 1;
+                }
+                if (params.activationCode) {
+                    query.ac = params.activationCode;
+                }
+                if (params.schema) {
+                    query.p = params.schema;
+                }
             }
             return { path, query, hash };
         },
@@ -128,7 +135,7 @@ module.exports = Relaks.createClass({
             // start authorization process--will receive system description
             // and list of OAuth providers along with links
             meanwhile.show(<StartPageSync {...props} />, delay);
-            return db.beginAuthorization('client').then((info) => {
+            return db.beginSession('client').then((info) => {
                 props.system = info.system;
                 props.providers = info.providers;
                 return <StartPageSync {...props} />;
@@ -684,7 +691,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
             var db = this.props.database.use({ by: this });
-            return db.checkAuthorizationStatus().catch((err) => {
+            return db.checkSession().catch((err) => {
+                debugger;
                 var errors = _.clone(this.state.errors);
                 errors[provider] = err;
                 this.setState({ errors });

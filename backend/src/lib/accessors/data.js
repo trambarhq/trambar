@@ -84,8 +84,8 @@ module.exports = {
     grant: function(db, schema) {
         var table = this.getTableName(schema);
         var sql = `
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO client_role;
+            GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
+            GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
         `;
         return db.execute(sql).return(true);
     },

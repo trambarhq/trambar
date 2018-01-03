@@ -130,11 +130,12 @@ updatePayload.flags = 'IMMUTABLE';
  * @return {Number}
  */
 function checkAuthorization(token, area) {
-    var sql = `SELECT user_id, area FROM "global"."authorization"
+    var sql = `SELECT user_id, area FROM "global"."session"
                WHERE token = $1
                AND (area = $2 OR $2 IS NULL)
-               AND expiration_date >= current_date
+               AND etime >= NOW()
                AND deleted = false
+               AND activated = true
                LIMIT 1`;
     var row = plv8.execute(sql, [ token, area ])[0];
     return (row) ? row.user_id : null;
@@ -144,21 +145,21 @@ checkAuthorization.ret = 'int';
 checkAuthorization.flags = 'SECURITY DEFINER';
 
 /**
- * Set the expiration date of an authorization object
+ * Extend the expiration time by given number of days
  *
  * NOTE: Runs as root
  *
  * @param  {String} token
- * @param  {String} expire
+ * @param  {Number} days
  */
-function extendAuthorization(token, expire) {
-    var sql = `UPDATE "global"."authorization"
-               SET expiration_date = $2
+function extendAuthorization(token, days) {
+    var sql = `UPDATE "global"."session"
+               SET etime = NOW() + ($2 || ' day')::INTERVAL
                WHERE token = $1
                AND deleted = false`;
-    plv8.execute(sql, [ token, expire ]);
+    plv8.execute(sql, [ token, days ]);
 }
-extendAuthorization.args = 'token text, expire date';
+extendAuthorization.args = 'token text, days int';
 extendAuthorization.ret = 'void';
 extendAuthorization.flags = 'SECURITY DEFINER';
 

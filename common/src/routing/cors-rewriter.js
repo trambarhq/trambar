@@ -20,14 +20,16 @@ function extract(urlParts, params) {
         urlParts.path = urlParts.path.substr(m[0].length);
         params.cors = true;
     } else {
-        host = window.location.host;
-        protocol = window.location.protocol;
-        if (process.env.NODE_ENV !== 'production') {
-            if (/^localhost:\d+$/.test(host)) {
-                // assume page is hosted by webpack-dev-server and that
-                // the remote server is actually at port 80
-                host = 'localhost';
-                protocol = 'http:';
+        if (process.env.PLATFORM === 'browser') {
+            host = window.location.host;
+            protocol = window.location.protocol;
+            if (process.env.NODE_ENV !== 'production') {
+                if (/^localhost:\d+$/.test(host)) {
+                    // assume page is hosted by webpack-dev-server and that
+                    // the remote server is actually at port 80
+                    host = 'localhost';
+                    protocol = 'http:';
+                }
             }
         }
         params.cors = false;

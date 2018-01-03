@@ -73,23 +73,6 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Grant privileges to table to appropriate Postgres users
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     *
-     * @return {Promise<Boolean>}
-     */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO client_role;
-        `;
-        return db.execute(sql).return(true);
-    },
-
-    /**
      * Add conditions to SQL query based on criteria object
      *
      * @param  {Object} criteria

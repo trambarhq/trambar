@@ -67,7 +67,7 @@ module.exports = _.create(Data, {
         // Auth Manager needs to be able to update a server's OAuth tokens
         var sql = `
             GRANT SELECT, UPDATE ON ${table} TO auth_role;
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO admin_role;
+            GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
         `;
         return db.execute(sql).return(true);
     },

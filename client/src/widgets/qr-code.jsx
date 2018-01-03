@@ -4,7 +4,7 @@ var QRCode = require('qrcode');
 module.exports = React.createClass({
     displayName: 'QRCode',
     propTypes: {
-        text: PropTypes.string.isRequired,
+        text: PropTypes.string,
         scale: PropTypes.number,
     },
 
@@ -48,10 +48,6 @@ module.exports = React.createClass({
         var options = {
             scale: this.props.scale
         };
-        QRCode.toCanvas(canvas, this.props.text, options, (err) => {
-            if (err) {
-                console.error(err);
-            }
-        });
+        QRCode.toCanvas(canvas, this.props.text, options, (err) => {});
     }
 });

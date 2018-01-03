@@ -40,7 +40,8 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            showingDialog: null
+            renderingDialog: null,
+            showingDialog: false,
         };
     },
 
@@ -181,11 +182,14 @@ module.exports = React.createClass({
     /**
      * Render project description dialog box
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderDescriptionDialogBox: function() {
+        if (this.state.renderingDialog !== 'description') {
+            return null;
+        }
         var props = {
-            show: (this.state.showingDialog === 'description'),
+            show: this.state.showingDialog,
             project: this.props.currentProject,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -197,11 +201,14 @@ module.exports = React.createClass({
     /**
      * Render mobile setup dialog box
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderMobileSetupDialogBox: function() {
+        if (this.state.renderingDialog !== 'mobile-setup') {
+            return null;
+        }
         var props = {
-            show: (this.state.showingDialog === 'mobile-setup'),
+            show: this.state.showingDialog,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -213,12 +220,15 @@ module.exports = React.createClass({
     /**
      * Render sign out dialog box
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderSignOutDialogBox: function() {
+        if (this.state.renderingDialog !== 'sign-out') {
+            return null;
+        }
         var t = this.props.locale.translate;
         var props = {
-            show: (this.state.showingDialog === 'sign-out'),
+            show: this.state.showingDialog,
             locale: this.props.locale,
             onClose: this.handleDialogClose,
             onConfirm: this.handleSignOutConfirm,
@@ -230,9 +240,17 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render project management dialog box
+     *
+     * @return {ReactElement|null}
+     */
     renderProjectManagementDialogBox: function() {
+        if (this.state.renderingDialog !== 'management') {
+            return null;
+        }
         var props = {
-            show: (this.state.showingDialog === 'management'),
+            show: this.state.showingDialog,
             projectLinks: this.props.projectLinks,
             route: this.props.route,
             locale: this.props.locale,
@@ -270,7 +288,10 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleManageClick: function(evt) {
-        this.setState({ showingDialog: 'management' });
+        this.setState({
+            renderingDialog: 'management',
+            showingDialog: true,
+        });
     },
 
     /**
@@ -279,7 +300,10 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleDescriptionClick: function(evt) {
-        this.setState({ showingDialog: 'description' });
+        this.setState({
+            renderingDialog: 'description',
+            showingDialog: true,
+        });
     },
 
     /**
@@ -288,7 +312,10 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleMobileSetupClick: function(evt) {
-        this.setState({ showingDialog: 'mobile-setup' });
+        this.setState({
+            renderingDialog: 'mobile-setup',
+            showingDialog: true,
+        });
     },
 
     /**
@@ -297,7 +324,10 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleSignOutClick: function(evt) {
-        this.setState({ showingDialog: 'sign-out' });
+        this.setState({
+            renderingDialog: 'sign-out',
+            showingDialog: true,
+        });
     },
 
     /**
@@ -306,7 +336,11 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDialogClose: function(evt) {
-        this.setState({ showingDialog: null });
+        this.setState({ showingDialog: false }, () => {
+            setTimeout(() => {
+                this.setState({ renderingDialog: null });
+            }, 500);
+        });
     },
 
     /**
@@ -320,7 +354,7 @@ module.exports = React.createClass({
         });
         var db = this.props.database.use({ by: this });
         db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
-            this.setState({ showingDialog: null });
+            this.handleDialogClose();
         });
     },
 
@@ -331,7 +365,7 @@ module.exports = React.createClass({
      */
     handleSignOutConfirm: function(evt) {
         var db = this.props.database.use({ by: this });
-        db.endAuthorization().then(() => {
+        db.endSession().then(() => {
             return this.props.route.replace(require('pages/start-page'));
         });
     },

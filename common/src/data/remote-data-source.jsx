@@ -49,10 +49,6 @@ module.exports = React.createClass({
         };
     },
 
-    getServerAddress: function(location) {
-        return location.address;
-    },
-
     /**
      * Create a login session and retrieve information about the remote server,
      * including a list of OAuth providers
@@ -62,14 +58,18 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    beginAuthorization: function(location, area) {
-        var address = this.getServerAddress(location);
+    beginSession: function(location, area) {
+        var address = location.address;
         var session = getSession(address);
-        if (!session.authorizationPromise) {
-            var url = `${address}/auth/session`;
+        if (!session.promise) {
+            var url = `${address}/session/`;
             var options = { responseType: 'json', contentType: 'json' };
-            session.authorizationPromise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
-                session.authentication = res.authentication;
+            session.promise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
+                var err = res.session.error;
+                if (err) {
+                    throw new HTTPError(err.statusCode, _.omit(err.statusCode));
+                }
+                _.assign(session, res.session);
                 // return login information to caller
                 return {
                     system: res.system,
@@ -77,11 +77,12 @@ module.exports = React.createClass({
                 };
             }).catch((err) => {
                 // clear the promise if it fails
-                session.authorizationPromise = null;
+                session.promise = null;
+                this.triggerChangeEvent();
                 throw err;
             });
         }
-        return session.authorizationPromise;
+        return session.promise;
     },
 
     /**
@@ -92,31 +93,27 @@ module.exports = React.createClass({
      *
      * @return {Promise<Boolean>}
      */
-    checkAuthorizationStatus: function(location) {
-        var address = this.getServerAddress(location);
+    checkSession: function(location) {
+        var address = location.address;
         var session = getSession(address);
-        if (!session.authentication) {
+        var handle = session.handle;
+        if (!handle) {
             return Promise.resolve(false);
         }
-        var token = session.authentication.token;
-        var url = `${address}/auth/session/${token}`;
+        var url = `${address}/session/`;
         var options = { responseType: 'json' };
-        return HTTPRequest.fetch('GET', url, {}, options).then((res) => {
-            var authorization = res.authorization;
-            if (authorization) {
-                session.authorization = authorization;
-                this.triggerAuthorizationEvent(address, authorization);
-                return true;
-            } else {
-                var error = _.get(res, 'authentication.error');
-                if (error) {
-                    throw new HTTPError(error.statusCode, _.omit(error, 'statusCode'));
-                }
-                return false;
+        return HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
+            var err = res.session.error;
+            if (err) {
+                throw new HTTPError(err.statusCode, _.omit(err, 'statusCode'));
             }
+            _.assign(session, res.session);
+            this.triggerAuthorizationEvent(session);
+            return true;
         }).catch((err) => {
             // clear the promise if the session has disappeared
-            session.authorizationPromise = null;
+            session.promise = null;
+            this.triggerChangeEvent();
             throw err;
         });
     },
@@ -131,27 +128,26 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     submitPassword: function(location, username, password) {
-        var address = this.getServerAddress(location);
+        var address = location.address;
         var session = getSession(address);
-        if (!session.authentication) {
+        var handle = session.handle;
+        if (!handle) {
             return Promise.resolve(false);
         }
-        var token = session.authentication.token;
-        var url = `${address}/auth/htpasswd`;
-        var payload = { token, username, password };
+        var url = `${address}/session/htpasswd/`;
+        var payload = { handle, username, password };
         var options = { responseType: 'json', contentType: 'json' };
         return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
-            var authorization = res.authorization;
-            if (authorization) {
-                session.authorization = authorization;
-                this.triggerAuthorizationEvent(address, authorization);
+            _.assign(session, res.session);
+            if (session.token) {
+                this.triggerAuthorizationEvent(session);
                 return true;
             } else {
                 return false;
             }
         }).catch((err) => {
             // clear the promise if the session has disappeared
-            session.authorizationPromise = null;
+            session.promise = null;
             throw err;
         });
     },
@@ -163,24 +159,104 @@ module.exports = React.createClass({
      *
      * @return {Promise<Boolean>}
      */
-    endAuthorization: function(location) {
-        var address = this.getServerAddress(location);
+    endSession: function(location) {
+        var address = location.address;
         var session = getSession(address);
-        if (!session.authorization) {
+        var handle = session.handle;
+        if (!handle) {
             return Promise.resolve(false);
         }
-        var token = session.authorization.token;
-        var url = `${address}/auth/session/${token}/end`;
-        var options = { responseType: 'json', contentType: 'json' };
-        return HTTPRequest.fetch('POST', url, {}, options).then(() => {
-            session.authentication = null;
-            session.authorizationPromise = null;
-            session.authorization = null;
-            this.clearRecentSearches(address);
-            this.clearCachedObjects(address);
-            this.triggerExpirationEvent(address);
-            return true;
+        return session.promise.then(() => {
+            var url = `${address}/session/`;
+            var options = { responseType: 'json', contentType: 'json' };
+            return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {
+                destroySession(session);
+                this.clearRecentSearches(address);
+                this.clearCachedObjects(address);
+                this.triggerExpirationEvent(address);
+                return true;
+            });
+        }).catch((err) => {
+            return false;
         });
+    },
+
+    /**
+     * Start the device activation process (on browser side)
+     *
+     * @param  {Object} location
+     * @param  {String} area
+     *
+     * @return {Promise<String>}
+     */
+    beginMobileSession: function(location, area) {
+        var address = location.address;
+        var session = getSession(address, 'mobile');
+        if (!session.promise) {
+            var parentSession = getSession(address);
+            var handle = parentSession.handle;
+            var url = `${address}/session/`;
+            var options = { responseType: 'json', contentType: 'json' };
+            session.promise = HTTPRequest.fetch('POST', url, { area, handle }, options).then((res) => {
+                _.assign(session, res.session);
+                return session.handle;
+            }).catch((err) => {
+                session.promise = null;
+                throw err;
+            });
+        }
+        return session.promise;
+    },
+
+    /**
+     * Acquire a session created by brwoser (on device/Cordova side)
+     *
+     * @param  {Object} location
+     * @param  {String} handle
+     *
+     * @return {Promise<Boolean>}
+     */
+    acquireMobileSession: function(location, handle) {
+        var address = location.address;
+        var session = getSession(address);
+        var url = `${address}/session/`;
+        var options = { responseType: 'json', contentType: 'json' };
+        return HTTPRequest.fetch('POST', url, { handle }, options).then((res) => {
+            _.assign(session, res.session);
+            if (session.token) {
+                this.triggerAuthorizationEvent(session);
+                return true;
+            } else {
+                var error = session.error;
+                if (error) {
+                    throw new HTTPError(error.statusCode, _.omit(error, 'statusCode'));
+                }
+                return false;
+            }
+        });
+    },
+
+    /**
+     * End the activation process, so another device can be activated (on browser side)
+     *
+     * @param  {Object} location
+     *
+     * @return {Promise<Boolean>}
+     */
+    releaseMobileSession: function(location) {
+        // just clear the promise--let unused authentication object expire on its own
+        var address = location.address;
+        var session = getSession(address, 'mobile');
+        if (session.promise) {
+            return session.promise.then(() => {
+                destroySession(session);
+                return true;
+            }).catch((err) => {
+                return false;
+            });
+        } else {
+            return Promise.resolve(false);
+        }
     },
 
     /**
@@ -193,19 +269,19 @@ module.exports = React.createClass({
      * @return {String}
      */
     getOAuthURL: function(location, oauthServer, type) {
-        var address = this.getServerAddress(location);
+        var address = location.address;
         var session = getSession(address);
-        if (!session.authorization) {
+        var handle = session.handle;
+        if (!handle) {
             return '';
         }
-        var token = session.authorization.token;
-        var query = `sid=${oauthServer.id}&token=${token}`;
+        var query = `sid=${oauthServer.id}&handle=${handle}`;
         if (type === 'activation') {
             query += '&activation=1';
         } else if (type === 'test') {
             query += '&test=1';
         }
-        var url = `${address}/auth/${oauthServer.type}?${query}`;
+        var url = `${address}/session/${oauthServer.type}?${query}`;
         return url;
     },
 
@@ -217,9 +293,9 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     hasAuthorization: function(location) {
-        var address = this.getServerAddress(location);
+        var address = location.address;
         var session = getSession(address);
-        if (session.authorization) {
+        if (session.token) {
             return true;
         } else {
             return false;
@@ -227,15 +303,16 @@ module.exports = React.createClass({
     },
 
     /**
-     * Add authorization info that was retrieved earlier
+     * Restore session info that was retrieved earlier
      *
-     * @param  {Object} location
-     * @param  {Object} authorization
+     * @param  {Object} session
      */
-    addAuthorization: function(location, authorization) {
-        var address = this.getServerAddress(location);
-        var session = getSession(address);
-        session.authorization = authorization;
+    restoreSession: function(session) {
+        // only if the session hasn't expired
+        if (Moment(session.etime) > Moment()) {
+            var existing = getSession(session.address);
+            _.assign(existing, session);
+        }
     },
 
     /**
@@ -252,10 +329,10 @@ module.exports = React.createClass({
             if (location.schema === 'local') {
                 return 0;
             }
-            var address = this.getServerAddress(location);
+            var address = location.address;
             var session = getSession(address);
-            if (session.authorization) {
-                return session.authorization.user_id;
+            if (session.token) {
+                return session.user_id;
             } else {
                 throw new HTTPError(401);
             }
@@ -557,22 +634,20 @@ module.exports = React.createClass({
     /**
      * Trigger the onAuthorization handler so user credentials can be saved
      *
-     * @param  {String} address
-     * @param  {Object} credentials
+     * @param  {Object} session
      */
-    triggerAuthorizationEvent: function(address, credentials) {
+    triggerAuthorizationEvent: function(session) {
         if (this.props.onAuthorization) {
             this.props.onAuthorization({
                 type: 'authorization',
                 target: this,
-                address,
-                credentials,
+                session,
             });
         }
     },
 
     /**
-     * Inform parent component that saved credentials are no longer valid
+     * Inform parent component that a session is no longer valid
      *
      * @param  {String} address
      */
@@ -761,7 +836,7 @@ module.exports = React.createClass({
      * @return {Prmise}
      */
     performRemoteAction: function(location, action, payload) {
-        var address = this.getServerAddress(location);
+        var address = location.address;
         var prefix = this.props.basePath;
         var schema = location.schema;
         var table = location.table;
@@ -774,8 +849,8 @@ module.exports = React.createClass({
         var url = `${address}${prefix}/data/${action}/${schema}/${table}/`;
         var session = getSession(address);
         payload = _.clone(payload) || {};
-        if (session.authorization) {
-            payload.token = session.authorization.token;
+        if (session.token) {
+            payload.token = session.token;
         }
         if (action === 'retrieval' || action === 'storage') {
             _.assign(payload, this.props.retrievalFlags);
@@ -790,7 +865,7 @@ module.exports = React.createClass({
             return result;
         }).catch((err) => {
             if (err.statusCode === 401) {
-                clearSession(address);
+                destroySession(session);
                 this.clearRecentSearches(address);
                 this.clearCachedObjects(address);
                 this.triggerExpirationEvent(address);
@@ -1036,18 +1111,26 @@ module.exports = React.createClass({
     },
 
     /**
-     * Creation interval function to check for session expiration
+     * Creation interval function to check for expiration of
      */
     componentWillMount: function() {
         this.sessionCheckTimeout = setInterval(() => {
-            var expiredSessions = getExpiredSessions();
-            if (!_.isEmpty(expiredSessions)) {
-                _.forIn(expiredSessions, (session, address) => {
-                    clearSession(address);
+            var soon = Moment().add(5, 'minute').toISOString();
+            var expired = findSessions((session) => {
+                if (session.etime < soon) {
+                    return true;
+                }
+            });
+            if (!_.isEmpty(expired)) {
+                _.each(expired, (session) => {
+                    if (!session.token) {
+                        // recreate session if we haven't gain authorization yet
+                        destroySession(session);
+                    }
                 });
                 this.triggerChangeEvent();
             }
-        }, 5 * 60 * 1000);
+        }, 60 * 1000);
     },
 
     /**
@@ -1241,46 +1324,46 @@ function getSearchQuery(search) {
     return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote');
 }
 
-var sessions = {};
+var sessions = [];
 
 /**
  * Obtain object where authorization info for a server is stored
  *
  * @param  {String} address
+ * @param  {String|undefined} type
  *
  * @return {Object}
  */
-function getSession(address) {
-    var session = sessions[address];
+function getSession(address, type) {
+    if (!type) {
+        type = 'primary';
+    }
+    var session = _.find(sessions, { address, type });
     if (!session) {
-        session = sessions[address] = {};
+        session = { address, type };
+        sessions.push(session);
     }
     return session;
 }
 
 /**
- * Return sessions that hasn't been granted authorization and have expired
+ * Return list of sessions
  *
- * @return {Object}
+ * @param  {*} predicate
+ *
+ * @return {Array<Object>}
  */
-function getExpiredSessions() {
-    var now = Moment().toISOString();
-    return _.pickBy(sessions, (session) => {
-        if (session && !session.authorization) {
-            if (session.authentication && session.authentication.expire < now) {
-                return true;
-            }
-        }
-    });
+function findSessions(predicate) {
+    return _.filter(sessions, predicate);
 }
 
 /**
  * Remove authorization to a server
  *
- * @param  {String} address
+ * @param  {Object} session
  */
-function clearSession(address) {
-    sessions[address] = null;
+function destroySession(session) {
+    _.pull(sessions, session);
 }
 
 /**

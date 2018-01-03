@@ -142,15 +142,15 @@ Database.prototype.start = function(location) {
 };
 
 /**
- * Create a login session and retrieve information about the remote server,
+ * Create a session and retrieve information about the remote server,
  * including a list of OAuth providers
  *
  * @param  {String} area
  *
  * @return {Promise<Object>}
  */
-Database.prototype.beginAuthorization = function(area) {
-    return this.remoteDataSource.beginAuthorization(this.context, area);
+Database.prototype.beginSession = function(area) {
+    return this.remoteDataSource.beginSession(this.context, area);
 };
 
 /**
@@ -159,8 +159,8 @@ Database.prototype.beginAuthorization = function(area) {
  *
  * @return {Promise<Boolean>}
  */
-Database.prototype.checkAuthorizationStatus = function() {
-    return this.remoteDataSource.checkAuthorizationStatus(this.context);
+Database.prototype.checkSession = function() {
+    return this.remoteDataSource.checkSession(this.context);
 };
 
 /**
@@ -175,10 +175,10 @@ Database.prototype.hasAuthorization = function() {
 /**
  * Add authorization info that was retrieved earlier
  *
- * @param  {Object} authorization
+ * @param  {Object} session
  */
-Database.prototype.addAuthorization = function(authorization) {
-    this.remoteDataSource.addAuthorization(this.context, authorization);
+Database.prototype.restoreSession = function(session) {
+    this.remoteDataSource.restoreSession(session);
 },
 
 /**
@@ -199,8 +199,39 @@ Database.prototype.submitPassword = function(username, password) {
  *
  * @return {Promise<Boolean>}
  */
-Database.prototype.endAuthorization = function() {
-    return this.remoteDataSource.endAuthorization(this.context);
+Database.prototype.endSession = function() {
+    return this.remoteDataSource.endSession(this.context);
+};
+
+/**
+ * Create a session for a mobile device (on browser)
+ *
+ * @param  {String} area
+ *
+ * @return {Promise<String>}
+ */
+Database.prototype.beginMobileSession = function(area) {
+    return this.remoteDataSource.beginMobileSession(this.context, area);
+};
+
+/**
+ * Acquired a session created earlier through a web-browser (on mobile device)
+ *
+ * @param  {String} handle
+ *
+ * @return {Promise<String>}
+ */
+Database.prototype.acquireMobileSession = function(handle) {
+    return this.remoteDataSource.beginMobileSession(this.context, handle);
+};
+
+/**
+ * Release the session created for a mobile device (on browser)
+ *
+ * @return {Promise}
+ */
+Database.prototype.releaseMobileSession = function() {
+    return this.remoteDataSource.releaseMobileSession(this.context);
 };
 
 /**

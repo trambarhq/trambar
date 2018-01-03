@@ -528,27 +528,37 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object|null>}
      */
-    loadCredentialsFromCache: function(address) {
+    loadSessionFromCache: function(address) {
         var db = this.state.database.use({ schema: 'local', by: this });
         var criteria = { key: address };
-        return db.findOne({ table: 'user_credentials', criteria });
+        return db.findOne({ table: 'session', criteria }).then((record) => {
+            return {
+                address: record.key,
+                token: record.token,
+                user_id: record.user_id,
+                etime: record.etime,
+            };
+        });
     },
 
     /**
-     * Save user credentials to local cache
+     * Save session handle, authorization token, and user id to local cache
      *
-     * @param  {String} address
-     * @param  {Object} credentials
+     * @param  {Object} session
      *
      * @return {Promise<Object>}
      */
-    saveCredentialsToCache: function(address, credentials) {
+    saveSessionToCache: function(session) {
         // save the credentials
         var db = this.state.database.use({ schema: 'local', by: this });
-        var record = _.extend({
-            key: address,
-        }, credentials);
-        return db.saveOne({ table: 'user_credentials' }, record);
+        var record = {
+            key: session.address,
+            handle: session.handle,
+            token: session.token,
+            user_id: session.user_id,
+            etime: session.etime,
+        };
+        return db.saveOne({ table: 'session' }, record);
     },
 
     /**
@@ -558,11 +568,11 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    removeCredentialsFromCache: function(address) {
+    removeSessionFromCache: function(address) {
         // save the credentials
         var db = this.state.database.use({ schema: 'local', by: this });
         var record = { key: address };
-        return db.removeOne({ table: 'user_credentials' }, record);
+        return db.removeOne({ table: 'session' }, record);
     },
 
     /**
@@ -634,10 +644,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleAuthorization: function(evt) {
-        this.saveCredentialsToCache(evt.address, evt.credentials);
+        this.saveSessionToCache(evt.session);
 
         var address = this.state.route.parameters.address;
-        if (evt.address === address) {
+        if (evt.session.address === address) {
             // it's possible to access the server now
             // assume we can access the schema too
             this.setState({
@@ -653,7 +663,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeCredentialsFromCache(evt.address);
+        this.removeSessionFromCache(evt.address);
 
         var address = this.state.route.parameters.address;
         if (evt.address === address) {
@@ -778,9 +788,9 @@ module.exports = React.createClass({
             });
         } else {
             // see if user credentials are stored locally
-            this.loadCredentialsFromCache(address).then((authorization) => {
-                if (authorization) {
-                    database.addAuthorization(authorization);
+            this.loadSessionFromCache(address).then((session) => {
+                if (session) {
+                    database.restoreSession(session);
                 }
                 if (database.hasAuthorization(address)) {
                     // route is now accessible

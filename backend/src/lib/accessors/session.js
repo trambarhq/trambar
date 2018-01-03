@@ -5,7 +5,7 @@ var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
     schema: 'global',
-    table: 'authorization',
+    table: 'session',
     columns: {
         id: Number,
         gn: Number,
@@ -14,16 +14,22 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         user_id: Number,
+        handle: String,
         token: String,
+        activated: Boolean,
         area: String,
-        expiration_date: String,
+        etime: String,
     },
     criteria: {
         id: Number,
         deleted: Boolean,
         user_id: Number,
+        handle: String,
         token: String,
+        activated: Boolean,
         area: String,
+
+        expired: Boolean,
     },
 
     /**
@@ -44,12 +50,15 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                user_id int NOT NULL,
-                token varchar(64) NOT NULL,
-                area varchar(64) NOT NULL,
-                expiration_date date NOT NULL,
+                user_id int,
+                handle varchar(16) NOT NULL,
+                token varchar(32),
+                area varchar(32) NOT NULL,
+                activated boolean NOT NULL DEFAULT false,
+                etime timestamp NOT NULL,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (handle);
             CREATE INDEX ON ${table} (token);
         `;
         return db.execute(sql);
@@ -68,7 +77,7 @@ module.exports = _.create(Data, {
         // other DB roles don't need direct access to this table
         var table = this.getTableName(schema);
         var sql = `
-            GRANT INSERT, SELECT, UPDATE, DELETE ON ${table} TO auth_role;
+            GRANT INSERT, SELECT, UPDATE ON ${table} TO auth_role;
         `;
         return db.execute(sql).return(true);
     },
@@ -112,8 +121,32 @@ module.exports = _.create(Data, {
      */
     extend: function(db, token, days) {
         var sql = `SELECT "extendAuthorization"($1, $2) AS result`;
-        var expire = Moment().add(days, 'day').format('YYYY-MM-DD');
-        return db.query(sql, [ token, expire ]).return();
+        return db.query(sql, [ token, days ]).return();
+    },
+
+    /**
+     * Add conditions to SQL query based on criteria object
+     *
+     * @param  {Object} criteria
+     * @param  {Object} query
+     *
+     * @return {Promise}
+     */
+    apply: function(criteria, query) {
+        var special = [
+            'expired',
+        ];
+        Data.apply.call(this, _.omit(criteria, special), query);
+
+        var params = query.parameters;
+        var conds = query.conditions;
+        if (criteria.expired !== undefined) {
+            if (criteria.expired) {
+                conds.push(`NOW() >= etime`);
+            } else {
+                conds.push(`NOW() < etime`);
+            }
+        }
     },
 
     import: null,
