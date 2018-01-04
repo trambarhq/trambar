@@ -1,0 +1,30 @@
+.activation-dialog-box {
+    display: flex;
+    flex-direction: column;
+    background-color: #362a2a;
+    box-shadow: 2px 2px 2px #000000;
+    color: #cccccc;
+    margin: auto;
+    padding: 0.4em 0.5em 0.4em 0.5em;
+    width: 100%;
+    max-width: 40em;
+
+    .container {
+        flex: 1 1 auto;
+        padding: 0.35em 0 0.2em 0.2em;
+    }
+
+    .buttons {
+        flex: 0 0 auto;
+        border-top: 1px solid #666666;
+        padding: 0.5em 0 0.2em 0.2em;
+
+        .left {
+            float: left;
+        }
+
+        .right {
+            float: right;
+        }
+    }
+}

@@ -5,42 +5,23 @@
     right: 0;
     bottom: 0;
 
-    .square {
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto;
-
-        @media (orientation: landscape) {
-            width: 60vh;
-            height: 60vh;
-        }
-
-        @media (orientation: portrait) {
-            width: 80vw;
-            height: 80vw;
-        }
-    }
-
     .top {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        background-color: #4d3936;
+        background-color: #211a1a;
         color: #cccccc;
-        padding: 0.25em 0.25em 0.25em 0.25em;
+        padding: 0.5em 0.5em 0.5em 0.5em;
     }
 
     .bottom {
-        background-color: #4d3936;
+        background-color: #211a1a;
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 0.25em 0.25em 0.25em 0.25em;
+        padding: 0.5em 0.5em 0.5em 0.5em;
 
         .buttons {
             float: right;
@@ -53,55 +34,82 @@
         }
     }
 
-    .corner {
+    .square {
         position: absolute;
-        border-color: rgba(0, 0, 0, 0.25);
-        border-width: 20px;
-        border-radius: 30px;
-        border-style: none;
+        left: 0;
+        top: 3em;
+        right: 0;
+        bottom: 0;
+        margin: auto;
 
-        &.top-left {
-            left: 0;
-            top: 0;
-            right: 80%;
-            bottom: 80%;
-            border-top-style: solid;
-            border-left-style: solid;
-            border-bottom-left-radius: 0;
-            border-top-right-radius: 0;
+        .corner {
+            position: absolute;
+            border-color: rgba(0, 0, 0, 0.25);
+            border-style: none;
+
+            &.top-left {
+                left: 0;
+                top: 0;
+                right: 80%;
+                bottom: 80%;
+                border-top-style: solid;
+                border-left-style: solid;
+                border-bottom-left-radius: 0;
+                border-top-right-radius: 0;
+            }
+
+            &.top-right {
+                left: 80%;
+                top: 0;
+                right: 0;
+                bottom: 80%;
+                border-top-style: solid;
+                border-right-style: solid;
+                border-bottom-right-radius: 0;
+                border-top-left-radius: 0;
+            }
+
+            &.bottom-left {
+                left: 0;
+                top: 80%;
+                right: 80%;
+                bottom: 0;
+                border-bottom-style: solid;
+                border-left-style: solid;
+                border-top-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+
+            &.bottom-right {
+                left: 80%;
+                top: 80%;
+                right: 0;
+                bottom:0;
+                border-bottom-style: solid;
+                border-right-style: solid;
+                border-top-right-radius: 0;
+                border-bottom-left-radius: 0;
+            }
         }
 
-        &.top-right {
-            left: 80%;
-            top: 0;
-            right: 0;
-            bottom: 80%;
-            border-top-style: solid;
-            border-right-style: solid;
-            border-bottom-right-radius: 0;
-            border-top-left-radius: 0;
+        @media (orientation: landscape) {
+            width: 40vh;
+            height: 40vh;
+
+            .corner {
+                border-width: 3vh;
+                border-radius: 6vh;
+            }
         }
 
-        &.bottom-left {
-            left: 0;
-            top: 80%;
-            right: 80%;
-            bottom: 0;
-            border-bottom-style: solid;
-            border-left-style: solid;
-            border-top-left-radius: 0;
-            border-bottom-right-radius: 0;
-        }
+        @media (orientation: portrait) {
+            width: 80vw;
+            height: 80vw;
 
-        &.bottom-right {
-            left: 80%;
-            top: 80%;
-            right: 0;
-            bottom:0;
-            border-bottom-style: solid;
-            border-right-style: solid;
-            border-top-right-radius: 0;
-            border-bottom-left-radius: 0;
+            .corner {
+                border-width: 6vw;
+                border-radius: 12vw;
+            }
         }
     }
 }

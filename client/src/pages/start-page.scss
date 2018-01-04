@@ -1,76 +1,10 @@
 .start-page {
-    display: flex;
     position: absolute;
 
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
-
-    background-color: #4d3936;
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-attachment: fixed;
-    background-size: cover;
-    background-blend-mode: soft-light;
-
-    .bar {
-        display: flex;
-        align-self: center;
-        flex-direction: column;
-        flex: 1 0 auto;
-        background-color: rgba(77, 57, 54, 0.97);
-        width: 100%;
-        min-height: 25vh;
-        position: relative;
-        color: #cccccc;
-        overflow: hidden;
-
-        .content-area {
-            align-self: center;
-            text-align: center;
-            flex: 1 1 auto;
-            width: 90%;
-            max-width: 80em;
-            padding-bottom: 1.4em;
-            z-index: 1;
-
-            .section {
-                display: inline-block;
-                text-align: left;
-                width: 48%;
-                min-width: 30em;
-                vertical-align: top;
-                padding-left: 1em;
-                padding-right: 1em;
-
-                .scrollable {
-                    margin-top: 1em;
-                    padding-right: 0.25em;
-                    max-height: 60vh;
-                }
-
-                &.description {
-                    .scrollable {
-                        white-space: pre-line;
-                    }
-                }
-            }
-        }
-
-        .welcome {
-            position: absolute;
-            left: 0px;
-            right: 0px;
-            top: 0px;
-            bottom: 0px;
-            text-align: center;
-            margin: auto;
-            height: 1em;
-            z-index: 0;
-            opacity: 0;
-        }
-    }
 
     .oauth-button {
         display: table;
@@ -220,38 +154,135 @@
         }
     }
 
-    &.transition-out-fast {
-        transition: opacity 0.7s linear 0.55s;
-        opacity: 0;
+    &.browser {
+        display: flex;
+
+        background-color: #4d3936;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: fixed;
+        background-size: cover;
+        background-blend-mode: soft-light;
 
         .bar {
-            transition: min-height 0.7s;
-            min-height: 100vh;
+            display: flex;
+            align-self: center;
+            flex-direction: column;
+            flex: 1 0 auto;
+            background-color: rgba(77, 57, 54, 0.97);
+            width: 100%;
+            min-height: 25vh;
+            position: relative;
+            color: #cccccc;
+            overflow: hidden;
 
             .content-area {
+                align-self: center;
+                text-align: center;
+                flex: 1 1 auto;
+                width: 90%;
+                max-width: 80em;
+                padding-bottom: 1.4em;
+                z-index: 1;
+
+                .section {
+                    display: inline-block;
+                    text-align: left;
+                    width: 48%;
+                    min-width: 30em;
+                    vertical-align: top;
+                    padding-left: 1em;
+                    padding-right: 1em;
+
+                    .scrollable {
+                        margin-top: 1em;
+                        padding-right: 0.25em;
+                        max-height: 60vh;
+                    }
+
+                    &.description {
+                        .scrollable {
+                            white-space: pre-line;
+                        }
+                    }
+                }
+            }
+
+            .welcome {
+                position: absolute;
+                left: 0px;
+                right: 0px;
+                top: 0px;
+                bottom: 0px;
+                text-align: center;
+                margin: auto;
+                height: 1em;
+                z-index: 0;
                 opacity: 0;
+            }
+        }
+
+        &.transition-out-fast {
+            transition: opacity 0.7s linear 0.55s;
+            opacity: 0;
+
+            .bar {
+                transition: min-height 0.7s;
+                min-height: 100vh;
+
+                .content-area {
+                    opacity: 0;
+                }
+            }
+        }
+
+        &.transition-out-slow {
+            transition: opacity 0.7s linear 3s;
+            opacity: 0;
+
+            .bar {
+                transition: min-height 0.7s, background-color 0.5s;
+                min-height: 100vh;
+                background-color: #4d3936;
+
+                .content-area {
+                    opacity: 0;
+                }
+
+                .welcome {
+                    transition: opacity 0.6s linear 1s, color 0.5s linear 2.5s;
+                    opacity: 1;
+                    color: rgba(255,255,255,0);
+                }
             }
         }
     }
 
-    &.transition-out-slow {
-        transition: opacity 0.7s linear 3s;
-        opacity: 0;
+    &.cordova {
+        padding: 0em 0.5em 0em 0.5em;
+        background-color: #211a1a;
+        color: #cccccc;
 
-        .bar {
-            transition: min-height 0.7s, background-color 0.5s;
-            min-height: 100vh;
-            background-color: #4d3936;
+        .welcome, .title {
 
-            .content-area {
-                opacity: 0;
+        }
+
+        .activation-instructions {
+            margin-bottom: 1em;
+        }
+
+        .activation-buttons {
+            .left {
+                float: left;
             }
 
-            .welcome {
-                transition: opacity 0.6s linear 1s, color 0.5s linear 2.5s;
-                opacity: 1;
-                color: rgba(255,255,255,0);
+            .right {
+                float: right;
             }
+        }
+
+        .projects {
+
         }
     }
 }

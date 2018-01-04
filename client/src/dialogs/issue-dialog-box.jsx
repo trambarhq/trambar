@@ -274,15 +274,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks the delete button
-     *
-     * @param  {Event} evt
-     */
-    handleClearClick: function(evt) {
-
-    },
-
-    /**
      * Called when user clicks the cancel button
      *
      * @param  {Event} evt

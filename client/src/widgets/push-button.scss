@@ -20,6 +20,10 @@
         }
     }
 
+    &:first-child {
+        margin-left: 0;
+    }
+
     INPUT[type="file"] {
         position: absolute;
         z-index: -50000;

@@ -176,5 +176,5 @@ function insertSpacers(s) {
         return s;
     }
     var parts = s.toUpperCase().match(/.{1,4}/g);
-    return parts.join('-');
+    return parts.join(' ');
 }

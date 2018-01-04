@@ -90,7 +90,13 @@ SELECT {
     }
 }
 
-TEXTAREA, INPUT[type=text] {
+TEXTAREA,
+INPUT[type=text],
+INPUT[type=url],
+INPUT[type=email],
+input[type=password],
+INPUT[type=number]
+ {
     -webkit-appearance: none;
     border-radius: 0;
     background-color: #eeeeee;

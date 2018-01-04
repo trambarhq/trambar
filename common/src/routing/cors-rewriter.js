@@ -34,7 +34,9 @@ function extract(urlParts, params) {
         }
         params.cors = false;
     }
-    params.address = `${protocol}//${host}`;
+    if (protocol && host) {
+        params.address = `${protocol}//${host}`;
+    }
 }
 
 /**

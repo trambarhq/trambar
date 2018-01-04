@@ -1,6 +1,3 @@
-const BROWSER = process.env.PLATFORM === 'browser';
-const CORDOVA = process.env.PLATFORM === 'cordova';
-
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
@@ -16,8 +13,10 @@ var Theme = require('theme/theme');
 
 // widgets
 var Scrollable = require('widgets/scrollable');
+var PushButton = require('widgets/push-button');
 var MembershipRequestDialogBox = require('dialogs/membership-request-dialog-box');
-var QRScannerDialogBox = (!CORDOVA) ? null : require('dialogs/qr-scanner-dialog-box');
+var QRScannerDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/qr-scanner-dialog-box') : null;
+var ActivationDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/activation-dialog-box') : null;
 
 require('./start-page.scss');
 
@@ -112,6 +111,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile, prevProps) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
@@ -131,15 +131,27 @@ module.exports = Relaks.createClass({
             onExit: this.props.onExit,
             onAvailableSchemas: this.props.onAvailableSchemas,
         };
+        console.log(params);
         if (!this.props.canAccessServer) {
-            // start authorization process--will receive system description
-            // and list of OAuth providers along with links
-            meanwhile.show(<StartPageSync {...props} />, delay);
-            return db.beginSession('client').then((info) => {
-                props.system = info.system;
-                props.providers = info.providers;
-                return <StartPageSync {...props} />;
-            });
+            if (process.env.PLATFORM === 'browser') {
+                // start authorization process--will receive system description
+                // and list of OAuth providers along with links
+                meanwhile.show(<StartPageSync {...props} />, delay);
+                return db.beginSession('client').then((info) => {
+                    props.system = info.system;
+                    props.providers = info.providers;
+                    return <StartPageSync {...props} />;
+                });
+            }
+            if (process.env.PLATFORM === 'cordova') {
+                if (params.address && params.activationCode) {
+                    // TODO
+                    console.log(params);
+                    return <StartPageSync {...props} />;
+                } else {
+                    return <StartPageSync {...props} />;
+                }
+            }
         } else {
             // handle things normally after we've gained authorization
             //
@@ -206,17 +218,19 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        if (BROWSER) {
+        if (process.env.PLATFORM === 'browser') {
             return {
                 transition: null,
                 selectedProjectId: 0,
                 newProjectNames: [],
                 errors: {},
             };
-        } else if (CORDOVA) {
+        }
+        if (process.env.PLATFORM === 'cordova') {
             return {
                 receivedInvalidQRCode: false,
                 scanningQRCode: false,
+                enteringManually: false,
             };
         }
     },
@@ -287,9 +301,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     render: function() {
-        if (BROWSER) {
+        if (process.env.PLATFORM === 'browser') {
             return this.renderForBrowser();
-        } else if (CORDOVA) {
+        }
+        if (process.env.PLATFORM === 'cordova') {
             return this.renderForCordova();
         }
     },
@@ -299,7 +314,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderForBrowser: (!BROWSER) ? null : function() {
+    renderForBrowser: function() {
+        if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
         var style;
         if (this.props.system) {
@@ -310,7 +326,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 style = { backgroundImage: `url(${imageURL})` };
             }
         }
-        var className = 'start-page';
+        var className = 'start-page browser';
         if (this.state.transition) {
             className += ` ${this.state.transition}`;
         }
@@ -320,7 +336,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
                     <h1 className="welcome">{t('start-welcome')}</h1>
                     <div className="content-area">
                         {this.renderDescription()}
-                        {this.renderButtons()}
+                        {this.renderChoices()}
                     </div>
                 </div>
                 {this.renderProjectDialog()}
@@ -333,16 +349,34 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderForCordova: (!CORDOVA) ? null : function() {
-        return (
-            <div className="start-page">
-                <div>
-                    <h1>Start Page!</h1>
-                    <button onClick={this.handleScanClick}>Scan</button>
+    renderForCordova: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var className = 'start-page cordova';
+        if (this.state.transition) {
+            className += ` ${this.state.transition}`;
+        }
+        if (_.isEmpty(this.props.projects)) {
+            return (
+                <div className={className}>
+                    {this.renderWelcome()}
+                    {this.renderActivationInstructions()}
+                    {this.renderActivationButtons()}
+                    {this.renderQRScannerDialogBox()}
+                    {this.renderActivationDialogBox()}
                 </div>
-                {this.renderQRScannerDialogBox()}
-            </div>
-        );
+            );
+        } else {
+            return (
+                <div className={className}>
+                    {this.renderTitle()}
+                    {this.renderProjectButtons()}
+                    {this.renderActivationInstructions()}
+                    {this.renderActivationButtons()}
+                    {this.renderQRScannerDialogBox()}
+                    {this.renderActivationDialogBox()}
+                </div>
+            );
+        }
     },
 
 
@@ -351,7 +385,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDescription: (!BROWSER) ? null : function() {
+    renderDescription: function() {
+        if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var system = this.props.system;
@@ -371,11 +406,74 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Render the system's name
+     *
+     * @return {ReactElement|null}
+     */
+    renderWelcome: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        return <h2 className="welcome">{t('start-welcome-mobile')}</h2>;
+    },
+
+    renderActivationInstructions: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        return (
+            <div className="activation-instructions">
+                {t('start-activation-instructions')}
+            </div>
+        );
+    },
+
+    renderActivationButtons: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        var manualProps = {
+            label: t('start-activation-manual'),
+            onClick: this.handleManualClick,
+        };
+        var scanProps = {
+            label: t('start-activation-scan-code'),
+            emphasized: true,
+            onClick: this.handleScanClick,
+        };
+        return (
+            <div className="activation-buttons">
+                <div className="left">
+                    <PushButton {...manualProps} />
+                </div>
+                <div className="right">
+                    <PushButton {...scanProps} />
+                </div>
+            </div>
+        );
+    },
+
+    /**
+     * Render the system's name
+     *
+     * @return {ReactElement|null}
+     */
+    renderTitle: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var system = this.props.system;
+        if (!system) {
+            return null;
+        }
+        var title = p(system.details.title) || t('start-system-title-default');
+        return <h2 className="title">{title}</h2>;
+    },
+
+    /**
      * Render list of buttons, either OAuth providers or available projects
      *
      * @return {ReactElement|null}
      */
-    renderButtons: (!BROWSER) ? null : function() {
+    renderChoices: function() {
+        if (process.env.PLATFORM !== 'browser') return;
         if (!this.props.canAccessServer) {
             return this.renderOAuthButtons();
         } else {
@@ -388,7 +486,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderOAuthButtons: (!BROWSER) ? null : function() {
+    renderOAuthButtons: function() {
+        if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
         var providers = this.props.providers;
         if (!providers) {
@@ -410,7 +509,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthButton: (!BROWSER) ? null : function(provider, i) {
+    renderOAuthButton: function(provider, i) {
+        if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var name = p(provider.details.title) || t(`server-type-${provider.type}`);
@@ -457,14 +557,23 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (!projects) {
             return null;
         }
-        return (
-            <div className="section buttons">
-                <h2>{t('start-projects')}</h2>
-                <Scrollable>
+        if (process.env.PLATFORM == 'browser') {
+            return (
+                <div className="section buttons">
+                    <h2>{t('start-projects')}</h2>
+                    <Scrollable>
+                        {_.map(projects, this.renderProjectButton)}
+                    </Scrollable>
+                </div>
+            );
+        }
+        if (process.env.PLATFORM === 'cordova') {
+            return (
+                <div className="projects">
                     {_.map(projects, this.renderProjectButton)}
-                </Scrollable>
-            </div>
-        );
+                </div>
+            );
+        }
     },
 
     /**
@@ -649,7 +758,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    openPopUpWindow: (!BROWSER) ? null : function(url) {
+    openPopUpWindow: function(url) {
+        if (process.env.PLATFORM !== 'browser') return;
         return new Promise((resolve, reject) => {
             var width = 800;
             var height = 600;
@@ -685,7 +795,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleOAuthButtonClick: (!BROWSER) ? null : function(evt) {
+    handleOAuthButtonClick: function(evt) {
+        if (process.env.PLATFORM !== 'browser') return;
         var url = evt.currentTarget.getAttribute('href');
         var provider = evt.currentTarget.getAttribute('data-type');
         evt.preventDefault();
@@ -766,10 +877,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderQRScannerDialogBox: (!CORDOVA) ? null : function() {
-        if (this.props.activating) {
-            return null
-        }
+    renderQRScannerDialogBox: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
         var props = {
             show: this.state.scanningQRCode,
             invalid: this.state.receivedInvalidQRCode,
@@ -779,8 +889,28 @@ var StartPageSync = module.exports.Sync = React.createClass({
         };
         return (
             <QRScannerDialogBox {...props}>
-                {'This is a test'}
+                {t('start-activation-instructions')}
             </QRScannerDialogBox>
+        );
+    },
+
+    /**
+     * Render QR scanner dialog box if we're scanning a QR code
+     *
+     * @return {ReactElement|null}
+     */
+    renderActivationDialogBox: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        var props = {
+            show: this.state.enteringManually,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onCancel: this.handleActivationCancel,
+            onConfirm: this.handleActivationConfirm,
+        };
+        return (
+            <ActivationDialogBox {...props} />
         );
     },
 
@@ -789,8 +919,18 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleScanClick: (!CORDOVA) ? null : function(evt) {
+    handleScanClick: function(evt) {
+        if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ scanningQRCode: true, receivedInvalidQRCode: false });
+    },
+
+    /**
+     * Called when user click manual button
+     *
+     * @param  {Event} evt
+     */
+    handleManualClick: function(evt) {
+        this.setState({ enteringManually: true });
     },
 
     /**
@@ -798,7 +938,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleCancelScan: (!CORDOVA) ? null : function(evt) {
+    handleCancelScan: function(evt) {
+        if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ scanningQRCode: false });
         if (this.invalidCodeTimeout) {
             clearTimeout(this.invalidCodeTimeout);
@@ -810,14 +951,14 @@ var StartPageSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleScanResult: (!CORDOVA) ? null : function(evt) {
+    handleScanResult: function(evt) {
+        if (process.env.PLATFORM !== 'cordova') return;
         if (this.invalidCodeTimeout) {
             clearTimeout(this.invalidCodeTimeout);
         }
         // see if the URL is a valid activation link
         var link = UniversalLink.parse(evt.result);
         var StartPage = require('pages/start-page');
-        debugger;
         var params = (link) ? StartPage.parseURL(link.path, link.query, link.hash) : null;
         if (params && params.activationCode) {
             this.props.route.change(link.url);
@@ -827,6 +968,34 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 this.setState({ receivedInvalidQRCode: false })
             }, 5000);
         }
+    },
+
+    /**
+     * Called when user closes the activation dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleActivationCancel: function(evt) {
+        this.setState({ enteringManually: false });
+    },
+
+    /**
+     * Called when user clicks OK in the activation dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleActivationConfirm: function(evt) {
+        // redirect to start page, now with server address, schema, as well as
+        // the activation code
+        var StartPage = require('pages/start-page');
+        var params = {
+            cors: true,
+            address: evt.address,
+            schema: evt.schema,
+            activationCode: evt.code,
+        };
+        this.props.route.push(StartPage, params);
+        handleActivationCancel();
     },
 });
 

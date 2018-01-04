@@ -129,7 +129,6 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var cancelProps = {
             label: t('qr-scanner-cancel'),
-            emphasized: true,
             onClick: this.handleCancelClick
         };
         var error;

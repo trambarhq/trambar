@@ -532,12 +532,16 @@ module.exports = React.createClass({
         var db = this.state.database.use({ schema: 'local', by: this });
         var criteria = { key: address };
         return db.findOne({ table: 'session', criteria }).then((record) => {
+            if (!record) {
+                return null;
+            }
             return {
                 address: record.key,
                 token: record.token,
                 user_id: record.user_id,
                 etime: record.etime,
             };
+            return
         });
     },
 

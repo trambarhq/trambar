@@ -17,6 +17,12 @@ module.exports = function(localeCode) {
         'action-view-linkedin-page': 'View LinkedIn page',
         'action-view-stackoverflow-page': 'View Stack Overflow Page',
 
+        'activation-address': 'Server address',
+        'activation-cancel': 'Cancel',
+        'activation-code': 'Activation code',
+        'activation-ok': 'OK',
+        'activation-schema': 'Project',
+
         'alert-$count-new-bookmarks': (count) => {
             return (count === 1) ? `1 new bookmark` : `${count} new bookmarks`;
         },
@@ -268,6 +274,9 @@ module.exports = function(localeCode) {
         'social-network-stackoverflow': 'Stack Overflow profile URL',
         'social-network-twitter': 'Twitter user name',
 
+        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-manual': 'Manual entry',
+        'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',
         'start-error-account-disabled': 'Account is currently disabled',
         'start-error-existing-users-only': 'Only authorized personnel can access this system',
@@ -276,6 +285,7 @@ module.exports = function(localeCode) {
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',
         'start-welcome': 'Welcome!',
+        'start-welcome-mobile': 'Welcome to Trambar',
 
         'statistics-bar': 'Bar',
         'statistics-line': 'Line',
