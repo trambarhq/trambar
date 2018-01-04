@@ -116,8 +116,8 @@ function sendError(res, err) {
  * @param  {Response} res
  */
 function handleSessionStart(req, res) {
-    var area = req.body.area;
-    var handle = req.body.handle;
+    var area = _.toLower(req.body.area);
+    var handle = _.toLower(req.body.handle);
     return findSystem().then((system) => {
         if (!(area === 'client' || area === 'admin')) {
             throw new HTTPError(400);
@@ -174,8 +174,8 @@ function handleSessionStart(req, res) {
  * @param  {Response} res
  */
 function handleHTPasswdRequest(req, res) {
-    var handle = req.body.handle;
-    var username = _.trim(_.lowerCase(req.body.username));
+    var handle = _.toLower(req.body.handle);
+    var username = _.trim(_.toLower(req.body.username));
     var password = _.trim(req.body.password);
     return findSession(handle).then((session) => {
         return findHtpasswdRecord(username, password).then(() => {
@@ -202,7 +202,7 @@ function handleHTPasswdRequest(req, res) {
  * @param  {Response} res
  */
 function handleSessionRetrieval(req, res) {
-    var handle = req.query.handle;
+    var handle = _.toLower(req.query.handle);
     return findSession(handle).then((session) => {
         if (!session.activated) {
             session.activated = true;
@@ -212,6 +212,9 @@ function handleSessionRetrieval(req, res) {
                 };
             });
         } else {
+            return {
+                session: _.pick(session, 'token', 'user_id', 'etime')
+            };
             throw new HTTPError(400);
         }
     }).then((info) => {
@@ -228,7 +231,7 @@ function handleSessionRetrieval(req, res) {
  * @param  {Response} res
  */
 function handleSessionTermination(req, res) {
-    var handle = req.query.handle;
+    var handle = _.toLower(req.query.handle);
     return removeSession(handle).then((session) => {
         return {};
     }).then((info) => {
@@ -247,7 +250,7 @@ function handleSessionTermination(req, res) {
  */
 function handleOAuthRequest(req, res, done) {
     var serverId = parseInt(req.query.sid);
-    var handle = req.query.handle;
+    var handle = _.toLower(req.query.handle);
     return findSession(handle).then((session) => {
         return findSystem().then((system) => {
             return findServer(serverId).then((server) => {
@@ -314,7 +317,7 @@ function handleOAuthActivationRequest(req, res, done) {
         return done();
     }
     var serverId = parseInt(req.query.sid);
-    var handle = req.query.handle;
+    var handle = _.toLower(req.query.handle);
     return findSession(handle).then((session) => {
         // make sure we have admin access
         if (session.area !== 'admin') {
@@ -495,6 +498,7 @@ function findSession(handle) {
         };
         return Session.findOne(db, 'global', criteria, '*').then((session) => {
             if (!session) {
+                console.log(criteria);
                 throw new HTTPError(404);
             }
             return session;

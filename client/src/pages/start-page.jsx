@@ -14,13 +14,14 @@ var Theme = require('theme/theme');
 // widgets
 var Scrollable = require('widgets/scrollable');
 var PushButton = require('widgets/push-button');
+var ProfileImage = require('widgets/profile-image');
 var MembershipRequestDialogBox = require('dialogs/membership-request-dialog-box');
 var QRScannerDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/qr-scanner-dialog-box') : null;
 var ActivationDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/activation-dialog-box') : null;
 
 require('./start-page.scss');
 
-module.exports = Relaks.createClass({
+var StartPage = module.exports = Relaks.createClass({
     displayName: 'StartPage',
     propTypes: {
         canAccessServer: PropTypes.bool,
@@ -119,6 +120,7 @@ module.exports = Relaks.createClass({
             system: null,
             providers: null,
             projects: null,
+            projectLinks: null,
             canAccessServer: this.props.canAccessServer,
             canAccessSchema: this.props.canAccessSchema,
 
@@ -131,7 +133,6 @@ module.exports = Relaks.createClass({
             onExit: this.props.onExit,
             onAvailableSchemas: this.props.onAvailableSchemas,
         };
-        console.log(params);
         if (!this.props.canAccessServer) {
             if (process.env.PLATFORM === 'browser') {
                 // start authorization process--will receive system description
@@ -145,9 +146,25 @@ module.exports = Relaks.createClass({
             }
             if (process.env.PLATFORM === 'cordova') {
                 if (params.address && params.activationCode) {
-                    // TODO
-                    console.log(params);
-                    return <StartPageSync {...props} />;
+                    meanwhile.show(<StartPageSync {...props} />);
+                    return db.acquireMobileSession(params.activationCode).catch((err) => {
+                        props.error = err;
+                        // start over after a few seconds
+                        setTimeout(() => {
+                            var params = {
+                                cors: false,
+                                address: null,
+                                schema: null,
+                                activationCode: null
+                            };
+                            this.props.route.replace(StartPage, params);
+                        }, 5000);
+                    }).then(() => {
+                        // if no error was encounted, an onAuthorization event
+                        // should have caused rendering at this point
+                        // with props.canAccessServer = true
+                        return <StartPageSync {...props} />;
+                    });
                 } else {
                     return <StartPageSync {...props} />;
                 }
@@ -155,20 +172,24 @@ module.exports = Relaks.createClass({
         } else {
             // handle things normally after we've gained authorization
             //
-            // keep showing what was there before until we've retrieved the
-            // system object (delay = undefined)
+            // keep showing what was there before until we've retrieved
+            // (delay = undefined)
             meanwhile.show(<StartPageSync {...props} />);
-            var currentUserId;
             return db.start().then((userId) => {
-                // load the current user later
-                currentUserId = userId;
-
+                // load current user
+                var criteria = {
+                    id: userId
+                };
+                return db.findOne({ table: 'user', criteria });
+            }).then((user) => {
+                props.currentUser = user;
+            }).then(() => {
                 // load system info
                 var criteria = {};
                 return db.findOne({ table: 'system', criteria, required: true });
             }).then((system) => {
                 props.system = system;
-                return meanwhile.show(<StartPageSync {...props} />, 250);
+                return meanwhile.show(<StartPageSync {...props} />);
             }).then(() => {
                 // load projects
                 var criteria = {
@@ -179,13 +200,11 @@ module.exports = Relaks.createClass({
                 props.projects = projects;
                 return meanwhile.show(<StartPageSync {...props} />);
             }).then(() => {
-                // load current user
-                var criteria = {
-                    id: currentUserId
-                };
-                return db.findOne({ table: 'user', criteria });
-            }).then((user) => {
-                props.currentUser = user;
+                // load project links from local schema
+                var criteria = {};
+                return db.find({ schema: 'local', table: 'project_link', criteria });
+            }).then((links) => {
+                props.projectLinks = links;
                 return <StartPageSync {...props} />;
             });
         }
@@ -199,8 +218,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
         system: PropTypes.object,
         providers: PropTypes.arrayOf(PropTypes.object),
         projects: PropTypes.arrayOf(PropTypes.object),
+        projectLinks: PropTypes.arrayOf(PropTypes.object),
         canAccessServer: PropTypes.bool,
         canAccessSchema: PropTypes.bool,
+        error: PropTypes.instanceOf(Error),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -222,8 +243,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             return {
                 transition: null,
                 selectedProjectId: 0,
-                newProjectNames: [],
-                errors: {},
+                oauthErrors: {},
             };
         }
         if (process.env.PLATFORM === 'cordova') {
@@ -231,6 +251,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 receivedInvalidQRCode: false,
                 scanningQRCode: false,
                 enteringManually: false,
+                addingServer: false,
+                lastError: null,
             };
         }
     },
@@ -300,6 +322,47 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
     },
 
+    /**
+     * Initiate transition out from this page
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        // begin transition out of page if user has gain access
+        if (this.props.route !== nextProps.route
+         || this.props.canAccessServer !== nextProps.canAccessServer
+         || this.props.canAccessSchema !== nextProps.canAccessSchema) {
+             if (nextProps.route.component !== StartPage) {
+                 // this page isn't the target--transition out if we have
+                 // access to the server and the schema
+                 if (nextProps.canAccessSchema && nextProps.canAccessServer) {
+                     this.transitionOut(nextProps.route);
+                 }
+             }
+             if (process.env.PLATFORM === 'cordova') {
+                 if (nextProps.canAccessServer) {
+                     var route = nextProps.route;
+                     var params = route.parameters;
+                     if (params.activationCode) {
+                         // we have gain access--redirect to news page if schema
+                         // was supplied or to this page again
+                         params = _.omit(params, 'activationCode');
+                         if (params.schema) {
+                             route.replace(require('pages/news-page'), params);
+                         } else {
+                             route.replace(require('pages/start-page'), params);
+                         }
+                     }
+                 }
+             }
+        }
+    },
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         if (process.env.PLATFORM === 'browser') {
             return this.renderForBrowser();
@@ -355,30 +418,51 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (this.state.transition) {
             className += ` ${this.state.transition}`;
         }
-        if (_.isEmpty(this.props.projects)) {
-            return (
-                <div className={className}>
-                    {this.renderWelcome()}
-                    {this.renderActivationInstructions()}
-                    {this.renderActivationButtons()}
-                    {this.renderQRScannerDialogBox()}
-                    {this.renderActivationDialogBox()}
-                </div>
-            );
-        } else {
+        if (!this.props.canAccessServer) {
+            // render only instructions for gaining access
             return (
                 <div className={className}>
                     {this.renderTitle()}
-                    {this.renderProjectButtons()}
-                    {this.renderActivationInstructions()}
-                    {this.renderActivationButtons()}
-                    {this.renderQRScannerDialogBox()}
-                    {this.renderActivationDialogBox()}
+                    {this.renderActivationControls()}
                 </div>
             );
+        } else {
+            if (this.state.transition) {
+                if (this.state.transition === 'transition-out-slow') {
+                    // render a greeting during long transition
+                    return (
+                        <div className={className}>
+                            {this.renderMobileGreeting()}
+                        </div>
+                    );
+                } else {
+                    //
+                    return (
+                        <div className={className} />
+                    );
+                }
+            } else {
+                if (this.state.addingServer) {
+                    // render project list, followed by activation instructions
+                    return (
+                        <div className={className}>
+                            {this.renderTitle()}
+                            {this.renderProjectButtons()}
+                            {this.renderActivationControls()}
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div className={className}>
+                            {this.renderTitle()}
+                            {this.renderProjectButtons()}
+                            {this.renderActivationSelector()}
+                        </div>
+                    );
+                }
+            }
         }
     },
-
 
     /**
      * Render text describing the system
@@ -406,16 +490,77 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render the system's name
+     * Render either the name of the system the user has logged into or the
+     * app name
      *
      * @return {ReactElement|null}
      */
-    renderWelcome: function() {
+    renderTitle: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
-        return <h2 className="welcome">{t('start-welcome-mobile')}</h2>;
+        var title;
+        if (this.props.canAccessServer) {
+            // show the name of the
+            var p = this.props.locale.pick;
+            var system = this.props.system;
+            if (system) {
+                title = p(system.details.title) || t('start-system-title-default');
+            }
+        } else {
+            title = t('app-name');
+        }
+        return <h2 className="title">{title}</h2>;
     },
 
+    /**
+     * Render welcome
+     *
+     * @return {ReactElement|null}
+     */
+    renderMobileGreeting: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        var n = this.props.locale.name;
+        var name;
+        var user = this.props.currentUser;
+        if (user) {
+            name = n(user.details.name, user.details.gender);
+        }
+        var imageProps = {
+            user: user,
+            size: 'large',
+            theme: this.props.theme,
+        };
+        return (
+            <div className="welcome">
+                <h3>{t('start-welcome-again')}</h3>
+                <ProfileImage {...imageProps} />
+                <h4>{name}</h4>
+            </div>
+        );
+    },
+
+    /**
+     * Render instructions plus buttons
+     *
+     * @return {ReactElement}
+     */
+    renderActivationControls: function() {
+        return (
+            <div>
+                {this.renderActivationInstructions()}
+                {this.renderActivationButtons()}
+                {this.renderQRScannerDialogBox()}
+                {this.renderActivationDialogBox()}
+            </div>
+        );
+    },
+
+    /**
+     * Render instructions for gaining access on mobile device
+     *
+     * @return {ReactElement}
+     */
     renderActivationInstructions: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
@@ -426,6 +571,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render buttons for scanning QR code or manual entry of session info
+     *
+     * @return {ReactElement}
+     */
     renderActivationButtons: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
@@ -451,20 +601,24 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render the system's name
+     * Render button for adding new server
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
-    renderTitle: function() {
+    renderActivationSelector: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var system = this.props.system;
-        if (!system) {
-            return null;
-        }
-        var title = p(system.details.title) || t('start-system-title-default');
-        return <h2 className="title">{title}</h2>;
+        var addProps = {
+            label: t('start-activation-add-server'),
+            onClick: this.handleAddClick,
+        };
+        return (
+            <div className="activation-buttons">
+                <div className="right">
+                    <PushButton {...addProps} />
+                </div>
+            </div>
+        );
     },
 
     /**
@@ -521,7 +675,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             onClick: this.handleOAuthButtonClick,
             'data-type': provider.type,
         };
-        var error = this.state.errors[provider.type];
+        var error = this.state.oauthErrors[provider.type];
         if (error) {
             var t = this.props.locale.translate;
             var text = t(`start-error-${error.reason}`);
@@ -697,28 +851,18 @@ var StartPageSync = module.exports.Sync = React.createClass({
             if (!_.isEmpty(accessible)) {
                 if (this.props.onAvailableSchemas) {
                     this.props.onAvailableSchemas({
-                        type: 'available_schema',
+                        type: 'availableschemas',
                         target: this,
                         schemas: _.map(accessible, 'name'),
                     });
                 }
             }
         }
-
-        // begin transition out of page if user has gain access
-        if (prevProps.route !== this.props.route
-         || prevProps.canAccessServer !== this.props.canAccessServer
-         || prevProps.canAccessSchema !== this.props.canAccessSchema) {
-             if (this.props.route.component !== module.exports) {
-                 // this page isn't the target--transition out if we have
-                 // access to the server and the schema
-                 if (this.props.canAccessSchema && this.props.canAccessServer) {
-                     this.transitionOut();
-                 }
-             }
-        }
     },
 
+    /**
+     * Inform parent component that the page has mount
+     */
     componentDidMount: function() {
         if (this.props.onEntry) {
             this.props.onEntry({
@@ -728,11 +872,19 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
     },
 
-    transitionOut: function() {
+    /**
+     * Transition out from this page
+     */
+    transitionOut: function(route) {
         var speed = 'fast';
         var duration = 1300;
-        var schema = this.props.route.parameters.schema;
-        if (_.includes(this.state.newProjectNames, schema)) {
+        var params = route.parameters;
+        // determine whether the user has seen the project before
+        var newProject = !_.some(this.props.projectLinks, {
+            address: params.address,
+            schema: params.schema,
+        });
+        if (newProject) {
             // show welcome message when we're heading to a new project
             speed = 'slow';
             duration = 3700;
@@ -803,10 +955,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
         return this.openPopUpWindow(url).then(() => {
             var db = this.props.database.use({ by: this });
             return db.checkSession().catch((err) => {
-                debugger;
-                var errors = _.clone(this.state.errors);
-                errors[provider] = err;
-                this.setState({ errors });
+                var oauthErrors = _.clone(this.state.oauthErrors);
+                oauthErrors[provider] = err;
+                this.setState({ oauthErrors });
             });
         });
     },
@@ -840,11 +991,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         };
         var route = this.props.route;
         var db = this.props.database.use({ by: this });
-        return db.saveOne({ schema: 'global', table: 'user' }, newUserProps).then(() => {
-            // remember that we have just joined this project
-            var newProjectNames = _.union(this.state.newProjectNames, [ project.name ]);
-            this.setState({ newProjectNames });
-        });
+        return db.saveOne({ schema: 'global', table: 'user' }, newUserProps);
     },
 
     /**
@@ -915,7 +1062,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user click scan button
+     * Called when user clicks scan button
      *
      * @param  {Event} evt
      */
@@ -925,12 +1072,21 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user click manual button
+     * Called when user clicks manual button
      *
      * @param  {Event} evt
      */
     handleManualClick: function(evt) {
         this.setState({ enteringManually: true });
+    },
+
+    /**
+     * Called when user clicks add server button
+     *
+     * @param  {Event} evt
+     */
+    handleAddClick: function(evt) {
+        this.setState({ addingServer: true });
     },
 
     /**
@@ -958,7 +1114,6 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
         // see if the URL is a valid activation link
         var link = UniversalLink.parse(evt.result);
-        var StartPage = require('pages/start-page');
         var params = (link) ? StartPage.parseURL(link.path, link.query, link.hash) : null;
         if (params && params.activationCode) {
             this.props.route.change(link.url);
@@ -985,9 +1140,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleActivationConfirm: function(evt) {
+        this.handleActivationCancel();
         // redirect to start page, now with server address, schema, as well as
         // the activation code
-        var StartPage = require('pages/start-page');
         var params = {
             cors: true,
             address: evt.address,
@@ -995,7 +1150,6 @@ var StartPageSync = module.exports.Sync = React.createClass({
             activationCode: evt.code,
         };
         this.props.route.push(StartPage, params);
-        handleActivationCancel();
     },
 });
 

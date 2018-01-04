@@ -65,20 +65,22 @@ module.exports = React.createClass({
             var url = `${address}/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
-                var err = res.session.error;
-                if (err) {
-                    throw new HTTPError(err.statusCode, _.omit(err.statusCode));
-                }
                 _.assign(session, res.session);
-                // return login information to caller
-                return {
-                    system: res.system,
-                    providers: res.providers,
-                };
+                if (session.handle) {
+                    // return login information to caller
+                    return {
+                        system: res.system,
+                        providers: res.providers,
+                    };
+                } else {
+                    throw new HTTPError(session.error);
+                }
             }).catch((err) => {
                 // clear the promise if it fails
                 session.promise = null;
-                this.triggerChangeEvent();
+                // trigger a change event after a delay, which should cause the
+                // caller to try again
+                setTimeout(this.triggerChangeEvent, 5000);
                 throw err;
             });
         }
@@ -103,15 +105,17 @@ module.exports = React.createClass({
         var url = `${address}/session/`;
         var options = { responseType: 'json' };
         return HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
-            var err = res.session.error;
-            if (err) {
-                throw new HTTPError(err.statusCode, _.omit(err, 'statusCode'));
-            }
             _.assign(session, res.session);
-            this.triggerAuthorizationEvent(session);
-            return true;
+            if (session.token) {
+                this.triggerAuthorizationEvent(session);
+                return true;
+            } else if (!session.error) {
+                return false;
+            } else {
+                throw new HTTPError(session.error);
+            }
         }).catch((err) => {
-            // clear the promise if the session has disappeared
+            // clear the promise if the session is no longer valid
             session.promise = null;
             this.triggerChangeEvent();
             throw err;
@@ -125,7 +129,7 @@ module.exports = React.createClass({
      * @param  {String} username
      * @param  {String} password
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
     submitPassword: function(location, username, password) {
         var address = location.address;
@@ -141,13 +145,16 @@ module.exports = React.createClass({
             _.assign(session, res.session);
             if (session.token) {
                 this.triggerAuthorizationEvent(session);
-                return true;
+                return null;
             } else {
-                return false;
+                throw new HTTPError(session.error);
             }
         }).catch((err) => {
-            // clear the promise if the session has disappeared
-            session.promise = null;
+            if (err.statusCode !== 401) {
+                // clear the promise if the session is no longer valid
+                session.promise = null;
+                this.triggerChangeEvent();
+            }
             throw err;
         });
     },
@@ -157,7 +164,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
     endSession: function(location) {
         var address = location.address;
@@ -174,10 +181,8 @@ module.exports = React.createClass({
                 this.clearRecentSearches(address);
                 this.clearCachedObjects(address);
                 this.triggerExpirationEvent(address);
-                return true;
+                return null;
             });
-        }).catch((err) => {
-            return false;
         });
     },
 
@@ -199,7 +204,11 @@ module.exports = React.createClass({
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('POST', url, { area, handle }, options).then((res) => {
                 _.assign(session, res.session);
-                return session.handle;
+                if (session.handle) {
+                    return session.handle;
+                } else {
+                    throw HTTPError(session.error);
+                }
             }).catch((err) => {
                 session.promise = null;
                 throw err;
@@ -209,31 +218,33 @@ module.exports = React.createClass({
     },
 
     /**
-     * Acquire a session created by brwoser (on device/Cordova side)
+     * Acquired a session created earlier through a web-browser (on mobile device)
      *
      * @param  {Object} location
      * @param  {String} handle
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
     acquireMobileSession: function(location, handle) {
         var address = location.address;
         var session = getSession(address);
-        var url = `${address}/session/`;
-        var options = { responseType: 'json', contentType: 'json' };
-        return HTTPRequest.fetch('POST', url, { handle }, options).then((res) => {
-            _.assign(session, res.session);
-            if (session.token) {
-                this.triggerAuthorizationEvent(session);
-                return true;
-            } else {
-                var error = session.error;
-                if (error) {
-                    throw new HTTPError(error.statusCode, _.omit(error, 'statusCode'));
+        if (!session.promise) {
+            var url = `${address}/session/`;
+            var options = { responseType: 'json', contentType: 'json' };
+            session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
+                _.assign(session, res.session);
+                if (session.token) {
+                    this.triggerAuthorizationEvent(session);
+                    return null;
+                } else {
+                    throw new HTTPError(session.error);
                 }
-                return false;
-            }
-        });
+            }).catch((err) => {
+                session.promise = null;
+                throw err;
+            });
+        }
+        return session.promise;
     },
 
     /**
@@ -241,7 +252,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
     releaseMobileSession: function(location) {
         // just clear the promise--let unused authentication object expire on its own
@@ -250,12 +261,9 @@ module.exports = React.createClass({
         if (session.promise) {
             return session.promise.then(() => {
                 destroySession(session);
-                return true;
-            }).catch((err) => {
-                return false;
             });
         } else {
-            return Promise.resolve(false);
+            return Promise.resolve();
         }
     },
 

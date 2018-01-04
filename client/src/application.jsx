@@ -94,10 +94,9 @@ module.exports = React.createClass({
 
             canAccessServer: false,
             canAccessSchema: false,
-            subscriptionId: null,
-            subscriptionError: null,
-            connectionId: null,
-            pushRelay: (Notifier == PushNotifier) ? null : undefined,
+            subscription: null,
+            connection: null,
+            pushRelay: null,
             renderingStartPage: false,
             showingUploadProgress: false,
         };
@@ -371,51 +370,9 @@ module.exports = React.createClass({
             }, 100);
         }
 
-        // create data change subscription
-        if (!this.state.subscriptionId) {
-            if (this.state.canAccessServer) {
-                if (this.state.connectionId) {
-                    if (!this.state.subscriptionError) {
-                        this.createSubscription();
-                    }
-                } else {
-                    if (Notifier === PushNotifier) {
-                        // PushNotifier needs the address to the relay
-                        if (this.state.pushRelay === null) {
-                            // TODO: reeanble once the push relay is up
-                            // this.discoverPushRelay();
-                        }
-                    }
-                }
-            }
-        }
-
-        // see if the project is different
-        if (prevState.route !== this.state.route) {
-            var prevAddress = _.get(prevState.route, 'parameters.address');
-            var currAddress = _.get(this.state.route, 'parameters.address');
-            var currSchema = _.get(this.state.route, 'parameters.schema');
-            var prevSchema = _.get(prevState.route, 'parameters.schema');
-            if (prevAddress !== currAddress || prevSchema !== currSchema) {
-                if (currSchema) {
-                    if (this.state.canAccessServer && this.state.canAccessSchema) {
-                        // remember that we have accessed this project
-                        this.addProjectLink(currAddress, currSchema);
-                    }
-                }
-                if (prevAddress === currAddress) {
-                    this.updateSubscription();
-                }
-                if (prevAddress && prevSchema) {
-                    var dataSource = this.components.remoteDataSource;
-                    dataSource.clear(prevAddress, prevSchema);
-                }
-            }
-        }
-
-        if (this.state.locale !== prevState.locale) {
-            this.updateSubscription();
-        }
+        this.updateRecentSearchResults(prevState);
+        this.updateProjectLink(prevState);
+        this.updateSubscription(prevState);
     },
 
     /**
@@ -426,30 +383,153 @@ module.exports = React.createClass({
     },
 
     /**
-     * Create a subscription to data monitoring service
+     * Clear recent search results when we siwtch to a different location
+     *
+     * @param  {Object} prevState
      */
-    createSubscription: function() {
-        if (this.creatingSubscription) {
+    updateRecentSearchResults: function(prevState) {
+        var needUpdate = false;
+        if (prevState.route !== this.props.route) {
+            needUpdate = true;
+        }
+        if (!needUpdate) {
             return;
         }
-        this.creatingSubscription = true;
+
+        if (!prevState.route) {
+            return;
+        }
+        var locationBefore = _.pick(prevState.route.parameters, 'address', 'schema');
+        var locationAfter = _.pick(this.state.route.parameters, 'address', 'schema');
+        if (!_.isEqual(locationBefore, locationAfter)) {
+            this.components.remoteDataSource.clear(locationBefore.address, locationBefore.schema);
+        }
+    },
+
+    /**
+     * Add project to list of visited projects
+     *
+     * @param  {Object} prevState
+     */
+    updateProjectLink: function(prevState) {
+        var needUpdate = false;
+        if (prevState.route !== this.state.route) {
+            needUpdate = true;
+        }
+        if (!needUpdate) {
+            return;
+        }
+
+        if (!this.state.route) {
+            return;
+        }
+        var params = this.state.route.parameters;
+        if (!params.address || !params.schema) {
+            return;
+        }
+        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
+            return;
+        }
+        var projectKey = `${params.address}/${params.schema}`;
+        if (this.lastProjectKey === projectKey) {
+            // guard against repeated effort
+            return;
+        }
+        this.lastProjectKey = projectKey;
+
+        // get the project object so we have the project's display name
+        var db = this.state.database.use({ by: this });
+        var criteria = { name: params.schema };
+        db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
+            if (!project) {
+                return;
+            }
+            var now = new Date;
+            var record = {
+                key: projectKey,
+                address: params.address,
+                schema: params.schema,
+                name: project.details.title,
+                atime: now.toISOString(),
+            };
+            return db.saveOne({ schema: 'local', table: 'project_link' }, record);
+        });
+    },
+
+    /**
+     * Maintain a subscription to data change notification
+     *
+     * @param  {Object} prevState
+     */
+    updateSubscription: function(prevState) {
+        // see if something changed that'd require a change in the subscription
+        var needUpdate = false;
+        if (prevState.route !== this.state.route) {
+            if (this.state.route)
+            needUpdate = true;
+        } else if (prevState.locale !== this.state.locale) {
+            needUpdate = true;
+        } else if (prevState.connection !== this.state.connection) {
+            needUpdate = true;
+        } else if (prevState.pushRelay !== this.state.pushRelay) {
+            needUpdate = true;
+        } else if (prevState.canAccessServer !== this.state.canAccessServer) {
+            needUpdate = true;
+        }
+        if (!needUpdate) {
+            return;
+        }
+
+        // make sure we have everything
+        if (!this.state.route) {
+            return;
+        }
+        var params = this.state.route.parameters;
+        if (!params.address) {
+            return;
+        }
+        if (!this.state.canAccessServer) {
+            return;
+        }
+        var connection = this.state.connection;
+        var destination;
+        if (Notifier === WebsocketNotifier) {
+            if (!connection || params.address !== connection.address) {
+                // don't have a websocket connection to the server yet
+                return;
+            }
+            destination = 'websocket';
+        }
+        if (Notifier === PushNotifier) {
+            if (!connection) {
+                // registration hasn't occurred
+                return;
+            }
+            var pushRelay = this.state.pushRelay;
+            if (!pushRelay || params.address !== pushRelay.address) {
+                // don't know yet the address of the push relay used by the server
+                this.discoverPushRelay();
+                return;
+            }
+            destination = this.state.pushRelay.url;
+            if (!destination) {
+                return;
+            }
+        }
 
         var db = this.state.database.use({ schema: 'global', by: this });
         db.start().then((userId) => {
-            var address;
-            if (Notifier === WebsocketNotifier) {
-                address = 'websocket';
-            } else if (Notifier === PushNotifier) {
-                address = this.state.pushRelay;
-            }
-            var schema = this.state.route.parameters.schema;
-            if (!schema || !this.state.canAccessSchema) {
+            var schema;
+            if (params.schema && this.state.canAccessSchema) {
+                schema = params.schema;
+            } else {
+                // keep an eye on changes of global objects like projects
                 schema = 'global';
             }
             var subscription = {
                 user_id: userId,
-                address: address,
-                token: this.state.connectionId,
+                address: destination,
+                token: connection.token,
                 schema: schema,
                 area: 'client',
                 locale: this.state.locale.localeCode,
@@ -458,66 +538,27 @@ module.exports = React.createClass({
                 }
             };
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
-                this.setState({ subscriptionId: subscription.id })
+                this.setState({ subscription });
             });
-        }).catch((err) => {
-            this.setState({ subscriptionError: err });
         }).finally(() => {
             this.creatingSubscription = false;
         });
     },
 
     /**
-     * Update subscription
-     */
-    updateSubscription: function() {
-        if (!this.state.subscriptionId) {
-            return;
-        }
-        if (this.updatingSubscription) {
-            return;
-        }
-        this.updatingSubscription = true;
-
-        var db = this.state.database.use({ schema: 'global', by: this });
-        db.start().then((userId) => {
-            var subscription = {
-                id: this.state.subscriptionId,
-                schema: this.state.route.parameters.schema || 'global',
-                locale: this.state.locale.localeCode,
-            };
-            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
-                this.setState({ subscriptionId: subscription.id })
-            });
-        }).catch((err) => {
-            this.setState({ subscriptionError: err });
-        }).finally(() => {
-            this.updatingSubscription = false;
-        });
-    },
-
-    /**
      * Ask remote server for the push relay URL
-     *
-     * @return {Promise}
      */
     discoverPushRelay: function() {
-        if (this.discoveringPushRelay) {
-            return;
-        }
-        this.discoveringPushRelay = true;
-
         var db = this.state.database.use({ schema: 'global', by: this });
         db.start().then((userId) => {
             return db.findOne({ table: 'system' }).then((system) => {
-                var address = _.get(system, 'settings.push_relay', '');
-                this.setState({ pushRelay: address });
+                var address = db.context.address;
+                var url = _.get(system, 'settings.push_relay', '');
+                this.setState({
+                    pushRelay: { address, url }
+                });
                 return null;
             });
-        }).catch((err) => {
-            this.setState({ pushRelay: err });
-        }).finally(() => {
-            this.discoveringPushRelay = false;
         });
     },
 
@@ -537,11 +578,11 @@ module.exports = React.createClass({
             }
             return {
                 address: record.key,
+                handle: record.handle,
                 token: record.token,
                 user_id: record.user_id,
                 etime: record.etime,
             };
-            return
         });
     },
 
@@ -577,34 +618,6 @@ module.exports = React.createClass({
         var db = this.state.database.use({ schema: 'local', by: this });
         var record = { key: address };
         return db.removeOne({ table: 'session' }, record);
-    },
-
-    /**
-     * Add project to list of visited projects
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     *
-     * @return {Promise<Object>}
-     */
-    addProjectLink: function(address, schema) {
-        var db = this.state.database.use({ by: this });
-        // get the project object so we have the project's display name
-        var criteria = { name: schema };
-        return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
-            if (!project) {
-                return;
-            }
-            var now = new Date;
-            var record = {
-                key: `${address}/${schema}`,
-                address: address,
-                schema: schema,
-                name: project.details.title,
-                atime: now.toISOString(),
-            };
-            return db.saveOne({ schema: 'local', table: 'project_link' }, record);
-        });
     },
 
     /**
@@ -775,6 +788,8 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleRouteChange: function(evt) {
+        // add server location to database context so we don't need to
+        // specify it everywhere
         var route = new Route(evt.target);
         var address = route.parameters.address;
         var database = this.state.database;
@@ -782,8 +797,10 @@ module.exports = React.createClass({
             var dataSource = this.components.remoteDataSource;
             database = new Database(dataSource, { address })
         }
+
+        // try to restore session prior to setting the route
         if (database.hasAuthorization()) {
-            // route is accessible
+            // route is already accessible
             this.setState({
                 route,
                 database,
@@ -862,8 +879,24 @@ module.exports = React.createClass({
         var replacing = evt.replacing;
         if (process.env.PLATFORM === 'cordova') {
             if (originalURL === '/bootstrap') {
-                var url = '/';
-                return routeManager.change(url, replacing);
+                // look for the most recently accessed project
+                var db = this.state.database.use({ by: this });
+                var criteria = {};
+                return db.find({ schema: 'local', table: 'project_link', criteria }).then((links) => {
+                    var mostRecent = _.last(_.sortBy(links, 'atime'));
+                    var url;
+                    if (mostRecent) {
+                        url = routeManager.find(NewsPage, {
+                            cors: true,
+                            address: mostRecent.address,
+                            schema: mostRecent.schema,
+                        });
+                    } else {
+                        url = routeManager.find(StartPage, {});
+                    }
+                    return routeManager.change(url, replacing);
+                });
+
             }
         }
 
@@ -917,7 +950,12 @@ module.exports = React.createClass({
      */
     handleConnection: function(evt) {
         // a new connection--old subscription no longer works
-        this.setState({ connectionId: evt.token, subscriptionId: null });
+        this.setState({
+            connection: {
+                address: evt.address,
+                token: evt.token
+            },
+        });
     },
 
     /**
@@ -926,7 +964,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDisconnection: function(evt) {
-        this.setState({ connectionId: null, subscriptionId: null });
+        this.setState({ connection: null });
     },
 
     /**

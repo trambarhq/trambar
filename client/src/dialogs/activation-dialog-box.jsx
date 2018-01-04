@@ -35,9 +35,9 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            address: 'https://',
+            address: 'http://localhost',
             code: '',
-            schema: '',
+            schema: 'test',
         };
     },
 
@@ -105,7 +105,7 @@ module.exports = React.createClass({
         var props = {
             id: 'code',
             value: this.state.code,
-            spellcheck: false,
+            spellCheck: false,
             locale: this.props.locale,
             onChange: this.handleCodeChange,
         };
@@ -122,7 +122,7 @@ module.exports = React.createClass({
         var props = {
             id: 'schema',
             value: this.state.schema,
-            spellcheck: false,
+            spellCheck: false,
             locale: this.props.locale,
             onChange: this.handleSchemaChange,
         };
@@ -192,7 +192,7 @@ module.exports = React.createClass({
                 type: 'close',
                 target: this,
                 address: this.state.address,
-                code: this.state.code,
+                code: _.replace(this.state.code, /\s+/g, ''),
                 schema: this.state.schema,
             });
         }
@@ -216,7 +216,7 @@ module.exports = React.createClass({
      */
     handleCodeChange: function(evt) {
         var code = evt.target.value;
-        code = _.replace(code.toUpperCase(), /[^0-9A-F ]/ig, '');
+        code = _.replace(_.toUpper(code), /[^0-9A-F ]/g, '');
         if (_.replace(code, /\s+/g, '').length <= 16) {
             this.setState({ code });
         }

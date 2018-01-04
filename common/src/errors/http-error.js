@@ -1,15 +1,24 @@
 module.exports = HTTPError;
 
-function HTTPError(statusCode, attributes) {
-    if (!statusCode) {
-        statusCode = 500;
+function HTTPError() {
+    for (var i = 0; i < arguments.length; i++) {
+        var arg = arguments[i];
+        if (typeof(arg) === 'number') {
+            this.statusCode = arg;
+        } else if (typeof(arg) === 'object') {
+            for (var key in arg) {
+                this[key] = arg[key];
+            }
+        }
     }
-    var name = httpErrorNamess[statusCode];
-    this.statusCode = statusCode;
-    this.name = name
-    this.message = name;
-    for (var key in attributes) {
-        this[key] = attributes[key];
+    if (!this.statusCode) {
+        this.statusCode = 500;
+    }
+    if (!this.name) {
+        this.name = httpErrorNamess[this.statusCode];
+    }
+    if (!this.message) {
+        this.message = this.name;
     }
 }
 

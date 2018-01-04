@@ -222,7 +222,7 @@ Database.prototype.beginMobileSession = function(area) {
  * @return {Promise<String>}
  */
 Database.prototype.acquireMobileSession = function(handle) {
-    return this.remoteDataSource.beginMobileSession(this.context, handle);
+    return this.remoteDataSource.acquireMobileSession(this.context, handle);
 };
 
 /**
