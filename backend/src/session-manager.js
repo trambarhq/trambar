@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
+var CORS = require('cors');
 var BodyParser = require('body-parser');
 var Passport = require('passport')
 var Crypto = Promise.promisifyAll(require('crypto'));
@@ -43,6 +44,7 @@ var cleanUpInterval;
 function start() {
     var app = Express();
     app.set('json spaces', 2);
+    app.use(CORS());
     app.use(BodyParser.json());
     app.use(Passport.initialize());
 
@@ -212,9 +214,6 @@ function handleSessionRetrieval(req, res) {
                 };
             });
         } else {
-            return {
-                session: _.pick(session, 'token', 'user_id', 'etime')
-            };
             throw new HTTPError(400);
         }
     }).then((info) => {
@@ -231,7 +230,7 @@ function handleSessionRetrieval(req, res) {
  * @param  {Response} res
  */
 function handleSessionTermination(req, res) {
-    var handle = _.toLower(req.query.handle);
+    var handle = _.toLower(req.body.handle);
     return removeSession(handle).then((session) => {
         return {};
     }).then((info) => {
@@ -479,6 +478,25 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
 function saveSession(session) {
     return Database.open().then((db) => {
         return Session.saveOne(db, 'global', session);
+    });
+}
+
+/**
+ * Mark session as deleted
+ *
+ * @param  {Object} session
+ *
+ * @return {Promise<Session>}
+ */
+function removeSession(handle) {
+    return Database.open().then((db) => {
+        return Session.findOne(db, 'global', { handle }, 'id').then((session) => {
+            if (!session) {
+                throw new HTTPError(404);
+            }
+            session.deleted = true;
+            return Session.updateOne(db, 'global', session);
+        });
     });
 }
 

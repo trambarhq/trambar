@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
+var CORS = require('cors');
 var BodyParser = require('body-parser');
 var HTTP = require('http');
 var SockJS = require('sockjs');
@@ -31,6 +32,7 @@ function listen() {
     return Promise.try(() => {
         // set up endpoint for push subscription
         var app = Express();
+        app.use(CORS());
         app.use(BodyParser.json());
         app.set('json spaces', 2);
 

@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
+var CORS = require('cors');
 var BodyParser = require('body-parser');
 var Moment = require('moment');
 
@@ -47,6 +48,7 @@ function start() {
         return db.need('global').then(() => {
             var app = Express();
             app.use(BodyParser.json());
+            app.use(CORS());
             app.set('json spaces', 2);
             app.route('/data/discovery/:schema/:table/').post(handleDiscovery).get(handleDiscovery);
             app.route('/data/retrieval/:schema/:table/:id?').post(handleRetrieval).get(handleRetrieval);

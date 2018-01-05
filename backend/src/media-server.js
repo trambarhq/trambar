@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var FS = Promise.promisifyAll(require('fs'));
 var Path = require('path');
 var Express = require('express');
+var CORS = require('cors');
 var BodyParser = require('body-parser');
 var Multer  = require('multer');
 var Moment = require('moment');
@@ -39,6 +40,7 @@ function start() {
     return new Promise((resolve, reject) => {
         var app = Express();
         var upload = Multer({ dest: '/var/tmp' });
+        app.use(CORS());
         app.use(BodyParser.json());
         app.set('json spaces', 2);
         app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
