@@ -50,10 +50,16 @@ module.exports = React.createClass({
      */
     render: function() {
         var t = this.props.locale.translate;
+
         return (
             <SettingsPanel className="mobile-alert">
                 <header>
-                    <i className="fa fa-tablet" /> {t('settings-mobile-alert')}
+                    <div className="icon">
+                        <i className="fa fa-tablet" />
+                        <i className="fa fa-exclamation-circle icon-overlay" />
+                    </div>
+                    {' '}
+                    {t('settings-mobile-alert')}
                 </header>
                 <body>
                     {this.renderOptions()}

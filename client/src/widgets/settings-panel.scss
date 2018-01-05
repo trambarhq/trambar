@@ -3,6 +3,7 @@
     border: 2px solid #211a1a;
     width: 100%;
     break-inside: avoid-column;
+    page-break-inside: avoid;
 
     .header {
         font-size: 1.2em;
@@ -12,6 +13,27 @@
 
         .fa {
             margin-right: 0.2em;
+        }
+
+        .icon {
+            display: inline-block;
+            position: relative;
+            margin-right: 0.2em;
+
+            .fa {
+                margin-right: 0;
+
+                &.icon-overlay {
+                    position: absolute;
+                    display: block;
+                    font-size: 0.75em;
+                    color: #bbbbbb;
+                    height: 1em;
+                    width: 1em;
+                    bottom: -0.2em;
+                    right: -0.65em;
+                }
+            }
         }
     }
 

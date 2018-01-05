@@ -50,10 +50,16 @@ module.exports = React.createClass({
      */
     render: function() {
         var t = this.props.locale.translate;
+        var browserIcon = getBrowserIcon();
         return (
             <SettingsPanel className="web-alert">
                 <header>
-                    <i className="fa fa-id-card" /> {t('settings-web-alert')}
+                    <div className="icon">
+                        <i className={`fa fa-${browserIcon}`} />
+                        <i className="fa fa-exclamation-circle icon-overlay" />
+                    </div>
+                    {' '}
+                    {t('settings-web-alert')}
                 </header>
                 <body>
                     {this.renderOptions()}
@@ -115,3 +121,21 @@ module.exports = React.createClass({
         this.setUserProperty('settings', settings);
     },
 });
+
+var userAgentRegExps = {
+    'edge': /(Edge|Internet Explorer)/,
+    'chrome': /Chrome/,
+    'safari': /Safari/,
+    'firefox': /Firefox/,
+};
+
+function getBrowserIcon() {
+    var ua = navigator.userAgent;
+    for (var key in userAgentRegExps) {
+        var re = userAgentRegExps[key];
+        if (re.test(ua)) {
+            return key;
+        }
+    }
+    return 'globe';
+}

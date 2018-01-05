@@ -65,7 +65,7 @@ module.exports = React.createClass({
         return (
             <SettingsPanel className="user">
                 <header>
-                    <i className="fa fa-globe" /> {t('settings-social-networks')}
+                    <i className="fa fa-handshake-o" /> {t('settings-social-networks')}
                 </header>
                 <body>
                     {this.renderSkypeNameInput()}

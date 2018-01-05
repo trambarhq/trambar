@@ -161,7 +161,7 @@ function DeviceIcon(props) {
     return (
         <div className="device-icon">
             <i className="fa fa-tablet background" />
-            <i className={`fa fa-${icon} overlay`} />
+            <i className={`fa fa-${icon} icon-overlay`} />
         </div>
     );
 }
