@@ -1055,7 +1055,10 @@ module.exports = React.createClass({
                 }, 1000);
             }
         } else if (process.env.PLATFORM === 'cordova') {
-
+            var splashScreen = navigator.splashscreen;
+            if (splashScreen) {
+                splashScreen.hide();
+            }
         }
     }
 });
