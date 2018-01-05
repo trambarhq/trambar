@@ -150,6 +150,8 @@ module.exports = React.createClass({
         var db = this.props.database.use({ schema: 'global', by: this });
         db.removeOne({ table: 'device' }, device).then(() => {
             return db.endMobileSession(device.session_handle);
+        }).finally(() => {
+            this.handleDialogClose();
         });
     },
 
@@ -159,10 +161,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDialogClose: function(evt) {
-        this.setState({
-            renderingDialog: true,
-            showingDialog: true,
-            selectedDeviceId: deviceId
+        this.setState({ showingDialog: false }, () => {
+            setTimeout(() => {
+                this.setState({ renderingDialog: false });
+            }, 500);
         });
     }
 });
