@@ -105,6 +105,7 @@ module.exports = function(localeCode) {
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
         'mobile-device-revoke': 'revoke',
+        'mobile-device-revoke-are-you-sure': 'Are you sure you want to revoke authorization to this device?',
 
         'mobile-setup-address': 'Server address',
         'mobile-setup-code': 'Authorization code',

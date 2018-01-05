@@ -156,7 +156,7 @@ module.exports = {
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
     ],
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     devServer: {
         inline: true,
         historyApiFallback: {

@@ -38,6 +38,7 @@ module.exports = React.createClass({
         return {
             renderingDialog: null,
             showingDialog: false,
+            selectedDeviceId: null,
         };
     },
 
@@ -85,13 +86,14 @@ module.exports = React.createClass({
      */
     renderDevice: function(device) {
         var t = this.props.locale.translate;
+        var fullName = `${device.details.manufacturer} ${device.details.name}`;
         return (
             <div key={device.id} className="device-option-button selected">
                 <div className="icon">
                     <DeviceIcon type={device.type} />
                 </div>
                 <div className="text">
-                    <span className="name">Lenovo Chicken</span>
+                    <span className="name">{fullName}</span>
                     <div data-device-id={device.id} className="revoke" onClick={this.handleRevokeClick}>
                         <i className="fa fa-ban" />
                         {' '}
@@ -108,7 +110,7 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderDialogBox: function() {
-        if (this.state.renderingDialog !== 'sign-out') {
+        if (this.state.renderingDialog !== 'revoke') {
             return null;
         }
         var t = this.props.locale.translate;
@@ -116,26 +118,13 @@ module.exports = React.createClass({
             show: this.state.showingDialog,
             locale: this.props.locale,
             onClose: this.handleDialogClose,
-            onConfirm: this.handleSignOutConfirm,
+            onConfirm: this.handleRevokeConfirm,
         };
         return (
             <ConfirmationDialogBox {...props}>
-                {t('project-panel-sign-out-are-you-sure')}
+                {t('mobile-device-revoke-are-you-sure')}
             </ConfirmationDialogBox>
         );
-    },
-
-    handleProjectClick: function(evt) {
-        var key = evt.currentTarget.getAttribute('data-key');
-        var link = _.find(this.props.projectLinks, { key });
-        if (link) {
-            // redirect to settings page with new schema, possibly new address
-            var params = {
-                address: link.address,
-                schema: link.schema,
-            };
-            this.props.route.replace(require('pages/settings-page'), params);
-        }
     },
 
     /**
@@ -145,17 +134,45 @@ module.exports = React.createClass({
      */
     handleRevokeClick: function(evt) {
         var deviceId = parseInt(evt.currentTarget.getAttribute('data-device-id'));
-        var device = _.find(this.props.devices, { id: deviceId });
-        if (device) {
-            console.log(device);
-        }
+        this.setState({
+            renderingDialog: 'revoke',
+            showingDialog: true,
+            selectedDeviceId: deviceId
+        });
     },
+
+    /**
+     * Called when user confirm his intention to remove authorization
+     *
+     * @param  {Object} evt
+     */
+    handleRevokeConfirm: function(evt) {
+        var device = _.find(this.props.devices, { id: this.state.selectedDeviceId });
+        var db = this.props.database.use({ schema: 'global', by: this });
+        db.removeOne({ table: 'device' }, device).then(() => {
+            return db.endMobileSession(device.session_handle);
+        });
+    },
+
+    /**
+     * Called when user closes dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleDialogClose: function(evt) {
+        this.setState({
+            renderingDialog: true,
+            showingDialog: true,
+            selectedDeviceId: deviceId
+        });
+    }
 });
 
 function DeviceIcon(props) {
     var icon;
     switch (props.type) {
-        case 'ios': icon = 'apple'; break;
+        case 'ios':
+        case 'osx': icon = 'apple'; break;
         default: icon = props.type;
     }
     return (

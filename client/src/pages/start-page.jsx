@@ -159,7 +159,17 @@ var StartPage = module.exports = Relaks.createClass({
                             };
                             this.props.route.replace(StartPage, params);
                         }, 5000);
-                    }).then(() => {
+                    }).then((userId) => {
+                        // create entry in device table
+                        var device = {
+                            type: getDeviceType(),
+                            uuid: getDeviceUUID(),
+                            details: getDeviceDetails(),
+                            user_id: userId,
+                            session_handle: _.toLower(params.activationCode),
+                        };
+                        return db.saveOne({ table: 'device' }, device);
+                    }).then((device) => {
                         // if no error was encounted, an onAuthorization event
                         // should have caused rendering at this point
                         // with props.canAccessServer = true
@@ -1168,3 +1178,65 @@ var sortProject = Memoize(function(projects, locale) {
         return p(project.details.title) || project.name;
     });
 });
+
+if (process.env.PLATFORM === 'cordova') {
+    /**
+     * Return the device OS
+     *
+     * @return {String}
+     */
+    var getDeviceType = function() {
+        var device = window.device;
+        if (device) {
+            switch (device.type) {
+                case 'Android': return 'android';
+                case 'iOS': return 'ios';
+                case 'WinCE':
+                case 'Win32NT': return 'windows';
+                case 'Mac OS X': return 'osx';
+            }
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            return 'android';
+        }
+        return 'unknown';
+    }
+
+    /**
+     * Return device unique id
+     *
+     * @return {String}
+     */
+    var getDeviceUUID = function() {
+        var device = window.device;
+        if (device) {
+            return device.uuid;
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            return '00000000000000000000000000000000';
+        }
+        return null;
+    }
+
+    /**
+     * Return device details
+     *
+     * @return {Object}
+     */
+    var getDeviceDetails = function() {
+        var device = window.device;
+        if (device) {
+            return {
+                manufacturer: _.capitalize(device.manufacturer),
+                name: model,
+            };
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            return {
+                manufacturer: 'Apricot',
+                name: 'oPhone 5',
+            };
+        }
+        return {};
+    }
+}

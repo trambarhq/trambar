@@ -219,7 +219,7 @@ Database.prototype.beginMobileSession = function(area) {
  *
  * @param  {String} handle
  *
- * @return {Promise<String>}
+ * @return {Promise<Number>}
  */
 Database.prototype.acquireMobileSession = function(handle) {
     return this.remoteDataSource.acquireMobileSession(this.context, handle);
@@ -232,6 +232,15 @@ Database.prototype.acquireMobileSession = function(handle) {
  */
 Database.prototype.releaseMobileSession = function() {
     return this.remoteDataSource.releaseMobileSession(this.context);
+};
+
+/**
+ * Remove authorization
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.endMobileSession = function(handle) {
+    return this.remoteDataSource.endMobileSession(this.context, handle);
 };
 
 /**

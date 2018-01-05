@@ -83,6 +83,25 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
         onClose: PropTypes.func,
     },
 
+    /**
+     * Check for change in props.devices
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.devices !== nextProps.devices) {
+            var handle = nextProps.activationCode;
+            if (handle) {
+                if (_.some(nextProps.devices, { session_handle: handle })) {
+                    // a device has acquire the session--close dialog box automatically
+                    if (this.props.onClose) {
+                        this.props.onClose({
+                            type: 'close',
+                            target: this,
+                        });
+                    }
+                }
+            }
+        }
+    },
 
     /**
      * Render component
@@ -151,23 +170,6 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-
-    /**
-     * Check for change in props.devices
-     */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (_.isArray(prevProps.devices)) {
-            // close the dialog box automatically when we see a new device
-            if (_.size(this.props.devices) > _.size(prevProps.devices)) {
-                if (this.props.onClose) {
-                    this.props.onClose({
-                        type: 'close',
-                        target: this,
-                    })
-                }
-            }
-        }
     },
 });
 

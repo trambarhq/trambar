@@ -235,6 +235,9 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderDevicePanel: function() {
+        if (process.env.PLATFORM === 'cordova') {
+            return null;
+        }
         if (_.isEmpty(this.props.devices)) {
             return null;
         }

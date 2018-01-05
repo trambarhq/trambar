@@ -223,7 +223,7 @@ module.exports = React.createClass({
      * @param  {Object} location
      * @param  {String} handle
      *
-     * @return {Promise}
+     * @return {Promise<Number>}
      */
     acquireMobileSession: function(location, handle) {
         var address = location.address;
@@ -235,7 +235,7 @@ module.exports = React.createClass({
                 _.assign(session, res.session);
                 if (session.token) {
                     this.triggerAuthorizationEvent(session);
-                    return null;
+                    return session.user_id;
                 } else {
                     throw new HTTPError(session.error);
                 }
@@ -265,6 +265,23 @@ module.exports = React.createClass({
         } else {
             return Promise.resolve();
         }
+    },
+
+    /**
+     * Remove authorization
+     *
+     * @param  {Object} location
+     * @param  {String} handle
+     *
+     * @return {Promise}
+     */
+    endMobileSession: function(location, handle) {
+        var address = location.address;
+        var url = `${address}/session/`;
+        var options = { responseType: 'json', contentType: 'json' };
+        return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {
+            return null;
+        });
     },
 
     /**
