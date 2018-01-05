@@ -104,6 +104,8 @@ module.exports = function(localeCode) {
         'membership-request-you-are-now-member': 'You are now a member in this project',
         'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
+        'mobile-device-revoke': 'revoke',
+
         'mobile-setup-address': 'Server address',
         'mobile-setup-code': 'Authorization code',
 
@@ -192,15 +194,14 @@ module.exports = function(localeCode) {
 
         'project-description-close': 'Close',
 
+        'project-management-add': 'Add',
         'project-management-cancel': 'Cancel',
+        'project-management-description': 'project description',
+        'project-management-manage': 'Manage list',
+        'project-management-mobile-set-up': 'mobile set up',
         'project-management-remove': 'Remove',
-
-        'project-panel-add': 'Add',
-        'project-panel-description': 'Project description',
-        'project-panel-manage': 'Manage list',
-        'project-panel-mobile-set-up': 'Mobile set up',
-        'project-panel-sign-out': 'Sign out',
-        'project-panel-sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
+        'project-management-sign-out': 'sign out',
+        'project-management-sign-out-are-you-sure': 'Are you sure you want to sign out from this server?',
 
         'qr-scanner-cancel': 'Cancel',
         'qr-scanner-invalid-qr-code': 'Invalid QR code',
@@ -255,6 +256,8 @@ module.exports = function(localeCode) {
         'server-type-gitlab': 'GitLab',
         'server-type-google': 'Google',
 
+        'settings-device': 'Mobile Device',
+        'settings-devices': 'Mobile Devices',
         'settings-language': 'Language',
         'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',
@@ -498,9 +501,9 @@ module.exports = function(localeCode) {
         'user-activity-$name-wrote-post': 'Wrote a post',
         'user-activity-more': 'More...',
 
-        'user-image-panel-remove': 'Remove',
-        'user-image-panel-select': 'Select',
-        'user-image-panel-snap': 'Snap',
+        'user-image-remove': 'Remove',
+        'user-image-select': 'Select',
+        'user-image-snap': 'Snap',
 
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',

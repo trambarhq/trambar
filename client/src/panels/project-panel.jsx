@@ -90,36 +90,37 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var params = this.props.route.parameters;
         if (link.schema === params.schema && link.address == params.address) {
+            var serverProps = {
+                icon: 'home',
+                label: link.address,
+                onClick: this.handleAddressClick,
+            };
+            var descriptionProps = {
+                icon: 'info-circle',
+                label: t('project-management-description'),
+                onClick: this.handleDescriptionClick,
+            };
+            var mobileProps = {
+                icon: 'qrcode',
+                label: t('project-management-mobile-set-up'),
+                hidden: (process.env.PLATFORM === 'cordova'),
+                onClick: this.handleMobileSetupClick,
+            };
+            var signOutProps = {
+                icon: 'sign-out',
+                label: t('project-management-sign-out'),
+                onClick: this.handleSignOutClick,
+            };
             return (
                 <div key={i} className="project-option-button selected">
                     <i className="icon fa fa-check-circle" />
                     <div className="text">
                         <span className="name">{p(link.name)}</span>
                         <div className="supplemental">
-                            <div className="item">
-                                <span className="button">
-                                    <i className="fa fa-fw fa-home" />
-                                    <span className="label">{link.address}</span>
-                                </span>
-                            </div>
-                            <div className="item">
-                                <span className="button" onClick={this.handleDescriptionClick}>
-                                    <i className="fa fa-fw fa-info-circle" />
-                                    <span className="label">{t('project-panel-description')}</span>
-                                </span>
-                            </div>
-                            <div className="item">
-                                <span className="button" onClick={this.handleMobileSetupClick}>
-                                    <i className="fa fa-fw fa-qrcode" />
-                                    <span className="label">{t('project-panel-mobile-set-up')}</span>
-                                </span>
-                            </div>
-                            <div className="item">
-                                <span className="button" onClick={this.handleSignOutClick}>
-                                    <i className="fa fa-fw fa-sign-out" />
-                                    <span className="label">{t('project-panel-sign-out')}</span>
-                                </span>
-                            </div>
+                            <SupplementalProjectOption {...serverProps} />
+                            <SupplementalProjectOption {...descriptionProps} />
+                            <SupplementalProjectOption {...mobileProps} />
+                            <SupplementalProjectOption {...signOutProps} />
                         </div>
                     </div>
                 </div>
@@ -144,11 +145,11 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var addProps = {
-            label: t('project-panel-add'),
+            label: t('project-management-add'),
             onClick: this.handleAddClick,
         };
         var manageProps = {
-            label: t('project-panel-manage'),
+            label: t('project-management-manage'),
             onClick: this.handleManageClick,
             disabled: _.size(this.props.projectLinks) < 2,
         };
@@ -235,7 +236,7 @@ module.exports = React.createClass({
         };
         return (
             <ConfirmationDialogBox {...props}>
-                {t('project-panel-sign-out-are-you-sure')}
+                {t('project-management-sign-out-are-you-sure')}
             </ConfirmationDialogBox>
         );
     },
@@ -370,3 +371,17 @@ module.exports = React.createClass({
         });
     },
 });
+
+function SupplementalProjectOption(props) {
+    if (props.hidden) {
+        return null;
+    }
+    return (
+        <div className="item">
+            <span className="button" onClick={props.onClick}>
+                <i className={`fa fa-fw fa-${props.icon}`} />
+                <span className="label">{props.label}</span>
+            </span>
+        </div>
+    );
+}

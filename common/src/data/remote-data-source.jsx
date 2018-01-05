@@ -173,7 +173,7 @@ module.exports = React.createClass({
         if (!handle) {
             return Promise.resolve(false);
         }
-        return session.promise.then(() => {
+        return Promise.resolve(session.promise).then(() => {
             var url = `${address}/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {

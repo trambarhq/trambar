@@ -167,16 +167,16 @@ module.exports = React.createClass({
         var resources = this.getUserProperty('details.resources');
         var hasPicture = _.some(resources, { type: 'image' });
         var removeProps = {
-            label: t('user-image-panel-remove'),
+            label: t('user-image-remove'),
             hidden: !hasPicture,
             onClick: this.handleRemoveClick,
         };
         var takeProps = {
-            label: t('user-image-panel-snap'),
+            label: t('user-image-snap'),
             onClick: this.handleTakeClick,
         };
         var selectProps = {
-            label: t('user-image-panel-select'),
+            label: t('user-image-select'),
             highlighted: !hasPicture,
             onChange: this.handleFileChange,
         };

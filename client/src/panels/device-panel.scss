@@ -1,0 +1,81 @@
+.settings-panel.device {
+    .body {
+        padding-left: 0.5em;
+    }
+
+    .device-option-button {
+        display: table;
+        width: 100%;
+        color: #eeeeee;
+        margin-top: 0.35em;
+        margin-bottom: 0.35em;
+
+        .icon {
+            display: table-cell;
+            text-align: left;
+            width: 1em;
+            padding-right: 0.4em;
+        }
+
+        .text {
+            display: table-cell;
+            vertical-align: top;
+
+            .name {
+                font-size: 1.3em;
+            }
+
+            .revoke {
+                padding-top: 0.1em;
+                display: block;
+                float: right;
+                color: #666666;
+                cursor: pointer;
+
+                &:hover {
+                    color: #eeeeee;
+                }
+            }
+        }
+    }
+
+    .device-icon {
+        position: relative;
+        font-size: 1.8em;
+        text-align: center;
+
+        .fa {
+            &.background {
+                display: block;
+                color: #eeeeee;
+            }
+
+            &.overlay {
+                position: absolute;
+                left: 0;
+                top: 0;
+                right: 0;
+                bottom: 0.5em;
+                font-size: 0.4em;
+                height: 1em;
+                width: 1em;
+                text-align: center;
+                margin: auto;
+
+                &.fa-android {
+                    color: #97c03d;
+                }
+
+                &.fa-windows {
+                    color: #0caee9;
+                    font-size: 0.35em;
+                }
+
+                &.fa-apple {
+                    color: #ffffff;
+                    bottom: 0.4em;
+                }
+            }
+        }
+    }
+}

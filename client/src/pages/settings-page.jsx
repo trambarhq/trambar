@@ -9,6 +9,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 var ProjectPanel = require('panels/project-panel');
+var DevicePanel = require('panels/device-panel');
 var UserInfoPanel = require('panels/user-info-panel');
 var UserImagePanel = require('panels/user-image-panel');
 var NotificationPanel = require('panels/notification-panel');
@@ -109,18 +110,24 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
         }).then((user) => {
             props.currentUser = user;
-            return meanwhile.show(<SettingsPageSync {...props} />, 250);
-        }).then(() => {
-            var criteria = { name: params.schema };
-            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
-        }).then((project) => {
-            props.currentProject = project;
-            return meanwhile.show(<SettingsPageSync {...props} />, 250);
+            return meanwhile.show(<SettingsPageSync {...props} />);
         }).then(() => {
             var criteria = {};
             return db.find({ schema: 'local', table: 'project_link', criteria });
         }).then((projectLinks) => {
             props.projectLinks = projectLinks;
+            return meanwhile.show(<SettingsPageSync {...props} />);
+        }).then(() => {
+            var criteria = { name: params.schema };
+            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+        }).then((project) => {
+            props.currentProject = project;
+            return meanwhile.show(<SettingsPageSync {...props} />);
+        }).then(() => {
+            var criteria = { user_id: props.currentUser.id };
+            return db.find({ schema: 'global', table: 'device', criteria });
+        }).then((devices) => {
+            props.devices = devices;
             return <SettingsPageSync {...props} />;
         });
     },
@@ -132,6 +139,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         currentUser: PropTypes.object,
         currentProject: PropTypes.object,
         projectLinks: PropTypes.arrayOf(PropTypes.object),
+        devices: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -191,6 +199,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             <div className="settings-page">
                 <div className="panels">
                     {this.renderProjectPanel()}
+                    {this.renderDevicePanel()}
                     {this.renderUserInfoPanel()}
                     {this.renderUserImagePanel()}
                     {this.renderSocialNetworkPanel()}
@@ -218,6 +227,25 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <ProjectPanel {...panelProps} />;
+    },
+
+    /**
+     * Render device panel
+     *
+     * @return {ReactElement}
+     */
+    renderDevicePanel: function() {
+        if (_.isEmpty(this.props.devices)) {
+            return null;
+        }
+        var panelProps = {
+            devices: this.props.devices,
+            database: this.props.database,
+            route: this.props.route,
+            locale: this.props.locale,
+            theme: this.props.theme,
+        };
+        return <DevicePanel {...panelProps} />;
     },
 
     /**
@@ -280,9 +308,12 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     /**
      * Render web alert panel
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderWebAlertPanel: function() {
+        if (process.env.PLATFORM === 'cordova') {
+            return null;
+        }
         var panelProps = {
             currentUser: this.getUser(),
             locale: this.props.locale,
@@ -294,9 +325,12 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     /**
      * Render mobile alert panel
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderMobileAlertPanel: function() {
+        if (_.isEmpty(this.props.devices)) {
+            return null;
+        }
         var panelProps = {
             currentUser: this.getUser(),
             locale: this.props.locale,
