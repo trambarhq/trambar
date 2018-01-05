@@ -1228,13 +1228,13 @@ if (process.env.PLATFORM === 'cordova') {
         if (device) {
             return {
                 manufacturer: _.capitalize(device.manufacturer),
-                name: model,
+                name: device.model,
             };
         }
         if (process.env.NODE_ENV !== 'production') {
             return {
                 manufacturer: 'Apricot',
-                name: 'oPhone 5',
+                name: 'Apricot oPhone 5',
             };
         }
         return {};

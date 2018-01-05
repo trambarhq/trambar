@@ -86,14 +86,13 @@ module.exports = React.createClass({
      */
     renderDevice: function(device) {
         var t = this.props.locale.translate;
-        var fullName = `${device.details.manufacturer} ${device.details.name}`;
         return (
             <div key={device.id} className="device-option-button selected">
                 <div className="icon">
                     <DeviceIcon type={device.type} />
                 </div>
                 <div className="text">
-                    <span className="name">{fullName}</span>
+                    <span className="name">{device.details.name}</span>
                     <div data-device-id={device.id} className="revoke" onClick={this.handleRevokeClick}>
                         <i className="fa fa-ban" />
                         {' '}
