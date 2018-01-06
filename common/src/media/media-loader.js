@@ -46,3 +46,18 @@ function loadAudio(url) {
         };
     });
 }
+
+if (process.env.PLATFORM === 'cordova') {
+    /**
+     * Return information about a MediaFile
+     *
+     * @param  {MediaFile} mediaFile
+     *
+     * @return {Promise<MediaFileData>}
+     */
+    module.exports.getFormatData = function(mediaFile) {
+        return new Promise((resolve, reject) => {
+            mediaFile.getFormatData(resolve, reject);
+        });
+    };
+}

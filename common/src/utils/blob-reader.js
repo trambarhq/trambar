@@ -1,4 +1,5 @@
 var Promise = require('bluebird');
+var CordovaFile = (process.env.PLATFORM === 'cordova') ? require('utils/cordova-file') : null;
 
 module.exports = {
     loadUint8Array,
@@ -13,6 +14,13 @@ function loadUint8Array(blob) {
 }
 
 function loadArrayBuffer(blob) {
+    if (process.env.PLATFORM === 'cordova') {
+        if (blob instanceof CordovaFile) {
+            return blob.getFileEntry((fileEntry) => {
+                return loadArrayBuffer(fileEntry);
+            });
+        }
+    }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();
         reader.onload = function(evt) {
@@ -25,58 +33,21 @@ function loadArrayBuffer(blob) {
     });
 }
 
-function loadImage(blob) {
-    return new Promise((resolve, reject) => {
-        var url = URL.createObjectURL(blob);
-        var image = document.createElement('IMG');
-        image.src = url;
-        image.onload = function(evt) {
-            resolve(image);
-        };
-        image.onerror = function(evt) {
-            reject(new Error(`Unable to load ${url}`));
-        };
-    });
-}
-
-function loadVideo(blob) {
-    return new Promise((resolve, reject) => {
-        var url = URL.createObjectURL(blob);
-        var video = document.createElement('VIDEO');
-        video.src = url;
-        video.preload = true;
-        video.onloadeddata = function(evt) {
-            resolve(video);
-        };
-        video.onerror = function(evt) {
-            reject(new Error(`Unable to load ${url}`));
-        };
-    });
-}
-
-function loadAudio(blob) {
-    return new Promise((resolve, reject) => {
-        var url = URL.createObjectURL(blob);
-        var audio = document.createElement('AUDIO');
-        audio.src = url;
-        audio.preload = true;
-        audio.onloadeddata = function(evt) {
-            resolve(video);
-        };
-        audio.onerror = function(evt) {
-            reject(new Error(`Unable to load ${url}`));
-        };
-    });
-}
-
 function loadText(blob) {
+    if (process.env.PLATFORM === 'cordova') {
+        if (blob instanceof CordovaFile) {
+            return blob.getFileEntry((fileEntry) => {
+                return loadText(fileEntry);
+            });
+        }
+    }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();
         reader.onload = function(evt) {
             resolve(reader.result);
         };
         reader.onerror = function(evt) {
-            reject(new Error(`Unable to load blob`));
+            reject(new Error(`Unable to load text`));
         };
         reader.readAsText(blob);
     });

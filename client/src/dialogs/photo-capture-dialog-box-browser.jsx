@@ -394,7 +394,7 @@ module.exports = React.createClass({
      * Report back to parent component that an image has been captured and
      * accepted by user
      *
-     * @param  {Object} video
+     * @param  {Object} image
      */
     triggerCaptureEvent: function(image) {
         if (this.props.onCapture) {
@@ -402,7 +402,19 @@ module.exports = React.createClass({
                 type: 'capture',
                 target: this,
                 image,
-            })
+            });
+        }
+    },
+
+    /**
+     * Inform parent component that operation was cancelled
+     */
+    triggerCancelEvent: function() {
+        if (this.props.onCancel) {
+            this.props.onCancel({
+                type: 'cancel',
+                target: this,
+            });
         }
     },
 
@@ -444,6 +456,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
+        this.triggerCancelEvent();
         if (this.props.onCancel) {
             this.props.onCancel({
                 type: 'cancel',

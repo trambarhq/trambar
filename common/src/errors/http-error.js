@@ -15,14 +15,14 @@ function HTTPError() {
         this.statusCode = 500;
     }
     if (!this.name) {
-        this.name = httpErrorNamess[this.statusCode];
+        this.name = httpErrorNames[this.statusCode];
     }
     if (!this.message) {
         this.message = this.name;
     }
 }
 
-var httpErrorNamess = {
+var httpErrorNames = {
     400: 'Bad Request',
     401: 'Unauthorized',
     402: 'Payment Required',

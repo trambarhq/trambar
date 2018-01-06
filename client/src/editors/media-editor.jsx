@@ -264,9 +264,6 @@ module.exports = React.createClass({
      * @return {ReactELement|null}
      */
     renderDialogBox: function() {
-        if (process.env.PLATFORM !== 'browser') {
-            return null;
-        }
         return (
             <div>
                 {this.renderPhotoDialog()}

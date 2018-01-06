@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var HTTPRequest = require('transport/http-request');
+var CordovaFile = (process.env.PLATFORM === 'cordova') ? require('utils/cordova-file') : null;
 
 module.exports = {
     manage,
@@ -22,9 +23,17 @@ var list = [];
  * @return {String}
  */
 function manage(blob) {
-    var localURL = URL.createObjectURL(blob);
-    var remoteURL;
     var atime = new Date;
+    var localURL;
+    var remoteURL;
+    if (process.env.PLATFORM === 'cordova') {
+        if (blob instanceof CordovaFile) {
+            localURL = blob.fullPath;
+            list.push({ blob, localURL, remoteURL, atime });
+            return localURL;
+        }
+    }
+    localURL = URL.createObjectURL(blob);
     list.push({ blob, localURL, remoteURL, atime });
     return localURL;
 }
@@ -73,10 +82,10 @@ function get(localURL) {
  */
 function associate(target, remoteURL) {
     var entry;
-    if (target instanceof Blob) {
-        entry = _.find(list, { blob: target });
-    } else {
+    if (typeof(target) === 'string') {
         entry = _.find(list, { localURL: target });
+    } else {
+        entry = _.find(list, { blob: target });
     }
     if (!entry) {
         return false;
@@ -93,14 +102,13 @@ function associate(target, remoteURL) {
  * @return {Promise<String>}
  */
 function fetch(remoteURL) {
-    var blob = get(remoteURL);
-    if (blob) {
-        // we were actually given a blob URL
+    if (get(remoteURL)) {
+        // we were actually given a local URL
         return Promise.resolve(remoteURL);
     }
     var localURL = find(remoteURL);
     if (localURL) {
-        // download the file before
+        // we downloaded the file before
         return Promise.resolve(localURL);
     }
 
