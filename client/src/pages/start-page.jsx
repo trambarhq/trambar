@@ -660,7 +660,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="section buttons">
                 <h2>{t('start-social-login')}</h2>
-                <p>{_.map(providers, this.renderOAuthButton)}</p>
+                <Scrollable>
+                    <p>{_.map(providers, this.renderOAuthButton)}</p>
+                </Scrollable>
             </div>
         );
     },

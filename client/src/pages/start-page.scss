@@ -51,6 +51,10 @@
             background-color: #fca326;
             color: #000000;
         }
+
+        .single-col & {
+            max-width: none;
+        }
     }
 
     .project-button {
@@ -152,6 +156,10 @@
             background-color: #fca326;
             color: #000000;
         }
+
+        .single-col & {
+            max-width: none;
+        }
     }
 
     &.browser {
@@ -198,6 +206,10 @@
                         margin-top: 1em;
                         padding-right: 0.25em;
                         max-height: 60vh;
+
+                        .single-col & {
+                            max-height: 30vh;
+                        }
                     }
 
                     &.description {
@@ -205,6 +217,16 @@
                             white-space: pre-line;
                         }
                     }
+
+                    .single-col & {
+                        min-width: auto;
+                        width: 100%;
+                    }
+                }
+
+                .single-col & {
+                    width: 100%;
+                    max-width: none;
                 }
             }
 
