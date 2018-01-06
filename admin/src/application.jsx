@@ -102,8 +102,8 @@ module.exports = React.createClass({
             theme: null,
 
             canAccessServer: false,
-            subscriptionId: null,
-            connectionId: null,
+            subscription: null,
+            connection: null,
             showingUploadProgress: false,
         };
     },
@@ -314,16 +314,6 @@ module.exports = React.createClass({
      * Check state variables after update
      */
     componentDidUpdate: function(prevProps, prevState) {
-        if (!this.state.subscriptionId) {
-            if (this.state.canAccessServer && this.state.connectionId) {
-                this.createSubscription();
-            }
-        } else {
-            if (this.state.locale !== prevState.locale) {
-                this.updateSubscription();
-            }
-        }
-
         // Hide the splash screen once app is ready
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
@@ -331,6 +321,8 @@ module.exports = React.createClass({
                 this.hideSplashScreen();
             }, 100);
         }
+
+        this.updateSubscription(prevState);
     },
 
     /**
@@ -341,20 +333,50 @@ module.exports = React.createClass({
     },
 
     /**
-     * Create a subscription to data monitoring service
+     * Maintain a subscription to data change notification
+     *
+     * @param  {Object} prevState
      */
-    createSubscription: function() {
-        if (this.creatingSubscription) {
+    updateSubscription: function(prevState) {
+        // see if something changed that'd require a change in the subscription
+        var needUpdate = false;
+        if (prevState.route !== this.state.route) {
+            if (this.state.route)
+            needUpdate = true;
+        } else if (prevState.locale !== this.state.locale) {
+            needUpdate = true;
+        } else if (prevState.connection !== this.state.connection) {
+            needUpdate = true;
+        } else if (prevState.canAccessServer !== this.state.canAccessServer) {
+            needUpdate = true;
+        }
+        if (!needUpdate) {
             return;
         }
-        this.creatingSubscription = true;
+
+        // make sure we have everything
+        if (!this.state.route) {
+            return;
+        }
+        var params = this.state.route.parameters;
+        if (!params.address) {
+            return;
+        }
+        if (!this.state.canAccessServer) {
+            return;
+        }
+        var connection = this.state.connection;
+        if (!connection || params.address !== connection.address) {
+            // don't have a websocket connection to the server yet
+            return;
+        }
 
         var db = this.state.database.use({ schema: 'global', by: this });
         db.start().then((userId) => {
             var subscription = {
                 user_id: userId,
                 address: 'websocket',
-                token: this.state.connectionId,
+                token: connection.token,
                 schema: '*',
                 area: 'admin',
                 locale: this.state.locale.localeCode,
@@ -363,33 +385,10 @@ module.exports = React.createClass({
                 }
             };
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
-                this.setState({ subscriptionId: subscription.id })
+                this.setState({ subscription });
             });
         }).finally(() => {
             this.creatingSubscription = false;
-        });
-    },
-
-    /**
-     * Update subscription
-     */
-    updateSubscription: function() {
-        if (this.updatingSubscription) {
-            return;
-        }
-        this.updatingSubscription = true;
-
-        var db = this.state.database.use({ schema: 'global', by: this });
-        db.start().then((userId) => {
-            var subscription = {
-                id: this.state.subscriptionId,
-                locale: this.state.locale.localeCode,
-            };
-            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
-                this.setState({ subscriptionId: subscription.id })
-            });
-        }).finally(() => {
-            this.updatingSubscription = false;
         });
     },
 
@@ -400,27 +399,41 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object|null>}
      */
-    loadCredentialsFromCache: function(address) {
+    loadSessionFromCache: function(address) {
         var db = this.state.database.use({ schema: 'local', by: this });
-        var criteria = { address };
-        return db.findOne({ table: 'user_credentials', criteria });
+        var criteria = { key: address };
+        return db.findOne({ table: 'session', criteria }).then((record) => {
+            if (!record) {
+                return null;
+            }
+            return {
+                address: record.key,
+                handle: record.handle,
+                token: record.token,
+                user_id: record.user_id,
+                etime: record.etime,
+            };
+        });
     },
 
     /**
-     * Save user credentials to local cache
+     * Save session handle, authorization token, and user id to local cache
      *
-     * @param  {String} address
-     * @param  {Object} credentials
+     * @param  {Object} session
      *
      * @return {Promise<Object>}
      */
-    saveCredentialsToCache: function(address, credentials) {
+    saveSessionToCache: function(session) {
         // save the credentials
         var db = this.state.database.use({ schema: 'local', by: this });
-        var record = _.extend({
-            key: address,
-        }, credentials);
-        return db.saveOne({ table: 'user_credentials' }, record);
+        var record = {
+            key: session.address,
+            handle: session.handle,
+            token: session.token,
+            user_id: session.user_id,
+            etime: session.etime,
+        };
+        return db.saveOne({ table: 'session' }, record);
     },
 
     /**
@@ -430,11 +443,11 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    removeCredentialsFromCache: function(address) {
+    removeSessionFromCache: function(address) {
         // save the credentials
         var db = this.state.database.use({ schema: 'local', by: this });
         var record = { key: address };
-        return db.removeOne({ table: 'user_credentials' }, record);
+        return db.removeOne({ table: 'session' }, record);
     },
 
     /**
@@ -478,9 +491,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleAuthorization: function(evt) {
-        this.saveCredentialsToCache(evt.address, evt.credentials);
+        this.saveSessionToCache(evt.session);
+
         var address = this.state.route.parameters.address;
-        if (evt.address === address) {
+        if (evt.session.address === address) {
             this.setState({
                 canAccessServer: true
             });
@@ -493,9 +507,10 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeCredentialsFromCache(evt.address);
+        this.removeSessionFromCache(evt.address);
+
         var address = this.state.route.parameters.address;
-        if (evt.address === address) {
+        if (evt.session.address === address) {
             this.setState({
                 canAccessServer: false
             });
@@ -588,9 +603,9 @@ module.exports = React.createClass({
             });
         } else {
             // see if user credentials are stored locally
-            this.loadCredentialsFromCache(address).then((authorization) => {
-                if (authorization) {
-                    database.addAuthorization(authorization);
+            this.loadSessionFromCache(address).then((session) => {
+                if (session) {
+                    database.restoreSession(session);
                 }
                 if (database.hasAuthorization()) {
                     // route is now accessible
@@ -661,7 +676,12 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleConnection: function(evt) {
-        this.setState({ connectionId: evt.token });
+        this.setState({
+            connection: {
+                address: evt.address,
+                token: evt.token
+            },
+        });
     },
 
     /**
@@ -670,7 +690,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDisconnection: function(evt) {
-        this.setState({ connectionId: null });
+        this.setState({ connection: null });
     },
 
     /**

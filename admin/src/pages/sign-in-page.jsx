@@ -46,7 +46,7 @@ module.exports = Relaks.createClass({
         // start authorization process--will receive system description
         // and list of OAuth providers along with links
         meanwhile.show(<SignInPageSync {...props} />, delay);
-        return db.beginAuthorization('admin').then((info) => {
+        return db.beginSession('admin').then((info) => {
             props.system = info.system;
             props.providers = info.providers;
             return <SignInPageSync {...props} />;

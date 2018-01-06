@@ -112,7 +112,7 @@ function sendError(res, err) {
 }
 
 /**
- * Create a new authentication object
+ * Create a new session object
  *
  * @param  {Request} req
  * @param  {Response} res
@@ -182,7 +182,7 @@ function handleHTPasswdRequest(req, res) {
     return findSession(handle).then((session) => {
         return findHtpasswdRecord(username, password).then(() => {
             return findUserByName(username).then((user) => {
-                return authorizeUser(session, user).then((session) => {
+                return authorizeUser(session, user, {}, true).then((session) => {
                     return {
                         session: _.pick(session, 'token', 'user_id', 'etime')
                     };
@@ -366,10 +366,11 @@ function handleOAuthActivationRequest(req, res, done) {
  * @param  {Session} session
  * @param  {User} user
  * @param  {Object} details
+ * @param  {Boolean} activate
  *
  * @return {Promise<Session>}
  */
-function authorizeUser(session, user, details) {
+function authorizeUser(session, user, details, activate) {
     return createRandomToken(16).then((token) => {
         if (session.area === 'admin' && user.type !== 'admin') {
             throw new HTTPError(403, {
@@ -394,8 +395,11 @@ function authorizeUser(session, user, details) {
         session.token = token;
         if (session.area === 'client') {
             session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
-        } else if (authentication.area === 'admin') {
+        } else if (session.area === 'admin') {
             session.etime = getFutureTime(SESSION_LIFETIME_ADMIN);
+        }
+        if (activate) {
+            session.activated = true;
         }
         session.details = _.assign(_.omit(session.details, 'error'), details);
         return saveSession(session);

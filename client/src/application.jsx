@@ -540,8 +540,6 @@ module.exports = React.createClass({
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
                 this.setState({ subscription });
             });
-        }).finally(() => {
-            this.creatingSubscription = false;
         });
     },
 
@@ -683,7 +681,7 @@ module.exports = React.createClass({
         this.removeSessionFromCache(evt.address);
 
         var address = this.state.route.parameters.address;
-        if (evt.address === address) {
+        if (evt.session.address === address) {
             this.setState({
                 canAccessServer: false,
                 canAccessSchema: false,
@@ -949,7 +947,6 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleConnection: function(evt) {
-        // a new connection--old subscription no longer works
         this.setState({
             connection: {
                 address: evt.address,

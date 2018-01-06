@@ -180,7 +180,7 @@ module.exports = React.createClass({
                 destroySession(session);
                 this.clearRecentSearches(address);
                 this.clearCachedObjects(address);
-                this.triggerExpirationEvent(address);
+                this.triggerExpirationEvent(session);
                 return null;
             });
         });
@@ -674,14 +674,14 @@ module.exports = React.createClass({
     /**
      * Inform parent component that a session is no longer valid
      *
-     * @param  {String} address
+     * @param  {Object} session
      */
-    triggerExpirationEvent: function(address) {
+    triggerExpirationEvent: function(session) {
         if (this.props.onExpiration) {
             this.props.onExpiration({
                 type: 'expiration',
                 target: this,
-                address,
+                session,
             });
         }
     },
@@ -893,7 +893,7 @@ module.exports = React.createClass({
                 destroySession(session);
                 this.clearRecentSearches(address);
                 this.clearCachedObjects(address);
-                this.triggerExpirationEvent(address);
+                this.triggerExpirationEvent(session);
                 this.triggerChangeEvent();
             } else if (err.statusCode == 403) {
                 this.clearRecentSearches(address);

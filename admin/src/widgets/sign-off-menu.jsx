@@ -49,6 +49,6 @@ module.exports = Relaks.createClass({
 
     handleSignOffClick: function() {
         var db = this.props.database.use({ by: this });
-        db.endAuthorization();
+        db.endSession();
     },
 });
