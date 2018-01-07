@@ -130,11 +130,13 @@ function handleSessionStart(req, res) {
                 var etime = getFutureTime(SESSION_LIFETIME_AUTHENTICATION);
                 return saveSession({ area, handle, etime });
             }).then((session) => {
-                return findOAuthProviders(system, area, session).then((providers) => {
+                return findOAuthServers(area).then((servers) => {
                     return {
                         session: _.pick(session, 'handle', 'etime'),
                         system: _.pick(system, 'details'),
-                        providers
+                        servers: _.map(servers, (server) => {
+                            return _.pick(server, 'id', 'type', 'details')
+                        })
                     };
                 });
             })
@@ -565,6 +567,22 @@ function findServer(serverId) {
 }
 
 /**
+ * Find servers that provide OAuth authentication
+ *
+ * @param  {String} area
+ *
+ * @return {Promise<Array<Server>>}
+ */
+function findOAuthServers(area) {
+    return Database.open().then((db) => {
+        var criteria = { deleted: false };
+        return Server.find(db, 'global', criteria, '*').filter((server) => {
+            return canProvideAccess(server, area);
+        });
+    });
+}
+
+/**
  * Create or update a server object
  *
  * @param  {Server} server
@@ -706,34 +724,6 @@ function findMatchingUser(server, account) {
                     }
                 }
             });
-        });
-    });
-}
-
-/**
- * Find OAuth providers among servers
- *
- * @param  {System} system
- * @param  {String} area
- * @param  {Session} session
- *
- * @return {Promise<Array>}
- */
-function findOAuthProviders(system, area, session) {
-    return Database.open().then((db) => {
-        var address = _.get(system, 'settings.address');
-        if (!address) {
-            return [];
-        }
-        var criteria = { disabled: false, deleted: false };
-        return Server.find(db, 'global', criteria, '*').filter((server) => {
-            return canProvideAccess(server, area);
-        }).map((server) => {
-            return {
-                type: server.type,
-                details: server.details,
-                url: `${address}/session/${server.type}?sid=${server.id}&handle=${session.handle}`,
-            };
         });
     });
 }

@@ -118,7 +118,7 @@ var StartPage = module.exports = Relaks.createClass({
         var props = {
             currentUser: null,
             system: null,
-            providers: null,
+            servers: null,
             projects: null,
             projectLinks: null,
             canAccessServer: this.props.canAccessServer,
@@ -140,7 +140,7 @@ var StartPage = module.exports = Relaks.createClass({
                 meanwhile.show(<StartPageSync {...props} />, delay);
                 return db.beginSession('client').then((info) => {
                     props.system = info.system;
-                    props.providers = info.providers;
+                    props.servers = info.servers;
                     return <StartPageSync {...props} />;
                 });
             }
@@ -226,7 +226,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
     propTypes: {
         currentUser: PropTypes.object,
         system: PropTypes.object,
-        providers: PropTypes.arrayOf(PropTypes.object),
+        servers: PropTypes.arrayOf(PropTypes.object),
         projects: PropTypes.arrayOf(PropTypes.object),
         projectLinks: PropTypes.arrayOf(PropTypes.object),
         canAccessServer: PropTypes.bool,
@@ -653,15 +653,15 @@ var StartPageSync = module.exports.Sync = React.createClass({
     renderOAuthButtons: function() {
         if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
-        var providers = this.props.providers;
-        if (!providers) {
+        var servers = this.props.servers;
+        if (!servers) {
             return null;
         }
         return (
             <div className="section buttons">
                 <h2>{t('start-social-login')}</h2>
                 <Scrollable>
-                    <p>{_.map(providers, this.renderOAuthButton)}</p>
+                    <p>{_.map(servers, this.renderOAuthButton)}</p>
                 </Scrollable>
             </div>
         );
@@ -670,24 +670,25 @@ var StartPageSync = module.exports.Sync = React.createClass({
     /**
      * Render a button for logging in through OAuth
      *
-     * @param  {Object} provider
+     * @param  {Object} server
      * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderOAuthButton: function(provider, i) {
+    renderOAuthButton: function(server, i) {
         if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var name = p(provider.details.title) || t(`server-type-${provider.type}`);
-        var icon = getServerIcon(provider.type);
+        var name = p(server.details.title) || t(`server-type-${server.type}`);
+        var icon = getServerIcon(server.type);
+        var url = this.props.database.getOAuthURL(server);
         var props = {
             className: 'oauth-button',
-            href: provider.url,
+            href: url,
             onClick: this.handleOAuthButtonClick,
-            'data-type': provider.type,
+            'data-type': server.type,
         };
-        var error = this.state.oauthErrors[provider.type];
+        var error = this.state.oauthErrors[server.type];
         if (error) {
             var t = this.props.locale.translate;
             var text = t(`start-error-${error.reason}`);

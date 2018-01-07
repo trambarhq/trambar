@@ -70,7 +70,7 @@ module.exports = React.createClass({
                     // return login information to caller
                     return {
                         system: res.system,
-                        providers: res.providers,
+                        servers: res.servers,
                     };
                 } else {
                     throw new HTTPError(session.error);
