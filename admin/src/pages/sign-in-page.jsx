@@ -36,7 +36,7 @@ module.exports = Relaks.createClass({
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             system: null,
-            providers: null,
+            servers: null,
 
             database: this.props.database,
             route: this.props.route,
@@ -48,7 +48,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<SignInPageSync {...props} />, delay);
         return db.beginSession('admin').then((info) => {
             props.system = info.system;
-            props.providers = info.providers;
+            props.servers = info.servers;
             return <SignInPageSync {...props} />;
         });
     },
@@ -58,7 +58,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
     displayName: 'SignInPage.Sync',
     propTypes: {
         system: PropTypes.object,
-        providers: PropTypes.arrayOf(PropTypes.object),
+        servers: PropTypes.arrayOf(PropTypes.object),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -184,10 +184,10 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      */
     renderOAuthButtons: function() {
         var t = this.props.locale.translate;
-        var providers = _.sortBy(this.props.providers, [ 'type', 'name' ]);
+        var servers = _.sortBy(this.props.servers, [ 'type' ]);
         return (
             <div className="oauth-buttons">
-                {_.map(providers, this.renderOAuthButton)}
+                {_.map(servers, this.renderOAuthButton)}
             </div>
         );
     },
@@ -195,23 +195,24 @@ var SignInPageSync = module.exports.Sync = React.createClass({
     /**
      * Render an OAuth option
      *
-     * @param  {Object} provider
+     * @param  {Object} server
      * @param  {Number} i
      *
      * @return {ReactElement}
      */
-     renderOAuthButton: function(provider, i) {
+     renderOAuthButton: function(server, i) {
          var t = this.props.locale.translate;
          var p = this.props.locale.pick;
-         var name = p(provider.details.title) || t(`server-type-${provider.type}`);
-         var icon = getServerIcon(provider.type);
+         var name = p(server.details.title) || t(`server-type-${server.type}`);
+         var icon = getServerIcon(server.type);
+         var url = this.props.database.getOAuthURL(server);
          var props = {
              className: 'oauth-button',
-             href: provider.url,
+             href: url,
              onClick: this.handleOAuthButtonClick,
-             'data-type': provider.type,
+             'data-type': server.type,
          };
-         var error = this.state.errors[provider.type];
+         var error = this.state.errors[server.type];
          if (error) {
              var t = this.props.locale.translate;
              var text = t(`sign-in-error-${error.reason}`);
@@ -245,8 +246,8 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      */
     openPopUpWindow: function(url) {
         return new Promise((resolve, reject) => {
-            var width = 400;
-            var height = 500;
+            var width = 800;
+            var height = 600;
             var options = {
                 width,
                 height,
@@ -286,9 +287,12 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         return this.openPopUpWindow(url).then(() => {
             // retrieve authorization object from server
             var db = this.props.database.use({ by: this });
-            return db.checkAuthorizationStatus().catch((err) => {
+            return db.checkSession().then((res) => {
+                console.log(res);
+            }).catch((err) => {
                 var errors = _.clone(this.state.errors);
                 errors[provider] = err;
+                console.log(err);
                 this.setState({ errors });
             });
         });

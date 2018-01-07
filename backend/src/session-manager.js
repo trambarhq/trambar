@@ -79,6 +79,21 @@ function sendHTML(res, html) {
 }
 
 /**
+ * Send error to browser as HTML
+ *
+ * @param  {Response} res
+ * @param  {Error} err
+ */
+function sendErrorHTML(res, err) {
+    err = sanitizeError(err);
+    var html = `
+        <h1>${err.statusCode} ${err.name}</h1>
+        <p>${err.message}</p>
+    `;
+    res.status(err.statusCode).type('html').send(html);
+}
+
+/**
  * Send JSON object to browser
  *
  * @param  {Response} res
@@ -89,12 +104,25 @@ function sendJSON(res, object) {
 }
 
 /**
- * Send error to browser
+ * Send error to browser as JSON
  *
  * @param  {Response} res
  * @param  {Error} err
  */
-function sendError(res, err) {
+function sendErrorJSON(res, err) {
+    err = sanitizeError(err);
+    res.status(err.statusCode).json(_.omit(err, 'statusCode'));
+}
+
+/**
+ * Replace unexpected error with generic one on production to avoid leaking
+ * sensitive information
+ *
+ * @param  {Error} err
+ *
+ * @return {Error}
+ */
+function sanitizeError(err) {
     if (!err.statusCode) {
         // not an expected error
         console.error(err);
@@ -104,11 +132,7 @@ function sendError(res, err) {
         }
         err = new HTTPError(500, { message });
     }
-    var html = `
-        <h1>${err.statusCode} ${err.name}</h1>
-        <p>${err.message}</p>
-    `;
-    res.status(err.statusCode).type('html').send(html);
+    return err;
 }
 
 /**
@@ -167,7 +191,7 @@ function handleSessionStart(req, res) {
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorJSON(res, err);
     });
 }
 
@@ -194,7 +218,7 @@ function handleHTPasswdRequest(req, res) {
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorJSON(res, err);
     });
 }
 
@@ -209,19 +233,26 @@ function handleSessionRetrieval(req, res) {
     var handle = _.toLower(req.query.handle);
     return findSession(handle).then((session) => {
         if (!session.activated) {
-            session.activated = true;
-            return saveSession(session).then((session) => {
-                return {
-                    session: _.pick(session, 'token', 'user_id', 'etime')
-                };
-            });
+            if (session.token) {
+                session.activated = true;
+                return saveSession(session).then((session) => {
+                    return {
+                        session: _.pick(session, 'token', 'user_id', 'etime')
+                    };
+                });
+            } else {
+                var error = session.details.error;
+                if (error) {
+                    throw new HTTPError(error);
+                }
+            }
         } else {
             throw new HTTPError(400);
         }
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorJSON(res, err);
     });
 }
 
@@ -240,7 +271,7 @@ function handleSessionTermination(req, res) {
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorJSON(res, err);
     });
 }
 
@@ -270,7 +301,7 @@ function handleOAuthRequest(req, res, done) {
                     });
                 }).catch((err) => {
                     // save the error
-                    session.details.error = _.pick(err, 'message', 'stack');
+                    session.details.error = err;
                     return saveSession(session);
                 });
             });
@@ -279,7 +310,7 @@ function handleOAuthRequest(req, res, done) {
         var html = `<script> close() </script>`;
         sendHTML(res, html);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorHTML(res, err);
     });
 }
 
@@ -304,7 +335,7 @@ function handleOAuthTestRequest(req, res, done) {
         var html = `<h1>OK</h1>`;
         sendHTML(res, html);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorHTML(res, err);
     });
 }
 
@@ -359,7 +390,7 @@ function handleOAuthActivationRequest(req, res, done) {
         var html = `<h1>OK</h1>`;
         sendHTML(res, html);
     }).catch((err) => {
-        sendError(res, err);
+        sendErrorHTML(res, err);
     });
 }
 

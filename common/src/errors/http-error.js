@@ -5,6 +5,8 @@ function HTTPError() {
         var arg = arguments[i];
         if (typeof(arg) === 'number') {
             this.statusCode = arg;
+        } else if (typeof(arg) === 'string') {
+            this.message = arg;
         } else if (typeof(arg) === 'object') {
             for (var key in arg) {
                 this[key] = arg[key];
@@ -14,10 +16,10 @@ function HTTPError() {
     if (!this.statusCode) {
         this.statusCode = 500;
     }
-    if (!this.name) {
+    if (!this.hasOwnProperty('name')) {
         this.name = httpErrorNames[this.statusCode];
     }
-    if (!this.message) {
+    if (!this.hasOwnProperty('message')) {
         this.message = this.name;
     }
 }
