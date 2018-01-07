@@ -55,6 +55,24 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Grant privileges to table to appropriate Postgres users
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    grant: function(db, schema) {
+        var table = this.getTableName(schema);
+        var sql = `
+            GRANT SELECT, UPDATE ON ${table} TO auth_role;
+            GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
+            GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
+        `;
+        return db.execute(sql).return(true);
+    },
+
+    /**
      * Attach triggers to the table.
      *
      * @param  {Database} db
@@ -90,10 +108,43 @@ module.exports = _.create(Data, {
                 object.session_handle = row.session_handle;
 
                 if (row.user_id !== credentials.user.id) {
-                    throw new HTTPERror(403);
+                    throw new HTTPError(403);
                 }
             });
             return objects;
+        });
+    },
+
+    /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials, options) {
+        return Data.import.call(this, db, schema, objects, originals, credentials, options).each((object) => {
+            // look for an existing record with the same UUID
+            if (object.user_id && object.uuid) {
+                if (object.user_id !== credentials.user.id) {
+                    throw new HTTPError(403);
+                }
+                var criteria = {
+                    user_id: object.user_id,
+                    uuid: object.uuid,
+                    deleted: false
+                };
+                return this.findOne(db, schema, criteria, 'id').then((row) => {
+                    if (row) {
+                        object.id = row.id;
+                    }
+                });
+            }
         });
     },
 

@@ -232,7 +232,9 @@ function handleSessionRetrieval(req, res) {
 function handleSessionTermination(req, res) {
     var handle = _.toLower(req.body.handle);
     return removeSession(handle).then((session) => {
-        return {};
+        return removeDevices(session.handle).then(() => {
+            return {};
+        });
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {
@@ -626,6 +628,23 @@ function findUserByName(username) {
 }
 
 /**
+ * Remove devices specified session handle(s)
+ *
+ * @param  {String|Array<String>} handles
+ *
+ * @return {Array<Device>}
+ */
+function removeDevices(handles) {
+    return Database.open().then((db) => {
+        var criteria = {
+            session_handle: handles,
+            deleted: false,
+        };
+        return Device.updateMatching(db, 'global', criteria, { deleted: true });
+    });
+}
+
+/**
  * Find or create a user that's linked with the external account
  *
  * @param  {Server} server
@@ -985,7 +1004,10 @@ function deleteExpiredSessions() {
             authorization_id: null,
             expired: true,
         };
-        return Session.updateMatching(db, 'global', criteria, { deleted: true });
+        return Session.updateMatching(db, 'global', criteria, { deleted: true }).then((sessions) => {
+            var handles = _.map(sessions, 'handle');
+            return removeDevices(handles).return(sessions);
+        });
     });
 }
 
