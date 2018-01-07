@@ -324,7 +324,7 @@ function handleOAuthActivationRequest(req, res, done) {
         }
         return findSystem().then((system) => {
             return findServer(serverId).then((server) => {
-                var params = { activation: 1, sid: serverId, token };
+                var params = { activation: 1, sid: serverId, handle };
                 var scope;
                 if (server.type === 'gitlab') {
                     scope = [ 'api' ];
@@ -429,7 +429,10 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
             query += name + '=' + value;
             return query;
         }, '');
-        var address = system.settings.address;
+        var address = _.get(system, 'settings.address');
+        if (!address) {
+            throw new HTTPError(400);
+        }
         var settings = {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
@@ -536,13 +539,7 @@ function findSession(handle) {
 function findSystem() {
     return Database.open().then((db) => {
         var criteria = { deleted: false };
-        return System.findOne(db, 'global', criteria, '*').then((system) => {
-            var address = _.get(system, 'settings.address');
-            if (!address) {
-                throw new HTTPError(400);
-            }
-            return system;
-        });
+        return System.findOne(db, 'global', criteria, '*');
     });
 }
 
@@ -705,11 +702,14 @@ function findMatchingUser(server, account) {
  */
 function findOAuthProviders(system, area, session) {
     return Database.open().then((db) => {
+        var address = _.get(system, 'settings.address');
+        if (!address) {
+            return [];
+        }
         var criteria = { disabled: false, deleted: false };
         return Server.find(db, 'global', criteria, '*').filter((server) => {
             return canProvideAccess(server, area);
         }).map((server) => {
-            var address = system.settings.address;
             return {
                 type: server.type,
                 details: server.details,
