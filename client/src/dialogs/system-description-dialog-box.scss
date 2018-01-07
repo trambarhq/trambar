@@ -1,0 +1,36 @@
+.system-description-dialog-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 80%;
+    max-width: 40em;
+    width: 80%;
+    background-color: #362a2a;
+    box-shadow: 2px 2px 2px #000000;
+    color: #cccccc;
+    margin: auto;
+    padding: 0.4em 0.5em 0.4em 0.5em;
+
+    .scrollable {
+        flex: 1 1 auto;
+        flex-basis: auto;
+    }
+
+    .buttons {
+        flex: 0 0 auto;
+        padding: 0.5em 0 0.2em 0.2em;
+        text-align: right;
+        border-top: 1px solid #666666;
+    }
+
+    .title {
+        font-size: 1.4em;
+        font-weight: bold;
+        margin-bottom: 0.3em;
+    }
+
+    .description {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+        white-space: pre-line;
+    }
+}

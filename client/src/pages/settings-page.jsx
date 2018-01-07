@@ -96,6 +96,7 @@ module.exports = Relaks.createClass({
             currentUser: null,
             currentProject: null,
             projectLinks: null,
+            system: null,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -128,6 +129,12 @@ module.exports = Relaks.createClass({
             return db.find({ schema: 'global', table: 'device', criteria });
         }).then((devices) => {
             props.devices = devices;
+            return meanwhile.show(<SettingsPageSync {...props} />);
+        }).then(() => {
+            var criteria = {};
+            return db.findOne({ schema: 'global', table: 'system', criteria });
+        }).then((system) => {
+            props.system = system;
             return <SettingsPageSync {...props} />;
         });
     },
@@ -140,6 +147,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         currentProject: PropTypes.object,
         projectLinks: PropTypes.arrayOf(PropTypes.object),
         devices: PropTypes.arrayOf(PropTypes.object),
+        system: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -186,15 +194,6 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var panelProps = {
-            currentUser: this.getUser(),
-            currentProject: this.props.currentProject,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            onChange: this.handleChange,
-        };
         return (
             <div className="settings-page">
                 <div className="panels">
@@ -219,6 +218,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     renderProjectPanel: function() {
         var panelProps = {
+            system: this.props.system,
             currentProject: this.props.currentProject,
             projectLinks: this.props.projectLinks,
             database: this.props.database,

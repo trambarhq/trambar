@@ -13,6 +13,7 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var SettingsPanel = require('widgets/settings-panel');
 var PushButton = require('widgets/push-button');
+var SystemDescriptionDialogBox = require('dialogs/system-description-dialog-box');
 var ProjectDescriptionDialogBox = require('dialogs/project-description-dialog-box');
 var MobileSetupDialogBox = require('dialogs/mobile-setup-dialog-box');
 var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
@@ -24,6 +25,7 @@ module.exports = React.createClass({
     displayName: 'ProjectPanel',
     mixins: [ UpdateCheck ],
     propTypes: {
+        system: PropTypes.object,
         currentProject: PropTypes.object,
         projectLinks: PropTypes.arrayOf(PropTypes.object),
 
@@ -93,12 +95,12 @@ module.exports = React.createClass({
             var serverProps = {
                 icon: 'home',
                 label: link.address,
-                onClick: this.handleAddressClick,
+                onClick: this.handleSystemDescriptionClick,
             };
             var descriptionProps = {
                 icon: 'info-circle',
                 label: t('project-management-description'),
-                onClick: this.handleDescriptionClick,
+                onClick: this.handleProjectDescriptionClick,
             };
             var mobileProps = {
                 icon: 'qrcode',
@@ -172,7 +174,8 @@ module.exports = React.createClass({
         }
         return (
             <div>
-                {this.renderDescriptionDialogBox()}
+                {this.renderSystemDescriptionDialogBox()}
+                {this.renderProjectDescriptionDialogBox()}
                 {this.renderMobileSetupDialogBox()}
                 {this.renderSignOutDialogBox()}
                 {this.renderProjectManagementDialogBox()}
@@ -185,8 +188,27 @@ module.exports = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDescriptionDialogBox: function() {
-        if (this.state.renderingDialog !== 'description') {
+    renderSystemDescriptionDialogBox: function() {
+        if (this.state.renderingDialog !== 'system-description') {
+            return null;
+        }
+        var props = {
+            show: this.state.showingDialog,
+            system: this.props.system,
+            locale: this.props.locale,
+            theme: this.props.theme,
+            onClose: this.handleDialogClose,
+        };
+        return <SystemDescriptionDialogBox {...props} />;
+    },
+
+    /**
+     * Render project description dialog box
+     *
+     * @return {ReactElement|null}
+     */
+    renderProjectDescriptionDialogBox: function() {
+        if (this.state.renderingDialog !== 'project-description') {
             return null;
         }
         var props = {
@@ -300,9 +322,21 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleDescriptionClick: function(evt) {
+    handleSystemDescriptionClick: function(evt) {
         this.setState({
-            renderingDialog: 'description',
+            renderingDialog: 'system-description',
+            showingDialog: true,
+        });
+    },
+
+    /**
+     * Called when user clicks description button
+     *
+     * @param  {Event} evt
+     */
+    handleProjectDescriptionClick: function(evt) {
+        this.setState({
+            renderingDialog: 'project-description',
             showingDialog: true,
         });
     },
