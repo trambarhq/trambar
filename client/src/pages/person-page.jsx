@@ -265,6 +265,12 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    getInitialState: function() {
+        return {
+            chartType: undefined
+        };
+    },
+
     /**
      * Return the access level
      *
@@ -295,10 +301,12 @@ var PersonPageSync = module.exports.Sync = React.createClass({
             roles: this.props.roles,
             dailyActivities: this.props.dailyActivities,
             currentUser: this.props.currentUser,
+            chartType: this.state.chartType,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            onChartSelect: this.handleChartSelect,
         };
         return <UserView {...userProps} />;
     },
@@ -331,8 +339,20 @@ var PersonPageSync = module.exports.Sync = React.createClass({
 
     /**
      * Called when user has scrolled away from selected story
+     *
+     * @param  {Object}
      */
-    handleSelectionClear: function() {
+    handleSelectionClear: function(evt) {
         this.props.route.loosen();
+    },
+
+    /**
+     * Called when user chooses a chart
+     *
+     * @param  {Object} evt
+     */
+    handleChartSelect: function(evt) {
+        var chartType = evt.chart;
+        this.setState({ chartType });
     },
 });
