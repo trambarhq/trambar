@@ -58,6 +58,17 @@ function detect(text, onReference) {
                     }
                 }
                 break;
+            case 'list':
+                return _.every(bToken.children, (item) => {
+                    var child = item.children[0];
+                    if (child.type === 'text_block') {
+                        if (/^\s*\[/.test(child.markdown)) {
+                            // it might be a task-list or survey item
+                            return false;
+                        }
+                    }
+                    return true;
+                });
             default:
                 return true;
         }

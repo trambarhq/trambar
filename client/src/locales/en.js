@@ -434,14 +434,6 @@ module.exports = function(localeCode) {
             return `Updated wiki page “${title}”`;
         },
 
-        'survey-item-$number': (number) => {
-            return `choice ${number}`;
-        },
-
-        'task-list-item-$number': (number) => {
-            return `task ${number}`;
-        },
-
         'telephone-dialog-close': 'Close',
 
         'time-yesterday': 'Yesterday',

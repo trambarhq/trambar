@@ -78,7 +78,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         this.components = ComponentRefs({
             mediaEditor: MediaEditor,
-            textArea: HTMLTextAreaElement,
+            textArea: AutosizeTextArea,
         });
         this.resourcesReferenced = {};
         var nextState = {
@@ -442,8 +442,8 @@ module.exports = React.createClass({
         var props = {
             value: langText,
             lang: loc,
-            autofocus: !!_.get(this.state.draft, 'id'),
             onChange: this.handleTextChange,
+            onKeyPress: this.handleKeyPress,
         };
         return <AutosizeTextArea ref={setters.textArea} {...props} />;
     },
@@ -735,6 +735,14 @@ module.exports = React.createClass({
         );
     },
 
+    componentDidUpdate: function(prevProp, prevState) {
+        if (this.repositionCursor) {
+            var target = this.repositionCursor.target;
+            target.selectionStart = target.selectionEnd = this.repositionCursor.position;
+            this.repositionCursor = null;
+        }
+    },
+
     /**
      * Set current draft
      *
@@ -1017,17 +1025,20 @@ module.exports = React.createClass({
             draft.details = _.omit(draft.details, 'text');
         }
 
-        // automatically enable Markdown formatting
-        if (draft.details.markdown === undefined) {
-            if (Markdown.detect(langText)) {
-                draft.details.markdown = true;
-            }
-        }
-
         // automatically set story type to task list
         if (!draft.type) {
             if (ListParser.detect(draft.details.text)) {
                 draft.type = 'task-list';
+                if (draft.details.markdown === undefined) {
+                    draft.details.markdown = false;
+                }
+            }
+        }
+
+        // automatically enable Markdown formatting
+        if (draft.details.markdown === undefined) {
+            if (Markdown.detect(langText)) {
+                draft.details.markdown = true;
             }
         }
 
@@ -1036,6 +1047,48 @@ module.exports = React.createClass({
         this.saveDraft(draft);
     },
 
+    /**
+     * Called when user press a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyPress: function(evt) {
+        // look for carriage return
+        var target = evt.target;
+        if (evt.charCode == 0x0D) {
+            var storyType = this.state.draft.type;
+            if (storyType === 'survey' || storyType === 'task-list') {
+                // see if there's survey or task-list item on the line where
+                // the cursor is at
+                var value = target.value;
+                var selStart = target.selectionStart;
+                var textInFront = value.substr(0, selStart);
+                var lineFeedIndex = _.lastIndexOf(textInFront, '\n');
+                var lineInFront = textInFront.substr(lineFeedIndex + 1);
+                var tokens = ListParser.extract(lineInFront);
+                var item = _.get(tokens, [ 0, 0 ]);
+                if (item instanceof Object) {
+                    var addition;
+                    if (item.label) {
+                        // the item is not empty--start the next item automatically
+                        addition = '\n* [ ] ';
+                    } else {
+                        // it's empty--move the selection back to remove it
+                        target.selectionStart = selStart - lineInFront.length;
+                        addition = '\n';
+                    }
+                    document.execCommand("insertText", false, addition);
+                    evt.preventDefault();
+                }
+            } else {
+                if (this.props.theme.mode === 'single-col') {
+                    evt.preventDefault();
+                    this.handlePublishClick(evt);
+                    target.blur();
+                }
+            }
+        }
+    },
 
     /**
      * Called when user click Cancel button
@@ -1215,14 +1268,14 @@ module.exports = React.createClass({
         var resourcesOfType = _.filter(resources, { type: resource.type });
         var index = _.indexOf(resourcesOfType, resource);
         if (index !== -1) {
-            var tag = `![${resource.type}-${index+1}]`;
-            var loc = this.state.options.localeCode;
-            var lang = loc.substr(0, 2);
-            var langText = _.get(draft, `details.text.${lang}`, '') + tag;
-            _.set(draft, `details.text.${lang}`, langText);
             _.set(draft, `details.markdown`, true);
-            this.saveDraft(draft).then(() => {
-                this.components.textArea.focus();
+            this.changeDraft(draft).then(() => {
+                var textArea = this.components.textArea.getElement();
+                textArea.focus();
+                setTimeout(() => {
+                    var addition = `![${resource.type}-${index+1}]`;
+                    document.execCommand("insertText", false, addition);
+                }, 10);
             });
         }
     },
@@ -1273,21 +1326,18 @@ module.exports = React.createClass({
                 draft.type = evt.value;
                 // attach a list template to the story if there's no list yet
                 if (draft.type === 'task-list' || draft.type === 'survey') {
-                    var text = draft.details.text || {};
-                    if (!ListParser.detect(text)) {
-                        var t = this.props.locale.translate;
-                        var lang = this.props.locale.lang;
-                        var langText = text[lang] || '';
-                        if (_.trimEnd(langText)) {
-                            langText = _.trimEnd(langText) + '\n\n';
+                    var textArea = this.components.textArea.getElement();
+                    textArea.focus();
+                    setTimeout(() => {
+                        var addition = '* [ ] ';
+                        var value = textArea.value;
+                        var selStart = textArea.selectionStart;
+                        var textInFront = value.substr(0, selStart);
+                        if (/[^\n]$/.test(textInFront)) {
+                            addition = '\n' + addition;
                         }
-                        var items = _.map(_.range(1, 4), (number) => {
-                            var label = t(`${draft.type}-item-$number`, number);
-                            return `[ ] ${label}`;
-                        });
-                        langText += items.join('\n');
-                        _.set(draft, `details.text.${lang}`, langText);
-                    }
+                        document.execCommand("insertText", false, addition);
+                    }, 10);
                 }
                 this.saveDraft(draft);
                 break;

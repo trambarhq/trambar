@@ -53,7 +53,8 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         this.components = ComponentRefs({
-            mediaEditor: MediaEditor
+            mediaEditor: MediaEditor,
+            textArea: AutosizeTextArea,
         });
         var nextState = {
             draft: null,
@@ -146,11 +147,12 @@ module.exports = React.createClass({
         var lang = this.props.locale.languageCode;
         var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
         var textareaProps = {
-            ref: 'textarea',
+            ref: this.components.setters.textArea,
             value: langText,
             lang: this.props.locale.localeCode,
             autofocus: true,
             onChange: this.handleTextChange,
+            onKeyPress: this.handleKeyPress,
         };
         return <AutosizeTextArea {...textareaProps} />
     },
@@ -219,16 +221,6 @@ module.exports = React.createClass({
         return (
             <MediaEditor {...editorProps} />
         );
-    },
-
-    /**
-     * Set keyboard focus on text area
-     */
-    focus: function() {
-        var textarea = this.refs.textarea;
-        if (textarea) {
-            textarea.focus();
-        }
     },
 
     /**
@@ -370,6 +362,22 @@ module.exports = React.createClass({
         // look for tags
         draft.tags = TagScanner.findTags(draft.details.text);
         return this.saveDraft(draft);
+    },
+
+    /**
+     * Called when user press a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyPress: function(evt) {
+        var target = evt.target;
+        if (evt.charCode == 0x0D) {
+            if (this.props.theme.mode === 'single-col') {
+                evt.preventDefault();
+                this.handlePublishClick(evt);
+                target.blur();
+            }
+        }
     },
 
     /**

@@ -37,6 +37,15 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return the actual textarea element
+     *
+     * @return {HTMLTextAreaElement}
+     */
+    getElement: function() {
+        return this.components.actual;
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -89,13 +98,10 @@ module.exports = React.createClass({
         window.removeEventListener('resize', this.handleDocumentResize);
     },
 
-    focus: function() {
-        var actual = this.components.actual;
-        if (actual) {
-            actual.focus();
-        }
-    },
 
+    /**
+     * Update the size of the textarea
+     */
     updateSize: function() {
         var shadow = this.components.shadow;
         var actual = this.components.actual;
@@ -123,7 +129,6 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleResize: function(evt) {
-        console.log('resize');
     },
 
     /**
