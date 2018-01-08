@@ -9,9 +9,9 @@ describe('ListParser', function() {
             var text = `
 Pick an item:
 
-[ ] item 1
-[ ] item 2
-[ ] item 3
+* [ ] item 1
+* [ ] item 2
+* [ ] item 3
             `
             var tokens = ListParser.extract(text);
             expect(tokens[0]).to.be.a('string');
@@ -25,9 +25,9 @@ Pick an item:
             var text = `
                 Pick an item:
 
-                [ ] item 1
-                [ ] item 2
-                [ ] item 3
+                * [ ] item 1
+                * [ ] item 2
+                * [ ] item 3
             `
             var tokens = ListParser.extract(text);
             expect(tokens[0]).to.be.a('string');
@@ -36,26 +36,13 @@ Pick an item:
                 expect(item).to.have.property('before').that.contains('    ');
             });
         })
-        it('should extract items varying number of whitespaces between the brackets', function() {
-            var text = `
-                Pick an item:
-
-                [] item 1
-                [ ] item 2
-                [  ] item 3
-                [   ] item 4
-            `
-            var tokens = ListParser.extract(text);
-            expect(tokens[0]).to.be.a('string');
-            expect(tokens[1]).to.be.an('array').that.has.lengthOf(4);
-        })
         it('should extract items that have been checked', function() {
             var text = `
                 Pick an item:
 
-                [x] item 1
-                [ x ] item 2
-                [x ] item 3
+                * [x] item 1
+                * [x] item 2
+                * [x] item 3
             `
             var tokens = ListParser.extract(text);
             expect(tokens[0]).to.be.a('string');
@@ -68,14 +55,14 @@ Pick an item:
             var text = `
                 Pick an item:
 
-                [ ] item 1
-                [ ] item 2
-                [ ] item 3
+                * [ ] item 1
+                * [ ] item 2
+                * [ ] item 3
 
                 Pick another item:
 
-                [ ] item 4
-                [ ] item 5
+                * [ ] item 4
+                * [ ] item 5
             `
             var tokens = ListParser.extract(text);
             expect(tokens[0]).to.be.a('string');
@@ -84,7 +71,7 @@ Pick an item:
             expect(tokens[3]).to.be.an('array').that.has.lengthOf(2);
         })
         it('should capture text before and after an item', function() {
-            var text = 'start\n[ ] item 1\nend';
+            var text = 'start\n* [ ] item 1\nend';
             var tokens = ListParser.extract(text);
             expect(tokens[0]).to.be.a('string').that.equals('start\n');
             expect(tokens[2]).to.be.a('string').that.equals('\nend');
@@ -101,14 +88,14 @@ Pick an item:
             var text = `
                 Pick an item:
 
-                [ ] item 1
-                [ ] item 2
-                [ ] item 3
+                * [ ] item 1
+                * [ ] item 2
+                * [ ] item 3
 
                 Pick another item:
 
-                [ ] item 4
-                [ ] item 5
+                * [ ] item 4
+                * [ ] item 5
             `
             var output = ListParser.update(text, 1, 1, false);
             output = ListParser.update(output, 2, 4, false);
@@ -118,14 +105,14 @@ Pick an item:
             var text = `
                 Pick an item:
 
-                [ ] item 1
-                [ ] item 2
-                [ ] item 3
+                * [ ] item 1
+                * [ ] item 2
+                * [ ] item 3
 
                 Pick another item:
 
-                [ ] item 4
-                [ ] item 5
+                * [ ] item 4
+                * [ ] item 5
             `
             var output = ListParser.update(text, 1, 1, true);
             output = ListParser.update(output, 2, 4, true);
@@ -142,14 +129,14 @@ Pick an item:
             var text = `
                 Pick an item:
 
-                [x] item 1
-                [x] item 2
-                [ ] item 3
+                * [x] item 1
+                * [x] item 2
+                * [ ] item 3
 
                 Pick another item:
 
-                [X] item 4
-                [ ] item 5
+                * [X] item 4
+                * [ ] item 5
             `
             var output = ListParser.update(text, 1, 1, false);
             output = ListParser.update(output, 2, 4, false);

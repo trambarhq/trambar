@@ -7,7 +7,7 @@ module.exports = {
 };
 
 // look for in Latin x, Cyrillic х, and Greek χ
-var regExp = /^([ \t]*)\[([ xхχ]{0,3})\]([ \t]*)(.*?)([ \t]*?)$/mig;
+var regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
 
 /**
  * Extract "[ ] label..." item lists from text
@@ -121,7 +121,7 @@ function update(text, list, key, checked, clearOthers) {
     // concatenate tokens into a string again
     return _.reduce(tokens, (result, token) => {
         if (token instanceof Object) {
-            return result + token.before + '[' + token.answer + ']' + token.between + token.label + token.after;
+            return result + token.before + '* [' + token.answer + ']' + token.between + token.label + token.after;
         } else {
             return result + token;
         }
@@ -138,18 +138,8 @@ function updateAnswerText(item, text) {
         } else {
             x = 'x';
         }
-        switch (item.answer.length) {
-            case 0:
-            case 1:
-            case 2: item.answer = x; break;
-            case 3: item.answer = ' ' + x + ' '; break;
-        }
+        item.answer = x;
     } else {
-        switch (item.answer.length) {
-            case 0: item.answer = ''; break
-            case 1: item.answer = ' '; break
-            case 2: item.answer = '  '; break;
-            case 3: item.answer = '   '; break;
-        }
+        item.answer = ' ';
     }
 }

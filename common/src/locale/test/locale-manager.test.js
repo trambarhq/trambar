@@ -42,28 +42,28 @@ describe('LocaleManager', function() {
     })
     it('should default to Polish as English is not supported', function() {
         return managerReady.then((manager) => {
-            expect(manager.getLanguageCode()).to.equal('pl-pl');
+            expect(manager.getLocaleCode()).to.equal('pl-pl');
         });
     })
     describe('#change', function() {
         it('should be able to switch to Russian', function() {
             return managerReady.then((manager) => {
                 return manager.change('ru-ua').then(() => {
-                    expect(manager.getLanguageCode()).to.equal('ru-ua');
+                    expect(manager.getLocaleCode()).to.equal('ru-ua');
                 });
             });
         })
         it('should be able to switch back to Polish', function() {
             return managerReady.then((manager) => {
                 return manager.change('pl-pl').then(() => {
-                    expect(manager.getLanguageCode()).to.equal('pl-pl');
+                    expect(manager.getLocaleCode()).to.equal('pl-pl');
                 });
             });
         })
         it('should be able to switch country code only', function() {
             return managerReady.then((manager) => {
                 return manager.change('pl-ua').then(() => {
-                    expect(manager.getLanguageCode()).to.equal('pl-ua');
+                    expect(manager.getLocaleCode()).to.equal('pl-ua');
                 });
             });
         })
