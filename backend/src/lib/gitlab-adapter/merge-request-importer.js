@@ -157,7 +157,7 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     var storyAfter = _.cloneDeep(story) || {};
     var mergeRequestLink = Import.join(storyAfter, link);
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
-    var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${label}`; });
+    var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
     mergeRequestLink.merge_request.number = glMergeRequest.iid;
     _.set(storyAfter, 'type', 'merge-request');
     _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));

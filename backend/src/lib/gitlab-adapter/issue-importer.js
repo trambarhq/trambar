@@ -160,7 +160,7 @@ function copyIssueProperties(story, author, glIssue, link) {
     var storyAfter = _.cloneDeep(story) || {};
     var issueLink = Import.join(storyAfter, link);
     var descriptionTags = TagScanner.findTags(glIssue.description);
-    var labelTags = _.map(glIssue.labels, (label) => { return `#${label}`; });
+    var labelTags = _.map(glIssue.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
     issueLink.issue.number = glIssue.iid;
     if (!storyAfter.type || storyAfter.type === 'issue') {
         _.set(storyAfter, 'type', 'issue');
