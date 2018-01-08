@@ -721,6 +721,9 @@ module.exports = React.createClass({
         if (this.state.action === 'delete-post') {
             message = t('story-cancel-are-you-sure');
             props.onConfirm = this.handleCancelConfirm;
+        } else if (this.state.action === 'cancel-edit') {
+            message = t('story-cancel-edit-are-you-sure');
+            props.onConfirm = this.handleCancelConfirm;
         } else {
             message = t('story-remove-yourself-are-you-sure');
             props.onConfirm = this.handleRemoveConfirm;
@@ -1045,8 +1048,10 @@ module.exports = React.createClass({
         var action;
         if (this.isCoauthoring()) {
             action = 'remove-self';
-        } else {
+        } else if (this.props.isStationary) {
             action = 'delete-post';
+        } else {
+            action = 'cancel-edit';
         }
         this.setState({ confirming: true, action });
     },

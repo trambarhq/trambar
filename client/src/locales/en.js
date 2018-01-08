@@ -311,6 +311,7 @@ module.exports = function(localeCode) {
         },
         'story-cancel': 'Cancel',
         'story-cancel-are-you-sure': 'Are you sure you want to abandon this post?',
+        'story-cancel-edit-are-you-sure': 'Are you sure you want to abandon changes you\'ve made?',
         'story-coauthors': 'Coauthors',
         'story-comment': 'Comment',
         'story-drop-files-here': 'Drag and drop media files here',
