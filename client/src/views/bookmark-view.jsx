@@ -29,7 +29,6 @@ module.exports = React.createClass({
             <div className="bookmark-view">
                 <div className="title">
                     {this.renderSenderNames()}
-                    {this.renderCloseButton()}
                 </div>
                 <div className="story">
                     {this.props.children}
@@ -96,14 +95,6 @@ module.exports = React.createClass({
             }
         }
         return <span className="name">{contents}</span>
-    },
-
-    renderCloseButton: function() {
-        return (
-            <div className="close-btn" onClick={this.handleCloseClick}>
-                <i className="fa fa-close" />
-            </div>
-        );
     },
 
     /**
