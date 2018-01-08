@@ -580,50 +580,64 @@ module.exports = React.createClass({
      * Invalidate queries based on changes
      *
      * @param  {String} address
-     * @param  {Object} changes
+     * @param  {Object|undefined} changes
      *
      * @return {Boolean}
      */
     invalidate: function(address, changes) {
         var changed = false;
-        _.forIn(changes, (idList, name) => {
-            var parts = _.split(name, '.');
-            var location = {
-                address: address,
-                schema: parts[0],
-                table: parts[1]
-            };
-            var relevantSearches = this.getRelevantRecentSearches(location);
-            _.each(relevantSearches, (search) => {
-                var dirty = false;
-                var expectedCount = getExpectedObjectCount(search);
-                if (expectedCount === search.results.length) {
-                    // see if the ids show up in the results
-                    _.each(idList, (id) => {
-                        var index = _.sortedIndexBy(search.results, { id }, 'id');
-                        var object = search.results[index];
-                        if (object && object.id === id) {
-                            dirty = true;
-                            return false;
-                        }
-                    });
-                } else {
-                    // we can't tell if new objects won't suddenly show up
-                    // in the search results
-                    dirty = true;
-                }
-                if (dirty) {
+        if (changes) {
+            _.forIn(changes, (idList, name) => {
+                var parts = _.split(name, '.');
+                var location = {
+                    address: address,
+                    schema: parts[0],
+                    table: parts[1]
+                };
+                var relevantSearches = this.getRelevantRecentSearches(location);
+                _.each(relevantSearches, (search) => {
+                    var dirty = false;
+                    var expectedCount = getExpectedObjectCount(search);
+                    if (expectedCount === search.results.length) {
+                        // see if the ids show up in the results
+                        _.each(idList, (id) => {
+                            var index = _.sortedIndexBy(search.results, { id }, 'id');
+                            var object = search.results[index];
+                            if (object && object.id === id) {
+                                dirty = true;
+                                return false;
+                            }
+                        });
+                    } else {
+                        // we can't tell if new objects won't suddenly show up
+                        // in the search results
+                        dirty = true;
+                    }
+                    if (dirty) {
+                        search.dirty = true;
+                        changed = true;
+                    }
+                });
+            });
+        } else {
+            // invalidate all results originating from address
+            _.each(this.state.recentSearchResults, (search) => {
+                var searchLocation = getSearchLocation(search);
+                if (searchLocation.address === address) {
                     search.dirty = true;
                     changed = true;
                 }
             });
-        });
+        }
         if (changed) {
             // tell data consuming components to rerun their queries
             // initially, they'd all get the data they had before
             // another change event will occur if new objects are
             // actually retrieved from the remote server
             this.triggerChangeEvent();
+
+            // update recent searches that aren't being used currently
+            this.schedulePrefetch(address);
         }
         return changed;
     },
@@ -749,10 +763,11 @@ module.exports = React.createClass({
      * Perform a search on the server sude
      *
      * @param  {Object} search
+     * @param  {Boolean|undefined} background
      *
      * @return {Promise<Boolean>}
      */
-    searchRemoteDatabase: function(search) {
+    searchRemoteDatabase: function(search, background) {
         if (search.schema === 'local') {
             return Promise.resolve(false);
         }
@@ -1179,7 +1194,48 @@ module.exports = React.createClass({
      */
     componentWillUnmount: function() {
         clearInterval(this.sessionExpirationCheckInterval);
+        this.stopPrefetch();
     },
+
+    /**
+     * Start updating recent searches that are dirty
+     *
+     * @param  {String} address
+     */
+    schedulePrefetch: function(address) {
+        this.stopPrefetch();
+
+        var prefetchTimeout = this.prefetchTimeout = setTimeout(() => {
+            var dirtySearches = _.filter(this.state.recentSearchResults, (search) => {
+                if (search.address === address) {
+                    if (search.dirty) {
+                        return true;
+                    }
+                }
+            });
+            Promise.map(dirtySearches, (search) => {
+                // prefetching was cancelled
+                if (this.prefetchTimeout !== prefetchTimeout) {
+                    return false;
+                }
+                if (!search.dirty) {
+                    return false;
+                }
+                console.log('Prefetching', getSearchQuery(search));
+                return this.searchRemoteDatabase(search, true);
+            }, { concurrency: 4 });
+        }, 1000);
+    },
+
+    /**
+     * Stop updating recent searches
+     */
+    stopPrefetch: function() {
+        if (this.prefetchTimeout) {
+            clearTimeout(this.prefetchTimeout);
+            this.prefetchTimeout = null;
+        }
+    }
 });
 
 var authCache = {};
