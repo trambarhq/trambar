@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Path = require('path');
+var FS = require('fs');
 var Webpack = require('webpack');
 
 // plugins
@@ -21,6 +22,14 @@ var folders = _.mapValues({
     assets: 'assets',
     includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
+if (event !== 'start') {
+    console.log(`Platform: ${platform}`);
+    console.log(`Output folder: ${folders.www}`);
+    if (FS.lstatSync(folders.www).isSymbolicLink()) {
+        var actualFolder = FS.readlinkSync(folders.www);
+        console.log(`Actual output folder: ${actualFolder}`);
+    }
+}
 
 var env = {
     PLATFORM: 'browser',

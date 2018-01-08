@@ -133,3 +133,22 @@ function remove(localURL) {
         URL.revokeObjectURL(entry.localURL);
     }
 }
+
+/**
+ * Clearing blob that have not been touched for some time
+ */
+function clearBlobs() {
+    var now = new Date;
+    _.remove(list, (entry) => {
+        // see if we can retrieve the file from the server if need arises
+        if (entry.remoteURL) {
+            var elapsed = now - entry.atime;
+            if (elapsed > 5 * 60 * 1000) {
+                // after five minutes, the blob probably won't be used again
+                return true;
+            }
+        }
+    });
+}
+
+setInterval(clearBlobs, 60 * 1000);

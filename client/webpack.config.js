@@ -46,11 +46,13 @@ var folders = _.mapValues({
     assets: 'assets',
     includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
-console.log(`Platform: ${platform}`);
-console.log(`Output folder: ${folders.www}`);
-if (FS.lstatSync(folders.www).isSymbolicLink()) {
-    var actualFolder = FS.readlinkSync(folders.www);
-    console.log(`Actual output folder: ${actualFolder}`);
+if (event !== 'start') {
+    console.log(`Platform: ${platform}`);
+    console.log(`Output folder: ${folders.www}`);
+    if (FS.lstatSync(folders.www).isSymbolicLink()) {
+        var actualFolder = FS.readlinkSync(folders.www);
+        console.log(`Actual output folder: ${actualFolder}`);
+    }
 }
 
 var env = {
@@ -156,7 +158,6 @@ module.exports = {
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
     ],
-    devtool: 'source-map',
     devServer: {
         inline: true,
         historyApiFallback: {
