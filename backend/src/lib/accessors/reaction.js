@@ -193,6 +193,22 @@ module.exports = _.create(ExternalData, {
             if (reactionReceived.deleted) {
                 reactionReceived.suppressed = true;
             }
+
+            if (!reactionReceived.id && reactionReceived.type === 'like') {
+                // see if there's an existing like
+                var criteria = {
+                    story_id: reactionReceived.story_id,
+                    user_id: reactionReceived.user_id,
+                };
+                return this.findOne(db, schema, criteria, '*').then((row) => {
+                    if (row) {
+                        // reuse the row--to avoid triggering new notification
+                        reactionReceived.id = row.id;
+                        reactionReceived.deleted = false;
+                    }
+                    return reactionReceived;
+                });
+            }
             return reactionReceived;
         });
     },

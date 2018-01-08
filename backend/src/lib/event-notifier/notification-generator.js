@@ -113,7 +113,9 @@ function getReactionNotificationTemplate(db, event) {
             return null;
         }
         var publishing = false;
-        if (event.diff.published || event.diff.ready) {
+        // published can become false again when user edit a comment
+        // ptime, on the other hand, will only be set when the comment is first published
+        if (event.diff.ptime || event.diff.ready) {
             if (event.current.published && event.current.ready) {
                 publishing = true;
             }
@@ -227,7 +229,7 @@ function getStoryNotificationTemplate(db, event) {
             return null;
         }
         var publishing = false;
-        if (event.diff.published || event.diff.ready) {
+        if (event.diff.ptime || event.diff.ready) {
             if (event.current.published && event.current.ready) {
                 publishing = true;
             }
