@@ -46,4 +46,35 @@
             float: right;
         }
     }
+
+    .connection {
+        display: block;
+        position: relative;
+        float: right;
+        font-size: 1.4em;
+        width: 1.8em;
+        text-align: center;
+        padding: 6px 6px 6px 6px;
+        color: #333333;
+
+        .fa-ban {
+            font-size: 0.55em;
+            position: absolute;
+            right: 0.5em;
+            bottom: 0.65em;
+            height: 1em;
+            color: #993333;
+        }
+
+        .fa-arrow-up, .fa-caret-up {
+            font-size: 0.5em;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0.165em;
+            margin: auto;
+            height: 1em;
+        }
+    }
 }

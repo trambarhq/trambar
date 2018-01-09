@@ -156,7 +156,30 @@ _.mixin({
             throw new Error(`Not an integer: ${s}`);
         }
         return n;
-    }
+    },
+
+    /**
+     * Return file size in human readable form
+     *
+     * @param  {Number} bytes
+     *
+     * @return {String}
+     */
+    fileSize(bytes) {
+        if (bytes < 1024) {
+            return bytes + 'B';
+        }
+        var kilobytes = bytes / 1024;
+        if (kilobytes < 1024) {
+            return _.round(kilobytes) + 'KB';
+        }
+        var megabytes = kilobytes / 1024;
+        if (megabytes < 1024) {
+            return _.round(megabytes, 1) + 'MB';
+        }
+        var gigabytes = megabytes / 1024;
+        return _.round(gigabytes, 2) + 'GB';
+    },
 });
 
 function obscureValue(value) {

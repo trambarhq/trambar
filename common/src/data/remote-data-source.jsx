@@ -15,6 +15,7 @@ module.exports = React.createClass({
         basePath: PropTypes.string,
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
+        hasConnection: PropTypes.bool,
         cache: PropTypes.object,
 
         onChange: PropTypes.func,
@@ -22,6 +23,7 @@ module.exports = React.createClass({
         onExpiration: PropTypes.func,
         onViolation: PropTypes.func,
         onStupefaction: PropTypes.func,
+        onSearch: PropTypes.func,
     },
 
     /**
@@ -33,6 +35,7 @@ module.exports = React.createClass({
         return {
             refreshInterval: 15 * 60,   // 15 minutes
             basePath: '',
+            hasConnection: true,
         };
     },
 
@@ -42,10 +45,12 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.searching = false;
         return {
             recentSearchResults: [],
             recentStorageResults: [],
             recentRemovalResults: [],
+            activeSearches: [],
         };
     },
 
@@ -734,6 +739,16 @@ module.exports = React.createClass({
         }
     },
 
+    triggerSearchEvent: function(searching) {
+        if (this.props.onSearch) {
+            this.props.onSearch({
+                type: 'search',
+                target: this,
+                searching
+            });
+        }
+    },
+
     /**
      * Look for a recent search that has the same criteria
      *
@@ -771,6 +786,11 @@ module.exports = React.createClass({
         if (search.schema === 'local') {
             return Promise.resolve(false);
         }
+        if (!background) {
+            var activeSearches = _.union(this.state.activeSearches, [ search ]);
+            this.setState({ activeSearches });
+        }
+
         var location = getSearchLocation(search);
         var query = getSearchQuery(search);
         search.start = getCurrentTime();
@@ -815,8 +835,12 @@ module.exports = React.createClass({
             search.dirty = false;
 
             // update this.state.recentSearchResults
+            var activeSearches = this.state.activeSearches;
+            if (!background) {
+                activeSearches = _.without(this.state.activeSearches, search);
+            }
             var recentSearchResults = _.slice(this.state.recentSearchResults);
-            this.setState({ recentSearchResults });
+            this.setState({ recentSearchResults, activeSearches });
 
             // update retrieval time and save to cache
             var rtime = search.finish;
@@ -1187,6 +1211,30 @@ module.exports = React.createClass({
      */
     componentDidMount: function() {
         this.triggerChangeEvent();
+    },
+
+    /**
+     * Inform parent
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        if (prevState.activeSearches !== this.state.activeSearches) {
+            // since a search can start immediately after another one has ended,
+            // use a timeout function to reduce the freqeuncy of events
+            if (this.searchingTimeout) {
+                clearTimeout(this.searchingTimeout);
+            }
+            this.searchingTimeout = setTimeout(() => {
+                var searchingNow = !_.isEmpty(this.state.activeSearches);
+                if (this.searching !== searchingNow) {
+                    this.searching = searchingNow;
+                    this.triggerSearchEvent(searchingNow);
+                }
+                this.searchingTimeout = null;
+            }, 50);
+        }
     },
 
     /**

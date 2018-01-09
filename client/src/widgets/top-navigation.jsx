@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
+var Payloads = require('transport/payloads');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -19,8 +20,11 @@ module.exports = React.createClass({
     displayName: 'TopNavigation',
     propTypes: {
         settings: PropTypes.object.isRequired,
+        hasConnection: PropTypes.bool,
+        searching: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -198,11 +202,18 @@ module.exports = React.createClass({
             active: selected === 'search',
             onClick: this.handleButtonClick,
         };
+        var connectionProps = {
+            locale: this.props.locale,
+            uploading: this.props.payloads.uploading,
+            searching: this.props.searching,
+            hasConnection: this.props.hasConnection,
+        };
         return (
             <div>
                 <Button {...calendarProps} />
                 <Button {...filterProps} />
                 <Button {...searchProps} />
+                <ConnectionIndicator {...connectionProps}/>
             </div>
         );
     },
@@ -308,4 +319,34 @@ function Button(props) {
             <i className={`fa fa-${props.icon}`} />
         </Link>
     );
+}
+
+function ConnectionIndicator(props) {
+    if (props.uploading) {
+        var t = props.locale.translate;
+        var size = _.fileSize(props.uploading.bytes);
+        var count = props.uploading.files;
+        var title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
+        return (
+            <span className="connection" title={title}>
+                <i className="fa fa-refresh fa-spin"/>
+                <i className="fa fa-arrow-up" />
+            </span>
+        );
+    } else if (props.searching) {
+        return (
+            <span className="connection">
+                <i className="fa fa-refresh fa-spin"/>
+            </span>
+        );
+    } else if (!props.hasConnection) {
+        return (
+            <span className="connection">
+                <i className="fa fa-wifi" />
+                <i className="fa fa-ban" />
+            </span>
+        );
+    } else {
+        return null;
+    }
 }

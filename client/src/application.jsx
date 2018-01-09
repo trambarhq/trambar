@@ -96,6 +96,7 @@ module.exports = React.createClass({
             canAccessSchema: false,
             subscription: null,
             connection: null,
+            searching: false,
             pushRelay: null,
             renderingStartPage: false,
             showingUploadProgress: false,
@@ -160,6 +161,9 @@ module.exports = React.createClass({
         var topNavProps = {
             settings: settings,
             database: this.state.database,
+            payloads: this.state.payloads,
+            hasConnection: true,
+            searching: this.state.searching,
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
@@ -261,6 +265,7 @@ module.exports = React.createClass({
             locale: this.state.locale,
 
             onChange: this.handleDatabaseChange,
+            onSearch: this.handleDatabaseSearch,
             onAuthorization: this.handleAuthorization,
             onExpiration: this.handleExpiration,
             onViolation: this.handleViolation,
@@ -651,6 +656,16 @@ module.exports = React.createClass({
         }
         var database = new Database(evt.target, context);
         this.setState({ database });
+    },
+
+    /**
+     * Called when RemoteDataSource starts or finish searching
+     *
+     * @param  {Object} evt
+     */
+    handleDatabaseSearch: function(evt) {
+        console.log('Searching', evt.searching);
+        this.setState({ searching: evt.searching });
     },
 
     /**

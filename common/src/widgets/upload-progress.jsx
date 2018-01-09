@@ -24,7 +24,7 @@ module.exports = React.createClass({
         if (!uploading) {
             return null;
         }
-        var size = getFileSize(uploading.bytes);
+        var size = _.fileSize(uploading.bytes);
         var count = uploading.files;
         return (
             <div className="upload-progress">
@@ -33,19 +33,3 @@ module.exports = React.createClass({
         );
     },
 })
-
-function getFileSize(bytes) {
-    if (bytes < 1024) {
-        return bytes + 'B';
-    }
-    var kilobytes = bytes / 1024;
-    if (kilobytes < 1024) {
-        return _.round(kilobytes) + 'KB';
-    }
-    var megabytes = kilobytes / 1024;
-    if (megabytes < 1024) {
-        return _.round(megabytes, 1) + 'MB';
-    }
-    var gigabytes = megabytes / 1024;
-    return _.round(gigabytes, 2) + 'GB';
-}
