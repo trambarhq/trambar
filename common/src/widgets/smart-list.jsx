@@ -65,10 +65,12 @@ module.exports = React.createClass({
             this.setState({ currentAnchor: nextProps.anchor });
             this.anchorOffset = nextProps.offset;
 
-            if (this.scrollContainer) {
-                // make sure we're at the top when rendering a branch new list
-                if (this.scrollContainer.scrollTop > 0) {
-                    this.scrollContainer.scrollTop = 0;
+            if (!nextProps.anchor) {
+                if (this.scrollContainer) {
+                    // make sure we're at the top when rendering a branch new list
+                    if (this.scrollContainer.scrollTop > 0) {
+                        this.scrollContainer.scrollTop = 0;
+                    }
                 }
             }
         }
