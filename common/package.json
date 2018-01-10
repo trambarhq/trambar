@@ -30,6 +30,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.3",
     "lodash": "^4.17.4",
+    "mark-gor": "0.0.4",
     "mocha": "^3.4.1",
     "react": "~15.4.0",
     "react-addons-test-utils": "~15.4.0",

@@ -457,8 +457,8 @@ module.exports = React.createClass({
                     url = theme.getImageURL(res, { height: 24 });
                     if (!url) {
                         // use blob if it's attached
-                        var file = theme.getImageFile(res);
-                        url = Markdown.createBlobURL(file, res.clip);
+                        var fileURL = theme.getImageFile(res);
+                        url = Markdown.attachClipRect(fileURL, res.clip);
                     }
                 }
             } else {

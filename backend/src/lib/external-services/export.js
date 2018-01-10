@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var MarkdownExporter = require('utils/markdown-exporter');
 
 module.exports = {
     format,
@@ -21,10 +22,11 @@ function text(versions, lang) {
     return langText || '';
 }
 
-function format(text, markdown, resources) {
-    if (markdown) {
-        return text;
-    } else {
-        return text;
+function format(text, markdown, resources, system) {
+    var address = _.get(system, 'settings.address');
+    if (!markdown) {
+        text = MarkdownExporter.escape(text);
     }
+    text = MarkdownExporter.attachResources(text, resources, address);
+    return text;
 }

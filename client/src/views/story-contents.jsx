@@ -196,15 +196,25 @@ module.exports = React.createClass({
         if (!text) {
             return null;
         }
+        var tags;
+        if (story.details.labels) {
+            tags = this.renderTags();
+        }
         if (story.details.markdown) {
             var contents = Markdown.parse(text, this.handleReference);
             return (
                 <div className="text story markdown" onClick={this.handleMarkdownClick}>
                     {contents}
+                    {tags}
                 </div>
             );
         } else {
-            return <div className="text story plain-text"><p>{text}</p></div>;
+            return (
+                <div className="text story plain-text">
+                    <p>{text}</p>
+                    {tags}
+                </div>
+            );
         }
     },
 
@@ -780,8 +790,8 @@ module.exports = React.createClass({
                     url = theme.getImageURL(res, { height: 24 });
                     if (!url) {
                         // use blob if it's attached
-                        var file = theme.getImageFile(res);
-                        url = Markdown.createBlobURL(file, res.clip);
+                        var fileURL = theme.getImageFile(res);
+                        url = Markdown.attachClipRect(fileURL, res.clip);
                     }
                 }
             } else {

@@ -47,6 +47,7 @@ function start() {
         app.get('/media/images/:filename', handleImageOriginalRequest);
         app.get('/media/videos/:filename', handleVideoRequest);
         app.get('/media/audios/:filename', handleAudioRequest);
+        app.get('/media/cliparts/:filename', handleClipartRequest);
         app.post('/media/html/poster/:schema/:taskId', upload.array(), handleWebsitePoster);
         app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
         app.post('/media/videos/upload/:schema/:taskId', upload.single('file'), handleVideoUpload);
@@ -214,6 +215,23 @@ function handleVideoRequest(req, res) {
 function handleAudioRequest(req, res) {
     var path = `${CacheFolders.audio}/${req.params.filename}`;
     sendStaticFile(res, path, cacheControl.audio);
+}
+
+/**
+ * Handle clipart request
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
+function handleClipartRequest(req, res) {
+    var path = Path.resolve(`../media/cliparts/${req.params.filename}`);
+    getFileType(path).then((info) => {
+        res.type(info.mime);
+        res.set('Cache-Control', 'max-age=86400');
+        res.sendFile(path);
+    }).catch((err) => {
+        sendError(res, new HTTPError(404));
+    });
 }
 
 /**

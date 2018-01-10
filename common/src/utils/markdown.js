@@ -17,7 +17,7 @@ module.exports = {
     createParser,
     createRenderer,
     findReferencedResource,
-    createBlobURL,
+    attachClipRect,
 };
 
 /**
@@ -346,7 +346,7 @@ function findReferencedResource(resources, name) {
             type = 'image';
         }
         var matchingResources = _.filter(resources, { type });
-        var number = parseInt(match[3]) || 0;
+        var number = parseInt(match[3]) || 1;
         var res = matchingResources[number - 1];
         if (res) {
             return res;
@@ -355,15 +355,20 @@ function findReferencedResource(resources, name) {
     return null;
 }
 
-function createBlobURL(blob, clip) {
-    if (blob) {
-        var url = URL.createObjectURL(blob);
-        if (clip) {
-            var query = _.join(_.map(clip, (value, name) => {
-                return `${name}=${value}`;
-            }), '&');
-            url += '?' + query;
-        }
-        return url;
+/**
+ * Attach clipping rectangle coordinates to a blob URL
+ *
+ * @param  {String} blobURL
+ * @param  {Object} clip
+ *
+ * @return {String}
+ */
+function attachClipRect(blobURL, clip) {
+    if (blobURL && clip) {
+        var query = _.join(_.map(clip, (value, name) => {
+            return `${name}=${value}`;
+        }), '&');
+        blobURL += '?' + query;
     }
+    return blobURL;
 }
