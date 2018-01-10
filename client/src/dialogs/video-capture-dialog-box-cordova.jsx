@@ -58,12 +58,12 @@ module.exports = React.createClass({
      *
      * @param  {Object} video
      */
-    triggerCaptureEvent: function(image) {
+    triggerCaptureEvent: function(video) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                image,
+                video,
             });
         }
     },
@@ -89,19 +89,26 @@ module.exports = React.createClass({
         var mediaFile = mediaFiles[0];
         if (mediaFile) {
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
-                var file = new CordovaFile(mediaFile.fullPath);
-                var fileURL = BlobManager.manage(file);
-                var [ type, format ] = _.split(mediaFile.type);
-                var image = {
-                    format,
-                    file: fileURL,
-                    width: mediaFileData.width,
-                    height: mediaFileData.height,
-                    filename: mediaFile.name,
-                    duration: mediaFileData.duration * 1000,
-                };
-                this.triggerCaptureEvent(image);
-                return null;
+                return createThumbnail(mediaFile).then((thumbnailURL) => {
+                    var file = new CordovaFile(mediaFile.fullPath, mediaFile.type, mediaFile.size);
+                    var posterFile = new CordovaFile(thumbnailURL, 'image/jpeg');
+                    return posterFile.obtainSize().then(() => {
+                        var fileURL = BlobManager.manage(file);
+                        var posterFileURL = BlobManager.manage(posterFile);
+                        var [ type, format ] = _.split(mediaFile.type, '/');
+                        var video = {
+                            format,
+                            file: fileURL,
+                            poster_file: posterFileURL,
+                            width: mediaFileData.width,
+                            height: mediaFileData.height,
+                            filename: mediaFile.name,
+                            duration: mediaFileData.duration * 1000,
+                        };
+                        this.triggerCaptureEvent(video);
+                        return null;
+                    });
+                });
             }).catch((err) => {
                 this.triggerCancelEvent();
                 return null;
@@ -118,3 +125,21 @@ module.exports = React.createClass({
         this.triggerCancelEvent();
     },
 });
+
+function createThumbnail(mediaFile) {
+    return new Promise((resolve, reject) => {
+        var successCB = (path) => {
+            var url = 'file://' + encodeURI(path);
+            resolve(url);
+        };
+        var errorCB = (err) => {
+            reject(new Error(err));
+        };
+        var options = {
+            fileUri: mediaFile.fullPath,
+            outputFileName: mediaFile.name,
+            quality: 70
+        };
+        VideoEditor.createThumbnail(successCB, errorCB, options);
+    });
+}

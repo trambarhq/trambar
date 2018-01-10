@@ -603,8 +603,16 @@ if (process.env.PLATFORM === 'cordova') {
             var errorCB = (err) => {
                 reject(new FileError(err))
             };
-            fileTransfer.attributes = options.attributes;
-            fileTransfer.onUploadProgress = options.onUploadProgress;
+
+            if (options.onUploadProgress) {
+                fileTransfer.onprogress = (evt) => {
+                    evt = _.clone(evt);
+                    evt.target = {
+                        attributes: options.attributes,
+                    };
+                    options.onUploadProgress(evt);
+                };
+            }
             fileTransfer.upload(fileURL, encodedURL, successCB, errorCB, fileUploadOptions);
         });
     }

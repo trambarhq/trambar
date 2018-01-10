@@ -95,15 +95,17 @@ module.exports = React.createClass({
      */
     handleCaptureSuccess: function(imageURL) {
         MediaLoader.loadImage(imageURL).then((image) => {
-            var file = new CordovaFile(imageURL);
-            var fileURL = BlobManager.manage(file);
-            var image = {
-                format: 'jpeg',
-                file: fileURL,
-                width: image.naturalWidth,
-                height: image.naturalHeight,
-            };
-            this.triggerCaptureEvent(image);
+            var file = new CordovaFile(imageURL, 'image/jpeg');
+            return file.obtainSize().then(() => {
+                var fileURL = BlobManager.manage(file);
+                var image = {
+                    format: 'jpeg',
+                    file: fileURL,
+                    width: image.naturalWidth,
+                    height: image.naturalHeight,
+                };
+                this.triggerCaptureEvent(image);
+            });
             return null;
         }).catch((err) => {
             this.triggerCancelEvent();

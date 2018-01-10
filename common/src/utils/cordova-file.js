@@ -4,7 +4,7 @@ var FileError = require('errors/file-error');
 
 module.exports = CordovaFile;
 
-function CordovaFile(fullPath, type) {
+function CordovaFile(fullPath, type, size) {
     var name;
     var slashIndex = _.lastIndexOf(fullPath, '/');
     if (slashIndex !== -1) {
@@ -13,8 +13,14 @@ function CordovaFile(fullPath, type) {
     this.fullPath = fullPath;
     this.name = name;
     this.type = type;
+    this.size = size;
 }
 
+/**
+ * Get the FileEntry object
+ *
+ * @return {Promise<FileEntry>}
+ */
 CordovaFile.prototype.getFileEntry = function() {
     if (this.fileEntry) {
         return Promise.resolve(this.fileEntry);
@@ -26,5 +32,32 @@ CordovaFile.prototype.getFileEntry = function() {
         }, (err) => {
             reject(new FileError(err));
         });
+    });
+};
+
+CordovaFile.prototype.getFile = function() {
+    if (this.file) {
+        return Promise.resolve(this.file);
+    }
+    return this.getFileEntry().then((fileEntry) => {
+        return new Promise((resolve, reject) => {
+            fileEntry.file((file) => {
+                this.file = file;
+                resolve(file);
+            }, (err) => {
+                reject(new FileError(err));
+            });
+        });
+    });
+};
+
+/**
+ * Obtain the size of the file
+ *
+ * @return {Promise}
+ */
+CordovaFile.prototype.obtainSize = function() {
+    return this.getFile().then((file) => {
+        this.size = file.size;
     });
 };

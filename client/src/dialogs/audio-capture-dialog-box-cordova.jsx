@@ -91,8 +91,8 @@ module.exports = React.createClass({
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
                 var file = new CordovaFile(mediaFile.fullPath);
                 var fileURL = BlobManager.manage(file);
-                var [ type, format ] = _.split(mediaFile.type);
-                var image = {
+                var [ type, format ] = _.split(mediaFile.type, '/');
+                var audio = {
                     format,
                     file: fileURL,
                     width: mediaFileData.width,
@@ -100,7 +100,7 @@ module.exports = React.createClass({
                     filename: mediaFile.name,
                     duration: mediaFileData.duration * 1000,
                 };
-                this.triggerCaptureEvent(image);
+                this.triggerCaptureEvent(audio);
                 return null;
             }).catch((err) => {
                 this.triggerCancelEvent();
