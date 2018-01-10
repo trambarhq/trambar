@@ -5,6 +5,7 @@ var Memoize = require('utils/memoize');
 var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 var PlainText = require('utils/plain-text');
+var ComponentRefs = require('utils/component-refs');
 var UserUtils = require('objects/utils/user-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
@@ -46,6 +47,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            audioPlayer: HTMLAudioElement,
+        });
         var nextState = {
             voteSubmitted: false,
             selectedComponent: null,
@@ -54,6 +58,7 @@ module.exports = React.createClass({
             selectedResourceURL: null,
             showingReferencedMediaDialog: false,
             renderingReferencedMediaDialog: false,
+            audioURL: null,
         };
         this.updateUserAnswers({}, nextState);
         return nextState;
@@ -137,6 +142,7 @@ module.exports = React.createClass({
         return (
             <div className="story-contents">
                 {this.renderText()}
+                {this.renderAudioPlayer()}
                 {this.renderMedia()}
                 {this.renderReferencedMediaDialog()}
                 {this.renderAppComponents()}
@@ -601,6 +607,25 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render audio player for embed audio in markdown text
+     *
+     * @return {ReactElement|null}
+     */
+    renderAudioPlayer: function() {
+        if (!this.state.audioURL) {
+            return null;
+        }
+        var audioProps = {
+            ref: this.components.setters.audioPlayer,
+            src: this.state.audioURL,
+            autoPlay: true,
+            controls: true,
+            onEnded: this.handleAudioEnded,
+        };
+        return <audio {...audioProps} />;
+    },
+
+    /**
      * Render attached media
      *
      * @return {ReactElement}
@@ -748,12 +773,16 @@ module.exports = React.createClass({
             var theme = this.props.theme;
             var url;
             if (evt.forImage)  {
-                // images are style at height = 1.5em
-                url = theme.getImageURL(res, { height: 24 });
-                if (!url) {
-                    // use blob if it's attached
-                    var file = theme.getImageFile(res);
-                    url = Markdown.createBlobURL(file, res.clip);
+                if (res.type === 'audio') {
+                    url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
+                } else {
+                    // images are style at height = 1.5em
+                    url = theme.getImageURL(res, { height: 24 });
+                    if (!url) {
+                        // use blob if it's attached
+                        var file = theme.getImageFile(res);
+                        url = Markdown.createBlobURL(file, res.clip);
+                    }
                 }
             } else {
                 url = theme.getURL(res);
@@ -787,7 +816,9 @@ module.exports = React.createClass({
                 } else if (res.type === 'website') {
                     window.open(res.url);
                 } else if (res.type === 'audio') {
-                    // TODO
+                    var version = chooseAudioVersion(res);
+                    var audioURL = this.props.theme.getAudioURL(res, { version });
+                    this.setState({ audioURL });
                 }
             } else {
                 var targetRect = target.getBoundingClientRect();
@@ -910,6 +941,15 @@ module.exports = React.createClass({
             }, 500);
         })
     },
+
+    /**
+     * Called when audio playback ends
+     *
+     * @param  {Event} evt
+     */
+    handleAudioEnded: function(evt) {
+        this.setState({ audioURL: null });
+    },
 });
 
 var countVotes = Memoize(function(reactions) {
@@ -954,3 +994,14 @@ var getZoomableResources = Memoize(function(resources) {
         }
     })
 });
+
+/**
+ * Choose a version of the audio
+ *
+ * @param  {Object} res
+ *
+ * @return {String}
+ */
+function chooseAudioVersion(res) {
+    return _.first(_.keys(res.versions)) || null;
+}

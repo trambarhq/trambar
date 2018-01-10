@@ -70,6 +70,11 @@
             padding: 0.5em 1em 0.5em 1em;
             max-width: 300px;
         }
+
+        audio {
+            margin-top: 0.25em;
+            width: 100%;
+        }
     }
 
     &.selected {

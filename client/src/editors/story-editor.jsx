@@ -1165,12 +1165,16 @@ module.exports = React.createClass({
             var theme = this.props.theme;
             var url;
             if (evt.forImage)  {
-                // images are style at height = 1.5em
-                url = theme.getImageURL(res, { height: 24 });
-                if (!url) {
-                    // use blob if it's attached
-                    var file = theme.getImageFile(res);
-                    url = Markdown.createBlobURL(file, res.clip);
+                if (res.type === 'audio') {
+                    url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
+                } else {
+                    // images are style at height = 1.5em
+                    url = theme.getImageURL(res, { height: 24 });
+                    if (!url) {
+                        // use blob if it's attached
+                        var file = theme.getImageFile(res);
+                        url = Markdown.createBlobURL(file, res.clip);
+                    }
                 }
             } else {
                 url = theme.getURL(res);

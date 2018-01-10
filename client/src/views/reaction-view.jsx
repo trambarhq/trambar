@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 var UserUtils = require('objects/utils/user-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
@@ -46,6 +47,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            audioPlayer: HTMLAudioElement,
+        });
         var nextState = {
             options: defaultOptions,
             selectedResourceURL: null,
@@ -116,6 +120,7 @@ module.exports = React.createClass({
                         {this.renderText()}
                         {this.renderReferencedMediaDialog()}
                     </div>
+                    {this.renderAudioPlayer()}
                     {this.renderMedia()}
                 </div>
             </div>
@@ -316,6 +321,25 @@ module.exports = React.createClass({
     },
 
     /**
+     * Render audio player for embed audio in markdown text
+     *
+     * @return {ReactElement|null}
+     */
+    renderAudioPlayer: function() {
+        if (!this.state.audioURL) {
+            return null;
+        }
+        var audioProps = {
+            ref: this.components.setters.audioPlayer,
+            src: this.state.audioURL,
+            autoPlay: true,
+            controls: true,
+            onEnded: this.handleAudioEnded,
+        };
+        return <audio {...audioProps} />;
+    },
+
+    /**
      * Render attached media
      *
      * @return {ReactElement}
@@ -426,12 +450,16 @@ module.exports = React.createClass({
             var theme = this.props.theme;
             var url;
             if (evt.forImage)  {
-                // images are style at height = 1.5em
-                url = theme.getImageURL(res, { height: 24 });
-                if (!url) {
-                    // use blob if it's attached
-                    var file = theme.getImageFile(res);
-                    url = Markdown.createBlobURL(file, res.clip);
+                if (res.type === 'audio') {
+                    url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
+                } else {
+                    // images are style at height = 1.5em
+                    url = theme.getImageURL(res, { height: 24 });
+                    if (!url) {
+                        // use blob if it's attached
+                        var file = theme.getImageFile(res);
+                        url = Markdown.createBlobURL(file, res.clip);
+                    }
                 }
             } else {
                 url = theme.getURL(res);
@@ -465,7 +493,9 @@ module.exports = React.createClass({
                 } else if (res.type === 'website') {
                     window.open(res.url);
                 } else if (res.type === 'audio') {
-                    // TODO
+                    var version = chooseAudioVersion(res);
+                    var audioURL = this.props.theme.getAudioURL(res, { version });
+                    this.setState({ audioURL });
                 }
             } else {
                 var targetRect = target.getBoundingClientRect();
@@ -504,6 +534,15 @@ module.exports = React.createClass({
     handleOptionsChange: function(evt) {
         this.setOptions(evt.options);
     },
+
+    /**
+     * Called when audio playback ends
+     *
+     * @param  {Event} evt
+     */
+    handleAudioEnded: function(evt) {
+        this.setState({ audioURL: null });
+    },
 });
 
 var defaultOptions = {
@@ -521,3 +560,14 @@ var getZoomableResources = Memoize(function(resources) {
         }
     })
 });
+
+/**
+ * Choose a version of the audio
+ *
+ * @param  {Object} res
+ *
+ * @return {String}
+ */
+function chooseAudioVersion(res) {
+    return _.first(_.keys(res.versions)) || null;
+}

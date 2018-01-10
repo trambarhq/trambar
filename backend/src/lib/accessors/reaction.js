@@ -197,6 +197,7 @@ module.exports = _.create(ExternalData, {
             if (!reactionReceived.id && reactionReceived.type === 'like') {
                 // see if there's an existing like
                 var criteria = {
+                    type: 'like',
                     story_id: reactionReceived.story_id,
                     user_id: reactionReceived.user_id,
                 };
