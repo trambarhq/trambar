@@ -43,6 +43,12 @@ function fetch(method, url, payload, options) {
         xhr.timeout = _.get(options, 'timeout');
         xhr.withCredentials = _.get(options, 'crossSite', false);
         xhr.responseType = _.get(options, 'responseType', '');
+        xhr.attributes = _.get(options, 'attributes');
+        if (xhr.attributes) {
+            if (xhr.upload) {
+                xhr.upload.attributes = xhr.attributes;
+            }
+        }
         xhr.open(method, url, true, username, password);
         if (contentType) {
             xhr.setRequestHeader("Content-Type", contentType);

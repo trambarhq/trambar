@@ -5,6 +5,8 @@ var Moment = require('moment');
 var HTTPRequest = require('transport/http-request');
 var BlobStream = require('transport/blob-stream');
 var BlobManager = require('transport/blob-manager');
+var CordovaFile = require('utils/cordova-file');
+var FileError = require('errors/file-error');
 var Async = require('async-do-while');
 
 var Database = require('data/database');
@@ -49,19 +51,29 @@ module.exports = React.createClass({
         // create a task object on the server-side to track
         // backend processing of the payload
         return this.createTask(schema, action, options).then((task) => {
-            var sources = _.pick(res, 'file', 'poster_file', 'stream', 'external_url', 'external_poster_url', 'url');
-            var payload = _.assign({
+            var progress = {};
+            setInitialProgress(progress, res, 'file');
+            setInitialProgress(progress, res, 'poster_file');
+            setInitialProgress(progress, res, 'stream');
+            var payload = {
                 payload_id: task.id,
                 action: task.action,
                 token: task.token,
                 start: Moment(),
-                transferred: 0,
-                total: this.getPayloadSize(sources),
+                transferProgress: progress,
                 backendProgress: 0,
                 address: address,
                 schema: schema,
-                promise: null
-            }, sources);
+                promise: null,
+
+                file: res.file,
+                poster_file: res.poster_file,
+                stream: res.stream,
+                url: res.url,
+                external_url: res.external_url,
+                external_poster_url: res.external_poster_url,
+                filename: res.filename,
+            };
             var payloads = _.concat(this.state.payloads, payload);
             this.setState({ payloads }, () => {
                 this.triggerChangeEvent();
@@ -182,94 +194,143 @@ module.exports = React.createClass({
             // already started
             return;
         }
-        var promise = this.createFormData(payload).then((formData) => {
-            var options = {
-                responseType: 'json',
-                onUploadProgress: (evt) => {
-                    // scale value to total we had determined easlier
-                    var transferred = (evt.total) ? Math.round(payload.total * (evt.loaded / evt.total)) : 0;
-                    this.updatePayloadStatus(payloadId, { transferred });
-                },
-            };
-            var url = this.getDestinationURL(payload);
-            return HTTPRequest.fetch('POST', url, formData, options);
-        });
-        payload.promise = promise;
+        var promiseF = this.sendStream(payload, 'stream')
+                    || this.sendBlob(payload, 'file')
+                    || this.sendCordovaFile(payload, 'file')
+                    || this.sendURL(payload, 'external_url');
+        var promiseP = this.sendBlob(payload, 'poster_file')
+                    || this.sendCordovaFile(payload, 'poster_file')
+                    || this.sendURL(payload, 'external_poster_url');
+        payload.promise = Promise.all([ promiseF, promiseP ]);
         return;
     },
 
     /**
-     * Create an instance of FormData for uploading the given payload
+     * Send a blob in the payload to remote server
      *
      * @param  {Object} payload
+     * @param  {String} propName
      *
-     * @return {Promise<FormData>}
+     * @return {Promise|null}
      */
-    createFormData: function(payload) {
-        var props = {};
-        // main contents
-        if (payload.stream) {
-            // start the stream before we send the form data
-            props.stream = this.stream(payload.stream);
-        } else if (payload.file) {
-            props.file = BlobManager.get(payload.file);
-        } else if (payload.external_url) {
-            props.external_url = payload.external_url;
+    sendBlob: function(payload, propName) {
+        var fileURL = payload[propName];
+        var blob = BlobManager.get(fileURL);
+        if (!(blob instanceof Blob)) {
+            return null;
         }
-        // poster
-        if (payload.poster_file) {
-            props.poster_file = BlobManager.get(payload.poster_file);
-        } else if (payload.external_poster_url) {
-            props.external_poster_url = payload.external_poster_url;
-        }
-        // URL of website
-        if (payload.url) {
-            props.url = payload.url;
-        }
-        return Promise.props(props).then((props) => {
-            return _.transform(props, (formData, value, name) => {
-                formData.append(name, value);
-            }, new FormData);
+        var payloadId = payload.payload_id;
+        var address = payload.address;
+        var url = this.getDestinationURL(payload, propName);
+        var formData = new FormData;
+        formData.set('file', blob);
+        var options = {
+            responseType: 'json',
+            attributes: { name: propName, payloadId: payloadId },
+            onUploadProgress: this.handleUploadProgress,
+        };
+        return HTTPRequest.fetch('POST', url, formData, options).then((res) => {
+            // associate remote URL with blob
+            var url = res.url || res.poster_url;
+            if (url) {
+                BlobManager.associate(blob, `${address}${url}`);
+            }
+            return res;
         });
     },
 
     /**
-     * Return the size of a payload
+     * Send a local file in the payload to remote server
      *
      * @param  {Object} payload
+     * @param  {String} propName
      *
-     * @return {Number}
+     * @return {Promise|null}
      */
-    getPayloadSize: function(payload) {
-        var size = 0;
-        if (payload.stream) {
-            // count only the stream
-            size += payload.stream.size;
-        } else {
-            if (payload.file) {
-                var blob = BlobManager.get(payload.file);
-                if (blob) {
-                    size += blob.size;
-                }
-            }
-            if (payload.poster_file) {
-                var blob = BlobManager.get(payload.poster_file);
-                if (blob) {
-                    size += blob.size;
-                }
-            }
+    sendCordovaFile: function(payload, propName) {
+        if (process.env.PLATFORM !== 'cordova') {
+            return null;
         }
-        return size;
+        var fileURL = payload[propName];
+        var file = BlobManager.get(fileURL);
+        if (!(file instanceof CordovaFile)) {
+            return null;
+        }
+        var payloadId = payload.payload_id;
+        var address = payload.address;
+        var url = this.getDestinationURL(payload, propName);
+        var options = {
+            fileKey: 'file',
+            fileName: file.name,
+            mimeType: file.type,
+            attributes: { name: propName, payloadId: payloadId },
+            onUploadProgress: this.handleUploadProgress,
+        };
+        return uploadWithPlugin(file.fullPath, url, options).then((res) => {
+            var url = res.url || res.poster_url;
+            if (url) {
+                BlobManager.associate(blob, `${address}${url}`);
+            }
+            return res;
+        });
+    },
+
+    /**
+     * Initiate stream transfer and send stream id to remote server
+     *
+     * @param  {Object} payload
+     * @param  {String} propName
+     *
+     * @return {Promise|null}
+     */
+    sendStream: function(payload, propName) {
+        var stream = payload[propName];
+        if (!(stream instanceof BlobStream)) {
+            return null;
+        }
+
+        // start the stream before we send the form data
+        stream.attributes = { name: propName, payloadId: payload.payload_id };
+        stream.onProgress = this.handleUploadProgress;
+        return this.stream(payload.stream).then((streamId) => {
+            var url = this.getDestinationURL(payload, propName);
+            var formData = new FormData;
+            formData.set('stream', streamId);
+            var options = { responseType: 'json' };
+            return HTTPRequest.fetch('POST', url, formData, options);
+        });
+    },
+
+    /**
+     * Send URL of remote file to remote server
+     *
+     * @param  {Object} payload
+     * @param  {String} propName
+     *
+     * @return {Promise|null}
+     */
+    sendURL: function(payload, propName) {
+        var payloadURL = payload[propName];
+        if (!payloadURL) {
+            return null;
+        }
+        var payloadId = payload.id;
+        var url = this.getDestinationURL(payload, propName);
+        var formData = new FormData;
+        formData.set('url', payloadURL);
+        var options = { responseType: 'json' };
+        return HTTPRequest.fetch('POST', url, formData, options);
     },
 
     /**
      * Return URL for uploading the given payload
      *
      * @param  {Object} payload
+     * @param  {String} propName
      *
      * @return {String}
      */
-    getDestinationURL: function(payload) {
+    getDestinationURL: function(payload, propName) {
         var schema = payload.schema;
         var url = payload.address;
         var id = payload.payload_id;
@@ -280,14 +341,22 @@ module.exports = React.createClass({
                 break;
             case 'video-copy-transcode':
             case 'video-upload-transcode':
-                url += `/media/videos/upload/${schema}/${id}`;
+                if (propName === 'poster_file' || propName === 'external_poster_url') {
+                    url += `/media/videos/poster/${schema}/${id}`;
+                } else {
+                    url += `/media/videos/upload/${schema}/${id}`;
+                }
                 break;
             case 'audio-copy-transcode':
             case 'audio-upload-transcode':
-                url += `/media/audios/upload/${schema}/${id}`;
+                if (propName === 'poster_file' || propName === 'external_poster_url') {
+                    url += `/media/audios/poster/${schema}/${id}`;
+                } else {
+                    url += `/media/audios/upload/${schema}/${id}`;
+                }
                 break;
             case 'website-poster-generate':
-                url += `/media/html/screenshot/${schema}/${id}`;
+                url += `/media/html/poster/${schema}/${id}`;
                 break;
             default:
                 return;
@@ -332,19 +401,16 @@ module.exports = React.createClass({
                     }
                     var options = {
                         responseType: 'json',
-                    };
-                    if (blob) {
-                        options.onUploadProgress = (evt) => {
-                            var payload = _.find(this.state.payloads, { stream });
-                            if (payload) {
+                        onUploadProgress: (evt) => {
+                            if (blob) {
                                 // evt.loaded and evt.total are encoded sizes,
                                 // which are slightly larger than the blob size
                                 var bytesSentFromChunk = (evt.total) ? Math.round(blob.size * (evt.loaded / evt.total)) : 0;
                                 var transferred = uploadedChunkSize + bytesSentFromChunk;
-                                this.updatePayloadStatus(payload.payload_id, { transferred });
+                                stream.report(transferred);
                             }
-                        };
-                    }
+                        },
+                    };
                     return HTTPRequest.fetch('POST', url, formData, options).then((response) => {
                         if (!stream.id) {
                             stream.id = response.id;
@@ -376,22 +442,26 @@ module.exports = React.createClass({
     },
 
     /**
-     * Update status of file payload, using info from response
+     * Update property of payload, using a callback function
      *
      * @param  {Number} payloadId
-     * @param  {Object} props
+     * @param  {Function} f
+     *
+     * @return {null}
      */
-    updatePayloadStatus: function(payloadId, props) {
-        var payloads = _.slice(this.state.payloads);
-        var index = _.findIndex(payloads, { payload_id: payloadId });
-        if (index === -1) {
-            return;
-        }
-        payloads[index] = _.assign({}, payloads[index], props);
-        this.setState({ payloads }, () => {
-            this.triggerChangeEvent();
-        });
-    },
+     updatePayload: function(payloadId, f) {
+         var payloads = _.slice(this.state.payloads);
+         var index = _.findIndex(payloads, { payload_id: payloadId });
+         if (index === -1) {
+             return;
+         }
+         var payload = payloads[index] = _.cloneDeep(payloads[index]);
+         f(payload);
+         this.setState({ payloads }, () => {
+             this.triggerChangeEvent();
+         });
+         return null;
+     },
 
     /**
      * Update backend progress of payloads
@@ -421,15 +491,6 @@ module.exports = React.createClass({
                     if (_.includes(schemaPayloads, payload)) {
                         var task = _.find(tasks, { id: payload.payload_id });
                         if (task) {
-                            // associate remote URL with blob
-                            if (task.details.url) {
-                                var url = `${payload.address}${task.details.url}`;
-                                BlobManager.associate(payload.file, url);
-                            }
-                            if (task.details.poster_url) {
-                                var url = `${payload.address}${task.details.poster_url}`;
-                                BlobManager.associate(payload.poster_file, url);
-                            }
                             if (task.completion !== payload.backendProgress) {
                                 var payloadAfter = _.clone(payload);
                                 payloadAfter.backendProgress = task.completion;
@@ -461,21 +522,12 @@ module.exports = React.createClass({
         var files = 0;
         var bytes = 0;
         _.each(this.state.payloads, (payload) => {
-            var transferred = payload.transferred;
-            var total = payload.total;
-            if (total === 0) {
-                // hasn't started yet
-                if (payload.file) {
-                    var blob = BlobManager.get(payload.file);
-                    total = blob.size;
-                } else if (payload.stream) {
-                    total = payload.stream.size;
+            _.each(payload.transferProgress, (progress) => {
+                if (progress.loaded < progress.total) {
+                    files++;
+                    bytes += Math.max(0, progress.total - progress.loaded);
                 }
-            }
-            if (transferred < total) {
-                files++;
-                bytes += Math.max(0, total - transferred);
-            }
+            });
         });
         return (files > 0) ? { files, bytes } : null;
     },
@@ -515,4 +567,52 @@ module.exports = React.createClass({
             });
         }
     },
+
+    /**
+     * Called when some progress has been made on uploading a file
+     *
+     * @param  {Event} evt
+     */
+    handleUploadProgress: function(evt) {
+        var attributes = evt.target.attributes;
+        var name = attributes.name;
+        var payloadId = attributes.payloadId;
+        this.updatePayload(payloadId, (payload) => {
+            payload.transferProgress[name] = _.pick(evt, 'loaded', 'total');
+        });
+    }
 });
+
+if (process.env.PLATFORM === 'cordova') {
+    /**
+     * Upload file with Cordova FileTransfer plugin
+     *
+     * @param  {String} fileURL
+     * @param  {String} remoteURL
+     * @param  {Object} options
+     *
+     * @return {Promise}
+     */
+    var uploadWithPlugin = function(fileURL, remoteURL, options) {
+        return new Promise((resolve, reject) => {
+            var encodedURL = encodeURI(remoteURL);
+            var fileUploadOptions = new FileUploadOptions();
+            _.assign(fileUploadOptions, _.omit(options, 'attributes', 'onUploadProgress'));
+            var fileTransfer = new FileTransfer();
+            var successCB = resolve;
+            var errorCB = (err) => {
+                reject(new FileError(err))
+            };
+            fileTransfer.attributes = options.attributes;
+            fileTransfer.onUploadProgress = options.onUploadProgress;
+            fileTransfer.upload(fileURL, encodedURL, successCB, errorCB, fileUploadOptions);
+        });
+    }
+}
+
+function setInitialProgress(progress, res, propName) {
+    var file = res[propName];
+    if (file && file.size > 0) {
+        progress[propName] = { loaded: 0, total: file.size };
+    }
+}

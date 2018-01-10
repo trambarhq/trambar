@@ -10,6 +10,7 @@ function BlobStream() {
     this.waitResult = null;
     this.id = null;
     this.size = 0;
+    this.onProgress = null;
 }
 
 /**
@@ -167,7 +168,23 @@ BlobStream.prototype.pipe = function(file, chunkSize) {
         this.push(chunk);
     }
     this.close();
-}
+};
+
+/**
+ * Report upload progress
+ *
+ * @param  {Number} transferred
+ */
+BlobStream.prototype.report = function(transferred) {
+    if (this.onProgress) {
+        this.onProgress({
+            type: 'progress',
+            target: this,
+            loaded: transferred,
+            total: this.size,
+        });
+    }
+};
 
 /**
  * Return an object containing a promise and its resolve/reject functions
