@@ -154,6 +154,7 @@ module.exports = React.createClass({
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
+            stacking: this.state.stacking,
             url: this.getPageURL(NewsPage),
             onClick: this.handleButtonClick,
         };
@@ -169,6 +170,7 @@ module.exports = React.createClass({
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
+            stacking: this.state.stacking,
             url: this.getPageURL(BookmarksPage),
             onClick: this.handleButtonClick,
         };
@@ -176,6 +178,7 @@ module.exports = React.createClass({
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
+            stacking: this.state.stacking,
             url: this.getPageURL(PeoplePage),
             onClick: this.handleButtonClick,
         };
@@ -183,11 +186,11 @@ module.exports = React.createClass({
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
+            stacking: this.state.stacking,
             url: this.getPageURL(SettingsPage),
             onClick: this.handleButtonClick,
         };
         var newNotificationProps = {
-            stacking: this.state.stacking,
             database: this.props.database,
             route: this.props.route,
         };
@@ -251,6 +254,9 @@ function Button(props) {
     }
     if (props.active) {
         className += ' active';
+    }
+    if (props.stacking) {
+        className += ' stacking';
     }
     if (props.stacking) {
         return (
@@ -321,12 +327,8 @@ var NewNotificationsBadge = Relaks.createClass({
             if (!count) {
                 return null;
             }
-            var className = 'badge';
-            if (this.props.stacking) {
-                className += ' stacking';
-            }
             return (
-                <span className={className}>
+                <span className="badge">
                     <span className="number">{count}</span>
                 </span>
             )

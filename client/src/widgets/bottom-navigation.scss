@@ -19,7 +19,7 @@
         display: block;
         flex: 1 1 auto;
         text-align: center;
-        padding: 6px 0 6px 0;
+        padding: 8px 0 8px 0;
         cursor: pointer;
         color: #888888;
 
@@ -59,8 +59,12 @@
                 left: 0.25em;
                 top: -0.5em;
             }
+        }
 
-            &.stacking {
+        &.stacking {
+            padding: 4px 0 0 0;
+
+            .badge {
                 .number {
                     left: 0.5em;
                     top: -0.7em;
@@ -68,4 +72,6 @@
             }
         }
     }
+
+
 }
