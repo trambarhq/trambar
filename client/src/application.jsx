@@ -612,14 +612,14 @@ module.exports = React.createClass({
     /**
      * Remove user credentials from local cache
      *
-     * @param  {String} address
+     * @param  {Object} session
      *
      * @return {Promise<Object>}
      */
-    removeSessionFromCache: function(address) {
+    removeSessionFromCache: function(session) {
         // save the credentials
         var db = this.state.database.use({ schema: 'local', by: this });
-        var record = { key: address };
+        var record = { key: session.address };
         return db.removeOne({ table: 'session' }, record);
     },
 
@@ -664,7 +664,6 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDatabaseSearch: function(evt) {
-        console.log('Searching', evt.searching);
         this.setState({ searching: evt.searching });
     },
 
@@ -693,7 +692,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeSessionFromCache(evt.address);
+        this.removeSessionFromCache(evt.session);
 
         var address = this.state.route.parameters.address;
         if (evt.session.address === address) {

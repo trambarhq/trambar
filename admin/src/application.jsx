@@ -191,9 +191,12 @@ module.exports = React.createClass({
     /**
      * Render alert message in pop-up bar at bottom of page
      *
-     * @return {[type]}
+     * @return {ReactElement|null}
      */
     renderTaskAlert: function() {
+        if (!this.state.canAccessServer) {
+            return null;
+        }
         var props = {
             database: this.state.database,
             route: this.state.route,
@@ -439,14 +442,14 @@ module.exports = React.createClass({
     /**
      * Remove user credentials from local cache
      *
-     * @param  {String} address
+     * @param  {Object} session
      *
      * @return {Promise<Object>}
      */
-    removeSessionFromCache: function(address) {
+    removeSessionFromCache: function(session) {
         // save the credentials
         var db = this.state.database.use({ schema: 'local', by: this });
-        var record = { key: address };
+        var record = { key: session.address };
         return db.removeOne({ table: 'session' }, record);
     },
 
@@ -507,7 +510,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeSessionFromCache(evt.address);
+        this.removeSessionFromCache(evt.session);
 
         var address = this.state.route.parameters.address;
         if (evt.session.address === address) {
