@@ -246,7 +246,7 @@ module.exports = React.createClass({
                 case 'assignment':
                     var user = this.props.currentUser;
                     var repo = this.props.repo;
-                    if (story.type === 'issue') {
+                    if (story.type === 'issue' || story.type === 'story') {
                         var url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
                             var link = LinkUtils.find(reaction, { relation: 'issue' });

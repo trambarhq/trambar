@@ -342,11 +342,12 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var n = this.props.locale.name;
+        var user = this.props.currentUser;
         var story = this.props.story;
         var title = story.details.title;
         var repo = this.props.repo;
         var author = _.first(this.props.authors);
-        var user = (author) ? n(author.details.name, author.details.gender) : '';
+        var name = (author) ? n(author.details.name, author.details.gender) : '';
         var url, target;
         var issueLink = LinkUtils.find(this.props.story, { relation: 'issue' });
         if (UserUtils.canAccessRepo(user, repo)) {
@@ -361,7 +362,7 @@ module.exports = React.createClass({
             <div className="text issue">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-issue-$user-opened-$number-$title`, user, number, p(title))}
+                        {t(`story-issue-$user-opened-$number-$title`, name, number, p(title))}
                     </a>
                 </p>
                 {this.renderStatus()}

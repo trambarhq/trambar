@@ -401,7 +401,7 @@ module.exports = React.createClass({
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
-            repo: this.props.repo,
+            repo: findRepo(this.props.repos, this.props.story),
             currentUser: this.props.currentUser,
             database: this.props.database,
             payloads: this.props.payloads,
