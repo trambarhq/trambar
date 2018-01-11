@@ -5,6 +5,7 @@ module.exports = exports = [
     'task-completion',
     'note',
     'assignment',
+    'tracking',
 ];
 
 exports.editable = [

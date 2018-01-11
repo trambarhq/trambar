@@ -156,7 +156,9 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var reaction = this.props.reaction;
+        var user = this.props.currentUser;
         var story = this.props.story;
+        var repo = this.props.repo;
         var name = p(_.get(this.props.respondent, 'details.name'));
         this.resourcesReferenced = {};
         if (reaction.published) {
@@ -244,8 +246,6 @@ module.exports = React.createClass({
                         </a>
                     );
                 case 'assignment':
-                    var user = this.props.currentUser;
-                    var repo = this.props.repo;
                     if (story.type === 'issue' || story.type === 'story') {
                         var url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
@@ -277,6 +277,22 @@ module.exports = React.createClass({
                             </a>
                         );
                     }
+                case 'tracking':
+                    var url, target;
+                    if (UserUtils.canAccessRepo(user, repo)) {
+                        var link = LinkUtils.find(reaction, { relation: 'issue' });
+                        if (link) {
+                            var issueNumber = link.issue.number;
+                            url = `${repo.details.web_url}/issues/${issueNumber}`;
+                            target = link.type;
+                        }
+                    }
+                    return (
+                        <a className="issue-tracking" href={url} target={target}>
+                            {t('reaction-$user-added-story-to-issue-tracker', name)}
+                        </a>
+                    );
+
             }
         } else {
             var action = (reaction.ptime) ? 'editing' : 'writing';

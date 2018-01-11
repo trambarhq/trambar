@@ -207,6 +207,9 @@ module.exports = function(localeCode) {
         'qr-scanner-cancel': 'Cancel',
         'qr-scanner-invalid-qr-code': 'Invalid QR code',
 
+        'reaction-$user-added-story-to-issue-tracker': (user) => {
+            return `${user} created an issue based on this post`;
+        },
         'reaction-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;
         },

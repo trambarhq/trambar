@@ -10,6 +10,7 @@ var Transport = require('gitlab-adapter/transport');
 var UserExporter = require('gitlab-adapter/user-exporter');
 
 // accessors
+var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
 var Server = require('accessors/server');
 var System = require('accessors/system');
@@ -32,25 +33,29 @@ function exportStory(db, project, story) {
     var criteria = { deleted: false };
     return System.findOne(db, 'global', criteria, '*').then((system) => {
         var issueLink = LinkUtils.find(story, { type: 'gitlab', relation: 'issue' });
+        var newIssue = !issueLink.issue.id;
         var criteria = { id: issueLink.server_id, deleted: false };
         return Server.findOne(db, 'global', criteria, '*').then((server) => {
-            var criteria = { id: story.user_ids[0], deleted: false };
-            return User.findOne(db, 'global', criteria, '*').then((author) => {
-                if (!server || !author) {
-                    return null;
+            if (!server) {
+                return null;
+            }
+            var glIssue = copyIssueProperties(story, project, system, issueLink);
+            var glIssueNumber = issueLink.issue.number;
+            return saveIssue(server, issueLink.project.id, glIssueNumber, glIssue, issueLink.user.id).then((glIssue) => {
+                var storyAfter = _.cloneDeep(story);
+                var issueLinkAfter = LinkUtils.find(storyAfter, { type: 'gitlab', relation: 'issue' });
+                _.set(issueLinkAfter, 'issue.id', glIssue.id);
+                _.set(issueLinkAfter, 'issue.number', glIssue.iid);
+                if (_.isEqual(story, storyAfter)) {
+                    return story;
                 }
-                var authorLink = LinkUtils.find(author, { server });
-                var glIssue = copyIssueProperties(story, project, system, issueLink);
-                var glIssueNumber = issueLink.issue.number;
-                return saveIssue(server, issueLink.project.id, glIssueNumber, glIssue, authorLink.user.id).then((glIssue) => {
-                    var storyAfter = _.cloneDeep(story);
-                    var issueLinkAfter = LinkUtils.find(storyAfter, { type: 'gitlab', relation: 'issue' });
-                    _.set(issueLinkAfter, 'issue.id', glIssue.id);
-                    _.set(issueLinkAfter, 'issue.number', glIssue.iid);
-                    if (_.isEqual(story, storyAfter)) {
+                return Story.updateOne(db, project.name, storyAfter).then((story) => {
+                    if (!newIssue) {
                         return story;
                     }
-                    return Story.updateOne(db, project.name, storyAfter);
+                    return createTrackingReaction(db, project, story, issueLinkAfter).then((reaction) => {
+                        return story;
+                    });
                 });
             });
         });
@@ -101,4 +106,37 @@ function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
     } else {
         return Transport.post(server, url, glIssue, glUserId);
     }
+}
+
+/**
+ * Add a "tracking" reaction
+ *
+ * @param  {Database} db
+ * @param  {Project} project
+ * @param  {Story} story
+ * @param  {Object} link
+ *
+ * @return {Reaction}
+ */
+function createTrackingReaction(db, project, story, link) {
+    // find the user who filed the story
+    var userLink = LinkUtils.pick(link, 'user');
+    var criteria = { external_object: userLink, deleted: false };
+    return User.findOne(db, 'global', criteria, '*').then((user) => {
+        if (!user) {
+            return null;
+        }
+        var reaction = {
+            type: 'tracking',
+            story_id: story.id,
+            user_id: user.id,
+            public: story.public,
+            ready: true,
+            published: true,
+            ptime: new String('NOW()'),
+        };
+        var schema = project.name;
+        var issueLink = Import.join(reaction, link);
+        return Reaction.insertOne(db, schema, reaction);
+    });
 }
