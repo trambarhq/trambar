@@ -121,10 +121,18 @@ module.exports = React.createClass({
                             if (object.changes) {
                                 this.triggerNotifyEvent(serverAddress, object.changes);
                             } else if (object.alert) {
-                                console.log('WebSocket: ', object);
                                 this.showAlert(serverAddress, object.alert);
                             } else if (object.socket) {
-                                this.triggerConnectEvent(serverAddress, object.socket);
+                                var connection = {
+                                    method: 'websocket',
+                                    relay: null,
+                                    token: object.socket,
+                                    address: serverAddress,
+                                    details: {
+                                        user_agent: navigator.userAgent
+                                    },
+                                };
+                                this.triggerConnectEvent(connection);
                             }
                         }
                     };
@@ -141,7 +149,9 @@ module.exports = React.createClass({
                                 });
                             });
                         }
-                        this.triggerDisconnectEvent(serverAddress);
+                        if (this.props.serverAddress === serverAddress) {
+                            this.triggerDisconnectEvent();
+                        }
                     };
                     this.setState({ socket, connected: true });
                 }
@@ -236,31 +246,26 @@ module.exports = React.createClass({
     /**
      * Notify parent component that a connection was established
      *
-     * @param  {String} address
-     * @param  {String} token
+     * @param  {Object} connection
      */
-    triggerConnectEvent: function(address, token) {
+    triggerConnectEvent: function(connection) {
         if (this.props.onConnect) {
             this.props.onConnect({
                 type: 'connect',
                 target: this,
-                address,
-                token,
+                connection,
             });
         }
     },
 
     /**
      * Notify parent component that a connection was lost
-     *
-     * @param  {String} address
      */
-    triggerDisconnectEvent: function(address) {
+    triggerDisconnectEvent: function() {
         if (this.props.onDisconnect) {
             this.props.onDisconnect({
                 type: 'disconnect',
                 target: this,
-                address,
             });
         }
     },

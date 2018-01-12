@@ -5,10 +5,15 @@ module.exports = {
     format,
 };
 
-function format(schema, user, notification, lang) {
+function format(system, schema, user, notification, lang) {
+    var title = _.get(system, [ 'details', 'title', lang ]);
+    if (!title) {
+        title = getLocalizedText('app-name', lang);
+    }
     return {
         schema: schema,
-        title: getNotificationText(user, notification, lang),
+        title: title,
+        message: getNotificationText(user, notification, lang),
         profile_image: getProfileImageURL(user),
         type: notification.type,
         notification_id: notification.id,
@@ -28,7 +33,6 @@ function getNotificationText(user, notification, lang) {
         return getLocalizedName.apply(null, args);
     };
     var name = n(user);
-    console.log(notification);
     switch (notification.type) {
         case 'like':
             return t('notification-$user-likes-your-$story', name, notification.details.story_type);
@@ -44,6 +48,8 @@ function getNotificationText(user, notification, lang) {
             return t('notification-$user-posted-a-note-about-your-$story', name, notification.details.story_type);
         case 'assignment':
             return t('notification-$user-is-assigned-to-your-issue', name);
+        case 'tracking':
+            return t('notification-$user-added-your-post-to-issue-tracker', name);
         case 'push':
             return t('notification-$user-pushed-code-to-$branch', name, notification.details.branch);
         case 'merge':

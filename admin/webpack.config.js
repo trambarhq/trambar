@@ -23,7 +23,6 @@ var folders = _.mapValues({
     includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
 }, resolve);
 if (event !== 'start') {
-    console.log(`Platform: ${platform}`);
     console.log(`Output folder: ${folders.www}`);
     if (FS.lstatSync(folders.www).isSymbolicLink()) {
         var actualFolder = FS.readlinkSync(folders.www);

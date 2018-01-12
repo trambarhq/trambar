@@ -378,14 +378,13 @@ module.exports = React.createClass({
         db.start().then((userId) => {
             var subscription = {
                 user_id: userId,
-                address: 'websocket',
-                token: connection.token,
                 schema: '*',
                 area: 'admin',
                 locale: this.state.locale.localeCode,
-                details: {
-                    user_agent: navigator.userAgent
-                }
+                method: connection.method,
+                token: connection.token,
+                relay: connection.relay,
+                details: connection.details,
             };
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
                 this.setState({ subscription });
@@ -679,12 +678,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleConnection: function(evt) {
-        this.setState({
-            connection: {
-                address: evt.address,
-                token: evt.token
-            },
-        });
+        this.setState({ connection: evt.connection });
     },
 
     /**

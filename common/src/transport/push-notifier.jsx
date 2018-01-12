@@ -20,7 +20,7 @@ module.exports = React.createClass({
 
     statics: {
         isAvailable: function() {
-            return (process.env.PLATFORM !== 'mobile');
+            return true;
         }
     },
 
@@ -42,13 +42,38 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        // TODO: obtain actual information from Cordova plugin
         return {
-            pushNetwork: 'fcm',
-            registrationId: 'test-id:0000000000000',
-            deviceDetails: { test: 1 },
-            info: null,
+            registrationId: null,
+            registrationType: null,
+            pushRelayResponse: null,
         };
+    },
+
+    componentDidMount: function() {
+        if (!pushNotification) {
+            var params = {
+                android: {},
+                ios: {
+                    alert: true,
+                    badge: true,
+                    sound: true,
+                },
+                windows: {},
+            };
+            pushNotification = PushNotification.init(params);
+        }
+        pushNotification.on('registration', this.handleRegistration);
+        pushNotification.on('notification', this.handleNotification);
+        pushNotification.on('error', this.handleError);
+   },
+
+    /**
+     * Render method
+     *
+     * @return {ReactElement}
+     */
+    render: function() {
+        return null;
     },
 
     /**
@@ -62,57 +87,66 @@ module.exports = React.createClass({
          || prevProps.relayAddress !== this.props.relayAddress
          || prevState.registrationId !== this.state.registrationId) {
              if (this.props.relayAddress && this.state.registrationId) {
-                 this.register(this.props.relayAddress, this.props.serverAddress, this.state.registrationId);
+                 this.register(this.props.relayAddress, this.props.serverAddress, this.state.registrationId, this.state.registrationType);
              }
         }
     },
 
     /**
-     * Connect to server
+     * Register device at push relay
      *
      * @param  {String} relayAddress
      * @param  {String} serverAddress
      * @param  {String} registrationId
+     * @param  {String} registrationType
      *
      * @return {Boolean}
      */
-    register: function(relayAddress, serverAddress, registrationId) {
+    register: function(relayAddress, serverAddress, registrationId, registrationType) {
         // track registration attempt with an object
-        var attempt = this.registrationAttempt;
-        if (attempt) {
-            if (attempt.relayAddress === relayAddress
-             && attempt.serverAddress === serverAddress
-             && attempt.registrationId === registrationId) {
-                // already connecting to server
-                return attempt.promise;
-            }
+        var attempt = { relayAddress, serverAddress, registrationId, registrationType };
+        if (_.isEqual(this.registrationAttempt, attempt)) {
+            // already connecting to server
+            return this.registrationAttempt.promise;
         }
-        attempt = this.registrationAttempt = { relayAddress, serverAddress, registrationId };
-        this.setState({ info: null, registered: false });
+        this.registrationAttempt = attempt;
+        this.setState({ pushRelayResponse: null, registered: false });
 
         var registered = false;
         var delay = this.props.initialReconnectionDelay;
         var maximumDelay = this.props.maximumReconnectionDelay;
 
+        relayAddress = _.trimEnd(relayAddress, '/');
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
         Async.do(() => {
-            var url = `${_.trimEnd(relayAddress, '/')}/register`;
+            var url = `${relayAddress}/register`;
+            var details = getDeviceDetails();
             var payload = {
-                network: this.state.pushNetwork,
+                network: registrationType,
                 registration_id: registrationId,
-                details: this.state.deviceDetails,
+                details: details,
                 address: serverAddress,
             };
             var options = {
                 responseType: 'json',
                 contentType: 'json',
             };
-            return HTTPRequest.fetch('POST', url, payload, options).then((info) => {
+            return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
                 if (attempt === this.registrationAttempt) {
                     this.registrationAttempt = null;
-                    this.setState({ info: _.omit(info, 'token'), registered: true });
-                    this.triggerConnectEvent(info.token);
+                    this.setState({
+                        pushRelayResponse: _.omit(result, 'token'),
+                        registered: true
+                    });
+                    var connection = {
+                        method: registrationType,
+                        relay: relayAddress,
+                        token: result.token,
+                        address: serverAddress,
+                        details: getDeviceDetails(),
+                    };
+                    this.triggerConnectEvent(connection);
                 }
                 registered = true;
                 return null;
@@ -160,29 +194,14 @@ module.exports = React.createClass({
     /**
      * Notify parent component that a connection was established
      *
-     * @param  {String} address
-     * @param  {String} token
+     * @param  {Object} connection
      */
-    triggerConnectEvent: function(address, token) {
+    triggerConnectEvent: function(connection) {
         if (this.props.onConnect) {
             this.props.onConnect({
                 type: 'connect',
                 target: this,
-                address,
-                token,
-            });
-        }
-    },
-
-    /**
-     * Notify parent component that a connection was lost
-     */
-    triggerDisconnectEvent: function() {
-        if (this.props.onDisconnect) {
-            this.props.onDisconnect({
-                type: 'disconnect',
-                target: this,
-                address,
+                connection,
             });
         }
     },
@@ -204,7 +223,72 @@ module.exports = React.createClass({
         }
     },
 
-    render: function() {
-        return null;
+    /**
+     * Called when plugin has successful register the device
+     *
+     * @param  {Object} data
+     */
+    handleRegistration: function(data) {
+        this.setState({
+            registrationId: data.registrationId,
+            registrationType: _.toLower(data.registrationType),
+        });
+    },
+
+    /**
+     * Called when a notification is received
+     *
+     * @param  {Object} data
+     */
+    handleNotification: function(data) {
+        var additionalData = data.additionalData || {};
+        var address = additionalData.address;
+        var changes = additionalData.changes;
+        console.log('handleNotification', data);
+        if (changes) {
+            this.triggerNotifyEvent(address, changes);
+        } else if (data.message) {
+            if (!additionalData.foreground) {
+                var alert = {
+                    title: data.title,
+                    message: data.message,
+                    type: additionalData.type,
+                    schema: additionalData.schema,
+                    notification_id: parseInt(additionalData.notification_id),
+                    reaction_id: parseInt(additionalData.reaction_id),
+                    story_id: parseInt(additionalData.story_id),
+                    user_id: parseInt(additionalData.user_id),
+                };
+                this.triggerAlertClickEvent(address, alert);
+            }
+        }
+    },
+
+
+    /**
+     * Called when an error occured
+     *
+     * @param  {Error} err
+     */
+    handleError: function(err) {
+        console.log(err);
     },
 });
+
+var pushNotification;
+
+/**
+ * Return device details
+ *
+ * @return {Object}
+ */
+var getDeviceDetails = function() {
+    var device = window.device;
+    if (device) {
+        return {
+            manufacturer: _.capitalize(device.manufacturer),
+            name: device.model,
+        };
+    }
+    return {};
+}

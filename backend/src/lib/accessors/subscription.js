@@ -16,7 +16,8 @@ module.exports = _.create(Data, {
         details: Object,
         user_id: Number,
         area: String,
-        address: String,
+        method: String,
+        relay: String,
         token: String,
         schema: String,
         locale: String,
@@ -24,9 +25,10 @@ module.exports = _.create(Data, {
     criteria: {
         id: Number,
         deleted: Boolean,
-        address: String,
         user_id: Number,
         area: String,
+        method: String,
+        relay: String,
         token: String,
         schema: String,
     },
@@ -51,7 +53,8 @@ module.exports = _.create(Data, {
                 details jsonb NOT NULL DEFAULT '{}',
                 user_id int NOT NULL,
                 area varchar(32) NOT NULL,
-                address varchar(256) NOT NULL,
+                method varchar(32) NOT NULL,
+                relay varchar(256),
                 token varchar(64) NOT NULL,
                 schema varchar(256) NOT NULL,
                 locale varchar(16) NOT NULL,
@@ -76,6 +79,39 @@ module.exports = _.create(Data, {
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },
+
+    /**
+     * Export database row to client-side code, omitting sensitive or
+     * unnecessary information
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    export: function(db, schema, rows, credentials, options) {
+        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var row = rows[index];
+                object.user_id = row.user_id;
+                object.area = row.area;
+                object.method = row.method;
+                object.token = row.token;
+                object.relay = row.relay;
+                object.schema = row.schema;
+                object.locale = row.locale;
+
+                if (row.user_id !== credentials.user.id) {
+                    throw new HTTPError(403);
+                }
+            });
+            return objects;
+        });
+    },
+
 
     /**
      * Import objects sent by client-side code, applying access control

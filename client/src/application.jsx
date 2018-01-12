@@ -321,9 +321,9 @@ module.exports = React.createClass({
                 defaultProfileImage: require('profile-image-placeholder.png'),
             })
         } else if (Notifier === PushNotifier) {
-            if (typeof(this.state.pushRelay) === 'string') {
+            if (this.state.pushRelay) {
                 _.assign(notifierProps, {
-                    relayAddress: this.state.pushRelay
+                    relayAddress: this.state.pushRelay.url
                 });
             }
         }
@@ -497,27 +497,24 @@ module.exports = React.createClass({
             return;
         }
         var connection = this.state.connection;
-        var destination;
         if (Notifier === WebsocketNotifier) {
             if (!connection || params.address !== connection.address) {
                 // don't have a websocket connection to the server yet
                 return;
             }
-            destination = 'websocket';
         }
         if (Notifier === PushNotifier) {
-            if (!connection) {
-                // registration hasn't occurred
-                return;
-            }
             var pushRelay = this.state.pushRelay;
             if (!pushRelay || params.address !== pushRelay.address) {
                 // don't know yet the address of the push relay used by the server
                 this.discoverPushRelay();
                 return;
             }
-            destination = this.state.pushRelay.url;
-            if (!destination) {
+            if (!connection) {
+                // registration hasn't occurred
+                return;
+            }
+            if (!this.state.pushRelay.url) {
                 return;
             }
         }
@@ -533,14 +530,13 @@ module.exports = React.createClass({
             }
             var subscription = {
                 user_id: userId,
-                address: destination,
-                token: connection.token,
                 schema: schema,
                 area: 'client',
                 locale: this.state.locale.localeCode,
-                details: {
-                    user_agent: navigator.userAgent
-                }
+                method: connection.method,
+                token: connection.token,
+                relay: connection.relay,
+                details: connection.details,
             };
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
                 this.setState({ subscription });
@@ -961,12 +957,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleConnection: function(evt) {
-        this.setState({
-            connection: {
-                address: evt.address,
-                token: evt.token
-            },
-        });
+        this.setState({ connection: evt.connection });
     },
 
     /**
