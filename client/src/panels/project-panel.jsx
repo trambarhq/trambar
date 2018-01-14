@@ -232,6 +232,7 @@ module.exports = React.createClass({
         }
         var props = {
             show: this.state.showingDialog,
+            system: this.props.system,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
