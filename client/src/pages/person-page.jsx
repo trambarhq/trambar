@@ -3,6 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var Relaks = require('relaks');
 var DateTracker = require('utils/date-tracker');
+var DateUtils = require('utils/date-utils');
+
 var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
@@ -42,13 +44,13 @@ module.exports = Relaks.createClass({
          */
         parseURL: function(path, query, hash) {
             return Route.match(path, [
-                '/:schema/people/:user/:date/?',
                 '/:schema/people/:user/?',
             ], (params) => {
                 return {
                     schema: params.schema,
                     user: Route.parseId(params.user),
                     search: query.search,
+                    date: Route.parseDate(query.date),
                     story: Route.parseId(hash, /S(\d+)/i),
                     reaction: Route.parseId(hash, /R(\d+)/i),
                 };
@@ -65,7 +67,7 @@ module.exports = Relaks.createClass({
         getURL: function(params) {
             var path = `/${params.schema}/people/${params.user}/`, query = {}, hash;
             if (params.date != undefined) {
-                path += `${params.date || 'date'}/`
+                query.date = params.date;
             }
             if (params.search != undefined) {
                 query.search = params.search;
@@ -105,6 +107,17 @@ module.exports = Relaks.createClass({
     },
 
     /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            today: DateTracker.today,
+        };
+    },
+
+    /**
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
@@ -123,6 +136,8 @@ module.exports = Relaks.createClass({
             dailyActivities: null,
             currentUser: null,
             project: null,
+            selectedDate: params.date,
+            today: this.state.today,
 
             database: this.props.database,
             payloads: this.props.payloads,
@@ -162,34 +177,13 @@ module.exports = Relaks.createClass({
             props.roles = roles;
             return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
-            // load daily-activities statistics
-            var end = DateTracker.endOfMonthISO;
-            var start = DateTracker.startOfMonthISO;
-            var range = `[${start},${end}]`;
-            var criteria = {
-                type: 'daily-activities',
-                filters: {
-                    user_ids: [ props.user.id ],
-                    time_range: range,
-                },
-            };
-            return db.findOne({ table: 'statistics', criteria });
-        }).then((statistics) => {
-            props.dailyActivities = statistics;
-            return meanwhile.show(<PersonPageSync {...props} />);
-        }).then(() => {
             if (params.date || params.search) {
                 // load story matching filters
                 var criteria = {
                     user_ids: [ params.user ],
                 };
                 if (params.date) {
-                    var s = Moment(params.date);
-                    var e = s.clone().endOf('day');
-                    var rangeStart = s.toISOString();
-                    var rangeEnd = e.toISOString();
-                    var range = `[${rangeStart},${rangeEnd}]`;
-                    criteria.time_range = range;
+                    criteria.time_range = DateUtils.getDayRange(params.date);
                 }
                 if (params.search) {
                     criteria.search = {
@@ -242,8 +236,52 @@ module.exports = Relaks.createClass({
             }
         }).then((stories) => {
             props.stories = stories
+            return meanwhile.show(<PersonPageSync {...props} />);
+        }).then(() => {
+            // load daily-activities statistics
+            var endDate;
+            if (props.selectedDate) {
+                endDate = Moment(props.selectedDate).add(6, 'day');
+            } else {
+                endDate = Moment(this.state.today);
+            }
+            var startDate = endDate.clone().subtract(14, 'day');
+            var ranges = DateUtils.getMonthRanges(startDate, endDate);
+            var filters = [];
+            _.each(ranges, (range) => {
+                filters.push({
+                    user_ids: [ props.user.id ],
+                    time_range: range,
+                });
+            });
+            var criteria = { type: 'daily-activities', filters };
+            return db.findOne({ table: 'statistics', criteria });
+        }).then((statistics) => {
+            props.dailyActivities = statistics;
             return <PersonPageSync {...props} />;
         });
+    },
+
+    /**
+     * Listen for date change event
+     */
+    componentDidMount: function() {
+        DateTracker.addEventListener('change', this.handleDateChange);
+    },
+
+    /**
+     * Remove event listener
+     */
+    componentWillUnmount: function() {
+        DateTracker.removeEventListener('change', this.handleDateChange);
+    },
+
+    /**
+     * Force rerendering by setting today's date
+     */
+    handleDateChange: function() {
+        // force rerendering
+        this.setState({ today: DateTracker.today });
     },
 });
 
@@ -257,6 +295,8 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
         project: PropTypes.object,
+        selectedDate: PropTypes.string,
+        today: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -306,6 +346,8 @@ var PersonPageSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            selectedDate: this.props.selectedDate,
+            today: this.props.today,
             onChartSelect: this.handleChartSelect,
         };
         return <UserView {...userProps} />;
