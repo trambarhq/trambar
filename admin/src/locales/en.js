@@ -57,7 +57,7 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 survey` : `${count} surveys`;
         },
-        'activity-tooltip-$count-tasj-list': (count) => {
+        'activity-tooltip-$count-task-list': (count) => {
             return (count === 1) ? `1 task list` : `${count} task lists`;
         },
         'activity-tooltip-$count-wiki': (count) => {

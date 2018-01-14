@@ -456,16 +456,51 @@ module.exports = function(localeCode) {
         'user-info-gender-female': 'Female',
         'user-info-gender-unspecified': 'Unspecified',
 
+        'user-statistics-legend-branches': 'New branches',
         'user-statistics-legend-issue': 'Issues',
         'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-merge-request': 'Merge requests',
         'user-statistics-legend-milestone': 'Milestones',
         'user-statistics-legend-push': 'Code pushes',
+        'user-statistics-legend-repo': 'Repo changes',
         'user-statistics-legend-story': 'Posts',
         'user-statistics-legend-survey': 'Surveys',
         'user-statistics-legend-task-list': 'Task lists',
         'user-statistics-legend-wiki': 'Wiki edits',
         'user-statistics-today': 'Today',
+        'user-statistics-tooltip-$count-branch': (count) => {
+            return (count === 1) ? `1 branch` : `${count} branches`;
+        },
+        'user-statistics-tooltip-$count-issue': (count) => {
+            return (count === 1) ? `1 issue` : `${count} issues`;
+        },
+        'user-statistics-tooltip-$count-member': (count) => {
+            return (count === 1) ? `1 membership change` : `${count} membership changes`;
+        },
+        'user-statistics-tooltip-$count-merge': (count) => {
+            return (count === 1) ? `1 merge` : `${count} merges`;
+        },
+        'user-statistics-tooltip-$count-milestone': (count) => {
+            return (count === 1) ? `1 milestone` : `${count} milestones`;
+        },
+        'user-statistics-tooltip-$count-push': (count) => {
+            return (count === 1) ? `1 push` : `${count} pushes`;
+        },
+        'user-statistics-tooltip-$count-repo': (count) => {
+            return (count === 1) ? `1 repository change` : `${count} repository changes`;
+        },
+        'user-statistics-tooltip-$count-story': (count) => {
+            return (count === 1) ? `1 post` : `${count} posts`;
+        },
+        'user-statistics-tooltip-$count-survey': (count) => {
+            return (count === 1) ? `1 survey` : `${count} surveys`;
+        },
+        'user-statistics-tooltip-$count-task-list': (count) => {
+            return (count === 1) ? `1 task list` : `${count} task lists`;
+        },
+        'user-statistics-tooltip-$count-wiki': (count) => {
+            return (count === 1) ? `1 wiki edit` : `${count} wiki edits`;
+        },
 
         'user-activity-$name-created-branch': 'Created a new branch',
         'user-activity-$name-created-merge-request': 'Made a merge request',

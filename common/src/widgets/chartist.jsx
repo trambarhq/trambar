@@ -16,6 +16,7 @@ module.exports = React.createClass({
         responsiveOptions: PropTypes.array,
         style: PropTypes.object,
         onDraw: PropTypes.func,
+        onClick: PropTypes.func,
     },
 
     /**
@@ -59,7 +60,8 @@ module.exports = React.createClass({
             ref: this.components.setters.container,
             className: classNames.join(' '),
             style: this.props.style,
-        }
+            onClick: this.props.onClick,
+        };
         return <div {...containerProps} />
     },
 

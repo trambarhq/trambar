@@ -6,6 +6,7 @@ var Memoize = require('utils/memoize');
 var DateTracker = require('utils/date-tracker');
 var StoryTypes = require('objects/types/story-types');
 
+var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -24,6 +25,7 @@ module.exports = React.createClass({
         selectedDate: PropTypes.string,
         today: PropTypes.string,
 
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
@@ -116,7 +118,7 @@ module.exports = React.createClass({
         var labels = getDateLabel(dates, this.props.locale.localeCode);
         var chartProps = {
             type: 'bar',
-            data: { labels, series },
+            data: { labels, series, meta: 1 },
             options: {
                 stackBars: true,
                 axisY: {
@@ -131,6 +133,7 @@ module.exports = React.createClass({
                 low: 0,
             },
             onDraw: this.handleChartDraw,
+            onClick: this.handleChartClick,
         };
         return <Chartist {...chartProps} />;
     },
@@ -182,7 +185,7 @@ module.exports = React.createClass({
                         return value;
                     }
                 },
-            }
+            },
         };
         return <Chartist {...chartProps} />;
     },
@@ -246,8 +249,41 @@ module.exports = React.createClass({
                 });
                 data.group.append(arrow);
             }
+        } else if (data.type === 'bar') {
+            // add mouseover title
+            var t = this.props.locale.translate;
+            var count = data.value.y;
+            var type = data.series.name;
+            var objects = t(`user-statistics-tooltip-$count-${type}`, count);
+            var m = Moment(data.meta);
+            var locale = this.props.locale.localeCode;
+            var date = m.locale(locale).format('l');
+            var label = `${objects}\n${date}`;
+            var title = new Chartist.Svg('title');
+            title.text(label);
+            data.element.append(title);
+            data.element.attr({ 'data-date': data.meta });
         }
-    }
+    },
+
+    /**
+     * Called when user clicks on the chart
+     *
+     * @param  {Event} evt
+     */
+    handleChartClick: function(evt) {
+        var date = evt.target.getAttribute('data-date');
+        if (date) {
+            // go to the user's personal page on that date
+            var route = this.props.route;
+            var params = {
+                schema: route.parameters.schema,
+                user: this.props.user.id,
+                date: date,
+            };
+            route.push(require('pages/person-page'), params);
+        }
+    },
 });
 
 var getActivityIndices = Memoize(function(activities, dates) {
@@ -275,12 +311,19 @@ var getActivitySeries = Memoize(function(activities, dates) {
         var empty = true;
         var series = _.map(dates, (date) => {
             var value = _.get(activities, [ date, type ], 0);
+            var meta = date;
             if (value) {
                 empty = false;
             }
-            return value;
+            return { meta, value };
         });
-        return (empty) ? [] : series;
+        if (empty) {
+            return [];
+        }
+        return {
+            name: type,
+            data: series,
+        };
     });
 });
 
