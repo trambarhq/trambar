@@ -38,9 +38,9 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.onDraw !== nextProps.onDraw) {
             if (this.chartist) {
-                this.chartist.off(this.props.onDraw);
+                this.chartist.off('draw', this.props.onDraw);
             } else {
-                this.chartist.on(nextProps.onDraw);
+                this.chartist.on('draw', nextProps.onDraw);
             }
         }
     },

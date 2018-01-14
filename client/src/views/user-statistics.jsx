@@ -21,10 +21,32 @@ module.exports = React.createClass({
         chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
         user: PropTypes.object,
         dailyActivities: PropTypes.object,
+        selectedDate: PropTypes.string,
         today: PropTypes.string,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return list of dates on which stats are shown
+     *
+     * @return {Array<String>}
+     */
+    getDates: function() {
+        var m;
+        if (this.props.selectedDate) {
+            m = Moment(this.props.selectedDate).add(6, 'day');
+        } else {
+            m = Moment(this.props.today);
+        }
+        var dates = [];
+        for (var i = 0; i < 14; i++) {
+            var date = m.format('YYYY-MM-DD');
+            dates.unshift(date);
+            m.subtract(1, 'day');
+        }
+        return dates;
     },
 
     /**
@@ -52,7 +74,7 @@ module.exports = React.createClass({
         }
         var t = this.props.locale.translate;
         var details = _.get(this.props.dailyActivities, 'details', {});
-        var dates = getDates(DateTracker.today, 14);
+        var dates = this.getDates();
         var indices = getActivityIndices(details, dates);
         var items = _.map(indices, (index, type) => {
             var props = {
@@ -88,7 +110,7 @@ module.exports = React.createClass({
      */
     renderBarChart: function() {
         var details = _.get(this.props.dailyActivities, 'details', {});
-        var dates = getDates(DateTracker.today, 14);
+        var dates = this.getDates();
         var series = getActivitySeries(details, dates);
         var upperRange = getUpperRange(series, true);
         var labels = getDateLabel(dates, this.props.locale.localeCode);
@@ -102,9 +124,13 @@ module.exports = React.createClass({
                         return value;
                     }
                 },
+                chartPadding: {
+                    right: 10
+                },
                 high: upperRange,
                 low: 0,
-            }
+            },
+            onDraw: this.handleChartDraw,
         };
         return <Chartist {...chartProps} />;
     },
@@ -116,7 +142,7 @@ module.exports = React.createClass({
      */
     renderLineChart: function() {
         var details = _.get(this.props.dailyActivities, 'details', {});
-        var dates = getDates(DateTracker.today, 14);
+        var dates = this.getDates();
         var series = getActivitySeries(details, dates);
         var upperRange = getUpperRange(series, false);
         var labels = getDateLabel(dates, this.props.locale.localeCode);
@@ -126,12 +152,13 @@ module.exports = React.createClass({
             options: {
                 fullWidth: true,
                 chartPadding: {
-                    right: 10
+                    right: 20
                 },
                 showPoint: false,
                 high: upperRange,
                 low: 0,
-            }
+            },
+            onDraw: this.handleChartDraw,
         };
         return <Chartist {...chartProps} />;
     },
@@ -143,7 +170,7 @@ module.exports = React.createClass({
      */
     renderPieChart: function() {
         var details = _.get(this.props.dailyActivities, 'details', {});
-        var dates = getDates(DateTracker.today, 14);
+        var dates = this.getDates();
         var series = getActivitySeries(details, dates);
         var seriesTotals = _.map(series, _.sum);
         var chartProps = {
@@ -154,22 +181,74 @@ module.exports = React.createClass({
                     if (value) {
                         return value;
                     }
-                }
+                },
             }
         };
         return <Chartist {...chartProps} />;
     },
-});
 
-var getDates = function(today, count) {
-    var m = Moment(today);
-    var dates = _.times(count, () => {
-        var date = m.format('YYYY-MM-DD');
-        m.subtract(1, 'day');
-        return date;
-    });
-    return _.reverse(dates);
-}
+    /**
+     * Called when Chartist is drawing a chart
+     *
+     * @param  {Object} data
+     */
+    handleChartDraw: function(data) {
+        if (data.type === 'grid') {
+            var label;
+            var index = data.index;
+            if (this.props.selectedDate) {
+                if (index === 7) {
+                    var m = Moment(this.props.selectedDate);
+                    var locale = this.props.locale.localeCode;
+                    label = m.locale(locale).format('l');
+                }
+            } else {
+                if (index === 13) {
+                    var t = this.props.locale.translate;
+                    label = t('user-statistics-today');
+                }
+            }
+            if (label) {
+                var x;
+                if (this.props.chartType === 'bar') {
+                    // add missing grid line
+                    var line = new Chartist.Svg('line');
+                    line.attr({
+                        x1: data.x2 + data.axis.stepLength,
+                        y1: data.y1,
+                        x2: data.x2 + data.axis.stepLength,
+                        y2: data.y2,
+                        class: 'ct-grid ct-vertical',
+                    });
+                    data.group.append(line);
+                    x = data.x2 + data.axis.stepLength * 0.5;
+                } else {
+                    x = data.x2;
+                }
+                var y = data.y1 + 12;
+                var text = new Chartist.Svg('text');
+                text.text(label);
+                text.attr({
+                    x: x,
+                    y: y,
+                    'text-anchor': 'middle',
+                    class: 'date-label',
+                });
+                data.group.append(text);
+
+                var arrow = new Chartist.Svg('text');
+                arrow.text('\uf0dd');
+                arrow.attr({
+                    x: x,
+                    y: y + 8,
+                    'text-anchor': 'middle',
+                    class: 'date-arrow',
+                });
+                data.group.append(arrow);
+            }
+        }
+    }
+});
 
 var getActivityIndices = Memoize(function(activities, dates) {
     var present = {};
@@ -225,9 +304,9 @@ var getUpperRange = Memoize(function(series, additive) {
             }
         });
     }
-    if (highest <= 20) {
+    if (highest <= 18) {
         return 20;
-    } else if (highest <= 50) {
+    } else if (highest <= 45) {
         return 50;
     } else {
         return Math.ceil(highest / 100) * 100;

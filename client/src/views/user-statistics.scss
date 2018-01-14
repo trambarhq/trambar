@@ -8,6 +8,18 @@
     .ct-grids line {
         stroke: #444444;
     }
+
+    .date-label {
+        font-family: sans-serif;
+        font-size: 12px;
+        fill: #eeeeee;
+    }
+
+    .date-arrow {
+        font-family: FontAwesome;
+        font-size: 12px;
+        fill: #eeeeee;
+    }
 }
 
 .user-statistics {

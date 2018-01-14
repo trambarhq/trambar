@@ -465,6 +465,7 @@ module.exports = function(localeCode) {
         'user-statistics-legend-survey': 'Surveys',
         'user-statistics-legend-task-list': 'Task lists',
         'user-statistics-legend-wiki': 'Wiki edits',
+        'user-statistics-today': 'Today',
 
         'user-activity-$name-created-branch': 'Created a new branch',
         'user-activity-$name-created-merge-request': 'Made a merge request',
