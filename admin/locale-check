@@ -1,0 +1,64 @@
+#!/usr/bin/node
+
+var _ = require('lodash');
+
+var locale = process.argv[2];
+
+if (!locale) {
+    console.log('locale-check <language code>');
+    process.exit(0);
+}
+
+try {
+    var lang = _.first(_.split(locale, '-'));
+    var targetModule = require(`./src/locales/${lang}`)
+    var target = targetModule(locale);
+    var englishModule = require(`./src/locales/en`);
+    var english = englishModule('en-us');
+
+    var missing = [];
+    var englishNames = _.keys(english);
+    _.each(englishNames, (name) => {
+        if (target[name] === undefined) {
+            missing.push(name);
+        }
+    });
+
+    var unknown = [];
+    var targetNames = _.keys(target);
+    _.each(targetNames, (name) => {
+        if (english[name] === undefined) {
+            unknown.push(name);
+        }
+    });
+
+    var misplaced = [];
+    _.each(targetNames, (name, i, list) => {
+        var next = list[i + 1];
+        if (next && name > next) {
+            misplaced.push(name);
+        }
+    });
+
+    if (missing.length > 0) {
+        console.log(`${missing.length} phrases are missing:\n`)
+        _.each(missing, (name) => {
+            console.log(name);
+        });
+    } else if (unknown.length > 0) {
+        console.log(`${unknown.length} phrases are extraneous or misnamed:\n`)
+        _.each(unknown, (name) => {
+            console.log(name);
+        });
+    } else if (misplaced.length> 0) {
+        console.log(`${misplaced.length} phrases are out of order:\n`)
+        _.each(misplaced, (name) => {
+            console.log(name);
+        });
+    } else {
+        console.log(`Locale "${lang}" seems to be okay`);
+    }
+} catch(err) {
+    console.error(err.message);
+    process.exit(-1);
+}

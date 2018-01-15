@@ -15,12 +15,12 @@ module.exports = function(localeCode) {
         'action-badge-restore': 'restore',
 
         'activity-chart-legend-branch': 'New branches',
-        'activity-chart-legend-push': 'Code pushes',
         'activity-chart-legend-issue': 'Issues',
         'activity-chart-legend-member': 'Membership changes',
         'activity-chart-legend-merge': 'Code merges',
         'activity-chart-legend-merge-request': 'Merge requests',
         'activity-chart-legend-milestone': 'Milestones',
+        'activity-chart-legend-push': 'Code pushes',
         'activity-chart-legend-repo': 'Repository changes',
         'activity-chart-legend-story': 'Stories',
         'activity-chart-legend-survey': 'Surveys',
@@ -33,9 +33,6 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-branch': (count) => {
             return (count === 1) ? `1 branch` : `${count} branches`;
         },
-        'activity-tooltip-$count-push': (count) => {
-            return (count === 1) ? `1 push` : `${count} pushes`;
-        },
         'activity-tooltip-$count-issue': (count) => {
             return (count === 1) ? `1 issue` : `${count} issues`;
         },
@@ -47,6 +44,9 @@ module.exports = function(localeCode) {
         },
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
+        },
+        'activity-tooltip-$count-push': (count) => {
+            return (count === 1) ? `1 push` : `${count} pushes`;
         },
         'activity-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 repository change` : `${count} repository changes`;
@@ -92,8 +92,8 @@ module.exports = function(localeCode) {
         'image-cropping-cancel': 'Cancel',
         'image-cropping-select': 'OK',
 
-        'image-selector-crop-image': 'Adjust size/position',
         'image-selector-choose-from-album': 'Choose from album',
+        'image-selector-crop-image': 'Adjust size/position',
         'image-selector-upload-file': 'Upload image',
 
         'member-list-$name-with-$username': (name, username) => {
@@ -113,22 +113,22 @@ module.exports = function(localeCode) {
         'member-list-edit': 'Edit member List',
         'member-list-reject-all': 'Reject all requests',
         'member-list-save': 'Save member List',
-        'member-list-status-pending': 'Request pending',
         'member-list-status-non-member': 'Not a member',
+        'member-list-status-pending': 'Request pending',
         'member-list-title': 'Members',
 
         'nav-member-new': 'New member',
         'nav-members': 'Members',
-        'nav-projects': 'Projects',
         'nav-project-new': 'New project',
+        'nav-projects': 'Projects',
         'nav-repositories': 'Repositories',
-        'nav-roles': 'Roles',
         'nav-role-new': 'New role',
-        'nav-servers': 'Servers',
+        'nav-roles': 'Roles',
         'nav-server-new': 'New server',
+        'nav-servers': 'Servers',
         'nav-settings': 'Settings',
-        'nav-users': 'Users',
         'nav-user-new': 'New user',
+        'nav-users': 'Users',
 
         'project-list-$title-with-$name': (title, name) => {
             if (title) {
@@ -217,8 +217,8 @@ module.exports = function(localeCode) {
         'repo-summary-edit': 'Edit repository',
         'repo-summary-gitlab-name': 'GitLab project name',
         'repo-summary-issue-tracker': 'Issue tracker',
-        'repo-summary-issue-tracker-enabled': 'Enabled',
         'repo-summary-issue-tracker-disabled': 'Disabled',
+        'repo-summary-issue-tracker-enabled': 'Enabled',
         'repo-summary-remove': 'Remove repository',
         'repo-summary-restore': 'Restore repository',
         'repo-summary-return': 'Return to repository list',
@@ -273,10 +273,9 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 other` : `${count} others`;
         },
 
-        'server-list-edit': 'Edit server list',
+        'server-list-add': 'Add new server',
         'server-list-api-access-false': '',
         'server-list-api-access-true': 'Acquired',
-        'server-list-add': 'Add new server',
         'server-list-cancel': 'Cancel',
         'server-list-confirm-disable-$count': (count) => {
             var servers = (count === 1) ? `this server` : `these ${count} servers`;
@@ -286,12 +285,13 @@ module.exports = function(localeCode) {
             var servers = (count === 1) ? `this server` : `these ${count} servers`;
             return `Are you sure you want to reactivate ${servers}?`
         },
+        'server-list-edit': 'Edit server list',
+        'server-list-oauth-false': '',
+        'server-list-oauth-true': 'Active',
         'server-list-save': 'Save server list',
         'server-list-status-deleted': 'Deleted',
         'server-list-status-disabled': 'Disabled',
         'server-list-title': 'Servers',
-        'server-list-oauth-false': '',
-        'server-list-oauth-true': 'Active',
 
         'server-summary-acquire': 'Acquire API access',
         'server-summary-activities': 'Activities',
@@ -341,8 +341,8 @@ module.exports = function(localeCode) {
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',
-        'server-type-gitlab': 'GitLab',
         'server-type-github': 'GitHub',
+        'server-type-gitlab': 'GitLab',
         'server-type-google': 'Google',
 
         'settings-background-image': 'Background image',
@@ -351,9 +351,9 @@ module.exports = function(localeCode) {
         'settings-input-languages': 'Input languages',
         'settings-push-relay': 'Push relay',
         'settings-save': 'Save settings',
-        'settings-site-title': 'Site name',
-        'settings-site-description': 'Description',
         'settings-site-address': 'Address',
+        'settings-site-description': 'Description',
+        'settings-site-title': 'Site name',
         'settings-title': 'Settings',
 
         'sign-in-$title': (title) => {
@@ -367,12 +367,12 @@ module.exports = function(localeCode) {
         'sign-in-error-account-disabled': 'Account is currently disabled',
         'sign-in-error-existing-users-only': 'Only authorized personnel can access this system',
         'sign-in-error-restricted-area': 'User is not an administrator',
-        'sign-in-password': 'Password:',
-        'sign-in-submit': 'Sign in',
         'sign-in-oauth': 'Sign in through OAuth',
+        'sign-in-password': 'Password:',
         'sign-in-problem-incorrect-username-password': 'Incorrect user name or password',
         'sign-in-problem-no-support-for-username-password': 'System does not accept password',
         'sign-in-problem-unexpected-error': 'Unexpected error encountered',
+        'sign-in-submit': 'Sign in',
         'sign-in-username': 'User name:',
 
         'sign-off-menu-sign-off': 'Sign off',
@@ -398,13 +398,13 @@ module.exports = function(localeCode) {
         'task-$seconds': (seconds) => {
             return (seconds === 1) ? `1 second` : `${seconds} seconds`;
         },
-        'task-imported-$count-events-from-$repo': (count, repo) => {
-            var events = (count === 1) ? `1 event` : `${count} events`;
-            return `Imported ${events} from “${repo}”`;
-        },
         'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
             var comments = (count === 1) ? `1 commit comment` : `${count} commit comments`;
             return `Imported ${comments} from “${repo}”`;
+        },
+        'task-imported-$count-events-from-$repo': (count, repo) => {
+            var events = (count === 1) ? `1 event` : `${count} events`;
+            return `Imported ${events} from “${repo}”`;
         },
         'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
             var comments = (count === 1) ? `1 issue comment` : `${count} issue comments`;
@@ -429,14 +429,14 @@ module.exports = function(localeCode) {
         'task-importing-commit-comments-from-$repo': (repo) => {
             return `Importing commit comments from “${repo}”`;
         },
+        'task-importing-events-from-$repo': (repo) => {
+            return `Importing events from “${repo}”`;
+        },
         'task-importing-issue-comments-from-$repo': (repo) => {
             return `Importing issue comments from “${repo}”`;
         },
         'task-importing-merge-request-comments-from-$repo': (repo) => {
             return `Importing merge-request comments from “${repo}”`;
-        },
-        'task-importing-events-from-$repo': (repo) => {
-            return `Importing events from “${repo}”`;
         },
         'task-importing-push-from-$repo': (repo) => {
             return `Importing push from “${repo}”`;
@@ -494,6 +494,7 @@ module.exports = function(localeCode) {
                 return username;
             }
         },
+        'user-list-add': 'Add new user',
         'user-list-approve-all': 'Approve all requests',
         'user-list-cancel': 'Cancel',
         'user-list-confirm-disable-$count': (count) => {
@@ -505,7 +506,6 @@ module.exports = function(localeCode) {
             return `Are you sure you want to reactivate ${accounts}?`
         },
         'user-list-edit': 'Edit user List',
-        'user-list-add': 'Add new user',
         'user-list-reject-all': 'Reject all requests',
         'user-list-save': 'Save user list',
         'user-list-status-deleted': 'Deleted',
@@ -532,6 +532,10 @@ module.exports = function(localeCode) {
         'user-summary-disable': 'Disable user account',
         'user-summary-edit': 'Edit user',
         'user-summary-email': 'E-mail',
+        'user-summary-github': 'GitHub profile URL',
+        'user-summary-gitlab': 'Gitlab profile URL',
+        'user-summary-ichat': 'iChat user name',
+        'user-summary-linkedin': 'Linkedin profile URL',
         'user-summary-member-$name': (name) => {
             var text = 'User';
             if (name) {
@@ -539,20 +543,16 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'user-summary-github': 'GitHub profile URL',
-        'user-summary-gitlab': 'Gitlab profile URL',
-        'user-summary-ichat': 'iChat user name',
-        'user-summary-linkedin': 'Linkedin profile URL',
         'user-summary-member-edit': 'Edit member',
-        'user-summary-member-save': 'Save member',
         'user-summary-member-return': 'Return to member list',
+        'user-summary-member-save': 'Save member',
         'user-summary-name': 'Name',
         'user-summary-phone': 'Phone number',
         'user-summary-profile-image': 'Profile image',
         'user-summary-reactivate': 'Reactivate user account',
         'user-summary-return': 'Return to user list',
-        'user-summary-roles': 'Roles',
         'user-summary-role-none': 'None',
+        'user-summary-roles': 'Roles',
         'user-summary-save': 'Save user',
         'user-summary-skype': 'Skype user name',
         'user-summary-slack': 'Slack user id',

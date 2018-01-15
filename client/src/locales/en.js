@@ -90,12 +90,11 @@ module.exports = function(localeCode) {
 
         'media-close': 'Close',
         'media-download-original': 'Download original',
-        'media-next': 'Next',
-        'media-previous': 'Previous',
-
         'media-editor-embed': 'Embed',
         'media-editor-remove': 'Remove',
         'media-editor-shift': 'Shift',
+        'media-next': 'Next',
+        'media-previous': 'Previous',
 
         'membership-request-cancel': 'Cancel',
         'membership-request-join': 'Join',
@@ -108,22 +107,8 @@ module.exports = function(localeCode) {
         'mobile-device-revoke-are-you-sure': 'Are you sure you want to revoke authorization to this device?',
 
         'mobile-setup-address': 'Server address',
+        'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
-
-        'notification-option-assignment': 'When you are assigned to an issue',
-        'notification-option-bookmark': 'When someone sends you a bookmark',
-        'notification-option-coauthor': 'When someone invites you to jointly edit a post',
-        'notification-option-comment': 'When someone comments on your post',
-        'notification-option-issue': 'When someone opens an issue',
-        'notification-option-join-request': 'When someone wants to join this project',
-        'notification-option-like': 'When someone likes your post',
-        'notification-option-merge': 'When someone merges code into the master branch',
-        'notification-option-note': 'When someone posts a note on a commit or issue',
-        'notification-option-push': 'When someone pushes code into Git',
-        'notification-option-survey': 'When someone posts a survey',
-        'notification-option-task-completion': 'When someone completes a task on your list',
-        'notification-option-vote': 'When someone answers your survey',
-        'notification-option-web-session': 'When a web session is active',
 
         'notification-$user-added-you-as-coauthor': (user) => {
             return `${user} invited you to jointly edit a post`;
@@ -167,8 +152,20 @@ module.exports = function(localeCode) {
         'notification-$user-voted-in-your-survey': (user) => {
             return `${user} answered your survey`;
         },
-
-        'mobile-setup-close': 'Close',
+        'notification-option-assignment': 'When you are assigned to an issue',
+        'notification-option-bookmark': 'When someone sends you a bookmark',
+        'notification-option-coauthor': 'When someone invites you to jointly edit a post',
+        'notification-option-comment': 'When someone comments on your post',
+        'notification-option-issue': 'When someone opens an issue',
+        'notification-option-join-request': 'When someone wants to join this project',
+        'notification-option-like': 'When someone likes your post',
+        'notification-option-merge': 'When someone merges code into the master branch',
+        'notification-option-note': 'When someone posts a note on a commit or issue',
+        'notification-option-push': 'When someone pushes code into Git',
+        'notification-option-survey': 'When someone posts a survey',
+        'notification-option-task-completion': 'When someone completes a task on your list',
+        'notification-option-vote': 'When someone answers your survey',
+        'notification-option-web-session': 'When a web session is active',
 
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
@@ -281,8 +278,8 @@ module.exports = function(localeCode) {
         'social-network-stackoverflow': 'Stack Overflow profile URL',
         'social-network-twitter': 'Twitter user name',
 
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
         'start-activation-add-server': 'Add project from another server',
+        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
         'start-activation-manual': 'Manual entry',
         'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',
@@ -367,10 +364,10 @@ module.exports = function(localeCode) {
             var lines = (count === 1) ? `1 line` : `${count} lines`;
             return `${lines} added`;
         },
+        'story-push-components-changed': 'The following parts were changed:',
         'story-push-created-$branch-in-$repo': (branch, repo) => {
             return `Created branch “${branch}” in project “${repo}”`;
         },
-        'story-push-components-changed': 'The following parts were changed:',
         'story-push-deleted-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} removed`;
@@ -408,6 +405,8 @@ module.exports = function(localeCode) {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} renamed`;
         },
+        'story-remove-yourself': 'Remove yourself',
+        'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
         'story-repo-created-$name': (name) => {
             var text = `Created project`;
             if (name) {
@@ -415,8 +414,6 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'story-remove-yourself': 'Remove yourself',
-        'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
         'story-status-transcoding-$progress': (progress) => {
             return `Transcoding (${progress}%)`;
         },
@@ -448,13 +445,49 @@ module.exports = function(localeCode) {
 
         'user-actions': 'Actions',
 
-        'user-info-name': 'Name',
+        'user-activity-$name-created-branch': 'Created a new branch',
+        'user-activity-$name-created-merge-request': 'Made a merge request',
+        'user-activity-$name-created-milestone': 'Created a milestone',
+        'user-activity-$name-created-repo': 'Created a git project',
+        'user-activity-$name-edited-wiki-page': 'Edited a wiki page',
+        'user-activity-$name-joined-repo': 'Joined a git project',
+        'user-activity-$name-left-repo': 'Left a git project',
+        'user-activity-$name-merged-code': 'Performed a code merge',
+        'user-activity-$name-opened-issue': 'Opened an issue',
+        'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+            var audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
+            return `Posted ${audios}`;
+        },
+        'user-activity-$name-posted-$count-links': (name, count) => {
+            var links = (count === 1) ? `a link` : `links`;
+            var website = (count === 1) ? `a website` : `${count} websites`;
+            return `Posted ${links} to ${website}`
+        },
+        'user-activity-$name-posted-$count-pictures': (name, count) => {
+            var pictures = (count === 1) ? `a picture` : `${count} pictures`;
+            return `Posted ${pictures}`;
+        },
+        'user-activity-$name-posted-$count-video-clips': (name, count) => {
+            var videos = (count === 1) ? `a video clip` : `${count} video clips`;
+            return `Posted ${videos}`;
+        },
+        'user-activity-$name-pushed-code': 'Pushed code to repo',
+        'user-activity-$name-started-survey': 'Started a survey',
+        'user-activity-$name-started-task-list': 'Started a task list',
+        'user-activity-$name-wrote-post': 'Wrote a post',
+        'user-activity-more': 'More...',
+
+        'user-image-remove': 'Remove',
+        'user-image-select': 'Select',
+        'user-image-snap': 'Snap',
+
         'user-info-email': 'E-mail address',
-        'user-info-phone': 'Phone number',
         'user-info-gender': 'Gender',
-        'user-info-gender-male': 'Male',
         'user-info-gender-female': 'Female',
+        'user-info-gender-male': 'Male',
         'user-info-gender-unspecified': 'Unspecified',
+        'user-info-name': 'Name',
+        'user-info-phone': 'Phone number',
 
         'user-statistics-legend-branches': 'New branches',
         'user-statistics-legend-issue': 'Issues',
@@ -501,42 +534,6 @@ module.exports = function(localeCode) {
         'user-statistics-tooltip-$count-wiki': (count) => {
             return (count === 1) ? `1 wiki edit` : `${count} wiki edits`;
         },
-
-        'user-activity-$name-created-branch': 'Created a new branch',
-        'user-activity-$name-created-merge-request': 'Made a merge request',
-        'user-activity-$name-created-milestone': 'Created a milestone',
-        'user-activity-$name-created-repo': 'Created a git project',
-        'user-activity-$name-edited-wiki-page': 'Edited a wiki page',
-        'user-activity-$name-joined-repo': 'Joined a git project',
-        'user-activity-$name-left-repo': 'Left a git project',
-        'user-activity-$name-merged-code': 'Performed a code merge',
-        'user-activity-$name-opened-issue': 'Opened an issue',
-        'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
-            return `Posted ${audios}`;
-        },
-        'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `a link` : `links`;
-            var website = (count === 1) ? `a website` : `${count} websites`;
-            return `Posted ${links} to ${website}`
-        },
-        'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures = (count === 1) ? `a picture` : `${count} pictures`;
-            return `Posted ${pictures}`;
-        },
-        'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos = (count === 1) ? `a video clip` : `${count} video clips`;
-            return `Posted ${videos}`;
-        },
-        'user-activity-$name-pushed-code': 'Pushed code to repo',
-        'user-activity-$name-started-survey': 'Started a survey',
-        'user-activity-$name-started-task-list': 'Started a task list',
-        'user-activity-$name-wrote-post': 'Wrote a post',
-        'user-activity-more': 'More...',
-
-        'user-image-remove': 'Remove',
-        'user-image-select': 'Select',
-        'user-image-snap': 'Snap',
 
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',
