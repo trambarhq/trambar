@@ -52,7 +52,7 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 undersøkelse` : `${count} undersøkelser`;
         },
-        'activity-tooltip-$count-tasj-list': (count) => {
+        'activity-tooltip-$count-task-list': (count) => {
             return (count === 1) ? `1 oppgaveliste` : `${count} oppgavelister`;
         },
         'activity-tooltip-$count-wiki': (count) => {

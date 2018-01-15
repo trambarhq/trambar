@@ -205,7 +205,7 @@ module.exports = function(localeCode) {
         'qr-scanner-invalid-qr-code': 'Invalid QR code',
 
         'reaction-$user-added-story-to-issue-tracker': (user) => {
-            return `${user} created an issue based on this post`;
+            return `${user} added this post to issue tracker`;
         },
         'reaction-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;
@@ -489,7 +489,7 @@ module.exports = function(localeCode) {
         'user-info-name': 'Name',
         'user-info-phone': 'Phone number',
 
-        'user-statistics-legend-branches': 'New branches',
+        'user-statistics-legend-branch': 'New branches',
         'user-statistics-legend-issue': 'Issues',
         'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-merge-request': 'Merge requests',
