@@ -40,4 +40,15 @@
             margin-bottom: 0.3em;
         }
     }
+
+    .single-col & {
+        width: 100%;
+        max-width: none;
+
+        .description {
+            img {
+                width: 5em;
+            }
+        }
+    }
 }

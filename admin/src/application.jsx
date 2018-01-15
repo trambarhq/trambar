@@ -152,7 +152,7 @@ module.exports = React.createClass({
             disabled: !this.state.canAccessServer,
         };
         return (
-            <div className="application">
+            <div className="application" id="application">
                 <SideNavigation {...navProps} />
                 <section className="page-view-port">
                     <div className="scroll-box">

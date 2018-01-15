@@ -1,6 +1,8 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 
+var Theme = require('theme/theme');
+
 require('./overlay.scss');
 
 module.exports = React.createClass({
@@ -69,9 +71,10 @@ module.exports = React.createClass({
      */
     show: function() {
         if (!this.containerNode) {
+            var app = document.getElementById('application');
             this.containerNode = document.createElement('DIV');
-            document.body.appendChild(this.containerNode);
-            document.body.addEventListener('keydown', this.handleKeyDown);
+            app.appendChild(this.containerNode);
+            app.addEventListener('keydown', this.handleKeyDown);
         } else {
             if (this.containerRemovalTimeout) {
                 clearTimeout(this.containerRemovalTimeout);
@@ -86,14 +89,8 @@ module.exports = React.createClass({
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
         this.shown = false;
         setTimeout(() => {
-            // this.props.children could be different here
-            var props = {
-                show: true,
-                onClick: this.handleClick,
-                children: this.props.children
-            };
-            ReactDOM.render(<Overlay {...props} />, this.containerNode);
             this.shown = true;
+            this.redraw();
         }, 10);
     },
 
@@ -118,19 +115,16 @@ module.exports = React.createClass({
         }
         if (!this.containerRemovalTimeout) {
             this.containerRemovalTimeout = setTimeout(() => {
+                var app = document.getElementById('application');
                 ReactDOM.unmountComponentAtNode(this.containerNode);
-                document.body.removeChild(this.containerNode);
-                document.body.removeEventListener('keydown', this.handleKeyDown);
+                app.removeChild(this.containerNode);
+                app.removeEventListener('keydown', this.handleKeyDown);
                 this.containerNode = null;
                 this.containerRemovalTimeout = 0;
             }, 1000);
         }
-        var props = {
-            show: false,
-            children: this.props.children
-        };
-        ReactDOM.render(<Overlay {...props} />, this.containerNode);
         this.shown = false;
+        this.redraw();
     },
 
     /**

@@ -182,7 +182,7 @@ module.exports = React.createClass({
         }
         var className = `application ${this.state.theme.mode}`;
         return (
-            <div className={className}>
+            <div className={className} id="application">
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port" id="page-view-port">
                     <div className="scroll-box" id="scroll-box">

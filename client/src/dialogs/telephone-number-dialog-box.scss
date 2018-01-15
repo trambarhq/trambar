@@ -29,4 +29,8 @@
         border-top: 1px solid #666666;
         text-align: right;
     }
+
+    .single-col & {
+        width: 100%;
+    }
 }

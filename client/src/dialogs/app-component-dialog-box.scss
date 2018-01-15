@@ -76,4 +76,25 @@
         text-align: right;
         border-top: 1px solid #666666;
     }
+
+    .single-col & {
+        width: 100%;
+        max-width: none;
+
+        .picture {
+            .icon {
+                width: 4em;
+                height: 4em;
+                padding-top: 1em;
+
+                .fa {
+                    font-size: 2em;
+                }
+            }
+
+            IMG {
+                height: 4em;
+            }
+        }
+    }
 }

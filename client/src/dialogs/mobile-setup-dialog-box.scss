@@ -16,11 +16,13 @@
             width: 198px;
             height: 198px;
             cursor: none;
+            margin-right: 1em;
         }
 
         .info {
+            float: left;
             overflow: hidden;
-            padding: 0.5em 0.5em 0 1em;
+            padding: 0.5em 0.5em 0 0;
 
             .label {
                 white-space: nowrap;

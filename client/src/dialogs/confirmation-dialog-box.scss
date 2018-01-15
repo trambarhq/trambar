@@ -3,6 +3,8 @@
     flex-direction: column;
     background-color: #362a2a;
     box-shadow: 2px 2px 2px #000000;
+    max-width: 40em;
+    width: 80%;
     color: #cccccc;
     margin: auto;
     padding: 0.4em 0.5em 0.4em 0.5em;
@@ -19,5 +21,14 @@
         flex-basis: auto;
         padding: 0.5em 0 0.2em 0.2em;
         text-align: right;
+    }
+
+    .single-col & {
+        width: 100%;
+        max-width: none;
+
+        .message {
+            font-size: 1.25em;
+        }
     }
 }

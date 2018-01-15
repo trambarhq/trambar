@@ -33,4 +33,9 @@
         margin-bottom: 0.5em;
         white-space: pre-line;
     }
+
+    .single-col & {
+        width: 100%;
+        max-width: none;
+    }
 }
