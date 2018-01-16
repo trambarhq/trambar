@@ -397,22 +397,22 @@ module.exports = function(localeCode) {
         'story-member-joined-$repo': (repo) => {
             var text = `Dołączył do projektu`;
             if (repo) {
-                text += ` “${repo}”`;
+                text += ` „${repo}”`;
             }
             return text;
         },
         'story-member-left-$repo': (repo) => {
             var text = `Opuścił projekt`;
             if (repo) {
-                text += ` “${repo}”`;
+                text += ` „${repo}”`;
             }
             return text;
         },
         'story-merge-request-$branch1-into-$branch2': (branch1, branch2) => {
-            return `Poprosił o scalanie zmian z gałęzi “${branch1}” do gałęzi “${branch2}”`;
+            return `Poprosił o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
         },
         'story-milestone-created-$name': (name) => {
-            return `Stworzył kamień milowy “${name}”`;
+            return `Stworzył kamień milowy „${name}”`;
         },
         'story-milestone-due-date': 'Termin:',
         'story-milestone-start-date': 'Data rozpoczęcia:',
@@ -445,7 +445,7 @@ module.exports = function(localeCode) {
         },
         'story-push-components-changed': 'Następujące części zostały zmienione:',
         'story-push-created-$branch-in-$repo': (branch, repo) => {
-            return `Stworzył gałąź “${branch}” w projektcie “${repo}”`;
+            return `Stworzył gałąź „${branch}” w projektcie „${repo}”`;
         },
         'story-push-deleted-$count-files': (count) => {
             var files;
@@ -473,13 +473,13 @@ module.exports = function(localeCode) {
             var text = `Scalił zmiany`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
-                    return `“${branch}”`;
+                    return `„${branch}”`;
                 });
                 text += ` z gałęzi ${sources.join(', ')}`;
             }
-            text += ` do gałęzi “${branch}”`;
+            text += ` do gałęzi „${branch}”`;
             if (repo) {
-                text += ` projekta “${repo}”`;
+                text += ` projekta „${repo}”`;
             }
             return text;
         },
@@ -495,9 +495,9 @@ module.exports = function(localeCode) {
             return `${files} zmodyfikowano`;
         },
         'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
-            var text = `Pushed changes to branch “${branch}”`;
+            var text = `Pushed changes to branch „${branch}”`;
             if (repo) {
-                text += ` of project “${repo}”`;
+                text += ` of project „${repo}”`;
             }
             return text;
         },
@@ -517,7 +517,7 @@ module.exports = function(localeCode) {
         'story-repo-created-$name': (name) => {
             var text = `Stworzył projekt`;
             if (name) {
-                text += ` “${name}”`;
+                text += ` „${name}”`;
             }
             return text;
         },
@@ -532,13 +532,13 @@ module.exports = function(localeCode) {
         'story-video': 'Wideo',
         'story-vote-submit': 'Zatwierdź',
         'story-wiki-created-page-with-$title': (title) => {
-            return `Stworzył stronę wiki “${title}”`;
+            return `Stworzył stronę wiki „${title}”`;
         },
         'story-wiki-deleted-page-with-$title': (title) => {
-            return `Usunał stronę wiki “${title}”`;
+            return `Usunał stronę wiki „${title}”`;
         },
         'story-wiki-updated-page-with-$title': (title) => {
-            return `Redagował wiki page “${title}”`;
+            return `Redagował wiki page „${title}”`;
         },
 
         'telephone-dialog-close': 'Zamknij',
@@ -640,11 +640,11 @@ module.exports = function(localeCode) {
         },
         'user-statistics-tooltip-$count-issue': (count) => {
             if (singular(count)) {
-                return `1 zgłoszenie blędu`;
+                return `1 zgłoszenie błędu`;
             } else if (plural(count)) {
-                return `${count} zgłoszenia blędu`;
+                return `${count} zgłoszenia błędu`;
             } else {
-                return `${count} zgłoszeń blędu`;
+                return `${count} zgłoszeń błędu`;
             }
         },
         'user-statistics-tooltip-$count-member': (count) => {
@@ -658,11 +658,11 @@ module.exports = function(localeCode) {
         },
         'user-statistics-tooltip-$count-merge': (count) => {
             if (singular(count)) {
-                return `1 scalnie`;
+                return `1 scalnie zmian`;
             } else if (plural(count)) {
-                return `${count} scalenia`;
+                return `${count} scalenia zmian`;
             } else {
-                return `${count} scaleń`;
+                return `${count} scaleń zmian`;
             }
         },
         'user-statistics-tooltip-$count-milestone': (count) => {
