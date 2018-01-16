@@ -425,7 +425,7 @@ module.exports = function(localeCode) {
         'story-video': 'Video',
         'story-vote-submit': 'Submit',
         'story-wiki-created-page-with-$title': (title) => {
-            return `Updated wiki page “${title}”`;
+            return `Created wiki page “${title}”`;
         },
         'story-wiki-deleted-page-with-$title': (title) => {
             return `Deleted wiki page “${title}”`;
