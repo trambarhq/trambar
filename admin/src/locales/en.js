@@ -448,7 +448,6 @@ module.exports = function(localeCode) {
             return `Installed ${hooks}`;
         },
         'task-installing-hooks': 'Installing hooks',
-
         'task-removed-$count-hooks': (count) => {
             var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
             return `Removed ${hooks}`;
