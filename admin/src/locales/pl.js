@@ -516,7 +516,7 @@ module.exports = function(localeCode) {
         'table-heading-date-range': 'Active period',
         'table-heading-email': 'E-mail',
         'table-heading-issue-tracker': 'Issue-tracker',
-        'table-heading-last-modified': 'Ostatnio zmodyfikowana',
+        'table-heading-last-modified': 'Zmodyfikowano',
         'table-heading-last-month': 'Zeszłym miesiąc',
         'table-heading-name': 'Imię i nazwisko',
         'table-heading-oauth': 'Autoryzacja OAuth',

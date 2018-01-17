@@ -62,7 +62,8 @@ module.exports = [
         locales: {
             admin: true,
             client: true,
-        }
+        },
+        load: () => require.ensure([ 'locales/en' ], () => require('locales/en') ),
     },
     {
         name: 'Español',
@@ -202,6 +203,7 @@ module.exports = [
             admin: true,
             client: true,
         },
+        load: () => require.ensure([ 'locales/nb' ], () => require('locales/nb') ),
     },
     {
         name: 'Polski',
@@ -218,6 +220,7 @@ module.exports = [
             admin: true,
             client: true,
         },
+        load: () => require.ensure([ 'locales/pl' ], () => require('locales/pl') ),
     },
     {
         name: 'Português',
@@ -258,6 +261,7 @@ module.exports = [
             admin: true,
             client: true,
         },
+        load: () => require.ensure([ 'locales/ru' ], () => require('locales/ru') ),
     },
     {
         name: 'Srpski',
@@ -339,5 +343,6 @@ module.exports = [
             admin: true,
             client: true,
         },
+        load: () => require.ensure([ 'locales/zh' ], () => require('locales/zh') ),
     },
 ];
