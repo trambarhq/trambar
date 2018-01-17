@@ -22,3 +22,18 @@ function initialize(evt) {
     var appElement = React.createElement(Application);
     ReactDOM.render(appElement, appContainer);
 }
+
+window.addEventListener("unhandledrejection", function(e) {
+    console.log(e);
+    e.preventDefault();
+});
+
+// NOTE: event name is all lower case as per DOM convention
+window.addEventListener("rejectionhandled", function(e) {
+    console.log(e);
+    e.preventDefault();
+});
+
+window.addEventListener("error", function(e) {
+    console.log(e);
+})

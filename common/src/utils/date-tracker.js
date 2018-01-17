@@ -68,7 +68,7 @@ function removeEventListener(type, f) {
     }
 }
 
-var currentLocale = 'en-US';
+var currentLocale = '';
 
 /**
  * Set the locale, used for determining what's the first day of the week
@@ -113,6 +113,9 @@ function updateRelativeDates(m) {
  * Update what today is if a change-over has occurred
  */
 function update() {
+    if (!currentLocale) {
+        return false;
+    }
     var now = Moment();
     var today = format(now);
     if (today !== exports.today) {
@@ -135,4 +138,3 @@ function triggerChangeEvent() {
 }
 
 setInterval(update, 1000);
-update();
