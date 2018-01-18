@@ -59,10 +59,7 @@ module.exports = [
             us: 'United States',
         },
         defaultCountry: 'us',
-        locales: {
-            admin: true,
-            client: true,
-        }
+        module: () => require.ensure([ 'locales/en' ], () => require('locales/en') ),
     },
     {
         name: 'Español',
@@ -198,10 +195,7 @@ module.exports = [
             no: 'Norge',
         },
         defaultCountry: 'no',
-        locales: {
-            admin: true,
-            client: true,
-        },
+        module: () => require.ensure([ 'locales/nb' ], () => require('locales/nb') ),
     },
     {
         name: 'Polski',
@@ -214,10 +208,7 @@ module.exports = [
             ua: 'Ukraina',
         },
         defaultCountry: 'pl',
-        locales: {
-            admin: true,
-            client: true,
-        },
+        module: () => require.ensure([ 'locales/pl' ], () => require('locales/pl') ),
     },
     {
         name: 'Português',
@@ -254,10 +245,7 @@ module.exports = [
             es: 'Эстония',
         },
         defaultCountry: 'ru',
-        locales: {
-            admin: true,
-            client: true,
-        },
+        module: () => require.ensure([ 'locales/ru' ], () => require('locales/ru') ),
     },
     {
         name: 'Srpski',
@@ -279,10 +267,7 @@ module.exports = [
             se: 'Ruotsi',
         },
         defaultCountry: 'fi',
-        locales: {
-            admin: true,
-            client: true,
-        },
+        module: () => require.ensure([ 'locales/fi' ], () => require('locales/fi') ),
     },
     {
         name: 'Slovenčina',
@@ -335,9 +320,6 @@ module.exports = [
             tw: '台灣',
         },
         defaultCountry: 'cn',
-        locales: {
-            admin: true,
-            client: true,
-        },
+        module: () => require.ensure([ 'locales/zh' ], () => require('locales/zh') ),
     },
 ];

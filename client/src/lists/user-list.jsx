@@ -1,8 +1,10 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Moment = require('moment');
 var Memoize = require('utils/memoize');
 var DateTracker = require('utils/date-tracker');
+var DateUtils = require('utils/date-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -24,6 +26,7 @@ module.exports = Relaks.createClass({
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
+        selectedDate: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -67,6 +70,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             today: this.state.today,
+            selectedDate: this.props.selectedDate,
             freshRoute: this.props.route !== prevProps.route,
         };
         meanwhile.show(<UserListSync {...props} />, delay);
@@ -82,18 +86,24 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<UserListSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
-            var end = DateTracker.endOfMonthISO;
-            var start = DateTracker.startOfMonthISO;
-            var range = `[${start},${end}]`;
-            var criteria = {
-                type: 'daily-activities',
-                filters: _.map(props.users, (user) => {
-                    return {
+            var startDate, endDate;
+            if (this.props.selectedDate) {
+                endDate = Moment(this.props.selectedDate).add(6, 'day');
+            } else {
+                endDate = Moment(this.state.today);
+            }
+            startDate = endDate.clone().subtract(14, 'day');
+            var ranges = DateUtils.getMonthRanges(startDate, endDate);
+            var filters = [];
+            _.each(props.users, (user) => {
+                _.each(ranges, (range) => {
+                    filters.push({
                         user_ids: [ user.id ],
                         time_range: range,
-                    };
-                }),
-            };
+                    });
+                });
+            });
+            var criteria = { type: 'daily-activities', filters };
             return db.find({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
@@ -148,7 +158,7 @@ module.exports = Relaks.createClass({
     },
 
     /**
-     * Force rerendering by setting today's date (which isn't actually used anywhere)
+     * Force rerendering by setting today's date
      */
     handleDateChange: function() {
         // force rerendering
@@ -166,6 +176,7 @@ var UserListSync = module.exports.Sync = React.createClass({
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
+        selectedDate: PropTypes.string,
         today: PropTypes.string,
         freshRoute: PropTypes.bool,
 
@@ -257,6 +268,7 @@ var UserListSync = module.exports.Sync = React.createClass({
                 route: this.props.route,
                 locale: this.props.locale,
                 theme: this.props.theme,
+                selectedDate: this.props.selectedDate,
                 today: this.props.today,
 
                 onChartSelect: this.handleChartSelect,

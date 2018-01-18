@@ -152,7 +152,7 @@ module.exports = React.createClass({
             disabled: !this.state.canAccessServer,
         };
         return (
-            <div className="application">
+            <div className="application" id="application">
                 <SideNavigation {...navProps} />
                 <section className="page-view-port">
                     <div className="scroll-box">
@@ -248,9 +248,8 @@ module.exports = React.createClass({
         var localeManagerProps = {
             ref: setters.localeManager,
             database: this.state.database,
-            directory: require('locales'),
+            directory: require('languages'),
             onChange: this.handleLocaleChange,
-            onModuleRequest: this.handleLanguageModuleRequest,
         };
         var themeManagerProps = {
             ref: setters.themeManager,
@@ -553,34 +552,6 @@ module.exports = React.createClass({
         var locale = new Locale(evt.target);
         this.setState({ locale });
         document.title = locale.translate('app-title');
-    },
-
-    /**
-     * Called when LocaleManager needs a language module
-     *
-     * @param  {Object} evt
-     *
-     * @return {Promise<Module>}
-     */
-    handleLanguageModuleRequest: function(evt) {
-        var languageCode = evt.languageCode;
-        return new Promise((resolve, reject) => {
-            // list the modules here so Webpack can code-split them
-            //
-            // require.ensure() will become a "new Promise(...)" statement
-            // use native Promise instead of Bluebird to avoid warning of
-            // null getting passed to then()
-            var Promise = window.Promise || require('bluebird');
-            switch (languageCode) {
-                case 'en': require.ensure([ './locales/en' ], () => { try { resolve(require('./locales/en')) } catch(err) { reject(err) } }); break;
-                case 'fi': require.ensure([ './locales/fi' ], () => { try { resolve(require('./locales/fi')) } catch(err) { reject(err) } }); break;
-                case 'nb': require.ensure([ './locales/nb' ], () => { try { resolve(require('./locales/nb')) } catch(err) { reject(err) } }); break;
-                case 'pl': require.ensure([ './locales/pl' ], () => { try { resolve(require('./locales/pl')) } catch(err) { reject(err) } }); break;
-                case 'ru': require.ensure([ './locales/ru' ], () => { try { resolve(require('./locales/ru')) } catch(err) { reject(err) } }); break;
-                case 'zh': require.ensure([ './locales/zh' ], () => { try { resolve(require('./locales/zh')) } catch(err) { reject(err) } }); break;
-                default: reject(new Error('No module for language: ' + languageCode));
-            }
-        });
     },
 
     /**

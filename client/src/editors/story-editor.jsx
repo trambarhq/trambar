@@ -30,6 +30,7 @@ var TextToolbar = require('widgets/text-toolbar');
 var HeaderButton = require('widgets/header-button');
 var DropZone = require('widgets/drop-zone');
 var MediaEditor = require('editors/media-editor');
+var MediaImporter = require('editors/media-importer');
 var MediaPlaceholder = require('widgets/media-placeholder');
 var StoryEditorOptions = require('editors/story-editor-options');
 var CornerPopUp = require('widgets/corner-pop-up');
@@ -77,13 +78,13 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         this.components = ComponentRefs({
-            mediaEditor: MediaEditor,
+            mediaImporter: MediaImporter,
             textArea: AutosizeTextArea,
         });
         this.resourcesReferenced = {};
         var nextState = {
             options: defaultOptions,
-            selectedResourceIndex: undefined,
+            selectedResourceIndex: 0,
             draft: null,
             confirming: false,
             capturing: null,
@@ -92,6 +93,7 @@ module.exports = React.createClass({
         this.updateDraft(nextState, this.props);
         this.updateOptions(nextState, this.props);
         this.updateLeadAuthor(nextState, this.props);
+        this.updateResourceIndex(nextState, this.props);
         return nextState;
     },
 
@@ -135,6 +137,7 @@ module.exports = React.createClass({
         }
         if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations || this.props.locale !== nextProps.locale) {
             this.updateOptions(nextState, nextProps);
+            this.updateResourceIndex(nextState, nextProps);
         }
         var changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
@@ -202,6 +205,22 @@ module.exports = React.createClass({
         }
         if (!options.localeCode) {
             options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
+        }
+    },
+
+    /**
+     * Update state.selectedResourceIndex
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
+    updateResourceIndex: function(nextState, nextProps) {
+        var resources = _.get(nextState.draft, 'details.resources');
+        var count = _.size(resources);
+        if (nextState.selectedResourceIndex >= count) {
+            nextState.selectedResourceIndex = count - 1;
+        } else if (nextState.selectedResourceIndex < 0 && count > 0) {
+            nextState.selectedResourceIndex = 0;
         }
     },
 
@@ -303,6 +322,7 @@ module.exports = React.createClass({
                         {this.renderPreview()}
                     </div>
                 </div>
+                {this.renderMediaImporter()}
                 {this.renderConfirmationDialogBox()}
             </div>
         );
@@ -337,6 +357,7 @@ module.exports = React.createClass({
                         {this.renderPreview()}
                     </div>
                 </div>
+                {this.renderMediaImporter()}
                 {this.renderConfirmationDialogBox()}
             </div>
         );
@@ -376,6 +397,7 @@ module.exports = React.createClass({
                         {this.renderOptions()}
                     </div>
                 </div>
+                {this.renderMediaImporter()}
                 {this.renderConfirmationDialogBox()}
             </div>
         );
@@ -444,6 +466,7 @@ module.exports = React.createClass({
             lang: loc,
             onChange: this.handleTextChange,
             onKeyPress: this.handleKeyPress,
+            onPaste: this.handlePaste,
         };
         return <AutosizeTextArea ref={setters.textArea} {...props} />;
     },
@@ -641,15 +664,12 @@ module.exports = React.createClass({
      */
     renderMediaPreview: function() {
         var editorProps = {
-            ref: this.components.setters.mediaEditor,
             allowEmbedding: true,
             resources: _.get(this.state.draft, 'details.resources'),
+            resourceIndex: this.state.selectedResourceIndex,
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
-            initialResourceIndex: this.props.selectedResourceIndex,
-            onCaptureStart: this.handleCaptureStart,
-            onCaptureEnd: this.handleCaptureEnd,
             onChange: this.handleResourcesChange,
             onEmbed: this.handleResourceEmbed,
         };
@@ -665,6 +685,25 @@ module.exports = React.createClass({
                 </MediaEditor>
             </DropZone>
         );
+    },
+
+    /**
+     * Render preview of images and videos
+     *
+     * @return {ReactElement}
+     */
+    renderMediaImporter: function() {
+        var props = {
+            ref: this.components.setters.mediaImporter,
+            resources: _.get(this.state.draft, 'details.resources'),
+            locale: this.props.locale,
+            theme: this.props.theme,
+            payloads: this.props.payloads,
+            onCaptureStart: this.handleCaptureStart,
+            onCaptureEnd: this.handleCaptureEnd,
+            onChange: this.handleResourcesChange,
+        };
+        return <MediaImporter {...props} />;
     },
 
     /**
@@ -750,7 +789,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    changeDraft: function(draft) {
+    changeDraft: function(draft, resourceIndex) {
         return new Promise((resolve, reject) => {
             var options = this.state.options;
             if (!options.preview) {
@@ -759,7 +798,11 @@ module.exports = React.createClass({
                     options = _.decoupleSet(options, 'preview', preview);
                 }
             }
-            this.setState({ draft, options }, () => {
+            var newState = { draft, options };
+            if (resourceIndex !== undefined) {
+                newState.selectedResourceIndex = resourceIndex;
+            }
+            this.setState(newState, () => {
                 resolve(draft);
             });
         });
@@ -785,11 +828,12 @@ module.exports = React.createClass({
      *
      * @param  {Story} draft
      * @param  {Boolean} immediate
+     * @param  {Number} resourceIndex
      *
      * @return {Promise<Story>}
      */
-    saveDraft: function(draft, immediate) {
-        return this.changeDraft(draft).then((story) => {
+    saveDraft: function(draft, immediate, resourceIndex) {
+        return this.changeDraft(draft, resourceIndex).then((story) => {
             var delay = (immediate) ? 0 : AUTOSAVE_DURATION;
             this.autosaveStory(story, delay);
             return story;
@@ -1091,6 +1135,16 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user paste into editor
+     *
+     * @param  {Event} evt
+     */
+    handlePaste: function(evt) {
+        this.components.mediaImporter.importFiles(evt.clipboardData.files);
+        this.components.mediaImporter.importDataItems(evt.clipboardData.items);
+    },
+
+    /**
      * Called when user click Cancel button
      *
      * @param  {Event} evt
@@ -1250,14 +1304,18 @@ module.exports = React.createClass({
      * Called when user add new resources or adjusted image cropping
      *
      * @param  {Object} evt
-     *
-     * @return {Promise}
      */
     handleResourcesChange: function(evt) {
-        var path = 'details.resources';
-        var draft = _.decoupleSet(this.state.draft, path, evt.resources);
-        var immediate = hasUnsentFiles(draft.details.resources);
-        return this.saveDraft(draft, immediate);
+        var resourcesBefore = this.state.draft.resources;
+        var resourcesAfter = evt.resources;
+        var selectedResourceIndex = evt.selection;
+        if (resourcesBefore !== resourcesAfter) {
+            var draft = _.decoupleSet(this.state.draft, 'details.resources', resourcesAfter);
+            var immediate = hasUnsentFiles(resourcesAfter);
+            return this.saveDraft(draft, immediate, selectedResourceIndex);
+        } else {
+            this.setState({ selectedResourceIndex });
+        }
     },
 
     /**
@@ -1272,14 +1330,19 @@ module.exports = React.createClass({
         var resourcesOfType = _.filter(resources, { type: resource.type });
         var index = _.indexOf(resourcesOfType, resource);
         if (index !== -1) {
-            _.set(draft, `details.markdown`, true);
-            this.changeDraft(draft).then(() => {
-                var textArea = this.components.textArea.getElement();
-                textArea.focus();
-                setTimeout(() => {
-                    var addition = `![${resource.type}-${index+1}]`;
-                    document.execCommand("insertText", false, addition);
-                }, 10);
+            // keep previewing media
+            var options = _.clone(this.state.options);
+            options.preview = 'media';
+            this.changeOptions(options).then(() => {
+                _.set(draft, `details.markdown`, true);
+                this.changeDraft(draft).then(() => {
+                    var textArea = this.components.textArea.getElement();
+                    textArea.focus();
+                    setTimeout(() => {
+                        var addition = `![${resource.type}-${index+1}]`;
+                        document.execCommand("insertText", false, addition);
+                    }, 10);
+                });
             });
         }
     },
@@ -1290,8 +1353,8 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleDrop: function(evt) {
-        this.components.mediaEditor.importFiles(evt.files);
-        this.components.mediaEditor.importDataItems(evt.items);
+        this.components.mediaImporter.importFiles(evt.files);
+        this.components.mediaImporter.importDataItems(evt.items);
         return null;
     },
 
@@ -1346,16 +1409,16 @@ module.exports = React.createClass({
                 this.saveDraft(draft);
                 break;
             case 'photo-capture':
-                this.components.mediaEditor.capture('image');
+                this.components.mediaImporter.capture('image');
                 break;
             case 'video-capture':
-                this.components.mediaEditor.capture('video');
+                this.components.mediaImporter.capture('video');
                 break;
             case 'audio-capture':
-                this.components.mediaEditor.capture('audio');
+                this.components.mediaImporter.capture('audio');
                 break;
             case 'file-import':
-                this.components.mediaEditor.importFiles(evt.files);
+                this.components.mediaImporter.importFiles(evt.files);
                 break;
         }
     }

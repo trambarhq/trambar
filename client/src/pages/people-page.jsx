@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Moment = require('moment');
 var Memoize = require('utils/memoize');
+var DateUtils = require('utils/date-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -38,8 +40,9 @@ module.exports = Relaks.createClass({
             ], (params) => {
                 return {
                     schema: params.schema,
-                    roles: Route.parseIdList(query.roles),
                     search: query.search,
+                    date: Route.parseDate(query.date),
+                    roles: Route.parseIdList(query.roles),
                 };
             });
         },
@@ -53,6 +56,9 @@ module.exports = Relaks.createClass({
          */
         getURL: function(params) {
             var path = `/${params.schema}/people/`, query = {}, hash;
+            if (params.date != undefined) {
+                query.date = params.date;
+            }
             if (params.roles != undefined) {
                 query.roles = params.roles.join('+');
             }
@@ -78,6 +84,7 @@ module.exports = Relaks.createClass({
                 filters: {},
             };
             return {
+                calendar: { route, statistics },
                 filter: { route },
                 search: { route, statistics },
                 navigation: { route, section: 'people' }
@@ -102,6 +109,7 @@ module.exports = Relaks.createClass({
             users: null,
             stories: null,
             currentUser: null,
+            selectedDate: params.date,
 
             database: this.props.database,
             route: this.props.route,
@@ -126,17 +134,21 @@ module.exports = Relaks.createClass({
             props.project = project;
             return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
-            if (params.search) {
+            if (params.search || params.date) {
                 // search for matching stories
                 var criteria = {
                     published: true,
                     ready: true,
-                    search: {
-                        lang: this.props.locale.languageCode,
-                        text: params.search,
-                    },
                     per_user_limit: 5
                 };
+                if (params.search) {
+                    criteria.search = {
+                        lang: this.props.locale.languageCode,
+                        text: params.search,
+                    };
+                } else if (params.date) {
+                    criteria.time_range = DateUtils.getDayRange(params.date);
+                }
                 if (!_.isEmpty(params.roles)) {
                     criteria.role_ids = params.roles;
                 }
@@ -173,6 +185,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        selectedDate: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -206,6 +219,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             users: this.props.users,
             stories: this.props.stories,
             currentUser: this.props.currentUser,
+            selectedDate: this.props.selectedDate,
 
             database: this.props.database,
             route: this.props.route,

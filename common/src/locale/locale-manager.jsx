@@ -8,9 +8,8 @@ module.exports = React.createClass({
     propTypes: {
         defaultLanguageCode: PropTypes.string,
         database: PropTypes.instanceOf(Database),
-        directory: PropTypes.arrayOf(PropTypes.object),
+        directory: PropTypes.arrayOf(PropTypes.object).isRequired,
         onChange: PropTypes.func,
-        onModuleRequest: PropTypes.func,
     },
 
     /**
@@ -160,15 +159,13 @@ module.exports = React.createClass({
      * @return {Promise<Function>}
      */
     load: function(localeCode) {
-        var languageCode = localeCode.substr(0, 2);
-        var module = languageModules[languageCode];
-        if (module) {
-            return Promise.resolve(module);
+        var code = localeCode.substr(0, 2);
+        var entry = _.find(this.props.directory, { code });
+        if (!entry || !entry.module) {
+            return Promise.reject(new Error('No module for language: ' + code));
         }
-        return this.triggerModuleRequest(languageCode).then((module) => {
-            languageModules[languageCode] = module;
-            return module;
-        });
+        // Wekpack returns a native promise--convert it to Bluebird
+        return Promise.resolve(entry.module());
     },
 
     /**
@@ -180,26 +177,6 @@ module.exports = React.createClass({
                 type: 'change',
                 target: this,
             });
-        }
-    },
-
-    /**
-     * Trigger the onModuleRequest handler to ask parent component to load
-     * a localization module
-     *
-     * @param  {String} languageCode
-     *
-     * @return {Promise<Module>}
-     */
-    triggerModuleRequest: function(languageCode) {
-        if (this.props.onModuleRequest) {
-            return this.props.onModuleRequest({
-                type: 'module_request',
-                target: this,
-                languageCode: languageCode,
-            });
-        } else {
-            return Promise.reject('onModuleRequest is not set');
         }
     },
 
@@ -245,8 +222,6 @@ module.exports = React.createClass({
         }
     },
 });
-
-var languageModules = {};
 
 function getBrowserLanguage() {
     // check navigator.languages

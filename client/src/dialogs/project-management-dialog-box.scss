@@ -33,4 +33,9 @@
         text-align: right;
         border-top: 1px solid #666666;
     }
+
+    .single-col & {
+        width: 100%;
+        max-width: none;
+    }
 }

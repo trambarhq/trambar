@@ -90,12 +90,11 @@ module.exports = function(localeCode) {
 
         'media-close': 'Close',
         'media-download-original': 'Download original',
-        'media-next': 'Next',
-        'media-previous': 'Previous',
-
         'media-editor-embed': 'Embed',
         'media-editor-remove': 'Remove',
         'media-editor-shift': 'Shift',
+        'media-next': 'Next',
+        'media-previous': 'Previous',
 
         'membership-request-cancel': 'Cancel',
         'membership-request-join': 'Join',
@@ -108,22 +107,8 @@ module.exports = function(localeCode) {
         'mobile-device-revoke-are-you-sure': 'Are you sure you want to revoke authorization to this device?',
 
         'mobile-setup-address': 'Server address',
+        'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
-
-        'notification-option-assignment': 'When you are assigned to an issue',
-        'notification-option-bookmark': 'When someone sends you a bookmark',
-        'notification-option-coauthor': 'When someone invites you to jointly edit a post',
-        'notification-option-comment': 'When someone comments on your post',
-        'notification-option-issue': 'When someone opens an issue',
-        'notification-option-join-request': 'When someone wants to join this project',
-        'notification-option-like': 'When someone likes your post',
-        'notification-option-merge': 'When someone merges code into the master branch',
-        'notification-option-note': 'When someone posts a note on a commit or issue',
-        'notification-option-push': 'When someone pushes code into Git',
-        'notification-option-survey': 'When someone posts a survey',
-        'notification-option-task-completion': 'When someone completes a task on your list',
-        'notification-option-vote': 'When someone answers your survey',
-        'notification-option-web-session': 'When a web session is active',
 
         'notification-$user-added-you-as-coauthor': (user) => {
             return `${user} invited you to jointly edit a post`;
@@ -167,8 +152,20 @@ module.exports = function(localeCode) {
         'notification-$user-voted-in-your-survey': (user) => {
             return `${user} answered your survey`;
         },
-
-        'mobile-setup-close': 'Close',
+        'notification-option-assignment': 'When you are assigned to an issue',
+        'notification-option-bookmark': 'When someone sends you a bookmark',
+        'notification-option-coauthor': 'When someone invites you to jointly edit a post',
+        'notification-option-comment': 'When someone comments on your post',
+        'notification-option-issue': 'When someone opens an issue',
+        'notification-option-join-request': 'When someone wants to join this project',
+        'notification-option-like': 'When someone likes your post',
+        'notification-option-merge': 'When someone merges code into the master branch',
+        'notification-option-note': 'When someone posts a note on a commit or issue',
+        'notification-option-push': 'When someone pushes code into Git',
+        'notification-option-survey': 'When someone posts a survey',
+        'notification-option-task-completion': 'When someone completes a task on your list',
+        'notification-option-vote': 'When someone answers your survey',
+        'notification-option-web-session': 'When a web session is active',
 
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
@@ -208,7 +205,7 @@ module.exports = function(localeCode) {
         'qr-scanner-invalid-qr-code': 'Invalid QR code',
 
         'reaction-$user-added-story-to-issue-tracker': (user) => {
-            return `${user} created an issue based on this post`;
+            return `${user} added this post to issue tracker`;
         },
         'reaction-$user-cast-a-vote': (user) => {
             return `${user} cast a vote`;
@@ -281,8 +278,8 @@ module.exports = function(localeCode) {
         'social-network-stackoverflow': 'Stack Overflow profile URL',
         'social-network-twitter': 'Twitter user name',
 
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
         'start-activation-add-server': 'Add project from another server',
+        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
         'start-activation-manual': 'Manual entry',
         'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',
@@ -367,10 +364,10 @@ module.exports = function(localeCode) {
             var lines = (count === 1) ? `1 line` : `${count} lines`;
             return `${lines} added`;
         },
+        'story-push-components-changed': 'The following parts were changed:',
         'story-push-created-$branch-in-$repo': (branch, repo) => {
             return `Created branch “${branch}” in project “${repo}”`;
         },
-        'story-push-components-changed': 'The following parts were changed:',
         'story-push-deleted-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} removed`;
@@ -408,6 +405,8 @@ module.exports = function(localeCode) {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} renamed`;
         },
+        'story-remove-yourself': 'Remove yourself',
+        'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
         'story-repo-created-$name': (name) => {
             var text = `Created project`;
             if (name) {
@@ -415,8 +414,6 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'story-remove-yourself': 'Remove yourself',
-        'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
         'story-status-transcoding-$progress': (progress) => {
             return `Transcoding (${progress}%)`;
         },
@@ -428,7 +425,7 @@ module.exports = function(localeCode) {
         'story-video': 'Video',
         'story-vote-submit': 'Submit',
         'story-wiki-created-page-with-$title': (title) => {
-            return `Updated wiki page “${title}”`;
+            return `Created wiki page “${title}”`;
         },
         'story-wiki-deleted-page-with-$title': (title) => {
             return `Deleted wiki page “${title}”`;
@@ -447,24 +444,6 @@ module.exports = function(localeCode) {
         },
 
         'user-actions': 'Actions',
-
-        'user-info-name': 'Name',
-        'user-info-email': 'E-mail address',
-        'user-info-phone': 'Phone number',
-        'user-info-gender': 'Gender',
-        'user-info-gender-male': 'Male',
-        'user-info-gender-female': 'Female',
-        'user-info-gender-unspecified': 'Unspecified',
-
-        'user-statistics-legend-issue': 'Issues',
-        'user-statistics-legend-merge': 'Code merges',
-        'user-statistics-legend-merge-request': 'Merge requests',
-        'user-statistics-legend-milestone': 'Milestones',
-        'user-statistics-legend-push': 'Code pushes',
-        'user-statistics-legend-story': 'Posts',
-        'user-statistics-legend-survey': 'Surveys',
-        'user-statistics-legend-task-list': 'Task lists',
-        'user-statistics-legend-wiki': 'Wiki edits',
 
         'user-activity-$name-created-branch': 'Created a new branch',
         'user-activity-$name-created-merge-request': 'Made a merge request',
@@ -501,6 +480,60 @@ module.exports = function(localeCode) {
         'user-image-remove': 'Remove',
         'user-image-select': 'Select',
         'user-image-snap': 'Snap',
+
+        'user-info-email': 'E-mail address',
+        'user-info-gender': 'Gender',
+        'user-info-gender-female': 'Female',
+        'user-info-gender-male': 'Male',
+        'user-info-gender-unspecified': 'Unspecified',
+        'user-info-name': 'Name',
+        'user-info-phone': 'Phone number',
+
+        'user-statistics-legend-branch': 'New branches',
+        'user-statistics-legend-issue': 'Issues',
+        'user-statistics-legend-merge': 'Code merges',
+        'user-statistics-legend-merge-request': 'Merge requests',
+        'user-statistics-legend-milestone': 'Milestones',
+        'user-statistics-legend-push': 'Code pushes',
+        'user-statistics-legend-repo': 'Repo changes',
+        'user-statistics-legend-story': 'Posts',
+        'user-statistics-legend-survey': 'Surveys',
+        'user-statistics-legend-task-list': 'Task lists',
+        'user-statistics-legend-wiki': 'Wiki edits',
+        'user-statistics-today': 'Today',
+        'user-statistics-tooltip-$count-branch': (count) => {
+            return (count === 1) ? `1 branch` : `${count} branches`;
+        },
+        'user-statistics-tooltip-$count-issue': (count) => {
+            return (count === 1) ? `1 issue` : `${count} issues`;
+        },
+        'user-statistics-tooltip-$count-member': (count) => {
+            return (count === 1) ? `1 membership change` : `${count} membership changes`;
+        },
+        'user-statistics-tooltip-$count-merge': (count) => {
+            return (count === 1) ? `1 merge` : `${count} merges`;
+        },
+        'user-statistics-tooltip-$count-milestone': (count) => {
+            return (count === 1) ? `1 milestone` : `${count} milestones`;
+        },
+        'user-statistics-tooltip-$count-push': (count) => {
+            return (count === 1) ? `1 push` : `${count} pushes`;
+        },
+        'user-statistics-tooltip-$count-repo': (count) => {
+            return (count === 1) ? `1 repository change` : `${count} repository changes`;
+        },
+        'user-statistics-tooltip-$count-story': (count) => {
+            return (count === 1) ? `1 post` : `${count} posts`;
+        },
+        'user-statistics-tooltip-$count-survey': (count) => {
+            return (count === 1) ? `1 survey` : `${count} surveys`;
+        },
+        'user-statistics-tooltip-$count-task-list': (count) => {
+            return (count === 1) ? `1 task list` : `${count} task lists`;
+        },
+        'user-statistics-tooltip-$count-wiki': (count) => {
+            return (count === 1) ? `1 wiki edit` : `${count} wiki edits`;
+        },
 
         'video-capture-accept': 'Accept',
         'video-capture-cancel': 'Cancel',

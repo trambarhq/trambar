@@ -17,6 +17,7 @@ module.exports = Relaks.createClass({
     displayName: 'MobileSetupDialogBox.Sync',
     propTypes: {
         show: PropTypes.bool,
+        system: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -39,6 +40,7 @@ module.exports = Relaks.createClass({
             devices: null,
 
             show: this.props.show,
+            system: this.props.system,
             route: this.props.route,
             locale: this.props.locale,
             onClose: this.props.onClose,
@@ -133,7 +135,10 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
         var number = this.props.number;
         var route = this.props.route;
         var url;
-        var address = route.parameters.address;
+        var address = _.get(this.props.system, 'settings.address');
+        if (!address) {
+            address = route.parameters.address;
+        }
         var schema = route.parameters.schema;
         var activationCode = this.props.activationCode;
         if (activationCode) {

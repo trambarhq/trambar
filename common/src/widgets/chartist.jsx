@@ -16,6 +16,7 @@ module.exports = React.createClass({
         responsiveOptions: PropTypes.array,
         style: PropTypes.object,
         onDraw: PropTypes.func,
+        onClick: PropTypes.func,
     },
 
     /**
@@ -38,9 +39,9 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.onDraw !== nextProps.onDraw) {
             if (this.chartist) {
-                this.chartist.off(this.props.onDraw);
+                this.chartist.off('draw', this.props.onDraw);
             } else {
-                this.chartist.on(nextProps.onDraw);
+                this.chartist.on('draw', nextProps.onDraw);
             }
         }
     },
@@ -59,7 +60,8 @@ module.exports = React.createClass({
             ref: this.components.setters.container,
             className: classNames.join(' '),
             style: this.props.style,
-        }
+            onClick: this.props.onClick,
+        };
         return <div {...containerProps} />
     },
 

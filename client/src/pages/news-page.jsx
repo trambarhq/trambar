@@ -4,6 +4,7 @@ var ReactDOM = require('react-dom');
 var Moment = require('moment');
 var Relaks = require('relaks');
 var DateTracker = require('utils/date-tracker');
+var DateUtils = require('utils/date-utils');
 var ProjectSettings = require('objects/settings/project-settings');
 
 var Database = require('data/database');
@@ -42,14 +43,13 @@ module.exports = Relaks.createClass({
          */
         parseURL: function(path, query, hash) {
             return Route.match(path, [
-                '/:schema/news/:date/?',
                 '/:schema/news/?',
             ], (params) => {
                 return {
                     schema: params.schema,
-                    date: Route.parseDate(params.date),
                     roles: Route.parseIdList(query.roles),
                     search: query.search,
+                    date: Route.parseDate(query.date),
                     story: Route.parseId(hash, /S(\d+)/i),
                     reaction: Route.parseId(hash, /R(\d+)/i),
                 };
@@ -66,7 +66,7 @@ module.exports = Relaks.createClass({
         getURL: function(params) {
             var path = `/${params.schema}/news/`, query = {}, hash;
             if (params.date != undefined) {
-                path += `${params.date || 'date'}/`
+                query.date = params.date;
             }
             if (params.roles != undefined) {
                 query.roles = params.roles.join('+');
@@ -162,12 +162,7 @@ module.exports = Relaks.createClass({
                 };
                 var remote;
                 if (params.date) {
-                    var s = Moment(params.date);
-                    var e = s.clone().endOf('day');
-                    var rangeStart = s.toISOString();
-                    var rangeEnd = e.toISOString();
-                    var range = `[${rangeStart},${rangeEnd}]`;
-                    criteria.time_range = range;
+                    criteria.time_range = DateUtils.getDayRange(params.date);
                 }
                 if (!_.isEmpty(params.roles)) {
                     criteria.role_ids = params.roles;

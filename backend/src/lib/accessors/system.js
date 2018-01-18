@@ -103,6 +103,7 @@ module.exports = _.create(Data, {
                     object.settings = row.settings;
                 } else {
                     object.settings = _.pick(row.settings, [
+                        'address',
                         'push_relay',
                     ]);
                 }

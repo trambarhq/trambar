@@ -58,4 +58,9 @@
             background-color: #dddd66;
         }
     }
+
+    .single-col & {
+        width: 100%;
+        max-width: none;
+    }
 }

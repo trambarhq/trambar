@@ -11,11 +11,12 @@ module.exports = function(localeCode) {
         'action-badge-restore': 'gjenopprette',
 
         'activity-chart-legend-branch': 'Nye brancher',
-        'activity-chart-legend-push': 'Pusher',
         'activity-chart-legend-issue': 'Problemer',
         'activity-chart-legend-member': 'Medlemskapsendringer',
         'activity-chart-legend-merge': 'Merger',
+        'activity-chart-legend-merge-request': 'Merge-requester',
         'activity-chart-legend-milestone': 'Milepæler',
+        'activity-chart-legend-push': 'Pusher',
         'activity-chart-legend-repo': 'Repo endringer',
         'activity-chart-legend-story': 'Innlegg',
         'activity-chart-legend-survey': 'Undersøkelser',
@@ -27,9 +28,6 @@ module.exports = function(localeCode) {
         },
         'activity-tooltip-$count-branch': (count) => {
             return (count === 1) ? `1 branch` : `${count} brancher`;
-        },
-        'activity-tooltip-$count-push': (count) => {
-            return (count === 1) ? `1 push` : `${count} pusher`;
         },
         'activity-tooltip-$count-issue': (count) => {
             return (count === 1) ? `1 problemet` : `${count} problemer`;
@@ -43,6 +41,9 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 Milepæl` : `${count} milepæler`;
         },
+        'activity-tooltip-$count-push': (count) => {
+            return (count === 1) ? `1 push` : `${count} pusher`;
+        },
         'activity-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 repo endring` : `${count} repo endringer`;
         },
@@ -52,7 +53,7 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 undersøkelse` : `${count} undersøkelser`;
         },
-        'activity-tooltip-$count-tasj-list': (count) => {
+        'activity-tooltip-$count-task-list': (count) => {
             return (count === 1) ? `1 oppgaveliste` : `${count} oppgavelister`;
         },
         'activity-tooltip-$count-wiki': (count) => {
@@ -78,6 +79,7 @@ module.exports = function(localeCode) {
         },
 
         'image-album-cancel': 'Avbryt',
+        'image-album-done': 'Gjort',
         'image-album-manage': 'Endr album',
         'image-album-remove': 'Fjern valgte',
         'image-album-select': 'Bruk valgt',
@@ -86,8 +88,8 @@ module.exports = function(localeCode) {
         'image-cropping-cancel': 'Avbryt',
         'image-cropping-select': 'OK',
 
-        'image-selector-crop-image': 'Juste størrelse/posisjon',
         'image-selector-choose-from-album': 'Velg fra album',
+        'image-selector-crop-image': 'Juste størrelse/posisjon',
         'image-selector-upload-file': 'Last opp bilde',
 
         'member-list-$name-with-$username': (name, username) => {
@@ -107,22 +109,22 @@ module.exports = function(localeCode) {
         'member-list-edit': 'Rediger medlemsliste',
         'member-list-reject-all': 'Avvis alle forespørsler',
         'member-list-save': 'Lagre medlemsliste',
-        'member-list-status-pending': 'Forespørsel venter',
         'member-list-status-non-member': 'Ikke et medlem',
+        'member-list-status-pending': 'Forespørsel venter',
         'member-list-title': 'Medlemmer',
 
         'nav-member-new': 'Nytt medlemm',
         'nav-members': 'Medlemmer',
-        'nav-projects': 'Prosjekter',
         'nav-project-new': 'Nytt prosjekt',
+        'nav-projects': 'Prosjekter',
         'nav-repositories': 'Repoer',
-        'nav-roles': 'Roller',
         'nav-role-new': 'Ny rolle',
-        'nav-servers': 'Servere',
+        'nav-roles': 'Roller',
         'nav-server-new': 'Ny server',
+        'nav-servers': 'Servere',
         'nav-settings': 'Innstillinger',
-        'nav-users': 'Brukere',
         'nav-user-new': 'Ny bruker',
+        'nav-users': 'Brukere',
 
         'project-list-$title-with-$name': (title, name) => {
             if (title) {
@@ -211,9 +213,8 @@ module.exports = function(localeCode) {
         'repo-summary-edit': 'Rediger repoen',
         'repo-summary-gitlab-name': 'GitLab prosjektnavn',
         'repo-summary-issue-tracker': 'Feilrapporteringssystem',
-        'repo-summary-issue-tracker-import-allowed': 'Tillat brukere å kopiere innlegg inn i feilrapporteringssystemet',
-        'repo-summary-issue-tracker-import-disallowed': 'Ikke la kopiere innlegg inn i feilrapporteringssystemet',
-        'repo-summary-issue-tracker-not-available': 'Ikke tilgjengelig',
+        'repo-summary-issue-tracker-disabled': 'Deaktivert',
+        'repo-summary-issue-tracker-enabled': 'Aktivert',
         'repo-summary-remove': 'Fjern repoen',
         'repo-summary-restore': 'Gjenopprett repoen',
         'repo-summary-return': 'Gå tilbake til repo listen',
@@ -262,15 +263,15 @@ module.exports = function(localeCode) {
         'role-summary-return': 'Gå tilbake til rollelisten',
         'role-summary-save': 'Lagre rolle',
         'role-summary-title': 'Navn',
+        'role-summary-users': 'Brukere',
 
         'role-tooltip-$count-others': (count) => {
             return `${count} andre`;
         },
 
-        'server-list-edit': 'Rediger serverlisten',
+        'server-list-add': 'Legg til ny server',
         'server-list-api-access-false': '',
         'server-list-api-access-true': 'Fikk',
-        'server-list-add': 'Legg til ny server',
         'server-list-cancel': 'Avbryt',
         'server-list-confirm-disable-$count': (count) => {
             var servers = (count === 1) ? `denne serveren` : `disse ${count} serverene`;
@@ -280,14 +281,16 @@ module.exports = function(localeCode) {
             var servers = (count === 1) ? `denne serveren` : `disse ${count} serverene`;
             return `Er du sikker på at du vil reaktivere ${servers}?`
         },
+        'server-list-edit': 'Rediger serverlisten',
+        'server-list-oauth-false': '',
+        'server-list-oauth-true': 'Aktivert',
         'server-list-save': 'Lagre serverlisten',
         'server-list-status-deleted': 'Slettet',
         'server-list-status-disabled': 'Deaktivert',
         'server-list-title': 'Servere',
-        'server-list-oauth-false': '',
-        'server-list-oauth-true': 'Aktivert',
 
         'server-summary-acquire': 'Få tilgang til API',
+        'server-summary-activities': 'Aktiviteter',
         'server-summary-add': 'Legg til ny server',
         'server-summary-api-access': 'API-tilgang',
         'server-summary-api-access-acquired': 'Administrativ tilgang ervervet',
@@ -300,30 +303,42 @@ module.exports = function(localeCode) {
         'server-summary-delete': 'Slett serveren',
         'server-summary-disable': 'Deaktiver serveren',
         'server-summary-edit': 'Rediger serveren',
+        'server-summary-gitlab-admin': 'Gitlab administrator',
+        'server-summary-gitlab-external-user': 'Gitlab ekstern bruker',
+        'server-summary-gitlab-regular-user': 'Gitlab vanlig bruker',
         'server-summary-member-$name': (name) => {
             return `Server: ${name}`;
         },
         'server-summary-name': 'Identifier',
-        'server-summary-new-user-no-creation': 'Ikke opprett nye brukere',
-        'server-summary-new-user-guest': 'Opprett nye brukere som gjester',
-        'server-summary-new-user-regular': 'Opprett nye brukere som vanlige brukere',
-        'server-summary-new-user-automatic-approval': 'Godkjenn nye brukere automatisk',
+        'server-summary-new-user': 'Ny bruker',
         'server-summary-new-users': 'Nye brukere',
+        'server-summary-oauth-callback': 'OAuth callback URL',
         'server-summary-oauth-id': 'OAuth klient-ID',
         'server-summary-oauth-secret': 'OAuth klienthemmelighet',
         'server-summary-oauth-url': 'OAuth URL',
         'server-summary-reactivate': 'Reaktiver serveren',
         'server-summary-return': 'Gå tilbake til serverlisten',
+        'server-summary-role-none': 'Ikke tilordne noen roller til nye brukere',
+        'server-summary-roles': 'Rolleoppgave',
         'server-summary-save': 'Lagre serveren',
-        'server-summary-show-api-log': 'Vis API-logg',
+        'server-summary-system-address-missing': 'Systemadressen er ikke angitt',
         'server-summary-test-oauth': 'Test OAuth-integrasjon',
         'server-summary-title': 'Navn',
         'server-summary-type': 'Server type',
+        'server-summary-user-automatic-approval': 'Godkjenn nye brukere automatisk',
+        'server-summary-user-import-disabled': 'Ikke registrer nye brukere',
+        'server-summary-user-import-gitlab-admin-disabled': 'Ikke importer Gitlab-administratorer',
+        'server-summary-user-import-gitlab-external-user-disabled': 'Ikke importer Gitlab eksterne brukere',
+        'server-summary-user-import-gitlab-user-disabled': 'Ikke importer Gitlab-brukere',
+        'server-summary-user-type-admin': 'Administrator',
+        'server-summary-user-type-guest': 'Gjest',
+        'server-summary-user-type-moderator': 'Moderator',
+        'server-summary-user-type-regular': 'Vanlig bruker',
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',
-        'server-type-gitlab': 'GitLab',
         'server-type-github': 'GitHub',
+        'server-type-gitlab': 'GitLab',
         'server-type-google': 'Google',
 
         'settings-background-image': 'Bakgrunnsbilde',
@@ -332,9 +347,9 @@ module.exports = function(localeCode) {
         'settings-input-languages': 'Inndataspråk',
         'settings-push-relay': 'Push notification relé',
         'settings-save': 'Lagre innstillinger',
-        'settings-site-title': 'Side navn',
-        'settings-site-description': 'Beskrivelse',
         'settings-site-address': 'Adresse',
+        'settings-site-description': 'Beskrivelse',
+        'settings-site-title': 'Side navn',
         'settings-title': 'Innstillinger',
 
         'sign-in-$title': (title) => {
@@ -344,12 +359,16 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'sign-in-password': 'Passord:',
-        'sign-in-submit': 'Logg inn',
+        'sign-in-error-access-denied': 'Forespørsel om tilgang avvist',
+        'sign-in-error-account-disabled': 'Kontoen er for øyeblikket deaktivert',
+        'sign-in-error-existing-users-only': 'Kun autorisert personell kan få tilgang til dette systemet',
+        'sign-in-error-restricted-area': 'Brukeren er ikke administrator',
         'sign-in-oauth': 'Logg inn via OAuth',
+        'sign-in-password': 'Passord:',
         'sign-in-problem-incorrect-username-password': 'Feil brukernavn eller passord',
         'sign-in-problem-no-support-for-username-password': 'Systemet godtar ikke passord',
         'sign-in-problem-unexpected-error': 'Uventet feil oppstått',
+        'sign-in-submit': 'Logg inn',
         'sign-in-username': 'Brukernavn:',
 
         'sign-off-menu-sign-off': 'Logg ut',
@@ -372,12 +391,92 @@ module.exports = function(localeCode) {
         'table-heading-type': 'Type',
         'table-heading-users': 'Brukere',
 
+        'task-$seconds': (seconds) => {
+            return (seconds === 1) ? `1 sekund` : `${seconds} sekunder`;
+        },
+        'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
+            var comments = (count === 1) ? `1 commit kommentar` : `${count} commit kommentarer`;
+            return `Importert ${comments} fra “${repo}”`;
+        },
+        'task-imported-$count-events-from-$repo': (count, repo) => {
+            var events = (count === 1) ? `1 hendelse` : `${count} hendelser`;
+            return `Importert ${events} fra “${repo}”`;
+        },
+        'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
+            var comments = (count === 1) ? `1 issue kommentar` : `${count} issue kommentarer`;
+            return `Importert ${comments} fra “${repo}”`;
+        },
+        'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
+            var comments = (count === 1) ? `1 merge-request kommentar` : `${count} merge-request kommentarer`;
+            return `Importert ${comments} fra “${repo}”`;
+        },
+        'task-imported-$count-repos': (count) => {
+            var repos = (count === 1) ? `1 repo` : `${count} repoer`;
+            return `Importert ${repos}`;
+        },
+        'task-imported-$count-users': (count) => {
+            var users = (count === 1) ? `1 bruker` : `${count} brukere`;
+            return `Importert ${users}`;
+        },
+        'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
+            var commits = (count === 1) ? `1 commit` : `${count} commiter`;
+            return `Importert en push med ${commits} fra “${branch}” av “${repo}”`;
+        },
+        'task-importing-commit-comments-from-$repo': (repo) => {
+            return `Importerer commit kommentare fra “${repo}”`;
+        },
+        'task-importing-events-from-$repo': (repo) => {
+            return `Importerer hendelser fra “${repo}”`;
+        },
+        'task-importing-issue-comments-from-$repo': (repo) => {
+            return `Importerer problem kommentare fra “${repo}”`;
+        },
+        'task-importing-merge-request-comments-from-$repo': (repo) => {
+            return `Importerer merge-request kommentare fra “${repo}”`;
+        },
+        'task-importing-push-from-$repo': (repo) => {
+            return `Importerer push fra “${repo}”`;
+        },
+        'task-importing-repos': 'Importerer repoer',
+        'task-importing-users': 'Importerer brukere',
+        'task-installed-$count-hooks': (count) => {
+            var hooks = (count === 1) ? `1 prosjektkrok` : `${count} prosjektkroker`;
+            return `Installert ${hooks}`;
+        },
+        'task-installing-hooks': 'Installere kroker',
+        'task-removed-$count-hooks': (count) => {
+            var hooks = (count === 1) ? `1 prosjektkrok` : `${count} prosjektkroker`;
+            return `Fjernet ${hooks}`;
+        },
+        'task-removed-$count-repos': (count) => {
+            var repos = (count === 1) ? `1 repo` : `${count} repoer`;
+            return `Fjernet ${repos}`;
+        },
+        'task-removed-$count-users': (count) => {
+            var users = (count === 1) ? `1 bruker` : `${count} brukere`;
+            return `Fjernet ${users}`;
+        },
+        'task-removing-hooks': 'Avinstallere kroker',
+        'task-updated-$count-repos': (count) => {
+            var repos = (count === 1) ? `1 repo` : `${count} repoer`;
+            return `Oppdatert ${repos}`;
+        },
+        'task-updated-$count-users': (count) => {
+            var users = (count === 1) ? `1 bruker` : `${count} brukere`;
+            return `Oppdatert ${users}`;
+        },
+
         'text-field-placeholder-none': 'ingen',
 
         'tooltip-$first-and-$tooltip': (first, tooltip) => {
             return [ first, ' og ', tooltip ];
         },
         'tooltip-more': 'Flere',
+
+        'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+            var files = (count === 1) ? `1 fil` : `${count} filer`;
+            return `Laster opp ${files}, ${size} gjenværende`;
+        },
 
         'user-list-$name-with-$username': (name, username) => {
             if (name) {
@@ -390,6 +489,7 @@ module.exports = function(localeCode) {
                 return username;
             }
         },
+        'user-list-add': 'Legg til ny bruker',
         'user-list-approve-all': 'Godkjenn alle forespørsler',
         'user-list-cancel': 'Avbryt',
         'user-list-confirm-disable-$count': (count) => {
@@ -401,7 +501,6 @@ module.exports = function(localeCode) {
             return `Er du sikker på at du vil reaktivere ${accounts}?`
         },
         'user-list-edit': 'Rediger brukerlisten',
-        'user-list-add': 'Legg til ny bruker',
         'user-list-reject-all': 'Reject all requests',
         'user-list-save': 'Lagre brukerlisten',
         'user-list-status-deleted': 'Slettet',
@@ -428,6 +527,10 @@ module.exports = function(localeCode) {
         'user-summary-disable': 'Deaktiver brukerkontoen',
         'user-summary-edit': 'Rediger brukeren',
         'user-summary-email': 'E-post',
+        'user-summary-github': 'GitHub profil URL',
+        'user-summary-gitlab': 'Gitlab profil URL',
+        'user-summary-ichat': 'iChat brukernavn',
+        'user-summary-linkedin': 'Linkedin profil URL',
         'user-summary-member-$name': (name) => {
             var text = 'Medlem';
             if (name) {
@@ -435,20 +538,16 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'user-summary-github': 'GitHub profil URL',
-        'user-summary-gitlab': 'Gitlab profil URL',
-        'user-summary-ichat': 'iChat brukernavn',
-        'user-summary-linkedin': 'Linkedin profil URL',
         'user-summary-member-edit': 'Rediger medlemmet',
-        'user-summary-member-save': 'Lagre medlemmet',
         'user-summary-member-return': 'Gå tilbake til medlemslisten',
+        'user-summary-member-save': 'Lagre medlemmet',
         'user-summary-name': 'Navn',
         'user-summary-phone': 'Telefonnummer',
         'user-summary-profile-image': 'Profilbilde',
         'user-summary-reactivate': 'Reaktiver brukerkonto',
         'user-summary-return': 'Gå tilbake til brukerlisten',
-        'user-summary-roles': 'Roller',
         'user-summary-role-none': 'Ingen',
+        'user-summary-roles': 'Roller',
         'user-summary-save': 'Lagre brukeren',
         'user-summary-skype': 'Skype brukernavn',
         'user-summary-slack': 'Slack bruker-id',
@@ -479,5 +578,7 @@ module.exports = function(localeCode) {
         'validation-password-for-admin-only': 'Bare administratorer kan logge på med passord',
         'validation-required': 'Påkrevd',
         'validation-required-for-oauth': 'Påkrevd når OAuth brukes',
+
+        'welcome': 'Velkommen!',
     };
 };

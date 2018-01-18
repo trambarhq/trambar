@@ -284,6 +284,7 @@ module.exports = React.createClass({
         var downloadButtonProps = {
             label: t('media-download-original'),
             emphasized: false,
+            hidden: (this.props.theme.mode === 'single-col'),
             onClick: this.handleDownloadClick,
         };
         var closeButtonProps = {
