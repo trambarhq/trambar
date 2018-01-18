@@ -128,7 +128,7 @@ function sanitizeError(err) {
         console.error(err);
         var message = err.message;
         if (process.env.NODE_ENV === 'production') {
-            message = 'The application has encountered an unexpect fault';
+            message = 'The application has encountered an unexpected fault';
         }
         err = new HTTPError(500, { message });
     }
@@ -301,7 +301,7 @@ function handleOAuthRequest(req, res, done) {
                     });
                 }).catch((err) => {
                     // save the error
-                    session.details.error = err;
+                    session.details.error = _.pick(err, 'statusCode', 'code', 'message', 'stack');
                     return saveSession(session);
                 });
             });
@@ -741,18 +741,20 @@ function findMatchingUser(server, account) {
                     user: { id: getProfileId(profile) }
                 });
                 var userAfter = copyUserProperties(user, image, server, profile, userLink);
-                if(userAfter) {
-                    if (user) {
-                        return User.updateOne(db, 'global', userAfter);
-                    } else {
-                        if (userAfter.disabled) {
-                            // don't create disabled user
-                            throw new HTTPError(403, {
-                                reason: 'existing-users-only',
-                            });
-                        }
-                        return User.insertUnique(db, 'global', userAfter);
+                if(!userAfter) {
+                    // no change
+                    return user;
+                }
+                if (user) {
+                    return User.updateOne(db, 'global', userAfter);
+                } else {
+                    if (userAfter.disabled) {
+                        // don't create disabled user
+                        throw new HTTPError(403, {
+                            reason: 'existing-users-only',
+                        });
                     }
+                    return User.insertUnique(db, 'global', userAfter);
                 }
             });
         });
@@ -884,15 +886,14 @@ function copyUserProperties(user, image, server, profile, link) {
         var email = _.first(_.map(profile.emails, 'value'));
         var name = profile.displayName;
         var username = profile.username || proposeUsername(profile);
-        var imported = Import.reacquire(userAfter, link, 'user');
-        Import.set(userAfter, imported, 'username', username);
-        Import.set(userAfter, imported, 'details.name', name);
-        Import.set(userAfter, imported, 'details.email', email);
-        Import.attach(userAfter, imported, 'image', image);
+        _.set(userAfter, 'username', username);
+        _.set(userAfter, 'details.name', name);
+        _.set(userAfter, 'details.email', email);
+        Import.attach(userAfter, 'image', image);
 
         // set user type
         if (server.type === 'facebook') {
-            Import.set(userAfter, imported, 'details.gender', json.gender);
+            _.set(userAfter, 'details.gender', json.gender);
         }
         var userType = _.get(server, 'settings.user.type');
         if (user) {
