@@ -160,18 +160,12 @@ module.exports = React.createClass({
      */
     load: function(localeCode) {
         var code = localeCode.substr(0, 2);
-        var module = languageModules[code];
-        if (module) {
-            return Promise.resolve(module);
-        }
         var entry = _.find(this.props.directory, { code });
-        if (!entry || !entry.load) {
+        if (!entry || !entry.module) {
             return Promise.reject(new Error('No module for language: ' + code));
         }
-        return Promise.resolve(entry.load()).then((module) => {
-            languageModules[code] = module;
-            return module;
-        });
+        // Wekpack returns a native promise--convert it to Bluebird
+        return Promise.resolve(entry.module());
     },
 
     /**
@@ -228,8 +222,6 @@ module.exports = React.createClass({
         }
     },
 });
-
-var languageModules = {};
 
 function getBrowserLanguage() {
     // check navigator.languages

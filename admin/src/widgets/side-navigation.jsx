@@ -118,7 +118,9 @@ module.exports = React.createClass({
      */
     renderLanguageButton: function() {
         var selected = this.getLanguage(this.props.locale.languageCode);
-        var languages = _.filter(this.props.locale.directory, { locales: { admin: true } });
+        var languages = _.filter(this.props.locale.directory, (language) => {
+            return !!language.module;
+        });
         var items = _.map(languages, (language, i) => {
             var props = {
                 className: 'item',

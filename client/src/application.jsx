@@ -288,7 +288,7 @@ module.exports = React.createClass({
         var localeManagerProps = {
             ref: setters.localeManager,
             database: this.state.database,
-            directory: require('locales'),
+            directory: require('languages'),
             onChange: this.handleLocaleChange,
         };
         var themeManagerProps = {
