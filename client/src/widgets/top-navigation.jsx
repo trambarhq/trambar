@@ -156,22 +156,11 @@ module.exports = React.createClass({
         return (
             <header className="top-navigation" style={style}>
                 <div ref="container" className="container">
-                    {this.renderSpacerBar()}
                     {this.renderButtonBar()}
                     {this.renderCollapsibleControl()}
                 </div>
             </header>
         );
-    },
-
-    /**
-     * Render a bar on iOS where the status bar overlays the app
-     *
-     * @return {ReactElement|null}
-     */
-    renderSpacerBar: function() {
-        // TODO
-        return null;
     },
 
     /**
