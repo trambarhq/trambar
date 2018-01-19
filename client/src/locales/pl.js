@@ -105,6 +105,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Anuluj',
         'confirmation-confirm': 'Potwierdź',
 
+        'diagnostics-show': 'Pokaż diagnostykę',
+        'diagnostics-show-panel': 'Wyświetl ten panel',
+
         'image-editor-upload-in-progress': 'Przesyłanie w toku...',
 
         'issue-cancel': 'Anuluj',
@@ -311,6 +314,7 @@ module.exports = function(localeCode) {
 
         'settings-device': 'Urządzenie mobilne',
         'settings-devices': 'Urządzenis mobilne',
+        'settings-diagnostics': 'Diagnostyka',
         'settings-language': 'Język',
         'settings-mobile-alert': 'Alert mobilny',
         'settings-notification': 'Powiadomienie',

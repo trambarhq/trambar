@@ -29,10 +29,14 @@ var dateTransforms = {
         return m.subtract(2, 'month').startOf('day');
     },
     startOfWeek: (m) => {
-        return m.locale(currentLocale).startOf('week');
+        if (currentLocale) {
+            return m.locale(currentLocale).startOf('week');
+        }
     },
     endOfWeek: (m) => {
-        return m.locale(currentLocale).endOf('week');
+        if (currentLocale) {
+            return m.locale(currentLocale).endOf('week');
+        }
     },
     startOfMonth: (m) => {
         return m.startOf('month');
@@ -99,11 +103,13 @@ function updateRelativeDates(m) {
     _.each(dateTransforms, (f, name) => {
         var r = f(m.clone());
         var before = exports[name];
-        var after = format(r);
-        if (before !== after) {
-            exports[name] = after;
-            exports[name + 'ISO'] = r.toISOString();
-            changed = true;
+        if (r) {
+            var after = format(r);
+            if (before !== after) {
+                exports[name] = after;
+                exports[name + 'ISO'] = r.toISOString();
+                changed = true;
+            }
         }
     });
     return changed;
@@ -113,9 +119,6 @@ function updateRelativeDates(m) {
  * Update what today is if a change-over has occurred
  */
 function update() {
-    if (!currentLocale) {
-        return false;
-    }
     var now = Moment();
     var today = format(now);
     if (today !== exports.today) {
@@ -138,3 +141,4 @@ function triggerChangeEvent() {
 }
 
 setInterval(update, 1000);
+update();

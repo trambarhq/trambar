@@ -6,6 +6,10 @@ var Async = require('async-do-while');
 
 var Locale = require('locale/locale');
 
+// widgets
+var Diagnostics = require('widgets/diagnostics');
+var DiagnosticsSection = require('widgets/diagnostics-section');
+
 module.exports = React.createClass({
     displayName: 'WebsocketNotifier',
     propTypes: {
@@ -49,6 +53,9 @@ module.exports = React.createClass({
         return {
             socket: null,
             notificationPermitted: false,
+            serverResponse: null,
+            reconnectionCount: 0,
+            recentMessages: [],
         };
     },
 
@@ -132,28 +139,40 @@ module.exports = React.createClass({
                                         user_agent: navigator.userAgent
                                     },
                                 };
+                                this.setState({ serverResponse: object });
                                 this.triggerConnectEvent(connection);
                             }
+
+                            var recentMessages = _.slice(this.state.recentMessages);
+                            recentMessages.unshift(object);
+                            if (recentMessages.length > 10) {
+                               recentMessages.splice(10);
+                            }
+                            this.setState({ recentMessages })
                         }
                     };
                     socket.onclose = () => {
                         if (this.state.socket === socket) {
                             // we're still supposed to be connected
                             // try to reestablish connection
-                            this.setState({ socket: null, server: '' }, () => {
+                            this.setState({ socket: null, serverResponse: null }, () => {
                                 console.log('Reestablishing web-socket connection...');
                                 this.connect(serverAddress).then((connected) => {
                                     if (connected) {
+                                        var reconnectionCount = this.state.reconnectionCount + 1;
+                                        this.setState({ reconnectionCount })
                                         console.log('Connection reestablished');
                                     }
                                 });
                             });
+                        } else {
+                            this.setState({ socket: null, serverResponse: null, reconnectionCount: 0 });
                         }
                         if (this.props.serverAddress === serverAddress) {
                             this.triggerDisconnectEvent();
                         }
                     };
-                    this.setState({ socket, connected: true });
+                    this.setState({ socket });
                 }
                 connected = true;
             }).catch((err) => {
@@ -187,7 +206,7 @@ module.exports = React.createClass({
         var socket = this.state.socket;
         if (socket) {
             // set state.socket to null first, to stop reconnection attempt
-            this.setState({ socket: null, connected: false }, () => {
+            this.setState({ socket: null, serverResponse: null, reconnectionCount: 0 }, () => {
                 socket.close();
             });
         }
@@ -316,8 +335,26 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render diagnostics
+     *
+     * @return {ReactElement}
+     */
     render: function() {
-        return null;
+        var id = _.get(this.state.serverResponse, 'socket');
+        return (
+            <Diagnostics type="websocket-notifier">
+                <DiagnosticsSection label="Connection">
+                    <div>ID: {id}</div>
+                    <div>Socket: {this.state.socket ? 'established' : 'none'}</div>
+                    <div>Reconnection count: {this.state.reconnectionCount}</div>
+                    <div>Notification: {this.state.notificationPermitted ? 'permitted' : 'denied'}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Recent messages">
+                    {_.map(this.state.recentMessages, renderJSON)}
+                </DiagnosticsSection>
+            </Diagnostics>
+        );
     },
 });
 
@@ -338,4 +375,8 @@ function requestNotificationPermission() {
             }
         })
     });
+}
+
+function renderJSON(object) {
+    return <pre>{JSON.stringify(object, undefined, 4)}</pre>;
 }

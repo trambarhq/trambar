@@ -4,6 +4,10 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Async = require('async-do-while');
 var HTTPRequest = require('transport/http-request');
 
+// widgets
+var Diagnostics = require('widgets/diagnostics');
+var DiagnosticsSection = require('widgets/diagnostics-section');
+
 module.exports = React.createClass({
     displayName: 'PushNotifier',
     propTypes: {
@@ -46,6 +50,7 @@ module.exports = React.createClass({
             registrationId: null,
             registrationType: null,
             pushRelayResponse: null,
+            recentMessages: [],
         };
     },
 
@@ -66,15 +71,6 @@ module.exports = React.createClass({
         pushNotification.on('notification', this.handleNotification);
         pushNotification.on('error', this.handleError);
    },
-
-    /**
-     * Render method
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return null;
-    },
 
     /**
      * Change the registration when relay changes or server changes
@@ -110,7 +106,7 @@ module.exports = React.createClass({
             return this.registrationAttempt.promise;
         }
         this.registrationAttempt = attempt;
-        this.setState({ pushRelayResponse: null, registered: false });
+        this.setState({ pushRelayResponse: null });
 
         var registered = false;
         var delay = this.props.initialReconnectionDelay;
@@ -135,10 +131,7 @@ module.exports = React.createClass({
             return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
                 if (attempt === this.registrationAttempt) {
                     this.registrationAttempt = null;
-                    this.setState({
-                        pushRelayResponse: _.omit(result, 'token'),
-                        registered: true
-                    });
+                    this.setState({ pushRelayResponse: result });
                     var connection = {
                         method: registrationType,
                         relay: relayAddress,
@@ -244,7 +237,6 @@ module.exports = React.createClass({
         var additionalData = data.additionalData || {};
         var address = additionalData.address;
         var changes = additionalData.changes;
-        console.log('handleNotification', data);
         if (changes) {
             this.triggerNotifyEvent(address, changes);
         } else if (data.message) {
@@ -262,8 +254,13 @@ module.exports = React.createClass({
                 this.triggerAlertClickEvent(address, alert);
             }
         }
+        var recentMessages = _.slice(this.state.recentMessages);
+        recentMessages.unshift(data);
+        if (recentMessages.length > 10) {
+           recentMessages.splice(10);
+        }
+        this.setState({ recentMessages })
     },
-
 
     /**
      * Called when an error occured
@@ -272,6 +269,30 @@ module.exports = React.createClass({
      */
     handleError: function(err) {
         console.log(err);
+    },
+
+    /**
+     * Render diagnostics
+     *
+     * @return {ReactElement}
+     */
+    render: function() {
+        var relayToken = _.get(this.state.pushRelayResponse, 'token');
+        return (
+            <Diagnostics type="push-notifier">
+                <DiagnosticsSection label="Registration">
+                    <div>ID: {this.state.registrationId}</div>
+                    <div>Network: {this.state.registrationType}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Push relay">
+                    <div>Address: {this.props.relayAddress}</div>
+                    <div>Token: {relayToken}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Recent messages">
+                   {_.map(this.state.recentMessages, renderJSON)}
+                </DiagnosticsSection>
+            </Diagnostics>
+        );
     },
 });
 
@@ -291,4 +312,8 @@ var getDeviceDetails = function() {
         };
     }
     return {};
+}
+
+function renderJSON(object) {
+    return <pre>{JSON.stringify(object, undefined, 4)}</pre>;
 }

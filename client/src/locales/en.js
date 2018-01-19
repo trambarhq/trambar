@@ -76,6 +76,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Cancel',
         'confirmation-confirm': 'Confirm',
 
+        'diagnostics-show': 'Show diagnostics',
+        'diagnostics-show-panel': 'Display this panel',
+
         'image-editor-upload-in-progress': 'Upload in progress...',
 
         'issue-cancel': 'Cancel',
@@ -259,6 +262,7 @@ module.exports = function(localeCode) {
 
         'settings-device': 'Mobile Device',
         'settings-devices': 'Mobile Devices',
+        'settings-diagnostics': 'Diagnostics',
         'settings-language': 'Language',
         'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',

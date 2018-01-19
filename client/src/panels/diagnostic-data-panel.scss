@@ -1,0 +1,39 @@
+.settings-panel.diagnostic-data {
+    .diagnostics-section {
+        .title {
+            font-weight: bold;
+            padding: 0.25em 0.25em 0.25em 0;
+            cursor: pointer;
+        }
+
+        .collapsible-contents {
+            padding: 0.25em 0.25em 0.25em 0.25em;
+            max-height: 50vh;
+            overflow: auto;
+        }
+
+        .collapsible-container {
+            border: 1px solid transparent;
+            transition: height .25s, border-color 0.2s;
+        }
+
+        PRE {
+            border-bottom: 1px dotted #cccccc;
+            padding-bottom: 0.5em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+
+        &.open {
+            color: #eeeeee;
+
+            .collapsible-container {
+                border-color: #eeeeee;
+            }
+        }
+    }
+}

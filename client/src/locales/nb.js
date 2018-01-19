@@ -72,6 +72,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Avbryt',
         'confirmation-confirm': 'Bekrefte',
 
+        'diagnostics-show': 'Vis diagnostikk',
+        'diagnostics-show-panel': 'Vis dette panelet',
+
         'image-editor-upload-in-progress': 'Opplasting pågår...',
 
         'issue-cancel': 'Avbryt',
@@ -256,6 +259,7 @@ module.exports = function(localeCode) {
 
         'settings-device': 'Mobil enhet',
         'settings-devices': 'Mobile enheter',
+        'settings-diagnostics': 'Diagnostikk',
         'settings-language': 'Språk',
         'settings-mobile-alert': 'Mobilvarsel',
         'settings-notification': 'Melding',

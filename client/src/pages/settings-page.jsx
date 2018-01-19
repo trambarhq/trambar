@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var KonamiCode = require('utils/konami-code');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -8,6 +9,8 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var DiagnosticsPanel = require('panels/diagnostics-panel');
 var ProjectPanel = require('panels/project-panel');
 var DevicePanel = require('panels/device-panel');
 var UserInfoPanel = require('panels/user-info-panel');
@@ -17,6 +20,7 @@ var WebAlertPanel = require('panels/web-alert-panel');
 var MobileAlertPanel = require('panels/mobile-alert-panel');
 var SocialNetworkPanel = require('panels/social-network-panel');
 var LanguagePanel = require('panels/language-panel');
+var DiagnoisticDataPanel = require('panels/diagnostic-data-panel');
 
 require('./settings-page.scss');
 
@@ -46,7 +50,8 @@ module.exports = Relaks.createClass({
                 '/:schema/settings/?',
             ], (params) => {
                 return {
-                    schema: params.schema
+                    schema: params.schema,
+                    diagnostics: !!query.diagnostics,
                 };
             });
         },
@@ -59,7 +64,10 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/${params.schema || 'global'}/settings/`, query, hash;
+            var path = `/${params.schema || 'global'}/settings/`, query = {}, hash;
+            if (params.diagnostics) {
+                query.diagnostics = 1;
+            }
             return { path, query, hash };
         },
 
@@ -194,9 +202,24 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var params = this.props.route.parameters;
+        if (params.diagnostics) {
+            return this.renderDiagnostics();
+        } else {
+            return this.renderSettings();
+        }
+    },
+
+    /**
+     * Render settings panels
+     *
+     * @return {ReactElement}
+     */
+    renderSettings: function() {
         return (
             <div className="settings-page">
                 <div className="panels">
+                    {this.renderDiagnosticsPanel()}
                     {this.renderProjectPanel()}
                     {this.renderDevicePanel()}
                     {this.renderUserInfoPanel()}
@@ -209,6 +232,42 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 </div>
             </div>
         );
+    },
+
+    /**
+     * Render diagnostics panels
+     *
+     * @return {ReactElement}
+     */
+    renderDiagnostics: function() {
+        return (
+            <div className="settings-page">
+                <div className="panels">
+                    <DiagnoisticDataPanel type="websocket-notifier" title="Web Socket" />
+                    <DiagnoisticDataPanel type="push-notifier" title="Push Notification" />
+                </div>
+            </div>
+        );
+    },
+
+    /**
+     * Render diagnostics panel if it's turned on
+     *
+     * @return {ReactElement|null}
+     */
+    renderDiagnosticsPanel: function() {
+        var user = this.getUser();
+        var enabled = _.get(user, 'settings.diagnostics.show_panel');
+        if (!enabled) {
+            return null;
+        }
+        var panelProps = {
+            currentUser: user,
+            route: this.props.route,
+            locale: this.props.locale,
+            onChange: this.handleChange,
+        };
+        return <DiagnosticsPanel {...panelProps} />;
     },
 
     /**
@@ -355,6 +414,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Add Konami code listener
+     */
+    componentDidMount: function() {
+        KonamiCode.addListener(this.handleKonamiCode);
+    },
+
+    /**
      * Save immediately on unmount
      *
      * @return {[type]}
@@ -364,6 +430,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             clearTimeout(this.autosaveTimeout);
             this.saveUser(this.state.user);
         }
+        KonamiCode.removeListener(this.handleKonamiCode);
     },
 
     /**
@@ -407,6 +474,18 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     handleChange: function(evt) {
         var user = evt.user;
+        this.setState({ user }, () => {
+            this.autosaveUser(user);
+        });
+    },
+
+    /**
+     * Called when user enters Konami code
+     *
+     * @param  {Object} evt
+     */
+    handleKonamiCode: function(evt) {
+        var user = _.decoupleSet(this.getUser(), 'settings.diagnostics.show_panel', true);
         this.setState({ user }, () => {
             this.autosaveUser(user);
         });
