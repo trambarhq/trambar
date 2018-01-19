@@ -377,6 +377,6 @@ function requestNotificationPermission() {
     });
 }
 
-function renderJSON(object) {
-    return <pre>{JSON.stringify(object, undefined, 4)}</pre>;
+function renderJSON(object, i) {
+    return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
 }
