@@ -792,7 +792,9 @@ module.exports = {
             });
             // text vector in each language
             var tsVectors = _.map(languageCodes, (code) => {
-                var vector = `to_tsvector('search_${code}', details->'text'->>'${code}')`;
+                // concat multiple columns
+                var text = getJointText(code);
+                var vector = `to_tsvector('search_${code}', ${text})`;
                 // give results in the user's language a higher weight
                 // A = 1.0, B = 0.4 by default
                 var weight = (code === lang) ? 'A' : 'B';
@@ -811,7 +813,7 @@ module.exports = {
             query.columns += `, ${tsRank} AS relevance`;
             query.table += `, ${tsVectors.join(', ')}`;
             query.table += `, ${tsQueries.join(', ')}`;
-            query.conditions.push(`details ? 'text'`);
+            query.conditions.push(getTextCondition());
             query.conditions.push(`(${tsConds.join(' OR ')})`);
             query.order = `relevance DESC`;
         });
@@ -857,12 +859,14 @@ module.exports = {
         return Promise.each(codes, (code) => {
             // create language
             return this.createSearchConfigure(db, code).then(() => {
-                var vector = ``
+                var condition = getTextCondition();
+                var text = getJointText(code);
+                var vector = `to_tsvector('search_${code}', ${text})`;
                 var sql = `
                     CREATE INDEX CONCURRENTLY ${this.table}_search_${code}
                     ON "${schema}"."${this.table}"
-                    USING gin((to_tsvector('search_${code}', details->'text'->>'${code}')))
-                    WHERE details ? 'text'
+                    USING gin((${vector}))
+                    WHERE ${condition}
                 `;
                 return db.execute(sql).then(() => {
                     _.set(searchLanguagesPromises, [ schema, this.table ], null);
@@ -1026,4 +1030,24 @@ var regExp = new RegExp(`[@#][${characters}][${digits}${characters}]*`, 'g');
 
 function removePunctuations(s) {
     return s.replace(punctRE, '');
+}
+
+function getJointText(code) {
+    var textColumns = [
+        `details->'text'->>'${code}'`,
+        `details->>'title'`,
+    ];
+    // can't use concat_ws() since it isn't immutable
+    var coalescedColumns = _.map(textColumns, (column) => {
+        return `COALESCE(${column}, '')`
+    });
+    return coalescedColumns.join(` || ' ' || `);
+}
+
+function getTextCondition() {
+    var conditions = [
+        `details ? 'text'`,
+        `details ? 'title'`,
+    ];
+    return '(' + conditions.join(' OR ') + ')';
 }

@@ -170,15 +170,12 @@ function copyIssueProperties(story, author, glIssue, link) {
         _.set(storyAfter, 'published', true);
         _.set(storyAfter, 'ptime', Moment(new Date(glIssue.created_at)).toISOString());
         _.set(storyAfter, 'public', !glIssue.confidential);
-        _.set(storyAfter, 'details.title', glIssue.title);
         _.set(storyAfter, 'details.labels', glIssue.labels);
         _.set(storyAfter, 'details.state', glIssue.state);
         _.set(storyAfter, 'details.milestone', _.get(glIssue, 'milestone.title'));
+        // title is imported only if issue isn't confidential
         if (!glIssue.confidential) {
             _.set(storyAfter, 'details.title', glIssue.title);
-        } else {
-            // titles are not imported for confidential issues
-            _.set(storyAfter, 'details.title', undefined);
         }
     } else {
         // a post exported to issue tracker--keep only certain props
