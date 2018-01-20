@@ -8,6 +8,7 @@ var SockJS = require('sockjs');
 var Request = require('request');
 var Async = require('async-do-while');
 var Crypto = Promise.promisifyAll(require('crypto'));
+var XML2JS = require('xml2js');
 var HTTPError = require('errors/http-error');
 var Shutdown = require('shutdown');
 
@@ -177,7 +178,10 @@ function sendToPushRelays(db, messages) {
             // in theory, it's possible to see multiple relays if it's
             // changed after subscriptions were created
             var messagesByRelay = _.groupBy(messages, 'listener.subscription.relay');
-            _.forIn(messagesByRelay, (messages, relay) => {
+            var messageLists = _.values(messagesByRelay);
+            var relays = _.keys(messagesByRelay);
+            return Promise.each(messageLists, (messages, index) => {
+                var relay = relays[index];
                 // merge identifical messages
                 var messagesByJSON = {};
                 var subscriptions = [];
@@ -213,7 +217,6 @@ function sendToPushRelays(db, messages) {
                     signature,
                     messages: pushMessages
                 };
-                console.log('Payload', JSON.stringify(payload))
                 return post(url, payload).then((result) => {
                     var errors = result.errors;
                     if (!_.isEmpty(errors)) {
@@ -312,9 +315,12 @@ function packagePushMessage(message) {
  * @return {Object}
  */
 function packageFirebaseMessage(message) {
-    var data = { address: message.address };
+    var data = {
+        address: message.address,
+        'content-available': 1,
+    };
     if (message.body.alert) {
-        _.transform(message.body.alert, (data, value, name) => {
+        _.each(message.body.alert, (value, name) => {
             switch (name) {
                 case 'title':
                     data.title = value;
@@ -328,14 +334,19 @@ function packageFirebaseMessage(message) {
                 default:
                     data[name] = value;
             }
-        }, data);
+        });
     } else {
-        _.transform(message.body, (data, value, name) => {
+        _.each(message.body, (value, name) => {
             data[name] = value;
-        }, data);
+        });
     }
-    return { data };
+    return {
+        body: { data },
+        attributes : {},
+    };
 }
+
+var apnsNotId = 1;
 
 /**
  * Package a message for delivery through APNS
@@ -345,8 +356,34 @@ function packageFirebaseMessage(message) {
  * @return {Object}
  */
 function packageAppleMessage(message) {
-    // TODO
-    return {};
+    var aps = {
+        address: message.address,
+        'content-available': 1,
+    };
+    if (message.body.alert) {
+        _.each(message.body.alert, (value, name) => {
+            switch (name) {
+                case 'message':
+                    aps.alert = value;
+                    aps.sound = 'default';
+                    break;
+                case 'title':
+                case 'profile_image':
+                    break;
+                default:
+                    aps[name] = value;
+            }
+        });
+    } else {
+        _.each(message.body, (value, name) => {
+            aps[name] = value;
+        });
+    }
+    var notId = apnsNotId++;
+    return {
+        body: { aps, notId },
+        attributes: {},
+    };
 }
 
 /**
@@ -357,8 +394,64 @@ function packageAppleMessage(message) {
  * @return {Object}
  */
 function packageWindowsMessage(message) {
-    // TODO
-    return {};
+    var data = { address: message.address };
+    if (message.body.alert) {
+        var alert = message.body.alert;
+        var toast = {
+            $: {},
+            visual: {
+                binding: {
+                    $: { template: 'ToastText02' },
+                    text: [
+                        { $: { id: 1 }, _: alert.title },
+                        { $: { id: 2 }, _: alert.message },
+                    ],
+                },
+            }
+        };
+        if (alert.profile_image) {
+            var url = message.address + alert.profile_image;
+            toast.visual.binding.$.template = 'ToastImageAndText02';
+            toast.visual.binding.image = { $: { id: 1, src: url } };
+        }
+
+        // add launch data
+        _.each(alert, (value, name) => {
+            switch (name) {
+                case 'title':
+                case 'message':
+                case 'profile_image':
+                    break;
+                default:
+                    data[name] = value;
+            }
+        });
+        toast.$.launch = JSON.stringify(data);
+
+        var builder = new XML2JS.Builder({ headless: true });
+        return {
+            body: builder.buildObject({ toast }),
+            attributes: {
+                'AWS.SNS.MOBILE.WNS.Type': {
+                    DataType: 'String',
+                    StringValue: 'wns/toast'
+                }
+            },
+        };
+    } else {
+        _.each(message.body, (value, name) => {
+            data[name] = value;
+        });
+        return {
+            body: JSON.stringify(data),
+            attributes: {
+                'AWS.SNS.MOBILE.WNS.Type': {
+                    DataType: 'String',
+                    StringValue: 'wns/raw'
+                }
+            },
+        };
+    }
 }
 
 var serverSignature;

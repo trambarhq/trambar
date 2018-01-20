@@ -44,6 +44,7 @@
     "request": "^2.81.0",
     "sharp": "0.17.3",
     "sockjs": "^0.3.18",
+    "xml2js": "^0.4.19",
     "yamljs": "^0.2.10"
   },
   "devDependencies": {
