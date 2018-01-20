@@ -222,10 +222,15 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleRegistration: function(data) {
-        this.setState({
-            registrationId: data.registrationId,
-            registrationType: _.toLower(data.registrationType),
-        });
+        var id = data.registrationId;
+        var type = _.toLower(data.registrationType);
+        if (!type) {
+            // the type is missing for WNS
+            if (/windows/.test(id)) {
+                type = 'wns';
+            }
+        }
+        this.setState({ registrationId: id, registrationType: type });
     },
 
     /**
@@ -234,32 +239,64 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleNotification: function(data) {
-        var additionalData = data.additionalData || {};
-        var address = additionalData.address;
-        var changes = additionalData.changes;
-        if (changes) {
-            this.triggerNotifyEvent(address, changes);
-        } else if (data.message) {
-            if (!additionalData.foreground) {
-                var alert = {
-                    title: data.title,
-                    message: data.message,
-                    type: additionalData.type,
-                    schema: additionalData.schema,
-                    notification_id: parseInt(additionalData.notification_id),
-                    reaction_id: parseInt(additionalData.reaction_id),
-                    story_id: parseInt(additionalData.story_id),
-                    user_id: parseInt(additionalData.user_id),
-                };
-                this.triggerAlertClickEvent(address, alert);
+        try {
+            var message = data.message;
+            var title = data.title;
+            var additionalData = data.additionalData || {};
+            var wnsEventArgs = additionalData.pushNotificationReceivedEventArgs;
+            var launch = !additionalData.foreground;
+            if (wnsEventArgs) {
+                // decode raw data in WNS message
+                if (wnsEventArgs.notificationType === 3) {
+                    var raw = wnsEventArgs.rawNotification;
+                    additionalData = JSON.parse(raw.content);
+                    message = null;
+                } else {
+                    var launchArgs = data.launchArgs;
+                    if (!launchArgs) {
+                        if (wnsEventArgs.notificationType === 0) {
+                            var toast = wnsEventArgs.toastNotification.content.getElementsByTagName('toast')[0];
+                            if (toast) {
+                                launchArgs = toast.getAttribute('launch');
+                            }
+                        }
+                    }
+                    if (launchArgs) {
+                        // decode launch argument in WNS message
+                        additionalData = JSON.parse(launchArgs);
+                    } else {
+                        launch = false;
+                    }
+                }
             }
+            var address = additionalData.address;
+            var changes = additionalData.changes;
+            if (changes) {
+                this.triggerNotifyEvent(address, changes);
+            } else if (message) {
+                if (launch) {
+                    var alert = {
+                        title: title,
+                        message: message,
+                        type: additionalData.type,
+                        schema: additionalData.schema,
+                        notification_id: parseInt(additionalData.notification_id),
+                        reaction_id: parseInt(additionalData.reaction_id),
+                        story_id: parseInt(additionalData.story_id),
+                        user_id: parseInt(additionalData.user_id),
+                    };
+                    this.triggerAlertClickEvent(address, alert);
+                }
+            }
+            var recentMessages = _.slice(this.state.recentMessages);
+            recentMessages.unshift(data);
+            if (recentMessages.length > 10) {
+               recentMessages.splice(10);
+            }
+            this.setState({ recentMessages })
+        } catch (err) {
+            console.error(err);
         }
-        var recentMessages = _.slice(this.state.recentMessages);
-        recentMessages.unshift(data);
-        if (recentMessages.length > 10) {
-           recentMessages.splice(10);
-        }
-        this.setState({ recentMessages })
     },
 
     /**
