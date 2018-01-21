@@ -300,13 +300,8 @@ module.exports = React.createClass({
      */
     handleNotification: function(data) {
         if (cordova.platformId === 'windows') {
-            // handle WNS response separately (in a try block since caught error
-            // kill the app in Windows)
-            try {
-                this.handleWNSNotification(data);
-            } catch (err) {
-                console.error(err);
-            }
+            // handle WNS response separately
+            this.handleWNSNotification(data);
         } else {
             // GCM and APNS responses are sufficiently normalized
             this.handleGCMNotification(data);
@@ -360,12 +355,9 @@ module.exports = React.createClass({
             var alert = recreateAlert(additionalData);
             this.triggerAlertClickEvent(address, alert);
         } else {
-            var eventArgs = data.pushNotificationReceivedEventArgs;
-            if (eventArgs.notificationType === 0) { // toast
-                //var element = eventArgs.toastNotification.content.getElementsByTagName('toast')[0];
-                //var launchArgs = element.getAttribute('launch');
-            } else if (eventArgs.notificationType === 3) { // raw
-                var raw = wnsEventArgs.rawNotification;
+            var eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
+            if (eventArgs.notificationType === 3) { // raw
+                var raw = eventArgs.rawNotification;
                 var additionalData = JSON.parse(raw.content);
                 var address = additionalData.address;
                 var changes = additionalData.changes;
@@ -376,8 +368,19 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Called when activating app after running in background on Windows
+     *
+     * @param  {Object} context
+     */
     handleActivation: function(context) {
-        console.log(context);
+        var launchArgs = context.args;
+        if (launchArgs) {
+            var additionalData = JSON.parse(launchArgs);
+            var address = additionalData.address;
+            var alert = recreateAlert(additionalData);
+            this.triggerAlertClickEvent(address, alert);
+        }
     },
 
     /**
