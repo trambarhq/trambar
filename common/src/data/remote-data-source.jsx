@@ -16,14 +16,15 @@ module.exports = React.createClass({
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
         hasConnection: PropTypes.bool,
+        inForeground: PropTypes.bool,
         cache: PropTypes.object,
 
         onChange: PropTypes.func,
+        onSearch: PropTypes.func,
         onAuthorization: PropTypes.func,
         onExpiration: PropTypes.func,
         onViolation: PropTypes.func,
         onStupefaction: PropTypes.func,
-        onSearch: PropTypes.func,
     },
 
     /**
@@ -36,6 +37,7 @@ module.exports = React.createClass({
             refreshInterval: 15 * 60,   // 15 minutes
             basePath: '',
             hasConnection: true,
+            inForeground: true,
         };
     },
 
@@ -628,7 +630,7 @@ module.exports = React.createClass({
             // invalidate all results originating from address
             _.each(this.state.recentSearchResults, (search) => {
                 var searchLocation = getSearchLocation(search);
-                if (searchLocation.address === address) {
+                if (!address || searchLocation.address === address) {
                     search.dirty = true;
                     changed = true;
                 }
@@ -642,7 +644,9 @@ module.exports = React.createClass({
             this.triggerChangeEvent();
 
             // update recent searches that aren't being used currently
-            this.schedulePrefetch(address);
+            if (this.props.inForeground) {
+                this.schedulePrefetch(address);
+            }
         }
         return changed;
     },
@@ -739,6 +743,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Inform parent component about active searches
+     *
+     * @param  {Boolean} searching
+     */
     triggerSearchEvent: function(searching) {
         if (this.props.onSearch) {
             this.props.onSearch({
@@ -1255,7 +1264,7 @@ module.exports = React.createClass({
 
         var prefetchTimeout = this.prefetchTimeout = setTimeout(() => {
             var dirtySearches = _.filter(this.state.recentSearchResults, (search) => {
-                if (search.address === address) {
+                if (!address || search.address === address) {
                     if (search.dirty) {
                         return true;
                     }

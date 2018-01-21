@@ -97,6 +97,7 @@ module.exports = React.createClass({
             subscription: null,
             connection: null,
             searching: false,
+            paused: false,
             pushRelay: null,
             renderingStartPage: false,
             showingUploadProgress: false,
@@ -262,6 +263,7 @@ module.exports = React.createClass({
         var serverAddress = (route) ? route.parameters.address : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
+            inForeground: !this.state.paused,
             locale: this.state.locale,
 
             onChange: this.handleDatabaseChange,
@@ -322,7 +324,8 @@ module.exports = React.createClass({
         } else if (Notifier === PushNotifier) {
             if (this.state.pushRelay) {
                 _.assign(notifierProps, {
-                    relayAddress: this.state.pushRelay.url
+                    relayAddress: this.state.pushRelay.url,
+                    searching: this.state.searching,
                 });
             }
         }
@@ -356,10 +359,17 @@ module.exports = React.createClass({
     },
 
     /**
-     * Attach beforeUnload event handler
+     * Attach event handlers
      */
     componentDidMount: function() {
-        window.addEventListener('beforeunload', this.handleBeforeUnload);
+        if (process.env.PLATFORM === 'browser') {
+            window.addEventListener('beforeunload', this.handleBeforeUnload);
+        }
+
+        if (process.env.PLATFORM === 'cordova') {
+            document.addEventListener('pause', this.handlePause, false);
+            document.addEventListener('resume', this.handleResume, false);
+        }
     },
 
     /**
@@ -380,10 +390,16 @@ module.exports = React.createClass({
     },
 
     /**
-     * Remove beforeUnload event handler
+     * Remove event handlers
      */
     componentWillUnmount: function() {
-        window.removeEventListener('beforeunload', this.handleBeforeUnload);
+        if (process.env.PLATFORM === 'browser') {
+            window.removeEventListener('beforeunload', this.handleBeforeUnload);
+        }
+        if (process.env.PLATFORM === 'cordova') {
+            document.removeEventListener('pause', this.handlePause, false);
+            document.removeEventListener('resume', this.handleResume, false);
+        }
     },
 
     /**
@@ -1002,11 +1018,40 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleBeforeUnload: function(evt) {
+        if (process.env.PLATFORM !== 'browser') return;
         if (this.state.payloads && this.state.payloads.uploading) {
             // Chrome will repaint only after the modal dialog is dismissed
             this.setState({ showingUploadProgress: true });
             return (evt.returnValue = 'Are you sure?');
         }
+    },
+
+    /**
+     * Called when Cordova application goes into background
+     *
+     * @param  {Event} evt
+     */
+    handlePause: function(evt) {
+        if (process.env.PLATFORM !== 'cordova') return;
+        this.setState({ paused: true });
+    },
+
+    /**
+     * Called when Cordova application comes into foreground again
+     *
+     * @param  {Event} evt
+     */
+    handleResume: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
+        this.setState({ paused: false });
+
+        // while we still receive push notification while the app is in
+        // background, it's always possible that some of the messages are
+        // missed due to lack of Internet access
+        //
+        // invalidate all queries just in case
+        var dataSource = this.components.remoteDataSource;
+        dataSource.invalidate();
     },
 
     /**
