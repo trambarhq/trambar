@@ -805,6 +805,7 @@ function findPassportPlugin(server) {
         github: 'passport-github',
         gitlab: 'passport-gitlab2',
         google: 'passport-google-oauth2',
+        windows: 'passport-windowslive',
     };
     return require(plugins[server.type]);
 }

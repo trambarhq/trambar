@@ -70,7 +70,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render a dropbox select control
+     * Render a select control for country selection
      *
      * @param  {Object} language
      *

@@ -4,6 +4,7 @@ module.exports = exports = [
     'github',
     'gitlab',
     'google',
+    'windows',
 ];
 
 exports.integrated = [

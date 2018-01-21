@@ -98,6 +98,7 @@ module.exports = function(localeCode) {
         'server-type-gitlab': 'GitLab',
         'server-type-github': 'GitHub',
         'server-type-google': 'Google',
+        'server-type-windows': 'Windows Live',
 
         'settings-cancel': '取消',
         'settings-edit': '更改設置',

@@ -340,6 +340,7 @@ module.exports = function(localeCode) {
         'server-type-github': 'GitHub',
         'server-type-gitlab': 'GitLab',
         'server-type-google': 'Google',
+        'server-type-windows': 'Windows Live',
 
         'settings-background-image': 'Bakgrunnsbilde',
         'settings-cancel': 'Avbryt',

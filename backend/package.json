@@ -37,6 +37,7 @@
     "passport-gitlab2": "^3.0.0",
     "passport-google-oauth2": "^0.1.6",
     "passport-local": "^1.0.0",
+    "passport-windowslive": "^1.0.2",
     "pg": "^6.2.2",
     "pg-pool": "^1.7.1",
     "phantom": "^4.0.3",
