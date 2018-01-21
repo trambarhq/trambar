@@ -764,7 +764,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 warning = t('server-summary-system-address-missing');
                 address = window.location.origin;
             }
-            url = `${address}/session/${serverType}/callback`;
+            url = `${address}/session/${serverType}/callback/`;
         }
         var props = {
             id: 'oauth_callback',

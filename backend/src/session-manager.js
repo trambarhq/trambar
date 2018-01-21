@@ -283,8 +283,9 @@ function handleSessionTermination(req, res) {
  * @param  {Function} done
  */
 function handleOAuthRequest(req, res, done) {
-    var serverId = parseInt(req.query.sid);
-    var handle = _.toLower(req.query.handle);
+    var query = extractQueryVariables(req.query);
+    var serverId = parseInt(query.sid);
+    var handle = _.toLower(query.handle);
     return findSession(handle).then((session) => {
         return findSystem().then((system) => {
             return findServer(serverId).then((server) => {
@@ -322,10 +323,11 @@ function handleOAuthRequest(req, res, done) {
  * @param  {Function}  done
  */
 function handleOAuthTestRequest(req, res, done) {
-    if (!req.query.test) {
+    var query = extractQueryVariables(req.query);
+    if (!query.test) {
         return done();
     }
-    var serverId = parseInt(req.query.sid);
+    var serverId = parseInt(query.sid);
     return findSystem().then((system) => {
         return findServer(serverId).then((server) => {
             var params = { test: 1, sid: serverId, handle: 'TEST' };
@@ -347,11 +349,12 @@ function handleOAuthTestRequest(req, res, done) {
  * @param  {Function}  done
  */
 function handleOAuthActivationRequest(req, res, done) {
-    if (!req.query.activation) {
+    var query = extractQueryVariables(req.query);
+    if (!query.activation) {
         return done();
     }
-    var serverId = parseInt(req.query.sid);
-    var handle = _.toLower(req.query.handle);
+    var serverId = parseInt(query.sid);
+    var handle = _.toLower(query.handle);
     return findSession(handle).then((session) => {
         // make sure we have admin access
         if (session.area !== 'admin') {
@@ -456,7 +459,7 @@ function authorizeUser(session, user, details, activate) {
 function authenticateThruPassport(req, res, system, server, params, scope) {
     return new Promise((resolve, reject) => {
         var provider = req.params.provider;
-        // add params as query variables in callback URL
+        // query variables are send as the state parameter
         var query = _.reduce(params, (query, value, name) => {
             if (query) {
                 query += '&';
@@ -472,22 +475,14 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
             baseURL: server.settings.oauth.base_url,
-            callbackURL: `${address}/session/${provider}/callback/?${query}`,
+            callbackURL: `${address}/session/${provider}/callback/`,
         };
-        var options = { session: false, scope };
-        if (provider === 'facebook') {
-            // ask Facebook to return these fields
-            settings.profileFields = [
-                'id',
-                'email',
-                'gender',
-                'link',
-                'displayName',
-                'name',
-                'picture',
-                'verified'
-            ];
-        }
+        var options = {
+            session: false,
+            scope: getServerSpecificScope(server, scope),
+            state: query,
+            profileFields: getServerSpecificProfileFields(server),
+        };
         // create strategy object, resolving promise when we have the profile
         var Strategy = findPassportPlugin(server);
         var strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
@@ -497,7 +492,8 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
         });
         // trigger Passport middleware manually
         Passport.use(strategy);
-        var auth = Passport.authenticate(server.type, options, (err, user, info) => {
+        var authType = server.type;
+        var auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
             // if this callback is called, then authentication has failed, since
             // the callback passed to Strategy() resolves the promise and does
             // not invoke done()
@@ -1014,6 +1010,65 @@ function createRandomToken(bytes) {
  */
 function getFutureTime(minutes) {
     return new String(`NOW() + '${minutes} minute'`);
+}
+
+/**
+ * Return a list of scope needed by server
+ *
+ * @param  {Server} server
+ * @param  {Array<String>|undefined} scope
+ *
+ * @return {Array<String>}
+ */
+function getServerSpecificScope(server, scope) {
+    switch (server.type) {
+        case 'windows':
+            return [ 'wl.signin', 'wl.basic', 'wl.emails' ];
+        default:
+            return scope;
+    }
+}
+
+/**
+ * Return list of fields the server should return
+ *
+ * @param  {Server} server
+ *
+ * @return {Array<String>}
+ */
+function getServerSpecificProfileFields(server) {
+    switch (server.type) {
+        case 'facebook':
+            return [ 'id', 'email', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+    }
+}
+
+function extractQueryVariables(query) {
+    if (query.state) {
+        return parseQueryString(query.state);
+    } else {
+        return query;
+    }
+}
+
+/**
+ * Parse a query string
+ *
+ * @param  {String} queryString
+ *
+ * @return {Object}
+ */
+function parseQueryString(queryString) {
+    var values = {};
+    var pairs = _.split(queryString, '&');
+    _.each(pairs, (pair) => {
+        var parts = _.split(pair, '=');
+        var name = decodeURIComponent(parts[0]);
+        var value = decodeURIComponent(parts[1] || '');
+        value = _.replace(value, /\+/g, ' ');
+        values[name] = value;
+    });
+    return values;
 }
 
 /**
