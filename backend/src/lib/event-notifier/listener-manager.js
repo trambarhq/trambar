@@ -315,10 +315,7 @@ function packagePushMessage(message) {
  * @return {Object}
  */
 function packageFirebaseMessage(message) {
-    var data = {
-        address: message.address,
-        'content-available': 1,
-    };
+    var data = { address: message.address };
     if (message.body.alert) {
         _.each(message.body.alert, (value, name) => {
             switch (name) {
@@ -339,6 +336,7 @@ function packageFirebaseMessage(message) {
         _.each(message.body, (value, name) => {
             data[name] = value;
         });
+        data['content-available'] = 1;
     }
     return {
         body: { data },
@@ -356,10 +354,7 @@ var apnsNotId = 1;
  * @return {Object}
  */
 function packageAppleMessage(message) {
-    var aps = {
-        address: message.address,
-        'content-available': 1,
-    };
+    var aps = { address: message.address };
     if (message.body.alert) {
         _.each(message.body.alert, (value, name) => {
             switch (name) {
@@ -378,8 +373,12 @@ function packageAppleMessage(message) {
         _.each(message.body, (value, name) => {
             aps[name] = value;
         });
+        aps['content-available'] = 1;
     }
     var notId = apnsNotId++;
+    if (apnsNotId >= 2147483647) {
+        apnsNotId = 1;
+    }
     return {
         body: { aps, notId },
         attributes: {},
