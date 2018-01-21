@@ -15,6 +15,7 @@ module.exports = React.createClass({
         relayAddress: PropTypes.string,
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
+        searching: PropTypes.bool,
 
         onConnect: PropTypes.func,
         onDisconnect: PropTypes.func,
@@ -54,6 +55,47 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Wait for database queries to end or time limit to be reached
+     *
+     * @param  {Number} limit
+     *
+     * @return {Promise}
+     */
+    waitForSearchIdling: function(limit) {
+        return new Promise((resolve, reject) => {
+            var timeout;
+            var onSearchIdling = () => {
+                resolve();
+                this.onSearchIdling = null;
+                clearTimeout(timeout);
+            };
+            // ensure it's trigger within a given amount of time
+            timeout = setTimeout(onSearchIdling, limit);
+            if (this.onSearchIdling) {
+                // call the previous handler
+                this.onSearchIdling();
+            }
+            this.onSearchIdling = onSearchIdling;
+        });
+    },
+
+    /**
+     * Check if database queries have finished
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.searching && !nextProps.searching) {
+            if (this.onSearchIdling) {
+                this.onSearchIdling();
+            }
+        }
+    },
+
+    /**
+     * Initialize plugin and attach handlers
+     */
     componentDidMount: function() {
         if (!pushNotification) {
             var params = {
@@ -70,6 +112,10 @@ module.exports = React.createClass({
         pushNotification.on('registration', this.handleRegistration);
         pushNotification.on('notification', this.handleNotification);
         pushNotification.on('error', this.handleError);
+
+        if (cordova.platformId === 'windows') {
+            document.addEventListener('activated', this.handleActivation);
+        }
    },
 
     /**
@@ -85,6 +131,20 @@ module.exports = React.createClass({
              if (this.props.relayAddress && this.state.registrationId) {
                  this.register(this.props.relayAddress, this.props.serverAddress, this.state.registrationId, this.state.registrationType);
              }
+        }
+    },
+
+    /**
+     * Clean up on unmount
+     */
+    componentWillUnmount: function() {
+        if (pushNotification) {
+            pushNotification.off('registration', this.handleRegistration);
+            pushNotification.off('notification', this.handleNotification);
+            pushNotification.off('error', this.handleError);
+        }
+        if (cordova.platformId === 'windows') {
+            document.removeEventListener('activated', this.handleActivation);
         }
     },
 
@@ -239,64 +299,85 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleNotification: function(data) {
-        try {
-            var message = data.message;
-            var title = data.title;
-            var additionalData = data.additionalData || {};
-            var wnsEventArgs = additionalData.pushNotificationReceivedEventArgs;
-            var launch = !additionalData.foreground;
-            if (wnsEventArgs) {
-                // decode raw data in WNS message
-                if (wnsEventArgs.notificationType === 3) {
-                    var raw = wnsEventArgs.rawNotification;
-                    additionalData = JSON.parse(raw.content);
-                    message = null;
-                } else {
-                    var launchArgs = data.launchArgs;
-                    if (!launchArgs) {
-                        if (wnsEventArgs.notificationType === 0) {
-                            var toast = wnsEventArgs.toastNotification.content.getElementsByTagName('toast')[0];
-                            if (toast) {
-                                launchArgs = toast.getAttribute('launch');
-                            }
-                        }
-                    }
-                    if (launchArgs) {
-                        // decode launch argument in WNS message
-                        additionalData = JSON.parse(launchArgs);
-                    } else {
-                        launch = false;
-                    }
-                }
+        if (cordova.platformId === 'windows') {
+            // handle WNS response separately (in a try block since caught error
+            // kill the app in Windows)
+            try {
+                this.handleWNSNotification(data);
+            } catch (err) {
+                console.error(err);
             }
-            var address = additionalData.address;
-            var changes = additionalData.changes;
-            if (changes) {
-                this.triggerNotifyEvent(address, changes);
-            } else if (message) {
-                if (launch) {
-                    var alert = {
-                        title: title,
-                        message: message,
-                        type: additionalData.type,
-                        schema: additionalData.schema,
-                        notification_id: parseInt(additionalData.notification_id),
-                        reaction_id: parseInt(additionalData.reaction_id),
-                        story_id: parseInt(additionalData.story_id),
-                        user_id: parseInt(additionalData.user_id),
-                    };
-                    this.triggerAlertClickEvent(address, alert);
-                }
-            }
-            var recentMessages = _.slice(this.state.recentMessages);
-            recentMessages.unshift(data);
-            if (recentMessages.length > 10) {
-               recentMessages.splice(10);
-            }
-            this.setState({ recentMessages })
-        } catch (err) {
-            console.error(err);
+        } else {
+            // GCM and APNS responses are sufficiently normalized
+            this.handleGCMNotification(data);
         }
+
+        // store data received in a list for diagnostic purpose
+        var recentMessages = _.slice(this.state.recentMessages);
+        recentMessages.unshift(data);
+        if (recentMessages.length > 10) {
+           recentMessages.splice(10);
+        }
+        this.setState({ recentMessages })
+    },
+
+    /**
+     * Handle notification on Android and iOS
+     *
+     * @param  {Object} data
+     */
+    handleGCMNotification: function(data) {
+        var additionalData = data.additionalData;
+        var address = additionalData.address;
+        var changes = additionalData.changes;
+        if (changes) {
+            this.triggerNotifyEvent(address, changes);
+
+            this.waitForSearchIdling(10 * 1000).then(() => {
+                signalBackgroundProcessCompletion(data.notId);
+            });
+        } else if (data.message) {
+            // if notification was received in the background, the event is
+            // triggered when the user clicks on the notification
+            if (!additionalData.foreground) {
+                var alert = recreateAlert(additionalData);
+                this.triggerAlertClickEvent(address, alert);
+                signalBackgroundProcessCompletion(data.notId);
+            }
+        }
+    },
+
+    /**
+     * Handle notification on Windows
+     *
+     * @param  {Object} data
+     */
+    handleWNSNotification: function(data) {
+        if (data.launchArgs) {
+            // notification is clicked while app isn't running
+            var additionalData = JSON.parse(data.launchArgs);
+            var address = additionalData.address;
+            var alert = recreateAlert(additionalData);
+            this.triggerAlertClickEvent(address, alert);
+        } else {
+            var eventArgs = data.pushNotificationReceivedEventArgs;
+            if (eventArgs.notificationType === 0) { // toast
+                //var element = eventArgs.toastNotification.content.getElementsByTagName('toast')[0];
+                //var launchArgs = element.getAttribute('launch');
+            } else if (eventArgs.notificationType === 3) { // raw
+                var raw = wnsEventArgs.rawNotification;
+                var additionalData = JSON.parse(raw.content);
+                var address = additionalData.address;
+                var changes = additionalData.changes;
+                if (changes) {
+                    this.triggerNotifyEvent(address, changes);
+                }
+            }
+        }
+    },
+
+    handleActivation: function(context) {
+        console.log(context);
     },
 
     /**
@@ -353,4 +434,25 @@ var getDeviceDetails = function() {
 
 function renderJSON(object, i) {
     return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
+}
+
+function recreateAlert(additionalData) {
+    return {
+        title: '',
+        message: '',
+        type: additionalData.type,
+        schema: additionalData.schema,
+        notification_id: parseInt(additionalData.notification_id),
+        reaction_id: parseInt(additionalData.reaction_id),
+        story_id: parseInt(additionalData.story_id),
+        user_id: parseInt(additionalData.user_id),
+    };
+}
+
+function signalBackgroundProcessCompletion(notId) {
+    if (pushNotification && notId) {
+        if (cordova.platformId === 'ios') {
+            pushNotification.finish(notId);
+        }
+    }
 }
