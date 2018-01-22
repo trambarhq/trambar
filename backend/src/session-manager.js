@@ -363,11 +363,7 @@ function handleOAuthActivationRequest(req, res, done) {
         return findSystem().then((system) => {
             return findServer(serverId).then((server) => {
                 var params = { activation: 1, sid: serverId, handle };
-                var scope;
-                if (server.type === 'gitlab') {
-                    scope = [ 'api' ];
-                }
-                return authenticateThruPassport(req, res, system, server, params, scope).then((account) => {
+                return authenticateThruPassport(req, res, system, server, params).then((account) => {
                     var profile = account.profile._json;
                     var isAdmin = false;
                     if (server.type === 'gitlab') {
@@ -452,11 +448,10 @@ function authorizeUser(session, user, details, activate) {
  * @param  {System} system
  * @param  {Server} server
  * @param  {Object} params
- * @param  {String} scope
  *
  * @return {Promise<Object>}
  */
-function authenticateThruPassport(req, res, system, server, params, scope) {
+function authenticateThruPassport(req, res, system, server, params) {
     return new Promise((resolve, reject) => {
         var provider = req.params.provider;
         // query variables are send as the state parameter
@@ -477,9 +472,8 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
             baseURL: server.settings.oauth.base_url,
             callbackURL: `${address}/session/${provider}/callback/`,
         });
-        var options = addServerSpecificOptions(server, {
+        var options = addServerSpecificOptions(server, params, {
             session: false,
-            scope: scope,
             state: query,
         });
         // create strategy object, resolving promise when we have the profile
@@ -1040,16 +1034,26 @@ function addServerSpecificSettings(server, settings) {
  * Add server-specific OAuth options
  *
  * @param  {Server} server
+ * @param  {Object} params
  * @param  {Object} options
  *
  * @return {Object}
  */
-function addServerSpecificOptions(server, options) {
+function addServerSpecificOptions(server, params, options) {
     switch (server.type) {
-        case 'windows':
-            options.scope = [ 'wl.signin', 'wl.basic', 'wl.emails' ];
         case 'facebook':
             options.profileFields = [ 'id', 'email', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+            break;
+        case 'gitlab':
+            if (params.activation) {
+                options.scope = [ 'api' ];
+            }
+            break;
+        case 'google':
+            options.scope = [ 'profile' ];
+            break;
+        case 'windows':
+            options.scope = [ 'wl.signin', 'wl.basic', 'wl.emails' ];
             break;
     }
     return options;
