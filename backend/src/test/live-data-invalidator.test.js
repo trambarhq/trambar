@@ -134,7 +134,7 @@ describe('LiveDataInvalidator', function() {
     it('should mark stats as dirty when a published story is inserted', function() {
         return Database.open().then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 1 ],
                 role_ids: [ 2 ],
                 published: true,
@@ -156,7 +156,7 @@ describe('LiveDataInvalidator', function() {
     it('should ignore a story when it is not published', function() {
         return Database.open().then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 1 ],
                 role_ids: [ 2 ],
                 published: false,
@@ -179,7 +179,7 @@ describe('LiveDataInvalidator', function() {
         // need exclusive connection for event handling
         return Database.open(true).then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 1 ],
                 role_ids: [ 2 ],
                 published: true,
@@ -207,7 +207,7 @@ describe('LiveDataInvalidator', function() {
     it('should invalidate user and role specific stats', function() {
         return Database.open().then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 600 ],
                 role_ids: [ 800 ],
                 published: true,
@@ -281,7 +281,7 @@ describe('LiveDataInvalidator', function() {
     it('should mark listing as dirty when a published story is inserted', function() {
         return Database.open().then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 1 ],
                 role_ids: [ 2 ],
                 published: true,
@@ -304,7 +304,7 @@ describe('LiveDataInvalidator', function() {
     it('should invalidate a listing when a story satisfies filters', function() {
         return Database.open().then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 1 ],
                 role_ids: [ 2 ],
                 published: true,
@@ -325,7 +325,7 @@ describe('LiveDataInvalidator', function() {
     it('should not invalidate a listing when a story does not satisfy filters', function() {
         return Database.open().then((db) => {
             var story = {
-                type: 'story',
+                type: 'post',
                 user_ids: [ 1 ],
                 role_ids: [ 1 ],
                 published: true,

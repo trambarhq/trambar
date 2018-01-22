@@ -16,9 +16,9 @@ module.exports = function(localeCode) {
         'activity-chart-legend-merge': 'Merger',
         'activity-chart-legend-merge-request': 'Merge-requester',
         'activity-chart-legend-milestone': 'Milepæler',
+        'activity-chart-legend-post': 'Innlegg',
         'activity-chart-legend-push': 'Pusher',
         'activity-chart-legend-repo': 'Repo endringer',
-        'activity-chart-legend-story': 'Innlegg',
         'activity-chart-legend-survey': 'Undersøkelser',
         'activity-chart-legend-task-list': 'Oppgavelister',
         'activity-chart-legend-wiki': 'Wiki redigeringer',
@@ -41,14 +41,14 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 Milepæl` : `${count} milepæler`;
         },
+        'activity-tooltip-$count-post': (count) => {
+            return (count === 1) ? `1 innlegg` : `${count} innlegg`;
+        },
         'activity-tooltip-$count-push': (count) => {
             return (count === 1) ? `1 push` : `${count} pusher`;
         },
         'activity-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 repo endring` : `${count} repo endringer`;
-        },
-        'activity-tooltip-$count-story': (count) => {
-            return (count === 1) ? `1 innlegg` : `${count} innlegg`;
         },
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 undersøkelse` : `${count} undersøkelser`;

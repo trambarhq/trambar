@@ -19,21 +19,21 @@ var schema = 'test:LiveDataUpdater';
 describe('LiveDataUpdater', function() {
     var testStories = [
         {
-            type: 'story',
+            type: 'post',
             user_ids: [ 1 ],
             role_ids: [ 1 ],
             published: true,
             ptime: '2016-01-01T00:00:00.000Z',
         },
         {
-            type: 'story',
+            type: 'post',
             user_ids: [ 1 ],
             role_ids: [ 1 ],
             published: true,
             ptime: '2016-05-01T00:00:00.000Z',
         },
         {
-            type: 'story',
+            type: 'post',
             user_ids: [ 2 ],
             role_ids: [ 2 ],
             published: true,

@@ -566,7 +566,7 @@ module.exports = React.createClass({
         switch (this.state.draft.type) {
             case undefined:
             case '':
-            case 'story':
+            case 'post':
                 contents = this.renderRegularPost();
                 break;
             case 'task-list':
@@ -1015,7 +1015,7 @@ module.exports = React.createClass({
         var draft = _.clone(this.state.draft);
         var options = this.state.options;
         if (!draft.type) {
-            draft.type = 'story';
+            draft.type = 'post';
         }
         if (_.isEmpty(draft.role_ids)) {
             var roleIds = _.map(this.props.authors, 'role_ids');

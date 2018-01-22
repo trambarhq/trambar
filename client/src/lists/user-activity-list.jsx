@@ -134,7 +134,7 @@ module.exports = React.createClass({
             case 'repo':
                 var action = story.details.action;
                 return t(`user-activity-$name-${action}-repo`, name);
-            case 'story':
+            case 'post':
                 var resources = story.details.resources;
                 var counts = _.countBy(resources, 'type');
                 if (counts.video > 0) {

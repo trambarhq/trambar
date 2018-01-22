@@ -16,9 +16,9 @@ module.exports = function(localeCode) {
         'activity-chart-legend-merge': 'Scalania zmian',
         'activity-chart-legend-merge-request': 'Prośby o połączenie zmian',
         'activity-chart-legend-milestone': 'Kamienie milowe',
+        'activity-chart-legend-post': 'Posty',
         'activity-chart-legend-push': 'Wgrywania zmian',
         'activity-chart-legend-repo': 'Zmiany repozytorium',
-        'activity-chart-legend-story': 'Posty',
         'activity-chart-legend-survey': 'Ankiety',
         'activity-chart-legend-task-list': 'Listy zadań',
         'activity-chart-legend-wiki': 'Edycje strony wiki',
@@ -77,6 +77,15 @@ module.exports = function(localeCode) {
                 return `${count} kamieni milowych`;
             }
         },
+        'activity-tooltip-$count-post': (count) => {
+            if (singular(count)) {
+                return `1 post`;
+            } else if (plural(count)) {
+                return `${count} posty`;
+            } else {
+                return `${count} postów`;
+            }
+        },
         'activity-tooltip-$count-push': (count) => {
             if (singular(count)) {
                 return `1 wgrywanie zmian`;
@@ -93,15 +102,6 @@ module.exports = function(localeCode) {
                 return `${count} zmiany repozytorium`;
             } else {
                 return `${count} zmian repozytorium`;
-            }
-        },
-        'activity-tooltip-$count-story': (count) => {
-            if (singular(count)) {
-                return `1 post`;
-            } else if (plural(count)) {
-                return `${count} posty`;
-            } else {
-                return `${count} postów`;
             }
         },
         'activity-tooltip-$count-survey': (count) => {

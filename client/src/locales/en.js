@@ -499,9 +499,9 @@ module.exports = function(localeCode) {
         'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-merge-request': 'Merge requests',
         'user-statistics-legend-milestone': 'Milestones',
+        'user-statistics-legend-post': 'Posts',
         'user-statistics-legend-push': 'Code pushes',
         'user-statistics-legend-repo': 'Repo changes',
-        'user-statistics-legend-story': 'Posts',
         'user-statistics-legend-survey': 'Surveys',
         'user-statistics-legend-task-list': 'Task lists',
         'user-statistics-legend-wiki': 'Wiki edits',
@@ -521,14 +521,14 @@ module.exports = function(localeCode) {
         'user-statistics-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
         },
+        'user-statistics-tooltip-$count-posts': (count) => {
+            return (count === 1) ? `1 post` : `${count} posts`;
+        },
         'user-statistics-tooltip-$count-push': (count) => {
             return (count === 1) ? `1 push` : `${count} pushes`;
         },
         'user-statistics-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 repository change` : `${count} repository changes`;
-        },
-        'user-statistics-tooltip-$count-story': (count) => {
-            return (count === 1) ? `1 post` : `${count} posts`;
         },
         'user-statistics-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 survey` : `${count} surveys`;

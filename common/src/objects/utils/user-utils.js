@@ -122,7 +122,7 @@ function canAddIssue(user, story, repos) {
     if (!user || !story) {
         return false;
     }
-    if (_.includes(StoryTypes.trackable, story.type || 'story')) {
+    if (_.includes(StoryTypes.trackable, story.type || 'post')) {
         if (user.type === 'admin' || user.type === 'moderator' || _.includes(story.user_ids, user.id)) {
             return _.some(repos, (repo) => {
                 if (_.includes(repo.user_ids, user.id)) {

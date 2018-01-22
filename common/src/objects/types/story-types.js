@@ -8,19 +8,19 @@ module.exports = exports = [
     'wiki',
     'member',
     'repo',
-    'story',
+    'post',
     'survey',
     'task-list',
 ];
 
 exports.editable = [
-    'story',
+    'post',
     'task-list',
     'survey',
 ];
 
 exports.trackable = [
-    'story',
+    'post',
 ];
 
 exports.git = [
@@ -50,7 +50,7 @@ if (!isNodeJs) {
         'wiki': require('octicons/build/svg/file-text.svg'),
         'member': require('octicons/build/svg/person.svg'),
         'repo': require('octicons/build/svg/repo.svg'),
-        'story': require('octicons/build/svg/note.svg'),
+        'post': require('octicons/build/svg/note.svg'),
         'survey': require('octicons/build/svg/list-unordered.svg'),
         'task-list': require('octicons/build/svg/list-ordered.svg'),
     };

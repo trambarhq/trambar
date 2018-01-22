@@ -20,9 +20,9 @@ module.exports = function(localeCode) {
         'activity-chart-legend-merge': 'Code merges',
         'activity-chart-legend-merge-request': 'Merge requests',
         'activity-chart-legend-milestone': 'Milestones',
+        'activity-chart-legend-post': 'Posts',
         'activity-chart-legend-push': 'Code pushes',
         'activity-chart-legend-repo': 'Repository changes',
-        'activity-chart-legend-story': 'Stories',
         'activity-chart-legend-survey': 'Surveys',
         'activity-chart-legend-task-list': 'Task lists',
         'activity-chart-legend-wiki': 'Wiki edits',
@@ -45,14 +45,14 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
         },
+        'activity-tooltip-$count-post': (count) => {
+            return (count === 1) ? `1 post` : `${count} posts`;
+        },
         'activity-tooltip-$count-push': (count) => {
             return (count === 1) ? `1 push` : `${count} pushes`;
         },
         'activity-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 repository change` : `${count} repository changes`;
-        },
-        'activity-tooltip-$count-story': (count) => {
-            return (count === 1) ? `1 story` : `${count} stories`;
         },
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 survey` : `${count} surveys`;

@@ -159,7 +159,7 @@ module.exports = React.createClass({
     renderText: function() {
         this.resourcesReferenced = {};
         switch (this.props.story.type) {
-            case 'story':
+            case 'post':
                 return this.renderStoryText();
             case 'task-list':
                 return this.renderTaskListText();

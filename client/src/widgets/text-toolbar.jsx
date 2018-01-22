@@ -80,7 +80,7 @@ module.exports = React.createClass({
      */
     handleTaskListClick: function(evt) {
         var story = this.props.story;
-        var value = (story.type !== 'task-list') ? 'task-list' : 'story';
+        var value = (story.type !== 'task-list') ? 'task-list' : 'post';
         this.triggerActionEvent('story-type-set', { value });
     },
 
@@ -91,7 +91,7 @@ module.exports = React.createClass({
      */
     handleSurveyClick: function(evt) {
         var story = this.props.story;
-        var value = (story.type !== 'survey') ? 'survey' : 'story';
+        var value = (story.type !== 'survey') ? 'survey' : 'post';
         this.triggerActionEvent('story-type-set', { value });
     },
 })

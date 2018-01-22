@@ -155,7 +155,7 @@ module.exports = function(localeCode) {
                 case 'branch': story = 'Twoją gałąź'; break;
                 case 'survey': story = 'Twoją ankietę'; break;
                 case 'task-list': story = 'Twoją listę zadań'; break;
-                case 'story': story = 'Twoj post'; break;
+                case 'post': story = 'Twoj post'; break;
                 default: story = 'Twoją wiadomość';
             }
             return `${user} skomentował${e} ${story}`;
@@ -171,7 +171,7 @@ module.exports = function(localeCode) {
                 case 'branch': story = 'Twoją gałąź'; break;
                 case 'survey': story = 'Twoją ankietę'; break;
                 case 'task-list': story = 'Twoją listę zadań'; break;
-                case 'story': story = 'Twoj post'; break;
+                case 'post': story = 'Twoj post'; break;
                 default: story = 'Twoją wiadomość';
             }
             return `${user} lubi ${story}`;
@@ -184,7 +184,7 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'ankiety'; break;
                 case 'task-list': story = 'listy zadań'; break;
-                case 'story': story = ' posta'; break;
+                case 'post': story = ' posta'; break;
                 default: story = 'wiadomości';
             }
             return `${user} przysłał${e} Ci zakładkę do ${story}`;
@@ -627,9 +627,9 @@ module.exports = function(localeCode) {
         'user-statistics-legend-merge': 'Wgrywania zmian',
         'user-statistics-legend-merge-request': 'Prośby o połączenie',
         'user-statistics-legend-milestone': 'Kamienia milowe',
+        'user-statistics-legend-post': 'Posty',
         'user-statistics-legend-push': 'Wgrywa kodu',
         'user-statistics-legend-repo': 'Zmiany repozytorium',
-        'user-statistics-legend-story': 'Posty',
         'user-statistics-legend-survey': 'Ankiety',
         'user-statistics-legend-task-list': 'Listy zadań',
         'user-statistics-legend-wiki': 'Edycje Wiki',
@@ -679,6 +679,15 @@ module.exports = function(localeCode) {
                 return `${count} kamieni milowych`;
             }
         },
+        'user-statistics-tooltip-$count-post': (count) => {
+            if (singular(count)) {
+                return `1 post`;
+            } else if (plural(count)) {
+                return `${count} posty`;
+            } else {
+                return `${count} postów`;
+            }
+        },
         'user-statistics-tooltip-$count-push': (count) => {
             if (singular(count)) {
                 return `1 wgrywanie zmian`;
@@ -695,15 +704,6 @@ module.exports = function(localeCode) {
                 return `${count} zmiany repozytorium`;
             } else {
                 return `${count} zmian repozytorium`;
-            }
-        },
-        'user-statistics-tooltip-$count-story': (count) => {
-            if (singular(count)) {
-                return `1 post`;
-            } else if (plural(count)) {
-                return `${count} posty`;
-            } else {
-                return `${count} postów`;
             }
         },
         'user-statistics-tooltip-$count-survey': (count) => {

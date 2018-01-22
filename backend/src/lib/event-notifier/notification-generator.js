@@ -39,7 +39,7 @@ function generate(db, events) {
         switch (event.table) {
             case 'reaction':
                 return createReactionNotifications(db, event);
-            case 'story':
+            case 'post':
                 return createStoryNotifications(db, event);
             case 'user':
                 return createUserNotifications(db, event);
