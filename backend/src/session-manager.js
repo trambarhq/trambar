@@ -471,18 +471,17 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
         if (!address) {
             throw new HTTPError(400);
         }
-        var settings = {
+        var settings = addServerSpecificSettings(server, {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
             baseURL: server.settings.oauth.base_url,
             callbackURL: `${address}/session/${provider}/callback/`,
-        };
-        var options = {
+        });
+        var options = addServerSpecificOptions(server, {
             session: false,
-            scope: getServerSpecificScope(server, scope),
+            scope: scope,
             state: query,
-            profileFields: getServerSpecificProfileFields(server),
-        };
+        });
         // create strategy object, resolving promise when we have the profile
         var Strategy = findPassportPlugin(server);
         var strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
@@ -497,10 +496,13 @@ function authenticateThruPassport(req, res, system, server, params, scope) {
             // if this callback is called, then authentication has failed, since
             // the callback passed to Strategy() resolves the promise and does
             // not invoke done()
-            reject(new HTTPError(403, {
-                message: info.message,
-                reason: 'access-denied',
-            }));
+            var message, reason;
+            if (info && info.message) {
+                message = info.message;
+            } else if (err && err.message) {
+                message = err.message;
+            }
+            reject(new HTTPError(403, { message, reason: 'access-denied' }));
         });
         auth(req, res);
     });
@@ -554,7 +556,6 @@ function findSession(handle) {
         };
         return Session.findOne(db, 'global', criteria, '*').then((session) => {
             if (!session) {
-                console.log(criteria);
                 throw new HTTPError(404);
             }
             return session;
@@ -803,7 +804,13 @@ function findPassportPlugin(server) {
         google: 'passport-google-oauth2',
         windows: 'passport-windowslive',
     };
-    return require(plugins[server.type]);
+    var module = require(plugins[server.type]);
+    if (!(module instanceof Function)) {
+        if (module.Strategy) {
+            module = module.Strategy;
+        }
+    }
+    return module;
 }
 
 /**
@@ -1013,34 +1020,39 @@ function getFutureTime(minutes) {
 }
 
 /**
- * Return a list of scope needed by server
+ * Add server-specific OAuth settings (passed to constructor)
  *
  * @param  {Server} server
- * @param  {Array<String>|undefined} scope
+ * @param  {Object} settings
  *
- * @return {Array<String>}
+ * @return {Object}
  */
-function getServerSpecificScope(server, scope) {
+function addServerSpecificSettings(server, settings) {
     switch (server.type) {
-        case 'windows':
-            return [ 'wl.signin', 'wl.basic', 'wl.emails' ];
-        default:
-            return scope;
+        case 'dropbox':
+            settings.apiVersion = '2';
+            break;
     }
+    return settings;
 }
 
 /**
- * Return list of fields the server should return
+ * Add server-specific OAuth options
  *
  * @param  {Server} server
+ * @param  {Object} options
  *
- * @return {Array<String>}
+ * @return {Object}
  */
-function getServerSpecificProfileFields(server) {
+function addServerSpecificOptions(server, options) {
     switch (server.type) {
+        case 'windows':
+            options.scope = [ 'wl.signin', 'wl.basic', 'wl.emails' ];
         case 'facebook':
-            return [ 'id', 'email', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+            options.profileFields = [ 'id', 'email', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+            break;
     }
+    return options;
 }
 
 function extractQueryVariables(query) {
