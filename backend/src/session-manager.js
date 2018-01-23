@@ -887,6 +887,7 @@ function copyUserProperties(user, image, server, profile, link) {
         _.set(userAfter, 'username', username);
         _.set(userAfter, 'details.name', name);
         _.set(userAfter, 'details.email', email);
+        Import.join(userAfter, link);
         Import.attach(userAfter, 'image', image);
 
         // set user type
