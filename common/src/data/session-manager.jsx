@@ -107,7 +107,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var subscription = this.state.subscription || {};
         return (
             <Diagnostics type="session-manager">
                 <DiagnosticsSection label="Session Handling">

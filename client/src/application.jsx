@@ -19,6 +19,7 @@ var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
 var SubscriptionManager = require('data/subscription-manager');
 var SessionManager = require('data/session-manager');
+var LinkManager = require('routing/link-manager');
 
 // pages
 var StartPage = require('pages/start-page');
@@ -86,6 +87,7 @@ module.exports = React.createClass({
             payloadManager: PayloadManager,
             subscriptionManager: SubscriptionManager,
             sessionManager: SessionManager,
+            linkManager: LinkManager,
             cache: LocalCache,
             notifier: Notifier,
         });
@@ -349,6 +351,11 @@ module.exports = React.createClass({
             ref: setters.sessionManager,
             database: this.state.database,
         };
+        var linkManagerProps = {
+            ref: setters.linkManager,
+            database: this.state.database,
+            route: this.state.route,
+        };
         return (
             <div>
                 <LocalCache {...cacheProps} />
@@ -360,6 +367,7 @@ module.exports = React.createClass({
                 <ThemeManager {...themeManagerProps} />
                 <SubscriptionManager {...subscriptionManagerProps} />
                 <SessionManager {...sessionManagerProps} />
+                <LinkManager {...linkManagerProps} />
             </div>
         );
     },
@@ -691,10 +699,7 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'cordova') {
             if (originalURL === '/bootstrap') {
                 // look for the most recently accessed project
-                var db = this.state.database.use({ by: this });
-                var criteria = {};
-                return db.find({ schema: 'local', table: 'project_link', criteria }).then((links) => {
-                    var mostRecent = _.last(_.sortBy(links, 'atime'));
+                return this.components.linkManager.findRecentLocation().then((mostRecent) => {
                     var url;
                     if (mostRecent) {
                         url = routeManager.find(NewsPage, {
@@ -707,7 +712,6 @@ module.exports = React.createClass({
                     }
                     return routeManager.change(url, replacing);
                 });
-
             }
         }
 
