@@ -470,7 +470,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderUserOptions()}
                 {this.renderRoleSelector()}
                 {this.renderOAuthCallbackURL()}
-                {this.renderOAuthURLInput()}
+                {this.renderGitlabURLInput()}
                 {this.renderOAuthClientIdInput()}
                 {this.renderOAuthClientSecretInput()}
                 {this.renderAPIStatus()}
@@ -757,14 +757,20 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
         var url, warning;
-        if (serverType) {
-            var address = _.get(this.props.system, 'settings.address');
-            var warning;
-            if (!address) {
-                warning = t('server-summary-system-address-missing');
-                address = window.location.origin;
-            }
-            url = `${address}/session/${serverType}/callback/`;
+        var address = _.get(this.props.system, 'settings.address');
+        var warning;
+        if (!address) {
+            warning = t('server-summary-system-address-missing');
+            address = window.location.origin;
+        }
+        switch (serverType) {
+            case 'facebook':
+                url = address;
+                break;
+            default:
+                if (serverType) {
+                    url = `${address}/session/${serverType}/callback/`;
+                }
         }
         var props = {
             id: 'oauth_callback',
@@ -773,9 +779,30 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             readOnly: true,
         };
         var problems = this.state.problems;
+        var phrase = 'server-summary-oauth-callback-url';
+        switch (this.getServerProperty('type')) {
+            case 'dropbox':
+                phrase = 'server-summary-oauth-redirect-uri';
+                break;
+            case 'facebook':
+                phrase = 'server-summary-oauth-site-url';
+                break;
+            case 'github':
+                phrase = 'server-summary-oauth-callback-url';
+                break;
+            case 'gitlab':
+                phrase = 'server-summary-oauth-callback-url';
+                break;
+            case 'google':
+                phrase = 'server-summary-oauth-redirect-uri';
+                break;
+            case 'windows':
+                phrase = 'server-summary-oauth-redirect-url';
+                break;
+        }
         return (
             <TextField {...props}>
-                {t('server-summary-oauth-callback')}
+                {t(phrase)}
                 <InputError type="warning">{warning}</InputError>
             </TextField>
         );
@@ -786,7 +813,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthURLInput: function() {
+    renderGitlabURLInput: function() {
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
         var props = {
@@ -800,7 +827,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <CollapsibleContainer open={serverType === 'gitlab'}>
                 <TextField {...props}>
-                    {t('server-summary-oauth-url')}
+                    {t('server-summary-oauth-gitlab-url')}
                     <InputError>{t(problems.base_url)}</InputError>
                 </TextField>
             </CollapsibleContainer>
@@ -822,9 +849,30 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             readOnly: !this.isEditing(),
         };
         var problems = this.state.problems;
+        var phrase = 'server-summary-oauth-client-id';
+        switch (this.getServerProperty('type')) {
+            case 'dropbox':
+                phrase = 'server-summary-oauth-app-key';
+                break;
+            case 'facebook':
+                phrase = 'server-summary-oauth-app-id';
+                break;
+            case 'github':
+                phrase = 'server-summary-oauth-client-id';
+                break;
+            case 'gitlab':
+                phrase = 'server-summary-oauth-application-id';
+                break;
+            case 'google':
+                phrase = 'server-summary-oauth-client-id';
+                break;
+            case 'windows':
+                phrase = 'server-summary-oauth-application-id';
+                break;
+        }
         return (
             <TextField {...props}>
-                {t('server-summary-oauth-id')}
+                {t(phrase)}
                 <InputError>{t(problems.client_id)}</InputError>
             </TextField>
         );
@@ -845,9 +893,30 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             readOnly: !this.isEditing(),
         };
         var problems = this.state.problems;
+        var phrase = 'server-summary-oauth-client-secret';
+        switch (this.getServerProperty('type')) {
+            case 'dropbox':
+                phrase = 'server-summary-oauth-app-secret';
+                break;
+            case 'facebook':
+                phrase = 'server-summary-oauth-app-secret';
+                break;
+            case 'github':
+                phrase = 'server-summary-oauth-client-secret';
+                break;
+            case 'gitlab':
+                phrase = 'server-summary-oauth-application-secret';
+                break;
+            case 'google':
+                phrase = 'server-summary-oauth-client-secret';
+                break;
+            case 'windows':
+                phrase = 'server-summary-oauth-application-secret';
+                break;
+        }
         return (
             <TextField {...props}>
-                {t('server-summary-oauth-secret')}
+                {t(phrase)}
                 <InputError>{t(problems.client_secret)}</InputError>
             </TextField>
         );
