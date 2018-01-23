@@ -18,6 +18,7 @@ var Locale = require('locale/locale');
 var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
 var SubscriptionManager = require('data/subscription-manager');
+var SessionManager = require('data/session-manager');
 
 // pages
 var ProjectListPage = require('pages/project-list-page');
@@ -94,6 +95,8 @@ module.exports = React.createClass({
             payloadManager: PayloadManager,
             cache: LocalCache,
             notifier: WebsocketNotifier,
+            subscriptionManager: SubscriptionManager,
+            sessionManager: SessionManager,
         });
         return {
             database: null,
@@ -277,11 +280,16 @@ module.exports = React.createClass({
             onDisconnect: this.handleDisconnection,
         };
         var subscriptionManagerProps = {
+            ref: setters.subscriptionManager,
             area: 'admin',
             connection: this.state.connection,
             schema: '*',
             database: this.state.database,
             locale: this.state.locale,
+        };
+        var sessionManagerProps = {
+            ref: setters.sessionManager,
+            database: this.state.database,
         };
         return (
             <div>
@@ -293,6 +301,7 @@ module.exports = React.createClass({
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
                 <SubscriptionManager {...subscriptionManagerProps} />
+                <SessionManager {...sessionManagerProps} />
             </div>
         );
     },
@@ -340,64 +349,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Load user credentials (authorization token, user_id, etc.) from local cache
-     *
-     * @param  {String} address
-     *
-     * @return {Promise<Object|null>}
-     */
-    loadSessionFromCache: function(address) {
-        var db = this.state.database.use({ schema: 'local', by: this });
-        var criteria = { key: address };
-        return db.findOne({ table: 'session', criteria }).then((record) => {
-            if (!record) {
-                return null;
-            }
-            return {
-                address: record.key,
-                handle: record.handle,
-                token: record.token,
-                user_id: record.user_id,
-                etime: record.etime,
-            };
-        });
-    },
-
-    /**
-     * Save session handle, authorization token, and user id to local cache
-     *
-     * @param  {Object} session
-     *
-     * @return {Promise<Object>}
-     */
-    saveSessionToCache: function(session) {
-        // save the credentials
-        var db = this.state.database.use({ schema: 'local', by: this });
-        var record = {
-            key: session.address,
-            handle: session.handle,
-            token: session.token,
-            user_id: session.user_id,
-            etime: session.etime,
-        };
-        return db.saveOne({ table: 'session' }, record);
-    },
-
-    /**
-     * Remove user credentials from local cache
-     *
-     * @param  {Object} session
-     *
-     * @return {Promise<Object>}
-     */
-    removeSessionFromCache: function(session) {
-        // save the credentials
-        var db = this.state.database.use({ schema: 'local', by: this });
-        var record = { key: session.address };
-        return db.removeOne({ table: 'session' }, record);
-    },
-
-    /**
      * Rewrite the URL that, either extracting the server address or inserting it
      *
      * @param  {Object} urlParts
@@ -438,7 +389,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleAuthorization: function(evt) {
-        this.saveSessionToCache(evt.session);
+        this.components.sessionManager.saveToCache(evt.session);
 
         var address = this.state.route.parameters.address;
         if (evt.session.address === address) {
@@ -454,7 +405,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleExpiration: function(evt) {
-        this.removeSessionFromCache(evt.session);
+        this.components.sessionManager.removeFromCache(evt.session);
 
         var address = this.state.route.parameters.address;
         if (evt.session.address === address) {
@@ -522,7 +473,7 @@ module.exports = React.createClass({
             });
         } else {
             // see if user credentials are stored locally
-            this.loadSessionFromCache(address).then((session) => {
+            this.components.sessionManager.loadFromCache(address).then((session) => {
                 if (session) {
                     database.restoreSession(session);
                 }

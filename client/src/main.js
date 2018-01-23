@@ -24,7 +24,7 @@ function initialize(evt) {
 }
 
 window.addEventListener("unhandledrejection", function(evt) {
-    console.error(evt.reason);
+    console.error(evt);
     evt.preventDefault();
 });
 

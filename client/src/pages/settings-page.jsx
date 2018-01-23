@@ -246,6 +246,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticDataPanel type="websocket-notifier" title="Web Socket" />
                     <DiagnoisticDataPanel type="push-notifier" title="Push Notification" />
                     <DiagnoisticDataPanel type="subscription-manager" title="Data Subscription" />
+                    <DiagnoisticDataPanel type="session-manager" title="Sessions" />
                 </div>
             </div>
         );
