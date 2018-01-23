@@ -177,10 +177,6 @@ module.exports = _.create(Data, {
      * @param  {Object} credentials
      */
     checkWritePermission: function(subscriptionReceived, subscriptionBefore, credentials) {
-        // don't allow modifications
-        if (subscriptionBefore) {
-            throw new HTTPError(400);
-        }
         if (subscriptionReceived.area !== credentials.area) {
             throw new HTTPError(400);
         }

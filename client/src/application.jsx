@@ -17,6 +17,7 @@ var LocaleManager = require('locale/locale-manager');
 var Locale = require('locale/locale');
 var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
+var SubscriptionManager = require('data/subscription-manager');
 
 // pages
 var StartPage = require('pages/start-page');
@@ -94,7 +95,6 @@ module.exports = React.createClass({
 
             canAccessServer: false,
             canAccessSchema: false,
-            subscription: null,
             connection: null,
             searching: false,
             paused: false,
@@ -261,6 +261,7 @@ module.exports = React.createClass({
         var setters = this.components.setters;
         var route = this.state.route;
         var serverAddress = (route) ? route.parameters.address : null;
+        var selectedSchema = (route) ? route.parameters.schema : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             inForeground: !this.state.paused,
@@ -329,6 +330,17 @@ module.exports = React.createClass({
                 });
             }
         }
+        if (!selectedSchema || !this.state.canAccessSchema) {
+            // keep an eye on changes of global objects like projects
+            selectedSchema = 'global';
+        }
+        var subscriptionManagerProps = {
+            area: 'client',
+            connection: this.state.connection,
+            schema: selectedSchema,
+            database: this.state.database,
+            locale: this.state.locale,
+        };
         return (
             <div>
                 <LocalCache {...cacheProps} />
@@ -338,6 +350,7 @@ module.exports = React.createClass({
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
+                <SubscriptionManager {...subscriptionManagerProps} />
             </div>
         );
     },
@@ -373,20 +386,15 @@ module.exports = React.createClass({
     },
 
     /**
-     * Check state variables after update
+     * Hide the splash screen once app is ready
      */
     componentDidUpdate: function(prevProps, prevState) {
-        // hide the splash screen once app is ready
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
             setTimeout(() => {
                 this.hideSplashScreen();
             }, 100);
         }
-
-        this.updateRecentSearchResults(prevState);
-        this.updateProjectLink(prevState);
-        this.updateSubscription(prevState);
     },
 
     /**
@@ -403,174 +411,18 @@ module.exports = React.createClass({
     },
 
     /**
-     * Clear recent search results when we siwtch to a different location
-     *
-     * @param  {Object} prevState
-     */
-    updateRecentSearchResults: function(prevState) {
-        var needUpdate = false;
-        if (prevState.route !== this.props.route) {
-            needUpdate = true;
-        }
-        if (!needUpdate) {
-            return;
-        }
-
-        if (!prevState.route) {
-            return;
-        }
-        var locationBefore = _.pick(prevState.route.parameters, 'address', 'schema');
-        var locationAfter = _.pick(this.state.route.parameters, 'address', 'schema');
-        if (!_.isEqual(locationBefore, locationAfter)) {
-            this.components.remoteDataSource.clear(locationBefore.address, locationBefore.schema);
-        }
-    },
-
-    /**
-     * Add project to list of visited projects
-     *
-     * @param  {Object} prevState
-     */
-    updateProjectLink: function(prevState) {
-        var needUpdate = false;
-        if (prevState.route !== this.state.route) {
-            needUpdate = true;
-        }
-        if (!needUpdate) {
-            return;
-        }
-
-        if (!this.state.route) {
-            return;
-        }
-        var params = this.state.route.parameters;
-        if (!params.address || !params.schema) {
-            return;
-        }
-        if (!this.state.canAccessServer || !this.state.canAccessSchema) {
-            return;
-        }
-        var projectKey = `${params.address}/${params.schema}`;
-        if (this.lastProjectKey === projectKey) {
-            // guard against repeated effort
-            return;
-        }
-        this.lastProjectKey = projectKey;
-
-        // get the project object so we have the project's display name
-        var db = this.state.database.use({ by: this });
-        var criteria = { name: params.schema };
-        db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
-            if (!project) {
-                return;
-            }
-            var now = new Date;
-            var record = {
-                key: projectKey,
-                address: params.address,
-                schema: params.schema,
-                name: project.details.title,
-                atime: now.toISOString(),
-            };
-            return db.saveOne({ schema: 'local', table: 'project_link' }, record);
-        });
-    },
-
-    /**
-     * Maintain a subscription to data change notification
-     *
-     * @param  {Object} prevState
-     */
-    updateSubscription: function(prevState) {
-        // see if something changed that'd require a change in the subscription
-        var needUpdate = false;
-        if (prevState.route !== this.state.route) {
-            if (this.state.route)
-            needUpdate = true;
-        } else if (prevState.locale !== this.state.locale) {
-            needUpdate = true;
-        } else if (prevState.connection !== this.state.connection) {
-            needUpdate = true;
-        } else if (prevState.pushRelay !== this.state.pushRelay) {
-            needUpdate = true;
-        } else if (prevState.canAccessServer !== this.state.canAccessServer) {
-            needUpdate = true;
-        }
-        if (!needUpdate) {
-            return;
-        }
-
-        // make sure we have everything
-        if (!this.state.route) {
-            return;
-        }
-        var params = this.state.route.parameters;
-        if (!params.address) {
-            return;
-        }
-        if (!this.state.canAccessServer) {
-            return;
-        }
-        var connection = this.state.connection;
-        if (Notifier === WebsocketNotifier) {
-            if (!connection || params.address !== connection.address) {
-                // don't have a websocket connection to the server yet
-                return;
-            }
-        }
-        if (Notifier === PushNotifier) {
-            var pushRelay = this.state.pushRelay;
-            if (!pushRelay || params.address !== pushRelay.address) {
-                // don't know yet the address of the push relay used by the server
-                this.discoverPushRelay();
-                return;
-            }
-            if (!connection) {
-                // registration hasn't occurred
-                return;
-            }
-            if (!this.state.pushRelay.url) {
-                return;
-            }
-        }
-
-        var db = this.state.database.use({ schema: 'global', by: this });
-        db.start().then((userId) => {
-            var schema;
-            if (params.schema && this.state.canAccessSchema) {
-                schema = params.schema;
-            } else {
-                // keep an eye on changes of global objects like projects
-                schema = 'global';
-            }
-            var subscription = {
-                user_id: userId,
-                schema: schema,
-                area: 'client',
-                locale: this.state.locale.localeCode,
-                method: connection.method,
-                token: connection.token,
-                relay: connection.relay,
-                details: connection.details,
-            };
-            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
-                this.setState({ subscription });
-            });
-        });
-    },
-
-    /**
      * Ask remote server for the push relay URL
      */
     discoverPushRelay: function() {
+        if (process.env.PLATFORM !== 'cordova') return;
         var db = this.state.database.use({ schema: 'global', by: this });
         db.start().then((userId) => {
             return db.findOne({ table: 'system' }).then((system) => {
-                var address = db.context.address;
                 var url = _.get(system, 'settings.push_relay', '');
-                this.setState({
-                    pushRelay: { address, url }
-                });
+                var pushRelay = { address, url };
+                if (!_.isEqual(pushRelay, this.state.pushRelay)) {
+                    this.setState({ pushRelay });
+                }
                 return null;
             });
         });
@@ -783,25 +635,48 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleRouteChange: function(evt) {
+        var route = new Route(evt.target);
+        var dataSource = this.components.remoteDataSource;
+
         // add server location to database context so we don't need to
         // specify it everywhere
-        var route = new Route(evt.target);
-        var address = route.parameters.address;
         var database = this.state.database;
-        if (address != this.state.database.context.address) {
-            var dataSource = this.components.remoteDataSource;
+        var address = route.parameters.address;
+        if (address != database.context.address) {
             database = new Database(dataSource, { address })
         }
+
+        // clear recent searches when we switch to a different project
+        if (this.state.route) {
+            var schemaBefore = this.state.route.parameters.schema;
+            var schemaAfter = route.parameters.schema;
+            if (address != database.context.address || schemaBefore !== schemaAfter) {
+                dataSource.clear(address, schemaBefore);
+            }
+        }
+
+        // set the route after we've determined whether we can access the data source
+        var setRoute = (accessible) => {
+            this.setState({
+                route,
+                database,
+                canAccessServer: accessible,
+                canAccessSchema: accessible,
+            }, () => {
+                // for mobile notification, we need to know which push relay
+                // the server is employing
+                if (accessible) {
+                    if (Notifier === PushNotifier) {
+                        this.discoverPushRelay();
+                    }
+                }
+            });
+        };
 
         // try to restore session prior to setting the route
         if (database.hasAuthorization()) {
             // route is already accessible
-            this.setState({
-                route,
-                database,
-                canAccessServer: true,
-                canAccessSchema: true,
-            });
+            setRoute(true);
         } else {
             // see if user credentials are stored locally
             this.loadSessionFromCache(address).then((session) => {
@@ -810,20 +685,10 @@ module.exports = React.createClass({
                 }
                 if (database.hasAuthorization(address)) {
                     // route is now accessible
-                    this.setState({
-                        route,
-                        database,
-                        canAccessServer: true,
-                        canAccessSchema: true,
-                    });
+                    setRoute(true);
                 } else {
                     // show start page, where user can log in or choose another project
-                    this.setState({
-                        route,
-                        database,
-                        canAccessServer: false,
-                        canAccessSchema: false,
-                    });
+                    setRoute(false);
                 }
             });
         }

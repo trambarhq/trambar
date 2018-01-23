@@ -17,6 +17,7 @@ var LocaleManager = require('locale/locale-manager');
 var Locale = require('locale/locale');
 var ThemeManager = require('theme/theme-manager');
 var Theme = require('theme/theme');
+var SubscriptionManager = require('data/subscription-manager');
 
 // pages
 var ProjectListPage = require('pages/project-list-page');
@@ -102,7 +103,6 @@ module.exports = React.createClass({
             theme: null,
 
             canAccessServer: false,
-            subscription: null,
             connection: null,
             showingUploadProgress: false,
         };
@@ -276,6 +276,13 @@ module.exports = React.createClass({
             onConnect: this.handleConnection,
             onDisconnect: this.handleDisconnection,
         };
+        var subscriptionManagerProps = {
+            area: 'admin',
+            connection: this.state.connection,
+            schema: '*',
+            database: this.state.database,
+            locale: this.state.locale,
+        };
         return (
             <div>
                 <LocalCache {...cacheProps} />
@@ -285,6 +292,7 @@ module.exports = React.createClass({
                 <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
+                <SubscriptionManager {...subscriptionManagerProps} />
             </div>
         );
     },
@@ -313,18 +321,15 @@ module.exports = React.createClass({
     },
 
     /**
-     * Check state variables after update
+     * Hide the splash screen once app is ready
      */
     componentDidUpdate: function(prevProps, prevState) {
-        // Hide the splash screen once app is ready
         if (!this.splashScreenHidden && this.isReady()) {
             this.splashScreenHidden = true;
             setTimeout(() => {
                 this.hideSplashScreen();
             }, 100);
         }
-
-        this.updateSubscription(prevState);
     },
 
     /**
@@ -332,65 +337,6 @@ module.exports = React.createClass({
      */
     componentWillUnmount: function() {
         window.removeEventListener('beforeunload', this.handleBeforeUnload);
-    },
-
-    /**
-     * Maintain a subscription to data change notification
-     *
-     * @param  {Object} prevState
-     */
-    updateSubscription: function(prevState) {
-        // see if something changed that'd require a change in the subscription
-        var needUpdate = false;
-        if (prevState.route !== this.state.route) {
-            if (this.state.route)
-            needUpdate = true;
-        } else if (prevState.locale !== this.state.locale) {
-            needUpdate = true;
-        } else if (prevState.connection !== this.state.connection) {
-            needUpdate = true;
-        } else if (prevState.canAccessServer !== this.state.canAccessServer) {
-            needUpdate = true;
-        }
-        if (!needUpdate) {
-            return;
-        }
-
-        // make sure we have everything
-        if (!this.state.route) {
-            return;
-        }
-        var params = this.state.route.parameters;
-        if (!params.address) {
-            return;
-        }
-        if (!this.state.canAccessServer) {
-            return;
-        }
-        var connection = this.state.connection;
-        if (!connection || params.address !== connection.address) {
-            // don't have a websocket connection to the server yet
-            return;
-        }
-
-        var db = this.state.database.use({ schema: 'global', by: this });
-        db.start().then((userId) => {
-            var subscription = {
-                user_id: userId,
-                schema: '*',
-                area: 'admin',
-                locale: this.state.locale.localeCode,
-                method: connection.method,
-                token: connection.token,
-                relay: connection.relay,
-                details: connection.details,
-            };
-            return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
-                this.setState({ subscription });
-            });
-        }).finally(() => {
-            this.creatingSubscription = false;
-        });
     },
 
     /**
