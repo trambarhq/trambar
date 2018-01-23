@@ -116,22 +116,24 @@
                         top: 0;
                         bottom: 0;
                         $series-colors: (
-                            #d70206,
-                            #f05b4f,
-                            #f4c63d,
-                            #d17905,
-                            #59922b,
-                            #f05b4f,
-                            #dda458,
-                            #eacf7d,
-                            #b2c326,
-                            #6188e2,
+                            #ffff99,
+                            #ff00cc,
+                            #6666ff,
+                            #33ff99,
+                            #ff6600,
+                            #ff33ff,
+                            #00ccff,
+                            #99ff66,
+                            #ff3333,
+                            #9900ff,
+                            #66ffff,
+                            #ccff00,
                         );
 
                         @for $i from 0 to length($series-colors) {
-                          &.color-#{$i} {
-                            background-color: nth($series-colors, $i + 1);
-                          }
+                            &.color-#{$i + 1} {
+                                background-color: nth($series-colors, $i + 1);
+                            }
                         }
                     }
                 }

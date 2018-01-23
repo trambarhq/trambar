@@ -50,7 +50,7 @@ function parseSurveyResults(text, voteCounts) {
                 var total = _.get(tally, 'total', 0);
                 var count = _.get(tally, [ 'answers', item.key ], 0);
                 var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-                var color = `color-${item.key % 10}`;
+                var color = `color-${item.key % 12}`;
                 return (
                     <span>
                         {item.before}
