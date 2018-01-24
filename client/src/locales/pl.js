@@ -244,7 +244,7 @@ module.exports = function(localeCode) {
 
         'project-management-add': 'Dodaj',
         'project-management-cancel': 'Anuluj',
-        'project-management-description': 'Opis projektu',
+        'project-management-description': 'opis projektu',
         'project-management-manage': 'Zarządzaj listą',
         'project-management-mobile-set-up': 'konfiguracja mobilna',
         'project-management-remove': 'Usuń',
@@ -340,7 +340,7 @@ module.exports = function(localeCode) {
         'social-network-skype': 'Nazwa użytkownika Skype',
         'social-network-slack': 'Identyfikator użytkownika na Slacku',
         'social-network-slack-team': 'Identyfikator zespołu na Slacku',
-        'social-network-stackoverflow': 'URL profilu na StackOverflowie',
+        'social-network-stackoverflow': 'URL profilu na StackOverflow',
         'social-network-twitter': 'Nazwa użytkownika na Twitterze',
 
         'start-activation-add-server': 'Add project from another server',
