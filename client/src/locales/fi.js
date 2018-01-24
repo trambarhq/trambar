@@ -116,10 +116,11 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'push': story = 'sinun push'; break;
                 case 'merge': story = 'sinun merge'; break;
-                case 'branch': story = 'sinun branch'; break;
+                case 'branch': story = 'branchiasi'; break;
                 case 'survey': story = 'kyselysi'; break;
                 case 'task-list': story = 'tehtäväluetteloasi'; break;
-                default: story = 'viestiäsi';
+                case 'post': story = 'viestiäsi'; break;
+                default: story = 'tarinaasi';
             }
             return `${user} kommentoi ${story}`;
         },
@@ -130,12 +131,13 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'push': story = 'sinun push'; break;
                 case 'merge': story = 'sinun merge'; break;
-                case 'branch': story = 'sinun branch'; break;
-                case 'survey': story = 'kyselyn'; break;
-                case 'task-list': story = 'tehtäväluettelostaan'; break;
-                default: story = 'viestisi';
+                case 'branch': story = 'branchistasi'; break;
+                case 'survey': story = 'kyselystäsi'; break;
+                case 'task-list': story = 'tehtäväluettelostasi'; break;
+                case 'post': story = 'viestistasi'; break;
+                default: story = 'tarinastasi';
             }
-            return `${user} pitää ${story}`;
+            return `${user} tykää ${story}`;
         },
         'notification-$user-requested-to-join': (user) => {
             return `${user} pyysi liittymään tähän projektiin`;
@@ -144,9 +146,10 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'kyselyyn'; break;
                 case 'task-list': story = 'tehtäväluettelon'; break;
-                default: story = 'tarinan';
+                case 'post': story = 'viestiin';
+                default: story = 'tarinaan';
             }
-            return `${user} lähetti sinulle ${story} kirjanmerkin`;
+            return `${user} lähetti sinulle kirjanmerkin ${story}`;
         },
         'notification-$user-voted-in-your-survey': (user) => {
             return `${user} vastasi kyselyynne`;
@@ -154,10 +157,10 @@ module.exports = function(localeCode) {
         'notification-option-assignment': 'Kun olet määrittänyt ongelman',
         'notification-option-bookmark': 'Kun joku lähettää sinulle kirjanmerkin',
         'notification-option-coauthor': 'Kun joku kutsuu sinut muokkaamaan viestiä yhdessä',
-        'notification-option-comment': 'Kun joku kommentoi viestiäsi',
+        'notification-option-comment': 'Kun joku kommentoi tarinaasi',
         'notification-option-issue': 'Kun joku avaa uuden asian',
         'notification-option-join-request': 'Kun joku haluaa liittyä tähän projektiin',
-        'notification-option-like': 'Kun joku haluaa tarinasi',
+        'notification-option-like': 'Kun joku tykkää tarinastasi',
         'notification-option-merge': 'Kun joku linkittää koodin branchien master',
         'notification-option-note': 'Kun joku lähettää viestin commitista tai liikkeestä',
         'notification-option-push': 'Kun joku painaa koodia Gitiin',
@@ -167,7 +170,7 @@ module.exports = function(localeCode) {
         'notification-option-web-session': 'Kun web-istunto on aktiivinen',
 
         'option-add-bookmark': 'Lisää kirjanmerkki tähän tarinaan',
-        'option-add-issue': 'Lisää viesti julkaisijan seurantaan',
+        'option-add-issue': 'Lisää viesti raportointityökaluun',
         'option-bookmark-story': 'Lisää kirjanmerkki tähän tarinaan',
         'option-bump-post': 'Edistä tarina',
         'option-edit-comment': 'Muokkaa kommenttia',
@@ -203,7 +206,7 @@ module.exports = function(localeCode) {
         'qr-scanner-invalid-qr-code': 'Virheellinen QR-koodi',
 
         'reaction-$user-added-story-to-issue-tracker': (user) => {
-            return `${user} lisäsi tämän viestin antamaan jäljitys`;
+            return `${user} lisäsi tämän viestin raportointityökaluun`;
         },
         'reaction-$user-cast-a-vote': (user) => {
             return `${user} äänesti`;
@@ -239,7 +242,7 @@ module.exports = function(localeCode) {
             return `${user} kirjoittaa kommentin...`;
         },
         'reaction-$user-likes-this': (user) => {
-            return `${user} pitää tästä`;
+            return `${user} tykkää tästä`;
         },
 
         'role-filter-no-roles': 'Ei rooleja määritelty',
@@ -387,7 +390,7 @@ module.exports = function(localeCode) {
         'story-issue-status-closed': 'Suljettu',
         'story-issue-status-opened': 'Avoinna',
         'story-issue-status-reopened': 'Avattu uudelleen',
-        'story-like': 'Pidä',
+        'story-like': 'Tykkää',
         'story-markdown': 'Markdown',
         'story-milestone-due-date': 'Eräpäivä:',
         'story-milestone-start-date': 'Aloituspäivä:',
