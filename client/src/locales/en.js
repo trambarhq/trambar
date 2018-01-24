@@ -58,14 +58,14 @@ module.exports = function(localeCode) {
         'bookmark-$name1-and-$name2-recommend-this': (name) => {
             return [ name1, ' and ', name2, ' recommend this' ];
         },
-        'bookmark-recommendations': 'Recommendations',
-        'bookmark-you-bookmarked-it': 'You bookmarked this',
-        'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+        'bookmark-$you-bookmarked-it': 'You bookmarked this',
+        'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             return `You bookmarked this (and ${name} recommends it)`;
         },
-        'bookmark-you-bookmarked-it-and-$users-recommends-it': (users) => {
+        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
             return [ `You bookmarked this (and `, users, ` recommend it)` ];
         },
+        'bookmark-recommendations': 'Recommendations',
 
         'bottom-nav-bookmarks': 'Bookmarks',
         'bottom-nav-news': 'News',
@@ -99,12 +99,12 @@ module.exports = function(localeCode) {
         'media-next': 'Next',
         'media-previous': 'Previous',
 
+        'membership-request-$you-are-now-member': 'You are now a member in this project',
+        'membership-request-$you-have-requested-membership': 'You have requested membership in this project',
         'membership-request-cancel': 'Cancel',
         'membership-request-join': 'Join',
         'membership-request-ok': 'OK',
         'membership-request-proceed': 'Proceed',
-        'membership-request-you-are-now-member': 'You are now a member in this project',
-        'membership-request-you-have-requested-membership': 'You have requested membership in this project',
 
         'mobile-device-revoke': 'revoke',
         'mobile-device-revoke-are-you-sure': 'Are you sure you want to revoke authorization to this device?',
@@ -305,6 +305,73 @@ module.exports = function(localeCode) {
             var users = (count === 1) ? `${count} user` : `${count} users`;
             return `${users} reacted to this`;
         },
+        'story-$name-created-$branch-in-$repo': (user, branch, repo) => {
+            return `Created branch “${branch}” in project “${repo}”`;
+        },
+        'story-$name-created-$milestone': (user, name) => {
+            return `Created milestone “${name}”`;
+        },
+        'story-$name-created-$page': (user, page) => {
+            return `Created wiki page “${page}”`;
+        },
+        'story-$name-created-$repo': (user, name) => {
+            var text = `Created project`;
+            if (name) {
+                text += ` “${name}”`;
+            }
+            return text;
+        },
+        'story-$name-deleted-$page': (user, page) => {
+            return `Deleted wiki page “${page}”`;
+        },
+        'story-$name-joined-$repo': (user, repo) => {
+            var text = `Joined project`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-left-$repo': (user, repo) => {
+            var text = `Left project`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-merged-$branches-into-$branch-of-$repo': (user, branches, branch, repo) => {
+            var text = `Merged code`;
+            if (branches && branches.length > 0) {
+                var sources = branches.map((branch) => {
+                    return `“${branch}”`;
+                });
+                text += ` from ${sources.join(', ')}`;
+            }
+            text += ` into branch “${branch}”`;
+            if (repo) {
+                text += ` of project “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-opened-issue-$number-$title': (user, number, title) => {
+            var text = `Opened issue ${number}`;
+            if (title) {
+                text += `: ${title}`;
+            }
+            return text;
+        },
+        'story-$name-pushed-to-$branch-of-$repo': (user, branch, repo) => {
+            var text = `Pushed changes to branch “${branch}”`;
+            if (repo) {
+                text += ` of project “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+            return `Requested to merge branch “${branch1}” into “${branch2}”`;
+        },
+        'story-$name-updated-$page': (user, page) => {
+            return `Updated wiki page “${page}”`;
+        },
         'story-add-coauthor': 'Add coauthor',
         'story-add-remove-coauthor': 'Add/Remove coauthor',
         'story-audio': 'Audio',
@@ -321,39 +388,12 @@ module.exports = function(localeCode) {
         'story-comment': 'Comment',
         'story-drop-files-here': 'Drag and drop media files here',
         'story-file': 'File',
-        'story-issue-$user-opened-$number-$title': (user, number, title) => {
-            var text = `Opened issue ${number}`;
-            if (title) {
-                text += `: ${title}`;
-            }
-            return text;
-        },
         'story-issue-current-status': 'Current status:',
         'story-issue-status-closed': 'Closed',
         'story-issue-status-opened': 'Open',
         'story-issue-status-reopened': 'Reopened',
         'story-like': 'Like',
         'story-markdown': 'Markdown',
-        'story-member-joined-$repo': (repo) => {
-            var text = `Joined project`;
-            if (repo) {
-                text += ` “${repo}”`;
-            }
-            return text;
-        },
-        'story-member-left-$repo': (repo) => {
-            var text = `Left project`;
-            if (repo) {
-                text += ` “${repo}”`;
-            }
-            return text;
-        },
-        'story-merge-request-$branch1-into-$branch2': (branch1, branch2) => {
-            return `Requested to merge branch “${branch1}” into “${branch2}”`;
-        },
-        'story-milestone-created-$name': (name) => {
-            return `Created milestone “${name}”`;
-        },
         'story-milestone-due-date': 'Due date:',
         'story-milestone-start-date': 'Start date:',
         'story-options': 'Options',
@@ -370,9 +410,6 @@ module.exports = function(localeCode) {
             return `${lines} added`;
         },
         'story-push-components-changed': 'The following parts were changed:',
-        'story-push-created-$branch-in-$repo': (branch, repo) => {
-            return `Created branch “${branch}” in project “${repo}”`;
-        },
         'story-push-deleted-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} removed`;
@@ -381,30 +418,9 @@ module.exports = function(localeCode) {
             var lines = (count === 1) ? `1 line` : `${count} lines`;
             return `${lines} removed`;
         },
-        'story-push-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
-            var text = `Merged code`;
-            if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
-                    return `“${branch}”`;
-                });
-                text += ` from ${sources.join(', ')}`;
-            }
-            text += ` into branch “${branch}”`;
-            if (repo) {
-                text += ` of project “${repo}”`;
-            }
-            return text;
-        },
         'story-push-modified-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} modified`;
-        },
-        'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
-            var text = `Pushed changes to branch “${branch}”`;
-            if (repo) {
-                text += ` of project “${repo}”`;
-            }
-            return text;
         },
         'story-push-renamed-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
@@ -412,13 +428,6 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Remove yourself',
         'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
-        'story-repo-created-$name': (name) => {
-            var text = `Created project`;
-            if (name) {
-                text += ` “${name}”`;
-            }
-            return text;
-        },
         'story-status-transcoding-$progress': (progress) => {
             return `Transcoding (${progress}%)`;
         },
@@ -429,15 +438,6 @@ module.exports = function(localeCode) {
         'story-task-list': 'Task list',
         'story-video': 'Video',
         'story-vote-submit': 'Submit',
-        'story-wiki-created-page-with-$title': (title) => {
-            return `Created wiki page “${title}”`;
-        },
-        'story-wiki-deleted-page-with-$title': (title) => {
-            return `Deleted wiki page “${title}”`;
-        },
-        'story-wiki-updated-page-with-$title': (title) => {
-            return `Updated wiki page “${title}”`;
-        },
 
         'telephone-dialog-close': 'Close',
 
@@ -521,7 +521,7 @@ module.exports = function(localeCode) {
         'user-statistics-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
         },
-        'user-statistics-tooltip-$count-posts': (count) => {
+        'user-statistics-tooltip-$count-post': (count) => {
             return (count === 1) ? `1 post` : `${count} posts`;
         },
         'user-statistics-tooltip-$count-push': (count) => {

@@ -54,14 +54,14 @@ module.exports = function(localeCode) {
         'bookmark-$name1-and-$name2-recommend-this': (name) => {
             return `${name1} og ${name2} anbefaler dette`;
         },
-        'bookmark-recommendations': 'Anbefalinger',
-        'bookmark-you-bookmarked-it': 'Du har laget et bokmerke til dette',
-        'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+        'bookmark-$you-bookmarked-it': 'Du har laget et bokmerke til dette',
+        'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             return `Du har laget et bokmerke til dette (og ${name} anbefaler dette)`;
         },
-        'bookmark-you-bookmarked-it-and-$users-recommends-it': (users) => {
+        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
             return [ `Du har laget et bokmerke til dette (og `, users, `  anbefaler dette)` ];
         },
+        'bookmark-recommendations': 'Anbefalinger',
 
         'bottom-nav-bookmarks': 'Bokmerker',
         'bottom-nav-news': 'Nyheter',
@@ -95,12 +95,12 @@ module.exports = function(localeCode) {
         'media-next': 'Neste',
         'media-previous': 'Tidligere',
 
+        'membership-request-$you-are-now-member': 'Du er nå medlem i dette prosjektet',
+        'membership-request-$you-have-requested-membership': 'Du har bedt om medlemskap i dette prosjektet',
         'membership-request-cancel': 'Avbryt',
         'membership-request-join': 'Bli med',
         'membership-request-ok': 'OK',
         'membership-request-proceed': 'Fortsett',
-        'membership-request-you-are-now-member': 'Du er nå medlem i dette prosjektet',
-        'membership-request-you-have-requested-membership': 'Du har bedt om medlemskap i dette prosjektet',
 
         'mobile-device-revoke': 'tilbakekalle',
         'mobile-device-revoke-are-you-sure': 'Er du sikker på at du vil tilbakekalle autorisasjon til denne enheten?',
@@ -302,6 +302,69 @@ module.exports = function(localeCode) {
             var users = (count === 1) ? `${count} bruker` : `${count} brukere`;
             return `${users} reagerte på dette`;
         },
+        'story-$name-created-$branch-in-$repo': (user, branch, repo) => {
+            return `Skapte branchen “${branch}” i prosjektet “${repo}”`;
+        },
+        'story-$name-created-$milestone': (user, milestone) => {
+            return `Skapte milepæl “${milestone}”`;
+        },
+        'story-$name-created-$page': (user, page) => {
+            return `Opprettet wiki-siden “${page}”`;
+        },
+        'story-$name-created-$repo': (user, repo) => {
+            var text = `Opprettet prosjektet`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-deleted-$page': (user, page) => {
+            return `Fjernet wiki-siden “${page}”`;
+        },
+        'story-$name-joined-$repo': (user, repo) => {
+            var text = `Ble med i prosjektet`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-left-$repo': (user, repo) => {
+            var text = `Forlot prosjektet`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-merged-$branches-into-$branch-of-$repo': (user, branches, branch, repo) => {
+            var text = `Merget kode`;
+            if (branches && branches.length > 0) {
+                var sources = branches.map((branch) => {
+                    return `“${branch}”`;
+                });
+                text += ` fra ${sources.join(', ')}`;
+            }
+            text += ` inn i branchen “${branch}”`;
+            if (repo) {
+                text += ` av prosjektet “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-opened-issue-$number-$title': (user, number, title) => {
+            return `Åpnet problemet ${number}: ${title}`;
+        },
+        'story-$name-pushed-to-$branch-of-$repo': (user, branch, repo) => {
+            var text = `Pushet forandringer til branchen “${branch}”`;
+            if (repo) {
+                text += ` av prosjektet “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+            return `Bedt om å fusjonere branchen “${branch1}” inn “${branch2}`;
+        },
+        'story-$name-updated-$page': (user, page) => {
+            return `Oppdatert wiki-siden “${page}”`;
+        },
         'story-add-coauthor': 'Legg til medforfatter',
         'story-add-remove-coauthor': 'Legg til/fjern medforfatter',
         'story-audio': 'Audio',
@@ -318,35 +381,12 @@ module.exports = function(localeCode) {
         'story-comment': 'Kommentar',
         'story-drop-files-here': 'Dra og slipp mediefiler her',
         'story-file': 'Fil',
-        'story-issue-$user-opened-$number-$title': (user, number, title) => {
-            return `Åpnet problemet ${number}: ${title}`;
-        },
         'story-issue-current-status': 'Nåværende status:',
         'story-issue-status-closed': 'Lukket',
         'story-issue-status-opened': 'Åpen',
         'story-issue-status-reopened': 'Gjenåpnet',
         'story-like': 'Liker',
         'story-markdown': 'Markdown',
-        'story-member-joined-$repo': (repo) => {
-            var text = `Ble med i prosjektet`;
-            if (repo) {
-                text += ` “${repo}”`;
-            }
-            return text;
-        },
-        'story-member-left-$repo': (repo) => {
-            var text = `Forlot prosjektet`;
-            if (repo) {
-                text += ` “${repo}”`;
-            }
-            return text;
-        },
-        'story-merge-request-$branch1-into-$branch2': (branch1, branch2) => {
-            return `Bedt om å fusjonere branchen “${branch1}” inn “${branch2}`;
-        },
-        'story-milestone-created-$name': (name) => {
-            return `Skapte milepæl “${name}”`;
-        },
         'story-milestone-due-date': 'Forfallsdato:',
         'story-milestone-start-date': 'Startdato:',
         'story-options': 'Alternativer',
@@ -363,9 +403,6 @@ module.exports = function(localeCode) {
             return `${lines} lagt til`;
         },
         'story-push-components-changed': 'Følgende deler ble endret:',
-        'story-push-created-$branch-in-$repo': (branch, repo) => {
-            return `Skapte branchen “${branch}” i prosjektet “${repo}”`;
-        },
         'story-push-deleted-$count-files': (count) => {
             var files = (count === 1) ? `1 fil` : `${count} filer`;
             return `${files} fjernet`;
@@ -374,30 +411,9 @@ module.exports = function(localeCode) {
             var lines = (count === 1) ? `1 linje` : `${count} linjer`;
             return `${lines} fjernet`;
         },
-        'story-push-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
-            var text = `Merget kode`;
-            if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
-                    return `“${branch}”`;
-                });
-                text += ` fra ${sources.join(', ')}`;
-            }
-            text += ` inn i branchen “${branch}”`;
-            if (repo) {
-                text += ` av prosjektet “${repo}”`;
-            }
-            return text;
-        },
         'story-push-modified-$count-files': (count) => {
             var files = (count === 1) ? `1 fil` : `${count} filer`;
             return `${files} endret`;
-        },
-        'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
-            var text = `Pushet forandringer til branchen “${branch}”`;
-            if (repo) {
-                text += ` av prosjektet “${repo}”`;
-            }
-            return text;
         },
         'story-push-renamed-$count-files': (count) => {
             var files = (count === 1) ? `1 fil` : `${count} filer`;
@@ -405,13 +421,6 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Fjern deg selv',
         'story-remove-yourself-are-you-sure': 'Er du sikker på at du vil fjerne deg selv som medforfatter?',
-        'story-repo-created-$name': (name) => {
-            var text = `Opprettet prosjektet`;
-            if (name) {
-                text += ` “${name}”`;
-            }
-            return text;
-        },
         'story-status-transcoding-$progress': (progress) => {
             return `transkoding (${progress}%)`;
         },
@@ -422,15 +431,6 @@ module.exports = function(localeCode) {
         'story-task-list': 'Oppgaveliste',
         'story-video': 'Video',
         'story-vote-submit': 'Sende inn',
-        'story-wiki-created-page-with-$title': (title) => {
-            return `Opprettet wiki-siden “${title}”`;
-        },
-        'story-wiki-deleted-page-with-$title': (title) => {
-            return `Fjernet wiki-siden “${title}”`;
-        },
-        'story-wiki-updated-page-with-$title': (title) => {
-            return `Oppdatert wiki-siden “${title}”`;
-        },
 
         'telephone-dialog-close': 'Lukk',
 
@@ -514,14 +514,14 @@ module.exports = function(localeCode) {
         'user-statistics-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 Milepæl` : `${count} milepæler`;
         },
+        'user-statistics-tooltip-$count-post': (count) => {
+            return (count === 1) ? `1 innlegg` : `${count} innlegg`;
+        },
         'user-statistics-tooltip-$count-push': (count) => {
             return (count === 1) ? `1 push` : `${count} pusher`;
         },
         'user-statistics-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 repo endring` : `${count} repo endringer`;
-        },
-        'user-statistics-tooltip-$count-story': (count) => {
-            return (count === 1) ? `1 innlegg` : `${count} innlegg`;
         },
         'user-statistics-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 undersøkelse` : `${count} undersøkelser`;

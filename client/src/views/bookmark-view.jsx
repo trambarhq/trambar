@@ -47,13 +47,15 @@ module.exports = React.createClass({
         });
         var contents;
         if (isOwner) {
+            var user = this.props.currentUser;
+            var you = n(user.details.name, user.details.gender);
             switch(others.length) {
                 case 0:
-                    contents = t('bookmark-you-bookmarked-it');
+                    contents = t('bookmark-$you-bookmarked-it', you);
                     break;
                 case 1:
                     var name = n(others[0].details.name, others[0].details.gender);
-                    contents = t('bookmark-you-bookmarked-it-and-$name-recommends-it', name);
+                    contents = t('bookmark-$you-bookmarked-it-and-$name-recommends-it', you, name);
                     break;
                 default:
                     var props = {
@@ -64,7 +66,7 @@ module.exports = React.createClass({
                         theme: this.props.theme,
                     };
                     var users = <MultipleUserNames key={1} {...props} />;
-                    contents = t('bookmark-you-bookmarked-it-and-$users-recommends-it', users, others.length);
+                    contents = t('bookmark-$you-bookmarked-it-and-$users-recommends-it', you, users, others.length);
             }
         } else {
             switch (others.length) {

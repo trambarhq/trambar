@@ -87,13 +87,16 @@ module.exports = React.createClass({
      */
     renderMessage: function() {
         var t = this.props.locale.translate;
+        var n = this.props.locale.name;
+        var user = this.props.currentUser;
+        var you = (user) ? n(user.details.name, user.details.gender) : null;
         var contents;
         if (this.props.member) {
             contents = (
                 <div className="message accepted">
                     <i className="fa fa-user-circle-o" />
                     {' '}
-                    {t('membership-request-you-are-now-member')}
+                    {t('membership-request-$you-are-now-member', you)}
                 </div>
             );
         } else if (this.props.pendingMember) {
@@ -101,7 +104,7 @@ module.exports = React.createClass({
                 <div className="message requested">
                     <i className="fa fa-clock-o" />
                     {' '}
-                    {t('membership-request-you-have-requested-membership')}
+                    {t('membership-request-$you-have-requested-membership', you)}
                 </div>
             );
         };

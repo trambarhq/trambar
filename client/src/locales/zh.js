@@ -62,11 +62,11 @@ var traditionalPhrases = {
         return `${name1}和${name2}推薦這個`;
     },
     'bookmark-recommendations': '推薦',
-    'bookmark-you-bookmarked-it': '你加了這個書籤',
-    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+    'bookmark-$you-bookmarked-it': '你加了這個書籤',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (name) => {
         return `你加了這個書籤（${name}推薦）`;
     },
-    'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
         return [ `你加了這個書籤（`, users, `推薦）` ];
     },
 
@@ -327,11 +327,11 @@ var cantonesePhrases = {
         return `${name1}同${name2}推薦呢個`;
     },
     'bookmark-recommendations': '推薦',
-    'bookmark-you-bookmarked-it': '你加咗呢個書籤',
-    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+    'bookmark-$you-bookmarked-it': '你加咗呢個書籤',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加咗呢個書籤（${name}推薦）`;
     },
-    'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, name, users, count) => {
         return [ `你加咗呢個書籤（`, users, `推薦）` ];
     },
 

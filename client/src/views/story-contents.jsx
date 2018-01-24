@@ -65,6 +65,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return the name the lead author
+     *
+     * @return {String}
+     */
+    getAuthorName: function() {
+        var n = this.props.locale.name;
+        var author = _.first(this.props.authors);
+        var name = (author) ? n(author.details.name, author.details.gender) : '';
+        return name;
+    },
+
+    /**
      * Update state when props changes
      *
      * @param  {Object} nextProps
@@ -294,6 +306,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var action = story.details.action;
         var repo = this.props.repo;
         var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
@@ -302,7 +315,7 @@ module.exports = React.createClass({
             <div className="text repo">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-repo-${action}-$name`, repoName)}
+                        {t(`story-$name-${action}-$repo`, name, repoName)}
                     </a>
                 </p>
             </div>
@@ -318,6 +331,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var action = story.details.action;
         var repo = this.props.repo;
         var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
@@ -326,7 +340,7 @@ module.exports = React.createClass({
             <div className="text member">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-member-${action}-$repo`, repoName)}
+                        {t(`story-$name-${action}-$repo`, name, repoName)}
                     </a>
                 </p>
             </div>
@@ -341,16 +355,13 @@ module.exports = React.createClass({
     renderIssueText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var n = this.props.locale.name;
-        var user = this.props.currentUser;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var title = story.details.title;
         var repo = this.props.repo;
-        var author = _.first(this.props.authors);
-        var name = (author) ? n(author.details.name, author.details.gender) : '';
         var url, target;
         var issueLink = LinkUtils.find(this.props.story, { relation: 'issue' });
-        if (UserUtils.canAccessRepo(user, repo)) {
+        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             if (issueLink) {
                 var issueNumber = issueLink.issue.number;
                 url = `${repo.details.web_url}/issues/${issueNumber}`;
@@ -362,7 +373,7 @@ module.exports = React.createClass({
             <div className="text issue">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-issue-$user-opened-$number-$title`, name, number, p(title))}
+                        {t(`story-$name-opened-issue-$number-$title`, name, number, p(title))}
                     </a>
                 </p>
                 {this.renderStatus()}
@@ -379,14 +390,14 @@ module.exports = React.createClass({
     renderMilestoneText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var user = this.props.currentUser;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var repo = this.props.repo;
         var title = story.details.title;
         var dueDate = formatDate(story.details.due_date);
         var startDate = formatDate(story.details.start_date) || '-';
         var url;
-        if (UserUtils.canAccessRepo(user, repo)) {
+        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             var milestoneLink = LinkUtils.find(this.props.story, { relation: 'milestone' });
             if (milestoneLink) {
                 url = `${repo.details.web_url}/milestones/${milestoneLink.milestone.id}`;
@@ -396,7 +407,7 @@ module.exports = React.createClass({
             <div className="text milestone">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-milestone-created-$name`, p(title))}
+                        {t(`story-$name-created-$milestone`, name, p(title))}
                     </a>
                 </p>
                 <p className="start-date">
@@ -421,13 +432,13 @@ module.exports = React.createClass({
     renderMergeRequestText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var user = this.props.currentUser;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var repo = this.props.repo;
         var branch1 = _.get(story, 'details.source_branch');
         var branch2 = _.get(story, 'details.branch');
         var url;
-        if (UserUtils.canAccessRepo(user, repo)) {
+        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             var mergeRequestLink = LinkUtils.find(this.props.story, { relation: 'merge_request' });
             if (mergeRequestLink) {
                 url = `${repo.details.web_url}/merge_requests/${mergeRequestLink.merge_request.id}`;
@@ -437,7 +448,7 @@ module.exports = React.createClass({
             <div className="text merge-request">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-merge-request-$branch1-into-$branch2`, branch1, branch2)}
+                        {t(`story-$name-requested-merge-$branch1-into-$branch2`, name, branch1, branch2)}
                     </a>
                 </p>
                 {this.renderStatus()}
@@ -454,6 +465,7 @@ module.exports = React.createClass({
     renderWikiText: function() {
         var t = this.props.locale.translate;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var url = story.details.url;
         var title = _.capitalize(story.details.title);
         var action = story.details.action + 'd';
@@ -464,7 +476,7 @@ module.exports = React.createClass({
             <div className="text wiki">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-wiki-${action}-page-with-$title`, title)}
+                        {t(`story-$name-${action}-$page`, name, title)}
                     </a>
                 </p>
             </div>
@@ -479,8 +491,8 @@ module.exports = React.createClass({
     renderPushText: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
-        var user = this.props.currentUser;
         var story = this.props.story;
+        var name = this.getAuthorName();
         var files = _.get(this.props.story, 'details.files');
         var lines = _.get(this.props.story, 'details.lines');
         var commits = _.get(this.props.story, 'details.commit_ids.length');
@@ -510,7 +522,7 @@ module.exports = React.createClass({
             }
         }, []);
         var url;
-        if (UserUtils.canAccessRepo(user, repo)) {
+        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             if (story.type === 'push' || story.type === 'merge') {
                 var commitBefore = story.details.commit_before;
                 var commitAfter = story.details.commit_after;
@@ -525,12 +537,12 @@ module.exports = React.createClass({
         }
         var text;
         if (story.type === 'push') {
-            text = t(`story-push-pushed-to-$branch-of-$repo`, branch, repoName);
+            text = t(`story-$name-pushed-to-$branch-of-$repo`, name, branch, repoName);
         } else if (story.type === 'merge') {
             var sourceBranches = story.details.source_branches;
-            text = t(`story-push-merged-$branches-into-$branch-of-$repo`, sourceBranches, branch, repoName);
+            text = t(`story-$name-merged-$branches-into-$branch-of-$repo`, name, sourceBranches, branch, repoName);
         } else if (story.type === 'branch') {
-            text = t(`story-push-created-$branch-in-$repo`, branch, repoName);
+            text = t(`story-$name-created-$branch-in-$repo`, name, branch, repoName);
         }
         return (
             <div className="text push">
