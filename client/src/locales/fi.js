@@ -272,7 +272,7 @@ module.exports = function(localeCode) {
         'settings-web-alert': 'Web-hälytys',
 
         'social-network-github': 'GitHub-profiilin URL-osoite',
-        'social-network-gitlab': 'GitLub-profiilin URL-osoite',
+        'social-network-gitlab': 'GitLab-profiilin URL-osoite',
         'social-network-ichat': 'iChat-käyttäjänimi',
         'social-network-linkedin': 'LinkedIn-profiilin URL-osoite',
         'social-network-skype': 'Skype-käyttäjänimi',
@@ -504,7 +504,7 @@ module.exports = function(localeCode) {
         'user-statistics-legend-wiki': 'Wiki-muokkaukset',
         'user-statistics-today': 'Tänään',
         'user-statistics-tooltip-$count-branch': (count) => {
-            return (count === 1) ? `1 branch` : `${count} branchia`;
+            return (count === 1) ? `1 branchi` : `${count} branchia`;
         },
         'user-statistics-tooltip-$count-issue': (count) => {
             return (count === 1) ? `1 asia` : `${count} asiaa`;
