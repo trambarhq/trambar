@@ -578,7 +578,6 @@ module.exports = function(localeCode) {
         'validation-illegal-project-name': 'Prosjektidentifikator kan ikke være "global" eller "admin"',
         'validation-password-for-admin-only': 'Bare administratorer kan logge på med passord',
         'validation-required': 'Påkrevd',
-        'validation-required-for-oauth': 'Påkrevd når OAuth brukes',
 
         'welcome': 'Velkommen!',
     };

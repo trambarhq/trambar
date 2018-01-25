@@ -590,7 +590,6 @@ module.exports = function(localeCode) {
         'validation-illegal-project-name': 'Project identifier cannot be "global" or "admin"',
         'validation-password-for-admin-only': 'Only administrators can sign in using password',
         'validation-required': 'Required',
-        'validation-required-for-oauth': 'Required when OAuth is used',
 
         'welcome': 'Welcome!',
     };
