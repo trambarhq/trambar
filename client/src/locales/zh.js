@@ -83,14 +83,14 @@ var traditionalPhrases = {
     'bookmark-$name1-and-$name2-recommend-this': (name) => {
         return [ name1, '和', name2, '推薦這個' ];
     },
-    'bookmark-recommendations': '推薦',
-    'bookmark-you-bookmarked-it': '你加了這個書籤',
-    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+    'bookmark-$you-bookmarked-it': '你加了這個書籤',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加了這個書籤（${name}推薦）`;
     },
-    'bookmark-you-bookmarked-it-and-$users-recommends-it': (users) => {
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
         return [ `你加了這個書籤（`, users, `推薦）` ];
     },
+    'bookmark-recommendations': '推薦',
 
     'bottom-nav-bookmarks': '書籤',
     'bottom-nav-news': '信息',
@@ -125,15 +125,15 @@ var traditionalPhrases = {
     'media-next': '下一個',
     'media-previous': '上一個',
 
+    'membership-request-$you-are-now-member': '你現在是這個項目的成員',
+    'membership-request-$you-have-requested-membership': '你要求成為這個項目的成員',
     'membership-request-cancel': '取消',
     'membership-request-join': '加入',
     'membership-request-ok': '完成',
     'membership-request-proceed': '繼續',
-    'membership-request-you-are-now-member': '你現在是這個項目的成員',
-    'membership-request-you-have-requested-membership': '你要求成為這個項目的成員',
 
     'mobile-device-revoke': '吊銷',
-    'mobile-device-revoke-are-you-sure': '您確定要吊銷此裝置的授權嗎？',
+    'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置的授權嗎？',
 
     'mobile-setup-address': '服務器地址',
     'mobile-setup-close': '關閉',
@@ -197,7 +197,7 @@ var traditionalPhrases = {
     'notification-option-survey': '當有人發布調查',
     'notification-option-task-completion': '當有人完成你列表上的任務',
     'notification-option-vote': '當有人回答你的調查',
-    'notification-option-web-session': '當您用網絡瀏覽器查看這個網站時',
+    'notification-option-web-session': '當你用網絡瀏覽器查看這個網站時',
 
     'option-add-bookmark': '加書籤',
     'option-add-issue': '加問題入跟蹤管理系統',
@@ -334,16 +334,16 @@ var traditionalPhrases = {
         var num = cardinalT(count);
         return `${num}個人有反應`;
     },
-    'story-$user-created-$branch-in-$repo': (user, branch, repo) => {
+    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》數據庫中創建了《${branch}》分支`;
     },
-    'story-$user-created-$milestone': (user, milestone) => {
+    'story-$name-created-$milestone': (name, milestone) => {
         return `建立了《${milestone}》里程碑`;
     },
-    'story-$user-created-$page': (page) => {
+    'story-$name-created-$page': (name, page) => {
         return `建立了wiki頁面《${page}》”`;
     },
-    'story-$user-created-$repo': (repo) => {
+    'story-$name-created-$repo': (name, repo) => {
         var text = `建立了`;
         if (repo) {
             text += `《${repo}》`;
@@ -351,10 +351,10 @@ var traditionalPhrases = {
         text += `數據庫`;
         return text;
     },
-    'story-$user-deleted-$page': (page) => {
+    'story-$name-deleted-$page': (name, page) => {
         return `刪除了wiki頁面《${page}》”`;
     },
-    'story-$user-joined-$repo': (user, repo) => {
+    'story-$name-joined-$repo': (name, repo) => {
         var text = `加入了`;
         if (repo) {
             text += `《${repo}》`;
@@ -362,7 +362,7 @@ var traditionalPhrases = {
         text += `數據庫`;
         return text;
     },
-    'story-$user-left-$repo': (user, repo) => {
+    'story-$name-left-$repo': (name, repo) => {
         var text = `離開了`;
         if (repo) {
             text += `《${repo}》`;
@@ -370,7 +370,7 @@ var traditionalPhrases = {
         text += `數據庫`;
         return text;
     },
-    'story-$user-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
+    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
         var text = `將`;
         if (branches && branches.length > 0) {
             var sources = branches.map((branch) => {
@@ -384,14 +384,14 @@ var traditionalPhrases = {
         text += `《${branch}》分支`;
         return text;
     },
-    'story-$user-opened-issue-$number-$title': (user, number, title) => {
+    'story-$name-opened-issue-$number-$title': (name, number, title) => {
         var text = `開了問題${number}`;
         if (title) {
             text += `： ${title}`;
         }
         return text;
     },
-    'story-$user-pushed-to-$branch-of-$repo': (branch, repo) => {
+    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
         var text = `推了一些代碼修改入到`
         if (repo) {
             text += `《${repo}》數據庫的`;
@@ -399,10 +399,10 @@ var traditionalPhrases = {
         text += `《${branch}》分支`;
         return text;
     },
-    'story-$user-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
         return `要求將《${branch1}》分支合併到《${branch2}》分支`;
     },
-    'story-$user-updated-$page': (page) => {
+    'story-$name-updated-$page': (name, page) => {
         return `修正了wiki頁面《${page}》`;
     },
     'story-add-coauthor': '加合著者',
@@ -650,14 +650,14 @@ var simplifiedPhrases = {
     'bookmark-$name1-and-$name2-recommend-this': (name) => {
         return [ name1, '和', name2, '推荐这个' ];
     },
-    'bookmark-recommendations': '推荐',
-    'bookmark-you-bookmarked-it': '你加了这个书签',
-    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+    'bookmark-$you-bookmarked-it': '你加了这个书签',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加了这个书签（${name}推荐）`;
     },
-    'bookmark-you-bookmarked-it-and-$users-recommends-it': (users) => {
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
         return [ `你加了这个书签（`, users, `推荐）` ];
     },
+    'bookmark-recommendations': '推荐',
 
     'bottom-nav-bookmarks': '书签',
     'bottom-nav-news': '信息',
@@ -692,15 +692,15 @@ var simplifiedPhrases = {
     'media-next': '下一个',
     'media-previous': '上一个',
 
+    'membership-request-$you-are-now-member': '你现在是这个项目的成员',
+    'membership-request-$you-have-requested-membership': '你要求成为这个项目的成员',
     'membership-request-cancel': '取消',
     'membership-request-join': '加入',
     'membership-request-ok': '完成',
     'membership-request-proceed': '继续',
-    'membership-request-you-are-now-member': '你现在是这个项目的成员',
-    'membership-request-you-have-requested-membership': '你要求成为这个项目的成员',
 
     'mobile-device-revoke': '吊销',
-    'mobile-device-revoke-are-you-sure': '您确定要吊销此装置的授权吗？',
+    'mobile-device-revoke-are-you-sure': '你确定要吊销此装置的授权吗？',
 
     'mobile-setup-address': '服务器地址',
     'mobile-setup-close': '关闭',
@@ -764,7 +764,7 @@ var simplifiedPhrases = {
     'notification-option-survey': '当有人发布调查',
     'notification-option-task-completion': '当有人完成你列表上的任务',
     'notification-option-vote': '当有人回答你的调查',
-    'notification-option-web-session': '当您用网络浏览器查看这个网站时',
+    'notification-option-web-session': '当你用网络浏览器查看这个网站时',
 
     'option-add-bookmark': '加书签',
     'option-add-issue': '加问题入跟踪管理系统',
@@ -901,16 +901,16 @@ var simplifiedPhrases = {
         var num = cardinalS(count);
         return `${num}个人有反应`;
     },
-    'story-$user-created-$branch-in-$repo': (user, branch, repo) => {
+    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》数据库中创建了《${branch}》分支`;
     },
-    'story-$user-created-$milestone': (user, milestone) => {
+    'story-$name-created-$milestone': (name, milestone) => {
         return `建立了《${milestone}》里程碑`;
     },
-    'story-$user-created-$page': (page) => {
+    'story-$name-created-$page': (name, page) => {
         return `建立了wiki页面《${page}》”`;
     },
-    'story-$user-created-$repo': (repo) => {
+    'story-$name-created-$repo': (name, repo) => {
         var text = `建立了`;
         if (repo) {
             text += `《${repo}》`;
@@ -918,10 +918,10 @@ var simplifiedPhrases = {
         text += `数据库`;
         return text;
     },
-    'story-$user-deleted-$page': (page) => {
+    'story-$name-deleted-$page': (name, page) => {
         return `删除了wiki页面《${page}》”`;
     },
-    'story-$user-joined-$repo': (user, repo) => {
+    'story-$name-joined-$repo': (name, repo) => {
         var text = `加入了`;
         if (repo) {
             text += `《${repo}》`;
@@ -929,7 +929,7 @@ var simplifiedPhrases = {
         text += `数据库`;
         return text;
     },
-    'story-$user-left-$repo': (user, repo) => {
+    'story-$name-left-$repo': (name, repo) => {
         var text = `离开了`;
         if (repo) {
             text += `《${repo}》`;
@@ -937,7 +937,7 @@ var simplifiedPhrases = {
         text += `数据库`;
         return text;
     },
-    'story-$user-merged-$branches-into-$branch-of-$repo': (branches, branch, repo) => {
+    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
         var text = `将`;
         if (branches && branches.length > 0) {
             var sources = branches.map((branch) => {
@@ -951,14 +951,14 @@ var simplifiedPhrases = {
         text += `《${branch}》分支`;
         return text;
     },
-    'story-$user-opened-issue-$number-$title': (user, number, title) => {
+    'story-$name-opened-issue-$number-$title': (name, number, title) => {
         var text = `开了问题${number}`;
         if (title) {
             text += `： ${title}`;
         }
         return text;
     },
-    'story-$user-pushed-to-$branch-of-$repo': (branch, repo) => {
+    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
         var text = `推了一些代码修改入到`
         if (repo) {
             text += `《${repo}》数据库的`;
@@ -966,10 +966,10 @@ var simplifiedPhrases = {
         text += `《${branch}》分支`;
         return text;
     },
-    'story-$user-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
         return `要求将《${branch1}》分支合并到《${branch2}》分支`;
     },
-    'story-$user-updated-$page': (page) => {
+    'story-$name-updated-$page': (name, page) => {
         return `修正了wiki页面《${page}》`;
     },
     'story-add-coauthor': '加合著者',
