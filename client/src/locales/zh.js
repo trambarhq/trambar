@@ -1,5 +1,6 @@
 require('moment/locale/zh-cn');
 require('moment/locale/zh-hk');
+require('moment/locale/zh-tw');
 
 module.exports = function(localeCode) {
     var cantonese = false;
@@ -95,7 +96,7 @@ var traditionalPhrases = {
     'bottom-nav-bookmarks': '書籤',
     'bottom-nav-news': '信息',
     'bottom-nav-notifications': '通知',
-    'bottom-nav-people': '人們',
+    'bottom-nav-people': '人員',
     'bottom-nav-settings': '設置',
 
     'confirmation-cancel': '取消',
@@ -205,8 +206,8 @@ var traditionalPhrases = {
     'option-bump-post': '推動故事',
     'option-edit-comment': '編輯回應',
     'option-edit-post': '編輯貼文',
-    'option-hide-comment': '非會員看不到',
-    'option-hide-post': '非會員看不到',
+    'option-hide-comment': '非成員看不到',
+    'option-hide-post': '非成員看不到',
     'option-remove-comment': '刪除回應',
     'option-remove-post': '刪除故事',
     'option-send-bookmarks': '發送書籤給其他人',
@@ -528,6 +529,7 @@ var traditionalPhrases = {
 
     'user-statistics-legend-branch': '分支',
     'user-statistics-legend-issue': '問題',
+    'user-statistics-legend-member': '成員變更',
     'user-statistics-legend-merge': '代碼合併',
     'user-statistics-legend-merge-request': '合併請求',
     'user-statistics-legend-milestone': '里程碑',
@@ -548,7 +550,7 @@ var traditionalPhrases = {
     },
     'user-statistics-tooltip-$count-member': (count) => {
         var num = cardinalT(count);
-        return `${num}個會員變更`;
+        return `${num}個成員變更`;
     },
     'user-statistics-tooltip-$count-merge': (count) => {
         var num = cardinalT(count);
@@ -662,7 +664,7 @@ var simplifiedPhrases = {
     'bottom-nav-bookmarks': '书签',
     'bottom-nav-news': '信息',
     'bottom-nav-notifications': '通知',
-    'bottom-nav-people': '人们',
+    'bottom-nav-people': '人员',
     'bottom-nav-settings': '设置',
 
     'confirmation-cancel': '取消',
@@ -772,8 +774,8 @@ var simplifiedPhrases = {
     'option-bump-post': '推动故事',
     'option-edit-comment': '编辑回应',
     'option-edit-post': '编辑贴文',
-    'option-hide-comment': '非会员看不到',
-    'option-hide-post': '非会员看不到',
+    'option-hide-comment': '非成员看不到',
+    'option-hide-post': '非成员看不到',
     'option-remove-comment': '删除回应',
     'option-remove-post': '删除故事',
     'option-send-bookmarks': '发送书签给其他人',
@@ -1095,6 +1097,7 @@ var simplifiedPhrases = {
 
     'user-statistics-legend-branch': '分支',
     'user-statistics-legend-issue': '问题',
+    'user-statistics-legend-member': '成员变更',
     'user-statistics-legend-merge': '代码合并',
     'user-statistics-legend-merge-request': '合并请求',
     'user-statistics-legend-milestone': '里程碑',
@@ -1115,7 +1118,7 @@ var simplifiedPhrases = {
     },
     'user-statistics-tooltip-$count-member': (count) => {
         var num = cardinalS(count);
-        return `${num}个会员变更`;
+        return `${num}个成员变更`;
     },
     'user-statistics-tooltip-$count-merge': (count) => {
         var num = cardinalS(count);
@@ -1239,8 +1242,8 @@ var cantonesePhrases = {
     'notification-option-web-session': '當你用緊網絡瀏覽器查嘞睇呢個網站',
 
     'option-edit-post': '編輯帖子',
-    'option-hide-comment': '非會員睇唔到',
-    'option-hide-post': '非會員睇唔到',
+    'option-hide-comment': '非成員睇唔到',
+    'option-hide-post': '非成員睇唔到',
     'option-send-bookmarks': '發送書籤俾其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
         var num = cardinalT(count);
