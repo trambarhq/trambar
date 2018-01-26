@@ -41,7 +41,8 @@ module.exports = React.createClass({
             image: ImageView,
         });
         return {
-            clippingRect: this.props.clippingRect
+            clippingRect: this.props.clippingRect,
+            hasFocus: false,
         };
     },
 
@@ -73,8 +74,12 @@ module.exports = React.createClass({
         var containerProps = {
             ref: setters.container,
             className: 'image-cropper',
+            tabIndex: 0,
             onMouseDown: this.handleMouseDown,
-            onWheel: this.handleMouseWheel,
+            onFocus: this.handleFocus,
+            onBlur: this.handleBlur,
+            onWheel: (this.state.hasFocus) ? this.handleMouseWheel : null,
+            onKeyDown: (this.state.hasFocus) ? this.handleKeyDown : null,
         };
         var imageProps = {
             ref: setters.image,
@@ -90,10 +95,16 @@ module.exports = React.createClass({
     },
 
     /**
-     * Set up Hammer.js once the node is created
+     * Add Hammer.js touch handling to container div
      */
-    componentDidMount: function() {
+    activateTouchHandling: function() {
         var container = this.components.container;
+        if (!container) {
+            return;
+        }
+        if (this.hammer) {
+            return;
+        }
         this.hammer = new Hammer(container);
         var pan = this.hammer.get('pan').set({
             direction: Hammer.DIRECTION_ALL,
@@ -112,6 +123,40 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove Hammer.js touch handling from container div
+     */
+    deactivateTouchHandling: function() {
+        if (!this.hammer) {
+            return;
+        }
+        this.hammer.off('panstart', this.handlePanStart);
+        this.hammer.off('panmove', this.handlePanMove);
+        this.hammer.off('panend', this.handlePanEnd);
+        this.hammer.off('pinchstart', this.handlePinchStart);
+        this.hammer.off('pinchmove', this.handlePinchMove);
+        this.hammer.off('pinchend', this.handlePinchEnd)
+        this.hammer.stop(true);
+        // Hammer.js doesn't clear this
+        this.hammer.element.style.touchAction = '';
+        this.hammer.destroy();
+        this.hammer = null;
+    },
+
+    /**
+     * Activate touch handling when container div gains focus
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate: function(prevProps, prevState) {
+        if (!prevState.hasFocus && this.state.hasFocus) {
+            this.activateTouchHandling();
+        } else if (prevState.hasFocus && !this.state.hasFocus) {
+            this.deactivateTouchHandling();
+        }
+    },
+
+    /**
      * Remove handler and timeout function on unmount
      */
     componentWillUnmount: function() {
@@ -122,14 +167,7 @@ module.exports = React.createClass({
             clearTimeout(this.zoomChangeTimeout);
             this.triggerChangeEvent(this.state.clippingRect);
         }
-        if (this.hammer) {
-            this.hammer.off('panstart', this.handlePanStart);
-            this.hammer.off('panmove', this.handlePanMove);
-            this.hammer.off('panend', this.handlePanEnd);
-            this.hammer.off('pinchstart', this.handlePinchStart);
-            this.hammer.off('pinchmove', this.handlePinchMove);
-            this.hammer.off('pinchend', this.handlePinchEnd)
-        }
+        this.deactivateTouchHandling();
     },
 
     /**
@@ -148,6 +186,24 @@ module.exports = React.createClass({
                 rect: clippingRect,
             });
         }
+    },
+
+    /**
+     * Called when container div gains focus
+     *
+     * @param  {Event} evt
+     */
+    handleFocus: function(evt) {
+        this.setState({ hasFocus: true });
+    },
+
+    /**
+     * Called when container div loses focus
+     *
+     * @param  {Event} evt
+     */
+    handleBlur: function(evt) {
+        this.setState({ hasFocus: false });
     },
 
     /**
@@ -445,6 +501,18 @@ module.exports = React.createClass({
         }
         this.triggerChangeEvent(this.state.clippingRect);
         this.pinchStart = null;
+    },
+
+    /**
+     * Called when user press a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyDown: function(evt) {
+        if (evt.keyCode === 27) {
+            var container = this.components.container;
+            container.blur();
+        }
     },
 });
 
