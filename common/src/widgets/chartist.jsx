@@ -4,7 +4,7 @@ var ReactDOM = require('react-dom');
 var Chartist = require('chartist');
 var ComponentRefs = require('utils/component-refs');
 
-require('./chartist.scss');
+require('widgets/chartist.scss');
 
 module.exports = React.createClass({
     displayName: 'Chartist',
