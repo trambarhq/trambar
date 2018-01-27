@@ -1,13 +1,14 @@
 require('moment/locale/zh-cn');
 require('moment/locale/zh-hk');
+require('moment/locale/zh-tw');
 
-module.exports = function(languageCode) {
+module.exports = function(localeCode) {
     var cantonese = false;
     var traditional = false;
-    if (/\-(mo|hk)$/.test(languageCode)) {
+    if (/\-(mo|hk)$/.test(localeCode)) {
         cantonese = true;
         traditional = true;
-    } else if (/\-(tw)$/.test(languageCode)) {
+    } else if (/\-(tw)$/.test(localeCode)) {
         traditional = true;
     }
     if (traditional) {
@@ -31,9 +32,30 @@ var traditionalPhrases = {
     'action-contact-by-phone': '用電話聯繫',
     'action-contact-by-skype': '用Skype聯繫',
     'action-contact-by-slack': '用Slack聯繫',
-    'action-view-github-page': '查看Github個人頁面',
+    'action-contact-by-twitter': '用Twitter聯繫',
+    'action-view-github-page': '查看GitHub個人頁面',
     'action-view-gitlab-page': '查看GitLab個人頁面',
+    'action-view-linkedin-page': '查看LinkedIn個人頁面',
     'action-view-stackoverflow-page': '查看StackOverflow個人頁面',
+
+    'activation-address': '服務器地址',
+    'activation-cancel': '取消',
+    'activation-code': '授權碼',
+    'activation-ok': '完成',
+    'activation-schema': '項目',
+
+    'alert-$count-new-bookmarks': (count) => {
+        var num = cardinalT(count);
+        return `${num}張新書籤`;
+    },
+    'alert-$count-new-notifications': (count) => {
+        var num = cardinalT(count);
+        return `${num}個新通知`;
+    },
+    'alert-$count-new-stories': (count) => {
+        var num = cardinalT(count);
+        return `${num}個新故事`;
+    },
 
     'app-name': '電車吧',
 
@@ -41,447 +63,1394 @@ var traditionalPhrases = {
     'audio-capture-cancel': '取消',
     'audio-capture-pause': '暫停',
     'audio-capture-rerecord': '重新錄製',
+    'audio-capture-resume': '繼續',
     'audio-capture-start': '開始',
     'audio-capture-stop': '停止',
 
     'bookmark-$count-other-users': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `另外${num}個人`;
     },
     'bookmark-$count-users': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `${num}個人`;
     },
-    'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
+    'bookmark-$name-and-$users-recommend-this': (name, users) => {
         return [ `${name}和`, users, `推薦這個` ];
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦這個`;
     },
     'bookmark-$name1-and-$name2-recommend-this': (name) => {
-        return `${name1}和${name2}推薦這個`;
+        return [ name1, '和', name2, '推薦這個' ];
     },
-    'bookmark-recommendations': '推薦',
-    'bookmark-you-bookmarked-it': '你加了這個書籤',
-    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
+    'bookmark-$you-bookmarked-it': '你加了這個書籤',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加了這個書籤（${name}推薦）`;
     },
-    'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
         return [ `你加了這個書籤（`, users, `推薦）` ];
     },
+    'bookmark-recommendations': '推薦',
 
     'bottom-nav-bookmarks': '書籤',
     'bottom-nav-news': '信息',
     'bottom-nav-notifications': '通知',
-    'bottom-nav-people': '人們',
+    'bottom-nav-people': '人員',
     'bottom-nav-settings': '設置',
 
-    'comment-$user-cast-a-vote': (user) => {
-        return `${user}投票`;
-    },
-    'comment-$user-commented-on-issue': (user) => {
-        return `${user}評論了這個問題`;
-    },
-    'comment-$user-commented-on-merge-request': (user) => {
-        return `${user}評論了這個合併請求`;
-    },
-    'comment-$user-commented-on-push': (user) => {
-        return `${user}評論了這個提交`;
-    },
-    'comment-$user-completed-a-task': (user) => {
-        return `${user}完成了一個任務`;
-    },
-    'comment-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到這個問題`;
-    },
-    'comment-$user-is-typing': (user) => {
-        return `${user}正在寫評論⋯⋯`;
-    },
-    'comment-$user-likes-this': (user) => {
-        return `${user}喜歡這個`;
-    },
+    'confirmation-cancel': '取消',
+    'confirmation-confirm': '肯定',
+
+    'diagnostics-show': '顯示診斷',
+    'diagnostics-show-panel': '顯示此面板',
+
+    'image-editor-upload-in-progress': '正在上傳⋯⋯',
+
+    'issue-cancel': '取消',
+    'issue-clear': '清除',
+    'issue-ok': '完成',
+    'issue-repo': '數據庫',
+    'issue-title': '標題',
 
     'list-$count-more': (count) => {
-        var num = cardinal(count);
-        return `還有${num}個⋯⋯`;
+        var num = cardinalT(count);
+        return `重有${num}個⋯⋯`;
     },
 
     'media-close': '關閉',
     'media-download-original': '下載原本文件',
+    'media-editor-embed': '嵌入',
+    'media-editor-remove': '刪除',
+    'media-editor-shift': '推前',
     'media-next': '下一個',
     'media-previous': '上一個',
 
-    'notification-$user-commented-on-your-commit': (user) => {
-        return `${user}評論了你的commit`;
+    'membership-request-$you-are-now-member': '你現在是這個項目的成員',
+    'membership-request-$you-have-requested-membership': '你要求成為這個項目的成員',
+    'membership-request-cancel': '取消',
+    'membership-request-join': '加入',
+    'membership-request-ok': '完成',
+    'membership-request-proceed': '繼續',
+
+    'mobile-device-revoke': '吊銷',
+    'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置的授權嗎？',
+
+    'mobile-setup-address': '服務器地址',
+    'mobile-setup-close': '關閉',
+    'mobile-setup-code': '授權碼',
+
+    'notification-$user-added-you-as-coauthor': (user) => {
+        return `${user}邀請你共同編輯一個貼文`;
     },
-    'notification-$user-commented-on-your-merge': (user) => {
-        return `${user}評論了你的merge`;
-    },
-    'notification-$user-commented-on-your-story': (user) => {
-        return `${user}評論了你的公報`;
-    },
-    'notification-$user-commented-on-your-survey': (user) => {
-        return `${user}評論了你的調查`;
-    },
-    'notification-$user-commented-on-your-task-list': (user) => {
-        return `${user}評論了你的任務列表`;
+    'notification-$user-commented-on-your-$story': (user, story) => {
+        switch (story) {
+            case 'push': story = '推送'; break;
+            case 'merge': story = '合併'; break;
+            case 'branch': story = '分支'; break;
+            case 'survey': story = '調查'; break;
+            case 'task-list': story = '任務列表'; break;
+            case 'post': story = '貼文'; break;
+            default: story = '故事';
+        }
+        return `${user}回應了你的${story}`;
     },
     'notification-$user-completed-task': (user) => {
         return `${user}完成了在你的列表上一個任務`;
     },
-    'notification-$user-likes-your-commit': (user) => {
-        return `${user}喜歡你的commit`;
+    'notification-$user-likes-your-$story': (user, story) => {
+        switch (story) {
+            case 'push': story = '推送'; break;
+            case 'merge': story = '合併'; break;
+            case 'branch': story = '分支'; break;
+            case 'survey': story = '調查'; break;
+            case 'task-list': story = '任務列表'; break;
+            case 'post': story = '貼文'; break;
+            default: story = '故事';
+        }
+        return `${user}喜歡你的${story}`;
     },
-    'notification-$user-likes-your-merge': (user) => {
-        return `${user}喜歡你的merge`;
+    'notification-$user-requested-to-join': (user) => {
+        return `${user}要求加入這個項目`;
     },
-    'notification-$user-likes-your-story': (user) => {
-        return `${user}喜歡你的公報`;
-    },
-    'notification-$user-likes-your-survey': (user) => {
-        return `${user}喜歡你的調查`;
-    },
-    'notification-$user-likes-your-task-list': (user) => {
-        return `${user}喜歡你的任務列表`;
+    'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        switch (story) {
+            case 'survey': story = '調查'; break;
+            case 'task-list': story = '任務列表'; break;
+            case 'post': story = '貼文'; break;
+            default: story = '故事';
+        }
+        return `${user}送你一個${story}書籤`;
     },
     'notification-$user-voted-in-your-survey': (user) => {
         return `${user}回答了你的調查`;
     },
+    'notification-option-assignment': '當你被分配到一個問題',
+    'notification-option-bookmark': '當你收到某人的書籤',
+    'notification-option-coauthor': '當你收到共同編輯貼文的邀請',
+    'notification-option-comment': '當有人回應你的貼文',
+    'notification-option-issue': '當有人打開了一個問題',
+    'notification-option-join-request': '當有人想加入這個項目',
+    'notification-option-like': '當有人喜歡你的貼文',
+    'notification-option-merge': '當有人將代碼合併到《master》分支',
+    'notification-option-note': '當有人在提交或問題上發布註釋',
+    'notification-option-push': '當有人推入代碼到git數據庫',
+    'notification-option-survey': '當有人發布調查',
+    'notification-option-task-completion': '當有人完成你列表上的任務',
+    'notification-option-vote': '當有人回答你的調查',
+    'notification-option-web-session': '當你用網絡瀏覽器查看這個網站時',
 
     'option-add-bookmark': '加書籤',
     'option-add-issue': '加問題入跟蹤管理系統',
     'option-bookmark-story': '加書籤',
-    'option-edit-post': '編輯訊息',
-    'option-hide-post': '非會員看不到',
-    'option-send-bookmarks': '發送書籤給他人',
+    'option-bump-post': '推動故事',
+    'option-edit-comment': '編輯回應',
+    'option-edit-post': '編輯貼文',
+    'option-hide-comment': '非成員看不到',
+    'option-hide-post': '非成員看不到',
+    'option-remove-comment': '刪除回應',
+    'option-remove-post': '刪除故事',
+    'option-send-bookmarks': '發送書籤給其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `發送書籤給${num}個人`;
     },
-    'option-show-media': '顯示附件媒體',
-    'option-show-preview': '顯示課文預覽',
+    'option-show-media-preview': '顯示附件媒體',
+    'option-show-text-preview': '顯示課文預覽',
 
     'photo-capture-accept': '接受',
     'photo-capture-cancel': '取消',
     'photo-capture-retake': '重拍',
     'photo-capture-snap': '拍照',
 
+    'project-description-close': '關閉',
+
+    'project-management-add': '添加',
+    'project-management-cancel': '取消',
+    'project-management-description': '項目介紹',
+    'project-management-manage': '管理列表',
+    'project-management-mobile-set-up': '手機設置',
+    'project-management-remove': '刪除',
+    'project-management-sign-out': '註銷',
+    'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
+
+    'qr-scanner-cancel': '取消',
+    'qr-scanner-invalid-qr-code': '不正確的ＱＲ碼',
+
+    'reaction-$user-added-story-to-issue-tracker': (user) => {
+        return `${user}把這個貼文放到問題跟踪器上`;
+    },
+    'reaction-$user-cast-a-vote': (user) => {
+        return `${user}投了一票`;
+    },
+    'reaction-$user-commented-on-branch': (user) => {
+        return `${user}回應了這個分支`;
+    },
+    'reaction-$user-commented-on-issue': (user) => {
+        return `${user}回應了這個問題`;
+    },
+    'reaction-$user-commented-on-merge': (user) => {
+        return `${user}回應了這個合併`;
+    },
+    'reaction-$user-commented-on-merge-request': (user) => {
+        return `${user}回應了這個合併請求`;
+    },
+    'reaction-$user-commented-on-push': (user) => {
+        return `${user}回應了這個推送`;
+    },
+    'reaction-$user-completed-a-task': (user) => {
+        return `${user}完成了一個任務`;
+    },
+    'reaction-$user-is-assigned-to-issue': (user) => {
+        return `${user}被分配到這個問題`;
+    },
+    'reaction-$user-is-assigned-to-merge-request': (user) => {
+        return `${user}被分配到這個合併請求`;
+    },
+    'reaction-$user-is-editing': (user) => {
+        return `${user}正在編輯一個回應⋯⋯`;
+    },
+    'reaction-$user-is-writing': (user) => {
+        return `${user}正在寫一個回應⋯⋯`;
+    },
+    'reaction-$user-likes-this': (user) => {
+        return `${user}喜歡這個`;
+    },
+
+    'role-filter-no-roles': '沒有角色',
+
+    'search-bar-keywords': '關鍵字或井號標籤',
+
     'selection-cancel': '取消',
     'selection-ok': '接受',
 
+    'server-type-dropbox': 'Dropbox',
+    'server-type-facebook': 'Facebook',
+    'server-type-github': 'GitHub',
+    'server-type-gitlab': 'GitLab',
+    'server-type-google': 'Google',
+    'server-type-windows': 'Windows Live',
+
+    'settings-device': '行動裝置',
+    'settings-devices': '行動裝置',
+    'settings-diagnostics': '診斷',
     'settings-language': '語言',
+    'settings-mobile-alert': '行動裝置警報',
     'settings-notification': '通知',
+    'settings-profile-image': '檔案圖像',
     'settings-projects': '項目',
-    'settings-user-profile': '用戶資料',
+    'settings-social-networks': '社交網絡',
+    'settings-user-information': '用戶資料',
+    'settings-web-alert': '瀏覽器警報',
+
+    'social-network-github': 'GitHub個人資料網址',
+    'social-network-gitlab': 'Gitlab個人資料網址',
+    'social-network-ichat': 'iChat用戶名',
+    'social-network-linkedin': 'LinkedIn個人資料網址',
+    'social-network-skype': 'Skype用戶名',
+    'social-network-slack': 'Slack用戶ID',
+    'social-network-slack-team': 'Slack團體ID',
+    'social-network-stackoverflow': 'StackOverflow個人資料網址',
+    'social-network-twitter': 'Twitter用戶名',
+
+    'start-activation-add-server': '從另一台服務器添加項目',
+    'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+    'start-activation-manual': '手動輸入',
+    'start-activation-scan-code': '掃描ＱＲ碼',
+    'start-error-access-denied': '請求被拒絕',
+    'start-error-account-disabled': '帳戶目前被禁用',
+    'start-error-existing-users-only': '只有授權人員才能訪問此系統',
+    'start-error-undefined': '意外的錯誤',
+    'start-projects': 'Projects',
+    'start-social-login': 'Social login',
+    'start-system-title-default': '電車吧',
+    'start-welcome': '歡迎!',
+    'start-welcome-again': '再次歡迎',
 
     'statistics-bar': '條圖',
     'statistics-line': '線圖',
     'statistics-pie': '餅圖',
 
     'story-$count-user-reacted-to-story': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `${num}個人有反應`;
+    },
+    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
+        return `在《${repo}》數據庫中創建了《${branch}》分支`;
+    },
+    'story-$name-created-$milestone': (name, milestone) => {
+        return `建立了《${milestone}》里程碑`;
+    },
+    'story-$name-created-$page': (name, page) => {
+        return `建立了wiki頁面《${page}》”`;
+    },
+    'story-$name-created-$repo': (name, repo) => {
+        var text = `建立了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-deleted-$page': (name, page) => {
+        return `刪除了wiki頁面《${page}》”`;
+    },
+    'story-$name-joined-$repo': (name, repo) => {
+        var text = `加入了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-left-$repo': (name, repo) => {
+        var text = `離開了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
+        var text = `將`;
+        if (branches && branches.length > 0) {
+            var sources = branches.map((branch) => {
+                return `《${branch}》`;
+            });
+            text += `${sources.join('、')}分支的代碼合併到`;
+        }
+        if (repo) {
+            text += `《${repo}》數據庫的`;
+        }
+        text += `《${branch}》分支`;
+        return text;
+    },
+    'story-$name-opened-issue-$number-$title': (name, number, title) => {
+        var text = `開了問題${number}`;
+        if (title) {
+            text += `： ${title}`;
+        }
+        return text;
+    },
+    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
+        var text = `推了一些代碼修改入到`
+        if (repo) {
+            text += `《${repo}》數據庫的`;
+        }
+        text += `《${branch}》分支`;
+        return text;
+    },
+    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
+        return `要求將《${branch1}》分支合併到《${branch2}》分支`;
+    },
+    'story-$name-updated-$page': (name, page) => {
+        return `修正了wiki頁面《${page}》`;
     },
     'story-add-coauthor': '加合著者',
     'story-add-remove-coauthor': '替代合著者',
     'story-audio': '音頻',
     'story-author-$count-others': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `另外${num}個人`;
     },
-    'story-author-$name-and-$users': (name, users, count) => {
-        return [ name, '和', users ];
-    },
     'story-author-$name1-and-$name2': (name1, name2) => {
-        return `${name1}和${name2}`;
+        return [ name1, '和', name2 ];
     },
     'story-cancel': '取消',
+    'story-cancel-are-you-sure': '你確定要取消這個貼文？',
+    'story-cancel-edit-are-you-sure': '你確定要取消這些更正？',
     'story-coauthors': '合著者',
-    'story-comment': '評論',
+    'story-comment': '留言',
+    'story-drop-files-here': '在此處拖放媒體文件',
     'story-file': '文件',
-    'story-issue-current-status': '當前狀態:',
-    'story-issue-opened-$number-$title': (number, title) => {
-        var num = String(number);
-        return `報告了問題${num}：《${title}》`;
-    },
+    'story-issue-current-status': '當前狀態：',
     'story-issue-status-closed': '關閉',
     'story-issue-status-opened': '開設',
     'story-issue-status-reopened': '重開',
     'story-like': '喜歡',
     'story-markdown': 'Markdown',
-    'story-member-joined-$repo': (repo) => {
-        var text = `加入了項目`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        return text;
-    },
-    'story-member-left-$repo': (repo) => {
-        var text = `離開了項目`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        return text;
-    },
-    'story-milestone-created-$name': (name) => {
-        return `加了里程碑《${name}》`;
-    },
     'story-milestone-due-date': '截止日期：',
     'story-milestone-start-date': '開始日期：',
     'story-options': '選項',
+    'story-paste-image-here': '粘貼到文本編輯器中的圖像會在這裡出現',
     'story-pending': '听候⋯⋯',
     'story-photo': '照片',
     'story-post': '發送',
     'story-push-added-$count-files': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `加了${num}個文件`;
     },
     'story-push-added-$count-lines': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `加了${num}行代碼`;
     },
+    'story-push-components-changed': '更改了以下部分：',
+    'story-push-deleted-$count-files': (count) => {
+        var num = cardinalT(count);
+        return `刪除了${num}個文件`;
+    },
+    'story-push-deleted-$count-lines': (count) => {
+        var num = cardinalT(count);
+        return `刪除了${num}行代碼`;
+    },
     'story-push-modified-$count-files': (count) => {
-        var num = cardinal(count);
-        return `改了${num}行代碼`;
-    },
-    'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
-        var text = `推了一些代碼修改入到`
-        if (repo) {
-            text += `項目《${repo}》的`;
-        }
-        text += `分支《${branch}》`;
-        return text;
-    },
-    'story-push-removed-$count-files': (count) => {
-        return `除了${num}個文件`;
-    },
-    'story-push-removed-$count-lines': (count) => {
-        return `除了${num}行代碼`;
+        var num = cardinalT(count);
+        return `修改了${num}個文件`;
     },
     'story-push-renamed-$count-files': (count) => {
+        var num = cardinalT(count);
         return `改了${num}個文件的名`;
     },
-    'story-repo-created-$name': (name) => {
-        var text = `創建項目`;
-        if (name) {
-            text += `《${name}》`;
-        }
-        return text;
+    'story-remove-yourself': '放棄作者權力',
+    'story-remove-yourself-are-you-sure': '你確定你不要做這個貼文的合著者？',
+    'story-status-transcoding-$progress': (progress) => {
+        return `轉碼（${progress}%）`;
+    },
+    'story-status-uploading-$progress': (progress) => {
+        return `上傳（${progress}%）`;
     },
     'story-survey': '調查',
     'story-task-list': '任務列表',
-    'story-video': '視頻',
+    'story-video': '影片',
     'story-vote-submit': '遞交',
-    'story-wiki-created-page-with-$title': (title) => {
-        return `創建了維基頁面《${title}》”`;
-    },
-    'story-wiki-deleted-page-with-$title': (title) => {
-        return `刪除了維基頁面《${title}》”`;
-    },
-    'story-wiki-updated-page-with-$title': (title) => {
-        return `修正了維基頁面《${title}》`;
-    },
 
-    'survey-item-$number': (number) => {
-        var num = String(number);
-        return `精選${num}`;
-    },
-    'task-list-item-$number': (number) => {
-        var num = String(number);
-        return `任務${num}`;
+    'telephone-dialog-close': '關閉',
+
+    'time-yesterday': '昨天',
+
+    'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+        return `上傳${num}個文件，剩下${size}`;
     },
 
     'user-actions': '行動',
 
+    'user-activity-$name-created-branch': '建立了一個分支',
+    'user-activity-$name-created-merge-request': '發出一個合併請求',
+    'user-activity-$name-created-milestone': '建立了一個里程碑',
+    'user-activity-$name-created-repo': '建立了一個git數據庫',
+    'user-activity-$name-edited-wiki-page': '編輯了一個wiki頁面',
+    'user-activity-$name-joined-repo': '加入了數據庫',
+    'user-activity-$name-left-repo': '離開了數據庫',
+    'user-activity-$name-merged-code': '合併了代碼',
+    'user-activity-$name-opened-issue': '開了一個問題',
+    'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+        var num = cardinalT(count);
+        return `新增了${num}個音頻剪輯`;
+    },
+    'user-activity-$name-posted-$count-links': (name, count) => {
+        var num = cardinalT(count);
+        return `新增了${num}個網頁鏈接`;
+    },
+    'user-activity-$name-posted-$count-pictures': (name, count) => {
+        var num = cardinalT(count);
+        return `新增了${num}張相片`;
+    },
+    'user-activity-$name-posted-$count-video-clips': (name, count) => {
+        var num = cardinalT(count);
+        return `新增了${num}張影片`;
+    },
+    'user-activity-$name-pushed-code': '將代碼推送到數據庫',
+    'user-activity-$name-started-survey': '發布了一個調查',
+    'user-activity-$name-started-task-list': '發布了一個任務列表',
+    'user-activity-$name-wrote-post': '寫了一個貼文',
+    'user-activity-more': '更多⋯⋯',
+
+    'user-image-remove': '刪除',
+    'user-image-select': '選擇',
+    'user-image-snap': '拍照',
+
+    'user-info-email': '電子郵件地址',
+    'user-info-gender': '性別',
+    'user-info-gender-female': '女性',
+    'user-info-gender-male': '男性',
+    'user-info-gender-unspecified': '未指定',
+    'user-info-name': '名稱',
+    'user-info-phone': '電話號碼',
+
+    'user-statistics-legend-branch': '分支',
     'user-statistics-legend-issue': '問題',
+    'user-statistics-legend-member': '成員變更',
+    'user-statistics-legend-merge': '代碼合併',
+    'user-statistics-legend-merge-request': '合併請求',
     'user-statistics-legend-milestone': '里程碑',
+    'user-statistics-legend-post': '貼文',
     'user-statistics-legend-push': '推送',
-    'user-statistics-legend-story': '公報',
+    'user-statistics-legend-repo': '數據庫修改',
     'user-statistics-legend-survey': '調查',
     'user-statistics-legend-task-list': '任務列表',
-    'user-statistics-legend-wiki': '維基編輯',
+    'user-statistics-legend-wiki': 'wiki修改',
+    'user-statistics-today': '今天',
+    'user-statistics-tooltip-$count-branch': (count) => {
+        var num = cardinalT(count);
+        return `${num}個分支`;
+    },
+    'user-statistics-tooltip-$count-issue': (count) => {
+        var num = cardinalT(count);
+        return `${num}個問題`
+    },
+    'user-statistics-tooltip-$count-member': (count) => {
+        var num = cardinalT(count);
+        return `${num}個成員變更`;
+    },
+    'user-statistics-tooltip-$count-merge': (count) => {
+        var num = cardinalT(count);
+        return `${num}個代碼合併`;
+    },
+    'user-statistics-tooltip-$count-milestone': (count) => {
+        var num = cardinalT(count);
+        return `${num}個里程碑`
+    },
+    'user-statistics-tooltip-$count-post': (count) => {
+        var num = cardinalT(count);
+        return `${num}個貼文`;
+    },
+    'user-statistics-tooltip-$count-push': (count) => {
+        var num = cardinalT(count);
+        return `${num}個代碼推送`;
+    },
+    'user-statistics-tooltip-$count-repo': (count) => {
+        var num = cardinalT(count);
+        return `${num}個數據庫變更`;
+    },
+    'user-statistics-tooltip-$count-survey': (count) => {
+        var num = cardinalT(count);
+        return `${num}個調查`;
+    },
+    'user-statistics-tooltip-$count-task-list': (count) => {
+        var num = cardinalT(count);
+        return `${num}個任務列表`;
+    },
+    'user-statistics-tooltip-$count-wiki': (count) => {
+        var num = cardinalT(count);
+        return `${num}個wiki修改`;
+    },
 
     'video-capture-accept': '接受',
     'video-capture-cancel': '取消',
     'video-capture-pause': '暫停',
+    'video-capture-resume': '繼續',
     'video-capture-retake': '重新錄製',
     'video-capture-start': '開始',
     'video-capture-stop': '停止',
 };
 
-// TODO
-var simplifiedPhrases = traditionalPhrases;
+var simplifiedPhrases = {
+    'action-contact-by-email': '用电子邮件联系',
+    'action-contact-by-ichat': '用iChat联系',
+    'action-contact-by-phone': '用电话联系',
+    'action-contact-by-skype': '用Skype联系',
+    'action-contact-by-slack': '用Slack联系',
+    'action-contact-by-twitter': '用Twitter联系',
+    'action-view-github-page': '查看GitHub个人页面',
+    'action-view-gitlab-page': '查看GitLab个人页面',
+    'action-view-linkedin-page': '查看LinkedIn个人页面',
+    'action-view-stackoverflow-page': '查看StackOverflow个人页面',
+
+    'activation-address': '服务器地址',
+    'activation-cancel': '取消',
+    'activation-code': '授权码',
+    'activation-ok': '完成',
+    'activation-schema': '项目',
+
+    'alert-$count-new-bookmarks': (count) => {
+        var num = cardinalS(count);
+        return `${num}张新书签`;
+    },
+    'alert-$count-new-notifications': (count) => {
+        var num = cardinalS(count);
+        return `${num}个新通知`;
+    },
+    'alert-$count-new-stories': (count) => {
+        var num = cardinalS(count);
+        return `${num}个新故事`;
+    },
+
+    'app-name': '电车吧',
+
+    'audio-capture-accept': '接受',
+    'audio-capture-cancel': '取消',
+    'audio-capture-pause': '暂停',
+    'audio-capture-rerecord': '重新录制',
+    'audio-capture-resume': '继续',
+    'audio-capture-start': '开始',
+    'audio-capture-stop': '停止',
+
+    'bookmark-$count-other-users': (count) => {
+        var num = cardinalS(count);
+        return `另外${num}个人`;
+    },
+    'bookmark-$count-users': (count) => {
+        var num = cardinalS(count);
+        return `${num}个人`;
+    },
+    'bookmark-$name-and-$users-recommend-this': (name, users) => {
+        return [ `${name}和`, users, `推荐这个` ];
+    },
+    'bookmark-$name-recommends-this': (name) => {
+        return `${name}推荐这个`;
+    },
+    'bookmark-$name1-and-$name2-recommend-this': (name) => {
+        return [ name1, '和', name2, '推荐这个' ];
+    },
+    'bookmark-$you-bookmarked-it': '你加了这个书签',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
+        return `你加了这个书签（${name}推荐）`;
+    },
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
+        return [ `你加了这个书签（`, users, `推荐）` ];
+    },
+    'bookmark-recommendations': '推荐',
+
+    'bottom-nav-bookmarks': '书签',
+    'bottom-nav-news': '信息',
+    'bottom-nav-notifications': '通知',
+    'bottom-nav-people': '人员',
+    'bottom-nav-settings': '设置',
+
+    'confirmation-cancel': '取消',
+    'confirmation-confirm': '肯定',
+
+    'diagnostics-show': '显示诊断',
+    'diagnostics-show-panel': '显示此面板',
+
+    'image-editor-upload-in-progress': '正在上传⋯⋯',
+
+    'issue-cancel': '取消',
+    'issue-clear': '清除',
+    'issue-ok': '完成',
+    'issue-repo': '数据库',
+    'issue-title': '标题',
+
+    'list-$count-more': (count) => {
+        var num = cardinalS(count);
+        return `重有${num}个⋯⋯`;
+    },
+
+    'media-close': '关闭',
+    'media-download-original': '下载原本文件',
+    'media-editor-embed': '嵌入',
+    'media-editor-remove': '删除',
+    'media-editor-shift': '推前',
+    'media-next': '下一个',
+    'media-previous': '上一个',
+
+    'membership-request-$you-are-now-member': '你现在是这个项目的成员',
+    'membership-request-$you-have-requested-membership': '你要求成为这个项目的成员',
+    'membership-request-cancel': '取消',
+    'membership-request-join': '加入',
+    'membership-request-ok': '完成',
+    'membership-request-proceed': '继续',
+
+    'mobile-device-revoke': '吊销',
+    'mobile-device-revoke-are-you-sure': '你确定要吊销此装置的授权吗？',
+
+    'mobile-setup-address': '服务器地址',
+    'mobile-setup-close': '关闭',
+    'mobile-setup-code': '授权码',
+
+    'notification-$user-added-you-as-coauthor': (user) => {
+        return `${user}邀请你共同编辑一个贴文`;
+    },
+    'notification-$user-commented-on-your-$story': (user, story) => {
+        switch (story) {
+            case 'push': story = '推送'; break;
+            case 'merge': story = '合并'; break;
+            case 'branch': story = '分支'; break;
+            case 'survey': story = '调查'; break;
+            case 'task-list': story = '任务列表'; break;
+            case 'post': story = '贴文'; break;
+            default: story = '故事';
+        }
+        return `${user}回应了你的${story}`;
+    },
+    'notification-$user-completed-task': (user) => {
+        return `${user}完成了在你的列表上一个任务`;
+    },
+    'notification-$user-likes-your-$story': (user, story) => {
+        switch (story) {
+            case 'push': story = '推送'; break;
+            case 'merge': story = '合并'; break;
+            case 'branch': story = '分支'; break;
+            case 'survey': story = '调查'; break;
+            case 'task-list': story = '任务列表'; break;
+            case 'post': story = '贴文'; break;
+            default: story = '故事';
+        }
+        return `${user}喜欢你的${story}`;
+    },
+    'notification-$user-requested-to-join': (user) => {
+        return `${user}要求加入这个项目`;
+    },
+    'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        switch (story) {
+            case 'survey': story = '调查'; break;
+            case 'task-list': story = '任务列表'; break;
+            case 'post': story = '贴文'; break;
+            default: story = '故事';
+        }
+        return `${user}送你一个${story}书签`;
+    },
+    'notification-$user-voted-in-your-survey': (user) => {
+        return `${user}回答了你的调查`;
+    },
+    'notification-option-assignment': '当你被分配到一个问题',
+    'notification-option-bookmark': '当你收到某人的书签',
+    'notification-option-coauthor': '当你收到共同编辑贴文的邀请',
+    'notification-option-comment': '当有人回应你的贴文',
+    'notification-option-issue': '当有人打开了一个问题',
+    'notification-option-join-request': '当有人想加入这个项目',
+    'notification-option-like': '当有人喜欢你的贴文',
+    'notification-option-merge': '当有人将代码合并到《master》分支',
+    'notification-option-note': '当有人在提交或问题上发布注释',
+    'notification-option-push': '当有人推入代码到git数据库',
+    'notification-option-survey': '当有人发布调查',
+    'notification-option-task-completion': '当有人完成你列表上的任务',
+    'notification-option-vote': '当有人回答你的调查',
+    'notification-option-web-session': '当你用网络浏览器查看这个网站时',
+
+    'option-add-bookmark': '加书签',
+    'option-add-issue': '加问题入跟踪管理系统',
+    'option-bookmark-story': '加书签',
+    'option-bump-post': '推动故事',
+    'option-edit-comment': '编辑回应',
+    'option-edit-post': '编辑贴文',
+    'option-hide-comment': '非成员看不到',
+    'option-hide-post': '非成员看不到',
+    'option-remove-comment': '删除回应',
+    'option-remove-post': '删除故事',
+    'option-send-bookmarks': '发送书签给其他人',
+    'option-send-bookmarks-to-$count-users': (count) => {
+        var num = cardinalS(count);
+        return `发送书签给${num}个人`;
+    },
+    'option-show-media-preview': '显示附件媒体',
+    'option-show-text-preview': '显示课文预览',
+
+    'photo-capture-accept': '接受',
+    'photo-capture-cancel': '取消',
+    'photo-capture-retake': '重拍',
+    'photo-capture-snap': '拍照',
+
+    'project-description-close': '关闭',
+
+    'project-management-add': '添加',
+    'project-management-cancel': '取消',
+    'project-management-description': '项目介绍',
+    'project-management-manage': '管理列表',
+    'project-management-mobile-set-up': '手机设置',
+    'project-management-remove': '删除',
+    'project-management-sign-out': '注销',
+    'project-management-sign-out-are-you-sure': '你确定你想从该服务器注销？',
+
+    'qr-scanner-cancel': '取消',
+    'qr-scanner-invalid-qr-code': '不正确的ＱＲ码',
+
+    'reaction-$user-added-story-to-issue-tracker': (user) => {
+        return `${user}把这个贴文放到问题跟踪器上`;
+    },
+    'reaction-$user-cast-a-vote': (user) => {
+        return `${user}投了一票`;
+    },
+    'reaction-$user-commented-on-branch': (user) => {
+        return `${user}回应了这个分支`;
+    },
+    'reaction-$user-commented-on-issue': (user) => {
+        return `${user}回应了这个问题`;
+    },
+    'reaction-$user-commented-on-merge': (user) => {
+        return `${user}回应了这个合并`;
+    },
+    'reaction-$user-commented-on-merge-request': (user) => {
+        return `${user}回应了这个合并请求`;
+    },
+    'reaction-$user-commented-on-push': (user) => {
+        return `${user}回应了这个推送`;
+    },
+    'reaction-$user-completed-a-task': (user) => {
+        return `${user}完成了一个任务`;
+    },
+    'reaction-$user-is-assigned-to-issue': (user) => {
+        return `${user}被分配到这个问题`;
+    },
+    'reaction-$user-is-assigned-to-merge-request': (user) => {
+        return `${user}被分配到这个合并请求`;
+    },
+    'reaction-$user-is-editing': (user) => {
+        return `${user}正在编辑一个回应⋯⋯`;
+    },
+    'reaction-$user-is-writing': (user) => {
+        return `${user}正在写一个回应⋯⋯`;
+    },
+    'reaction-$user-likes-this': (user) => {
+        return `${user}喜欢这个`;
+    },
+
+    'role-filter-no-roles': '没有角色',
+
+    'search-bar-keywords': '关键字或井号标签',
+
+    'selection-cancel': '取消',
+    'selection-ok': '接受',
+
+    'server-type-dropbox': 'Dropbox',
+    'server-type-facebook': 'Facebook',
+    'server-type-github': 'GitHub',
+    'server-type-gitlab': 'GitLab',
+    'server-type-google': 'Google',
+    'server-type-windows': 'Windows Live',
+
+    'settings-device': '行动装置',
+    'settings-devices': '行动装置',
+    'settings-diagnostics': '诊断',
+    'settings-language': '语言',
+    'settings-mobile-alert': '行动装置警报',
+    'settings-notification': '通知',
+    'settings-profile-image': '档案图像',
+    'settings-projects': '项目',
+    'settings-social-networks': '社交网络',
+    'settings-user-information': '用户资料',
+    'settings-web-alert': '浏览器警报',
+
+    'social-network-github': 'GitHub个人资料网址',
+    'social-network-gitlab': 'Gitlab个人资料网址',
+    'social-network-ichat': 'iChat用户名',
+    'social-network-linkedin': 'LinkedIn个人资料网址',
+    'social-network-skype': 'Skype用户名',
+    'social-network-slack': 'Slack用户ID',
+    'social-network-slack-team': 'Slack团体ID',
+    'social-network-stackoverflow': 'StackOverflow个人资料网址',
+    'social-network-twitter': 'Twitter用户名',
+
+    'start-activation-add-server': '从另一台服务器添加项目',
+    'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+    'start-activation-manual': '手动输入',
+    'start-activation-scan-code': '扫描ＱＲ码',
+    'start-error-access-denied': '请求被拒绝',
+    'start-error-account-disabled': '帐户目前被禁用',
+    'start-error-existing-users-only': '只有授权人员才能访问此系统',
+    'start-error-undefined': '意外的错误',
+    'start-projects': 'Projects',
+    'start-social-login': 'Social login',
+    'start-system-title-default': '电车吧',
+    'start-welcome': '欢迎!',
+    'start-welcome-again': '再次欢迎',
+
+    'statistics-bar': '条图',
+    'statistics-line': '线图',
+    'statistics-pie': '饼图',
+
+    'story-$count-user-reacted-to-story': (count) => {
+        var num = cardinalS(count);
+        return `${num}个人有反应`;
+    },
+    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
+        return `在《${repo}》数据库中创建了《${branch}》分支`;
+    },
+    'story-$name-created-$milestone': (name, milestone) => {
+        return `建立了《${milestone}》里程碑`;
+    },
+    'story-$name-created-$page': (name, page) => {
+        return `建立了wiki页面《${page}》”`;
+    },
+    'story-$name-created-$repo': (name, repo) => {
+        var text = `建立了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `数据库`;
+        return text;
+    },
+    'story-$name-deleted-$page': (name, page) => {
+        return `删除了wiki页面《${page}》”`;
+    },
+    'story-$name-joined-$repo': (name, repo) => {
+        var text = `加入了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `数据库`;
+        return text;
+    },
+    'story-$name-left-$repo': (name, repo) => {
+        var text = `离开了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `数据库`;
+        return text;
+    },
+    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
+        var text = `将`;
+        if (branches && branches.length > 0) {
+            var sources = branches.map((branch) => {
+                return `《${branch}》`;
+            });
+            text += `${sources.join('、')}分支的代码合并到`;
+        }
+        if (repo) {
+            text += `《${repo}》数据库的`;
+        }
+        text += `《${branch}》分支`;
+        return text;
+    },
+    'story-$name-opened-issue-$number-$title': (name, number, title) => {
+        var text = `开了问题${number}`;
+        if (title) {
+            text += `： ${title}`;
+        }
+        return text;
+    },
+    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
+        var text = `推了一些代码修改入到`
+        if (repo) {
+            text += `《${repo}》数据库的`;
+        }
+        text += `《${branch}》分支`;
+        return text;
+    },
+    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
+        return `要求将《${branch1}》分支合并到《${branch2}》分支`;
+    },
+    'story-$name-updated-$page': (name, page) => {
+        return `修正了wiki页面《${page}》`;
+    },
+    'story-add-coauthor': '加合著者',
+    'story-add-remove-coauthor': '替代合著者',
+    'story-audio': '音频',
+    'story-author-$count-others': (count) => {
+        var num = cardinalS(count);
+        return `另外${num}个人`;
+    },
+    'story-author-$name1-and-$name2': (name1, name2) => {
+        return [ name1, '和', name2 ];
+    },
+    'story-cancel': '取消',
+    'story-cancel-are-you-sure': '你确定要取消这个贴文？',
+    'story-cancel-edit-are-you-sure': '你确定要取消这些更正？',
+    'story-coauthors': '合著者',
+    'story-comment': '留言',
+    'story-drop-files-here': '在此处拖放媒体文件',
+    'story-file': '文件',
+    'story-issue-current-status': '当前状态：',
+    'story-issue-status-closed': '关闭',
+    'story-issue-status-opened': '开设',
+    'story-issue-status-reopened': '重开',
+    'story-like': '喜欢',
+    'story-markdown': 'Markdown',
+    'story-milestone-due-date': '截止日期：',
+    'story-milestone-start-date': '开始日期：',
+    'story-options': '选项',
+    'story-paste-image-here': '粘贴到文本编辑器中的图像会在这里出现',
+    'story-pending': '听候⋯⋯',
+    'story-photo': '照片',
+    'story-post': '发送',
+    'story-push-added-$count-files': (count) => {
+        var num = cardinalS(count);
+        return `加了${num}个文件`;
+    },
+    'story-push-added-$count-lines': (count) => {
+        var num = cardinalS(count);
+        return `加了${num}行代码`;
+    },
+    'story-push-components-changed': '更改了以下部分：',
+    'story-push-deleted-$count-files': (count) => {
+        var num = cardinalS(count);
+        return `删除了${num}个文件`;
+    },
+    'story-push-deleted-$count-lines': (count) => {
+        var num = cardinalS(count);
+        return `删除了${num}行代码`;
+    },
+    'story-push-modified-$count-files': (count) => {
+        var num = cardinalS(count);
+        return `修改了${num}个文件`;
+    },
+    'story-push-renamed-$count-files': (count) => {
+        var num = cardinalS(count);
+        return `改了${num}个文件的名`;
+    },
+    'story-remove-yourself': '放弃作者权力',
+    'story-remove-yourself-are-you-sure': '你确定你不要做这个贴文的合著者？',
+    'story-status-transcoding-$progress': (progress) => {
+        return `转码（${progress}%）`;
+    },
+    'story-status-uploading-$progress': (progress) => {
+        return `上传（${progress}%）`;
+    },
+    'story-survey': '调查',
+    'story-task-list': '任务列表',
+    'story-video': '影片',
+    'story-vote-submit': '递交',
+
+    'telephone-dialog-close': '关闭',
+
+    'time-yesterday': '昨天',
+
+    'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+        return `上传${num}个文件，剩下${size}`;
+    },
+
+    'user-actions': '行动',
+
+    'user-activity-$name-created-branch': '建立了一个分支',
+    'user-activity-$name-created-merge-request': '发出一个合并请求',
+    'user-activity-$name-created-milestone': '建立了一个里程碑',
+    'user-activity-$name-created-repo': '建立了一个git数据库',
+    'user-activity-$name-edited-wiki-page': '编辑了一个wiki页面',
+    'user-activity-$name-joined-repo': '加入了数据库',
+    'user-activity-$name-left-repo': '离开了数据库',
+    'user-activity-$name-merged-code': '合并了代码',
+    'user-activity-$name-opened-issue': '开了一个问题',
+    'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+        var num = cardinalS(count);
+        return `新增了${num}个音频剪辑`;
+    },
+    'user-activity-$name-posted-$count-links': (name, count) => {
+        var num = cardinalS(count);
+        return `新增了${num}个网页链接`;
+    },
+    'user-activity-$name-posted-$count-pictures': (name, count) => {
+        var num = cardinalS(count);
+        return `新增了${num}张相片`;
+    },
+    'user-activity-$name-posted-$count-video-clips': (name, count) => {
+        var num = cardinalS(count);
+        return `新增了${num}张影片`;
+    },
+    'user-activity-$name-pushed-code': '将代码推送到数据库',
+    'user-activity-$name-started-survey': '发布了一个调查',
+    'user-activity-$name-started-task-list': '发布了一个任务列表',
+    'user-activity-$name-wrote-post': '写了一个贴文',
+    'user-activity-more': '更多⋯⋯',
+
+    'user-image-remove': '删除',
+    'user-image-select': '选择',
+    'user-image-snap': '拍照',
+
+    'user-info-email': '电子邮件地址',
+    'user-info-gender': '性别',
+    'user-info-gender-female': '女性',
+    'user-info-gender-male': '男性',
+    'user-info-gender-unspecified': '未指定',
+    'user-info-name': '名称',
+    'user-info-phone': '电话号码',
+
+    'user-statistics-legend-branch': '分支',
+    'user-statistics-legend-issue': '问题',
+    'user-statistics-legend-member': '成员变更',
+    'user-statistics-legend-merge': '代码合并',
+    'user-statistics-legend-merge-request': '合并请求',
+    'user-statistics-legend-milestone': '里程碑',
+    'user-statistics-legend-post': '贴文',
+    'user-statistics-legend-push': '推送',
+    'user-statistics-legend-repo': '数据库修改',
+    'user-statistics-legend-survey': '调查',
+    'user-statistics-legend-task-list': '任务列表',
+    'user-statistics-legend-wiki': 'wiki修改',
+    'user-statistics-today': '今天',
+    'user-statistics-tooltip-$count-branch': (count) => {
+        var num = cardinalS(count);
+        return `${num}个分支`;
+    },
+    'user-statistics-tooltip-$count-issue': (count) => {
+        var num = cardinalS(count);
+        return `${num}个问题`
+    },
+    'user-statistics-tooltip-$count-member': (count) => {
+        var num = cardinalS(count);
+        return `${num}个成员变更`;
+    },
+    'user-statistics-tooltip-$count-merge': (count) => {
+        var num = cardinalS(count);
+        return `${num}个代码合并`;
+    },
+    'user-statistics-tooltip-$count-milestone': (count) => {
+        var num = cardinalS(count);
+        return `${num}个里程碑`
+    },
+    'user-statistics-tooltip-$count-post': (count) => {
+        var num = cardinalS(count);
+        return `${num}个贴文`;
+    },
+    'user-statistics-tooltip-$count-push': (count) => {
+        var num = cardinalS(count);
+        return `${num}个代码推送`;
+    },
+    'user-statistics-tooltip-$count-repo': (count) => {
+        var num = cardinalS(count);
+        return `${num}个数据库变更`;
+    },
+    'user-statistics-tooltip-$count-survey': (count) => {
+        var num = cardinalS(count);
+        return `${num}个调查`;
+    },
+    'user-statistics-tooltip-$count-task-list': (count) => {
+        var num = cardinalS(count);
+        return `${num}个任务列表`;
+    },
+    'user-statistics-tooltip-$count-wiki': (count) => {
+        var num = cardinalS(count);
+        return `${num}个wiki修改`;
+    },
+
+    'video-capture-accept': '接受',
+    'video-capture-cancel': '取消',
+    'video-capture-pause': '暂停',
+    'video-capture-resume': '继续',
+    'video-capture-retake': '重新录制',
+    'video-capture-start': '开始',
+    'video-capture-stop': '停止',
+};
 
 var cantonesePhrases = {
-    'action-view-github-page': '睇吓佢嘅Github個人頁面',
-    'action-view-gitlab-page': '睇吓佢嘅GitLab個人頁面',
-    'action-view-stackoverflow-page': '睇吓佢嘅StackOverflow個人頁面',
+    'action-view-github-page': '睇佢嘅GitHub網頁',
+    'action-view-gitlab-page': '睇佢嘅GitLab網頁',
+    'action-view-linkedin-page': '睇佢嘅LinkedIn網頁',
+    'action-view-stackoverflow-page': '睇佢嘅StackOverflow網頁',
 
-    'bookmark-$name-and-$users-recommend-this': (name, users, count) => {
-        return [ `${name}同`, users, `推薦呢個` ];
+    'bookmark-$name-and-$users-recommend-this': (name, users) => {
+        return [ name, '同', users, `都推薦呢個` ];
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦呢個`;
     },
     'bookmark-$name1-and-$name2-recommend-this': (name) => {
-        return `${name1}同${name2}推薦呢個`;
+        return [ name1, '同', name2, '都推薦呢個' ];
     },
-    'bookmark-recommendations': '推薦',
-    'bookmark-you-bookmarked-it': '你加咗呢個書籤',
-    'bookmark-you-bookmarked-it-and-$name-recommends-it': (name) => {
-        return `你加咗呢個書籤（${name}推薦）`;
+    'bookmark-$you-bookmarked-it': '你加咗個書籤',
+    'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
+        return `你加咗個書籤（${name}推薦）`;
     },
-    'bookmark-you-bookmarked-it-and-$users-recommends-it': (name, users, count) => {
-        return [ `你加咗呢個書籤（`, users, `推薦）` ];
-    },
-
-    'comment-$user-cast-a-vote': (user) => {
-        return `${user}投咗一票`;
-    },
-    'comment-$user-commented-on-issue': (user) => {
-        return `${user}評論咗呢個問題`;
-    },
-    'comment-$user-commented-on-merge-request': (user) => {
-        return `${user}評論咗呢個合併請求`;
-    },
-    'comment-$user-commented-on-push': (user) => {
-        return `${user}評論咗呢個push`;
-    },
-    'comment-$user-completed-a-task': (user) => {
-        return `${user}完成咗一個任務`;
-    },
-    'comment-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到呢個問題`;
-    },
-    'comment-$user-is-typing': (user) => {
-        return `${user}現在寫緊評論⋯⋯`;
-    },
-    'comment-$user-likes-this': (user) => {
-        return `${user}鍾意呢個`;
+    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
+        return [ `你加咗個書籤（`, users, `推薦）` ];
     },
 
-    'list-$count-more': (count) => {
-        var num = cardinal(count);
-        return `重有${num}個⋯⋯`;
-    },
+    'bottom-nav-people': '仆街',
 
-    'notification-$user-commented-on-your-commit': (user) => {
-        return `${user}評論咗你嘅commit`;
+    'membership-request-$you-are-now-member': '你而家係呢個項目嘅成員',
+    'membership-request-$you-have-requested-membership': '你要求成為呢個項目嘅成員',
+
+    'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置嘅授權？',
+
+    'notification-$user-added-you-as-coauthor': (user) => {
+        return `${user}邀請你一齊寫一個帖子`;
     },
-    'notification-$user-commented-on-your-merge': (user) => {
-        return `${user}評論咗你嘅merge`;
-    },
-    'notification-$user-commented-on-your-story': (user) => {
-        return `${user}評論咗你嘅公報`;
-    },
-    'notification-$user-commented-on-your-survey': (user) => {
-        return `${user}評論咗你嘅調查`;
-    },
-    'notification-$user-commented-on-your-task-list': (user) => {
-        return `${user}評論咗你嘅任務列表`;
+    'notification-$user-commented-on-your-$story': (user, story) => {
+        switch (story) {
+            case 'push': story = '推送'; break;
+            case 'merge': story = '合併'; break;
+            case 'branch': story = '分支'; break;
+            case 'survey': story = '調查'; break;
+            case 'task-list': story = '任務列表'; break;
+            case 'post': story = '帖子'; break;
+            default: story = '故事';
+        }
+        return `${user}回應咗你嘅${story}`;
     },
     'notification-$user-completed-task': (user) => {
-        return `${user}完成咗喺你嘅列表嘅上一個任務`;
+        return `${user}完成咗喺你個列表上嘅一個任務`;
     },
-    'notification-$user-likes-your-commit': (user) => {
-        return `${user}鍾意你嘅commit`;
+    'notification-$user-likes-your-$story': (user, story) => {
+        switch (story) {
+            case 'push': story = '推送'; break;
+            case 'merge': story = '合併'; break;
+            case 'branch': story = '分支'; break;
+            case 'survey': story = '調查'; break;
+            case 'task-list': story = '任務列表'; break;
+            case 'post': story = '帖子'; break;
+            default: story = '故事';
+        }
+        return `${user}鍾意你嘅${story}`;
     },
-    'notification-$user-likes-your-merge': (user) => {
-        return `${user}鍾意你嘅merge`;
-    },
-    'notification-$user-likes-your-story': (user) => {
-        return `${user}鍾意你嘅公報`;
-    },
-    'notification-$user-likes-your-survey': (user) => {
-        return `${user}鍾意你嘅調查`;
-    },
-    'notification-$user-likes-your-task-list': (user) => {
-        return `${user}鍾意你嘅任務列表`;
+    'notification-$user-requested-to-join': (user) => {
+        return `${user}要求加入呢個項目`;
     },
     'notification-$user-voted-in-your-survey': (user) => {
         return `${user}回答咗你嘅調查`;
     },
+    'notification-option-assignment': '當你被分配到一個問題',
+    'notification-option-bookmark': '當你收到人哋嘅書籤',
+    'notification-option-coauthor': '當有人想同你一齊寫帖子',
+    'notification-option-comment': '當有人回應你嘅帖子',
+    'notification-option-issue': '當有人開咗一個問題',
+    'notification-option-join-request': '當有人想加入呢個項目',
+    'notification-option-like': '當有人鍾意你嘅帖子',
+    'notification-option-note': '當有人喺提交或問題上發布回應',
+    'notification-option-push': '當有人推啲代碼入到git數據庫',
+    'notification-option-task-completion': '當有人完成你列表上嘅任務',
+    'notification-option-vote': '當有人回答你嘅調查',
+    'notification-option-web-session': '當你用緊網絡瀏覽器查嘞睇呢個網站',
 
-    'option-hide-post': '非會員睇唔到',
-    'option-send-bookmarks': '發送書籤畀其他人',
+    'option-edit-post': '編輯帖子',
+    'option-hide-comment': '非成員睇唔到',
+    'option-hide-post': '非成員睇唔到',
+    'option-send-bookmarks': '發送書籤俾其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
-        var num = cardinal(count);
-        return `發送書籤畀${num}個人`;
+        var num = cardinalT(count);
+        return `發送書籤俾${num}個人`;
     },
 
-    'story-author-$name-and-$users': (name, users, count) => {
-        return [ name, '同', users ];
+    'project-management-mobile-set-up': '手機設置',
+    'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
+
+    'qr-scanner-invalid-qr-code': '唔正確嘅ＱＲ碼',
+
+    'reaction-$user-added-story-to-issue-tracker': (user) => {
+        return `${user}把呢個帖子放到問題跟踪器上`;
+    },
+    'reaction-$user-cast-a-vote': (user) => {
+        return `${user}投咗一票`;
+    },
+    'reaction-$user-commented-on-branch': (user) => {
+        return `${user}回應咗呢個分支`;
+    },
+    'reaction-$user-commented-on-issue': (user) => {
+        return `${user}回應咗呢個問題`;
+    },
+    'reaction-$user-commented-on-merge': (user) => {
+        return `${user}回應咗呢個合併`;
+    },
+    'reaction-$user-commented-on-merge-request': (user) => {
+        return `${user}回應咗呢個合併請求`;
+    },
+    'reaction-$user-commented-on-push': (user) => {
+        return `${user}回應咗呢個推送`;
+    },
+    'reaction-$user-completed-a-task': (user) => {
+        return `${user}完成咗一個任務`;
+    },
+    'reaction-$user-is-assigned-to-issue': (user) => {
+        return `${user}被分配到呢個問題`;
+    },
+    'reaction-$user-is-assigned-to-merge-request': (user) => {
+        return `${user}被分配到呢個合併請求`;
+    },
+    'reaction-$user-is-editing': (user) => {
+        return `${user}啱啱改緊一個回應⋯⋯`;
+    },
+    'reaction-$user-is-writing': (user) => {
+        return `${user}啱啱寫緊一個回應⋯⋯`;
+    },
+    'reaction-$user-likes-this': (user) => {
+        return `${user}鍾意呢個`;
+    },
+
+    'role-filter-no-roles': '冇角色',
+
+    'settings-device': '流動裝置',
+    'settings-devices': '流動裝置',
+    'settings-mobile-alert': '流動裝置警報',
+
+    'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
+        return `喺《${repo}》數據庫中創建咗《${branch}》分支`;
+    },
+    'story-$name-created-$milestone': (name, milestone) => {
+        return `建立咗《${milestone}》里程碑`;
+    },
+    'story-$name-created-$page': (name, page) => {
+        return `建立咗wiki頁面《${page}》”`;
+    },
+    'story-$name-created-$repo': (name, repo) => {
+        var text = `建立咗`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-deleted-$page': (name, page) => {
+        return `刪除咗wiki頁面《${page}》”`;
+    },
+    'story-$name-joined-$repo': (name, repo) => {
+        var text = `加入咗`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-left-$repo': (name, repo) => {
+        var text = `離開咗`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
+        var text = `將`;
+        if (branches && branches.length > 0) {
+            var sources = branches.map((branch) => {
+                return `《${branch}》`;
+            });
+            text += `${sources.join('、')}分支嘅代碼合併到`;
+        }
+        if (repo) {
+            text += `《${repo}》數據庫嘅`;
+        }
+        text += `《${branch}》分支`;
+        return text;
+    },
+    'story-$name-opened-issue-$number-$title': (name, number, title) => {
+        var text = `開咗問題${number}`;
+        if (title) {
+            text += `： ${title}`;
+        }
+        return text;
+    },
+    'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
+        var text = `推咗一啲代碼修改入到`
+        if (repo) {
+            text += `《${repo}》數據庫嘅`;
+        }
+        text += `《${branch}》分支`;
+        return text;
+    },
+    'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
+        return `要求將《${branch1}》分支合併到《${branch2}》分支`;
+    },
+    'story-$name-updated-$page': (name, page) => {
+        return `修正咗wiki頁面《${page}》`;
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
-        return `${name1}同${name2}`;
+        return [ name1, '同', name2 ];
     },
-    'story-issue-opened-$number-$title': (number, title) => {
-        var num = String(number)
-        return `報告咗問題${num}：《${title}》`;
-    },
+    'story-cancel-are-you-sure': '你確定要取消呢個帖子？',
+    'story-cancel-edit-are-you-sure': '你確定要取消呢啲改變？',
+    'story-comment': '回應',
+    'story-drop-files-here': '喺呢度放媒體文件',
     'story-like': '鍾意',
-    'story-member-joined-$repo': (repo) => {
-        var text = `加入咗project`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        return text;
-    },
-    'story-member-left-$repo': (repo) => {
-        var text = `離開咗project`;
-        if (repo) {
-            text += `《${repo}》`;
-        }
-        return text;
-    },
-    'story-milestone-created-$name': (name) => {
-        return `加咗里程碑《${name}》`;
-    },
-    'story-pending': '等一陣⋯⋯',
+    'story-paste-image-here': '放喺文本編輯器嘅圖像會係呢度出現',
+    'story-pending': '等緊⋯⋯',
     'story-push-added-$count-files': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `加咗${num}個文件`;
     },
     'story-push-added-$count-lines': (count) => {
-        var num = cardinal(count);
+        var num = cardinalT(count);
         return `加咗${num}行代碼`;
     },
+    'story-push-components-changed': '更改咗以下部分：',
+    'story-push-deleted-$count-files': (count) => {
+        var num = cardinalT(count);
+        return `刪除咗${num}個文件`;
+    },
+    'story-push-deleted-$count-lines': (count) => {
+        var num = cardinalT(count);
+        return `刪除咗${num}行代碼`;
+    },
     'story-push-modified-$count-files': (count) => {
-        var num = cardinal(count);
-        return `改咗${num}行代碼`;
-    },
-    'story-push-pushed-to-$branch-of-$repo': (branch, repo) => {
-        var text = `推咗一啲代碼修改入到`
-        if (repo) {
-            text += `project《${repo}》嘅`;
-        }
-        text += `branch《${branch}》`;
-        return text;
-    },
-    'story-push-removed-$count-files': (count) => {
-        return `除咗${num}個文件`;
-    },
-    'story-push-removed-$count-lines': (count) => {
-        return `除咗${num}行代碼`;
+        var num = cardinalT(count);
+        return `修改咗${num}個文件`;
     },
     'story-push-renamed-$count-files': (count) => {
+        var num = cardinalT(count);
         return `改咗${num}個文件嘅名`;
     },
-    'story-repo-created-$name': (name) => {
-        var text = `加咗project`;
-        if (name) {
-            text += `《${name}》`;
-        }
-        return text;
+    'story-remove-yourself-are-you-sure': '你確定你唔要做呢個帖子嘅合著者？',
+    'story-status-uploading-$progress': (progress) => {
+        return `上載（${progress}%）`;
     },
-    'story-wiki-created-page-with-$title': (title) => {
-        return `加咗Wiki頁面《${title}》”`;
+
+    'time-yesterday': '尋日',
+
+    'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
+        return `上載緊${num}個文件，重有${size}`;
     },
-    'story-wiki-deleted-page-with-$title': (title) => {
-        return `刪除咗Wiki頁面《${title}》”`;
+
+    'user-activity-$name-created-branch': '建立咗一個分支',
+    'user-activity-$name-created-milestone': '建立咗一個里程碑',
+    'user-activity-$name-created-repo': '建立咗一個git數據庫',
+    'user-activity-$name-edited-wiki-page': '編輯咗一個wiki頁面',
+    'user-activity-$name-joined-repo': '加入咗數據庫',
+    'user-activity-$name-left-repo': '離開咗數據庫',
+    'user-activity-$name-merged-code': '合併咗一啲代碼',
+    'user-activity-$name-opened-issue': '開咗一個問題',
+    'user-activity-$name-posted-$count-audio-clips': (name, count) => {
+        var num = cardinalT(count);
+        return `新增咗${num}個音頻剪輯`;
     },
-    'story-wiki-updated-page-with-$title': (title) => {
-        return `改咗Wiki頁面《${title}》`;
+    'user-activity-$name-posted-$count-links': (name, count) => {
+        var num = cardinalT(count);
+        return `新增咗${num}個網頁鏈接`;
+    },
+    'user-activity-$name-posted-$count-pictures': (name, count) => {
+        var num = cardinalT(count);
+        return `新增咗${num}張相片`;
+    },
+    'user-activity-$name-posted-$count-video-clips': (name, count) => {
+        var num = cardinalT(count);
+        return `新增咗${num}張影片`;
+    },
+    'user-activity-$name-started-survey': '發布咗一個調查',
+    'user-activity-$name-started-task-list': '發布咗一個任務列表',
+    'user-activity-$name-wrote-post': '寫咗一個帖子',
+
+    'user-statistics-legend-post': '帖子',
+    'user-statistics-today': '今日',
+    'user-statistics-tooltip-$count-post': (count) => {
+        var num = cardinalT(count);
+        return `${num}個帖子`;
     },
 };
 
