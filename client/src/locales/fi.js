@@ -114,9 +114,6 @@ module.exports = function(localeCode) {
         },
         'notification-$user-commented-on-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'sinun push'; break;
-                case 'merge': story = 'sinun merge'; break;
-                case 'branch': story = 'branchiasi'; break;
                 case 'survey': story = 'kyselysi'; break;
                 case 'task-list': story = 'tehtäväluetteloasi'; break;
                 case 'post': story = 'viestiäsi'; break;
@@ -129,9 +126,6 @@ module.exports = function(localeCode) {
         },
         'notification-$user-likes-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'sinun push'; break;
-                case 'merge': story = 'sinun merge'; break;
-                case 'branch': story = 'branchistasi'; break;
                 case 'survey': story = 'kyselystäsi'; break;
                 case 'task-list': story = 'tehtäväluettelostasi'; break;
                 case 'post': story = 'viestistasi'; break;

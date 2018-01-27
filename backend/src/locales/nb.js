@@ -114,12 +114,10 @@ module.exports = function(localeCode) {
         },
         'notification-$user-commented-on-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'pushen din'; break;
-                case 'merge': story = 'mergen din'; break;
-                case 'branch': story = 'branchen din'; break;
                 case 'survey': story = 'undersøkelsen din'; break;
                 case 'task-list': story = 'oppgavelisten din'; break;
-                default: story = 'innlegget ditt';
+                case 'post': story = 'innlegget ditt'; break;
+                default: story = 'historien din';
             }
             return `${user} kommenterte ${story}`;
         },
@@ -128,12 +126,10 @@ module.exports = function(localeCode) {
         },
         'notification-$user-likes-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'pushen din'; break;
-                case 'merge': story = 'mergen din'; break;
-                case 'branch': story = 'branchen din'; break;
                 case 'survey': story = 'undersøkelsen din'; break;
                 case 'task-list': story = 'oppgavelisten din'; break;
-                default: story = 'innlegget ditt';
+                case 'post': story = 'innlegget ditt';
+                default: story = 'historien din';
             }
             return `${user} liker ${story}`;
         },
@@ -144,7 +140,8 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'en undersøkelse'; break;
                 case 'task-list': story = 'en oppgavelist'; break;
-                default: story = 'et innlegg';
+                case 'post': story = 'et innlegg';
+                default: story = 'en historie';
             }
             return `${user} sendte deg et bokmerke til ${story}`;
         },
@@ -157,7 +154,7 @@ module.exports = function(localeCode) {
         'notification-option-comment': 'Når noen kommenterer innlegget ditt',
         'notification-option-issue': 'Når noen åpner et problem',
         'notification-option-join-request': 'Når noen ønsker å bli med i dette prosjektet',
-        'notification-option-like': 'Når noen liker innlegget ditt',
+        'notification-option-like': 'Når noen liker historien din',
         'notification-option-merge': 'Når noen fusjonerer kode inn i master versjonen',
         'notification-option-note': 'Når noen legger inn et notat om et begå eller et problem',
         'notification-option-push': 'Når noen trykker på kode i Git',
@@ -166,16 +163,16 @@ module.exports = function(localeCode) {
         'notification-option-vote': 'Når noen svarer på undersøkelsen din',
         'notification-option-web-session': 'Når en web økt er aktiv',
 
-        'option-add-bookmark': 'Legg til bokmerke for dette innlegget',
+        'option-add-bookmark': 'Legg til bokmerke for denne historien',
         'option-add-issue': 'Legg til innlegg til feilrapporteringssystemet',
         'option-bookmark-story': 'Legg bokmerke',
-        'option-bump-post': 'Støt opp dette innlegget',
+        'option-bump-post': 'Støt opp denne historien',
         'option-edit-comment': 'Rediger kommentaren',
         'option-edit-post': 'Rediger innlegget',
         'option-hide-comment': 'Skjul kommentaren fra ikke-medlemmer',
-        'option-hide-post': 'Skjul innlegget fra ikke-medlemmer',
+        'option-hide-post': 'Skjul historien fra ikke-medlemmer',
         'option-remove-comment': 'Fjern kommentaren',
-        'option-remove-post': 'Fjern innlegget',
+        'option-remove-post': 'Fjern historien',
         'option-send-bookmarks': 'Send bokmerker til andre brukere',
         'option-send-bookmarks-to-$count-users': (count) => {
             var users = (count === 1) ? `${count} bruker` : `${count} brukere`;

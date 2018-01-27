@@ -118,12 +118,10 @@ module.exports = function(localeCode) {
         },
         'notification-$user-commented-on-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'push'; break;
-                case 'merge': story = 'merge'; break;
-                case 'branch': story = 'branch'; break;
                 case 'survey': story = 'survey'; break;
                 case 'task-list': story = 'task list'; break;
-                default: story = 'post';
+                case 'post': story = 'post'; break;
+                default: story = 'story';
             }
             return `${user} commented on your ${story}`;
         },
@@ -132,12 +130,10 @@ module.exports = function(localeCode) {
         },
         'notification-$user-likes-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'push'; break;
-                case 'merge': story = 'merge'; break;
-                case 'branch': story = 'branch'; break;
                 case 'survey': story = 'survey'; break;
                 case 'task-list': story = 'task list'; break;
-                default: story = 'post';
+                case 'post': story = 'post'; break;
+                default: story = 'story';
             }
             return `${user} likes your ${story}`;
         },
@@ -148,7 +144,8 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'a survey'; break;
                 case 'task-list': story = 'a task list'; break;
-                default: story = 'a post';
+                case 'post': story = 'post';
+                default: story = 'a story';
             }
             return `${user} sent you a bookmark to ${story}`;
         },
@@ -158,10 +155,10 @@ module.exports = function(localeCode) {
         'notification-option-assignment': 'When you are assigned to an issue',
         'notification-option-bookmark': 'When someone sends you a bookmark',
         'notification-option-coauthor': 'When someone invites you to jointly edit a post',
-        'notification-option-comment': 'When someone comments on your post',
+        'notification-option-comment': 'When someone comments on your story',
         'notification-option-issue': 'When someone opens an issue',
         'notification-option-join-request': 'When someone wants to join this project',
-        'notification-option-like': 'When someone likes your post',
+        'notification-option-like': 'When someone likes your story',
         'notification-option-merge': 'When someone merges code into the master branch',
         'notification-option-note': 'When someone posts a note on a commit or issue',
         'notification-option-push': 'When someone pushes code into Git',
@@ -173,13 +170,13 @@ module.exports = function(localeCode) {
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
         'option-bookmark-story': 'Bookmark story',
-        'option-bump-post': 'Bump post',
+        'option-bump-post': 'Bump story',
         'option-edit-comment': 'Edit comment',
         'option-edit-post': 'Edit post',
         'option-hide-comment': 'Hide comment from non-team members',
         'option-hide-post': 'Hide from non-team members',
         'option-remove-comment': 'Remove comment',
-        'option-remove-post': 'Remove post',
+        'option-remove-post': 'Remove story',
         'option-send-bookmarks': 'Send bookmarks to other users',
         'option-send-bookmarks-to-$count-users': (count) => {
             var users = (count === 1) ? `${count} user` : `${count} users`;
