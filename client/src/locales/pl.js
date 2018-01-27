@@ -85,15 +85,15 @@ module.exports = function(localeCode) {
             return [ name1, ' i ', name2, ' polecają to' ];
         },
         'bookmark-$you-bookmarked-it': (you) => {
-            var e = verbPastTenseEnding(you, 2);
+            var e = pastTenseEnding(you, 2);
             return `Założył${e} zakładkę do tego`;
         },
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
-            var e = verbPastTenseEnding(you, 2);
+            var e = pastTenseEnding(you, 2);
             return `Założył${e} zakładkę do tego (i ${name} poleca go)`;
         },
         'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users, count) => {
-            var e = verbPastTenseEnding(you, 2);
+            var e = pastTenseEnding(you, 2);
             var verb = plural(count) ? 'polecają' : 'poleca';
             return [ `Założył${e} zakładkę do tego (i `, users, ` ${verb} it)` ];
         },
@@ -136,7 +136,7 @@ module.exports = function(localeCode) {
             return `Jesteś ${member} tego projektu`;
         },
         'membership-request-$you-have-requested-membership': (you) => {
-            var e = verbPastTenseEnding(you, 2);
+            var e = pastTenseEnding(you, 2);
             return `Zgłosił${e} się o członkostwo w tym projekcie`;
         },
         'membership-request-cancel': 'Anuluj',
@@ -152,31 +152,25 @@ module.exports = function(localeCode) {
         'mobile-setup-code': 'Kod autoryzacyjny',
 
         'notification-$user-added-you-as-coauthor': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} zaprosił${e} Cię do wspólnej edycji posta`;
         },
         'notification-$user-commented-on-your-$story': (user, story) => {
-            var e = verbPastTenseEnding(user, 3);
             switch (story) {
-                case 'push': story = 'Twoje wgrywanie zmian'; break;
-                case 'merge': story = 'Twoje scalanie'; break;
-                case 'branch': story = 'Twoją gałąź'; break;
                 case 'survey': story = 'Twoją ankietę'; break;
                 case 'task-list': story = 'Twoją listę zadań'; break;
                 case 'post': story = 'Twoj post'; break;
                 default: story = 'Twoją wiadomość';
             }
+            var e = pastTenseEnding(user, 3);
             return `${user} skomentował${e} ${story}`;
         },
         'notification-$user-completed-task': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} wykonał${e} zadanie z Twojej listy`;
         },
         'notification-$user-likes-your-$story': (user, story) => {
             switch (story) {
-                case 'push': story = 'Twoje wgrywanie zmian'; break;
-                case 'merge': story = 'Twoje scalanie'; break;
-                case 'branch': story = 'Twoją gałąź'; break;
                 case 'survey': story = 'Twoją ankietę'; break;
                 case 'task-list': story = 'Twoją listę zadań'; break;
                 case 'post': story = 'Twoj post'; break;
@@ -185,7 +179,7 @@ module.exports = function(localeCode) {
             return `${user} lubi ${story}`;
         },
         'notification-$user-requested-to-join': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} poprosił${e} o dołączenie do tego projektu`;
         },
         'notification-$user-sent-bookmark-to-$story': (user, story) => {
@@ -195,10 +189,11 @@ module.exports = function(localeCode) {
                 case 'post': story = ' posta'; break;
                 default: story = 'wiadomości';
             }
+            var e = pastTenseEnding(user, 3);
             return `${user} przysłał${e} Ci zakładkę do ${story}`;
         },
         'notification-$user-voted-in-your-survey': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} odpowiedział${e} na Twoją ankietę`;
         },
         'notification-option-assignment': 'Po przypisaniu do zgłoszenia błędu',
@@ -255,45 +250,45 @@ module.exports = function(localeCode) {
         'qr-scanner-invalid-qr-code': 'Nieprawidłowy kod QR',
 
         'reaction-$user-added-story-to-issue-tracker': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} dodał${e} tego posta do issue-trackera`;
         },
         'reaction-$user-cast-a-vote': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} głosował${e}`;
         },
         'reaction-$user-commented-on-branch': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} skomentował${e} tę gałąź`;
         },
         'reaction-$user-commented-on-issue': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} skomentował${e} to zgłoszenie`;
         },
         'reaction-$user-commented-on-merge': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} skomentował${e} to połączenie`;
         },
         'reaction-$user-commented-on-merge-request': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} skomentował${e} tę prośbę o połączenie`;
         },
         'reaction-$user-commented-on-push': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} skomentował${e} zmiany w tym wgrywaniu`;
         },
         'reaction-$user-completed-a-task': (user) => {
-            var e = verbPastTenseEnding(user, 3);
+            var e = pastTenseEnding(user, 3);
             return `${user} wykonał${e} zadanie`;
         },
         'reaction-$user-is-assigned-to-issue': (user) => {
-            var ve = verbPastTenseEnding(user, 3);
+            var ve = pastTenseEnding(user, 3);
             var ae = (ve === 'a') ? 'a' : 'y';
             return `${user} został${ve} przydzielon${ae} do tego problemu`;
 
         },
         'reaction-$user-is-assigned-to-merge-request': (user) => {
-            var ve = verbPastTenseEnding(user, 3);
+            var ve = pastTenseEnding(user, 3);
             var ae = (ve === 'a') ? 'a' : 'y';
             return `${user} został${ve} przydzielon${ae} do tej prośby o połączenie`;
         },
@@ -371,19 +366,19 @@ module.exports = function(localeCode) {
             }
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} gałąź „${branch}” w projektcie „${repo}”`;
         },
         'story-$name-created-$milestone': (name, milestone) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} kamień milowy „${milestone}”`;
         },
         'story-$name-created-$page': (name, page) => {
-            var e = verbPastTenseEnding(name);
+            var e = pastTenseEnding(name);
             return `Stworzył${e} stronę wiki „${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var e = verbPastTenseEnding(name);
+            var e = pastTenseEnding(name);
             var text = `Stworzył${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
@@ -391,11 +386,11 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-deleted-$page': (name, page) => {
-            var e = verbPastTenseEnding(name);
+            var e = pastTenseEnding(name);
             return `Usunał${e} stronę wiki „${page}”`;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             var text = `Dołączył${e} do projektu`;
             if (repo) {
                 text += ` „${repo}”`;
@@ -403,7 +398,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             var text = `Opuścił${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
@@ -411,7 +406,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var e = verbPastTenseEnding(name);
+            var e = pastTenseEnding(name);
             var text = `Scalił${e} zmiany`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
@@ -426,7 +421,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             var text = `Napisał${e} zgłoszenie błędu #${number}`;
             if (title) {
                 text += `: ${title}`;
@@ -442,11 +437,11 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Poprosił${e} o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
         },
         'story-$name-updated-$page': (name, page) => {
-            var e = verbPastTenseEnding(name);
+            var e = pastTenseEnding(name);
             return `Redagował${e} wiki page „${page}”`;
         },
         'story-add-coauthor': 'Dodaj współautora',
@@ -576,39 +571,39 @@ module.exports = function(localeCode) {
         'user-actions': 'Operacje',
 
         'user-activity-$name-created-branch': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} nową gałąź`;
         },
         'user-activity-$name-created-merge-request': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} prośbę o połączenie zmain`;
         },
         'user-activity-$name-created-milestone': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} kamień milowy`;
         },
         'user-activity-$name-created-repo': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} projekt gita`;
         },
         'user-activity-$name-edited-wiki-page': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Redagował${e} stronę wiki`;
         },
         'user-activity-$name-joined-repo': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Dołączył${e} do projektu gita`;
         },
         'user-activity-$name-left-repo': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Opuścił${e} projekt gita`;
         },
         'user-activity-$name-merged-code': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Wykonał${e} scalenie zmian`;
         },
         'user-activity-$name-opened-issue': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Napisał${e} zgłoszenie błędu`;
         },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
@@ -620,13 +615,13 @@ module.exports = function(localeCode) {
             } else {
                 audios = `${count} klipów audio`;
             }
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Wysłał${e} ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
             var links = (count === 1) ? `link` : `linki`;
             var website = (count === 1) ? `strony internetowej` : `${count} stron internetowych`;
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Wysłał${e} ${links} do ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
@@ -637,7 +632,7 @@ module.exports = function(localeCode) {
             } else {
                 pictures = `${count} zdjęć`;
             }
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Wysłał${e} ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
@@ -649,23 +644,23 @@ module.exports = function(localeCode) {
             } else {
                 wideos = `${count} klipów wideo`;
             }
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Wysłał${e} ${wideos}`;
         },
         'user-activity-$name-pushed-code': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Przesłał${e} kod do repozytorium`;
         },
         'user-activity-$name-started-survey': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} ankietę`;
         },
         'user-activity-$name-started-task-list': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} listę zadań`;
         },
         'user-activity-$name-wrote-post': (name) => {
-            var e = verbPastTenseEnding(name, 3);
+            var e = pastTenseEnding(name, 3);
             return `Napisał${e} post`;
         },
         'user-activity-more': 'Więcej...',
@@ -819,24 +814,23 @@ function plural(n) {
 }
 
 function gender(name) {
-    if (name.gender) {
-        return name.gender;
-    }
-    var parts = name.split(/\s+/);
-    var fname = parts[0].toLocaleLowerCase();
-    if (/a$/.test(fname)) {
-        if (isMasculine[fname]) {
-            return 'male';
-        } else {
-            return 'female';
+    if (name) {
+        if (name.gender) {
+            return name.gender;
         }
-    } else {
-        if (isFeminine[fname]) {
-            return 'female';
+        var parts = name.split(/\s+/);
+        var fname = parts[0].toLocaleLowerCase();
+        if (/a$/.test(fname)) {
+            if (!isMasculine[fname]) {
+                return 'female';
+            }
         } else {
-            return 'male';
+            if (isFeminine[fname]) {
+                return 'female';
+            }
         }
     }
+    return 'male';
 }
 
 // żeńskie imiona nie kończące się na a
@@ -880,7 +874,7 @@ var isMasculine = {};
     isMasculine[name.toLocaleLowerCase()] = true;
 });
 
-function verbPastTenseEnding(name, person) {
+function pastTenseEnding(name, person) {
     if (gender(name) === 'female') {
         if (person === 3) {
             return 'a';
