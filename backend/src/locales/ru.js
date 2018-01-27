@@ -75,8 +75,8 @@ module.exports = function(localeCode) {
                 return `${count} пользователей`;
             }
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users) => {
-            return [ `${name} и `, users, ` рекомендуют это` ];
+        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
+            return [ `${name} и `, others, ` рекомендуют это` ];
         },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} рекомендует это`;
@@ -90,8 +90,8 @@ module.exports = function(localeCode) {
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             return `Вы добавили это в закладки (и ${name} рекомендует)`;
         },
-        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-            return [ `Вы добавили это в закладки (и `, users, ` рекомендуют)` ];
+        'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+            return [ `Вы добавили это в закладки (и `, others, ` рекомендуют)` ];
         },
         'bookmark-recommendations': 'Рекомендации',
 
@@ -141,50 +141,50 @@ module.exports = function(localeCode) {
         'mobile-setup-close': 'Закрыть',
         'mobile-setup-code': 'Код авторизации',
 
-        'notification-$user-added-you-as-coauthor': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} предложил${e} вам совместно редактировать сообщение`;
+        'notification-$name-added-you-as-coauthor': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} предложил${e} вам совместно редактировать сообщение`;
         },
-        'notification-$user-commented-on-your-$story': (user, story) => {
+        'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'ваш опрос'; break;
                 case 'task-list': story = 'ваш список задач'; break;
                 case 'post': 'ваше сообщение'; break;
                 default: story = 'ваш рассказ';
             }
-            var e = pastTenseEnding(user);
-            return `${user} прокомментировал${e} ${story}`;
+            var e = pastTenseEnding(name);
+            return `${name} прокомментировал${e} ${story}`;
         },
-        'notification-$user-completed-task': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} выполнил задачу в вашем списке`;
+        'notification-$name-completed-task': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} выполнил задачу в вашем списке`;
         },
-        'notification-$user-likes-your-$story': (user, story) => {
+        'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'ваш опрос'; break;
                 case 'task-list': story = 'ваш список задач'; break;
                 case 'post': 'ваше сообщение'; break;
                 default: story = 'ваш рассказ';
             }
-            return `${user} любит ${story}`;
+            return `${name} любит ${story}`;
         },
-        'notification-$user-requested-to-join': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} попросил${e} присоединиться к проекту`;
+        'notification-$name-requested-to-join': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} попросил${e} присоединиться к проекту`;
         },
-        'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'опрос'; break;
                 case 'task-list': story = 'список задач'; break;
                 case 'post': story = 'сообщение'; break;
                 default: story = 'рассказ';
             }
-            var e = pastTenseEnding(user);
-            return `${user} отправил${e} вам закладку в ${story}`;
+            var e = pastTenseEnding(name);
+            return `${name} отправил${e} вам закладку в ${story}`;
         },
-        'notification-$user-voted-in-your-survey': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} ответил${e} на ваш опрос`;
+        'notification-$name-voted-in-your-survey': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} ответил${e} на ваш опрос`;
         },
         'notification-option-assignment': 'Когда вам назначается отчёт об ошибке',
         'notification-option-bookmark': 'Когда кто-то отправляет вам закладку',
@@ -204,13 +204,13 @@ module.exports = function(localeCode) {
         'option-add-bookmark': 'Добавить закладку в рассказ',
         'option-add-issue': 'Добавить сообщение в выпускной трекер',
         'option-bookmark-story': 'Добавить закладку в рассказ',
-        'option-bump-post': 'Продвинуть рассказ',
+        'option-bump-story': 'Продвинуть рассказ',
         'option-edit-comment': 'Редактировать комментарий',
         'option-edit-post': 'Редактировать сообщение',
         'option-hide-comment': 'Скрыть комментарий от гостей',
-        'option-hide-post': 'Скрыть рассказ от гостей',
+        'option-hide-story': 'Скрыть рассказ от гостей',
         'option-remove-comment': 'Удалить комментарий',
-        'option-remove-post': 'Удалить рассказ',
+        'option-remove-story': 'Удалить рассказ',
         'option-send-bookmarks': 'Отправить закладки другим пользователям',
         'option-send-bookmarks-to-$count-users': (count) => {
             if (singularN(count)) {
@@ -242,54 +242,54 @@ module.exports = function(localeCode) {
         'qr-scanner-cancel': 'Отмена',
         'qr-scanner-invalid-qr-code': 'Неверный QR-код',
 
-        'reaction-$user-added-story-to-issue-tracker': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} добавил${e} это сообщение в выпускной трекер`;
+        'reaction-$name-added-story-to-issue-tracker': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} добавил${e} это сообщение в выпускной трекер`;
         },
-        'reaction-$user-cast-a-vote': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} проголосовал${e}`;
+        'reaction-$name-cast-a-vote': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} проголосовал${e}`;
         },
-        'reaction-$user-commented-on-branch': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} прокомментировал${e} эту ветку`;
+        'reaction-$name-commented-on-branch': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} прокомментировал${e} эту ветку`;
         },
-        'reaction-$user-commented-on-issue': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} прокомментировал${e} эту проблему`;
+        'reaction-$name-commented-on-issue': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} прокомментировал${e} эту проблему`;
         },
-        'reaction-$user-commented-on-merge': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} прокомментировал${e} это слияние`;
+        'reaction-$name-commented-on-merge': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} прокомментировал${e} это слияние`;
         },
-        'reaction-$user-commented-on-merge-request': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} прокомментировал${e} этот запрос слияния`;
+        'reaction-$name-commented-on-merge-request': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} прокомментировал${e} этот запрос слияния`;
         },
-        'reaction-$user-commented-on-push': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} прокомментировал${e} это помещение`;
+        'reaction-$name-commented-on-push': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} прокомментировал${e} это помещение`;
         },
-        'reaction-$user-completed-a-task': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} выполнил задачу`;
+        'reaction-$name-completed-a-task': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} выполнил задачу`;
         },
-        'reaction-$user-is-assigned-to-issue': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} был назначен на этот отчёт об ошибке`;
+        'reaction-$name-is-assigned-to-issue': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} был назначен на этот отчёт об ошибке`;
         },
-        'reaction-$user-is-assigned-to-merge-request': (user) => {
-            var e = pastTenseEnding(user);
-            return `${user} был назначен на этот запрос слияния`;
+        'reaction-$name-is-assigned-to-merge-request': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} был назначен на этот запрос слияния`;
         },
-        'reaction-$user-is-editing': (user) => {
-            return `${user} редактирует комментарий...`;
+        'reaction-$name-is-editing': (name) => {
+            return `${name} редактирует комментарий...`;
         },
-        'reaction-$user-is-writing': (user) => {
-            return `${user} пишет комментарий...`;
+        'reaction-$name-is-writing': (name) => {
+            return `${name} пишет комментарий...`;
         },
-        'reaction-$user-likes-this': (user) => {
-            return `${user} любит это`;
+        'reaction-$name-likes-this': (name) => {
+            return `${name} любит это`;
         },
 
         'role-filter-no-roles': 'Роли не определены',
@@ -400,7 +400,7 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'story-$name-merged-$branches-into-$branch-of-$repo': (user, branches, branch, repo) => {
+        'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
             var e = pastTenseEnding(name);
             var text = `Слил${e} изменения`;
             if (branches && branches.length > 0) {

@@ -45,8 +45,8 @@ module.exports = function(localeCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 käyttäjä` : `${count} käyttäjää`;
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users) => {
-            return [ `${name} ja `, users, ` suosittelevat tätä` ];
+        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
+            return [ `${name} ja `, others, ` suosittelevat tätä` ];
         },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} suosittelee tätä`;
@@ -58,8 +58,8 @@ module.exports = function(localeCode) {
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             return `Teit kirjanmerkin tähän (ja ${name} suosittelee sitä)`;
         },
-        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-            return [ `Teit kirjanmerkin tähän (ja `, users, ` suosittelevat tätä)` ];
+        'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others, count) => {
+            return [ `Teit kirjanmerkin tähän (ja `, others, ` suosittelevat tätä)` ];
         },
         'bookmark-recommendations': 'Suositukset',
 
@@ -109,44 +109,44 @@ module.exports = function(localeCode) {
         'mobile-setup-close': 'Sulje',
         'mobile-setup-code': 'Lupakoodi',
 
-        'notification-$user-added-you-as-coauthor': (user) => {
-            return `${user} kutsui sinut muokkaamaan viestiä yhdessä`;
+        'notification-$name-added-you-as-coauthor': (name) => {
+            return `${name} kutsui sinut muokkaamaan viestiä yhdessä`;
         },
-        'notification-$user-commented-on-your-$story': (user, story) => {
+        'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'kyselysi'; break;
                 case 'task-list': story = 'tehtäväluetteloasi'; break;
                 case 'post': story = 'viestiäsi'; break;
                 default: story = 'tarinaasi';
             }
-            return `${user} kommentoi ${story}`;
+            return `${name} kommentoi ${story}`;
         },
-        'notification-$user-completed-task': (user) => {
-            return `${user} täytti tehtävänsä luettelossasi`;
+        'notification-$name-completed-task': (name) => {
+            return `${name} täytti tehtävänsä luettelossasi`;
         },
-        'notification-$user-likes-your-$story': (user, story) => {
+        'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'kyselystäsi'; break;
                 case 'task-list': story = 'tehtäväluettelostasi'; break;
                 case 'post': story = 'viestistasi'; break;
                 default: story = 'tarinastasi';
             }
-            return `${user} tykää ${story}`;
+            return `${name} tykää ${story}`;
         },
-        'notification-$user-requested-to-join': (user) => {
-            return `${user} pyysi liittymään tähän projektiin`;
+        'notification-$name-requested-to-join': (name) => {
+            return `${name} pyysi liittymään tähän projektiin`;
         },
-        'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'kyselyyn'; break;
                 case 'task-list': story = 'tehtäväluettelon'; break;
                 case 'post': story = 'viestiin';
                 default: story = 'tarinaan';
             }
-            return `${user} lähetti sinulle kirjanmerkin ${story}`;
+            return `${name} lähetti sinulle kirjanmerkin ${story}`;
         },
-        'notification-$user-voted-in-your-survey': (user) => {
-            return `${user} vastasi kyselyynne`;
+        'notification-$name-voted-in-your-survey': (name) => {
+            return `${name} vastasi kyselyynne`;
         },
         'notification-option-assignment': 'Kun olet määrittänyt ongelman',
         'notification-option-bookmark': 'Kun joku lähettää sinulle kirjanmerkin',
@@ -166,13 +166,13 @@ module.exports = function(localeCode) {
         'option-add-bookmark': 'Lisää kirjanmerkki tähän tarinaan',
         'option-add-issue': 'Lisää viesti raportointityökaluun',
         'option-bookmark-story': 'Lisää kirjanmerkki tähän tarinaan',
-        'option-bump-post': 'Edistä tarina',
+        'option-bump-story': 'Edistä tarina',
         'option-edit-comment': 'Muokkaa kommenttia',
         'option-edit-post': 'Muokkaa viestiä',
         'option-hide-comment': 'Piilota kommentti muilta kuin tiimin jäseniltä',
-        'option-hide-post': 'Piilota tarina muilta kuin tiimin jäseniltä',
+        'option-hide-story': 'Piilota tarina muilta kuin tiimin jäseniltä',
         'option-remove-comment': 'Poista kommentti',
-        'option-remove-post': 'Poista tarina',
+        'option-remove-story': 'Poista tarina',
         'option-send-bookmarks': 'Lähetä kirjanmerkit muille käyttäjille',
         'option-send-bookmarks-to-$count-users': (count) => {
             return `Lähetä kirjanmerkit ${count} käyttäjälle`;
@@ -199,44 +199,44 @@ module.exports = function(localeCode) {
         'qr-scanner-cancel': 'Peruutta',
         'qr-scanner-invalid-qr-code': 'Virheellinen QR-koodi',
 
-        'reaction-$user-added-story-to-issue-tracker': (user) => {
-            return `${user} lisäsi tämän viestin raportointityökaluun`;
+        'reaction-$name-added-story-to-issue-tracker': (name) => {
+            return `${name} lisäsi tämän viestin raportointityökaluun`;
         },
-        'reaction-$user-cast-a-vote': (user) => {
-            return `${user} äänesti`;
+        'reaction-$name-cast-a-vote': (name) => {
+            return `${name} äänesti`;
         },
-        'reaction-$user-commented-on-branch': (user) => {
-            return `${user} kommentoi tätä branchia`;
+        'reaction-$name-commented-on-branch': (name) => {
+            return `${name} kommentoi tätä branchia`;
         },
-        'reaction-$user-commented-on-issue': (user) => {
-            return `${user} kommentoi tätä asiaa`;
+        'reaction-$name-commented-on-issue': (name) => {
+            return `${name} kommentoi tätä asiaa`;
         },
-        'reaction-$user-commented-on-merge': (user) => {
-            return `${user} kommentoi tätä commitia`;
+        'reaction-$name-commented-on-merge': (name) => {
+            return `${name} kommentoi tätä commitia`;
         },
-        'reaction-$user-commented-on-merge-request': (user) => {
-            return `${user} kommentoi tätä merge-request`;
+        'reaction-$name-commented-on-merge-request': (name) => {
+            return `${name} kommentoi tätä merge-request`;
         },
-        'reaction-$user-commented-on-push': (user) => {
-            return `${user} kommentoi tätä push`;
+        'reaction-$name-commented-on-push': (name) => {
+            return `${name} kommentoi tätä push`;
         },
-        'reaction-$user-completed-a-task': (user) => {
-            return `${user} suoritti tehtävän`;
+        'reaction-$name-completed-a-task': (name) => {
+            return `${name} suoritti tehtävän`;
         },
-        'reaction-$user-is-assigned-to-issue': (user) => {
-            return `${user} oli määrätty tähän asiaan`;
+        'reaction-$name-is-assigned-to-issue': (name) => {
+            return `${name} oli määrätty tähän asiaan`;
         },
-        'reaction-$user-is-assigned-to-merge-request': (user) => {
-            return `${user} oli määrätty tähän merge-request`;
+        'reaction-$name-is-assigned-to-merge-request': (name) => {
+            return `${name} oli määrätty tähän merge-request`;
         },
-        'reaction-$user-is-editing': (user) => {
-            return `${user} muokkaa kommenttia...`;
+        'reaction-$name-is-editing': (name) => {
+            return `${name} muokkaa kommenttia...`;
         },
-        'reaction-$user-is-writing': (user) => {
-            return `${user} kirjoittaa kommentin...`;
+        'reaction-$name-is-writing': (name) => {
+            return `${name} kirjoittaa kommentin...`;
         },
-        'reaction-$user-likes-this': (user) => {
-            return `${user} tykkää tästä`;
+        'reaction-$name-likes-this': (name) => {
+            return `${name} tykkää tästä`;
         },
 
         'role-filter-no-roles': 'Ei rooleja määritelty',
@@ -297,40 +297,40 @@ module.exports = function(localeCode) {
             var users = (count === 1) ? `${count} ihminen` : `${count} ihmistä`;
             return `${users} reagoi tähän`;
         },
-        'story-$name-created-$branch-in-$repo': (user, branch, repo) => {
+        'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Loi branchin “${branch}” projektissa “${repo}”`;
         },
-        'story-$name-created-$milestone': (user, name) => {
-            return `Loi virstanpylvään “${name}”`;
+        'story-$name-created-$milestone': (name, milestone) => {
+            return `Loi virstanpylvään “${milestone}”`;
         },
-        'story-$name-created-$page': (user, page) => {
+        'story-$name-created-$page': (name, page) => {
             return `Loi wiki-sivun “${page}”`;
         },
-        'story-$name-created-$repo': (user, name) => {
+        'story-$name-created-$repo': (name, repo) => {
             var text = `Loi projektin`;
             if (name) {
-                text += ` “${name}”`;
+                text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-deleted-$page': (user, page) => {
+        'story-$name-deleted-$page': (name, page) => {
             return `Poisti wiki-sivun “${page}”`;
         },
-        'story-$name-joined-$repo': (user, repo) => {
+        'story-$name-joined-$repo': (name, repo) => {
             var text = `Liittyi projektiin`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-left-$repo': (user, repo) => {
+        'story-$name-left-$repo': (name, repo) => {
             var text = `Lähti projektista`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-merged-$branches-into-$branch-of-$repo': (user, branches, branch, repo) => {
+        'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
             var text = `Yhdisti koodin`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
@@ -344,24 +344,24 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'story-$name-opened-issue-$number-$title': (user, number, title) => {
+        'story-$name-opened-issue-$number-$title': (name, number, title) => {
             var text = `Avasi asian ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
-        'story-$name-pushed-to-$branch-of-$repo': (user, branch, repo) => {
+        'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
             var text = `Painoi muutoksia branchien “${branch}”`;
             if (repo) {
                 text += ` projektin “${repo}”`;
             }
             return text;
         },
-        'story-$name-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+        'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
             return `Pyysi yhdistämään branchin “${branch1}” branchien “${branch2}”`;
         },
-        'story-$name-updated-$page': (user, page) => {
+        'story-$name-updated-$page': (name, page) => {
             return `Päivitti wiki-sivun “${page}”`;
         },
         'story-add-coauthor': 'Lisää kirjoittaja',

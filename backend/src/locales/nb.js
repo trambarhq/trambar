@@ -45,8 +45,8 @@ module.exports = function(localeCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 brukere` : `${count} brukere`;
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users) => {
-            return [ `${name} og `, users, ` anbefaler dette` ];
+        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
+            return [ `${name} og `, others, ` anbefaler dette` ];
         },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} anbefaler dette`;
@@ -58,8 +58,8 @@ module.exports = function(localeCode) {
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             return `Du har laget et bokmerke til dette (og ${name} anbefaler dette)`;
         },
-        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-            return [ `Du har laget et bokmerke til dette (og `, users, `  anbefaler dette)` ];
+        'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others, count) => {
+            return [ `Du har laget et bokmerke til dette (og `, others, `  anbefaler dette)` ];
         },
         'bookmark-recommendations': 'Anbefalinger',
 
@@ -109,44 +109,44 @@ module.exports = function(localeCode) {
         'mobile-setup-close': 'Lukk',
         'mobile-setup-code': 'Autorisasjonskode',
 
-        'notification-$user-added-you-as-coauthor': (user) => {
-            return `${user} inviterte deg til å redigere et innlegg`;
+        'notification-$name-added-you-as-coauthor': (name) => {
+            return `${name} inviterte deg til å redigere et innlegg`;
         },
-        'notification-$user-commented-on-your-$story': (user, story) => {
+        'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'undersøkelsen din'; break;
                 case 'task-list': story = 'oppgavelisten din'; break;
                 case 'post': story = 'innlegget ditt'; break;
                 default: story = 'historien din';
             }
-            return `${user} kommenterte ${story}`;
+            return `${name} kommenterte ${story}`;
         },
-        'notification-$user-completed-task': (user) => {
-            return `${user} fullførte en oppgave på listen din`;
+        'notification-$name-completed-task': (name) => {
+            return `${name} fullførte en oppgave på listen din`;
         },
-        'notification-$user-likes-your-$story': (user, story) => {
+        'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'undersøkelsen din'; break;
                 case 'task-list': story = 'oppgavelisten din'; break;
                 case 'post': story = 'innlegget ditt';
                 default: story = 'historien din';
             }
-            return `${user} liker ${story}`;
+            return `${name} liker ${story}`;
         },
-        'notification-$user-requested-to-join': (user) => {
-            return `${user} ba om å bli med i dette prosjektet`;
+        'notification-$name-requested-to-join': (name) => {
+            return `${name} ba om å bli med i dette prosjektet`;
         },
-        'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'en undersøkelse'; break;
                 case 'task-list': story = 'en oppgavelist'; break;
                 case 'post': story = 'et innlegg';
                 default: story = 'en historie';
             }
-            return `${user} sendte deg et bokmerke til ${story}`;
+            return `${name} sendte deg et bokmerke til ${story}`;
         },
-        'notification-$user-voted-in-your-survey': (user) => {
-            return `${user} svarte på undersøkelsen din`;
+        'notification-$name-voted-in-your-survey': (name) => {
+            return `${name} svarte på undersøkelsen din`;
         },
         'notification-option-assignment': 'Når du er tildelt et problem',
         'notification-option-bookmark': 'Når noen sender deg et bokmerke',
@@ -166,13 +166,13 @@ module.exports = function(localeCode) {
         'option-add-bookmark': 'Legg til bokmerke for denne historien',
         'option-add-issue': 'Legg til innlegg til feilrapporteringssystemet',
         'option-bookmark-story': 'Legg bokmerke',
-        'option-bump-post': 'Støt opp denne historien',
+        'option-bump-story': 'Støt opp denne historien',
         'option-edit-comment': 'Rediger kommentaren',
         'option-edit-post': 'Rediger innlegget',
         'option-hide-comment': 'Skjul kommentaren fra ikke-medlemmer',
-        'option-hide-post': 'Skjul historien fra ikke-medlemmer',
+        'option-hide-story': 'Skjul historien fra ikke-medlemmer',
         'option-remove-comment': 'Fjern kommentaren',
-        'option-remove-post': 'Fjern historien',
+        'option-remove-story': 'Fjern historien',
         'option-send-bookmarks': 'Send bokmerker til andre brukere',
         'option-send-bookmarks-to-$count-users': (count) => {
             var users = (count === 1) ? `${count} bruker` : `${count} brukere`;
@@ -201,44 +201,44 @@ module.exports = function(localeCode) {
         'qr-scanner-cancel': 'Avbryt',
         'qr-scanner-invalid-qr-code': 'Ugyldig QR-kode',
 
-        'reaction-$user-added-story-to-issue-tracker': (user) => {
-            return `${user} la til dette innlegget til feilrapporteringssystemet`;
+        'reaction-$name-added-story-to-issue-tracker': (name) => {
+            return `${name} la til dette innlegget til feilrapporteringssystemet`;
         },
-        'reaction-$user-cast-a-vote': (user) => {
-            return `${user} stemte`;
+        'reaction-$name-cast-a-vote': (name) => {
+            return `${name} stemte`;
         },
-        'reaction-$user-commented-on-branch': (user) => {
-            return `${user} kommenterte denne branchen`;
+        'reaction-$name-commented-on-branch': (name) => {
+            return `${name} kommenterte denne branchen`;
         },
-        'reaction-$user-commented-on-issue': (user) => {
-            return `${user} kommenterte dette problemet`;
+        'reaction-$name-commented-on-issue': (name) => {
+            return `${name} kommenterte dette problemet`;
         },
-        'reaction-$user-commented-on-merge': (user) => {
-            return `${user} kommenterte denne mergen`;
+        'reaction-$name-commented-on-merge': (name) => {
+            return `${name} kommenterte denne mergen`;
         },
-        'reaction-$user-commented-on-merge-request': (user) => {
-            return `${user} kommenterte denne merge-requesten`;
+        'reaction-$name-commented-on-merge-request': (name) => {
+            return `${name} kommenterte denne merge-requesten`;
         },
-        'reaction-$user-commented-on-push': (user) => {
-            return `${user} kommenterte denne pushen`;
+        'reaction-$name-commented-on-push': (name) => {
+            return `${name} kommenterte denne pushen`;
         },
-        'reaction-$user-completed-a-task': (user) => {
-            return `${user} fullførte en oppgave`;
+        'reaction-$name-completed-a-task': (name) => {
+            return `${name} fullførte en oppgave`;
         },
-        'reaction-$user-is-assigned-to-issue': (user) => {
-            return `${user} ble tildelt dette problemet`;
+        'reaction-$name-is-assigned-to-issue': (name) => {
+            return `${name} ble tildelt dette problemet`;
         },
-        'reaction-$user-is-assigned-to-merge-request': (user) => {
-            return `${user} ble tildelt denne merge-requesten`;
+        'reaction-$name-is-assigned-to-merge-request': (name) => {
+            return `${name} ble tildelt denne merge-requesten`;
         },
-        'reaction-$user-is-editing': (user) => {
-            return `${user} redigerer en kommentar...`;
+        'reaction-$name-is-editing': (name) => {
+            return `${name} redigerer en kommentar...`;
         },
-        'reaction-$user-is-writing': (user) => {
-            return `${user} skriver en kommentar...`;
+        'reaction-$name-is-writing': (name) => {
+            return `${name} skriver en kommentar...`;
         },
-        'reaction-$user-likes-this': (user) => {
-            return `${user} liker dette`;
+        'reaction-$name-likes-this': (name) => {
+            return `${name} liker dette`;
         },
 
         'role-filter-no-roles': 'Ingen roller definert',
@@ -299,40 +299,40 @@ module.exports = function(localeCode) {
             var users = (count === 1) ? `${count} bruker` : `${count} brukere`;
             return `${users} reagerte på dette`;
         },
-        'story-$name-created-$branch-in-$repo': (user, branch, repo) => {
+        'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Skapte branchen “${branch}” i prosjektet “${repo}”`;
         },
-        'story-$name-created-$milestone': (user, milestone) => {
+        'story-$name-created-$milestone': (name, milestone) => {
             return `Skapte milepæl “${milestone}”`;
         },
-        'story-$name-created-$page': (user, page) => {
+        'story-$name-created-$page': (name, page) => {
             return `Opprettet wiki-siden “${page}”`;
         },
-        'story-$name-created-$repo': (user, repo) => {
+        'story-$name-created-$repo': (name, repo) => {
             var text = `Opprettet prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-deleted-$page': (user, page) => {
+        'story-$name-deleted-$page': (name, page) => {
             return `Fjernet wiki-siden “${page}”`;
         },
-        'story-$name-joined-$repo': (user, repo) => {
+        'story-$name-joined-$repo': (name, repo) => {
             var text = `Ble med i prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-left-$repo': (user, repo) => {
+        'story-$name-left-$repo': (name, repo) => {
             var text = `Forlot prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-merged-$branches-into-$branch-of-$repo': (user, branches, branch, repo) => {
+        'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
             var text = `Merget kode`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
@@ -346,20 +346,20 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'story-$name-opened-issue-$number-$title': (user, number, title) => {
+        'story-$name-opened-issue-$number-$title': (name, number, title) => {
             return `Åpnet problemet ${number}: ${title}`;
         },
-        'story-$name-pushed-to-$branch-of-$repo': (user, branch, repo) => {
+        'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
             var text = `Pushet forandringer til branchen “${branch}”`;
             if (repo) {
                 text += ` av prosjektet “${repo}”`;
             }
             return text;
         },
-        'story-$name-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+        'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
             return `Bedt om å fusjonere branchen “${branch1}” inn “${branch2}`;
         },
-        'story-$name-updated-$page': (user, page) => {
+        'story-$name-updated-$page': (name, page) => {
             return `Oppdatert wiki-siden “${page}”`;
         },
         'story-add-coauthor': 'Legg til medforfatter',

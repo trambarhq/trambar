@@ -49,8 +49,8 @@ module.exports = function(localeCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users) => {
-            return [ `${name} and `, users, ` recommend this` ];
+        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
+            return [ `${name} and `, others, ` recommend this` ];
         },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} recommends this`;
@@ -62,8 +62,8 @@ module.exports = function(localeCode) {
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             return `You bookmarked this (and ${name} recommends it)`;
         },
-        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-            return [ `You bookmarked this (and `, users, ` recommend it)` ];
+        'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others, count) => {
+            return [ `You bookmarked this (and `, others, ` recommend it)` ];
         },
         'bookmark-recommendations': 'Recommendations',
 
@@ -113,44 +113,44 @@ module.exports = function(localeCode) {
         'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
 
-        'notification-$user-added-you-as-coauthor': (user) => {
-            return `${user} invited you to jointly edit a post`;
+        'notification-$name-added-you-as-coauthor': (name) => {
+            return `${name} invited you to jointly edit a post`;
         },
-        'notification-$user-commented-on-your-$story': (user, story) => {
+        'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'survey'; break;
                 case 'task-list': story = 'task list'; break;
                 case 'post': story = 'post'; break;
                 default: story = 'story';
             }
-            return `${user} commented on your ${story}`;
+            return `${name} commented on your ${story}`;
         },
-        'notification-$user-completed-task': (user) => {
-            return `${user} completed a task on your list`;
+        'notification-$name-completed-task': (name) => {
+            return `${name} completed a task on your list`;
         },
-        'notification-$user-likes-your-$story': (user, story) => {
+        'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'survey'; break;
                 case 'task-list': story = 'task list'; break;
                 case 'post': story = 'post'; break;
                 default: story = 'story';
             }
-            return `${user} likes your ${story}`;
+            return `${name} likes your ${story}`;
         },
-        'notification-$user-requested-to-join': (user) => {
-            return `${user} requested to join this project`;
+        'notification-$name-requested-to-join': (name) => {
+            return `${name} requested to join this project`;
         },
-        'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'a survey'; break;
                 case 'task-list': story = 'a task list'; break;
                 case 'post': story = 'post';
                 default: story = 'a story';
             }
-            return `${user} sent you a bookmark to ${story}`;
+            return `${name} sent you a bookmark to ${story}`;
         },
-        'notification-$user-voted-in-your-survey': (user) => {
-            return `${user} answered your survey`;
+        'notification-$name-voted-in-your-survey': (name) => {
+            return `${name} answered your survey`;
         },
         'notification-option-assignment': 'When you are assigned to an issue',
         'notification-option-bookmark': 'When someone sends you a bookmark',
@@ -170,13 +170,13 @@ module.exports = function(localeCode) {
         'option-add-bookmark': 'Add bookmark to this story',
         'option-add-issue': 'Add post to issue tracker',
         'option-bookmark-story': 'Bookmark story',
-        'option-bump-post': 'Bump story',
+        'option-bump-story': 'Bump story',
         'option-edit-comment': 'Edit comment',
         'option-edit-post': 'Edit post',
         'option-hide-comment': 'Hide comment from non-team members',
-        'option-hide-post': 'Hide from non-team members',
+        'option-hide-story': 'Hide from non-team members',
         'option-remove-comment': 'Remove comment',
-        'option-remove-post': 'Remove story',
+        'option-remove-story': 'Remove story',
         'option-send-bookmarks': 'Send bookmarks to other users',
         'option-send-bookmarks-to-$count-users': (count) => {
             var users = (count === 1) ? `${count} user` : `${count} users`;
@@ -204,44 +204,44 @@ module.exports = function(localeCode) {
         'qr-scanner-cancel': 'Cancel',
         'qr-scanner-invalid-qr-code': 'Invalid QR code',
 
-        'reaction-$user-added-story-to-issue-tracker': (user) => {
-            return `${user} added this post to issue tracker`;
+        'reaction-$name-added-story-to-issue-tracker': (name) => {
+            return `${name} added this post to issue tracker`;
         },
-        'reaction-$user-cast-a-vote': (user) => {
-            return `${user} cast a vote`;
+        'reaction-$name-cast-a-vote': (name) => {
+            return `${name} cast a vote`;
         },
-        'reaction-$user-commented-on-branch': (user) => {
-            return `${user} commented on this branch`;
+        'reaction-$name-commented-on-branch': (name) => {
+            return `${name} commented on this branch`;
         },
-        'reaction-$user-commented-on-issue': (user) => {
-            return `${user} commented on this issue`;
+        'reaction-$name-commented-on-issue': (name) => {
+            return `${name} commented on this issue`;
         },
-        'reaction-$user-commented-on-merge': (user) => {
-            return `${user} commented on a commit`;
+        'reaction-$name-commented-on-merge': (name) => {
+            return `${name} commented on a commit`;
         },
-        'reaction-$user-commented-on-merge-request': (user) => {
-            return `${user} commented on this merge request`;
+        'reaction-$name-commented-on-merge-request': (name) => {
+            return `${name} commented on this merge request`;
         },
-        'reaction-$user-commented-on-push': (user) => {
-            return `${user} commented on this push`;
+        'reaction-$name-commented-on-push': (name) => {
+            return `${name} commented on this push`;
         },
-        'reaction-$user-completed-a-task': (user) => {
-            return `${user} completed a task`;
+        'reaction-$name-completed-a-task': (name) => {
+            return `${name} completed a task`;
         },
-        'reaction-$user-is-assigned-to-issue': (user) => {
-            return `${user} was assigned to this issue`;
+        'reaction-$name-is-assigned-to-issue': (name) => {
+            return `${name} was assigned to this issue`;
         },
-        'reaction-$user-is-assigned-to-merge-request': (user) => {
-            return `${user} was assigned to this merge request`;
+        'reaction-$name-is-assigned-to-merge-request': (name) => {
+            return `${name} was assigned to this merge request`;
         },
-        'reaction-$user-is-editing': (user) => {
-            return `${user} is editing a comment...`;
+        'reaction-$name-is-editing': (name) => {
+            return `${name} is editing a comment...`;
         },
-        'reaction-$user-is-writing': (user) => {
-            return `${user} is writing a comment...`;
+        'reaction-$name-is-writing': (name) => {
+            return `${name} is writing a comment...`;
         },
-        'reaction-$user-likes-this': (user) => {
-            return `${user} likes this`;
+        'reaction-$name-likes-this': (name) => {
+            return `${name} likes this`;
         },
 
         'role-filter-no-roles': 'No roles defined',
@@ -302,40 +302,40 @@ module.exports = function(localeCode) {
             var users = (count === 1) ? `${count} user` : `${count} users`;
             return `${users} reacted to this`;
         },
-        'story-$name-created-$branch-in-$repo': (user, branch, repo) => {
+        'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Created branch “${branch}” in project “${repo}”`;
         },
-        'story-$name-created-$milestone': (user, name) => {
-            return `Created milestone “${name}”`;
+        'story-$name-created-$milestone': (name, milestone) => {
+            return `Created milestone “${milestone}”`;
         },
-        'story-$name-created-$page': (user, page) => {
+        'story-$name-created-$page': (name, page) => {
             return `Created wiki page “${page}”`;
         },
-        'story-$name-created-$repo': (user, name) => {
+        'story-$name-created-$repo': (name, repo) => {
             var text = `Created project`;
             if (name) {
-                text += ` “${name}”`;
+                text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-deleted-$page': (user, page) => {
+        'story-$name-deleted-$page': (name, page) => {
             return `Deleted wiki page “${page}”`;
         },
-        'story-$name-joined-$repo': (user, repo) => {
+        'story-$name-joined-$repo': (name, repo) => {
             var text = `Joined project`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-left-$repo': (user, repo) => {
+        'story-$name-left-$repo': (name, repo) => {
             var text = `Left project`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
-        'story-$name-merged-$branches-into-$branch-of-$repo': (user, branches, branch, repo) => {
+        'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
             var text = `Merged code`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
@@ -349,24 +349,24 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        'story-$name-opened-issue-$number-$title': (user, number, title) => {
+        'story-$name-opened-issue-$number-$title': (name, number, title) => {
             var text = `Opened issue ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
-        'story-$name-pushed-to-$branch-of-$repo': (user, branch, repo) => {
+        'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
             var text = `Pushed changes to branch “${branch}”`;
             if (repo) {
                 text += ` of project “${repo}”`;
             }
             return text;
         },
-        'story-$name-requested-merge-$branch1-into-$branch2': (user, branch1, branch2) => {
+        'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
             return `Requested to merge branch “${branch1}” into “${branch2}”`;
         },
-        'story-$name-updated-$page': (user, page) => {
+        'story-$name-updated-$page': (name, page) => {
             return `Updated wiki page “${page}”`;
         },
         'story-add-coauthor': 'Add coauthor',

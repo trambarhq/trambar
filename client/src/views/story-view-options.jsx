@@ -109,7 +109,7 @@ module.exports = React.createClass({
                 onClick: this.handleAddIssueClick,
             };
             var hideProps = {
-                label: t('option-hide-post'),
+                label: t('option-hide-story'),
                 hidden: !(canWrite && UserUtils.canHideStory(user, story)),
                 selected: options.hidePost,
                 onClick: this.handleHideClick,
@@ -121,13 +121,13 @@ module.exports = React.createClass({
                 onClick: this.handleEditClick,
             };
             var removeProps = {
-                label: t('option-remove-post'),
+                label: t('option-remove-story'),
                 hidden: !(canWrite && UserUtils.canRemoveStory(user, story)),
                 selected: options.removePost,
                 onClick: this.handleRemoveClick,
             };
             var bumpProps = {
-                label: t('option-bump-post'),
+                label: t('option-bump-story'),
                 hidden: !(canWrite && UserUtils.canBumpStory(user, story)),
                 selected: options.bumpPost,
                 onClick: this.handleBumpClick,

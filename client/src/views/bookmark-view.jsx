@@ -65,8 +65,8 @@ module.exports = React.createClass({
                         locale: this.props.locale,
                         theme: this.props.theme,
                     };
-                    var users = <MultipleUserNames key={1} {...props} />;
-                    contents = t('bookmark-$you-bookmarked-it-and-$users-recommends-it', you, users, others.length);
+                    var popup = <MultipleUserNames key={1} {...props} />;
+                    contents = t('bookmark-$you-bookmarked-it-and-$others-recommends-it', you, popup, others.length);
             }
         } else {
             switch (others.length) {
@@ -92,8 +92,8 @@ module.exports = React.createClass({
                         locale: this.props.locale,
                         theme: this.props.theme,
                     };
-                    var users = <MultipleUserNames key={1} {...props} />;
-                    contents = t('bookmark-$name1-and-$name2-recommend-this', name, users);
+                    var popup = <MultipleUserNames key={1} {...props} />;
+                    contents = t('bookmark-$name1-and-$others-recommend-this', name, popup, others.length - 1);
             }
         }
         return <span className="name">{contents}</span>

@@ -118,7 +118,7 @@ module.exports = React.createClass({
                 onClick: this.handleAddIssueClick,
             };
             var hidePostProps = {
-                label: t('option-hide-post'),
+                label: t('option-hide-story'),
                 selected: options.hidePost,
                 hidden: !UserUtils.canHideStory(user, story),
                 onClick: this.handleHidePostClick,

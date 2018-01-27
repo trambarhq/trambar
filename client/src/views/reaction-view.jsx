@@ -166,7 +166,7 @@ module.exports = React.createClass({
                 case 'like':
                     return (
                         <span className="like">
-                            {t('reaction-$user-likes-this', name)}
+                            {t('reaction-$name-likes-this', name)}
                         </span>
                     );
                 case 'comment':
@@ -194,13 +194,13 @@ module.exports = React.createClass({
                 case 'vote':
                     return (
                         <span className="vote">
-                            {t('reaction-$user-cast-a-vote', name)}
+                            {t('reaction-$name-cast-a-vote', name)}
                         </span>
                     );
                 case 'task-completion':
                     return (
                         <span className="task-completion">
-                            {t('reaction-$user-completed-a-task', name)}
+                            {t('reaction-$name-completed-a-task', name)}
                         </span>
                     );
                 case 'note':
@@ -242,7 +242,7 @@ module.exports = React.createClass({
                     }
                     return (
                         <a className="note" href={url} target={target}>
-                            {t(`reaction-$user-commented-on-${story.type}`, name)}
+                            {t(`reaction-$name-commented-on-${story.type}`, name)}
                         </a>
                     );
                 case 'assignment':
@@ -258,7 +258,7 @@ module.exports = React.createClass({
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
-                                {t('reaction-$user-is-assigned-to-issue', name)}
+                                {t('reaction-$name-is-assigned-to-issue', name)}
                             </a>
                         );
                     } else if (story.type === 'merge-request') {
@@ -273,7 +273,7 @@ module.exports = React.createClass({
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
-                                {t('reaction-$user-is-assigned-to-merge-request', name)}
+                                {t('reaction-$name-is-assigned-to-merge-request', name)}
                             </a>
                         );
                     }
@@ -289,7 +289,7 @@ module.exports = React.createClass({
                     }
                     return (
                         <a className="issue-tracking" href={url} target={target}>
-                            {t('reaction-$user-added-story-to-issue-tracker', name)}
+                            {t('reaction-$name-added-story-to-issue-tracker', name)}
                         </a>
                     );
 
@@ -298,7 +298,7 @@ module.exports = React.createClass({
             var action = (reaction.ptime) ? 'editing' : 'writing';
             return (
                 <span className="in-progress">
-                    {t(`reaction-$user-is-${action}`, name)}
+                    {t(`reaction-$name-is-${action}`, name)}
                 </span>
             );
         }

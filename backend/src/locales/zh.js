@@ -75,8 +75,8 @@ var traditionalPhrases = {
         var num = cardinalT(count);
         return `${num}個人`;
     },
-    'bookmark-$name-and-$users-recommend-this': (name, users) => {
-        return [ `${name}和`, users, `推薦這個` ];
+    'bookmark-$name-and-$others-recommend-this': (name, others) => {
+        return [ `${name}和`, others, `推薦這個` ];
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦這個`;
@@ -88,8 +88,8 @@ var traditionalPhrases = {
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加了這個書籤（${name}推薦）`;
     },
-    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-        return [ `你加了這個書籤（`, users, `推薦）` ];
+    'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+        return [ `你加了這個書籤（`, others, `推薦）` ];
     },
     'bookmark-recommendations': '推薦',
 
@@ -140,10 +140,10 @@ var traditionalPhrases = {
     'mobile-setup-close': '關閉',
     'mobile-setup-code': '授權碼',
 
-    'notification-$user-added-you-as-coauthor': (user) => {
-        return `${user}邀請你共同編輯一個貼文`;
+    'notification-$name-added-you-as-coauthor': (name) => {
+        return `${name}邀請你共同編輯一個貼文`;
     },
-    'notification-$user-commented-on-your-$story': (user, story) => {
+    'notification-$name-commented-on-your-$story': (name, story) => {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
@@ -153,12 +153,12 @@ var traditionalPhrases = {
             case 'post': story = '貼文'; break;
             default: story = '故事';
         }
-        return `${user}回應了你的${story}`;
+        return `${name}回應了你的${story}`;
     },
-    'notification-$user-completed-task': (user) => {
-        return `${user}完成了在你的列表上一個任務`;
+    'notification-$name-completed-task': (name) => {
+        return `${name}完成了在你的列表上一個任務`;
     },
-    'notification-$user-likes-your-$story': (user, story) => {
+    'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
@@ -168,22 +168,22 @@ var traditionalPhrases = {
             case 'post': story = '貼文'; break;
             default: story = '故事';
         }
-        return `${user}喜歡你的${story}`;
+        return `${name}喜歡你的${story}`;
     },
-    'notification-$user-requested-to-join': (user) => {
-        return `${user}要求加入這個項目`;
+    'notification-$name-requested-to-join': (name) => {
+        return `${name}要求加入這個項目`;
     },
-    'notification-$user-sent-bookmark-to-$story': (user, story) => {
+    'notification-$name-sent-bookmark-to-$story': (name, story) => {
         switch (story) {
             case 'survey': story = '調查'; break;
             case 'task-list': story = '任務列表'; break;
             case 'post': story = '貼文'; break;
             default: story = '故事';
         }
-        return `${user}送你一個${story}書籤`;
+        return `${name}送你一個${story}書籤`;
     },
-    'notification-$user-voted-in-your-survey': (user) => {
-        return `${user}回答了你的調查`;
+    'notification-$name-voted-in-your-survey': (name) => {
+        return `${name}回答了你的調查`;
     },
     'notification-option-assignment': '當你被分配到一個問題',
     'notification-option-bookmark': '當你收到某人的書籤',
@@ -203,13 +203,13 @@ var traditionalPhrases = {
     'option-add-bookmark': '加書籤',
     'option-add-issue': '加問題入跟蹤管理系統',
     'option-bookmark-story': '加書籤',
-    'option-bump-post': '推動故事',
+    'option-bump-story': '推動故事',
     'option-edit-comment': '編輯回應',
     'option-edit-post': '編輯貼文',
     'option-hide-comment': '非成員看不到',
-    'option-hide-post': '非成員看不到',
+    'option-hide-story': '非成員看不到',
     'option-remove-comment': '刪除回應',
-    'option-remove-post': '刪除故事',
+    'option-remove-story': '刪除故事',
     'option-send-bookmarks': '發送書籤給其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
         var num = cardinalT(count);
@@ -237,44 +237,44 @@ var traditionalPhrases = {
     'qr-scanner-cancel': '取消',
     'qr-scanner-invalid-qr-code': '不正確的ＱＲ碼',
 
-    'reaction-$user-added-story-to-issue-tracker': (user) => {
-        return `${user}把這個貼文放到問題跟踪器上`;
+    'reaction-$name-added-story-to-issue-tracker': (name) => {
+        return `${name}把這個貼文放到問題跟踪器上`;
     },
-    'reaction-$user-cast-a-vote': (user) => {
-        return `${user}投了一票`;
+    'reaction-$name-cast-a-vote': (name) => {
+        return `${name}投了一票`;
     },
-    'reaction-$user-commented-on-branch': (user) => {
-        return `${user}回應了這個分支`;
+    'reaction-$name-commented-on-branch': (name) => {
+        return `${name}回應了這個分支`;
     },
-    'reaction-$user-commented-on-issue': (user) => {
-        return `${user}回應了這個問題`;
+    'reaction-$name-commented-on-issue': (name) => {
+        return `${name}回應了這個問題`;
     },
-    'reaction-$user-commented-on-merge': (user) => {
-        return `${user}回應了這個合併`;
+    'reaction-$name-commented-on-merge': (name) => {
+        return `${name}回應了這個合併`;
     },
-    'reaction-$user-commented-on-merge-request': (user) => {
-        return `${user}回應了這個合併請求`;
+    'reaction-$name-commented-on-merge-request': (name) => {
+        return `${name}回應了這個合併請求`;
     },
-    'reaction-$user-commented-on-push': (user) => {
-        return `${user}回應了這個推送`;
+    'reaction-$name-commented-on-push': (name) => {
+        return `${name}回應了這個推送`;
     },
-    'reaction-$user-completed-a-task': (user) => {
-        return `${user}完成了一個任務`;
+    'reaction-$name-completed-a-task': (name) => {
+        return `${name}完成了一個任務`;
     },
-    'reaction-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到這個問題`;
+    'reaction-$name-is-assigned-to-issue': (name) => {
+        return `${name}被分配到這個問題`;
     },
-    'reaction-$user-is-assigned-to-merge-request': (user) => {
-        return `${user}被分配到這個合併請求`;
+    'reaction-$name-is-assigned-to-merge-request': (name) => {
+        return `${name}被分配到這個合併請求`;
     },
-    'reaction-$user-is-editing': (user) => {
-        return `${user}正在編輯一個回應⋯⋯`;
+    'reaction-$name-is-editing': (name) => {
+        return `${name}正在編輯一個回應⋯⋯`;
     },
-    'reaction-$user-is-writing': (user) => {
-        return `${user}正在寫一個回應⋯⋯`;
+    'reaction-$name-is-writing': (name) => {
+        return `${name}正在寫一個回應⋯⋯`;
     },
-    'reaction-$user-likes-this': (user) => {
-        return `${user}喜歡這個`;
+    'reaction-$name-likes-this': (name) => {
+        return `${name}喜歡這個`;
     },
 
     'role-filter-no-roles': '沒有角色',
@@ -643,8 +643,8 @@ var simplifiedPhrases = {
         var num = cardinalS(count);
         return `${num}个人`;
     },
-    'bookmark-$name-and-$users-recommend-this': (name, users) => {
-        return [ `${name}和`, users, `推荐这个` ];
+    'bookmark-$name-and-$others-recommend-this': (name, others) => {
+        return [ `${name}和`, others, `推荐这个` ];
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推荐这个`;
@@ -656,8 +656,8 @@ var simplifiedPhrases = {
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加了这个书签（${name}推荐）`;
     },
-    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-        return [ `你加了这个书签（`, users, `推荐）` ];
+    'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+        return [ `你加了这个书签（`, others, `推荐）` ];
     },
     'bookmark-recommendations': '推荐',
 
@@ -708,10 +708,10 @@ var simplifiedPhrases = {
     'mobile-setup-close': '关闭',
     'mobile-setup-code': '授权码',
 
-    'notification-$user-added-you-as-coauthor': (user) => {
-        return `${user}邀请你共同编辑一个贴文`;
+    'notification-$name-added-you-as-coauthor': (name) => {
+        return `${name}邀请你共同编辑一个贴文`;
     },
-    'notification-$user-commented-on-your-$story': (user, story) => {
+    'notification-$name-commented-on-your-$story': (name, story) => {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合并'; break;
@@ -721,12 +721,12 @@ var simplifiedPhrases = {
             case 'post': story = '贴文'; break;
             default: story = '故事';
         }
-        return `${user}回应了你的${story}`;
+        return `${name}回应了你的${story}`;
     },
-    'notification-$user-completed-task': (user) => {
-        return `${user}完成了在你的列表上一个任务`;
+    'notification-$name-completed-task': (name) => {
+        return `${name}完成了在你的列表上一个任务`;
     },
-    'notification-$user-likes-your-$story': (user, story) => {
+    'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合并'; break;
@@ -736,22 +736,22 @@ var simplifiedPhrases = {
             case 'post': story = '贴文'; break;
             default: story = '故事';
         }
-        return `${user}喜欢你的${story}`;
+        return `${name}喜欢你的${story}`;
     },
-    'notification-$user-requested-to-join': (user) => {
-        return `${user}要求加入这个项目`;
+    'notification-$name-requested-to-join': (name) => {
+        return `${name}要求加入这个项目`;
     },
-    'notification-$user-sent-bookmark-to-$story': (user, story) => {
+    'notification-$name-sent-bookmark-to-$story': (name, story) => {
         switch (story) {
             case 'survey': story = '调查'; break;
             case 'task-list': story = '任务列表'; break;
             case 'post': story = '贴文'; break;
             default: story = '故事';
         }
-        return `${user}送你一个${story}书签`;
+        return `${name}送你一个${story}书签`;
     },
-    'notification-$user-voted-in-your-survey': (user) => {
-        return `${user}回答了你的调查`;
+    'notification-$name-voted-in-your-survey': (name) => {
+        return `${name}回答了你的调查`;
     },
     'notification-option-assignment': '当你被分配到一个问题',
     'notification-option-bookmark': '当你收到某人的书签',
@@ -771,13 +771,13 @@ var simplifiedPhrases = {
     'option-add-bookmark': '加书签',
     'option-add-issue': '加问题入跟踪管理系统',
     'option-bookmark-story': '加书签',
-    'option-bump-post': '推动故事',
+    'option-bump-story': '推动故事',
     'option-edit-comment': '编辑回应',
     'option-edit-post': '编辑贴文',
     'option-hide-comment': '非成员看不到',
-    'option-hide-post': '非成员看不到',
+    'option-hide-story': '非成员看不到',
     'option-remove-comment': '删除回应',
-    'option-remove-post': '删除故事',
+    'option-remove-story': '删除故事',
     'option-send-bookmarks': '发送书签给其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
         var num = cardinalS(count);
@@ -805,44 +805,44 @@ var simplifiedPhrases = {
     'qr-scanner-cancel': '取消',
     'qr-scanner-invalid-qr-code': '不正确的ＱＲ码',
 
-    'reaction-$user-added-story-to-issue-tracker': (user) => {
-        return `${user}把这个贴文放到问题跟踪器上`;
+    'reaction-$name-added-story-to-issue-tracker': (name) => {
+        return `${name}把这个贴文放到问题跟踪器上`;
     },
-    'reaction-$user-cast-a-vote': (user) => {
-        return `${user}投了一票`;
+    'reaction-$name-cast-a-vote': (name) => {
+        return `${name}投了一票`;
     },
-    'reaction-$user-commented-on-branch': (user) => {
-        return `${user}回应了这个分支`;
+    'reaction-$name-commented-on-branch': (name) => {
+        return `${name}回应了这个分支`;
     },
-    'reaction-$user-commented-on-issue': (user) => {
-        return `${user}回应了这个问题`;
+    'reaction-$name-commented-on-issue': (name) => {
+        return `${name}回应了这个问题`;
     },
-    'reaction-$user-commented-on-merge': (user) => {
-        return `${user}回应了这个合并`;
+    'reaction-$name-commented-on-merge': (name) => {
+        return `${name}回应了这个合并`;
     },
-    'reaction-$user-commented-on-merge-request': (user) => {
-        return `${user}回应了这个合并请求`;
+    'reaction-$name-commented-on-merge-request': (name) => {
+        return `${name}回应了这个合并请求`;
     },
-    'reaction-$user-commented-on-push': (user) => {
-        return `${user}回应了这个推送`;
+    'reaction-$name-commented-on-push': (name) => {
+        return `${name}回应了这个推送`;
     },
-    'reaction-$user-completed-a-task': (user) => {
-        return `${user}完成了一个任务`;
+    'reaction-$name-completed-a-task': (name) => {
+        return `${name}完成了一个任务`;
     },
-    'reaction-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到这个问题`;
+    'reaction-$name-is-assigned-to-issue': (name) => {
+        return `${name}被分配到这个问题`;
     },
-    'reaction-$user-is-assigned-to-merge-request': (user) => {
-        return `${user}被分配到这个合并请求`;
+    'reaction-$name-is-assigned-to-merge-request': (name) => {
+        return `${name}被分配到这个合并请求`;
     },
-    'reaction-$user-is-editing': (user) => {
-        return `${user}正在编辑一个回应⋯⋯`;
+    'reaction-$name-is-editing': (name) => {
+        return `${name}正在编辑一个回应⋯⋯`;
     },
-    'reaction-$user-is-writing': (user) => {
-        return `${user}正在写一个回应⋯⋯`;
+    'reaction-$name-is-writing': (name) => {
+        return `${name}正在写一个回应⋯⋯`;
     },
-    'reaction-$user-likes-this': (user) => {
-        return `${user}喜欢这个`;
+    'reaction-$name-likes-this': (name) => {
+        return `${name}喜欢这个`;
     },
 
     'role-filter-no-roles': '没有角色',
@@ -1168,8 +1168,8 @@ var cantonesePhrases = {
     'action-view-linkedin-page': '睇佢嘅LinkedIn網頁',
     'action-view-stackoverflow-page': '睇佢嘅StackOverflow網頁',
 
-    'bookmark-$name-and-$users-recommend-this': (name, users) => {
-        return [ name, '同', users, `都推薦呢個` ];
+    'bookmark-$name-and-$others-recommend-this': (name, others) => {
+        return [ name, '同', others, `都推薦呢個` ];
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦呢個`;
@@ -1181,8 +1181,8 @@ var cantonesePhrases = {
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
         return `你加咗個書籤（${name}推薦）`;
     },
-    'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users) => {
-        return [ `你加咗個書籤（`, users, `推薦）` ];
+    'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, others) => {
+        return [ `你加咗個書籤（`, others, `推薦）` ];
     },
 
     'bottom-nav-people': '仆街',
@@ -1192,10 +1192,10 @@ var cantonesePhrases = {
 
     'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置嘅授權？',
 
-    'notification-$user-added-you-as-coauthor': (user) => {
-        return `${user}邀請你一齊寫一個帖子`;
+    'notification-$name-added-you-as-coauthor': (name) => {
+        return `${name}邀請你一齊寫一個帖子`;
     },
-    'notification-$user-commented-on-your-$story': (user, story) => {
+    'notification-$name-commented-on-your-$story': (name, story) => {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
@@ -1205,12 +1205,12 @@ var cantonesePhrases = {
             case 'post': story = '帖子'; break;
             default: story = '故事';
         }
-        return `${user}回應咗你嘅${story}`;
+        return `${name}回應咗你嘅${story}`;
     },
-    'notification-$user-completed-task': (user) => {
-        return `${user}完成咗喺你個列表上嘅一個任務`;
+    'notification-$name-completed-task': (name) => {
+        return `${name}完成咗喺你個列表上嘅一個任務`;
     },
-    'notification-$user-likes-your-$story': (user, story) => {
+    'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
@@ -1220,13 +1220,13 @@ var cantonesePhrases = {
             case 'post': story = '帖子'; break;
             default: story = '故事';
         }
-        return `${user}鍾意你嘅${story}`;
+        return `${name}鍾意你嘅${story}`;
     },
-    'notification-$user-requested-to-join': (user) => {
-        return `${user}要求加入呢個項目`;
+    'notification-$name-requested-to-join': (name) => {
+        return `${name}要求加入呢個項目`;
     },
-    'notification-$user-voted-in-your-survey': (user) => {
-        return `${user}回答咗你嘅調查`;
+    'notification-$name-voted-in-your-survey': (name) => {
+        return `${name}回答咗你嘅調查`;
     },
     'notification-option-assignment': '當你被分配到一個問題',
     'notification-option-bookmark': '當你收到人哋嘅書籤',
@@ -1243,7 +1243,7 @@ var cantonesePhrases = {
 
     'option-edit-post': '編輯帖子',
     'option-hide-comment': '非成員睇唔到',
-    'option-hide-post': '非成員睇唔到',
+    'option-hide-story': '非成員睇唔到',
     'option-send-bookmarks': '發送書籤俾其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
         var num = cardinalT(count);
@@ -1255,44 +1255,44 @@ var cantonesePhrases = {
 
     'qr-scanner-invalid-qr-code': '唔正確嘅ＱＲ碼',
 
-    'reaction-$user-added-story-to-issue-tracker': (user) => {
-        return `${user}把呢個帖子放到問題跟踪器上`;
+    'reaction-$name-added-story-to-issue-tracker': (name) => {
+        return `${name}把呢個帖子放到問題跟踪器上`;
     },
-    'reaction-$user-cast-a-vote': (user) => {
-        return `${user}投咗一票`;
+    'reaction-$name-cast-a-vote': (name) => {
+        return `${name}投咗一票`;
     },
-    'reaction-$user-commented-on-branch': (user) => {
-        return `${user}回應咗呢個分支`;
+    'reaction-$name-commented-on-branch': (name) => {
+        return `${name}回應咗呢個分支`;
     },
-    'reaction-$user-commented-on-issue': (user) => {
-        return `${user}回應咗呢個問題`;
+    'reaction-$name-commented-on-issue': (name) => {
+        return `${name}回應咗呢個問題`;
     },
-    'reaction-$user-commented-on-merge': (user) => {
-        return `${user}回應咗呢個合併`;
+    'reaction-$name-commented-on-merge': (name) => {
+        return `${name}回應咗呢個合併`;
     },
-    'reaction-$user-commented-on-merge-request': (user) => {
-        return `${user}回應咗呢個合併請求`;
+    'reaction-$name-commented-on-merge-request': (name) => {
+        return `${name}回應咗呢個合併請求`;
     },
-    'reaction-$user-commented-on-push': (user) => {
-        return `${user}回應咗呢個推送`;
+    'reaction-$name-commented-on-push': (name) => {
+        return `${name}回應咗呢個推送`;
     },
-    'reaction-$user-completed-a-task': (user) => {
-        return `${user}完成咗一個任務`;
+    'reaction-$name-completed-a-task': (name) => {
+        return `${name}完成咗一個任務`;
     },
-    'reaction-$user-is-assigned-to-issue': (user) => {
-        return `${user}被分配到呢個問題`;
+    'reaction-$name-is-assigned-to-issue': (name) => {
+        return `${name}被分配到呢個問題`;
     },
-    'reaction-$user-is-assigned-to-merge-request': (user) => {
-        return `${user}被分配到呢個合併請求`;
+    'reaction-$name-is-assigned-to-merge-request': (name) => {
+        return `${name}被分配到呢個合併請求`;
     },
-    'reaction-$user-is-editing': (user) => {
-        return `${user}啱啱改緊一個回應⋯⋯`;
+    'reaction-$name-is-editing': (name) => {
+        return `${name}啱啱改緊一個回應⋯⋯`;
     },
-    'reaction-$user-is-writing': (user) => {
-        return `${user}啱啱寫緊一個回應⋯⋯`;
+    'reaction-$name-is-writing': (name) => {
+        return `${name}啱啱寫緊一個回應⋯⋯`;
     },
-    'reaction-$user-likes-this': (user) => {
-        return `${user}鍾意呢個`;
+    'reaction-$name-likes-this': (name) => {
+        return `${name}鍾意呢個`;
     },
 
     'role-filter-no-roles': '冇角色',

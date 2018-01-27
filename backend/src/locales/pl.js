@@ -75,8 +75,8 @@ module.exports = function(localeCode) {
                 return `${count} osób`
             }
         },
-        'bookmark-$name-and-$users-recommend-this': (name, users) => {
-            return [ `${name} i `, users, ` polecają to` ];
+        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
+            return [ `${name} i `, others, ` polecają to` ];
         },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} poleca to`;
@@ -92,7 +92,7 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(you, 2);
             return `Założył${e} zakładkę do tego (i ${name} poleca go)`;
         },
-        'bookmark-$you-bookmarked-it-and-$users-recommends-it': (you, users, count) => {
+        'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, users, count) => {
             var e = pastTenseEnding(you, 2);
             var verb = plural(count) ? 'polecają' : 'poleca';
             return [ `Założył${e} zakładkę do tego (i `, users, ` ${verb} it)` ];
@@ -151,50 +151,50 @@ module.exports = function(localeCode) {
         'mobile-setup-close': 'Zamknij',
         'mobile-setup-code': 'Kod autoryzacyjny',
 
-        'notification-$user-added-you-as-coauthor': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} zaprosił${e} Cię do wspólnej edycji posta`;
+        'notification-$name-added-you-as-coauthor': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} zaprosił${e} Cię do wspólnej edycji posta`;
         },
-        'notification-$user-commented-on-your-$story': (user, story) => {
+        'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'Twoją ankietę'; break;
                 case 'task-list': story = 'Twoją listę zadań'; break;
                 case 'post': story = 'Twoj post'; break;
                 default: story = 'Twoją wiadomość';
             }
-            var e = pastTenseEnding(user, 3);
-            return `${user} skomentował${e} ${story}`;
+            var e = pastTenseEnding(name, 3);
+            return `${name} skomentował${e} ${story}`;
         },
-        'notification-$user-completed-task': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} wykonał${e} zadanie z Twojej listy`;
+        'notification-$name-completed-task': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} wykonał${e} zadanie z Twojej listy`;
         },
-        'notification-$user-likes-your-$story': (user, story) => {
+        'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'Twoją ankietę'; break;
                 case 'task-list': story = 'Twoją listę zadań'; break;
                 case 'post': story = 'Twoj post'; break;
                 default: story = 'Twoją wiadomość';
             }
-            return `${user} lubi ${story}`;
+            return `${name} lubi ${story}`;
         },
-        'notification-$user-requested-to-join': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} poprosił${e} o dołączenie do tego projektu`;
+        'notification-$name-requested-to-join': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} poprosił${e} o dołączenie do tego projektu`;
         },
-        'notification-$user-sent-bookmark-to-$story': (user, story) => {
+        'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'ankiety'; break;
                 case 'task-list': story = 'listy zadań'; break;
                 case 'post': story = ' posta'; break;
                 default: story = 'wiadomości';
             }
-            var e = pastTenseEnding(user, 3);
-            return `${user} przysłał${e} Ci zakładkę do ${story}`;
+            var e = pastTenseEnding(name, 3);
+            return `${name} przysłał${e} Ci zakładkę do ${story}`;
         },
-        'notification-$user-voted-in-your-survey': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} odpowiedział${e} na Twoją ankietę`;
+        'notification-$name-voted-in-your-survey': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} odpowiedział${e} na Twoją ankietę`;
         },
         'notification-option-assignment': 'Po przypisaniu do zgłoszenia błędu',
         'notification-option-bookmark': 'Po otrzymaniu zakładki',
@@ -214,13 +214,13 @@ module.exports = function(localeCode) {
         'option-add-bookmark': 'Dodaj zakładkę',
         'option-add-issue': 'Dodaj zgłoszenie do issue-trackera',
         'option-bookmark-story': 'Dodaj zakładkę',
-        'option-bump-post': 'Podnieś pozycję wiadomości',
+        'option-bump-story': 'Podnieś pozycję wiadomości',
         'option-edit-comment': 'Edytuj komentarz',
         'option-edit-post': 'Edytuj wiadomość',
         'option-hide-comment': 'Ukryj komentarz przed gośćmi',
-        'option-hide-post': 'Ukryj wiadomość przed gośćmi',
+        'option-hide-story': 'Ukryj wiadomość przed gośćmi',
         'option-remove-comment': 'Usuń komentarz',
-        'option-remove-post': 'Usuń wiadomość',
+        'option-remove-story': 'Usuń wiadomość',
         'option-send-bookmarks': 'Wyślij zakładki do innych',
         'option-send-bookmarks-to-$count-users': (count) => {
             var users = (count === 1) ? `${count} osoby` : `${count} osób`;
@@ -249,57 +249,57 @@ module.exports = function(localeCode) {
         'qr-scanner-cancel': 'Anuluj',
         'qr-scanner-invalid-qr-code': 'Nieprawidłowy kod QR',
 
-        'reaction-$user-added-story-to-issue-tracker': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} dodał${e} tego posta do issue-trackera`;
+        'reaction-$name-added-story-to-issue-tracker': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} dodał${e} tego posta do issue-trackera`;
         },
-        'reaction-$user-cast-a-vote': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} głosował${e}`;
+        'reaction-$name-cast-a-vote': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} głosował${e}`;
         },
-        'reaction-$user-commented-on-branch': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} skomentował${e} tę gałąź`;
+        'reaction-$name-commented-on-branch': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} skomentował${e} tę gałąź`;
         },
-        'reaction-$user-commented-on-issue': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} skomentował${e} to zgłoszenie`;
+        'reaction-$name-commented-on-issue': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} skomentował${e} to zgłoszenie`;
         },
-        'reaction-$user-commented-on-merge': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} skomentował${e} to połączenie`;
+        'reaction-$name-commented-on-merge': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} skomentował${e} to połączenie`;
         },
-        'reaction-$user-commented-on-merge-request': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} skomentował${e} tę prośbę o połączenie`;
+        'reaction-$name-commented-on-merge-request': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} skomentował${e} tę prośbę o połączenie`;
         },
-        'reaction-$user-commented-on-push': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} skomentował${e} zmiany w tym wgrywaniu`;
+        'reaction-$name-commented-on-push': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} skomentował${e} zmiany w tym wgrywaniu`;
         },
-        'reaction-$user-completed-a-task': (user) => {
-            var e = pastTenseEnding(user, 3);
-            return `${user} wykonał${e} zadanie`;
+        'reaction-$name-completed-a-task': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} wykonał${e} zadanie`;
         },
-        'reaction-$user-is-assigned-to-issue': (user) => {
-            var ve = pastTenseEnding(user, 3);
+        'reaction-$name-is-assigned-to-issue': (name) => {
+            var ve = pastTenseEnding(name, 3);
             var ae = (ve === 'a') ? 'a' : 'y';
-            return `${user} został${ve} przydzielon${ae} do tego problemu`;
+            return `${name} został${ve} przydzielon${ae} do tego problemu`;
 
         },
-        'reaction-$user-is-assigned-to-merge-request': (user) => {
-            var ve = pastTenseEnding(user, 3);
+        'reaction-$name-is-assigned-to-merge-request': (name) => {
+            var ve = pastTenseEnding(name, 3);
             var ae = (ve === 'a') ? 'a' : 'y';
-            return `${user} został${ve} przydzielon${ae} do tej prośby o połączenie`;
+            return `${name} został${ve} przydzielon${ae} do tej prośby o połączenie`;
         },
-        'reaction-$user-is-editing': (user) => {
-            return `${user} edytuje komentarz...`;
+        'reaction-$name-is-editing': (name) => {
+            return `${name} edytuje komentarz...`;
         },
-        'reaction-$user-is-writing': (user) => {
-            return `${user} pisze komentarz...`;
+        'reaction-$name-is-writing': (name) => {
+            return `${name} pisze komentarz...`;
         },
-        'reaction-$user-likes-this': (user) => {
-            return `${user} lubi to`;
+        'reaction-$name-likes-this': (name) => {
+            return `${name} lubi to`;
         },
 
         'role-filter-no-roles': 'Nie ma żadnych ról',
