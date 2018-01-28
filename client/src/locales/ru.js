@@ -193,7 +193,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Когда кто-то открывает отчёт об ошибке',
         'notification-option-join-request': 'Когда кто-то хочет присоединиться к проекту',
         'notification-option-like': 'Когда кому-то нравится ваш рассказ',
-        'notification-option-merge': 'Когда кто-то сливает код в ветку “${branch}”',
+        'notification-option-merge': 'Когда кто-то сливает код в ветку «${branch}»',
         'notification-option-note': 'Когда кто-то публикует заметку о коммите или отчёте об ошибке',
         'notification-option-push': 'Когда кто-то отправляет код в репозиторий git',
         'notification-option-survey': 'Когда кто-то публикует опрос',
@@ -202,7 +202,7 @@ module.exports = function(localeCode) {
         'notification-option-web-session': 'Когда вы просматриваете этот сайт с помощью веб-браузера',
 
         'option-add-bookmark': 'Добавить закладку в рассказ',
-        'option-add-issue': 'Добавить сообщение в выпускной трекер',
+        'option-add-issue': 'Добавить сообщение в баг трекер',
         'option-bookmark-story': 'Добавить закладку в рассказ',
         'option-bump-story': 'Продвинуть рассказ',
         'option-edit-comment': 'Редактировать комментарий',
@@ -244,7 +244,7 @@ module.exports = function(localeCode) {
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} добавил${e} это сообщение в выпускной трекер`;
+            return `${name} добавил${e} это сообщение в баг трекер`;
         },
         'reaction-$name-cast-a-vote': (name) => {
             var e = pastTenseEnding(name);
@@ -362,33 +362,33 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} ветку “${branch}” в репозитории “${repo}”`;
+            return `Создал${e} ветку «${branch}» в репозитории «${repo}»`;
         },
         'story-$name-created-$milestone': (name, milestone) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} веху “${milestone}”`;
+            return `Создал${e} веху «${milestone}»`;
         },
         'story-$name-created-$page': (name, page) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} wiki-страницу “${page}”`;
+            return `Создал${e} wiki-страницу «${page}»`;
         },
         'story-$name-created-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
             var text = `Создал репозиторий`;
             if (name) {
-                text += ` “${repo}”`;
+                text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-deleted-$page': (name, page) => {
             var e = pastTenseEnding(name);
-            return `Удалил${e} wiki-страницу “${page}”`;
+            return `Удалил${e} wiki-страницу «${page}»`;
         },
         'story-$name-joined-$repo': (name, repo) => {
             var e = reflective(pastTenseEnding(name));
             var text = `Присоединил${e} к репозиторию`;
             if (repo) {
-                text += ` “${repo}”`;
+                text += ` «${repo}»`;
             }
             return text;
         },
@@ -396,7 +396,7 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             var text = `Оставил${e} репозиторий`;
             if (repo) {
-                text += ` “${repo}”`;
+                text += ` «${repo}»`;
             }
             return text;
         },
@@ -405,7 +405,7 @@ module.exports = function(localeCode) {
             var text = `Слил${e} изменения`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
-                    return `“${branch}”`;
+                    return `«${branch}»`;
                 });
                 text += ` из`;
                 if (branches.length > 1) {
@@ -415,9 +415,9 @@ module.exports = function(localeCode) {
                 }
                 text += ` ${sources.join(', ')}`;
             }
-            text += ` в ветку “${branch}”`;
+            text += ` в ветку «${branch}»`;
             if (repo) {
-                text += ` репозитория “${repo}”`;
+                text += ` репозитория «${repo}»`;
             }
             return text;
         },
@@ -431,19 +431,19 @@ module.exports = function(localeCode) {
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name);
-            var text = `Отправил${e} изменения в ветку “${branch}”`;
+            var text = `Отправил${e} изменения в ветку «${branch}»`;
             if (repo) {
-                text += ` репозитория “${repo}”`;
+                text += ` репозитория «${repo}»`;
             }
             return text;
         },
         'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
             var e = pastTenseEnding(name);
-            return `Попросил${e} слить ветку “${branch1}” в ветку “${branch2}”`;
+            return `Попросил${e} слить ветку «${branch1}» в ветку «${branch2}»`;
         },
         'story-$name-updated-$page': (name, page) => {
             var e = pastTenseEnding(name);
-            return `Обновил${e} wiki-страницу “${page}”`;
+            return `Обновил${e} wiki-страницу «${page}»`;
         },
         'story-add-coauthor': 'Добавить соавтора',
         'story-add-remove-coauthor': 'Добавить/удалить соавтора',
@@ -687,7 +687,8 @@ module.exports = function(localeCode) {
         'user-info-phone': 'Номер телефона',
 
         'user-statistics-legend-branch': 'Ветки',
-        'user-statistics-legend-issue': 'отчёты об ошибке',
+        'user-statistics-legend-issue': 'Отчёты об ошибке',
+        'user-statistics-legend-member': 'Изменения членства',
         'user-statistics-legend-merge': 'Слияния',
         'user-statistics-legend-merge-request': 'Запросы слияния',
         'user-statistics-legend-milestone': 'Вехи',
