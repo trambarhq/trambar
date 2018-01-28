@@ -487,6 +487,7 @@ module.exports = function(localeCode) {
 
         'user-statistics-legend-branch': 'Branchit',
         'user-statistics-legend-issue': 'Asiat',
+        'user-statistics-legend-member': 'Jäsenmuutokset',
         'user-statistics-legend-merge': 'Merges',
         'user-statistics-legend-merge-request': 'Merge requests',
         'user-statistics-legend-milestone': 'Virstanpylväät',

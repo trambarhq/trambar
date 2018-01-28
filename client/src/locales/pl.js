@@ -679,6 +679,7 @@ module.exports = function(localeCode) {
 
         'user-statistics-legend-branch': 'Nowe gałęzie',
         'user-statistics-legend-issue': 'Zgłoszenia błędu',
+        'user-statistics-legend-member': 'Zmiany członkostwa',
         'user-statistics-legend-merge': 'Wgrywania zmian',
         'user-statistics-legend-merge-request': 'Prośby o połączenie',
         'user-statistics-legend-milestone': 'Kamienia milowe',

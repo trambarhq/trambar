@@ -493,6 +493,7 @@ module.exports = function(localeCode) {
 
         'user-statistics-legend-branch': 'New branches',
         'user-statistics-legend-issue': 'Issues',
+        'user-statistics-legend-member': 'Membership changes',
         'user-statistics-legend-merge': 'Code merges',
         'user-statistics-legend-merge-request': 'Merge requests',
         'user-statistics-legend-milestone': 'Milestones',

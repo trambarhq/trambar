@@ -486,6 +486,7 @@ module.exports = function(localeCode) {
 
         'user-statistics-legend-branch': 'Nye brancher',
         'user-statistics-legend-issue': 'Problemer',
+        'user-statistics-legend-member': 'Medlemskapsendringer',
         'user-statistics-legend-merge': 'Merger',
         'user-statistics-legend-merge-request': 'Merge-requester',
         'user-statistics-legend-milestone': 'Milepæler',
