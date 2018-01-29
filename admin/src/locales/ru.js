@@ -531,7 +531,7 @@ module.exports = function(localeCode) {
         'table-heading-date-range': 'Активный период',
         'table-heading-email': 'Адрес эл. почты',
         'table-heading-issue-tracker': 'Отслеживание ошибок',
-        'table-heading-last-modified': 'Последнее изменение',
+        'table-heading-last-modified': 'Изменено',
         'table-heading-last-month': 'Прошлый месяц',
         'table-heading-name': 'Имя и фамилия',
         'table-heading-oauth': 'Аутентификация OAuth',
