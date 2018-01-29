@@ -1,6 +1,8 @@
 require('moment/locale/zh-cn');
 require('moment/locale/zh-hk');
 require('moment/locale/zh-tw');
+require('moment').defineLocale('zh-sg', { parentLocale: 'zh-cn' });
+require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
 module.exports = function(localeCode) {
     var cantonese = false;

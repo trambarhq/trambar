@@ -37,11 +37,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var localeData = Moment.localeData(this.props.locale.languageCode);
+        var localeCode = this.props.locale.localeCode;
+        var localeData = Moment.localeData(localeCode);
         var year = this.props.year;
         var month = this.props.month;
         var selection = this.props.selection;
-        var firstDay = Moment(date(year, month, 1));
+        var firstDay = Moment(date(year, month, 1)).locale(localeCode);
         var firstDayOfWeek = localeData.firstDayOfWeek();
         var daysInMonth = firstDay.daysInMonth();
         var dayOfWeek = firstDay.day();
@@ -65,7 +66,7 @@ module.exports = React.createClass({
                 x++;
             }
         }
-        var dayLabels = localeData.weekdaysShort();
+        var dayLabels = _.slice(localeData.weekdaysShort());
         var isWeekend = [ true, false, false, false, false, false, true ];
         for (var i = 0; i < firstDayOfWeek; i++) {
             dayLabels.push(dayLabels.shift());
