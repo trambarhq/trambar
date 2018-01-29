@@ -61,7 +61,8 @@ module.exports = React.createClass({
     getInitialState: function() {
         this.components = ComponentRefs({
             reactionContainer: HTMLDivElement,
-            reactionList: ReactionList
+            reactionList: ReactionList,
+            mainPopUp: CornerPopUp,
         });
         var nextState = {
             options: defaultOptions,
@@ -455,8 +456,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPopUpMenu: function(section) {
+        var ref = this.components.setters[section + 'PopUp'];
         return (
-            <CornerPopUp>
+            <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
@@ -484,6 +486,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
 
             onChange: this.handleOptionsChange,
+            onComplete: this.handleOptionsComplete,
         };
         return <StoryViewOptions {...props} />;
     },
@@ -609,7 +612,6 @@ module.exports = React.createClass({
         }
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
-        debugger;
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
@@ -746,6 +748,17 @@ module.exports = React.createClass({
      */
     handleOptionsChange: function(evt) {
         this.setOptions(evt.options);
+    },
+
+    /**
+     * Called when a change to the story options is complete
+     *
+     * @param  {Object} evt
+     */
+    handleOptionsComplete: function(evt) {
+        var section = evt.target.props.section;
+        var popUp = this.components[section + 'PopUp'];
+        popUp.close();
     },
 
     /**

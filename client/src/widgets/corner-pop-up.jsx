@@ -1,4 +1,5 @@
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 // widgets
 var PopUpMenu = require('widgets/pop-up-menu');
@@ -18,9 +19,19 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            popUpMenu: PopUpMenu,
+        });
         return {
             open: false
         };
+    },
+
+    /**
+     * Close the pop-up menu
+     */
+    close: function() {
+        this.components.popUpMenu.close();
     },
 
     /**
@@ -29,13 +40,14 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var setters = this.components.setters;
         var handlers = {
             onOpen: this.handleOpen,
             onClose: this.handleClose,
         };
         var dir = (this.state.open) ? 'left' : 'down';
         return (
-            <PopUpMenu className="corner-pop-up" {...handlers} >
+            <PopUpMenu ref={setters.popUpMenu} className="corner-pop-up" {...handlers} >
                 <button>
                     <i className={`fa fa-chevron-circle-${dir}`} />
                 </button>

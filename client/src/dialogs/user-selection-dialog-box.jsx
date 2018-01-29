@@ -145,7 +145,7 @@ module.exports = React.createClass({
                 type: 'select',
                 target: this,
                 selection: this.state.selection,
-            })
+            });
         }
     },
 

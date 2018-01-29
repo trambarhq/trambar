@@ -80,6 +80,8 @@ module.exports = React.createClass({
         this.components = ComponentRefs({
             mediaImporter: MediaImporter,
             textArea: AutosizeTextArea,
+            mainPopUp: CornerPopUp,
+            previewPopUp: CornerPopUp,
         });
         this.resourcesReferenced = {};
         var nextState = {
@@ -712,8 +714,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPopUpMenu: function(section) {
+        var ref = this.components.setters[section + 'PopUp'];
         return (
-            <CornerPopUp>
+            <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
@@ -740,6 +743,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
 
             onChange: this.handleOptionsChange,
+            onComplete: this.handleOptionsComplete,
         };
         return <StoryEditorOptions {...props} />;
     },
@@ -1172,6 +1176,17 @@ module.exports = React.createClass({
      */
     handleOptionsChange: function(evt) {
         return this.changeOptions(evt.options);
+    },
+
+    /**
+     * Called when a change to the story options is complete
+     *
+     * @param  {Object} evt
+     */
+    handleOptionsComplete: function(evt) {
+        var section = evt.target.props.section;
+        var popUp = this.components[section + 'PopUp'];
+        popUp.close();
     },
 
     /**

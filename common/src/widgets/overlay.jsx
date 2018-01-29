@@ -13,6 +13,10 @@ module.exports = React.createClass({
         onBackgroundClick: PropTypes.func,
     },
 
+    statics: {
+        active: false,
+    },
+
     /**
      * Return default props
      *
@@ -92,6 +96,7 @@ module.exports = React.createClass({
             this.shown = true;
             this.redraw();
         }, 10);
+        this.constructor.active = true;
     },
 
     /**
@@ -125,6 +130,7 @@ module.exports = React.createClass({
         }
         this.shown = false;
         this.redraw();
+        this.constructor.active = false;
     },
 
     /**
@@ -133,6 +139,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleClick: function(evt) {
+        if (evt.button !== 0) {
+            return;
+        }
         var targetClass = evt.target.className;
         if (targetClass === 'foreground' || targetClass === 'background') {
             if (this.props.onBackgroundClick) {

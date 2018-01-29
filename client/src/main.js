@@ -28,7 +28,7 @@ window.addEventListener("unhandledrejection", function(evt) {
     evt.preventDefault();
 });
 
-window.addEventListener("error", function(e) {
+window.addEventListener("error", function(evt) {
     console.error(evt.error || evt.message);
     evt.preventDefault();
 });

@@ -19,7 +19,6 @@ module.exports = React.createClass({
     propTypes: {
         section: PropTypes.oneOf([ 'main', 'both' ]),
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        inBookmark: PropTypes.bool,
         story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
@@ -31,6 +30,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onChange: PropTypes.func,
+        onComplete: PropTypes.func,
     },
 
     /**
@@ -41,7 +41,6 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             section: 'both',
-            inBookmark: false,
         }
     },
 
@@ -224,6 +223,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Inform parent component the action requested is either done or canceled
+     */
+    triggerCompleteEvent: function() {
+        if (this.props.onComplete) {
+            this.props.onComplete({
+                type: 'complete',
+                target: this,
+            });
+        }
+    },
+
+    /**
      * Open dialog box for selecting user
      *
      * @param  {Event} evt
@@ -234,10 +245,6 @@ module.exports = React.createClass({
                 selectingRecipients: true,
                 renderingRecipientDialogBox: true
             });
-
-            // stop menu from closing, as otherwise this component would unmount
-            evt.stopPropagation();
-            this.sendBookmakTarget = evt.target;
         }
     },
 
@@ -251,13 +258,7 @@ module.exports = React.createClass({
                 if (!this.state.selectingRecipients) {
                     this.setState({ renderingRecipientDialogBox: false });
                 }
-            }, 1000);
-
-            // fire click event to close menu
-            if (this.sendBookmakTarget) {
-                this.sendBookmakTarget.click();
-                this.sendBookmakTarget = null;
-            }
+            }, 500);
         }
     },
 
@@ -272,10 +273,6 @@ module.exports = React.createClass({
                 enteringIssueDetails: true,
                 renderingIssueDialogBox: true
             });
-
-            // stop menu from closing, as otherwise this component would unmount
-            evt.stopPropagation();
-            this.issueDetailsTarget = evt.target;
         }
     },
 
@@ -289,13 +286,7 @@ module.exports = React.createClass({
                 if (!this.state.enteringIssueDetails) {
                     this.setState({ renderingIssueDialogBox: false });
                 }
-            }, 1000);
-
-            // fire click event to close menu
-            if (this.issueDetailsTarget) {
-                this.issueDetailsTarget.click();
-                this.issueDetailsTarget = null;
-            }
+            }, 500);
         }
     },
 
@@ -313,6 +304,7 @@ module.exports = React.createClass({
             options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userId ]);
         }
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
     },
 
     /**
@@ -325,6 +317,7 @@ module.exports = React.createClass({
         var userId = this.props.currentUser.id;
         options.keepBookmark = false;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
     },
 
     /**
@@ -354,6 +347,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.hideStory = !options.hideStory;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
     },
 
     /**
@@ -365,6 +359,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.editStory = true;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
     },
 
     /**
@@ -376,6 +371,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.removeStory = true;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
     },
 
     /**
@@ -387,6 +383,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.bumpStory = true;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
     },
 
     /**
@@ -398,6 +395,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
         this.closeSelectionDialogBox();
     },
 
@@ -407,6 +405,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleRecipientsCancel: function(evt) {
+        this.triggerCompleteEvent();
         this.closeSelectionDialogBox();
     },
 
@@ -419,6 +418,7 @@ module.exports = React.createClass({
         var options = _.clone(this.props.options);
         options.issueDetails = evt.issue;
         this.triggerChangeEvent(options);
+        this.triggerCompleteEvent();
         this.closeIssueDialogBox();
     },
 
@@ -428,6 +428,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleIssueCancel: function(evt) {
+        this.triggerCompleteEvent();
         this.closeIssueDialogBox();
     },
 });

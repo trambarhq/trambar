@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
+var Overlay = require('widgets/overlay');
 
 require('./pop-up-menu.scss');
 
@@ -45,6 +46,13 @@ module.exports = React.createClass({
         if (child) {
             return child.props.children;
         }
+    },
+
+    /**
+     * Close menu
+     */
+    close: function() {
+        return this.setState({ open: false });
     },
 
     /**
@@ -93,7 +101,7 @@ module.exports = React.createClass({
         }
         return (
             <div className="container">
-                <div className="menu" onClick={this.handleMenuClick}>
+                <div className="menu">
                     {this.getContents('menu')}
                 </div>
             </div>
@@ -135,7 +143,7 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        var appContainer = document.getElementById('app-container');
+        var appContainer = document.getElementById('application');
         if (!prevState.open && this.state.open) {
             appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
 
@@ -204,28 +212,23 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on an item in the menu
-     *
-     * @param  {Event} evt
-     */
-    handleMenuClick: function(evt) {
-        this.setState({ open: false });
-        this.triggerEvent(false);
-    },
-
-    /**
      * Called when user clicks on the page somewhere
      *
      * @param  {Event} evt
      */
     handleBodyMouseDown: function(evt) {
-        var containerNode = ReactDOM.findDOMNode(this);
-        var insideMenu = isInside(evt.target, containerNode);
-        if (!insideMenu && this.popOutContainer) {
-            insideMenu = isInside(evt.target, this.popOutContainer);
+        if (evt.button !== 0) {
+            return;
         }
-        if (!insideMenu) {
-            this.setState({ open: false });
+        if (!Overlay.active) {
+            var containerNode = ReactDOM.findDOMNode(this);
+            var insideMenu = isInside(evt.target, containerNode);
+            if (!insideMenu && this.popOutContainer) {
+                insideMenu = isInside(evt.target, this.popOutContainer);
+            }
+            if (!insideMenu) {
+                this.setState({ open: false });
+            }
         }
     },
 });
