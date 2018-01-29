@@ -408,6 +408,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderTitleInput()}
                 {this.renderNameInput()}
                 {this.renderDescriptionInput()}
+                {this.renderRatingSelector()}
                 {this.renderUserSelector()}
             </div>
         );
@@ -481,6 +482,42 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render message rating selector
+     *
+     * @return {ReactElement}
+     */
+    renderRatingSelector: function() {
+        var t = this.props.locale.translate;
+        var ratingCurr = this.getRoleProperty('settings.rating', 'current') || 0;
+        var ratingPrev = this.getRoleProperty('settings.rating', 'original') || 0;
+        var optionProps = _.map(messageRatings, (rating, key) => {
+            return {
+                name: key,
+                selected: ratingCurr === rating,
+                previous: ratingCurr === rating,
+                children: t(`role-summary-rating-${key}`),
+            };
+        });
+        var listProps = {
+            onOptionClick: this.handleRatingOptionClick,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <OptionList {...listProps}>
+                <label>
+                    {t('role-summary-rating')}
+                </label>
+                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+            </OptionList>
+        );
+    },
+
+    /**
+     * Render user selector
+     *
+     * @return {ReactElement}
+     */
     renderUserSelector: function() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
@@ -719,6 +756,17 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Called when user clicks on one of the rating option
+     *
+     * @param  {Object} evt
+     */
+    handleRatingOptionClick: function(evt) {
+        var key = evt.name;
+        var rating = messageRatings[key];
+        this.setRoleProperty(`settings.rating`, rating);
+    },
+
+    /**
      * Called when user clicks on one of the users in list
      *
      * @param  {Object} evt
@@ -760,4 +808,12 @@ var sortUsers = Memoize(function(users, locale) {
 
 var emptyRole = {
     details: {}
+};
+
+var messageRatings = {
+    'very-high': 50,
+    'high': 20,
+    'normal': 0,
+    'low': -20,
+    'very-low': -50,
 };

@@ -59,7 +59,7 @@ module.exports = {
         var ratings = _.map(roles, (role) => {
             return _.get(role, 'settings.rating', 0);
         }, 0);
-        return _.max(ratings);
+        return _.sum(ratings);
     },
 
     /**
