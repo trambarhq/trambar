@@ -68,6 +68,15 @@ module.exports = function(localeCode) {
                 return `${count} слияний`;
             }
         },
+        'activity-tooltip-$count-merge-request': (count) => {
+            if (singularN(count)) {
+                return `${count} запрос слияния`;
+            } else if (singularG(count)) {
+                return `${count} запроса слияния`;
+            } else {
+                return `${count} запросов слияния`;
+            }
+        },
         'activity-tooltip-$count-milestone': (count) => {
             if (singularN(count)) {
                 return `${count} веха`;

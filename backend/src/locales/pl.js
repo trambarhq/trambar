@@ -719,11 +719,20 @@ module.exports = function(localeCode) {
         },
         'user-statistics-tooltip-$count-merge': (count) => {
             if (singular(count)) {
-                return `1 scalnie zmian`;
+                return `1 scalenie zmian`;
             } else if (plural(count)) {
                 return `${count} scalenia zmian`;
             } else {
                 return `${count} scaleń zmian`;
+            }
+        },
+        'user-statistics-tooltip-$count-merge-request': (count) => {
+            if (singular(count)) {
+                return `1 prośba o połączenie`;
+            } else if (plural(count)) {
+                return `${count} prośby o połączenie`;
+            } else {
+                return `${count} próśb o połączenie`;
             }
         },
         'user-statistics-tooltip-$count-milestone': (count) => {

@@ -501,13 +501,16 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 branch` : `${count} brancher`;
         },
         'user-statistics-tooltip-$count-issue': (count) => {
-            return (count === 1) ? `1 problemet` : `${count} problemer`;
+            return (count === 1) ? `1 problem` : `${count} problemer`;
         },
         'user-statistics-tooltip-$count-member': (count) => {
             return (count === 1) ? `1 medlemskapsendring` : `${count} medlemskapsendringer`;
         },
         'user-statistics-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merger`;
+        },
+        'user-statistics-tooltip-$count-merge-request': (count) => {
+            return (count === 1) ? `1 merge-request` : `${count} merge-requester`;
         },
         'user-statistics-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 Milepæl` : `${count} milepæler`;

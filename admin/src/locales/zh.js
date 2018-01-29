@@ -67,6 +67,9 @@ var traditionalPhrases = {
     'activity-tooltip-$count-merge': (count) => {
         return `${count}個代碼合併`;
     },
+    'activity-tooltip-$count-merge-request': (count) => {
+        return `${count}個合併請求`;
+    },
     'activity-tooltip-$count-milestone': (count) => {
         return `${count}個里程碑`
     },
@@ -650,6 +653,9 @@ var simplifiedPhrases = {
     },
     'activity-tooltip-$count-merge': (count) => {
         return `${count}个代码合并`;
+    },
+    'activity-tooltip-$count-merge-request': (count) => {
+        return `${count}个合并請求`;
     },
     'activity-tooltip-$count-milestone': (count) => {
         return `${count}个里程碑`

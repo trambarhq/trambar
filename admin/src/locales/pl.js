@@ -68,6 +68,15 @@ module.exports = function(localeCode) {
                 return `${count} scaleń zmian`;
             }
         },
+        'activity-tooltip-$count-merge-request': (count) => {
+            if (singular(count)) {
+                return `1 prośba o połączenie`;
+            } else if (plural(count)) {
+                return `${count} prośby o połączenie`;
+            } else {
+                return `${count} próśb o połączenie`;
+            }
+        },
         'activity-tooltip-$count-milestone': (count) => {
             if (singular(count)) {
                 return `1 kamień milowy`;

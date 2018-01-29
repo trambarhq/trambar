@@ -38,6 +38,9 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merges`;
         },
+        'activity-tooltip-$count-merge': (count) => {
+            return (count === 1) ? `1 merge requests` : `${count} merge requests`;
+        },
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 virstanpylväs` : `${count} virstanpylväitä`;
         },

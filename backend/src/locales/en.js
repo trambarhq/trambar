@@ -516,6 +516,9 @@ module.exports = function(localeCode) {
         'user-statistics-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merges`;
         },
+        'user-statistics-tooltip-$count-merge-request': (count) => {
+            return (count === 1) ? `1 merge request` : `${count} merge requests`;
+        },
         'user-statistics-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
         },

@@ -735,6 +735,15 @@ module.exports = function(localeCode) {
                 return `${count} слияний`;
             }
         },
+        'user-statistics-tooltip-$count-merge-request': (count) => {
+            if (singularN(count)) {
+                return `${count} запрос слияния`;
+            } else if (singularG(count)) {
+                return `${count} запроса слияния`;
+            } else {
+                return `${count} запросов слияния`;
+            }
+        },
         'user-statistics-tooltip-$count-milestone': (count) => {
             if (singularN(count)) {
                 return `${count} веха`;

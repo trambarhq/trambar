@@ -558,6 +558,9 @@ var traditionalPhrases = {
     'user-statistics-tooltip-$count-merge': (count) => {
         return `${count}個代碼合併`;
     },
+    'user-statistics-tooltip-$count-merge-request': (count) => {
+        return `${count}個合併請求`;
+    },
     'user-statistics-tooltip-$count-milestone': (count) => {
         return `${count}個里程碑`
     },
@@ -1109,6 +1112,9 @@ var simplifiedPhrases = {
     },
     'user-statistics-tooltip-$count-merge': (count) => {
         return `${count}个代码合并`;
+    },
+    'user-statistics-tooltip-$count-merge-request': (count) => {
+        return `${count}个合并請求`;
     },
     'user-statistics-tooltip-$count-milestone': (count) => {
         return `${count}个里程碑`

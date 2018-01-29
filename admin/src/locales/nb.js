@@ -30,13 +30,16 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 branch` : `${count} brancher`;
         },
         'activity-tooltip-$count-issue': (count) => {
-            return (count === 1) ? `1 problemet` : `${count} problemer`;
+            return (count === 1) ? `1 problem` : `${count} problemer`;
         },
         'activity-tooltip-$count-member': (count) => {
             return (count === 1) ? `1 medlemskapsendring` : `${count} medlemskapsendringer`;
         },
         'activity-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merger`;
+        },
+        'user-statistics-tooltip-$count-merge-request': (count) => {
+            return (count === 1) ? `1 merge-request` : `${count} merge-requester`;
         },
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 Milepæl` : `${count} milepæler`;

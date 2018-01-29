@@ -42,6 +42,9 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merges`;
         },
+        'activity-tooltip-$count-merge-request': (count) => {
+            return (count === 1) ? `1 merge request` : `${count} merge requests`;
+        },
         'activity-tooltip-$count-milestone': (count) => {
             return (count === 1) ? `1 milestone` : `${count} milestones`;
         },
