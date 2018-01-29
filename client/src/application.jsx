@@ -435,6 +435,7 @@ module.exports = React.createClass({
         var db = this.state.database.use({ schema: 'global', by: this });
         db.start().then((userId) => {
             return db.findOne({ table: 'system' }).then((system) => {
+                var address = db.context.address;
                 var url = _.get(system, 'settings.push_relay', '');
                 var pushRelay = { address, url };
                 if (!_.isEqual(pushRelay, this.state.pushRelay)) {
