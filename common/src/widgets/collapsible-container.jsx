@@ -69,13 +69,32 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Update height when component draws for the first time
+     */
     componentDidMount: function() {
         if (this.props.open) {
-            this.componentDidUpdate();
+            this.updateHeight();
+            // sometimes height of the scrollbar isn't accounted for initially
+            setTimeout(this.updateHeight, 10);
         }
     },
 
+    /**
+     * Update height on redraw
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
     componentDidUpdate: function(prevProps, prevState) {
+        this.updateHeight();
+        setTimeout(this.updateHeight, 10);
+    },
+
+    /**
+     * Get the height of the contents, saving it if it's different
+     */
+    updateHeight: function() {
         var contentHeight = getContentHeight(this.components.contents);
         if (this.state.contentHeight !== contentHeight) {
             this.setState({ contentHeight });

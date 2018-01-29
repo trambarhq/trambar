@@ -2,12 +2,31 @@
     padding: 4px 4px 4px 4px;
     overflow-x: auto;
     white-space: nowrap;
-
-    display: flex;
     width: 100%;
+    direction: rtl;
+
+    &::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
+        background-color: transparent;
+    }
+
+    &::-webkit-scrollbar {
+        height: 8px;
+        background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        -webkit-box-shadow: inset 0 0 3px rgba(255,255,255,.2);
+        background-color: rgba(255,255,255,.1);
+    }
+
+/* the following only works on Chrome */
+/*
+    display: flex;
     flex-direction: row-reverse;
 
     .calendar {
         flex: 0 0 auto;
     }
+*/
 }
