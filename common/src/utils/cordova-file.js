@@ -6,9 +6,12 @@ module.exports = CordovaFile;
 
 function CordovaFile(fullPath, type, size) {
     var name;
+    if (fullPath.charAt(0) === '/') {
+        fullPath = 'file://' + encodeURI(fullPath);
+    }
     var slashIndex = _.lastIndexOf(fullPath, '/');
     if (slashIndex !== -1) {
-        name = decodeURIComponent(fullPath.substr(slashIndex + 1));
+        name = decodeURI(fullPath.substr(slashIndex + 1));
     }
     this.fullPath = fullPath;
     this.name = name;
@@ -59,5 +62,9 @@ CordovaFile.prototype.getFile = function() {
 CordovaFile.prototype.obtainSize = function() {
     return this.getFile().then((file) => {
         this.size = file.size;
+        if (!this.type) {
+            // set the type as well if it's missing
+            this.type = file.type;
+        }
     });
 };

@@ -30,20 +30,57 @@ function FileButton(props) {
     if (props.hidden) {
         return null;
     }
-    var inputProps = {
-        type: 'file',
-        value: '',
-        disabled: props.disabled,
-        multiple: props.multiple,
-        onChange: props.onChange,
-    };
-    return (
-        <label className={buttonClasses(props)}>
-            <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
-            <input {...inputProps} />
-        </label>
-    );
+    if (process.env.PLATFORM === 'cordova') {
+        var buttonProps = _.omit(props, 'onChange');
+        var onClick = () => {
+            var camera = navigator.camera;
+            if (camera) {
+                var options = {
+                    destinationType: Camera.DestinationType.FILE_URI,
+                    sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                    mediaType: Camera.MediaType.ALLMEDIA,
+                };
+                var handleSuccess = (url) => {
+                    var CordovaFile = require('utils/cordova-file');
+                    var file = new CordovaFile(url);
+                    return file.obtainSize().then(() => {
+                        var evt = {
+                            target: {
+                                files: [ file ]
+                            },
+                        };
+                        if (props.onChange) {
+                            props.onChange(evt);
+                        }
+                    });
+                };
+                var handleFailure = () => {
+                };
+                camera.getPicture(handleSuccess, handleFailure, options);
+            }
+        };
+        return (
+            <label className={buttonClasses(props)} onClick={!props.disabled ? onClick : null}>
+                <i className={iconClasses(props)}/>
+                <span className="label">{props.label}</span>
+            </label>
+        );
+    } else {
+        var inputProps = {
+            type: 'file',
+            value: '',
+            disabled: props.disabled,
+            multiple: props.multiple,
+            onChange: props.onChange,
+        };
+        return (
+            <label className={buttonClasses(props)}>
+                <i className={iconClasses(props)}/>
+                <span className="label">{props.label}</span>
+                <input {...inputProps} />
+            </label>
+        );
+    }
 }
 
 FileButton.propTypes = {
