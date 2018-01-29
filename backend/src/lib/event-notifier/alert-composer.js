@@ -35,33 +35,33 @@ function getNotificationText(user, notification, lang) {
     var name = n(user);
     switch (notification.type) {
         case 'like':
-            return t('notification-$user-likes-your-$story', name, notification.details.story_type);
+            return t('notification-$name-likes-your-$story', name, notification.details.story_type);
         case 'comment':
-            return t('notification-$user-commented-on-your-$story', name, notification.details.story_type);
+            return t('notification-$name-commented-on-your-$story', name, notification.details.story_type);
         case 'issue':
-            return t('notification-$user-opened-an-issue', name);
+            return t('notification-$name-opened-an-issue', name);
         case 'vote':
-            return t('notification-$user-voted-in-your-survey', name);
+            return t('notification-$name-voted-in-your-survey', name);
         case 'task-completion':
-            return t('notification-$user-completed-task', name);
+            return t('notification-$name-completed-task', name);
         case 'note':
-            return t('notification-$user-posted-a-note-about-your-$story', name, notification.details.story_type);
+            return t('notification-$name-posted-a-note-about-your-$story', name, notification.details.story_type);
         case 'assignment':
-            return t('notification-$user-is-assigned-to-your-issue', name);
+            return t('notification-$name-is-assigned-to-your-issue', name);
         case 'tracking':
-            return t('notification-$user-added-your-post-to-issue-tracker', name);
+            return t('notification-$name-added-your-post-to-issue-tracker', name);
         case 'push':
-            return t('notification-$user-pushed-code-to-$branch', name, notification.details.branch);
+            return t('notification-$name-pushed-code-to-$branch', name, notification.details.branch);
         case 'merge':
-            return t('notification-$user-merged-code-to-$branch', name, notification.details.branch);
+            return t('notification-$name-merged-code-to-$branch', name, notification.details.branch);
         case 'coauthor':
-            return t('notification-$user-added-you-as-coauthor', name);
+            return t('notification-$name-added-you-as-coauthor', name);
         case 'survey':
-            return t('notification-$user-posted-a-survey', name);
+            return t('notification-$name-posted-a-survey', name);
         case 'bookmark':
-            return t('notification-$user-sent-bookmark-to-$story', name, notification.details.story_type);
+            return t('notification-$name-sent-bookmark-to-$story', name, notification.details.story_type);
         case 'join_request':
-            return t('notification-$user-requested-to-join', name);
+            return t('notification-$name-requested-to-join', name);
     }
 }
 
