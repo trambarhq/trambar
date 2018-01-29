@@ -279,75 +279,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render given story
-     *
-     * @param  {Story} story
-     *
-     * @return {ReactElement|null}
-     */
-    renderStory: function(story) {
-        if (!story) {
-            return;
-        }
-        var draft = _.find(this.props.draftStories, { published_version_id: story.id });
-        if (draft) {
-            return this.renderEditor(draft);
-        }
-        var reactions = findReactions(this.props.reactions, story);
-        var authors = findAuthors(this.props.authors, story);
-        var respondents = findRespondents(this.props.respondents, reactions);
-        var recommendations = findRecommendations(this.props.recommendations, story);
-        var recipients = findRecipients(this.props.recipients, recommendations);
-        var storyProps = {
-            story,
-            reactions,
-            authors,
-            respondents,
-            recommendations,
-            recipients,
-            repos: this.props.repos,
-            currentUser: this.props.currentUser,
-
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <StoryView {...storyProps} />;
-    },
-
-    /**
-     * Render editor for story
-     *
-     * @param  {Story} story
-     * @param  {Number} index
-     *
-     * @return {ReactElement}
-     */
-    renderEditor: function(story, index) {
-        var authors = findAuthors(this.props.draftAuthors, story);
-        var recommendations = findRecommendations(this.props.recommendations, story);
-        var recipients = findRecipients(this.props.recipients, recommendations);
-        if (!story) {
-            authors = array(this.props.currentUser);
-        }
-        var editorProps = {
-            story,
-            authors,
-            recommendations,
-            recipients,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <StoryEditor {...editorProps}/>
-    },
-
-    /**
      * Render alert indicating there're new stories hidden up top
      *
      * @return {ReactElement}
@@ -399,22 +330,22 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         }
 
         // see if it's being editted
-        var renderEditor = false;
+        var editing = false;
         if (story) {
             if (this.props.access === 'read-write') {
                 if (!story.published) {
-                    renderEditor = true;
+                    editing = true;
                 } else {
                     var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
                     if (tempCopy) {
                         // edit the temporary copy
                         story = tempCopy;
-                        renderEditor = true;
+                        editing = true;
                     }
                 }
             }
         }
-        if (renderEditor || evt.needed) {
+        if (editing || evt.needed) {
             var senders = findSenders(this.props.senders, bookmark);
             var bookmarkProps = {
                 bookmark,
@@ -427,7 +358,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                 theme: this.props.theme,
             };
         }
-        if (renderEditor) {
+        if (editing) {
             var authors = findAuthors(this.props.draftAuthors, story);
             var recommendations = findRecommendations(this.props.recommendations, story);
             var recipients = findRecipients(this.props.recipients, recommendations);
@@ -461,6 +392,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                 var storyProps = {
                     access: this.props.access,
                     story,
+                    bookmark,
                     reactions,
                     authors,
                     respondents,

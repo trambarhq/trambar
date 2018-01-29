@@ -36,6 +36,7 @@ module.exports = React.createClass({
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         selected: PropTypes.bool,
         story: PropTypes.object.isRequired,
+        bookmark: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
@@ -144,9 +145,10 @@ module.exports = React.createClass({
      */
     updateOptions: function(nextState, nextProps) {
         var options = nextState.options = _.clone(nextState.options);
-        options.hidePost = !nextProps.story.public;
+        options.hideStory = !nextProps.story.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
         options.issueDetails = IssueUtils.extract(nextProps.story, nextProps.repos);
+        options.keepBookmark = (nextProps.bookmark) ? true : undefined;
     },
 
     /**
@@ -607,6 +609,7 @@ module.exports = React.createClass({
         }
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
+        debugger;
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
@@ -676,27 +679,32 @@ module.exports = React.createClass({
         var before = this.state.options;
         this.setState({ options }, () => {
             var story = this.props.story;
-            if (options.editPost && !before.editPost) {
+            if (options.editStory && !before.editStory) {
                 var tempCopy = _.omit(story, 'id', 'published', 'ptime');
                 tempCopy.published_version_id = story.id;
                 this.saveStory(tempCopy);
             }
-            if (options.removePost && !before.removePost) {
+            if (options.removeStory && !before.removeStory) {
                 this.removeStory(story);
             }
-            if (options.bumpPost && !before.bumpPost) {
+            if (options.bumpStory && !before.bumpStory) {
                 var columns = {
                     id: story.id,
                     bump: true
                 };
                 this.saveStory(columns);
             }
-            if (options.hidePost !== before.hidePost) {
+            if (options.hideStory !== before.hideStory) {
                 var columns = {
                     id: story.id,
-                    public: !options.hidePost
+                    public: !options.hideStory
                 };
                 this.saveStory(columns);
+            }
+            if (options.keepBookmark !== before.keepBookmark) {
+                if (this.props.bookmark && !options.keepBookmark) {
+                    this.removeBookmarks([ this.props.bookmark ]);
+                }
             }
             if (!_.isEqual(options.issueDetails, before.issueDetails)) {
                 var columns = {
@@ -801,11 +809,12 @@ var reactionContainerMaxHeight;
 
 var defaultOptions = {
     issueDetails: null,
-    hidePost: false,
-    editPost: false,
-    removePost: false,
-    bumpPost: false,
+    hideStory: false,
+    editStory: false,
+    removeStory: false,
+    bumpStory: false,
     bookmarkRecipients: [],
+    keepBookmark: undefined,
 };
 
 var findRepo = Memoize(function(repos, story) {

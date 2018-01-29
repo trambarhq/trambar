@@ -99,7 +99,7 @@ module.exports = React.createClass({
             var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
             var otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
             var bookmarkProps = {
-                label: t('option-bookmark-story'),
+                label: t('option-add-bookmark'),
                 selected: bookmarking,
                 onClick: this.handleBookmarkClick,
             };

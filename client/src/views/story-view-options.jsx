@@ -19,6 +19,7 @@ module.exports = React.createClass({
     propTypes: {
         section: PropTypes.oneOf([ 'main', 'both' ]),
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        inBookmark: PropTypes.bool,
         story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
@@ -40,6 +41,7 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             section: 'both',
+            inBookmark: false,
         }
     },
 
@@ -87,13 +89,23 @@ module.exports = React.createClass({
         var user = this.props.currentUser;
         var story = this.props.story;
         if (section === 'main') {
-            var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
+            var bookmarkProps;
+            if (options.keepBookmark === undefined) {
+                var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
+                bookmarkProps = {
+                    label: t('option-add-bookmark'),
+                    selected: bookmarking,
+                    onClick: this.handleAddBookmarkClick,
+                };
+            } else {
+                // viewing in bookmark page
+                 bookmarkProps = {
+                    label: t('option-keep-bookmark'),
+                    selected: options.keepBookmark,
+                    onClick: this.handleKeepBookmarkClick,
+                };
+            }
             var otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
-            var bookmarkProps = {
-                label: t('option-bookmark-story'),
-                selected: bookmarking,
-                onClick: this.handleBookmarkClick,
-            };
             var sendBookmarkProps = {
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
@@ -111,25 +123,25 @@ module.exports = React.createClass({
             var hideProps = {
                 label: t('option-hide-story'),
                 hidden: !(canWrite && UserUtils.canHideStory(user, story)),
-                selected: options.hidePost,
+                selected: options.hideStory,
                 onClick: this.handleHideClick,
             };
             var editProps = {
                 label: t('option-edit-post'),
                 hidden: !(canWrite && UserUtils.canEditStory(user, story)),
-                selected: options.editPost,
+                selected: options.editStory,
                 onClick: this.handleEditClick,
             };
             var removeProps = {
                 label: t('option-remove-story'),
                 hidden: !(canWrite && UserUtils.canRemoveStory(user, story)),
-                selected: options.removePost,
+                selected: options.removeStory,
                 onClick: this.handleRemoveClick,
             };
             var bumpProps = {
                 label: t('option-bump-story'),
                 hidden: !(canWrite && UserUtils.canBumpStory(user, story)),
-                selected: options.bumpPost,
+                selected: options.bumpStory,
                 onClick: this.handleBumpClick,
             };
             return (
@@ -288,11 +300,11 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on bookmark post button
+     * Called when user clicks on add bookmark button
      *
      * @param  {Event} evt
      */
-    handleBookmarkClick: function(evt) {
+    handleAddBookmarkClick: function(evt) {
         var options = _.clone(this.props.options);
         var userId = this.props.currentUser.id;
         if (_.includes(options.bookmarkRecipients, userId)) {
@@ -300,6 +312,18 @@ module.exports = React.createClass({
         } else {
             options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userId ]);
         }
+        this.triggerChangeEvent(options);
+    },
+
+    /**
+     * Called when user clicks on keep bookmark button
+     *
+     * @param  {Event} evt
+     */
+    handleKeepBookmarkClick: function(evt) {
+        var options = _.clone(this.props.options);
+        var userId = this.props.currentUser.id;
+        options.keepBookmark = false;
         this.triggerChangeEvent(options);
     },
 
@@ -322,46 +346,46 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks on hide post button
+     * Called when user clicks on hide story button
      *
      * @param  {Event} evt
      */
     handleHideClick: function(evt) {
         var options = _.clone(this.props.options);
-        options.hidePost = !options.hidePost;
+        options.hideStory = !options.hideStory;
         this.triggerChangeEvent(options);
     },
 
     /**
-     * Called when user clicks on edit post button
+     * Called when user clicks on edit story button
      *
      * @param  {Event} evt
      */
     handleEditClick: function(evt) {
         var options = _.clone(this.props.options);
-        options.editPost = true;
+        options.editStory = true;
         this.triggerChangeEvent(options);
     },
 
     /**
-     * Called when user clicks on remove post button
+     * Called when user clicks on remove story button
      *
      * @param  {Event} evt
      */
     handleRemoveClick: function(evt) {
         var options = _.clone(this.props.options);
-        options.removePost = true;
+        options.removeStory = true;
         this.triggerChangeEvent(options);
     },
 
     /**
-     * Called when user clicks on bump post button
+     * Called when user clicks on bump story button
      *
      * @param  {Event} evt
      */
     handleBumpClick: function(evt) {
         var options = _.clone(this.props.options);
-        options.bumpPost = true;
+        options.bumpStory = true;
         this.triggerChangeEvent(options);
     },
 

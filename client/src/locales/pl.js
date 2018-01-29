@@ -213,12 +213,12 @@ module.exports = function(localeCode) {
 
         'option-add-bookmark': 'Dodaj zakładkę',
         'option-add-issue': 'Dodaj zgłoszenie do issue-trackera',
-        'option-bookmark-story': 'Dodaj zakładkę',
         'option-bump-story': 'Podnieś pozycję wiadomości',
         'option-edit-comment': 'Edytuj komentarz',
         'option-edit-post': 'Edytuj wiadomość',
         'option-hide-comment': 'Ukryj komentarz przed gośćmi',
         'option-hide-story': 'Ukryj wiadomość przed gośćmi',
+        'option-keep-bookmark': 'Zachowuj zakładkę',
         'option-remove-comment': 'Usuń komentarz',
         'option-remove-story': 'Usuń wiadomość',
         'option-send-bookmarks': 'Wyślij zakładki do innych',
