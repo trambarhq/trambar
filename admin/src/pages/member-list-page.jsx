@@ -530,14 +530,15 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
+        var lc = this.props.locale.localeCode;
         if (!user) {
             return <TH id="range">{t('table-heading-date-range')}</TH>
         } else {
             var start, end;
             var range = _.get(this.props.statistics, [ user.id, 'range' ]);
             if (range) {
-                start = Moment(range.start).format('ll');
-                end = Moment(range.end).format('ll');
+                start = Moment(range.start).locale(lc).format('ll');
+                end = Moment(range.end).locale(lc).format('ll');
             }
             return <td>{t('date-range-$start-$end', start, end)}</td>;
         }
