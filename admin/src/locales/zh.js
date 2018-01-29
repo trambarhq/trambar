@@ -4,6 +4,16 @@ require('moment/locale/zh-tw');
 require('moment').defineLocale('zh-sg', { parentLocale: 'zh-cn' });
 require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
+// remove white-spaces from relative time
+['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
+    var localeData = require('moment').localeData('zh-cn');
+    var relativeTime = localeData._relativeTime;
+    for (var key in relativeTime) {
+        var value = relativeTime[key];
+        relativeTime[key] = value.replace(/\s+/g, '');
+    }
+});
+
 module.exports = function(localeCode) {
     var cantonese = false;
     var traditional = false;
@@ -43,52 +53,40 @@ var traditionalPhrases = {
     'activity-chart-legend-wiki': 'wiki修改',
 
     'activity-tooltip-$count': (count) => {
-        var num = cardinalT(count);
-        return `${num}個故事`;
+        return `${count}個故事`;
     },
     'activity-tooltip-$count-branch': (count) => {
-        var num = cardinalT(count);
-        return `${num}個分支`;
+        return `${count}個分支`;
     },
     'activity-tooltip-$count-issue': (count) => {
-        var num = cardinalT(count);
-        return `${num}個問題`
+        return `${count}個問題`
     },
     'activity-tooltip-$count-member': (count) => {
-        var num = cardinalT(count);
-        return `${num}個成員變更`;
+        return `${count}個成員變更`;
     },
     'activity-tooltip-$count-merge': (count) => {
-        var num = cardinalT(count);
-        return `${num}個代碼合併`;
+        return `${count}個代碼合併`;
     },
     'activity-tooltip-$count-milestone': (count) => {
-        var num = cardinalT(count);
-        return `${num}個里程碑`
+        return `${count}個里程碑`
     },
     'activity-tooltip-$count-post': (count) => {
-        var num = cardinalT(count);
-        return `${num}個貼文`;
+        return `${count}個貼文`;
     },
     'activity-tooltip-$count-push': (count) => {
-        var num = cardinalT(count);
-        return `${num}個代碼推送`;
+        return `${count}個代碼推送`;
     },
     'activity-tooltip-$count-repo': (count) => {
-        var num = cardinalT(count);
-        return `${num}個數據庫變更`;
+        return `${count}個數據庫變更`;
     },
     'activity-tooltip-$count-survey': (count) => {
-        var num = cardinalT(count);
-        return `${num}個調查`;
+        return `${count}個調查`;
     },
     'activity-tooltip-$count-task-list': (count) => {
-        var num = cardinalT(count);
-        return `${num}個任務列表`;
+        return `${count}個任務列表`;
     },
     'activity-tooltip-$count-wiki': (count) => {
-        var num = cardinalT(count);
-        return `${num}個wiki修改`;
+        return `${count}個wiki修改`;
     },
 
     'app-name': '電車吧',
@@ -255,8 +253,7 @@ var traditionalPhrases = {
     'repo-summary-title': '名稱',
 
     'repository-tooltip-$count': (count) => {
-        var num = cardinalT(count);
-        return `${num}個數據庫`;
+        return `${count}個數據庫`;
     },
 
     'role-list-add': '添加角色',
@@ -441,36 +438,28 @@ var traditionalPhrases = {
     'table-heading-users': '用戶',
 
     'task-$seconds': (seconds) => {
-        var num = cardinalT(count);
-        return `${num}秒`;
+        return `${seconds}秒`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `從《${repo}》數據庫導入了${num}個提交回應`;
+        return `從《${repo}》數據庫導入了${count}個提交回應`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `從《${repo}》數據庫導入了${num}個事件`;
+        return `從《${repo}》數據庫導入了${count}個事件`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `從《${repo}》數據庫導入了${num}個問題回應`;
+        return `從《${repo}》數據庫導入了${count}個問題回應`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `從《${repo}》數據庫導入了${num}個合併請求回應`;
+        return `從《${repo}》數據庫導入了${count}個合併請求回應`;
     },
     'task-imported-$count-repos': (count) => {
-        var num = cardinalT(count);
-        return `導入了${num}個數據庫`;
+        return `導入了${count}個數據庫`;
     },
     'task-imported-$count-users': (count) => {
-        var num = cardinalT(count);
-        return `導入了${num}個用戶`;
+        return `導入了${count}個用戶`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var num = cardinalT(count);
-        return `從《${repo}》數據庫的《${branch}》分支導入有${num}個提交的代碼推送`;
+        return `從《${repo}》數據庫的《${branch}》分支導入有${count}個提交的代碼推送`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
         return `從《${repo}》數據庫導入提交回應`;
@@ -490,30 +479,24 @@ var traditionalPhrases = {
     'task-importing-repos': '導入數據庫',
     'task-importing-users': '導入用戶',
     'task-installed-$count-hooks': (count) => {
-        var num = cardinalT(count);
-        return `安裝了${num}個項目鉤`;
+        return `安裝了${count}個項目鉤`;
     },
     'task-installing-hooks': '安裝項目鉤',
     'task-removed-$count-hooks': (count) => {
-        var num = cardinalT(count);
-        return `卸載了${num}個項目鉤`;
+        return `卸載了${count}個項目鉤`;
     },
     'task-removed-$count-repos': (count) => {
-        var num = cardinalT(count);
-        return `刪除了${num}個數據庫`;
+        return `刪除了${count}個數據庫`;
     },
     'task-removed-$count-users': (count) => {
-        var num = cardinalT(count);
-        return `刪除了${num}個用戶`;
+        return `刪除了${count}個用戶`;
     },
     'task-removing-hooks': 'Uninstalling hooks',
     'task-updated-$count-repos': (count) => {
-        var num = cardinalT(count);
-        return `改性了${num}個數據庫`;
+        return `改性了${count}個數據庫`;
     },
     'task-updated-$count-users': (count) => {
-        var num = cardinalT(count);
-        return `改性了${num}個用戶`;
+        return `改性了${count}個用戶`;
     },
 
     'text-field-placeholder-none': '空白',
@@ -617,8 +600,7 @@ var traditionalPhrases = {
     'user-summary-visibility-shown': '用戶會在《人員》頁出現',
 
     'user-tooltip-$count': (count) => {
-        var num = cardinalT(count);
-        return `${num}個用戶`;
+        return `${count}個用戶`;
     },
 
     'validation-duplicate-project-name': '具有該標識符的項目已經存在',
@@ -655,52 +637,40 @@ var simplifiedPhrases = {
     'activity-chart-legend-wiki': 'wiki修改',
 
     'activity-tooltip-$count': (count) => {
-        var num = cardinalT(count);
-        return `${num}个故事`;
+        return `${count}个故事`;
     },
     'activity-tooltip-$count-branch': (count) => {
-        var num = cardinalT(count);
-        return `${num}个分支`;
+        return `${count}个分支`;
     },
     'activity-tooltip-$count-issue': (count) => {
-        var num = cardinalT(count);
-        return `${num}个问题`
+        return `${count}个问题`
     },
     'activity-tooltip-$count-member': (count) => {
-        var num = cardinalT(count);
-        return `${num}个成员变更`;
+        return `${count}个成员变更`;
     },
     'activity-tooltip-$count-merge': (count) => {
-        var num = cardinalT(count);
-        return `${num}个代码合并`;
+        return `${count}个代码合并`;
     },
     'activity-tooltip-$count-milestone': (count) => {
-        var num = cardinalT(count);
-        return `${num}个里程碑`
+        return `${count}个里程碑`
     },
     'activity-tooltip-$count-post': (count) => {
-        var num = cardinalT(count);
-        return `${num}个贴文`;
+        return `${count}个贴文`;
     },
     'activity-tooltip-$count-push': (count) => {
-        var num = cardinalT(count);
-        return `${num}个代码推送`;
+        return `${count}个代码推送`;
     },
     'activity-tooltip-$count-repo': (count) => {
-        var num = cardinalT(count);
-        return `${num}个数据库变更`;
+        return `${count}个数据库变更`;
     },
     'activity-tooltip-$count-survey': (count) => {
-        var num = cardinalT(count);
-        return `${num}个调查`;
+        return `${count}个调查`;
     },
     'activity-tooltip-$count-task-list': (count) => {
-        var num = cardinalT(count);
-        return `${num}个任务列表`;
+        return `${count}个任务列表`;
     },
     'activity-tooltip-$count-wiki': (count) => {
-        var num = cardinalT(count);
-        return `${num}个wiki修改`;
+        return `${count}个wiki修改`;
     },
 
     'app-name': '电车吧',
@@ -867,8 +837,7 @@ var simplifiedPhrases = {
     'repo-summary-title': '名称',
 
     'repository-tooltip-$count': (count) => {
-        var num = cardinalT(count);
-        return `${num}个数据库`;
+        return `${count}个数据库`;
     },
 
     'role-list-add': '添加角色',
@@ -1053,36 +1022,28 @@ var simplifiedPhrases = {
     'table-heading-users': '用户',
 
     'task-$seconds': (seconds) => {
-        var num = cardinalT(count);
-        return `${num}秒`;
+        return `${seconds}秒`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `从《${repo}》数据库导入了${num}个提交回应`;
+        return `从《${repo}》数据库导入了${count}个提交回应`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `从《${repo}》数据库导入了${num}个事件`;
+        return `从《${repo}》数据库导入了${count}个事件`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `从《${repo}》数据库导入了${num}个问题回应`;
+        return `从《${repo}》数据库导入了${count}个问题回应`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        var num = cardinalT(count);
-        return `从《${repo}》数据库导入了${num}个合并请求回应`;
+        return `从《${repo}》数据库导入了${count}个合并请求回应`;
     },
     'task-imported-$count-repos': (count) => {
-        var num = cardinalT(count);
-        return `导入了${num}个数据库`;
+        return `导入了${count}个数据库`;
     },
     'task-imported-$count-users': (count) => {
-        var num = cardinalT(count);
-        return `导入了${num}个用户`;
+        return `导入了${count}个用户`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var num = cardinalT(count);
-        return `从《${repo}》数据库的《${branch}》分支导入有${num}个提交的代码推送`;
+        return `从《${repo}》数据库的《${branch}》分支导入有${count}个提交的代码推送`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
         return `从《${repo}》数据库导入提交回应`;
@@ -1102,30 +1063,24 @@ var simplifiedPhrases = {
     'task-importing-repos': '导入数据库',
     'task-importing-users': '导入用户',
     'task-installed-$count-hooks': (count) => {
-        var num = cardinalT(count);
-        return `安装了${num}个项目钩`;
+        return `安装了${count}个项目钩`;
     },
     'task-installing-hooks': '安装项目钩',
     'task-removed-$count-hooks': (count) => {
-        var num = cardinalT(count);
-        return `卸载了${num}个项目钩`;
+        return `卸载了${count}个项目钩`;
     },
     'task-removed-$count-repos': (count) => {
-        var num = cardinalT(count);
-        return `删除了${num}个数据库`;
+        return `删除了${count}个数据库`;
     },
     'task-removed-$count-users': (count) => {
-        var num = cardinalT(count);
-        return `删除了${num}个用户`;
+        return `删除了${count}个用户`;
     },
     'task-removing-hooks': 'Uninstalling hooks',
     'task-updated-$count-repos': (count) => {
-        var num = cardinalT(count);
-        return `改性了${num}个数据库`;
+        return `改性了${count}个数据库`;
     },
     'task-updated-$count-users': (count) => {
-        var num = cardinalT(count);
-        return `改性了${num}个用户`;
+        return `改性了${count}个用户`;
     },
 
     'text-field-placeholder-none': '沒有',
@@ -1229,8 +1184,7 @@ var simplifiedPhrases = {
     'user-summary-visibility-shown': '用户会在《人员》页出现',
 
     'user-tooltip-$count': (count) => {
-        var num = cardinalT(count);
-        return `${num}个用户`;
+        return `${count}个用户`;
     },
 
     'validation-duplicate-project-name': '具有该标识符的项目已经存在',

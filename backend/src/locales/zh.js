@@ -4,6 +4,16 @@ require('moment/locale/zh-tw');
 require('moment').defineLocale('zh-sg', { parentLocale: 'zh-cn' });
 require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
+// remove white-spaces from relative time
+['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
+    var localeData = require('moment').localeData('zh-cn');
+    var relativeTime = localeData._relativeTime;
+    for (var key in relativeTime) {
+        var value = relativeTime[key];
+        relativeTime[key] = value.replace(/\s+/g, '');
+    }
+});
+
 module.exports = function(localeCode) {
     var cantonese = false;
     var traditional = false;
@@ -439,29 +449,23 @@ var traditionalPhrases = {
     'story-photo': '照片',
     'story-post': '發送',
     'story-push-added-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `加了${num}個文件`;
+        return `加了${count}個文件`;
     },
     'story-push-added-$count-lines': (count) => {
-        var num = cardinalT(count);
-        return `加了${num}行代碼`;
+        return `加了${count}行代碼`;
     },
     'story-push-components-changed': '更改了以下部分：',
     'story-push-deleted-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `刪除了${num}個文件`;
+        return `刪除了${count}個文件`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        var num = cardinalT(count);
-        return `刪除了${num}行代碼`;
+        return `刪除了${count}行代碼`;
     },
     'story-push-modified-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `修改了${num}個文件`;
+        return `修改了${count}個文件`;
     },
     'story-push-renamed-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `改了${num}個文件的名`;
+        return `改了${count}個文件的名`;
     },
     'story-remove-yourself': '放棄作者權力',
     'story-remove-yourself-are-you-sure': '你確定你不要做這個貼文的合著者？',
@@ -543,48 +547,37 @@ var traditionalPhrases = {
     'user-statistics-legend-wiki': 'wiki修改',
     'user-statistics-today': '今天',
     'user-statistics-tooltip-$count-branch': (count) => {
-        var num = cardinalT(count);
-        return `${num}個分支`;
+        return `${count}個分支`;
     },
     'user-statistics-tooltip-$count-issue': (count) => {
-        var num = cardinalT(count);
-        return `${num}個問題`
+        return `${count}個問題`
     },
     'user-statistics-tooltip-$count-member': (count) => {
-        var num = cardinalT(count);
-        return `${num}個成員變更`;
+        return `${count}個成員變更`;
     },
     'user-statistics-tooltip-$count-merge': (count) => {
-        var num = cardinalT(count);
-        return `${num}個代碼合併`;
+        return `${count}個代碼合併`;
     },
     'user-statistics-tooltip-$count-milestone': (count) => {
-        var num = cardinalT(count);
-        return `${num}個里程碑`
+        return `${count}個里程碑`
     },
     'user-statistics-tooltip-$count-post': (count) => {
-        var num = cardinalT(count);
-        return `${num}個貼文`;
+        return `${count}個貼文`;
     },
     'user-statistics-tooltip-$count-push': (count) => {
-        var num = cardinalT(count);
-        return `${num}個代碼推送`;
+        return `${count}個代碼推送`;
     },
     'user-statistics-tooltip-$count-repo': (count) => {
-        var num = cardinalT(count);
-        return `${num}個數據庫變更`;
+        return `${count}個數據庫變更`;
     },
     'user-statistics-tooltip-$count-survey': (count) => {
-        var num = cardinalT(count);
-        return `${num}個調查`;
+        return `${count}個調查`;
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
-        var num = cardinalT(count);
-        return `${num}個任務列表`;
+        return `${count}個任務列表`;
     },
     'user-statistics-tooltip-$count-wiki': (count) => {
-        var num = cardinalT(count);
-        return `${num}個wiki修改`;
+        return `${count}個wiki修改`;
     },
 
     'video-capture-accept': '接受',
@@ -1008,29 +1001,23 @@ var simplifiedPhrases = {
     'story-photo': '照片',
     'story-post': '发送',
     'story-push-added-$count-files': (count) => {
-        var num = cardinalS(count);
-        return `加了${num}个文件`;
+        return `加了${count}个文件`;
     },
     'story-push-added-$count-lines': (count) => {
-        var num = cardinalS(count);
-        return `加了${num}行代码`;
+        return `加了${count}行代码`;
     },
     'story-push-components-changed': '更改了以下部分：',
     'story-push-deleted-$count-files': (count) => {
-        var num = cardinalS(count);
-        return `删除了${num}个文件`;
+        return `删除了${count}个文件`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        var num = cardinalS(count);
-        return `删除了${num}行代码`;
+        return `删除了${count}行代码`;
     },
     'story-push-modified-$count-files': (count) => {
-        var num = cardinalS(count);
-        return `修改了${num}个文件`;
+        return `修改了${count}个文件`;
     },
     'story-push-renamed-$count-files': (count) => {
-        var num = cardinalS(count);
-        return `改了${num}个文件的名`;
+        return `改了${count}个文件的名`;
     },
     'story-remove-yourself': '放弃作者权力',
     'story-remove-yourself-are-you-sure': '你确定你不要做这个贴文的合著者？',
@@ -1112,48 +1099,37 @@ var simplifiedPhrases = {
     'user-statistics-legend-wiki': 'wiki修改',
     'user-statistics-today': '今天',
     'user-statistics-tooltip-$count-branch': (count) => {
-        var num = cardinalS(count);
-        return `${num}个分支`;
+        return `${count}个分支`;
     },
     'user-statistics-tooltip-$count-issue': (count) => {
-        var num = cardinalS(count);
-        return `${num}个问题`
+        return `${count}个问题`
     },
     'user-statistics-tooltip-$count-member': (count) => {
-        var num = cardinalS(count);
-        return `${num}个成员变更`;
+        return `${count}个成员变更`;
     },
     'user-statistics-tooltip-$count-merge': (count) => {
-        var num = cardinalS(count);
-        return `${num}个代码合并`;
+        return `${count}个代码合并`;
     },
     'user-statistics-tooltip-$count-milestone': (count) => {
-        var num = cardinalS(count);
-        return `${num}个里程碑`
+        return `${count}个里程碑`
     },
     'user-statistics-tooltip-$count-post': (count) => {
-        var num = cardinalS(count);
-        return `${num}个贴文`;
+        return `${count}个贴文`;
     },
     'user-statistics-tooltip-$count-push': (count) => {
-        var num = cardinalS(count);
-        return `${num}个代码推送`;
+        return `${count}个代码推送`;
     },
     'user-statistics-tooltip-$count-repo': (count) => {
-        var num = cardinalS(count);
-        return `${num}个数据库变更`;
+        return `${count}个数据库变更`;
     },
     'user-statistics-tooltip-$count-survey': (count) => {
-        var num = cardinalS(count);
-        return `${num}个调查`;
+        return `${count}个调查`;
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
-        var num = cardinalS(count);
-        return `${num}个任务列表`;
+        return `${count}个任务列表`;
     },
     'user-statistics-tooltip-$count-wiki': (count) => {
-        var num = cardinalS(count);
-        return `${num}个wiki修改`;
+        return `${count}个wiki修改`;
     },
 
     'video-capture-accept': '接受',
@@ -1386,29 +1362,23 @@ var cantonesePhrases = {
     'story-paste-image-here': '放喺文本編輯器嘅圖像會係呢度出現',
     'story-pending': '等緊⋯⋯',
     'story-push-added-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `加咗${num}個文件`;
+        return `加咗${count}個文件`;
     },
     'story-push-added-$count-lines': (count) => {
-        var num = cardinalT(count);
-        return `加咗${num}行代碼`;
+        return `加咗${count}行代碼`;
     },
     'story-push-components-changed': '更改咗以下部分：',
     'story-push-deleted-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `刪除咗${num}個文件`;
+        return `刪除咗${count}個文件`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        var num = cardinalT(count);
-        return `刪除咗${num}行代碼`;
+        return `刪除咗${count}行代碼`;
     },
     'story-push-modified-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `修改咗${num}個文件`;
+        return `修改咗${count}個文件`;
     },
     'story-push-renamed-$count-files': (count) => {
-        var num = cardinalT(count);
-        return `改咗${num}個文件嘅名`;
+        return `改咗${count}個文件嘅名`;
     },
     'story-remove-yourself-are-you-sure': '你確定你唔要做呢個帖子嘅合著者？',
     'story-status-uploading-$progress': (progress) => {
@@ -1452,8 +1422,7 @@ var cantonesePhrases = {
     'user-statistics-legend-post': '帖子',
     'user-statistics-today': '今日',
     'user-statistics-tooltip-$count-post': (count) => {
-        var num = cardinalT(count);
-        return `${num}個帖子`;
+        return `${count}個帖子`;
     },
 };
 
