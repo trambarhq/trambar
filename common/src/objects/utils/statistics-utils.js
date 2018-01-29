@@ -186,7 +186,9 @@ function summarizeDailyActivities(dailyActivities, month) {
                 return;
             }
             _.each(dailyCounts, (value, type) => {
-                stats.total += value;
+                if (type.charAt(0) !== '#') {
+                    stats.total += value;
+                }
                 if (stats[type]) {
                     stats[type] += value;
                 } else {
