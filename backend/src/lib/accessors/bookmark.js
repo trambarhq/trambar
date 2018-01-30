@@ -130,6 +130,7 @@ module.exports = _.create(Data, {
                 var criteria = {
                     story_id: bookmarkReceived.story_id,
                     target_user_id: bookmarkReceived.target_user_id,
+                    deleted: false,
                 };
                 return this.findOne(db, schema, criteria, 'id, user_ids').then((row) => {
                     if (row) {
