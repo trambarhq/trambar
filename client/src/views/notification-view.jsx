@@ -160,6 +160,14 @@ module.exports = React.createClass({
                 return t('notification-$name-posted-a-survey', name);
             case 'bookmark':
                 return t('notification-$name-sent-bookmark-to-$story', name, notification.details.story_type);
+            case 'mention':
+                if (notification.details.story_type) {
+                    return t('notification-$name-mentioned-you-in-$story', name, notification.details.story_type);
+                } else if (notification.details.reaction_type) {
+                    return t('notification-$name-mentioned-you-in-$reaction', name, notification.details.reaction_type);
+                } else {
+                    break;
+                }
             case 'join_request':
                 return t('notification-$name-requested-to-join', name);
         }
@@ -185,6 +193,7 @@ module.exports = React.createClass({
             case 'coauthor': return 'handshake-o';
             case 'survey': return 'list-url';
             case 'bookmark': return 'bookmark';
+            case 'mention': return 'at';
             case 'join_request': return 'user-circle';
         }
     },
@@ -223,8 +232,9 @@ function getNotificationURL(notification, route) {
         case 'merge':
         case 'survey':
         case 'issue':
+        case 'mention':
             params.story = notification.story_id;
-            params.reaction = notification.reaction_id;
+            params.reaction = notification.reaction_id || undefined;
             return route.find(require('pages/news-page'), params);
         case 'bookmark':
             params.story = notification.story_id;
