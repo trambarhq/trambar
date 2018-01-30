@@ -263,6 +263,7 @@ module.exports = function(localeCode) {
 
         'qr-scanner-cancel': 'Anuluj',
         'qr-scanner-invalid-qr-code': 'Nieprawidłowy kod QR',
+        'qr-scanner-qr-code-found': 'Znaleziono kod QR',
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name, 3);

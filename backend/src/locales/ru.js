@@ -256,6 +256,7 @@ module.exports = function(localeCode) {
 
         'qr-scanner-cancel': 'Отмена',
         'qr-scanner-invalid-qr-code': 'Неверный QR-код',
+        'qr-scanner-qr-code-found': 'QR-код найден',
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name);

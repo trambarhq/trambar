@@ -218,6 +218,7 @@ module.exports = function(localeCode) {
 
         'qr-scanner-cancel': 'Cancel',
         'qr-scanner-invalid-qr-code': 'Invalid QR code',
+        'qr-scanner-qr-code-found': 'QR code found',
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             return `${name} added this post to issue tracker`;

@@ -258,6 +258,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
         if (process.env.PLATFORM === 'cordova') {
             return {
+                receivedCorrectQRCode: false,
                 receivedInvalidQRCode: false,
                 scanningQRCode: false,
                 enteringManually: false,
@@ -1042,6 +1043,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             show: this.state.scanningQRCode,
+            found: this.state.receivedCorrectQRCode,
             invalid: this.state.receivedInvalidQRCode,
             locale: this.props.locale,
             onCancel: this.handleCancelScan,
@@ -1129,9 +1131,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var link = UniversalLink.parse(evt.result);
         var params = (link) ? StartPage.parseURL(link.path, link.query, link.hash) : null;
         if (params && params.activationCode) {
+            this.setState({ receivedCorrectQRCode: true, receivedInvalidQRCode: false })
             this.props.route.change(link.url);
         } else {
-            this.setState({ receivedInvalidQRCode: true });
+            this.setState({ receivedCorrectQRCode: false, receivedInvalidQRCode: true });
             this.invalidCodeTimeout = setTimeout(() => {
                 this.setState({ receivedInvalidQRCode: false })
             }, 5000);

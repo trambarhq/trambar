@@ -213,6 +213,7 @@ module.exports = function(localeCode) {
 
         'qr-scanner-cancel': 'Peruutta',
         'qr-scanner-invalid-qr-code': 'Virheellinen QR-koodi',
+        'qr-scanner-qr-code-found': 'QR-koodi löytyi',
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             return `${name} lisäsi tämän viestin raportointityökaluun`;

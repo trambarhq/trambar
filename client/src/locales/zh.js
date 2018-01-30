@@ -260,6 +260,7 @@ var traditionalPhrases = {
 
     'qr-scanner-cancel': '取消',
     'qr-scanner-invalid-qr-code': '不正確的ＱＲ碼',
+    'qr-scanner-qr-code-found': '找到ＱＲ碼',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name}把這個貼文放到問題跟踪器上`;
@@ -827,6 +828,7 @@ var simplifiedPhrases = {
 
     'qr-scanner-cancel': '取消',
     'qr-scanner-invalid-qr-code': '不正确的ＱＲ码',
+    'qr-scanner-qr-code-found': '找到QR码',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name}把这个贴文放到问题跟踪器上`;
@@ -1278,6 +1280,7 @@ var cantonesePhrases = {
     'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
 
     'qr-scanner-invalid-qr-code': '唔正確嘅ＱＲ碼',
+    'qr-scanner-qr-code-found': '搵找到ＱＲ碼',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name}把呢個帖子放到問題跟踪器上`;

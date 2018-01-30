@@ -20,6 +20,7 @@ module.exports = React.createClass({
     propTypes: {
         show: PropTypes.bool,
         invalid: PropTypes.bool,
+        found: PropTypes.bool,
         locale: PropTypes.instanceOf(Locale),
         onCancel: PropTypes.func,
         onResult: PropTypes.func,
@@ -131,9 +132,11 @@ module.exports = React.createClass({
             label: t('qr-scanner-cancel'),
             onClick: this.handleCancelClick
         };
-        var error;
-        if (this.props.invalid) {
-            error = t('qr-scanner-invalid-qr-code');
+        var message;
+        if (this.props.found) {
+            message = <span className="success">{t('qr-scanner-qr-code-found')}</span>;
+        } else if (this.props.invalid) {
+            message = <span className="error">{t('qr-scanner-invalid-qr-code')}</span>;
         }
         var element = (
             <CameraOverlay>
@@ -141,7 +144,7 @@ module.exports = React.createClass({
                     {this.props.children}
                 </top>
                 <bottom>
-                    <div className="error">{error}</div>
+                    <div className="message">{message}</div>
                     <div className="buttons">
                         <PushButton {...cancelProps} />
                     </div>

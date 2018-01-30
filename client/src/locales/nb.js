@@ -215,6 +215,7 @@ module.exports = function(localeCode) {
 
         'qr-scanner-cancel': 'Avbryt',
         'qr-scanner-invalid-qr-code': 'Ugyldig QR-kode',
+        'qr-scanner-qr-code-found': 'QR-kode funnet',
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             return `${name} la til dette innlegget til feilrapporteringssystemet`;
