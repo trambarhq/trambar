@@ -35,249 +35,344 @@ function generate(db, events) {
         }
         return true;
     });
-    return Promise.mapSeries(events, (event) => {
-        switch (event.table) {
-            case 'reaction':
-                return createReactionNotifications(db, event);
-            case 'post':
-                return createStoryNotifications(db, event);
-            case 'user':
-                return createUserNotifications(db, event);
-            case 'bookmark':
-                return createBookmarkNotifications(db, event);
-            default:
-                return [];
-        }
-    }).then((notificationLists) => {
-        return _.flatten(notificationLists);
+
+    var criteria = { deleted: false, disabled: false };
+    return User.findCached(db, 'global', criteria, '*').then((users) => {
+        return Promise.mapSeries(events, (event) => {
+            return Promise.mapSeries(notificationGeneratingFunctions, (f) => {
+                return f(db, event);
+            }).then((lists) => {
+                // filter out notifications that user doesn't want to receive
+                var notifications = _.filter(_.flatten(lists), (notification) => {
+                    var user = _.find(users, { id: notification.target_user_id });
+                    return checkUserPreference(user, notification);
+                });
+                return Notification.save(db, event.schema, notifications);
+            });
+        }).then((lists) => {
+            return _.flatten(lists);
+        });
     });
 }
 
+var notificationGeneratingFunctions = [
+    generateCoauthoringNotifications,
+    generateStoryPublicationNotifications,
+    generateReactionPublicationNotifications,
+    generateUserMentionNotifications,
+    generateBookmarkNotifications,
+    generateJoinRequestNotifications,
+];
+
 /**
- * Create notifications in response to a change to the table "reaction"
+ * Generate coauthoring invitation notifications if event indicates addition of
+ * new authors
  *
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>}
+ * @return {Promise<Array<Object>>}
  */
-function createReactionNotifications(db, event) {
-    return getReactionNotificationTemplate(db, event).then((template) => {
-        if (!template) {
+function generateCoauthoringNotifications(db, event) {
+    return Promise.try(() => {
+        var newCoauthorIds = getNewCoauthorIds(event);
+        if (_.isEmpty(newCoauthorIds)) {
             return [];
         }
         var schema = event.schema;
-        var criteria = { deleted: false, disabled: false };
-        return User.findCached(db, 'global', criteria, '*').filter((user) => {
-            if (template.user_id === user.id) {
-                // never notify user of his own reaction
-                if (process.env.NODE_ENV === 'production') {
-                    return false;
-                }
-            }
-            if (!_.includes(template.target_user_ids, user.id)) {
-                return false;
-            }
-            var n = _.get(user, 'settings.notification', {});
-            switch (template.type) {
-                case 'like': return n.like;
-                case 'comment': return n.comment;
-                case 'issue': return n.issue;
-                case 'vote': return n.vote;
-                case 'task-completion': return n.task_completion;
-                case 'note': return n.note;
-                case 'assignment': return n.assignment;
-            }
-        }).then((recipients) => {
-            var notifications = _.map(recipients, (recipient) => {
-                var notification = _.omit(template, 'target_user_ids');
-                notification.target_user_id = recipient.id;
-                return notification;
-            });
-            return Notification.insert(db, schema, notifications);
+        var notificationType = 'coauthor';
+        var storyId = event.id;
+        var leadAuthorId = event.current.user_ids[0];
+        return _.map(newCoauthorIds, (coauthorId) => {
+            return {
+                type: notificationType,
+                story_id: storyId,
+                user_id: leadAuthorId,
+                target_user_id: coauthorId,
+            };
         });
     });
 }
 
 /**
- * Return a notification template for database event on "reaction"
+ * Generate story notifications if event indicates a story is being published
  *
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<String|null>}
+ * @return {Promise<Array<Object>>}
  */
-function getReactionNotificationTemplate(db, event) {
+function generateStoryPublicationNotifications(db, event) {
     return Promise.try(() => {
-        if (event.op === 'DELETE' || event.current.deleted) {
-            return null;
-        }
-        var publishing = false;
-        // published can become false again when user edit a comment
-        // ptime, on the other hand, will only be set when the comment is first published
-        if (event.diff.ptime || event.diff.ready) {
-            if (event.current.published && event.current.ready) {
-                publishing = true;
-            }
-        }
-        var notificationType;
-        var details = {};
-        if (publishing) {
-            var reactionType = event.current.type;
-            switch (reactionType) {
-                case 'like':
-                case 'comment':
-                case 'issue':
-                case 'vote':
-                case 'task-completion':
-                case 'assignment':
-                    notificationType = reactionType;
-                    break;
-            }
-        }
-        if (!notificationType) {
-            return null;
+        if (!isPublishing(event, 'story')) {
+            return [];
         }
         var schema = event.schema;
-        var criteria = { id: event.current.story_id };
+        // every story type generates the a notification of the same type
+        var notificationType = event.current.type;
+        var storyId = event.id;
+        var leadAuthorId = event.current.user_ids[0];
+        // notify (potentially) all active users
+        var criteria = { deleted: false, disabled: false };
+        return User.findCached(db, 'global', criteria, '*').then((users) => {
+            return getStoryPublicationDetails(db, schema, storyId, notificationType).then((details) => {
+                return _.map(users, (user) => {
+                    return {
+                        type: notificationType,
+                        story_id: storyId,
+                        user_id: leadAuthorId,
+                        target_user_id: user.id,
+                        details
+                    };
+                });
+            });
+        });
+    });
+}
+
+/**
+ * Return an object containing certain details from story
+ *
+ * @param  {Database} db
+ * @param  {String} schema
+ * @param  {Number} storyId
+ * @param  {String} notificationType
+ *
+ * @return {Promise<Object|undefined>}
+ */
+function getStoryPublicationDetails(db, schema, storyId, notificationType) {
+    switch (notificationType) {
+        case 'push':
+        case 'merge':
+        case 'branch':
+            // need addition info from story object not contained in event
+            var criteria = { id: storyId };
+            return Story.findOne(db, schema, criteria, 'details').then((story) => {
+                return {
+                    branch: story.details.branch
+                };
+            });
+        default:
+            return Promise.resolve();
+    }
+}
+
+/**
+ * Generate reaction notifications if event indicates a reaction is being published
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise<Array<Object>>}
+ */
+function generateReactionPublicationNotifications(db, event) {
+    return Promise.try(() => {
+        if (!isPublishing(event, 'reaction')) {
+            return [];
+        }
+        var schema = event.schema;
+        // every reaction type generates the a notification of the same type
+        var notificationType = event.current.type;
+        var reactionId = event.id;
+        var storyId = event.current.story_id;
+        var respondentId = event.current.user_id;
+        // notify the author(s) of the story reacted to
+        var criteria = { id: storyId };
         return Story.findOne(db, schema, criteria, 'type, user_ids').then((story) => {
-            var template = {
-                type: notificationType,
-                story_id: event.current.story_id,
-                reaction_id: event.id,
-                user_id: event.current.user_id,
-                target_user_ids: story.user_ids,
-            };
+            var details;
             switch (notificationType) {
+                // like and comment requires the story type since they're applicable to all stories
                 case 'like':
                 case 'comment':
-                    template.details = {
+                    details = {
                         story_type: story.type
                     };
                     break;
             }
-            return template;
+            return _.map(story.user_ids, (authorId) => {
+                return {
+                    type: notificationType,
+                    story_id: storyId,
+                    reaction_id: reactionId,
+                    user_id: respondentId,
+                    target_user_id: authorId,
+                    details
+                };
+            });
         });
     });
 }
 
 /**
- * Create notifications in response to a change to the table "story"
+ * Generate bookmark notifications if event indicates a bookmark is being sent
  *
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Array<Object>}
+ * @return {Promise<Array<Object>>}
  */
-function createStoryNotifications(db, event) {
-    return getStoryNotificationTemplate(db, event).then((template) => {
-        if (!template) {
+function generateBookmarkNotifications(db, event) {
+    return Promise.try(() => {
+        var senderIds = getNewBookmarkSenderIds(event);
+        if (_.isEmpty(senderIds)) {
             return [];
         }
-        var criteria = { deleted: false, disabled: false };
-        return User.findCached(db, 'global', criteria, '*').filter((user) => {
-            if (template.user_id === user.id) {
-                // never notify user of his own action
-                if (process.env.NODE_ENV === 'production') {
-                    return false;
-                }
+        var schema = event.schema;
+        var notificationType = 'bookmark';
+        var storyId = event.current.story_id;
+        var targetUserId = event.current.target_user_id;
+        var criteria = { id: storyId, deleted: false };
+        return Story.findOne(db, schema, criteria, 'type').then((story) => {
+            if (!story) {
+                return [];
             }
-            var n = _.get(user, 'settings.notification', {});
-            switch (template.type) {
-                case 'push':
-                    if (typeof(n.push_master) === 'string') {
-                        return template.details.branch === n.push_master;
-                    } else {
-                        return n.push_master;
-                    }
-                case 'merge':
-                    if (typeof(n.merge_master) === 'string') {
-                        return template.details.branch === n.merge_master;
-                    } else {
-                        return n.merge_master;
-                    }
-                case 'branch': return n.branch;
-                case 'survey': return n.survey;
-                case 'issue': return n.issue;
-                case 'coauthor':
-                    var newCoauthorIds = getNewCoauthorIds(event);
-                    return n.coauthor && _.includes(newCoauthorIds, user.id);
-            }
-        }).then((recipients) => {
-            var schema = event.schema;
-            var notifications = _.map(recipients, (recipient) => {
-                var notification = _.clone(template);
-                notification.target_user_id = recipient.id;
-                return notification;
+            var details = {
+                story_type: story.type
+            };
+            return _.map(senderIds, (senderId) => {
+                return {
+                    type: notificationType,
+                    story_id: storyId,
+                    user_id: senderId,
+                    target_user_id: targetUserId,
+                    details,
+                };
             });
-            return Notification.insert(db, schema, notifications);
         });
     });
 }
 
 /**
- * Return a notification template for database event on "story"
+ * Generate user mention notifications if event indicates a user is mentioned
+ * in a story or reaction
  *
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise<Object|null>}
+ * @return {Promise<Array<Object>>}
  */
-function getStoryNotificationTemplate(db, event) {
+function generateUserMentionNotifications(db, event) {
     return Promise.try(() => {
-        if (event.op === 'DELETE' || event.current.deleted) {
-            return null;
+        var newTags = getNewTags(event);
+        var newUserTags = _.filter(newTags, (tag) => {
+            return (tag.charAt(0) === '@');
+        });
+        if (_.isEmpty(newUserTags)) {
+            return [];
         }
-        var publishing = false;
+        var schema = event.schema;
+        var notificationType = 'mention';
+        var storyId = event.current.story_id;
+        var storyId;
+        var reactionId;
+        var authorId;
+        var details;
+        if (event.table === 'story') {
+            storyId = event.id;
+            authorId = event.current.user_ids[0];
+            details = { story_type: event.current.type };
+        } else if (event.table === 'reaction') {
+            reactionId = event.id;
+            storyId = event.current.story_id;
+            authorId = event.current.user_id;
+            details = { reaction_type: event.current.type };
+        }
+        var criteria = { deleted: false, disabled: false };
+        return User.findCached(db, 'global', criteria, '*').then((users) => {
+            var mentionedUsers = _.filter(users, (user) => {
+                return _.includes(newUserTags, `@${user.username}`);
+            });
+            return _.map(mentionedUsers, (user) => {
+                return {
+                    type: notificationType,
+                    story_id: storyId,
+                    reaction_id: reactionId,
+                    user_id: authorId,
+                    target_user_id: user.id,
+                    details,
+                };
+            });
+        });
+    });
+}
+
+/**
+ * Generate join request notifications if event indicate addition of new
+ * project ids
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Array<Object>}
+ */
+function generateJoinRequestNotifications(db, event) {
+    return Promise.try(() => {
+        var newProjectIds = getNewRequestedProjectIds(event);
+        if (_.isEmpty(newProjectIds)) {
+            return [];
+        }
+        var schema = event.schema;
+        var notificationType = 'join-request';
+        var userId = event.id;
+        var criteria = { id: newProjectIds, deleted: false };
+        return Project.find(db, 'global', criteria, 'name').then((projects) => {
+            return User.findCached(db, 'global', criteria, '*').then((users) => {
+                var admins = _.filter(users, { type: 'admin' });
+                var notificationLists = _.map(projects, (projects) => {
+                    var details = {
+                        project_name: project.name,
+                    };
+                    return _.map(admins, (admin) => {
+                        return {
+                            type: 'join-request',
+                            user_id: userId,
+                            details
+                        };
+                    });
+                });
+                return _.flatten(notificationLists);
+            });
+        });
+    });
+}
+
+/**
+ * Check if an event indicates a row in the given table is being inserted/update
+ *
+ * @param  {Object}  event
+ * @param  {String}  table
+ *
+ * @return {Boolean}
+ */
+function isModifying(event, table) {
+    if (event.table === table) {
+        // make sure row isn't being deleted or marked deleted
+        if (event.op !== 'DELETE' && !event.current.deleted) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Check if an event indicates a story or reaction is being published
+ *
+ * @param  {Object}  event
+ * @param  {String}  table
+ *
+ * @return {Boolean}
+ */
+function isPublishing(event, table) {
+    if (isModifying(event, table)) {
+        // published can become false again when user edit a comment
+        // ptime, on the other hand, will only be set when the comment is first published
         if (event.diff.ptime || event.diff.ready) {
             if (event.current.published && event.current.ready) {
-                publishing = true;
+                return true;
             }
         }
-        var notificationType;
-        if (publishing) {
-            var storyType = event.current.type;
-            switch (storyType) {
-                case 'push':
-                case 'merge':
-                case 'survey':
-                case 'issue':
-                    notificationType = storyType;
-                    break;
-            }
-        } else {
-            if (event.diff.user_ids) {
-                var newCoauthorIds = getNewCoauthorIds(event);
-                if (!_.isEmpty(newCoauthorIds)) {
-                    notificationType = 'coauthor';
-                }
-            }
-        }
-        if (!notificationType) {
-            return null;
-        }
-        var template = {
-            type: notificationType,
-            story_id: event.id,
-            user_id: event.current.user_ids[0],
-        };
-        switch (notificationType) {
-            case 'push':
-            case 'merge':
-            case 'branch':
-                // need addition info from story object
-                var schema = event.schema;
-                var criteria = { id: event.id };
-                return Story.findOne(db, schema, criteria, 'details').then((story) => {
-                    template.details = {
-                        branch: story.details.branch
-                    };
-                    return template;
-                });
-            default:
-                return template;
-        }
-    });
+    }
+    return false;
 }
 
 /**
@@ -288,157 +383,104 @@ function getStoryNotificationTemplate(db, event) {
  * @return {Array<Number>}
  */
 function getNewCoauthorIds(event) {
-    var coauthorIdsBefore = _.slice(event.previous.user_ids, 1);
-    var coauthorIdsAfter = _.slice(event.current.user_ids, 1);
-    return _.difference(coauthorIdsAfter, coauthorIdsBefore);
-}
-
-/**
- * Create notifications in response to a change to the table "user"
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise<Array<Object>}
- */
-function createUserNotifications(db, event) {
-    return getUserNotificationTemplate(db, event).then((template) => {
-        if (!template) {
-            return [];
-        }
-        var criteria = { deleted: false, disabled: false };
-        return User.findCached(db, 'global', criteria, '*').filter((user) => {
-            if (user.type !== 'admin') {
-                return false;
-            }
-            var n = _.get(user, 'settings.notification', {});
-            switch (template.type) {
-                case 'join-request': return n.join_request;
-            }
-        }).then((recipients) => {
-            return Promise.map(template.project_names, (schema) => {
-                var notifications = _.map(recipients, (recipient) => {
-                    var notification = _.omit(template, 'project_names');
-                    notification.target_user_id = recipient
-                    return notification;
-                });
-                return Notification.insert(db, schema, notifications);
-            }).then((notificationLists) => {
-                return _.flatten(notificationLists);
-            });
-        });
-    });
-}
-
-/**
- * Return a notification template for database event on "user"
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise<String|null>}
- */
-function getUserNotificationTemplate(db, event) {
-    return Promise.try(() => {
-        if (event.op === 'DELETE' || event.current.deleted) {
-            return null;
-        }
-        if (event.diff.requested_project_ids) {
-            var newProjectIds = _.difference(event.current.requested_project_ids, event.previous.requested_project_ids);
-            if (!_.isEmpty(newProjectIds)) {
-                var criteria = {
-                    id: newProjectIds,
-                    deleted: false
-                };
-                return Project.find(db, 'global', criteria, 'name').then((projects) => {
-                    return {
-                        type: 'join-request',
-                        user_id: event.id,
-                        project_names: _.map(projects, 'name'),
-                    };
-                });
-            }
-        }
-        return null;
-    });
-}
-
-/**
- * Create notifications in response to a change to the table "bookmark"
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise<Array<Object>}
- */
-function createBookmarkNotifications(db, event) {
-    return getBookmarkNotificationTemplate(db, event).then((template) => {
-        if (!template) {
-            return [];
-        }
-        var criteria = { deleted: false, disabled: false };
-        return User.findCached(db, 'global', criteria, '*').filter((user) => {
-            if (user.id !== template.target_user_id) {
-                return false;
-            }
-            var n = _.get(user, 'settings.notification', {});
-            switch (template.type) {
-                case 'bookmark': return n.bookmark;
-            }
-        }).then((recipients) => {
-            return Promise.map(template.user_ids, (userId) => {
-                var schema = event.schema;
-                var notifications = _.map(recipients, (recipient) => {
-                    var notification = _.omit(template, 'user_ids');
-                    notification.user_id = userId;
-                    return notification;
-                });
-                return Notification.insert(db, schema, notifications);
-            }).then((notificationLists) => {
-                return _.flatten(notificationLists);
-            });
-        });
-    });
-}
-
-/**
- * Return a notification template for database event on "bookmark"
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise<String|null>}
- */
-function getBookmarkNotificationTemplate(db, event) {
-    return Promise.try(() => {
-        if (event.op === 'DELETE' || event.current.deleted) {
-            return null;
-        }
-        var schema = event.schema;
+    if (isModifying(event, 'story')) {
         if (event.diff.user_ids) {
-            var newUserIds = _.difference(event.current.user_ids, event.previous.user_ids);
-            _.pull(newUserIds, event.current.target_user_id);
-            if (!_.isEmpty(newUserIds)) {
-                var criteria = {
-                    id: event.current.story_id,
-                    deleted: false,
-                };
-                return Story.findOne(db, schema, criteria, 'type').then((story) => {
-                    if (!story) {
-                        return null;
-                    }
-                    return {
-                        type: 'bookmark',
-                        story_id: event.current.story_id,
-                        user_ids: newUserIds,
-                        target_user_id: event.current.target_user_id,
-                        details: {
-                            story_type: story.type
-                        }
-                    };
-                });
+            var coauthorIdsBefore = _.slice(event.previous.user_ids, 1);
+            var coauthorIdsAfter = _.slice(event.current.user_ids, 1);
+            return _.difference(coauthorIdsAfter, coauthorIdsBefore);
+        }
+    }
+    return [];
+}
+
+/**
+ * Return ids of new senders of a bookmark
+ *
+ * @param  {Object} event
+ *
+ * @return {Array<Number>}
+ */
+function getNewBookmarkSenderIds(event) {
+    if (isModifying(event, 'bookmark')) {
+        if (event.diff.user_ids) {
+            var senderIdsBefore = event.previous.user_ids;
+            var senderIdsAfter = event.current.user_ids;
+            return _.difference(senderIdsAfter, senderIdsBefore);
+        }
+    }
+    return [];
+}
+
+/**
+ * Return new tags added to a story or reaction
+ *
+ * @param  {Object} event
+ *
+ * @return {Array<String>}
+ */
+function getNewTags(event) {
+    if (isModifying(event, 'story') || isModifying(event, 'reaction')) {
+        if (event.current.published && event.current.ready) {
+            if (event.diff.tags) {
+                var tagsBefore = event.previous.tags;
+                var tagsAfter = event.current.tags;
+                return _.difference(tagsAfter, tagsBefore);
             }
         }
-        return null;
-    });
+    }
+    return [];
+}
+
+/**
+ * Return id of new projects requested by user
+ *
+ * @param  {Object} event
+ *
+ * @return {Array<String>}
+ */
+function getNewRequestedProjectIds(event) {
+    if (isModifying(event, 'user')) {
+        if (event.diff.requested_project_ids) {
+            var projectIdsBefore = event.previous.requested_project_ids;
+            var projectIdsAfter = event.current.requested_project_ids;
+            return _.difference(projectIdsAfter, projectIdsBefore);
+        }
+    }
+}
+
+/**
+ * Check whether user wishes to receive notification or not
+ *
+ * @param  {User}  user
+ * @param  {Notification}  notification
+ *
+ * @return {Boolean}
+ */
+function checkUserPreference(user, notification) {
+    var settingValue = _.get(user, `settings.notification.${notification.type}`);
+    if (settingValue) {
+        if (process.env.NODE_ENV === 'production') {
+            // user never receives notification from himself in production
+            if (notification.user_id === notification.target_user_id) {
+                return false;
+            }
+        }
+        if (settingValue === true) {
+            return true;
+        } else {
+            var testValue;
+            switch (notification.type) {
+                case 'push':
+                case 'merge':
+                    testValue = notification.details.branch;
+                    break;
+            }
+            if (settingValue instanceof Array) {
+                return _.includes(settingValue, testValue);
+            } else {
+                return settingValue === testValue;
+            }
+        }
+    }
+    return false;
 }

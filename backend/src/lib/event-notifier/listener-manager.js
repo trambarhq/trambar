@@ -72,7 +72,10 @@ function listen() {
  */
 function shutdown() {
     _.each(sockets, (socket) => {
-        socket.end();
+        // for some reason socket is undefined sometimes during shutdown
+        if (socket) {
+            socket.end();
+        }
     });
     sockets = [];
     return Shutdown.close(server);

@@ -133,6 +133,21 @@ module.exports = function(localeCode) {
             }
             return `${name} liker ${story}`;
         },
+        'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+            reaction = 'i en kommentar';
+            return `${name} nevnte deg ${reaction}`;
+        },
+        'notification-$name-mentioned-you-in-$story': (name, story) => {
+            switch (story) {
+                case 'survey': story = 'i en undersøkelse'; break;
+                case 'task-list': story = 'på en oppgaveliste'; break;
+                case 'post': story = 'i et innlegg'; break;
+                case 'issue': story = 'i et problem'; break;
+                case 'merge-request': story = 'i en merge-request'; break;
+                default: story = 'in en historie';
+            }
+            return `${name} nevnte deg ${story}`;
+        },
         'notification-$name-requested-to-join': (name) => {
             return `${name} ba om å bli med i dette prosjektet`;
         },

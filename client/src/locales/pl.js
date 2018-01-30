@@ -178,6 +178,21 @@ module.exports = function(localeCode) {
             }
             return `${name} lubi ${story}`;
         },
+        'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+            reaction = 'w komentarzu';
+            return `${name} wspomniał o Tobie ${reaction}`;
+        },
+        'notification-$name-mentioned-you-in-$story': (name, story) => {
+            switch (story) {
+                case 'survey': story = 'w ankiecie'; break;
+                case 'task-list': story = 'na liście zadań'; break;
+                case 'post': story = 'w poście'; break;
+                case 'issue': story = 'w głoszeniu błędu'; break;
+                case 'merge-request': story = 'w prośbie o połączenie'; break;
+                default: story = 'w wiadomości';
+            }
+            return `${name} wspomniał o Tobie ${story}`;
+        },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name, 3);
             return `${name} poprosił${e} o dołączenie do tego projektu`;

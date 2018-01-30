@@ -137,6 +137,21 @@ module.exports = function(localeCode) {
             }
             return `${name} likes your ${story}`;
         },
+        'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+            reaction = 'a comment';
+            return `${name} mentioned you in ${reaction}`;
+        },
+        'notification-$name-mentioned-you-in-$story': (name, story) => {
+            switch (story) {
+                case 'survey': story = 'a survey'; break;
+                case 'task-list': story = 'a task list'; break;
+                case 'post': story = 'a post'; break;
+                case 'issue': story = 'an issue'; break;
+                case 'merge-request': story = 'a merge request'; break;
+                default: story = 'a story';
+            }
+            return `${name} mentioned you in ${story}`;
+        },
         'notification-$name-requested-to-join': (name) => {
             return `${name} requested to join this project`;
         },

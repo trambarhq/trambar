@@ -133,6 +133,21 @@ module.exports = function(localeCode) {
             }
             return `${name} tykää ${story}`;
         },
+        'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+            reaction = 'kommentissa';
+            return `${name} mainitsi sinut ${reaction}`;
+        },
+        'notification-$name-mentioned-you-in-$story': (name, story) => {
+            switch (story) {
+                case 'survey': story = 'kyselyssä'; break;
+                case 'task-list': story = 'tehtäväluettelossa'; break;
+                case 'post': story = 'viestissä'; break;
+                case 'issue': story = 'kysymyksessä'; break;
+                case 'merge-request': story = 'in a merge request'; break;
+                default: story = 'tarinassa';
+            }
+            return `${name} mainitsi sinut ${story}`;
+        },
         'notification-$name-requested-to-join': (name) => {
             return `${name} pyysi liittymään tähän projektiin`;
         },

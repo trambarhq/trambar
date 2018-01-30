@@ -6,6 +6,7 @@ module.exports = exports = {
             task_completion: true,
             vote: true,
             bookmark: true,
+            mention: true,
             coauthor: true,
         },
         web_alert: {
@@ -14,6 +15,7 @@ module.exports = exports = {
             task_completion: true,
             vote: true,
             bookmark: true,
+            mention: true,
             coauthor: true,
         },
         mobile_alert: {
@@ -22,6 +24,7 @@ module.exports = exports = {
             task_completion: true,
             vote: true,
             bookmark: true,
+            mention: true,
             coauthor: true,
         },
     },

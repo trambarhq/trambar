@@ -172,15 +172,27 @@ var traditionalPhrases = {
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
-            case 'push': story = '推送'; break;
-            case 'merge': story = '合併'; break;
-            case 'branch': story = '分支'; break;
             case 'survey': story = '調查'; break;
             case 'task-list': story = '任務列表'; break;
             case 'post': story = '貼文'; break;
             default: story = '故事';
         }
         return `${name}喜歡你的${story}`;
+    },
+    'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+        reaction = '一個回應中';
+        return `${name}在${reaction}提到你`;
+    },
+    'notification-$name-mentioned-you-in-$story': (name, story) => {
+        switch (story) {
+            case 'survey': story = '一個調查上'; break;
+            case 'task-list': story = '一個任務列表上'; break;
+            case 'post': story = '一個貼文中'; break;
+            case 'issue': story = '一個問題上'; break;
+            case 'merge-request': story = '一個合併請求中'; break;
+            default: story = '一個故事中';
+        }
+        return `${name}在${story}提到你`;
     },
     'notification-$name-requested-to-join': (name) => {
         return `${name}要求加入這個項目`;
@@ -726,15 +738,27 @@ var simplifiedPhrases = {
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
-            case 'push': story = '推送'; break;
-            case 'merge': story = '合并'; break;
-            case 'branch': story = '分支'; break;
             case 'survey': story = '调查'; break;
             case 'task-list': story = '任务列表'; break;
             case 'post': story = '贴文'; break;
             default: story = '故事';
         }
         return `${name}喜欢你的${story}`;
+    },
+    'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+        reaction = '一个回应中';
+        return `${name}在${reaction}提到你`;
+    },
+    'notification-$name-mentioned-you-in-$story': (name, story) => {
+        switch (story) {
+            case 'survey': story = '一个调查上'; break;
+            case 'task-list': story = '一个任务列表上'; break;
+            case 'post': story = '一个贴文中'; break;
+            case 'issue': story = '一个问题上'; break;
+            case 'merge-request': story = '一个合并请求中'; break;
+            default: story = '一个故事中';
+        }
+        return `${name}在${story}提到你`;
     },
     'notification-$name-requested-to-join': (name) => {
         return `${name}要求加入这个项目`;
@@ -1206,6 +1230,21 @@ var cantonesePhrases = {
             default: story = '故事';
         }
         return `${name}鍾意你嘅${story}`;
+    },
+    'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+        reaction = '一個回應中';
+        return `${name}喺${reaction}提到你`;
+    },
+    'notification-$name-mentioned-you-in-$story': (name, story) => {
+        switch (story) {
+            case 'survey': story = '一個調查上'; break;
+            case 'task-list': story = '一個任務列表上'; break;
+            case 'post': story = '一個貼文中'; break;
+            case 'issue': story = '一個問題上'; break;
+            case 'merge-request': story = '一個合併請求中'; break;
+            default: story = '一個故事中';
+        }
+        return `${name}喺${story}提到你`;
     },
     'notification-$name-requested-to-join': (name) => {
         return `${name}要求加入呢個項目`;

@@ -5,6 +5,7 @@ module.exports = exports = [
     'vote',
     'coauthor',
     'bookmark',
+    'mention',
     'note',
     'assignment',
     'issue',

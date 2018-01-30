@@ -79,6 +79,7 @@ module.exports = _.create(ExternalData, {
      * @return {Promise<Boolean>}
      */
     grant: function(db, schema) {
+        // TODO revoke INSERT and UPDATE of column 'type'
         var table = this.getTableName(schema);
         var sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO auth_role;
@@ -98,7 +99,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'external' ];
+            var propNames = [ 'deleted', 'requested_project_ids', 'external' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
                     var Task = require('accessors/task');

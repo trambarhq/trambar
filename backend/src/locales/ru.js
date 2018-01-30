@@ -168,6 +168,21 @@ module.exports = function(localeCode) {
             }
             return `${name} любит ${story}`;
         },
+        'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
+            reaction = 'в комментарии';
+            return `${name} упомянул вас ${reaction}`;
+        },
+        'notification-$name-mentioned-you-in-$story': (name, story) => {
+            switch (story) {
+                case 'survey': story = 'в опросе'; break;
+                case 'task-list': story = 'в списке задач'; break;
+                case 'post': story = 'в сообщении'; break;
+                case 'issue': story = 'в отчёте об ошибке'; break;
+                case 'merge-request': story = 'в запросе слияния'; break;
+                default: story = 'в рассказе';
+            }
+            return `${name} упомянул вас ${story}`;
+        },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name);
             return `${name} попросил${e} присоединиться к проекту`;

@@ -60,6 +60,14 @@ function getNotificationText(user, notification, lang) {
             return t('notification-$name-posted-a-survey', name);
         case 'bookmark':
             return t('notification-$name-sent-bookmark-to-$story', name, notification.details.story_type);
+        case 'mention':
+            if (notification.details.story_type) {
+                return t('notification-$name-mentioned-you-in-$story', name, notification.details.story_type);
+            } else if (notification.details.reaction_type) {
+                return t('notification-$name-mentioned-you-in-$reaction', name, notification.details.reaction_type);
+            } else {
+                break;
+            }
         case 'join_request':
             return t('notification-$name-requested-to-join', name);
     }
