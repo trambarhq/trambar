@@ -1,11 +1,18 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-
 var LocalSearch = require('data/local-search');
+
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
+// widgets
+var Diagnostics = require('widgets/diagnostics');
+var DiagnosticsSection = require('widgets/diagnostics-section');
 
 module.exports = React.createClass({
     displayName: 'IndexedDBCache',
+    mixins: [ UpdateCheck ],
     propTypes: {
         databaseName: PropTypes.string.isRequired,
     },
@@ -29,6 +36,9 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             database: null,
+            recordCounts: {},
+            writeCount: 0,
+            readCount: 0,
         };
     },
 
@@ -42,13 +52,13 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
+        var address = query.address;
+        var schema = query.schema;
+        var table = query.table;
+        var local = (schema === 'local');
+        var storeName = (local) ? 'local-data' : 'remote-data';
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var address = query.address;
-                var schema = query.schema;
-                var table = query.table;
-                var local = (schema === 'local');
-                var storeName = (local) ? 'local-data' : 'remote-data';
                 var transaction = db.transaction(storeName, 'readonly');
                 var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
@@ -118,6 +128,11 @@ module.exports = React.createClass({
                     };
                 }
             });
+        }).then((objects) => {
+            var readCount = this.state.readCount;
+            readCount += objects.length;
+            this.setState({ readCount });
+            return objects;
         });
     },
 
@@ -130,13 +145,13 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     save: function(location, objects) {
+        var address = location.address;
+        var schema = location.schema;
+        var table = location.table;
+        var local = (schema === 'local');
+        var storeName = (local) ? 'local-data' : 'remote-data';
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var address = location.address;
-                var schema = location.schema;
-                var table = location.table;
-                var local = (schema === 'local');
-                var storeName = (local) ? 'local-data' : 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
                 var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
@@ -156,6 +171,12 @@ module.exports = React.createClass({
                     objectStore.put(record, key);
                 });
             });
+        }).then((objects) => {
+            var writeCount = this.state.writeCount;
+            writeCount += objects.length;
+            this.setState({ writeCount });
+            this.updateRecordCount(storeName, 500);
+            return objects;
         });
     },
 
@@ -168,13 +189,13 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     remove: function(location, objects) {
+        var address = location.address;
+        var schema = location.schema;
+        var table = location.table;
+        var local = (schema === 'local');
+        var storeName = (local) ? 'local-data' : 'remote-data';
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var address = location.address;
-                var schema = location.schema;
-                var table = location.table;
-                var local = (schema === 'local');
-                var storeName = (local) ? 'local-data' : 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
                 var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
@@ -189,6 +210,9 @@ module.exports = React.createClass({
                     objectStore.delete(key);
                 });
             });
+        }).then((objects) => {
+            this.updateRecordCount(storeName, 500);
+            return objects;
         });
     },
 
@@ -206,9 +230,9 @@ module.exports = React.createClass({
      * @return {Promise<Number>}
      */
     clean: function(criteria) {
+        var storeName = 'remote-data';
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var storeName = 'remote-data';
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
                 if (criteria.address !== undefined) {
@@ -265,6 +289,11 @@ module.exports = React.createClass({
                     };
                 }
             });
+        }).then((count) => {
+            if (count > 0) {
+                this.updateRecordCount(storeName, 500);
+            }
+            return count;
         });
     },
 
@@ -278,7 +307,9 @@ module.exports = React.createClass({
             this.databasePromise = new Promise((resolve, reject) => {
                 var openRequest = window.indexedDB.open(this.props.databaseName, 1);
                 openRequest.onsuccess = (evt) => {
-                    resolve(evt.target.result);
+                    var database = evt.target.result;
+                    resolve(database);
+                    this.setState({ database });
                 };
                 openRequest.onerror = (evt) => {
                     reject(new Error(evt.message));
@@ -301,12 +332,65 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render component
+     * Count the number of rows in the object store (on a time delay)
+     *
+     * @param  {String} storeName
+     * @param  {Number} delay
+     */
+    updateRecordCount: function(storeName, delay) {
+        var timeoutPath = `updateRecordCountTimeouts.${storeName}`;
+        var timeout = _.get(this, timeoutPath);
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(() => {
+            this.open().then((db) => {
+                var transaction = db.transaction(storeName, 'readonly');
+                var objectStore = transaction.objectStore(storeName);
+                var req = objectStore.count();
+                req.onsuccess = (evt) => {
+                    var recordCounts = _.clone(this.state.recordCounts);
+                    recordCounts[storeName] = evt.target.result;
+                    this.setState({ recordCounts });
+                };
+            }).catch((err) => {
+            });
+            _.set(this, timeoutPath, 0);
+        }, delay || 0);
+        _.set(this, timeoutPath, timeout);
+    },
+
+    /**
+     * Count the number of rows in the object stores on mount
+     */
+    componentDidMount: function() {
+        this.updateRecordCount('remote-data');
+        this.updateRecordCount('local-data');
+    },
+
+    /**
+     * Render diagnostics
      *
      * @return {ReactElement}
      */
     render: function() {
-        return <div />;
+        var db = this.state.database;
+        var localRowCount = _.get(this.state.recordCounts, 'local-data');
+        var remoteRowCount = _.get(this.state.recordCounts, 'remote-data');
+        return (
+            <Diagnostics type="indexed-db-cache">
+                <DiagnosticsSection label="Database details">
+                    <div>Name: {(db) ? db.name : ''}</div>
+                    <div>Version: {(db) ? db.version : ''}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Usage">
+                    <div>Local objects: {localRowCount}</div>
+                    <div>Remote objects: {remoteRowCount}</div>
+                    <div>Objects read: {this.state.readCount}</div>
+                    <div>Objects written: {this.state.writeCount}</div>
+                </DiagnosticsSection>
+            </Diagnostics>
+        );
     },
 });
 

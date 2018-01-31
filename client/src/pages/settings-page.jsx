@@ -248,6 +248,8 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticDataPanel type="subscription-manager" title="Data Subscription" />
                     <DiagnoisticDataPanel type="session-manager" title="Sessions" />
                     <DiagnoisticDataPanel type="link-manager" title="Project Links" />
+                    <DiagnoisticDataPanel type="indexed-db-cache" title="IndexedDB Cache" />
+                    <DiagnoisticDataPanel type="sqlite-cache" title="SQLite Cache" />
                 </div>
             </div>
         );
