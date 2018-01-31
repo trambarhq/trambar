@@ -187,7 +187,6 @@ module.exports = React.createClass({
                 destroySession(session);
                 this.clearRecentSearches(address);
                 this.clearCachedObjects(address);
-                this.triggerExpirationEvent(session);
                 return null;
             });
         });
@@ -239,6 +238,7 @@ module.exports = React.createClass({
             var url = `${address}/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
+                session.handle = handle;
                 _.assign(session, res.session);
                 if (session.token) {
                     this.triggerAuthorizationEvent(session);
@@ -342,8 +342,11 @@ module.exports = React.createClass({
     restoreSession: function(session) {
         // only if the session hasn't expired
         if (Moment(session.etime) > Moment()) {
-            var existing = getSession(session.address);
-            _.assign(existing, session);
+            // don't restore broken session
+            if (session.handle && session.token) {
+                var existing = getSession(session.address);
+                _.assign(existing, session);
+            }
         }
     },
 

@@ -400,9 +400,25 @@ module.exports = React.createClass({
      * @param {Object} evt
      */
     handleSignOutConfirm: function(evt) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ by: this });
         db.endSession().then(() => {
-            return this.props.route.replace(require('pages/start-page'));
+            // delete links of all projects on server
+            var serverLinks = _.filter(this.props.projectLinks, { address: params.address });
+            var otherLinks = _.difference(this.props.projectLinks, serverLinks);
+            return db.remove({ schema: 'local', table: 'project_link' }, serverLinks).then(() => {
+                if (_.isEmpty(otherLinks)) {
+                    // go to start page if there aren't other projects
+                    return this.props.route.replace(require('pages/start-page'));
+                } else {
+                    // go to one of the other projects
+                    var lastVisited = _.last(_.sortBy(otherLinks, 'atime'));
+                    return this.props.route.replace(require('pages/settings-page'), {
+                        address: lastVisited.address,
+                        schema: lastVisited.schema,
+                    });
+                }
+            });
         });
     },
 });

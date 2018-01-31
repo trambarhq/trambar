@@ -56,9 +56,6 @@ module.exports = React.createClass({
      */
     saveLocation: function(address, schema) {
         var key = `${address}/${schema}`;
-        if (_.last(this.state.added) === key) {
-            return;
-        }
         this.setState({ added: _.union(_.without(this.state.added, key), [ key ]) });
 
         // get the project object so we have the project's display name
@@ -82,10 +79,15 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        if (prevProps.route !== this.props.route && this.props.route) {
-            var params = this.props.route.parameters;
-            if (params.address && params.schema) {
-                this.saveLocation(params.address, params.schema);
+        if (prevProps.route !== this.props.route) {
+            var prevAddress = _.get(prevProps.route, 'parameters.address');
+            var prevSchema = _.get(prevProps.route, 'parameters.schema');
+            var currAddress = _.get(this.props.route, 'parameters.address');
+            var currSchema = _.get(this.props.route, 'parameters.schema');
+            if (prevAddress !== currAddress || prevSchema !== currSchema) {
+                if (currAddress && currSchema) {
+                    this.saveLocation(currAddress, currSchema);
+                }
             }
         }
     },
