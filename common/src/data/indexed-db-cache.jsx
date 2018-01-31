@@ -39,6 +39,7 @@ module.exports = React.createClass({
             recordCounts: {},
             writeCount: 0,
             readCount: 0,
+            deleteCount: 0,
         };
     },
 
@@ -211,6 +212,9 @@ module.exports = React.createClass({
                 });
             });
         }).then((objects) => {
+            var deleteCount = this.state.deleteCount;
+            deleteCount += objects.length;
+            this.setState({ deleteCount });
             this.updateRecordCount(storeName, 500);
             return objects;
         });
@@ -291,6 +295,9 @@ module.exports = React.createClass({
             });
         }).then((count) => {
             if (count > 0) {
+                var deleteCount = this.state.deleteCount;
+                deleteCount += count;
+                this.setState({ deleteCount });
                 this.updateRecordCount(storeName, 500);
             }
             return count;
@@ -388,6 +395,7 @@ module.exports = React.createClass({
                     <div>Remote objects: {remoteRowCount}</div>
                     <div>Objects read: {this.state.readCount}</div>
                     <div>Objects written: {this.state.writeCount}</div>
+                    <div>Objects deleted: {this.state.deleteCount}</div>
                 </DiagnosticsSection>
             </Diagnostics>
         );

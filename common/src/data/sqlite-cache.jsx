@@ -43,20 +43,21 @@ module.exports = React.createClass({
             recordCounts: {},
             writeCount: 0,
             readCount: 0,
+            deleteCount: 0,
         };
     },
 
     /**
      * Look for objects in cache
      *
-     * Query object contains the name of the origin server, schema, and table
+     * Query object contains the name of the server address, schema, and table
      *
      * @param  {Object} query
      *
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
-        var server = query.server || '';
+        var address = query.address;
         var schema = query.schema;
         var table = query.table;
         var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
@@ -78,11 +79,11 @@ module.exports = React.createClass({
         } else {
             sql = `
                 SELECT json FROM ${cacheTableName}
-                WHERE server_name = ?
+                WHERE address = ?
                 AND schema_name = ?
                 AND table_name = ?
             `;
-            params = [ server, schema, table ];
+            params = [ address, schema, table ];
             if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
                 // look up by id
                 var ids = criteria.id;
@@ -123,7 +124,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     save: function(location, objects) {
-        var server = location.server || '';
+        var address = location.address;
         var schema = location.schema;
         var table = location.table;
         var statements = [], paramSets = [];
@@ -141,10 +142,10 @@ module.exports = React.createClass({
                 var rtime = (new Date(object.rtime)).getTime();
                 statements.push(`
                     INSERT OR REPLACE INTO ${cacheTableName}
-                    (server_name, schema_name, table_name, id, json, rtime)
+                    (address, schema_name, table_name, id, json, rtime)
                     VALUES (?, ?, ?, ?, ?, ?)
                 `);
-                paramSets.push([ server, schema, table, object.id, json, rtime ]);
+                paramSets.push([ address, schema, table, object.id, json, rtime ]);
             }
         });
         return this.execute(statements, paramSets).then(() => {
@@ -165,7 +166,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     remove: function(location, objects) {
-        var server = location.server || '';
+        var address = location.address;
         var schema = location.schema;
         var table = location.table;
         var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
@@ -180,15 +181,18 @@ module.exports = React.createClass({
             } else {
                 sql = `
                     DELETE FROM ${cacheTableName}
-                    WHERE server_name = ?
+                    WHERE address = ?
                     AND schema_name = ?
                     AND table_name = ?
                     AND id = ?
                 `;
-                params = [ server, schema, table, object.id ];
+                params = [ address, schema, table, object.id ];
             }
             return this.execute(sql, params);
         }).then((objects) => {
+            var deleteCount = this.state.deleteCount;
+            deleteCount += objects.length;
+            this.setState({ deleteCount });
             this.updateRecordCount(cacheTableName, 500);
             return objects;
         });
@@ -197,7 +201,7 @@ module.exports = React.createClass({
     /**
      * Remove objects by one of three criteria:
      *
-     * server - remove all objects from specified server
+     * address - remove all objects from specified address
      * count - remove certain number of objects, starting from those least recent
      * before - remove objects with retrieval time (rtime) earlier than given value
      *
@@ -209,12 +213,12 @@ module.exports = React.createClass({
      */
     clean: function(criteria) {
         var sql, params;
-        if (criteria.server !== undefined) {
+        if (criteria.address !== undefined) {
             sql = `
                 DELETE FROM remote_data
-                WHERE server_name = ?
+                WHERE address = ?
             `;
-            params = [ criteria.server ];
+            params = [ criteria.address ];
         } else if (criteria.count !== undefined) {
             sql = `
                 DELETE FROM remote_data
@@ -233,6 +237,9 @@ module.exports = React.createClass({
         }
         return this.execute(sql, params).then((count) => {
             if (count > 0) {
+                var deleteCount = this.state.deleteCount;
+                deleteCount += count;
+                this.setState({ deleteCount });
                 this.updateRecordCount('remote_data');
             }
         });
@@ -300,11 +307,11 @@ module.exports = React.createClass({
     open: function() {
         if (!this.databasePromise) {
             this.databasePromise = Promise.try(() => {
-                var db = openDatabase(this.props.databaseName, '1.0', '', 50 * 1048576);
+                var db = openDatabase(this.props.databaseName, '', '', 50 * 1048576);
                 var sql = [
                     `
                         CREATE TABLE IF NOT EXISTS remote_data (
-                            server_name text,
+                            address text,
                             schema_name text,
                             table_name text,
                             id int,
@@ -315,7 +322,7 @@ module.exports = React.createClass({
                     `
                         CREATE UNIQUE INDEX IF NOT EXISTS remote_data_idx_id
                         ON remote_data (
-                            server_name,
+                            address,
                             schema_name,
                             table_name,
                             id
@@ -324,7 +331,7 @@ module.exports = React.createClass({
                     `
                         CREATE INDEX IF NOT EXISTS remote_data_idx_location
                         ON remote_data (
-                            server_name,
+                            address,
                             schema_name,
                             table_name
                         )
@@ -350,6 +357,11 @@ module.exports = React.createClass({
                         )
                     `,
                 ];
+                if (db.version !== '1.0') {
+                    // delete tables if schema is out of date
+                    sql.unshift(`DROP TABLE IF EXISTS remote_data`);
+                    sql.unshift(`DROP TABLE IF EXISTS local_data`);
+                }
                 return new Promise((resolve, reject) => {
                     var rejectS = (err) => { reject(new Error(err.message)) };
                     db.transaction((tx) => {
@@ -415,6 +427,7 @@ module.exports = React.createClass({
                     <div>Remote objects: {remoteRowCount}</div>
                     <div>Objects read: {this.state.readCount}</div>
                     <div>Objects written: {this.state.writeCount}</div>
+                    <div>Objects deleted: {this.state.deleteCount}</div>
                 </DiagnosticsSection>
             </Diagnostics>
         );
