@@ -575,9 +575,28 @@ var StartPageSync = module.exports.Sync = React.createClass({
     renderActivationInstructions: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
+        var ui = {
+            settings: (
+                <span key="0" className="ui">
+                    {t('bottom-nav-settings')}
+                </span>
+            ),
+            projects: (
+                <span key="1" className="ui">
+                    {t('settings-projects')}
+                </span>
+            ),
+            mobileSetup: (
+                <span key="2" className="ui">
+                    <i className="fa fa-qrcode" />
+                    {' '}
+                    {t('project-management-mobile-set-up')}
+                </span>
+            )
+        };
         return (
             <div className="activation-instructions">
-                {t('start-activation-instructions')}
+                {t('start-activation-instructions', ui)}
             </div>
         );
     },
@@ -1049,9 +1068,23 @@ var StartPageSync = module.exports.Sync = React.createClass({
             onCancel: this.handleCancelScan,
             onResult: this.handleScanResult,
         };
+        var ui = {
+            settings: (
+                <span key="0" className="ui">
+                    {t('bottom-nav-settings')}
+                </span>
+            ),
+            mobileSetup: (
+                <span key="2" className="ui">
+                    <i className="fa fa-qrcode" />
+                    {' '}
+                    {t('project-management-mobile-set-up')}
+                </span>
+            )
+        };
         return (
             <QRScannerDialogBox {...props}>
-                {t('start-activation-instructions')}
+                {t('start-activation-instructions-short', ui)}
             </QRScannerDialogBox>
         );
     },

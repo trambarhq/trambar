@@ -297,7 +297,25 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Twitter user name',
 
         'start-activation-add-server': 'Add project from another server',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'To access a Trambar server on this device, first sign into the server using a web browser. Select a project then go to ',
+                ui.settings,
+                '. In the ',
+                ui.projects,
+                ' panel, click ',
+                ui.mobileSetup,
+                '. A QR code will appear on screen. Then on this device, press the button below and scan the code. Alternately, you may manually input the activation code.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Sign in using a web browser then scan the QR code shown in ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Manual entry',
         'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',

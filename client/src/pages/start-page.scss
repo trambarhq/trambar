@@ -311,6 +311,15 @@
 
         .activation-instructions {
             margin-bottom: 1em;
+            line-height: 125%;
+
+            .ui {
+                color: #eeeeee;
+                font-weight: bold;
+                padding-left: 0.1em;
+                padding-right: 0.1em;
+                white-space: nowrap;
+            }
         }
 
         .activation-buttons {

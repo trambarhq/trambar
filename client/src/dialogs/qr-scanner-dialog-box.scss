@@ -13,6 +13,15 @@
         background-color: #211a1a;
         color: #cccccc;
         padding: 0.5em 0.5em 0.5em 0.5em;
+        line-height: 125%;
+
+        .ui {
+            color: #eeeeee;
+            font-weight: bold;
+            padding-left: 0.1em;
+            padding-right: 0.1em;
+            white-space: nowrap;
+        }
     }
 
     .bottom {
@@ -44,10 +53,13 @@
     .square {
         position: absolute;
         left: 0;
-        top: 3em;
+        top: 0;
         right: 0;
         bottom: 0;
         margin: auto;
+        animation-duration: 0.5s;
+        animation-iteration-count: 1;
+        animation-name: expand;
 
         .corner {
             position: absolute;
@@ -107,6 +119,17 @@
                 border-width: 3vh;
                 border-radius: 6vh;
             }
+
+            @keyframes expand {
+                0% {
+                    width: 30vh;
+                    height: 30vh;
+                }
+                100% {
+                    width: 40vh;
+                    height: 40vh;
+                }
+            }
         }
 
         @media (orientation: portrait) {
@@ -116,6 +139,17 @@
             .corner {
                 border-width: 6vw;
                 border-radius: 12vw;
+            }
+
+            @keyframes expand {
+                0% {
+                    width: 70vw;
+                    height: 70vw;
+                }
+                100% {
+                    width: 80vw;
+                    height: 80vw;
+                }
             }
         }
     }
