@@ -52,6 +52,7 @@ module.exports = React.createClass({
             recentSearchResults: [],
             recentStorageResults: [],
             recentRemovalResults: [],
+            changeQueue: [],
             activeSearches: [],
         };
     },
@@ -478,17 +479,21 @@ module.exports = React.createClass({
             }
             this.setState({ recentSearchResults });
         }
-        if (required && query.expected) {
-            return search.promise.then((results) => {
+        return search.promise.then((results) => {
+            if (required && query.expected) {
                 if (results.length < query.expected) {
                     this.triggerStupefactionEvent(query, results);
                     throw new HTTPError(404);
                 }
-                return results;
-            });
-        } else {
-            return search.promise;
-        }
+            }
+            if (search.committed) {
+                // only return committed results
+                return search.result;
+            } else {
+                // apply changes that haven't been saved yet
+                return this.applyUncommittedChanges(search);
+            }
+        });
     },
 
     /**
@@ -762,6 +767,30 @@ module.exports = React.createClass({
     },
 
     /**
+     * Wait for props.hasConnection to become true
+     *
+     * @return {Promise}
+     */
+    waitForConnectivity: function() {
+        if (this.props.hasConnection) {
+            if (process.env.NODE_ENV !== 'production') {
+                // introduce some delay during development
+                return Promise.delay(2000);
+            } else {
+                return Promise.resolve();
+            }
+        } else {
+            if (!this.connectivityPromise) {
+                this.connectivityPromise = new Promise((resolve, reject) => {
+                    // save function so we can call it in componentWillReceiveProps()
+                    this.connectivityPromise.resolve = resolve;
+                });
+            }
+            return this.connectivityPromise;
+        }
+    },
+
+    /**
      * Look for a recent search that has the same criteria
      *
      * @param  {Object} query
@@ -898,7 +927,74 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     storeRemoteObjects: function(location, objects) {
-        return this.performRemoteAction(location, 'storage', { objects });
+        var change = {
+            objects: _.map(objects, (object) => {
+                // flag the object as uncommitted
+                var uncommitted = Object.defineProperty(_.clone(object), 'uncommitted', { value: true });
+                if (!uncommitted.id) {
+                    // assign a temporary id so we can find the
+                    uncommitted.id = getTemporaryId();
+                }
+                return uncommitted;
+            }),
+            location: location,
+            dispatched: false
+        };
+        var changeQueue = _.concat(this.state.changeQueue, change);
+        this.setState({ changeQueue }, () => {
+            this.triggerChangeEvent();
+        });
+        return this.waitForConnectivity().then(() => {
+            return this.performRemoteAction(location, 'storage', { objects }).then((results) => {
+                // caller is expected to trigger change event
+                var changeQueue = _.without(this.state.changeQueue, change);
+                this.setState({ changeQueue });
+                return results;
+            });
+        });
+    },
+
+    /**
+     * Apply uncomitted changes to search results
+     *
+     * @param  {Object} search
+     *
+     * @return {Array<Object>}
+     */
+    applyUncommittedChanges: function(search) {
+        if (_.isEmpty(this.state.changeQueue)) {
+            return search.results;
+        }
+        var objects = _.slice(search.results);
+        var location = getSearchLocation(search);
+        var includeDeleted = _.get(this.props.discoveryFlags, 'include_deleted');
+        _.each(this.state.changeQueue, (change) => {
+            if (_.isEqual(change.location, location)) {
+                _.each(change.objects, (modified) => {
+                    var index = _.findIndex(objects, { id: modified.id });
+                    if (index !== -1) {
+                        if (modified.deleted && !includeDeleted) {
+                            objects.splice(index, 1);
+                        } else {
+                            var match = LocalSearch.match(search.table, modified, search.criteria);
+                            if (match) {
+                                objects[index] = modified;
+                            } else {
+                                objects.splice(index, 1);
+                            }
+                        }
+                    } else {
+                        if (!(modified.deleted && !includeDeleted)) {
+                            var match = LocalSearch.match(search.table, modified, search.criteria);
+                            if (match) {
+                                objects.push(modified);
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        return objects;
     },
 
     /**
@@ -1230,7 +1326,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Inform parent
+     * Monitor changes to active searches and connectivity
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState
@@ -1250,6 +1346,13 @@ module.exports = React.createClass({
                 }
                 this.searchingTimeout = null;
             }, 50);
+        }
+        if (this.connectivityPromise) {
+            if (this.props.hasConnection) {
+                var promise = this.connectivityPromise;
+                this.connectivityPromise = null;
+                promise.resolve();
+            }
         }
     },
 
@@ -1466,7 +1569,7 @@ function getSearchLocation(search) {
  * @return {Object}
  */
 function getSearchQuery(search) {
-    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote');
+    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote', 'committed');
 }
 
 var sessions = [];
@@ -1641,3 +1744,14 @@ function countCriteria(criteria, name) {
         }
     }
 }
+
+/**
+ * Return a temporary id that can be used to identify an uncommitted object
+ *
+ * @return {Number}
+ */
+function getTemporaryId() {
+    return nextTemporaryId--;
+}
+
+var nextTemporaryId = -1;

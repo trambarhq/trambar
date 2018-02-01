@@ -52,7 +52,7 @@ function match(table, object, criteria) {
                     }
                     break;
                 case 'newer_than':
-                    if (!(object.ptime > desiredValue)) {
+                    if (object.ptime < desiredValue) {
                         matching = false;
                     }
                     break;
