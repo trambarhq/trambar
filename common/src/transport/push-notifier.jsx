@@ -25,7 +25,7 @@ module.exports = React.createClass({
 
     statics: {
         isAvailable: function() {
-            return true;
+            return (typeof(PushNotification) !== 'undefined');
         }
     },
 
@@ -98,6 +98,9 @@ module.exports = React.createClass({
      */
     componentDidMount: function() {
         if (!pushNotification) {
+            if (typeof(PushNotification) === 'undefined') {
+                return;
+            }
             var params = {
                 android: {},
                 ios: {
