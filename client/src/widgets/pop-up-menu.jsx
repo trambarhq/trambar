@@ -146,20 +146,13 @@ module.exports = React.createClass({
         var appContainer = document.getElementById('application');
         if (!prevState.open && this.state.open) {
             appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
-
             if (this.props.popOut) {
-                var viewport = getViewportNode();
-                this.popOutContainer = document.createElement('DIV');
-                this.popOutContainer.style.left = '0';
-                this.popOutContainer.style.top = '0';
-                viewport.appendChild(this.popOutContainer);
-                this.popOutContainer.style.position = 'absolute';
+                this.addPopOutContainer();
             }
         } else if (prevState.open && !this.state.open) {
             appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
-
             if (this.props.popOut) {
-                this.popOutContainer.parentNode.removeChild(this.popOutContainer);
+                this.removePopOutContainer();
             }
         }
 
@@ -174,6 +167,32 @@ module.exports = React.createClass({
     componentWillUnmount: function() {
         var appContainer = document.getElementById('application');
         appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
+        this.removePopOutContainer();
+    },
+
+    /**
+     * Add pop-out container, used when menu cannot be positioned relatively
+     * due to parent container having overflow of hidden or scroll
+     */
+    addPopOutContainer: function() {
+        if (!this.popOutContainer) {
+            var viewport = getViewportNode();
+            this.popOutContainer = document.createElement('DIV');
+            this.popOutContainer.style.left = '0';
+            this.popOutContainer.style.top = '0';
+            viewport.appendChild(this.popOutContainer);
+            this.popOutContainer.style.position = 'absolute';
+        }
+    },
+
+    /**
+     * Remove pop-out container if there's one
+     */
+    removePopOutContainer: function() {
+        if (this.popOutContainer) {
+            this.popOutContainer.parentNode.removeChild(this.popOutContainer);
+            this.popOutContainer = null;
+        }
     },
 
     /**
