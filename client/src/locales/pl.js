@@ -390,11 +390,11 @@ module.exports = function(localeCode) {
             return `Stworzył${e} kamień milowy „${milestone}”`;
         },
         'story-$name-created-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} stronę wiki „${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             var text = `Stworzył${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
@@ -402,7 +402,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-deleted-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             return `Usunał${e} stronę wiki „${page}”`;
         },
         'story-$name-joined-$repo': (name, repo) => {
@@ -422,7 +422,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             var text = `Scalił${e} zmiany`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
@@ -457,7 +457,7 @@ module.exports = function(localeCode) {
             return `Poprosił${e} o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
         },
         'story-$name-updated-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             return `Redagował${e} wiki page „${page}”`;
         },
         'story-add-coauthor': 'Dodaj współautora',
