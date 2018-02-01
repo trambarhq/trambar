@@ -682,9 +682,19 @@ module.exports = React.createClass({
         this.setState({ options }, () => {
             var story = this.props.story;
             if (options.editStory && !before.editStory) {
-                var tempCopy = _.omit(story, 'id', 'published', 'ptime');
-                tempCopy.published_version_id = story.id;
-                this.saveStory(tempCopy);
+                if (story.id > 1) {
+                    // create a temporary object linked to this one
+                    var tempCopy = _.omit(story, 'id', 'published', 'ptime');
+                    tempCopy.published_version_id = story.id;
+                    this.saveStory(tempCopy);
+                } else {
+                    // story hasn't been saved yet--edit it directly
+                    var columns = {
+                        id: story.id,
+                        published: false
+                    };
+                    this.saveStory(columns);
+                }
             }
             if (options.removeStory && !before.removeStory) {
                 this.removeStory(story);

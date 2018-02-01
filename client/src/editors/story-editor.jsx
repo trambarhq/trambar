@@ -1459,11 +1459,8 @@ var createBlankStory = Memoize(function(currentUser) {
         user_ids: [ currentUser.id ],
         details: {},
         public: true,
+        published: false,
     };
-}, {
-    user_ids: [],
-    details: {},
-    public: true,
 });
 
 function hasUnsentFiles(resources) {

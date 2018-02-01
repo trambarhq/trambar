@@ -524,7 +524,7 @@ var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser,
             }
         });
     }
-    stories = _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
+    stories = _.orderBy(stories, [ getStoryTime, 'id' ], [ 'desc', 'desc' ]);
 
     if (acceptNewStory) {
         // add new drafts (drafts includes published stories being edited)

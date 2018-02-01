@@ -8,6 +8,8 @@ var HTTPError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
 var SessionStartTime = require('data/session-start-time');
 
+var DEVELOPMENT_SAVE_DELAY = 5000;
+
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     propTypes: {
@@ -48,13 +50,30 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         this.searching = false;
-        return {
+        var lists = {
             recentSearchResults: [],
             recentStorageResults: [],
             recentRemovalResults: [],
             changeQueue: [],
             activeSearches: [],
         };
+        _.assign(this, lists);
+        return lists;
+    },
+
+    /**
+     * Update an instance variable that's mirrored in the state
+     *
+     * @param  {String} name
+     * @param  {Function} f
+     */
+    updateList: function(name, f) {
+        var prevList = this[name];
+        var nextList = f(prevList);
+        this[name] = nextList;
+        var state = {};
+        state[name] = nextList;
+        this.setState(state);
     },
 
     /**
@@ -472,12 +491,14 @@ module.exports = React.createClass({
             });
 
             // save the search
-            var recentSearchResults = _.slice(this.state.recentSearchResults);
-            recentSearchResults.unshift(search);
-            while (recentSearchResults.length > 256) {
-                recentSearchResults.pop();
-            }
-            this.setState({ recentSearchResults });
+            this.updateList('recentSearchResults', (before) => {
+                var after = _.slice(before);
+                after.unshift(search);
+                while (after.length > 256) {
+                    after.pop();
+                }
+                return after;
+            });
         }
         return search.promise.then((results) => {
             if (required && query.expected) {
@@ -516,24 +537,26 @@ module.exports = React.createClass({
                 return objects;
             });
         } else {
+            // storeRemoteObjects() will trigger change event
             return this.storeRemoteObjects(location, objects).then((objects) => {
                 var endTime = getCurrentTime();
                 this.updateCachedObjects(location, objects);
                 this.updateRecentSearchResults(location, objects);
-                this.triggerChangeEvent();
 
-                var recentStorageResults = _.clone(this.state.recentStorageResults);
-                recentStorageResults.unshift({
-                    start: startTime,
-                    finish: endTime,
-                    duration: getTimeElapsed(startTime, endTime),
-                    results: objects,
-                    by: byComponent,
+                this.updateList('recentStorageResults', (before) => {
+                    var after = _.slice(before);
+                    after.unshift({
+                        start: startTime,
+                        finish: endTime,
+                        duration: getTimeElapsed(startTime, endTime),
+                        results: objects,
+                        by: byComponent,
+                    });
+                    while (after.length > 32) {
+                        after.pop();
+                    }
+                    return after;
                 });
-                while (recentStorageResults.length > 32) {
-                    recentStorageResults.pop();
-                }
-                this.setState({ recentStorageResults });
                 return objects;
             });
         }
@@ -568,24 +591,26 @@ module.exports = React.createClass({
                 // only the id is needed--no point in sending the other properties
                 return { id: object.id, deleted: true };
             });
+            // storeRemoteObjects() will trigger change event
             return this.storeRemoteObjects(location, objects).then((objects) => {
                 var endTime = getCurrentTime();
                 this.removeCachedObjects(location, objects);
                 this.removeFromRecentSearchResults(location, objects);
-                this.triggerChangeEvent();
 
-                var recentRemovalResults = _.clone(this.state.recentRemovalResults);
-                recentRemovalResults.unshift({
-                    start: startTime,
-                    finish: endTime,
-                    duration: getTimeElapsed(startTime, endTime),
-                    results: objects,
-                    by: byComponent,
+                this.updateList('recentRemovalResults', (before) => {
+                    var after = _.clone(before);
+                    after.unshift({
+                        start: startTime,
+                        finish: endTime,
+                        duration: getTimeElapsed(startTime, endTime),
+                        results: objects,
+                        by: byComponent,
+                    });
+                    while (after.length > 32) {
+                        after.pop();
+                    }
+                    return after;
                 });
-                while (recentRemovalResults.length > 32) {
-                    recentRemovalResults.pop();
-                }
-                this.setState({ recentRemovalResults });
                 return objects;
             });
         }
@@ -636,12 +661,16 @@ module.exports = React.createClass({
             });
         } else {
             // invalidate all results originating from address
-            _.each(this.state.recentSearchResults, (search) => {
-                var searchLocation = getSearchLocation(search);
-                if (!address || searchLocation.address === address) {
-                    search.dirty = true;
-                    changed = true;
-                }
+            this.updateList('recentSearchResults', (before) => {
+                var after = _.slice(before);
+                _.each(after, (search) => {
+                    var searchLocation = getSearchLocation(search);
+                    if (!address || searchLocation.address === address) {
+                        search.dirty = true;
+                        changed = true;
+                    }
+                });
+                return after;
             });
         }
         if (changed) {
@@ -666,13 +695,15 @@ module.exports = React.createClass({
      * @param  {String} schema
      */
     clear: function(address, schema) {
-        var recentSearchResults = _.filter(this.state.recentSearchResults, (search) => {
-            if (_.isMatch(search, { address, schema })) {
-                return false;
-            }
-            return true;
+        this.updateList('recentSearchResults', (before) => {
+            var after = _.filter(before, (search) => {
+                if (_.isMatch(search, { address, schema })) {
+                    return false;
+                }
+                return true;
+            });
+            return after;
         });
-        this.setState({ recentSearchResults });
     },
 
     /**
@@ -769,24 +800,24 @@ module.exports = React.createClass({
     /**
      * Wait for props.hasConnection to become true
      *
+     * @param  {Object} change
+     *
      * @return {Promise}
      */
-    waitForConnectivity: function() {
+    waitForConnectivity: function(change) {
         if (this.props.hasConnection) {
             if (process.env.NODE_ENV !== 'production') {
                 // introduce some delay during development
-                return Promise.delay(2000);
+                return Promise.delay(DEVELOPMENT_SAVE_DELAY);
             } else {
                 return Promise.resolve();
             }
         } else {
-            if (!this.connectivityPromise) {
-                this.connectivityPromise = new Promise((resolve, reject) => {
-                    // save function so we can call it in componentWillReceiveProps()
-                    this.connectivityPromise.resolve = resolve;
-                });
-            }
-            return this.connectivityPromise;
+            return new Promise((resolve, reject) => {
+                // save function so we can call it in componentDidUpdate()
+                change.resolve = resolve;
+                change.reject = reject;
+            });
         }
     },
 
@@ -798,17 +829,19 @@ module.exports = React.createClass({
      * @return {Object|null}
      */
     findRecentSearch: function(query) {
-        var index = _.findIndex(this.state.recentSearchResults, (search) => {
+        var index = _.findIndex(this.recentSearchResults, (search) => {
             var searchQuery = getSearchQuery(search);
             return _.isEqual(query, searchQuery);
         });
         if (index !== -1) {
             // move the matching search to the top
-            var searchResultsAfter = _.slice(this.state.recentSearchResults);
-            var search = searchResultsAfter[index];
-            searchResultsAfter.splice(index, 1);
-            searchResultsAfter.unshift(search);
-            this.setState({ recentSearchResults: searchResultsAfter });
+            var search = this.recentSearchResults[index];
+            this.updateList('recentSearchResults', (before) => {
+                var after = _.slice(before);
+                after.splice(index, 1);
+                after.unshift(search);
+                return after;
+            });
             return search;
         } else {
             return null;
@@ -828,8 +861,9 @@ module.exports = React.createClass({
             return Promise.resolve(false);
         }
         if (!background) {
-            var activeSearches = _.union(this.state.activeSearches, [ search ]);
-            this.setState({ activeSearches });
+            this.updateList('activeSearches', (before) => {
+                return _.union(before, [ search ]);
+            });
         }
 
         var location = getSearchLocation(search);
@@ -875,13 +909,16 @@ module.exports = React.createClass({
             search.duration = getTimeElapsed(search.start, search.finish);
             search.dirty = false;
 
-            // update this.state.recentSearchResults
-            var activeSearches = this.state.activeSearches;
+            // update activeSearches unless search is done in the background
             if (!background) {
-                activeSearches = _.without(this.state.activeSearches, search);
+                this.updateList('activeSearches', (before) => {
+                    return _.without(this.state.activeSearches, search);
+                });
             }
-            var recentSearchResults = _.slice(this.state.recentSearchResults);
-            this.setState({ recentSearchResults, activeSearches });
+            // update recentSearchResults
+            this.updateList('recentSearchResults', (before) => {
+                return _.slice(before);
+            });
 
             // update retrieval time and save to cache
             var rtime = search.finish;
@@ -927,30 +964,118 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     storeRemoteObjects: function(location, objects) {
-        var change = {
-            objects: _.map(objects, (object) => {
-                // flag the object as uncommitted
-                var uncommitted = Object.defineProperty(_.clone(object), 'uncommitted', { value: true });
-                if (!uncommitted.id) {
-                    // assign a temporary id so we can find the
-                    uncommitted.id = getTemporaryId();
-                }
-                return uncommitted;
-            }),
-            location: location,
-            dispatched: false
-        };
-        var changeQueue = _.concat(this.state.changeQueue, change);
-        this.setState({ changeQueue }, () => {
-            this.triggerChangeEvent();
-        });
-        return this.waitForConnectivity().then(() => {
-            return this.performRemoteAction(location, 'storage', { objects }).then((results) => {
-                // caller is expected to trigger change event
-                var changeQueue = _.without(this.state.changeQueue, change);
-                this.setState({ changeQueue });
-                return results;
+        try {
+            // pluck objects from earlier operations
+            objects = this.mergePreviousChanges(location, objects);
+        } catch (err) {
+            return Promise.reject(err);
+        }
+        var change = this.queueChange(location, objects);
+        if (_.isEmpty(change.deliverables)) {
+            // a no-op
+            return Promise.resolve([]);
+        }
+        return this.waitForConnectivity(change).then(() => {
+            // return empty set if change was superceded
+            if (change.canceled) {
+                console.log('canceled')
+                return [];
+            }
+            var objects = change.deliverables;
+            change.dispatched = true;
+            return this.performRemoteAction(location, 'storage', { objects }).then((objects) => {
+                return objects;
+            }).finally(() => {
+                this.removeChange(change);
             });
+        });
+    },
+
+    queueChange: function(location, objects) {
+        var placeholders = _.map(objects, (object) => {
+            if (!object.uncommitted) {
+                object = Object.defineProperty(_.clone(object), 'uncommitted', { value: true });
+                if (!object.id) {
+                    // assign a temporary id so we can find the object again
+                    object.id = getTemporaryId();
+                }
+                return object;
+            }
+        });
+        var deliverables = _.map(objects, (object) => {
+            if (object.id < 1) {
+                // remove temporary id
+                object = _.omit(object, 'id');
+            }
+            return object;
+        });
+        // remove delete request for objects that were never saved in the first place
+        deliverables = _.filter(deliverables, (object) => {
+            if (object.deleted && !object.id) {
+                return false;
+            }
+            return true;
+        });
+        // add change to queue
+        var change = {
+            deliverables,
+            placeholders,
+            location,
+            dispatched: false,
+            canceled: false,
+        };
+        this.updateList('changeQueue', (before) => {
+            return _.concat(before, change);
+        });
+        return change;
+    },
+
+    mergePreviousChanges: function(location, objects) {
+        var changed = false;
+        objects = _.slice(objects);
+        _.each(this.changeQueue, (earlierOp) => {
+            if (_.isEqual(earlierOp.location, location)) {
+                _.each(objects, (object, i) => {
+                    var index = _.findIndex(earlierOp.placeholders, { id: object.id });
+                    if (index !== -1) {
+                        if (earlierOp.dispatched) {
+                            // can't alter the operation once it's dispatched
+                            throw new HTTPError(409);
+                        }
+                        // merge in changes from earlier op
+                        objects[i] = _.extend(_.clone(earlierOp.deliverables[index]), object);
+                        earlierOp.placeholders.splice(index, 1);
+                        earlierOp.deliverables.splice(index, 1);
+                        changed = true;
+                    }
+                });
+            }
+        });
+        if (changed) {
+            // cancel the changes that have become no-op's
+            this.updateList('changeQueue', (before) => {
+                var after = _.filter(before, (change) => {
+                    if (change.deliverables.length === 0) {
+                        change.canceled = true;
+                        if (change.resolve) {
+                            var f = change.resolve;
+                            change.resolve = null;
+                            change.reject = null;
+                            f();
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+                return after;
+            });
+        }
+        return objects;
+    },
+
+    removeChange: function(change) {
+        this.updateList('changeQueue', (before) => {
+            return _.without(before, change);
         });
     },
 
@@ -962,32 +1087,32 @@ module.exports = React.createClass({
      * @return {Array<Object>}
      */
     applyUncommittedChanges: function(search) {
-        if (_.isEmpty(this.state.changeQueue)) {
+        if (_.isEmpty(this.changeQueue)) {
             return search.results;
         }
         var objects = _.slice(search.results);
         var location = getSearchLocation(search);
         var includeDeleted = _.get(this.props.discoveryFlags, 'include_deleted');
-        _.each(this.state.changeQueue, (change) => {
+        _.each(this.changeQueue, (change) => {
             if (_.isEqual(change.location, location)) {
-                _.each(change.objects, (modified) => {
-                    var index = _.findIndex(objects, { id: modified.id });
+                _.each(change.placeholders, (placeholder) => {
+                    var index = _.findIndex(objects, { id: placeholder.id });
                     if (index !== -1) {
-                        if (modified.deleted && !includeDeleted) {
+                        if (placeholder.deleted && !includeDeleted) {
                             objects.splice(index, 1);
                         } else {
-                            var match = LocalSearch.match(search.table, modified, search.criteria);
+                            var match = LocalSearch.match(search.table, placeholder, search.criteria);
                             if (match) {
-                                objects[index] = modified;
+                                objects[index] = _.extend(_.clone(objects[index]), placeholder);
                             } else {
                                 objects.splice(index, 1);
                             }
                         }
                     } else {
-                        if (!(modified.deleted && !includeDeleted)) {
-                            var match = LocalSearch.match(search.table, modified, search.criteria);
+                        if (!(placeholder.deleted && !includeDeleted)) {
+                            var match = LocalSearch.match(search.table, placeholder, search.criteria);
                             if (match) {
-                                objects.push(modified);
+                                objects.push(placeholder);
                             }
                         }
                     }
@@ -1263,7 +1388,7 @@ module.exports = React.createClass({
      * @return {Array<Object>}
      */
     getRelevantRecentSearches: function(location) {
-        return _.filter(this.state.recentSearchResults, (search) => {
+        return _.filter(this.recentSearchResults, (search) => {
             var searchLocation = getSearchLocation(search);
             if (search.results && _.isEqual(location, searchLocation)) {
                 return true;
@@ -1277,13 +1402,15 @@ module.exports = React.createClass({
      * @param  {String} address
      */
     clearRecentSearches: function(address) {
-        var recentSearchResults = _.filter(this.state.recentSearchResults, (search) => {
-            if (search.address === address) {
-                return false;
-            }
-            return true;
+        this.updateList('recentSearchResults', (before) => {
+            var after = _.filter(before, (search) => {
+                if (search.address === address) {
+                    return false;
+                }
+                return true;
+            });
+            return after;
         });
-        this.setState({ recentSearchResults });
     },
 
     /**
@@ -1332,6 +1459,9 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
+        if (prevState.changeQueue !== this.state.changeQueue) {
+            this.triggerChangeEvent();
+        }
         if (prevState.activeSearches !== this.state.activeSearches) {
             // since a search can start immediately after another one has ended,
             // use a timeout function to reduce the freqeuncy of events
@@ -1347,12 +1477,16 @@ module.exports = React.createClass({
                 this.searchingTimeout = null;
             }, 50);
         }
-        if (this.connectivityPromise) {
-            if (this.props.hasConnection) {
-                var promise = this.connectivityPromise;
-                this.connectivityPromise = null;
-                promise.resolve();
-            }
+        if (!prevProps.hasConnection && this.props.hasConnection) {
+            // tell pending operations to proceed
+            _.each(this.changeQueue, (change) => {
+                if (change.resolve) {
+                    var f = change.resolve;
+                    change.resolve = null;
+                    change.reject = null;
+                    f();
+                }
+            });
         }
     },
 
@@ -1373,7 +1507,7 @@ module.exports = React.createClass({
         this.stopPrefetch();
 
         var prefetchTimeout = this.prefetchTimeout = setTimeout(() => {
-            var dirtySearches = _.filter(this.state.recentSearchResults, (search) => {
+            var dirtySearches = _.filter(this.recentSearchResults, (search) => {
                 if (!address || search.address === address) {
                     if (search.dirty) {
                         return true;
@@ -1751,7 +1885,9 @@ function countCriteria(criteria, name) {
  * @return {Number}
  */
 function getTemporaryId() {
-    return nextTemporaryId--;
+    var newTemporaryId = lastTemporaryId + 0.000000001;
+    lastTemporaryId = newTemporaryId;
+    return newTemporaryId;
 }
 
-var nextTemporaryId = -1;
+var lastTemporaryId = 0;
