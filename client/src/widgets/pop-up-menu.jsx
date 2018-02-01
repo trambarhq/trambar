@@ -172,7 +172,7 @@ module.exports = React.createClass({
      * Remove mousedown handler on unmount
      */
     componentWillUnmount: function() {
-        var appContainer = document.getElementById('app-container');
+        var appContainer = document.getElementById('application');
         appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
     },
 
