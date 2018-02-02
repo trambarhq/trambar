@@ -358,7 +358,7 @@ module.exports = function(localeCode) {
         'start-activation-add-server': 'Add project from another server',
         'start-activation-instructions': (ui) => {
             return [
-                'Aby uzyskać dostęp do serwera Trambar na tym urządzeniu, najpierw zaloguj się do serwera za pomocą przeglądarki internetowej. Wybierz projekt, a następnie przejdź do strony',
+                'Aby uzyskać dostęp do serwera Trambar na tym urządzeniu, najpierw zaloguj się do serwera za pomocą przeglądarki internetowej. Wybierz projekt, a następnie przejdź do strony ',
                 ui.settings,
                 '. W panelu ',
                 ui.projects,
