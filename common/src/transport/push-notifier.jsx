@@ -402,6 +402,7 @@ module.exports = React.createClass({
      */
     render: function() {
         var relayToken = _.get(this.state.pushRelayResponse, 'token');
+        var device = getDeviceDetails();
         return (
             <Diagnostics type="push-notifier">
                 <DiagnosticsSection label="Registration">
@@ -414,6 +415,10 @@ module.exports = React.createClass({
                 </DiagnosticsSection>
                 <DiagnosticsSection label="Recent messages">
                    {_.map(this.state.recentMessages, renderJSON)}
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Device">
+                    <div>Manufacturer: {device.manufacturer}</div>
+                    <div>Model: {device.name}</div>
                 </DiagnosticsSection>
             </Diagnostics>
         );
@@ -431,7 +436,7 @@ var getDeviceDetails = function() {
     var device = window.device;
     if (device) {
         return {
-            manufacturer: _.capitalize(device.manufacturer),
+            manufacturer: device.manufacturer,
             name: device.model,
         };
     }

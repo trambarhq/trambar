@@ -242,7 +242,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     renderDiagnostics: function() {
         return (
             <div className="settings-page">
-                <div className="panels">
+                <div className="panels diagnostics">
                     <DiagnoisticDataPanel type="websocket-notifier" title="Web Socket" />
                     <DiagnoisticDataPanel type="push-notifier" title="Push Notification" />
                     <DiagnoisticDataPanel type="subscription-manager" title="Data Subscription" />
@@ -250,6 +250,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticDataPanel type="link-manager" title="Project Links" />
                     <DiagnoisticDataPanel type="indexed-db-cache" title="IndexedDB Cache" />
                     <DiagnoisticDataPanel type="sqlite-cache" title="SQLite Cache" />
+                    <DiagnoisticDataPanel type="locale-manager" title="Locale Manager" />
                 </div>
             </div>
         );

@@ -6,6 +6,7 @@ module.exports = React.createClass({
     displayName: 'DiagnosticsSection',
     propTypes: {
         label: PropTypes.string,
+        hidden: PropTypes.bool,
     },
 
     /**
@@ -22,9 +23,12 @@ module.exports = React.createClass({
     /**
      * Render component
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     render: function() {
+        if (this.props.hidden) {
+            return null;
+        }
         var className = 'diagnostics-section';
         if (this.state.open) {
             className += ' open';

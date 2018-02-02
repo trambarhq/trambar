@@ -3,6 +3,10 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var Database = require('data/database');
 
+// widgets
+var Diagnostics = require('widgets/diagnostics');
+var DiagnosticsSection = require('widgets/diagnostics-section');
+
 module.exports = React.createClass({
     displayName: 'LocaleManager',
     propTypes: {
@@ -31,6 +35,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             localeCode: '',
+            localeCodeSaved: '',
             phraseTable: {},
             missingPhrases: [],
         };
@@ -77,6 +82,11 @@ module.exports = React.createClass({
                 return entry;
             }
         } else {
+            // use timeout since translate() will be called using render
+            setTimeout(() => {
+                var missingPhrases = _.union(this.state.missingPhrases, [ phrase ]);
+                this.setState({ missingPhrases });
+            }, 10);
             return phrase;
         }
     },
@@ -181,19 +191,10 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render function
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return null;
-    },
-
-    /**
      * Get the browser's language setting and use it
      */
     componentDidMount: function() {
-        var initialLanguageCode = getBrowserLanguage() || this.props.defaultLanguageCode;
+        var initialLanguageCode = getBrowserLocale() || this.props.defaultLanguageCode;
         this.change(initialLanguageCode).catch((err) => {
             // use the default language if there's no support for the user's language
             this.change(this.props.defaultLanguageCode);
@@ -210,21 +211,61 @@ module.exports = React.createClass({
         if (!prevProps.database && this.props.database) {
             var db = this.props.database.use({ by: this, schema: 'local' });
             db.start().then(() => {
-                return db.findOne({
-                    table: 'settings',
-                    key: 'language'
-                });
+                var criteria = { key: 'language' };
+                return db.findOne({ table: 'settings', criteria });
             }).then((settings) => {
-                if (settings && settings.selectedLanguageCode) {
-                    this.change(settings.selectedLanguageCode);
+                console.log(settings);
+                var code = _.get(settings, 'selectedLanguageCode');
+                if (code) {
+                    this.change(code);
+                    this.setState({ localeCodeSaved: code });
                 }
             })
         }
+        if (prevState.localeCode !== this.state.localeCode) {
+            var db = this.props.database.use({ by: this, schema: 'local' });
+            db.start().then(() => {
+                var settings = {
+                    key: 'language',
+                    selectedLanguageCode: this.state.localeCode
+                };
+                if (settings.selectedLanguageCode === getBrowserLocale()) {
+                    return db.removeOne({ table: 'settings' }, settings);
+                } else {
+                    return db.saveOne({ table: 'settings' }, settings);
+                }
+            });
+        }
+    },
+
+    /**
+     * Render diagnostics
+     *
+     * @return {ReactElement}
+     */
+    render: function() {
+        var browserLocaleCode = getBrowserLocale();
+        var missingPhrases = this.state.missingPhrases;
+        return (
+            <Diagnostics type="locale-manager">
+                <DiagnosticsSection label="Locale code">
+                    <div>Current: {this.state.localeCode}</div>
+                    <div>Browser: {browserLocaleCode}</div>
+                    <div>Previously saved: {this.state.localeCodeSaved}</div>
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Missing phrases" hidden={_.isEmpty(missingPhrases)}>
+                    {
+                        _.map(missingPhrases, (phrase, i) => {
+                            return <div key={i}>{phrase}</div>;
+                        })
+                    }
+                </DiagnosticsSection>
+            </Diagnostics>
+        );
     },
 });
 
-function getBrowserLanguage() {
-    return 'fi-fi'
+function getBrowserLocale() {
     // check navigator.languages
     _.each(navigator.languages, check);
 
