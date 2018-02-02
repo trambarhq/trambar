@@ -345,7 +345,25 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Имя пользователя Twitter',
 
         'start-activation-add-server': 'Добавить проект с другого сервера',
-        'start-activation-instructions': 'Лорем ипсум долор сит амет, ат сеа фацер путант цонсеяуунтур, юсто ассум ат меи. Мел солет темпор тибияуе ет, примис цонституто яуо ид.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'Чтобы получить доступ к серверу Трамбар на этом устройстве, сначала войдите в сервер с помощью веб-браузера. Выберите проект, затем перейдите в страницу ',
+                ui.settings,
+                '. На панели ',
+                ui.projects,
+                ' нажмите ',
+                ui.mobileSetup,
+                '. На экране появится QR-код. Затем на этом устройстве нажмите кнопку ниже и сканируйте код. В качестве альтернативы вы можете вручную ввести код активации.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Войдите в систему через веб-браузер, затем сканируйте QR-код показанный на странице ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Ввод вручную',
         'start-activation-scan-code': 'Сканировать QR-код',
         'start-error-access-denied': 'Запрос отклонен',

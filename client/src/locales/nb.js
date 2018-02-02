@@ -294,7 +294,25 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Twitter brukernavn',
 
         'start-activation-add-server': 'Legg til prosjekt fra en annen server',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'For å få tilgang til en Trambar-server på denne enheten, logg først på serveren ved å bruke en nettleser. Velg et prosjekt og gå til ',
+                ui.settings,
+                '. Klikk på ',
+                ui.mobileSetup,
+                ' i panelet ',
+                ui.projects,
+                '. En QR-kode vil vises på skjermen. Deretter på denne enheten, trykk på knappen nedenfor og skann koden. Alternativt kan du legge inn aktiveringskoden manuelt.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Logg inn med en nettleser, og skann deretter QR-koden som vises på ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Manuell oppføring',
         'start-activation-scan-code': 'Skann QR kode',
         'start-error-access-denied': 'Forespørsel om tilgang avvist',

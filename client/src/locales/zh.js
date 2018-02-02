@@ -339,8 +339,26 @@ var traditionalPhrases = {
     'social-network-twitter': 'Twitter用戶名',
 
     'start-activation-add-server': '從另一台服務器添加項目',
-    'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
-    'start-activation-manual': '手動輸入',
+    'start-activation-instructions': (ui) => {
+        return [
+            '請先使用網絡瀏覽器登錄電車吧服務器。選擇一個項目，然後進入',
+            ui.settings,
+            '。在',
+            ui.projects,
+            '面板中單擊',
+            ui.mobileSetup,
+            '。 ＱＲ碼將出現在屏幕上。在此裝置按下面的按鈕，然後掃描ＱＲ碼。如果相機出現故障，你可以用鍵盤輸入授權碼。'
+        ];
+    },
+    'start-activation-instructions-short': (ui) => {
+        return [
+            'Sign in using a web browser then scan the QR code shown in ',
+            ui.settings,
+            ' > ',
+            ui.mobileSetup,
+        ];
+    },
+    'start-activation-manual': '鍵盤輸入',
     'start-activation-scan-code': '掃描ＱＲ碼',
     'start-error-access-denied': '請求被拒絕',
     'start-error-account-disabled': '帳戶目前被禁用',
@@ -907,8 +925,26 @@ var simplifiedPhrases = {
     'social-network-twitter': 'Twitter用户名',
 
     'start-activation-add-server': '从另一台服务器添加项目',
-    'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
-    'start-activation-manual': '手动输入',
+    'start-activation-instructions': (ui) => {
+        return [
+            '请先使用网络浏览器登录電車吧服务器。选择一个项目，然后进入',
+            ui.settings,
+            '。在',
+            ui.projects,
+            '面板中单击',
+            ui.mobileSetup,
+            '。 ＱＲ码将出现在屏幕上。在此装置按下面的按，钮然后扫描ＱＲ码。如果相机出现故障，你可以用键盘输入授权码。'
+        ];
+    },
+    'start-activation-instructions-short': (ui) => {
+        return [
+            'Sign in using a web browser then scan the QR code shown in ',
+            ui.settings,
+            ' > ',
+            ui.mobileSetup,
+        ];
+    },
+    'start-activation-manual': '键盘输入',
     'start-activation-scan-code': '扫描ＱＲ码',
     'start-error-access-denied': '请求被拒绝',
     'start-error-account-disabled': '帐户目前被禁用',

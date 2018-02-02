@@ -224,6 +224,7 @@ module.exports = React.createClass({
 });
 
 function getBrowserLanguage() {
+    return 'fi-fi'
     // check navigator.languages
     _.each(navigator.languages, check);
 

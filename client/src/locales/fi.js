@@ -292,7 +292,25 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Twitter-käyttäjänimi',
 
         'start-activation-add-server': 'Lisää projekti toiselta palvelimelta',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'Jos haluat käyttää tämän laitteen palvelimella varustettua palvelinta, kirjaudu ensin palvelimeen WWW-selaimella. Valitse projekti ja siirry sitten ',
+                ui.settings,
+                '-kohtaan. Valitse ',
+                ui.projects,
+                '-paneelissa ',
+                ui.mobileSetup,
+                '. QR-koodi ilmestyy näytölle. Paina tätä laitetta painamalla alla olevaa painiketta ja skannaa koodi. Vaihtoehtoisesti voit syöttää aktivointikoodin manuaalisesti.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Kirjaudu sisään WWW-selaimella ja skannaa QR koodi joka näkyy sivulla ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Manuaalinen syöttö',
         'start-activation-scan-code': 'Skannaa QR-koodi',
         'start-error-access-denied': 'Hakuhakemus hylättiin',
