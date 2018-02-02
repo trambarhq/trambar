@@ -17,6 +17,7 @@ module.exports = React.createClass({
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         defaultProfileImage: PropTypes.string,
+        hasConnection: PropTypes.bool,
 
         locale: PropTypes.instanceOf(Locale),
 
@@ -81,6 +82,11 @@ module.exports = React.createClass({
         if (this.props.serverAddress !== nextProps.serverAddress) {
              this.updateConnection(nextProps);
         }
+        if (!this.props.hasConnection && nextProps.hasConnection) {
+            if (this.onConnectivity) {
+                this.onConnectivity();
+            }
+        }
     },
 
     /**
@@ -92,6 +98,29 @@ module.exports = React.createClass({
         this.disconnect();
         if (nextProps.serverAddress) {
             this.connect(nextProps.serverAddress)
+        }
+    },
+
+    /**
+     * Wait for props.hasConnection to become true
+     *
+     * @return {Promise}
+     */
+    waitForConnectivity: function() {
+        if (this.props.hasConnection) {
+            return Promise.resolve();
+        } else {
+            if (!this.connectivityPromise) {
+                this.connectivityPromise = new Promise((resolve, reject) => {
+                    // call function in componentWillReceiveProps
+                    this.onConnectivity = () => {
+                        this.connectivityPromise = null;
+                        this.onConnectivity = null;
+                        resolve();
+                    };
+                });
+            }
+            return this.connectivityPromise;
         }
     },
 
@@ -220,28 +249,30 @@ module.exports = React.createClass({
      * @return {Promise<SockJS>}
      */
     createSocket: function(serverAddress) {
-        return new Promise((resolve, reject) => {
-            var url = `${serverAddress}/socket`;
-            var socket = new SockJS(url);
-            var isFulfilled = false;
-            socket.onopen = (evt) => {
-                if (!isFulfilled) {
-                    isFulfilled = true;
-                    resolve(socket);
-                }
-            };
-            socket.onclose = () => {
-                if (!isFulfilled) {
-                    // neither onopen() or onerror() was called
-                    reject(new Error('Unable to establish a connection'));
-                }
-            };
-            socket.onerror = (evt) => {
-                if (!isFulfilled) {
-                    isFulfilled = true;
-                    reject(new Error(evt.message));
-                }
-            };
+        return this.waitForConnectivity().then(() => {
+            return new Promise((resolve, reject) => {
+                var url = `${serverAddress}/socket`;
+                var socket = new SockJS(url);
+                var isFulfilled = false;
+                socket.onopen = (evt) => {
+                    if (!isFulfilled) {
+                        isFulfilled = true;
+                        resolve(socket);
+                    }
+                };
+                socket.onclose = () => {
+                    if (!isFulfilled) {
+                        // neither onopen() or onerror() was called
+                        reject(new Error('Unable to establish a connection'));
+                    }
+                };
+                socket.onerror = (evt) => {
+                    if (!isFulfilled) {
+                        isFulfilled = true;
+                        reject(new Error(evt.message));
+                    }
+                };
+            });
         });
     },
 

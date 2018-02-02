@@ -13,6 +13,7 @@ var RouteManager = require('routing/route-manager');
 var Route = require('routing/route');
 var PayloadManager = require('transport/payload-manager');
 var Payloads = require('transport/payloads');
+var ConnectivityMonitor = require('transport/connectivity-monitor');
 var LocaleManager = require('locale/locale-manager');
 var Locale = require('locale/locale');
 var ThemeManager = require('theme/theme-manager');
@@ -106,6 +107,8 @@ module.exports = React.createClass({
             pushRelay: null,
             renderingStartPage: false,
             showingUploadProgress: false,
+            online: true,
+            networkType: 'unknown',
         };
     },
 
@@ -168,7 +171,7 @@ module.exports = React.createClass({
             settings: settings,
             database: this.state.database,
             payloads: this.state.payloads,
-            hasConnection: true,
+            hasConnection: this.state.online,
             searching: this.state.searching,
             route: this.state.route,
             locale: this.state.locale,
@@ -270,6 +273,7 @@ module.exports = React.createClass({
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             inForeground: !this.state.paused,
+            hasConnection: this.state.online,
             locale: this.state.locale,
 
             onChange: this.handleDatabaseChange,
@@ -281,6 +285,7 @@ module.exports = React.createClass({
         };
         var payloadManagerProps = {
             ref: setters.payloadManager,
+            hasConnection: this.state.online,
             database: this.state.database,
             route: this.state.route,
             onChange: this.handlePayloadsChange,
@@ -314,9 +319,13 @@ module.exports = React.createClass({
             ref: setters.cache,
             databaseName: 'trambar',
         };
+        var connectivityMonitorProps = {
+            onChange: this.handleConnectivityChange,
+        };
         var notifierProps = {
             ref: setters.notifier,
             serverAddress: serverAddress,
+            hasConnection: this.state.online,
             onConnect: this.handleConnection,
             onDisconnect: this.handleDisconnection,
             onNotify: this.handleChangeNotification,
@@ -368,6 +377,7 @@ module.exports = React.createClass({
                 <SubscriptionManager {...subscriptionManagerProps} />
                 <SessionManager {...sessionManagerProps} />
                 <LinkManager {...linkManagerProps} />
+                <ConnectivityMonitor {...connectivityMonitorProps} />
             </div>
         );
     },
@@ -862,7 +872,7 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleResume: function() {
+    handleResume: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ paused: false });
 
@@ -873,6 +883,18 @@ module.exports = React.createClass({
         // invalidate all queries just in case
         var dataSource = this.components.remoteDataSource;
         dataSource.invalidate();
+    },
+
+    /**
+     * Called when connectivity changes
+     *
+     * @param  {Event} evt
+     */
+    handleConnectivityChange: function(evt) {
+        this.setState({
+            online: evt.online,
+            networkType: evt.type,
+        });
     },
 
     /**

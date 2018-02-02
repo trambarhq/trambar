@@ -16,6 +16,7 @@ module.exports = React.createClass({
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         searching: PropTypes.bool,
+        hasConnection: PropTypes.bool,
 
         onConnect: PropTypes.func,
         onDisconnect: PropTypes.func,
@@ -81,14 +82,43 @@ module.exports = React.createClass({
     },
 
     /**
-     * Check if database queries have finished
+     * Wait for props.hasConnection to become true
+     *
+     * @return {Promise}
+     */
+    waitForConnectivity: function() {
+        if (this.props.hasConnection) {
+            return Promise.resolve();
+        } else {
+            if (!this.connectivityPromise) {
+                this.connectivityPromise = new Promise((resolve, reject) => {
+                    // call function in componentWillReceiveProps
+                    this.onConnectivity = () => {
+                        this.connectivityPromise = null;
+                        this.onConnectivity = null;
+                        resolve();
+                    };
+                });
+            }
+            return this.connectivityPromise;
+        }
+    },
+
+    /**
+     * Monitor prop changes
      *
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
+        // check if database queries have finished
         if (this.props.searching && !nextProps.searching) {
             if (this.onSearchIdling) {
                 this.onSearchIdling();
+            }
+        }
+        if (!this.props.hasConnection && nextProps.hasConnection) {
+            if (this.onConnectivity) {
+                this.onConnectivity();
             }
         }
     },
@@ -187,11 +217,7 @@ module.exports = React.createClass({
                 details: details,
                 address: serverAddress,
             };
-            var options = {
-                responseType: 'json',
-                contentType: 'json',
-            };
-            return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
+            return this.sendRegistration(url, payload).then((result) => {
                 if (attempt === this.registrationAttempt) {
                     this.registrationAttempt = null;
                     this.setState({ pushRelayResponse: result });
@@ -228,6 +254,24 @@ module.exports = React.createClass({
         });
         attempt.promise = Async.end();
         return attempt.promise;
+    },
+
+    /**
+     * Send registration to push relay
+     *
+     * @param  {String} url
+     * @param  {Object} payload
+     *
+     * @return {Object}
+     */
+    sendRegistration: function(url, payload) {
+        var options = {
+            responseType: 'json',
+            contentType: 'json',
+        };
+        return this.waitForConnectivity().then(() => {
+            return HTTPRequest.fetch('POST', url, payload, options);
+        });
     },
 
     /**
