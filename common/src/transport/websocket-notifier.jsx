@@ -86,6 +86,12 @@ module.exports = React.createClass({
             if (this.onConnectivity) {
                 this.onConnectivity();
             }
+        } else if(this.props.hasConnection && !nextProps.hasConnection) {
+            if (this.state.socket) {
+                // putting Chrome into offline mode does not automatically
+                // break the WebSocket connection--do it manually
+                this.state.socket.close();
+            }
         }
     },
 
@@ -181,6 +187,7 @@ module.exports = React.createClass({
                         }
                     };
                     socket.onclose = () => {
+                        console.log('onclose');
                         if (this.state.socket === socket) {
                             // we're still supposed to be connected
                             // try to reestablish connection
