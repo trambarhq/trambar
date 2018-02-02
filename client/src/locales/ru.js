@@ -208,6 +208,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Когда кто-то открывает отчёт об ошибке',
         'notification-option-join-request': 'Когда кто-то хочет присоединиться к проекту',
         'notification-option-like': 'Когда кому-то нравится ваш рассказ',
+        'notification-option-mention': 'Когда кто-то упоминает вас в истории или комментарии',
         'notification-option-merge': 'Когда кто-то сливает код в ветку «${branch}»',
         'notification-option-note': 'Когда кто-то публикует заметку о коммите или отчёте об ошибке',
         'notification-option-push': 'Когда кто-то отправляет код в репозиторий git',

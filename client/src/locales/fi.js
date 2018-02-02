@@ -170,6 +170,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Kun joku avaa uuden asian',
         'notification-option-join-request': 'Kun joku haluaa liittyä tähän projektiin',
         'notification-option-like': 'Kun joku tykkää tarinastasi',
+        'notification-option-mention': 'Kun joku mainitsee sinut tarinassa tai kommentissa',
         'notification-option-merge': 'Kun joku linkittää koodin branchien master',
         'notification-option-note': 'Kun joku lähettää viestin commitista tai liikkeestä',
         'notification-option-push': 'Kun joku painaa koodia Gitiin',

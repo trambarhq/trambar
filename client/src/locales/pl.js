@@ -218,6 +218,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Po zgłoszeniu błędu',
         'notification-option-join-request': 'Po prośbie o dołączenie do projektu',
         'notification-option-like': 'Po upodobaniu Twojej wiadomości',
+        'notification-option-mention': 'Po wspomnieniach o Tobie w wiadomości lub komentarzu',
         'notification-option-merge': 'Po scalaniu kodu w gałąź master',
         'notification-option-note': 'Po komentowaniu zmian kodu ablo złoszenia błedu',
         'notification-option-push': 'Po wgrywaniu zmian do repozytorium Gita',

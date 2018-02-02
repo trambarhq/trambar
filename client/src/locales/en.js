@@ -174,6 +174,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'When someone opens an issue',
         'notification-option-join-request': 'When someone wants to join this project',
         'notification-option-like': 'When someone likes your story',
+        'notification-option-mention': 'When someone mentions you in a story or comment',
         'notification-option-merge': 'When someone merges code into the master branch',
         'notification-option-note': 'When someone posts a note on a commit or issue',
         'notification-option-push': 'When someone pushes code into Git',
