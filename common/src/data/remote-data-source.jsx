@@ -419,16 +419,18 @@ module.exports = React.createClass({
                     // search is perhaps out-of-date--indicate that the data
                     // is speculative and check with the server
                     if (!search.updating) {
-                        search.updating = true;
-                        this.searchRemoteDatabase(search).then((changed) => {
-                            search.updating = false;
-                            if (changed) {
-                                // data returned earlier wasn't entirely correct
-                                // trigger a new search through a onChange event
-                                this.triggerChangeEvent();
-                                return null;
-                            }
-                        });
+                        if (this.props.hasConnection) {
+                            search.updating = true;
+                            this.searchRemoteDatabase(search).then((changed) => {
+                                search.updating = false;
+                                if (changed) {
+                                    // data returned earlier wasn't entirely correct
+                                    // trigger a new search through a onChange event
+                                    this.triggerChangeEvent();
+                                    return null;
+                                }
+                            });
+                        }
                     }
                 }
             } else if (search.promise.isRejected()) {
@@ -453,6 +455,10 @@ module.exports = React.createClass({
 
             // look for records in cache first
             var localSearchPromise = this.searchLocalCache(search).then(() => {
+                // don't search remotely when there's no connection
+                if (!this.props.hasConnection) {
+                    return true;
+                }
                 // if we have the right number of objects and they were
                 // retrieved recently, then don't perform server check
                 if (isMeetingExpectation(search)) {
