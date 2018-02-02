@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Moment = require('moment');
-var StoryTypes = require('objects/types/story-types');
+var StoryUtils = require('objects/utils/story-utils');
 
 module.exports = {
     canEditStory,
@@ -9,6 +9,7 @@ module.exports = {
     canBumpStory,
     canAddIssue,
     canAccessRepo,
+    canCreateBookmark,
     canSendBookmarks,
 };
 
@@ -21,10 +22,10 @@ module.exports = {
  * @return {Boolean}
  */
 function canEditStory(user, story) {
-    if (!user || !story) {
+    if (!user) {
         return false;
     }
-    if (_.includes(StoryTypes.editable, story.type)) {
+    if (StoryUtils.isEditable(story)) {
         if (user.type === 'admin' || user.type === 'moderator') {
             // allow editing for two weeks
             if (Moment() < Moment(story.ptime).add(14, 'day')) {
@@ -97,7 +98,10 @@ function canRemoveStory(user, story) {
  * @return {Boolean}
  */
 function canBumpStory(user, story) {
-    if (!user || !story) {
+    if (!user) {
+        return false;
+    }
+    if (!StoryUtils.isSaved(story)) {
         return false;
     }
     if (_.includes(story.user_ids, user.id) || user.type === 'admin') {
@@ -119,10 +123,10 @@ function canBumpStory(user, story) {
  * @return {Boolean}
  */
 function canAddIssue(user, story, repos) {
-    if (!user || !story) {
+    if (!user) {
         return false;
     }
-    if (_.includes(StoryTypes.trackable, story.type || 'post')) {
+    if (StoryUtils.isTrackable(story)) {
         if (user.type === 'admin' || user.type === 'moderator' || _.includes(story.user_ids, user.id)) {
             return _.some(repos, (repo) => {
                 if (_.includes(repo.user_ids, user.id)) {
@@ -156,7 +160,14 @@ function canAccessRepo(user,repo) {
     return false;
 }
 
+function canCreateBookmark(user, story) {
+    if (!user) {
+        return false;
+    }
+    return true;
+}
+
 function canSendBookmarks(user, story) {
     // TODO
-    return true;
+    return canCreateBookmark(user, story);
 }

@@ -94,6 +94,7 @@ module.exports = React.createClass({
                 bookmarkProps = {
                     label: t('option-add-bookmark'),
                     selected: bookmarking,
+                    hidden: !UserUtils.canCreateBookmark(user, story),
                     onClick: this.handleAddBookmarkClick,
                 };
             } else {

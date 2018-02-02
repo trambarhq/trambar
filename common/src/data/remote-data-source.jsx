@@ -8,8 +8,6 @@ var HTTPError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
 var SessionStartTime = require('data/session-start-time');
 
-var DEVELOPMENT_SAVE_DELAY = 5000;
-
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     propTypes: {
@@ -812,12 +810,7 @@ module.exports = React.createClass({
      */
     waitForConnectivity: function(change) {
         if (this.props.hasConnection) {
-            if (process.env.NODE_ENV !== 'production') {
-                // introduce some delay during development
-                return Promise.delay(DEVELOPMENT_SAVE_DELAY);
-            } else {
-                return Promise.resolve();
-            }
+            return Promise.resolve();
         } else {
             return new Promise((resolve, reject) => {
                 // save function so we can call it in componentDidUpdate()
@@ -1000,18 +993,23 @@ module.exports = React.createClass({
     queueChange: function(location, objects) {
         var placeholders = _.map(objects, (object) => {
             if (!object.uncommitted) {
-                object = Object.defineProperty(_.clone(object), 'uncommitted', { value: true });
+                object = _.clone(object);
                 if (!object.id) {
                     // assign a temporary id so we can find the object again
                     object.id = getTemporaryId();
                 }
-                return object;
+                object.uncomitted = true;
             }
+            return object;
         });
         var deliverables = _.map(objects, (object) => {
-            if (object.id < 1) {
-                // remove temporary id
-                object = _.omit(object, 'id');
+            if (object.uncomitted) {
+                // strip out special properties
+                if (object.id < 1) {
+                    object = _.omit(object, 'id', 'uncomitted');
+                } else {
+                    object = _.omit(object, 'uncomitted')
+                }
             }
             return object;
         });

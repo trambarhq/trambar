@@ -460,6 +460,7 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Remove yourself',
         'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
+        'story-status-storage-pending': 'Pending',
         'story-status-transcoding-$progress': (progress) => {
             return `Transcoding (${progress}%)`;
         },

@@ -2,6 +2,8 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+
+var StoryUtils = require('objects/utils/story-utils');
 var IssueUtils = require('objects/utils/issue-utils');
 var LinkUtils = require('objects/utils/link-utils');
 
@@ -312,9 +314,12 @@ module.exports = React.createClass({
     /**
      * Render link and comment buttons on title bar
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderReactionToolbar: function() {
+        if (!StoryUtils.isSaved(this.props.story)) {
+            return null;
+        }
         var props = {
             access: this.props.access,
             currentUser: this.props.currentUser,
@@ -552,7 +557,18 @@ module.exports = React.createClass({
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
-            return db.saveOne({ table: 'story' }, story);
+            var newStory = !StoryUtils.isSaved(story);
+            var bookmarkRecipients = this.state.options.bookmarkRecipients;
+            return db.saveOne({ table: 'story' }, story).then((story) => {
+                if (newStory && !_.isEmpty(bookmarkRecipients)) {
+                    // bookmarks were added after the story was published but
+                    // not yet saved
+                    return this.sendBookmarks(story, bookmarkRecipients).then((bookmarks) => {
+                        return story;
+                    });
+                }
+                return story
+            });
         });
     },
 
@@ -728,7 +744,12 @@ module.exports = React.createClass({
                 this.saveStory(columns);
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
-                this.sendBookmarks(this.props.story, options.bookmarkRecipients);
+                if (StoryUtils.isSaved(story)) {
+                    this.sendBookmarks(this.props.story, options.bookmarkRecipients);
+                } else {
+                    // to create the bookmarks we need the story id
+                    this.saveStory(story);
+                }
             }
         });
     },
