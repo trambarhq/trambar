@@ -247,6 +247,7 @@ module.exports = React.createClass({
             }
             if (!insideMenu) {
                 this.setState({ open: false });
+                this.triggerEvent(false);
             }
         }
     },
