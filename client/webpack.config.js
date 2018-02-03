@@ -70,10 +70,11 @@ module.exports = {
     output: {
         path: folders.www,
         filename: '[name].js',
+        chunkFilename: '[name].js',
     },
     resolve: {
         extensions: [ '.js', '.jsx' ],
-        modules: folders.includes
+        modules: folders.includes,
     },
     module: {
         rules: [
@@ -85,6 +86,9 @@ module.exports = {
                     presets: [
                         'babel-preset-es2015',
                         'babel-preset-react',
+                    ].map(require.resolve),
+                    plugins: [
+                        'babel-plugin-syntax-dynamic-import'
                     ].map(require.resolve),
                 }
             },
@@ -153,7 +157,7 @@ module.exports = {
             },
         }),
         new SourceMapDevToolPlugin({
-            filename: "[file].map",
+            filename: '[file].map',
             exclude: ["vendor.js"]
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
