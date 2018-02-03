@@ -487,7 +487,7 @@ module.exports = React.createClass({
                 schema: this.state.route.parameters.schema,
             };
         }
-        var database = new Database(evt.target, context);
+        var database = new Database(evt.target, context, this.state.online);
         this.setState({ database });
     },
 
@@ -613,7 +613,7 @@ module.exports = React.createClass({
         var database = this.state.database;
         var address = route.parameters.address;
         if (address != database.context.address) {
-            database = new Database(dataSource, { address })
+            database = new Database(dataSource, { address }, this.state.online);
         }
 
         // clear recent searches when we switch to a different project
@@ -891,10 +891,16 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleConnectivityChange: function(evt) {
-        this.setState({
+        var nextState = {
             online: evt.online,
             networkType: evt.type,
-        });
+        };
+        var database = this.state.database;
+        if (database) {
+            // change the online flag of database
+            nextState.database = new Database(database.remoteDataSource, database.context, evt.online);
+        }
+        this.setState(nextState);
     },
 
     /**

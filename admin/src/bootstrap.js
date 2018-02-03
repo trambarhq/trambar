@@ -14,7 +14,7 @@ function initialize(evt) {
     for (var key in libraries) {
         importFuncs[key] = libraries[key];
     }
-    BootstrapLoader.load(importFuncs, progress).then((modules) => {
+    BootstrapLoader.load(importFuncs).then((modules) => {
         var Application = modules['app'];
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];

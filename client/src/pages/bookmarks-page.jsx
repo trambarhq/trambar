@@ -11,6 +11,8 @@ var Theme = require('theme/theme');
 
 // widgets
 var BookmarkList = require('lists/bookmark-list');
+var LoadingAnimation = require('widgets/loading-animation');
+var EmptyMessage = require('widgets/empty-message');
 
 require('./bookmarks-page.scss');
 
@@ -161,6 +163,7 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="bookmarks-page">
                 {this.renderList()}
+                {this.renderEmptyMessage()}
             </div>
         );
     },
@@ -188,6 +191,29 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
             onSelectionClear: this.handleSelectionClear,
         };
         return <BookmarkList {...listProps} />
+    },
+
+    /**
+     * Render a message if there're no bookmarks
+     *
+     * @return {ReactElement|null}
+     */
+    renderEmptyMessage: function() {
+        var bookmarks = this.props.bookmarks;
+        if (!_.isEmpty(bookmarks)) {
+            return null;
+        }
+        if (!bookmarks) {
+            // props.stories is null when they're being loaded
+            return <LoadingAnimation />;
+        } else {
+            var props = {
+                locale: this.props.locale,
+                online: this.props.database.online,
+                phrase: 'bookmarks-no-bookmarks',
+            };
+            return <EmptyMessage {...props} />;
+        }
     },
 
     /**

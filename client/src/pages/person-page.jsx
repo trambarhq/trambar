@@ -19,6 +19,8 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var StoryList = require('lists/story-list');
 var UserView = require('views/user-view');
+var LoadingAnimation = require('widgets/loading-animation');
+var EmptyMessage = require('widgets/empty-message');
 
 require('./news-page.scss');
 
@@ -331,6 +333,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
             <div className="person-page">
                 {this.renderUserView()}
                 {this.renderList()}
+                {this.renderEmptyMessage()}
             </div>
         );
     },
@@ -377,6 +380,38 @@ var PersonPageSync = module.exports.Sync = React.createClass({
             onSelectionClear: this.handleSelectionClear,
         };
         return <StoryList {...listProps} />
+    },
+
+    /**
+     * Render a message if there're no stories
+     *
+     * @return {ReactElement|null}
+     */
+    renderEmptyMessage: function() {
+        var stories = this.props.stories;
+        if (!_.isEmpty(stories)) {
+            return null;
+        }
+        if (!stories) {
+            // props.stories is null when they're being loaded
+            return <LoadingAnimation />;
+        } else {
+            var params = this.props.route.parameters;
+            var phrase;
+            if (params.date) {
+                phrase = 'person-no-stories-on-date';
+            } else if (params.search) {
+                phrase = 'person-no-stories-found';
+            } else {
+                phrase = 'person-no-stories-yet';
+            }
+            var props = {
+                locale: this.props.locale,
+                online: this.props.database.online,
+                phrase,
+            };
+            return <EmptyMessage {...props} />;
+        }
     },
 
     /**

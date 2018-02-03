@@ -221,7 +221,7 @@ module.exports = React.createClass({
                 }
             })
         }
-        if (prevState.localeCode !== this.state.localeCode) {
+        if (prevState.localeCode !== this.state.localeCode && this.props.database) {
             var db = this.props.database.use({ by: this, schema: 'local' });
             db.start().then(() => {
                 var settings = {

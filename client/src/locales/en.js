@@ -67,6 +67,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Recommendations',
 
+        'bookmarks-no-bookmarks': 'No bookmarks',
+
         'bottom-nav-bookmarks': 'Bookmarks',
         'bottom-nav-news': 'News',
         'bottom-nav-notifications': 'Notifications',
@@ -78,6 +80,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Show diagnostics',
         'diagnostics-show-panel': 'Display this panel',
+
+        'empty-currently-offline': 'You are currently offline',
 
         'image-editor-upload-in-progress': 'Upload in progress...',
 
@@ -112,6 +116,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server address',
         'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
+
+        'news-no-stories-by-role': 'No stories by someone with that role',
+        'news-no-stories-found': 'No matching stories found',
+        'news-no-stories-on-date': 'No stories on that date',
+        'news-no-stories-yet': 'No stories yet',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} invited you to jointly edit a post`;
@@ -183,6 +192,9 @@ module.exports = function(localeCode) {
         'notification-option-vote': 'When someone answers your survey',
         'notification-option-web-session': 'When a web session is active',
 
+        'notifications-no-notifications-on-date': 'No notifications on that date',
+        'notifications-no-notifications-yet': 'No notifications yet',
+
         'option-add-bookmark': 'Add bookmark',
         'option-add-issue': 'Add post to issue tracker',
         'option-bump-story': 'Bump story',
@@ -200,6 +212,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Show attached media',
         'option-show-text-preview': 'Show text preview',
+
+        'people-no-stories-found': 'No matching stories found',
+        'people-no-stories-on-date': 'No activities on that date',
+        'people-no-users-by-role': 'No project member has that role',
+        'people-no-users-yet': 'No project members yet',
+
+        'person-no-stories-found': 'No matching stories found',
+        'person-no-stories-on-date': 'No stories on that date',
+        'person-no-stories-yet': 'No stories yet',
 
         'photo-capture-accept': 'Accept',
         'photo-capture-cancel': 'Cancel',
@@ -326,6 +347,8 @@ module.exports = function(localeCode) {
         'start-error-account-disabled': 'Account is currently disabled',
         'start-error-existing-users-only': 'Only authorized personnel can access this system',
         'start-error-undefined': 'Unexpected error',
+        'start-no-projects': 'No projects',
+        'start-no-servers': 'No OAuth providers',
         'start-projects': 'Projects',
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',

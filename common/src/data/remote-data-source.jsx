@@ -75,6 +75,15 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return true if there's internet connection
+     *
+     * @return {Boolean}
+     */
+    isOnline: function() {
+        return this.props.hasConnection;
+    },
+
+    /**
      * Create a login session and retrieve information about the remote server,
      * including a list of OAuth providers
      *

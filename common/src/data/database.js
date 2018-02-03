@@ -4,9 +4,10 @@ var HTTPError = require('errors/http-error');
 
 module.exports = Database;
 
-function Database(remoteDataSource, context) {
+function Database(remoteDataSource, context, online) {
     this.context = context || {};
     this.remoteDataSource = remoteDataSource;
+    this.online = online;
 }
 
 /**

@@ -12,6 +12,8 @@ var Theme = require('theme/theme');
 
 // widgets
 var UserList = require('lists/user-list');
+var LoadingAnimation = require('widgets/loading-animation');
+var EmptyMessage = require('widgets/empty-message');
 
 require('./people-page.scss')
 
@@ -202,6 +204,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         return (
             <div className="people-page">
                 {this.renderList()}
+                {this.renderEmptyMessage()}
             </div>
         );
     },
@@ -227,5 +230,39 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <UserList {...listProps} />
+    },
+
+    /**
+     * Render a message if there're no bookmarks
+     *
+     * @return {ReactElement|null}
+     */
+    renderEmptyMessage: function() {
+        var users = this.props.users;
+        if (!_.isEmpty(users)) {
+            return null;
+        }
+        if (!users) {
+            // props.users is null when they're being loaded
+            return <LoadingAnimation />;
+        } else {
+            var params = this.props.route.parameters;
+            var phrase;
+            if (params.date) {
+                phrase = 'people-no-stories-on-date';
+            } else if (!_.isEmpty(params.roles)) {
+                phrase = 'people-no-users-by-role';
+            } else if (params.search) {
+                phrase = 'people-no-stories-found';
+            } else {
+                phrase = 'people-no-users-yet';
+            }
+            var props = {
+                locale: this.props.locale,
+                online: this.props.database.online,
+                phrase: 'people-no-users-yet',
+            };
+            return <EmptyMessage {...props} />;
+        }
     },
 });

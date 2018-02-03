@@ -18,6 +18,8 @@ var ProfileImage = require('widgets/profile-image');
 var MembershipRequestDialogBox = require('dialogs/membership-request-dialog-box');
 var QRScannerDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/qr-scanner-dialog-box') : null;
 var ActivationDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/activation-dialog-box') : null;
+var LoadingAnimation = require('widgets/loading-animation');
+var EmptyMessage = require('widgets/empty-message');
 
 require('./start-page.scss');
 
@@ -459,6 +461,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
                         <div className={className}>
                             {this.renderTitle()}
                             {this.renderProjectButtons()}
+                            {this.renderEmptyMessage()}
                             {this.renderActivationControls()}
                         </div>
                     );
@@ -467,6 +470,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
                         <div className={className}>
                             {this.renderTitle()}
                             {this.renderProjectButtons()}
+                            {this.renderEmptyMessage()}
                             {this.renderActivationSelector()}
                         </div>
                     );
@@ -666,6 +670,43 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Render a message if there're no stories
+     *
+     * @return {ReactElement|null}
+     */
+    renderEmptyMessage: function() {
+        if (!this.props.canAccessServer) {
+            var servers = this.props.servers;
+            if (!_.isEmpty(servers)) {
+                return null;
+            }
+            if (servers) {
+                var props = {
+                    locale: this.props.locale,
+                    online: this.props.database.online,
+                    phrase: 'start-no-servers',
+                };
+                return <EmptyMessage {...props} />;
+            }
+        } else {
+            var projects = this.props.projects;
+            if (!_.isEmpty(projects)) {
+                return null;
+            }
+            if (!projects) {
+                return <LoadingAnimation />;
+            } else {
+                var props = {
+                    locale: this.props.locale,
+                    online: this.props.database.online,
+                    phrase: 'start-no-projects',
+                };
+                return <EmptyMessage {...props} />;
+            }
+        }
+    },
+
+    /**
      * Render OAuth buttons
      *
      * @return {ReactElement|null}
@@ -681,6 +722,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             <div className="section buttons">
                 <h2>{t('start-social-login')}</h2>
                 <Scrollable>
+                    {this.renderEmptyMessage()}
                     <p>{_.map(servers, this.renderOAuthButton)}</p>
                 </Scrollable>
             </div>
@@ -741,14 +783,12 @@ var StartPageSync = module.exports.Sync = React.createClass({
     renderProjectButtons: function() {
         var t = this.props.locale.translate;
         var projects = sortProject(this.props.projects, this.props.locale);
-        if (!projects) {
-            return null;
-        }
         if (process.env.PLATFORM == 'browser') {
             return (
                 <div className="section buttons">
                     <h2>{t('start-projects')}</h2>
                     <Scrollable>
+                        {this.renderEmptyMessage()}
                         {_.map(projects, this.renderProjectButton)}
                     </Scrollable>
                 </div>
@@ -757,6 +797,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (process.env.PLATFORM === 'cordova') {
             return (
                 <div className="projects">
+                    {this.renderEmptyMessage()}
                     {_.map(projects, this.renderProjectButton)}
                 </div>
             );

@@ -10,6 +10,8 @@ var Theme = require('theme/theme');
 
 // widgets
 var NotificationList = require('lists/notification-list');
+var LoadingAnimation = require('widgets/loading-animation');
+var EmptyMessage = require('widgets/empty-message');
 
 require('./notifications-page.scss');
 
@@ -160,6 +162,7 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="notifications-page">
                 {this.renderList()}
+                {this.renderEmptyMessage()}
             </div>
         );
     },
@@ -181,6 +184,36 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
             onSelectionClear: this.handleSelectionClear,
         };
         return <NotificationList {...listProps} />;
+    },
+
+    /**
+     * Render a message if there're no notifications
+     *
+     * @return {ReactElement|null}
+     */
+    renderEmptyMessage: function() {
+        var notifications = this.props.notifications;
+        if (!_.isEmpty(notifications)) {
+            return null;
+        }
+        if (!notifications) {
+            // props.notifications is null when they're being loaded
+            return <LoadingAnimation />;
+        } else {
+            var params = this.props.route.parameters;
+            var phrase;
+            if (params.date) {
+                phrase = 'notifications-no-notifications-on-date';
+            } else {
+                phrase = 'notifications-no-notifications-yet';
+            }
+            var props = {
+                locale: this.props.locale,
+                online: this.props.database.online,
+                phrase,
+            };
+            return <EmptyMessage {...props} />;
+        }
     },
 
     /**
