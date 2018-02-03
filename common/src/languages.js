@@ -59,7 +59,7 @@ module.exports = [
             us: 'United States',
         },
         defaultCountry: 'us',
-        module: () => import(/* webpackChunkName: "en" */ 'locales/en'),
+        module: () => import('locales/en' /* webpackChunkName: "locale-en" */),
     },
     {
         name: 'Español',
@@ -195,7 +195,7 @@ module.exports = [
             no: 'Norge',
         },
         defaultCountry: 'no',
-        module: () => import(/* webpackChunkName: "nb" */ 'locales/nb'),
+        module: () => import('locales/nb' /* webpackChunkName: "locale-nb" */),
     },
     {
         name: 'Polski',
@@ -208,7 +208,7 @@ module.exports = [
             ua: 'Ukraina',
         },
         defaultCountry: 'pl',
-        module: () => import(/* webpackChunkName: "pl" */ 'locales/pl'),
+        module: () => import('locales/pl' /* webpackChunkName: "locale-pl" */),
     },
     {
         name: 'Português',
@@ -245,7 +245,7 @@ module.exports = [
             es: 'Эстония',
         },
         defaultCountry: 'ru',
-        module: () => import(/* webpackChunkName: "ru" */ 'locales/ru'),
+        module: () => import('locales/ru' /* webpackChunkName: "locale-ru" */),
     },
     {
         name: 'Srpski',
@@ -267,7 +267,7 @@ module.exports = [
             se: 'Ruotsi',
         },
         defaultCountry: 'fi',
-        module: () => import(/* webpackChunkName: "fi" */ 'locales/fi'),
+        module: () => import('locales/fi' /* webpackChunkName: "locale-fi" */),
     },
     {
         name: 'Slovenčina',
@@ -320,6 +320,6 @@ module.exports = [
             tw: '台灣',
         },
         defaultCountry: 'cn',
-        module: () => import(/* webpackChunkName: "zh" */ 'locales/zh'),
+        module: () => import('locales/zh' /* webpackChunkName: "locale-zh" */),
     },
 ];

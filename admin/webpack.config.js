@@ -10,6 +10,7 @@ var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 var event = 'build';
 if (process.env.npm_lifecycle_event) {
@@ -39,9 +40,17 @@ _.each(env, (value, name) => {
     constants[`process.env.${name}`] = JSON.stringify(String(value));
 });
 
+// get list of external libraries
+var code = FS.readFileSync(`${folders.src}/libraries.js`, { encoding: 'utf8'});
+var libraries = [];
+var re = /webpackChunkName:\s*"(.+)"/ig, m;
+while (m = re.exec(code)) {
+    libraries.push(m[1]);
+}
+
 module.exports = {
     context: folders.src,
-    entry: './main',
+    entry: './bootstrap',
     output: {
         path: folders.www,
         filename: '[name].js',
@@ -129,17 +138,21 @@ module.exports = {
             template: `${folders.assets}/index.html`,
             filename: `${folders.www}/index.html`,
         }),
-        new CommonsChunkPlugin({
-            name: 'vendor',
-            minChunks: (module) => {
-                return module.context && module.context.indexOf('node_modules') !== -1;
-            },
+        // pull library code out of app chunk and into their own files
+        ... _.map(libraries, (lib) => {
+            return new CommonsChunkPlugin({
+                async: lib,
+                chunks: [ 'app', lib ],
+            });
         }),
         new SourceMapDevToolPlugin({
             filename: '[file].map',
             exclude: ["vendor.js"]
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
+        new BundleAnalyzerPlugin({
+            analyzerMode: (event === 'build') ? 'static' : 'disabled'
+        }),
     ],
     devServer: {
         inline: true,

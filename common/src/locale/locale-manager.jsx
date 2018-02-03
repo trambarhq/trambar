@@ -214,7 +214,6 @@ module.exports = React.createClass({
                 var criteria = { key: 'language' };
                 return db.findOne({ table: 'settings', criteria });
             }).then((settings) => {
-                console.log(settings);
                 var code = _.get(settings, 'selectedLanguageCode');
                 if (code) {
                     this.change(code);
