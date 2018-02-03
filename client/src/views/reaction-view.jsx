@@ -18,6 +18,7 @@ var UpdateCheck = require('mixins/update-check');
 var ProfileImage = require('widgets/profile-image');
 var MediaView = require('views/media-view');
 var MediaDialogBox = require('dialogs/media-dialog-box');
+var ReactionProgress = require('widgets/reaction-progress');
 var Time = require('widgets/time');
 var ReactionViewOptions = require('views/reaction-view-options');
 
@@ -116,7 +117,7 @@ module.exports = React.createClass({
                 <div className="contents-column">
                     <div className="text">
                         {this.renderOptionButton()}
-                        {this.renderTime()}
+                        {this.renderProgress()}
                         {this.renderText()}
                         {this.renderReferencedMediaDialog()}
                     </div>
@@ -328,12 +329,12 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTime: function() {
+    renderProgress: function() {
         var props = {
-            time: this.props.reaction.ptime,
+            reaction: this.props.reaction,
             locale: this.props.locale,
         };
-        return <Time {...props} />
+        return <ReactionProgress {...props} />;
     },
 
     /**

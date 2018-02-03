@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
-var ReactionTypes = require('objects/types/reaction-types');
+var UserUtils = require('objects/utils/user-utils');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -37,108 +37,25 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return true if current user can perform write action
-     *
-     * @return {Boolean}
-     */
-    canWrite: function() {
-        var access = this.props.access;
-        return (access === 'read-write');
-    },
-
-    /**
-     * Return true if current user can comment
-     *
-     * @return {Boolean}
-     */
-    canComment: function() {
-        var access = this.props.access;
-        return (access === 'read-comment' || access === 'read-write');
-    },
-
-    /**
-     * Return true if reaction can be edited
-     *
-     * @return {Boolean}
-     */
-    canEditReaction: function() {
-        if (!this.canComment()) {
-            return false;
-        }
-        var reaction = this.props.reaction;
-        var user = this.props.currentUser;
-        if (_.includes(ReactionTypes.editable, reaction.type)) {
-            if (reaction.user_id === user.id) {
-                // allow editing for 3 days
-                if (Moment() < Moment(reaction.ptime).add(3, 'day')) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if comment can be edited
-     *
-     * @return {Boolean}
-     */
-    canRemoveReaction: function() {
-        if (!this.canComment()) {
-            return false;
-        }
-        var reaction = this.props.reaction;
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (user.type === 'admin') {
-            return true;
-        }
-        if (reaction.user_id === user.id) {
-            // allow removal for 3 days
-            if (Moment() < Moment(reaction.ptime).add(3, 'day')) {
-                return true;
-            }
-        }
-        if (_.includes(story.user_ids, user.id)) {
-            // allow removal by authors for 7 days
-            if (Moment() < Moment(story.ptime).add(7, 'day')) {
-                return true;
-            }
-        }
-        return false;
-    },
-
-    /**
-     * Return true if comment can be edited
-     *
-     * @return {Boolean}
-     */
-    canHideReaction: function() {
-        if (!this.canWrite()) {
-            return false;
-        }
-        var story = this.props.story;
-        var user = this.props.currentUser;
-        if (user.type !== 'guest') {
-            if (user.type === 'admin') {
-                return true;
-            }
-            if (_.includes(story.user_ids, user.id)) {
-                return true;
-            }
-        }
-        return false;
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render: function() {
-        var active = this.canEditReaction()
-                  || this.canRemoveReaction()
-                  || this.canHideReaction();
+        var access = this.props.access;
+        var user = this.props.currentUser;
+        var story = this.props.story;
+        var reaction = this.props.reaction;
+        var active = false;
+        if (UserUtils.canHideReaction(user, story, reaction, access)) {
+            active = true;
+        }
+        if (UserUtils.canEditReaction(user, story, reaction, access)) {
+            active = true;
+        }
+        if (UserUtils.canRemoveReaction(user, story, reaction, access)) {
+            active = true;
+        }
         var props = {
             className: 'reaction-view-options',
             disabled: !active,
@@ -169,21 +86,25 @@ module.exports = React.createClass({
         }
         var t = this.props.locale.translate;
         var options = this.props.options;
+        var access = this.props.access;
+        var user = this.props.currentUser;
+        var story = this.props.story;
+        var reaction = this.props.reaction;
         var hideProps = {
             label: t('option-hide-comment'),
-            hidden: !this.canHideReaction(),
+            hidden: !UserUtils.canHideReaction(user, story, reaction, access),
             selected: options.hideReaction,
             onClick: this.handleHideClick,
         };
         var editProps = {
             label: t('option-edit-comment'),
-            hidden: !this.canEditReaction(),
+            hidden: !UserUtils.canEditReaction(user, story, reaction, access),
             selected: options.editReaction,
             onClick: this.handleEditClick,
         };
         var removeProps = {
             label: t('option-remove-comment'),
-            hidden: !this.canRemoveReaction(),
+            hidden: !UserUtils.canRemoveReaction(user, story, reaction, access),
             selected: options.removeReaction,
             onClick: this.handleRemoveClick,
         };

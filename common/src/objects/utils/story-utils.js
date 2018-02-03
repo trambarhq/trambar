@@ -8,6 +8,8 @@ module.exports = {
     isEditable,
     isTrackable,
     isActuallyPublished,
+    wasPublishedWithin,
+    wasBumpedWithin,
     hasUncomittedChanges,
 };
 
@@ -74,10 +76,56 @@ function isTrackable(story) {
 }
 
 /**
+ * Return true if story is published within the given time
+ *
+ * @param  {Story}  story
+ * @param  {Number}  time
+ * @param  {String}  unit
+ *
+ * @return {Boolean}
+ */
+function wasPublishedWithin(story, time, unit) {
+    if (!story || !story.published) {
+        return false;
+    }
+    var ptime = story.ptime;
+    if (!ptime) {
+        return true;
+    }
+    if (Moment() < Moment(ptime).add(time, unit)) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Return true if story is published within the given time
+ *
+ * @param  {Story}  story
+ * @param  {Number}  time
+ * @param  {String}  unit
+ *
+ * @return {Boolean}
+ */
+function wasBumpedWithin(story, time, unit) {
+    if (!story || !story.published) {
+        return false;
+    }
+    var btime = story.btime || story.ptime;
+    if (!btime) {
+        return true;
+    }
+    if (Moment() < Moment(btime).add(time, unit)) {
+        return true;
+    }
+    return false;
+}
+
+/**
  * Return true if the story has changes that's sitting in the save queue,
  * awaiting delivery to remote server
  *
- * @param  {Story}  story
+ * @param  {Story} story
  *
  * @return {Boolean}
  */

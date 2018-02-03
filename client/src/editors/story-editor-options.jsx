@@ -93,10 +93,9 @@ module.exports = React.createClass({
         var options = this.props.options;
         if (section === 'main') {
             var access = this.props.access;
-            var canWrite = (access === 'read-write');
-            var canComment = (canWrite || access === 'read-write');
             var user = this.props.currentUser;
             var story = this.props.story;
+            var repos = this.props.repos;
             var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
             var otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
             var bookmarkProps = {
@@ -108,20 +107,20 @@ module.exports = React.createClass({
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !UserUtils.canSendBookmarks(user, story),
+                hidden: !UserUtils.canSendBookmarks(user, story, access),
                 selected: !_.isEmpty(otherRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
             var addIssueProps = {
                 label: t('option-add-issue'),
                 selected: !!options.issueDetails,
-                hidden: !UserUtils.canAddIssue(user, story, this.props.repos),
+                hidden: !UserUtils.canAddIssue(user, story, repos, access),
                 onClick: this.handleAddIssueClick,
             };
             var hidePostProps = {
                 label: t('option-hide-story'),
                 selected: options.hidePost,
-                hidden: !UserUtils.canHideStory(user, story),
+                hidden: !UserUtils.canHideStory(user, story, access),
                 onClick: this.handleHidePostClick,
             };
             return (

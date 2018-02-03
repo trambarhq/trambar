@@ -1,0 +1,15 @@
+.reaction-progress {
+    color: #666666;
+    font-size: 0.9em;
+    float: right;
+
+    .time {
+        &.today {
+            color: #aaaaaa;
+        }
+
+        &.yesterday {
+            color: #999999;
+        }
+    }
+}

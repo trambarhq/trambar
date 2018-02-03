@@ -1,8 +1,12 @@
 var _ = require('lodash');
 var Moment = require('moment');
 var StoryUtils = require('objects/utils/story-utils');
+var ReactionUtils = require('objects/utils/reaction-utils');
 
 module.exports = {
+    isAuthor,
+    isRespondent,
+    canModerate,
     canEditStory,
     canHideStory,
     canRemoveStory,
@@ -11,30 +15,54 @@ module.exports = {
     canAccessRepo,
     canCreateBookmark,
     canSendBookmarks,
+    canEditReaction,
+    canHideReaction,
+    canRemoveReaction,
 };
+
+function isAuthor(user, story) {
+    if (!user || !story) {
+        return false;
+    }
+    if (_.includes(story.user_ids, user.id)) {
+        return true;
+    }
+    return false;
+}
+
+function canModerate(user) {
+    if (!user) {
+        return false;
+    }
+    if (user.type === 'admin' || user.type === 'moderator') {
+        return true;
+    }
+    return false;
+}
 
 /**
  * Return true if user can edit a story
  *
  * @param  {User} user
  * @param  {Story} story
+ * @param  {String} access
  *
  * @return {Boolean}
  */
-function canEditStory(user, story) {
-    if (!user) {
+function canEditStory(user, story, access) {
+    if (access !== 'read-write') {
         return false;
     }
     if (StoryUtils.isEditable(story)) {
-        if (user.type === 'admin' || user.type === 'moderator') {
+        if (canModerate(story)) {
             // allow editing for two weeks
-            if (Moment() < Moment(story.ptime).add(14, 'day')) {
+            if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
                 return true;
             }
         }
-        if (_.includes(story.user_ids, user.id)) {
+        if (isAuthor(user, story)) {
             // allow editing for 3 days
-            if (Moment() < Moment(story.ptime).add(3, 'day')) {
+            if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
                 return true;
             }
         }
@@ -47,18 +75,19 @@ function canEditStory(user, story) {
  *
  * @param  {User} user
  * @param  {Story} story
+ * @param  {String} access
  *
  * @return {Boolean}
  */
-function canHideStory(user, story) {
-    if (!user || !story) {
+function canHideStory(user, story, access) {
+    if (access !== 'read-write') {
         return false;
     }
-    if (user.type === 'admin' || user.type === 'moderator') {
+    if (canModerate(user)) {
         return true;
-    } else if (user.type === 'regular') {
-        // regular user can only hide his own stories
-        if (_.includes(story.user_ids, user.id)) {
+    } else if (isAuthor(user, story)) {
+        // guest cannot post private stories
+        if (user.type !== 'guest') {
             return true;
         }
     }
@@ -70,21 +99,24 @@ function canHideStory(user, story) {
  *
  * @param  {User} user
  * @param  {Story} story
+ * @param  {String} access
  *
  * @return {Boolean}
  */
-function canRemoveStory(user, story) {
-    if (!user || !story) {
+function canRemoveStory(user, story, access) {
+    if (access !== 'read-write') {
         return false;
     }
-    if (_.includes(story.user_ids, user.id)) {
-        // allow removal for 3 days
-        if (Moment() < Moment(story.ptime).add(3, 'day')) {
+    if (canModerate(user)) {
+        // allow removal for ttwo weeks
+        if (StoryUtils.wasPublishedWithin(story, 14, 'day')) {
             return true;
         }
-    }
-    if (user.type === 'admin') {
-        return true;
+    } else if (isAuthor(user, story)) {
+        // allow removal for 3 days
+        if (StoryUtils.wasPublishedWithin(story, 3, 'day')) {
+            return true;
+        }
     }
     return false;
 }
@@ -94,19 +126,17 @@ function canRemoveStory(user, story) {
  *
  * @param  {User} user
  * @param  {Story} story
+ * @param  {String} access
  *
  * @return {Boolean}
  */
-function canBumpStory(user, story) {
-    if (!user) {
+function canBumpStory(user, story, access) {
+    if (access !== 'read-write') {
         return false;
     }
-    if (!StoryUtils.isSaved(story)) {
-        return false;
-    }
-    if (_.includes(story.user_ids, user.id) || user.type === 'admin') {
+    if (canModerate(user) || isAuthor(user, story)) {
         // allow bumping after a day
-        if (Moment() > Moment(story.btime || story.ptime).add(1, 'day')) {
+        if (!StoryUtils.wasBumpedWithin(story, 1, 'day')) {
             return true;
         }
     }
@@ -119,15 +149,20 @@ function canBumpStory(user, story) {
  * @param  {User} user
  * @param  {Story} story
  * @param  {Array<Repo>} repos
+ * @param  {String} access
  *
  * @return {Boolean}
  */
-function canAddIssue(user, story, repos) {
+function canAddIssue(user, story, repos, access) {
     if (!user) {
         return false;
     }
+    if (access !== 'read-write') {
+        return false;
+    }
     if (StoryUtils.isTrackable(story)) {
-        if (user.type === 'admin' || user.type === 'moderator' || _.includes(story.user_ids, user.id)) {
+        if (canModerate(user) || isAuthor(user, story)) {
+            // see if user is a member of one of the repos
             return _.some(repos, (repo) => {
                 if (_.includes(repo.user_ids, user.id)) {
                     if (repo.details.issues_enabled) {
@@ -148,7 +183,7 @@ function canAddIssue(user, story, repos) {
  *
  * @return {Boolean}
  */
-function canAccessRepo(user,repo) {
+function canAccessRepo(user, repo) {
     if (!user || !repo) {
         return false;
     }
@@ -160,14 +195,143 @@ function canAccessRepo(user,repo) {
     return false;
 }
 
-function canCreateBookmark(user, story) {
+/**
+ * Return true if user can create a bookmark (for himself)
+ *
+ * @param  {User} user
+ * @param  {Story} story
+ * @param  {String} access
+ *
+ * @return {Boolean}
+ */
+function canCreateBookmark(user, story, access) {
     if (!user) {
+        return false;
+    }
+    if (access !== 'read-write') {
         return false;
     }
     return true;
 }
 
-function canSendBookmarks(user, story) {
-    // TODO
+/**
+ * Return true if user can send bookmarks to others
+ *
+ * @param  {User} user
+ * @param  {Story} story
+ * @param  {String} access
+ *
+ * @return {Boolean}
+ */
+function canSendBookmarks(user, story, access) {
+    if (user.type === 'guest') {
+        return false;
+    }
     return canCreateBookmark(user, story);
+}
+
+/**
+ * Return true if user is author of reaction
+ *
+ * @param  {User} user
+ * @param  {Reaction} reaction
+ *
+ * @return {Boolean}
+ */
+function isRespondent(user, reaction) {
+    if (!user || !reaction) {
+        return false;
+    }
+    if (reaction.user_id === user.id) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Return true if user can edit a reaction
+ *
+ * @param  {User} user
+ * @param  {Story} story
+ * @param  {Reaction} reaction
+ * @param  {String} access
+ *
+ * @return {Boolean}
+ */
+function canEditReaction(user, story, reaction, access) {
+    if (!user) {
+        return false;
+    }
+    if (ReactionUtils.isEditable(reaction)) {
+        if (isRespondent(user, reaction)) {
+            if (access === 'read-write' || access === 'read-comment') {
+                // allow editing for 3 days
+                if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Return true if user can remove a reaction
+ *
+ * @param  {User} user
+ * @param  {Story} story
+ * @param  {Reaction} reaction
+ * @param  {String} access
+ *
+ * @return {Boolean}
+ */
+function canRemoveReaction(user, story, reaction, access) {
+    if (canModerate(user)) {
+        if (access === 'read-write') {
+            return true;
+        }
+    }
+    if (isRespondent(user, reaction)) {
+        if (access === 'read-write' || access === 'read-comment') {
+            // allow hide for 3 days
+            if (ReactionUtils.wasPublishedWithin(reaction, 3, 'day')) {
+                return true;
+            }
+        }
+    }
+    if (isAuthor(user, story)) {
+        if (access === 'read-write') {
+            // allow hidding by authors for 7 days
+            if (ReactionUtils.wasPublishedWithin(reaction, 7, 'day')) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Return true if user can hide a reaction
+ *
+ * @param  {User} user
+ * @param  {Story} story
+ * @param  {Reaction} reaction
+ * @param  {String} access
+ *
+ * @return {Boolean}
+ */
+function canHideReaction(user, story, reaction, access) {
+    if (canModerate(user)) {
+        if (access === 'read-write') {
+            return true;
+        }
+    }
+    if (isAuthor(user, story)) {
+        if (user.type !== 'guest') {
+            if (access === 'read-write') {
+                return true;
+            }
+        }
+    }
+    return false;
 }

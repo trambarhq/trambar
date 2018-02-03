@@ -260,6 +260,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} likes this`;
         },
+        'reaction-status-storage-pending': 'Pending',
+        'reaction-status-transcoding': 'Transcoding',
+        'reaction-status-uploading': 'Uploading',
 
         'role-filter-no-roles': 'No roles defined',
 

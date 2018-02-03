@@ -83,10 +83,9 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var options = this.props.options;
         var access = this.props.access;
-        var canWrite = (access === 'read-write');
-        var canComment = (canWrite || access === 'read-write');
         var user = this.props.currentUser;
         var story = this.props.story;
+        var repos = this.props.repos;
         if (section === 'main') {
             var bookmarkProps;
             if (options.keepBookmark === undefined) {
@@ -94,7 +93,7 @@ module.exports = React.createClass({
                 bookmarkProps = {
                     label: t('option-add-bookmark'),
                     selected: bookmarking,
-                    hidden: !UserUtils.canCreateBookmark(user, story),
+                    hidden: !UserUtils.canCreateBookmark(user, story, access),
                     onClick: this.handleAddBookmarkClick,
                 };
             } else {
@@ -110,37 +109,37 @@ module.exports = React.createClass({
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !(canWrite && UserUtils.canSendBookmarks(user, story)),
+                hidden: !UserUtils.canSendBookmarks(user, story, access),
                 selected: !_.isEmpty(otherRecipients) || this.state.selectingRecipients,
                 onClick: this.handleSendBookmarkClick,
             };
             var addIssueProps = {
                 label: t('option-add-issue'),
-                hidden: !(canWrite && UserUtils.canAddIssue(user, story, this.props.repos)),
+                hidden: !UserUtils.canAddIssue(user, story, repos, access),
                 selected: !!options.issueDetails || this.state.enteringIssueDetails,
                 onClick: this.handleAddIssueClick,
             };
             var hideProps = {
                 label: t('option-hide-story'),
-                hidden: !(canWrite && UserUtils.canHideStory(user, story)),
+                hidden: !UserUtils.canHideStory(user, story, access),
                 selected: options.hideStory,
                 onClick: this.handleHideClick,
             };
             var editProps = {
                 label: t('option-edit-post'),
-                hidden: !(canWrite && UserUtils.canEditStory(user, story)),
+                hidden: !UserUtils.canEditStory(user, story, access),
                 selected: options.editStory,
                 onClick: this.handleEditClick,
             };
             var removeProps = {
                 label: t('option-remove-story'),
-                hidden: !(canWrite && UserUtils.canRemoveStory(user, story)),
+                hidden: !UserUtils.canRemoveStory(user, story, access),
                 selected: options.removeStory,
                 onClick: this.handleRemoveClick,
             };
             var bumpProps = {
                 label: t('option-bump-story'),
-                hidden: !(canWrite && UserUtils.canBumpStory(user, story)),
+                hidden: !UserUtils.canBumpStory(user, story, access),
                 selected: options.bumpStory,
                 onClick: this.handleBumpClick,
             };
