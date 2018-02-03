@@ -23,9 +23,25 @@ function initialize(evt) {
         throw new Error('Unable to find app element in DOM');
     }
 
-    var progress = (loaded, total, name) => {
-        console.log(`Loaded ${name} (${loaded}/${total})`);
-    };
+    var progress;
+    if (process.env.PLATFORM === 'browser') {
+        var progressBar = document.getElementById('bootstrap-progress-bar');
+        var progressBarFilled = document.getElementById('bootstrap-progress-bar-filled');
+        var finished = false;
+        setTimeout(() => {
+            // don't show progress bar when loading finishes quickly
+            if (!finished) {
+                progressBar.className = 'show';
+            }
+        }, 500);
+        progress = (loaded, total) => {
+            if (loaded === total) {
+                progressBar.className = '';
+                finished = true;
+            }
+            progressBarFilled.style.width = Math.round(loaded / total * 100) + '%';
+        };
+    }
 
     // load application code and support libraries
     var BootstrapLoader = require('utils/bootstrap-loader');

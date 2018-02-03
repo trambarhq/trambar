@@ -56,6 +56,28 @@
     margin: auto;
 }
 
+#bootstrap-progress-bar {
+    position: absolute;
+    right: 0.5em;
+    bottom: 0.5em;
+    width: 10%;
+    min-width: 75px;
+    max-width: 150px;
+    border: 1px solid black;
+    transition: opacity 1s;
+    opacity: 0;
+}
+
+#bootstrap-progress-bar.show {
+    opacity: 1;
+}
+
+#bootstrap-progress-bar-filled {
+    width: 0;
+    height: 0.5em;
+    background-color: #000000;
+}
+
 </style>
 <div id="splash-screen">
     <div class="bottom">
@@ -122,4 +144,7 @@
           </g>
       </g>
     </svg>
+    <div id="bootstrap-progress-bar">
+        <div id="bootstrap-progress-bar-filled"></div>
+    </div>
 </div>
