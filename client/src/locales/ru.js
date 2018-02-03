@@ -95,6 +95,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Рекомендации',
 
+        'bookmarks-no-bookmarks': 'Без закладок',
+
         'bottom-nav-bookmarks': 'Закладки',
         'bottom-nav-news': 'Новости',
         'bottom-nav-notifications': 'Уведомления',
@@ -106,6 +108,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Показать диагностику',
         'diagnostics-show-panel': 'Показать эту панель',
+
+        'empty-currently-offline': 'Вы не подключены к Интернету',
 
         'image-editor-upload-in-progress': 'Загрузка выполняется...',
 
@@ -140,6 +144,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Адрес сервера',
         'mobile-setup-close': 'Закрыть',
         'mobile-setup-code': 'Код авторизации',
+
+        'news-no-stories-by-role': 'Никаких рассказов кем-то с этой ролью',
+        'news-no-stories-found': 'Не найдено совпадающих рассказов',
+        'news-no-stories-on-date': 'Нет рассказов этой даты',
+        'news-no-stories-yet': 'Нет рассказов',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             var e = pastTenseEnding(name);
@@ -217,6 +226,9 @@ module.exports = function(localeCode) {
         'notification-option-vote': 'Когда кто-то отвечает на ваш опрос',
         'notification-option-web-session': 'Когда вы просматриваете этот сайт с помощью веб-браузера',
 
+        'notifications-no-notifications-on-date': 'Нет уведомлений на эту дату',
+        'notifications-no-notifications-yet': 'Пока нет уведомлений',
+
         'option-add-bookmark': 'Добавить закладку',
         'option-add-issue': 'Добавить сообщение в баг трекер',
         'option-bump-story': 'Продвинуть рассказ',
@@ -238,6 +250,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Показать прикрепленные носители',
         'option-show-text-preview': 'Показать предварительный просмотр текста',
+
+        'people-no-stories-found': 'Не найдено совпадающих рассказов',
+        'people-no-stories-on-date': 'Никаких действий на эту дату',
+        'people-no-users-by-role': 'Ни один из участников проекта не имеет такой роли',
+        'people-no-users-yet': 'Пока нет участников проекта',
+
+        'person-no-stories-found': 'Не найдено совпадающих рассказов',
+        'person-no-stories-on-date': 'Нет рассказов этой даты',
+        'person-no-stories-yet': 'Нет рассказов',
 
         'photo-capture-accept': 'Прими',
         'photo-capture-cancel': 'Отмена',
@@ -308,6 +329,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} любит это`;
         },
+        'reaction-status-storage-pending': 'в ожидании',
+        'reaction-status-transcoding': 'Tранскодирование',
+        'reaction-status-uploading': 'Загрузка',
 
         'role-filter-no-roles': 'Роли не определены',
 
@@ -371,6 +395,8 @@ module.exports = function(localeCode) {
         'start-error-account-disabled': 'В настоящее время отключена учетная запись',
         'start-error-existing-users-only': 'Доступ к этой системе может получить только уполномоченный персонал',
         'start-error-undefined': 'Неожиданная ошибка',
+        'start-no-projects': 'Нет проектов',
+        'start-no-servers': 'Нет поставщиков OAuth',
         'start-projects': 'Проекты',
         'start-social-login': 'Социальный вход',
         'start-system-title-default': 'Трамбар',
@@ -578,6 +604,7 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Удалите себя',
         'story-remove-yourself-are-you-sure': 'Вы действительно хотите удалить себя как соавтор?',
+        'story-status-storage-pending': 'в ожидании',
         'story-status-transcoding-$progress': (progress) => {
             return `Tранскодирование (${progress}%)`;
         },

@@ -63,6 +63,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Anbefalinger',
 
+        'bookmarks-no-bookmarks': 'Ingen bokmerker',
+
         'bottom-nav-bookmarks': 'Bokmerker',
         'bottom-nav-news': 'Nyheter',
         'bottom-nav-notifications': 'Varslinger',
@@ -74,6 +76,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Vis diagnostikk',
         'diagnostics-show-panel': 'Vis dette panelet',
+
+        'empty-currently-offline': 'Du er frakoblet',
 
         'image-editor-upload-in-progress': 'Opplasting pågår...',
 
@@ -108,6 +112,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server adresse',
         'mobile-setup-close': 'Lukk',
         'mobile-setup-code': 'Autorisasjonskode',
+
+        'news-no-stories-by-role': 'Ingen historier av noen med den rollen',
+        'news-no-stories-found': 'Ingen matchende historier funnet',
+        'news-no-stories-on-date': 'Ingen historier på den datoen',
+        'news-no-stories-yet': 'Ingen historier ennå',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} inviterte deg til å redigere et innlegg`;
@@ -179,6 +188,9 @@ module.exports = function(localeCode) {
         'notification-option-vote': 'Når noen svarer på undersøkelsen din',
         'notification-option-web-session': 'Når en web økt er aktiv',
 
+        'notifications-no-notifications-on-date': 'Ingen varsler på den datoen',
+        'notifications-no-notifications-yet': 'Ingen varsler ennå',
+
         'option-add-bookmark': 'Legg til bokmerke',
         'option-add-issue': 'Legg til innlegg til feilrapporteringssystemet',
         'option-bump-story': 'Støt opp denne historien',
@@ -197,6 +209,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Vis vedlagte medier',
         'option-show-text-preview': 'Vis tekstforhåndsvisning',
+
+        'people-no-stories-found': 'Ingen matchende historier funnet',
+        'people-no-stories-on-date': 'Ingen aktiviteter på den datoen',
+        'people-no-users-by-role': 'Ingen prosjektmedlem har den rollen',
+        'people-no-users-yet': 'Ingen prosjektmedlemmer ennå',
+
+        'person-no-stories-found': 'Ingen matchende historier funnet',
+        'person-no-stories-on-date': 'Ingen historier på den datoen',
+        'person-no-stories-yet': 'Ingen historier ennå',
 
         'photo-capture-accept': 'Aksepter',
         'photo-capture-cancel': 'Avbryt',
@@ -257,6 +278,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} liker dette`;
         },
+        'reaction-status-storage-pending': 'I påvente av',
+        'reaction-status-transcoding': 'Transkoding',
+        'reaction-status-uploading': 'Opplasting',
 
         'role-filter-no-roles': 'Ingen roller definert',
 
@@ -320,6 +344,8 @@ module.exports = function(localeCode) {
         'start-error-account-disabled': 'Kontoen er for øyeblikket deaktivert',
         'start-error-existing-users-only': 'Kun autorisert personell kan få tilgang til dette systemet',
         'start-error-undefined': 'Uventet feil',
+        'start-no-projects': 'Ingen prosjekter',
+        'start-no-servers': 'Ingen OAuth-leverandører',
         'start-projects': 'Prosjekter',
         'start-social-login': 'Sosial pålogging',
         'start-system-title-default': 'Trambar',
@@ -453,11 +479,12 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Fjern deg selv',
         'story-remove-yourself-are-you-sure': 'Er du sikker på at du vil fjerne deg selv som medforfatter?',
+        'story-status-storage-pending': 'I påvente av',
         'story-status-transcoding-$progress': (progress) => {
-            return `transkoding (${progress}%)`;
+            return `Transkoding (${progress}%)`;
         },
         'story-status-uploading-$progress': (progress) => {
-            return `opplasting (${progress}%)`;
+            return `Opplasting (${progress}%)`;
         },
         'story-survey': 'Undersøkelse',
         'story-task-list': 'Oppgaveliste',
