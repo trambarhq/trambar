@@ -236,6 +236,7 @@ module.exports = _.create(ExternalData, {
                 object.ptime = row.ptime;
                 object.public = row.public;
                 object.published = row.published;
+                object.tags = row.tags;
                 if (row.ready === false) {
                     object.ready = false;
                 }

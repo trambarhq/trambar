@@ -242,6 +242,7 @@ module.exports = _.create(ExternalData, {
                 object.ptime = row.ptime;
                 object.public = row.public;
                 object.published = row.published;
+                object.tags = row.tags;
                 if (row.published_version_id) {
                     object.published_version_id = row.published_version_id;
                 }
