@@ -7,6 +7,14 @@ module.exports = StoryEmblem;
 require('./story-emblem.scss');
 
 function StoryEmblem(props) {
+    if (_.includes(props.story.tags, '#yippeekiyay')) {
+        return (
+            <div className="story-emblem die-hard">
+                <img src={require('explosion.gif')} />
+            </div>
+        );
+    }
+
     var type = props.story.type;
     var className = 'story-emblem';
     if (_.includes(StoryTypes.git, type)) {

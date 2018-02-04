@@ -7,4 +7,17 @@
         margin-top: 0.2em;
         height: 3em;
     }
+
+    &.die-hard {
+        position: relative;
+
+        IMG {
+            position: absolute;
+            top: 0;
+            right: 0;
+
+            width: 70px;
+            height: auto;
+        }
+    }
 }

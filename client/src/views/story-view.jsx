@@ -356,7 +356,7 @@ module.exports = React.createClass({
     /**
      * Render emblem
      *
-     * @return {[type]}
+     * @return {ReactElement}
      */
     renderEmblem: function() {
         var props = {
