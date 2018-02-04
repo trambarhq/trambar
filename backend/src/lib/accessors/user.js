@@ -357,9 +357,11 @@ module.exports = _.create(ExternalData, {
      * @return {Promise}
      */
      associate: function(db, schema, objects, originals, rows, credentials) {
-         return this.updateMemberList(db, schema, objects, originals, rows).then(() => {
-             return this.updateStoryRoles(db, schema, originals, rows);
-         });
+         return Promise.all([
+             this.updateMemberList(db, schema, objects, originals, rows),
+             this.updateStoryRoles(db, schema, originals, rows),
+             this.updateContentDeletion(db, schema, originals, rows),
+         ]);
      },
 
     /**
@@ -436,5 +438,45 @@ module.exports = _.create(ExternalData, {
             var Story = require('accessors/story');
             return Story.updateUserRoles(db, project.name, userIds);
         });
+    },
+
+    /**
+     * Update deleted flag of stories when user is deleted or undeleted
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} usersBefore
+     * @param  {Array<Object>} usersAfter
+     *
+     * @return {Promise}
+     */
+    updateContentDeletion: function(db, schema, usersBefore, usersAfter) {
+        var deletedUserIds = [];
+        var undeletedUserIds = [];
+        _.each(usersBefore, (userBefore, index) => {
+            if (userBefore) {
+                var userAfter = usersAfter[index];
+                if (!userBefore.deleted && userAfter.deleted) {
+                    deletedUserIds.push(userAfter.id);
+                } else if (userBefore.deleted && !userAfter.deleted) {
+                    undeletedUserIds.push(userAfter.id);
+                }
+            }
+        });
+        if (!_.isEmpty(deletedUserIds) || !_.isEmpty(undeletedUserIds)) {
+            var Project = require('accessors/project');
+            var Story = require('accessors/story');
+            var Reaction = require('accessors/reaction');
+            var criteriaP = { deleted: false };
+            return Project.find(db, schema, criteriaP, 'name').each((project) => {
+                var contentSchema = project.name;
+                return Promise.all([
+                    Story.deleteAssociated(db, contentSchema, deletedUserIds),
+                    Story.restoreAssociated(db, contentSchema, undeletedUserIds),
+                    Reaction.deleteAssociated(db, contentSchema, deletedUserIds),
+                    Reaction.restoreAssociated(db, contentSchema, undeletedUserIds),
+                ]);
+            });
+        }
     },
 });

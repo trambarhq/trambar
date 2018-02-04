@@ -308,4 +308,46 @@ module.exports = _.create(ExternalData, {
             }
         }
     },
+
+    /**
+     * Mark reactions as deleted if their lead authors are those specified
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Number>} userIds
+     *
+     * @return {Promise}
+     */
+    deleteAssociated: function(db, schema, userIds) {
+        if (_.isEmpty(userIds)) {
+            return Promise.resolve();
+        }
+        var criteria = {
+            user_id: userIds,
+            deleted: false,
+        };
+        return this.updateMatching(db, schema, criteria, { deleted: true });
+    },
+
+    /**
+     * Clear deleted flag of reactions beloging to specified users
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Number>} userIds
+     *
+     * @return {Promise}
+     */
+    restoreAssociated: function(db, schema, userIds) {
+        if (_.isEmpty(userIds)) {
+            return Promise.resolve();
+        }
+        var criteria = {
+            user_id: userIds,
+            deleted: true,
+            // don't restore reactions that were manually deleted
+            suppressed: false,
+        };
+        return this.updateMatching(db, schema, criteria, { deleted: false });
+    },
 });

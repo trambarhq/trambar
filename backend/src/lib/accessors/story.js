@@ -43,6 +43,7 @@ module.exports = _.create(ExternalData, {
         public: Boolean,
 
         server_id: Number,
+        lead_author_id: Number,
         external_object: Object,
         exclude: Array(Number),
         time_range: String,
@@ -149,6 +150,7 @@ module.exports = _.create(ExternalData, {
      */
     apply: function(db, schema, criteria, query) {
         var special = [
+            'lead_author_id',
             'time_range',
             'newer_than',
             'older_than',
@@ -162,6 +164,13 @@ module.exports = _.create(ExternalData, {
 
         var params = query.parameters;
         var conds = query.conditions;
+        if (criteria.lead_author_id !== undefined) {
+            if (criteria.lead_author_id instanceof Array) {
+                conds.push(`user_ids[1:1] <@ $${params.push(criteria.lead_author_id)}`);
+            } else {
+                conds.push(`user_ids[1] = $${params.push(criteria.lead_author_id)}`);
+            }
+        }
         if (criteria.time_range !== undefined) {
             conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
@@ -452,5 +461,47 @@ module.exports = _.create(ExternalData, {
             AND id = story_role_ids.story_id
         `;
         return db.execute(sql, [ userIds ]);
+    },
+
+    /**
+     * Mark stories as deleted if their lead authors are those specified
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Number>} userIds
+     *
+     * @return {Promise}
+     */
+    deleteAssociated: function(db, schema, userIds) {
+        if (_.isEmpty(userIds)) {
+            return Promise.resolve();
+        }
+        var criteria = {
+            lead_author_id: userIds,
+            deleted: false,
+        };
+        return this.updateMatching(db, schema, criteria, { deleted: true });
+    },
+
+    /**
+     * Clear deleted flag of stories beloging to specified users
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Number>} userIds
+     *
+     * @return {Promise}
+     */
+    restoreAssociated: function(db, schema, userIds) {
+        if (_.isEmpty(userIds)) {
+            return Promise.resolve();
+        }
+        var criteria = {
+            lead_author_id: userIds,
+            deleted: true,
+            // don't restore stories that were manually deleted
+            suppressed: false,
+        };
+        return this.updateMatching(db, schema, criteria, { deleted: false });
     },
 });
