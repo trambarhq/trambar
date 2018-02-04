@@ -685,10 +685,10 @@ module.exports = {
             if (row.deleted) {
                 object.deleted = row.deleted;
             }
-            if (options.include_ctime) {
+            if (options.includeCreationTime) {
                 object.ctime = row.ctime;
             }
-            if (options.include_mtime) {
+            if (options.includeModificationTime) {
                 object.mtime = row.mtime;
             }
             return object;

@@ -223,8 +223,9 @@ function handleRetrieval(req, res) {
             }
 
             var options = {
-                include_ctime: params.include_ctime,
-                include_mtime: params.include_mtime,
+                includeCreationTime: params.include_ctime,
+                includeModificationTime: params.include_mtime,
+                backgroundRetrieval: params.background,
             };
 
             // look up the rows by id
