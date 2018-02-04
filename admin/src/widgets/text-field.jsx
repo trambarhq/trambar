@@ -11,7 +11,7 @@ require('./text-field.scss');
 module.exports = TextField;
 
 function TextField(props) {
-    var classNames = [ 'text-field'];
+    var classNames = [ 'text-field' ];
     var Input = 'input';
     var inputProps = _.omit(props, 'children', 'locale');
     if (props.type === 'textarea') {

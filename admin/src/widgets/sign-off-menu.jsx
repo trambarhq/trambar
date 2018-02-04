@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 
 var Database = require('data/database');
+var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -16,6 +17,7 @@ module.exports = Relaks.createClass({
     displayName: 'SignOffMenu',
     propTypes: {
         database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
@@ -49,6 +51,8 @@ module.exports = Relaks.createClass({
 
     handleSignOffClick: function() {
         var db = this.props.database.use({ by: this });
-        db.endSession();
+        db.endSession().then(() => {
+            this.props.route.push(require('pages/start-page'));
+        });
     },
 });

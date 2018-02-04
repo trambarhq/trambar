@@ -207,6 +207,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var menuProps = {
             database: this.props.database,
+            route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };

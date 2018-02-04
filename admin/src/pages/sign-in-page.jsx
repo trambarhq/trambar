@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var Moment = require('moment');
 var HTTPRequest = require('transport/http-request');
 
 var Database = require('data/database');
@@ -75,6 +76,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         return {
             username: '',
             password: '',
+            savedCredentials: false,
             submitting: false,
             problem: null,
             errors: {},
@@ -144,13 +146,22 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handlePasswordChange,
         };
+        var buttonDisabled = !valid;
+        if (this.state.savedCredentials) {
+            // don't disable the button, since the browser will immediately
+            // set the password on user action
+            buttonDisabled = false;
+        }
+        if (this.state.submitting) {
+            buttonDisabled = true;
+        }
         return (
             <form onSubmit={this.handleFormSubmit}>
                 {this.renderProblem()}
                 <TextField {...usernameProps}>{t('sign-in-username')}</TextField>
                 <TextField {...passwordProps}>{t('sign-in-password')}</TextField>
                 <div className="button-row">
-                    <PushButton disabled={!valid || this.state.submitting}>
+                    <PushButton disabled={buttonDisabled}>
                         {t('sign-in-submit')}
                     </PushButton>
                 </div>
@@ -200,42 +211,49 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-     renderOAuthButton: function(server, i) {
-         var t = this.props.locale.translate;
-         var p = this.props.locale.pick;
-         var name = p(server.details.title) || t(`server-type-${server.type}`);
-         var icon = getServerIcon(server.type);
-         var url = this.props.database.getOAuthURL(server);
-         var props = {
-             className: 'oauth-button',
-             href: url,
-             onClick: this.handleOAuthButtonClick,
-             'data-type': server.type,
-         };
-         var error = this.state.errors[server.type];
-         if (error) {
-             var t = this.props.locale.translate;
-             var text = t(`sign-in-error-${error.reason}`);
-             props.className += ' error';
-             return (
-                 <a key={i} {...props}>
-                     <span className="icon">
-                         <i className={`fa fa-fw fa-${icon}`}></i>
-                     </span>
-                     <span className="error">{text}</span>
-                 </a>
-             );
-         } else {
-             return (
-                 <a key={i} {...props}>
-                     <span className="icon">
-                         <i className={`fa fa-fw fa-${icon}`}></i>
-                     </span>
-                     <span className="label">{name}</span>
-                 </a>
-             );
-         }
-     },
+    renderOAuthButton: function(server, i) {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var name = p(server.details.title) || t(`server-type-${server.type}`);
+        var icon = getServerIcon(server.type);
+        var url = this.props.database.getOAuthURL(server);
+        var props = {
+            className: 'oauth-button',
+            href: url,
+            onClick: this.handleOAuthButtonClick,
+            'data-type': server.type,
+        };
+        var error = this.state.errors[server.type];
+        if (error) {
+            var t = this.props.locale.translate;
+            var text = t(`sign-in-error-${error.reason}`);
+            props.className += ' error';
+            return (
+                <a key={i} {...props}>
+                    <span className="icon">
+                        <i className={`fa fa-fw fa-${icon}`}></i>
+                    </span>
+                    <span className="error">{text}</span>
+                </a>
+            );
+        } else {
+            return (
+                <a key={i} {...props}>
+                    <span className="icon">
+                        <i className={`fa fa-fw fa-${icon}`}></i>
+                    </span>
+                    <span className="label">{name}</span>
+                </a>
+            );
+        }
+    },
+
+    /**
+     * Remember when the component is loaded
+     */
+    componentDidMount: function() {
+        this.mountTime = Moment();
+    },
 
     /**
      * Open a popup window to OAuth provider
@@ -287,9 +305,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
         return this.openPopUpWindow(url).then(() => {
             // retrieve authorization object from server
             var db = this.props.database.use({ by: this });
-            return db.checkSession().then((res) => {
-                console.log(res);
-            }).catch((err) => {
+            return db.checkSession().catch((err) => {
                 var errors = _.clone(this.state.errors);
                 errors[provider] = err;
                 console.log(err);
@@ -304,7 +320,17 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleUsernameChange: function(evt) {
-        this.setState({ username: evt.target.value });
+        // if a username shows up within half a second, it's set by the
+        // browser's saved password feature
+        var now = Moment();
+        var username = evt.target.value;
+        var savedCredentials = false;
+        if (username.length > 3) {
+            if ((now - this.mountTime) < 500) {
+                savedCredentials = true;
+            }
+        }
+        this.setState({ username, savedCredentials });
     },
 
     /**
@@ -313,7 +339,9 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handlePasswordChange: function(evt) {
-        this.setState({ password: evt.target.value });
+        var password = evt.target.value;
+        var savedCredentials = false;
+        this.setState({ password, savedCredentials });
     },
 
     /**
