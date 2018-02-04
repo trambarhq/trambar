@@ -3,6 +3,7 @@ var _ = require('lodash');
 module.exports = {
     findTags,
     isTag,
+    removeTags,
 };
 
 /**
@@ -32,10 +33,11 @@ function isTag(text) {
     return checkRE.test(text);
 }
 
-var characters = 'a-zA-Z';
-var digits = '0-9';
-var pattern = `[@#][${characters}][${digits}${characters}]*`;
+function removeTags(text) {
+    return _.trim(String(text).replace(findRE, ''));
+}
 
+var pattern = `[@#][a-zA-Z][a-zA-Z0-9_\\-]*`;
 var findRE = new RegExp(`${pattern}`, 'g');
 var checkRE = new RegExp(`^${pattern}$`);
 

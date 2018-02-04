@@ -4,6 +4,7 @@ var Moment = require('moment');
 var Relaks = require('relaks');
 var DateTracker = require('utils/date-tracker');
 var DateUtils = require('utils/date-utils');
+var TagScanner = require('utils/tag-scanner');
 
 var ProjectSettings = require('objects/settings/project-settings');
 
@@ -180,6 +181,7 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<PersonPageSync {...props} />);
         }).then(() => {
             if (params.date || params.search) {
+                var remote;
                 // load story matching filters
                 var criteria = {
                     user_ids: [ params.user ],
@@ -188,15 +190,23 @@ module.exports = Relaks.createClass({
                     criteria.time_range = DateUtils.getDayRange(params.date);
                 }
                 if (params.search) {
-                    criteria.search = {
-                        lang: this.props.locale.languageCode,
-                        text: params.search,
-                    };
+                    if (!TagScanner.removeTags(params.search)) {
+                        // search by tags only (which can happen locally)
+                        var tags = TagScanner.findTags(params.search);
+                        criteria.tags = tags;
+                    } else {
+                        criteria.search = {
+                            lang: this.props.locale.languageCode,
+                            text: params.search,
+                        };
+                        // don't scan local cache
+                        remote = true;
+                    }
                     criteria.limit = 100;
                 } else {
                     criteria.limit = 500;
                 }
-                return db.find({ table: 'story', criteria });
+                return db.find({ table: 'story', criteria, remote });
             } else {
                 // load story in listing
                 var criteria = {

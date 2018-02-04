@@ -4,6 +4,7 @@ var Relaks = require('relaks');
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
 var DateUtils = require('utils/date-utils');
+var TagScanner = require('utils/tag-scanner');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -143,18 +144,28 @@ module.exports = Relaks.createClass({
                     ready: true,
                     per_user_limit: 5
                 };
+                var remote;
                 if (params.search) {
-                    criteria.search = {
-                        lang: this.props.locale.languageCode,
-                        text: params.search,
-                    };
+                    if (!TagScanner.removeTags(params.search)) {
+                        // search by tags only (which can happen locally)
+                        var tags = TagScanner.findTags(params.search);
+                        criteria.tags = tags;
+                    } else {
+                        criteria.search = {
+                            lang: this.props.locale.languageCode,
+                            text: params.search,
+                        };
+                        // don't scan local cache
+                        remote = true;
+                    }
+                    criteria.limit = 100;
                 } else if (params.date) {
                     criteria.time_range = DateUtils.getDayRange(params.date);
                 }
                 if (!_.isEmpty(params.roles)) {
                     criteria.role_ids = params.roles;
                 }
-                return db.find({ table: 'story', criteria, remote: true }).then((stories) => {
+                return db.find({ table: 'story', criteria, remote }).then((stories) => {
                     props.stories = stories;
                     var userIds = _.uniq(_.flatten(_.map(stories, 'user_ids')));
                     var criteria = {
