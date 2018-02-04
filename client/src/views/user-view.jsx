@@ -28,7 +28,7 @@ module.exports = React.createClass({
         roles: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         chartType: PropTypes.string,
-        dailyActivities: PropTypes.object,
+        dailyActivities: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,

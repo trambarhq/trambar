@@ -318,7 +318,7 @@ var findRoles = Memoize(function(roles, user) {
 
 var findDailyActivities = Memoize(function(dailyActivities, user) {
     if (user) {
-        return _.find(dailyActivities, (stats) => {
+        return _.filter(dailyActivities, (stats) => {
             return stats.filters.user_ids[0] === user.id;
         });
     } else {

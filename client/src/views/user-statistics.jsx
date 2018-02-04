@@ -21,7 +21,7 @@ module.exports = React.createClass({
     propTypes: {
         chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
         user: PropTypes.object,
-        dailyActivities: PropTypes.object,
+        dailyActivities: PropTypes.arrayOf(PropTypes.object),
         selectedDate: PropTypes.string,
         today: PropTypes.string,
 
@@ -75,7 +75,7 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var details = _.get(this.props.dailyActivities, 'details', {});
+        var details = mergeDetails(this.props.dailyActivities);
         var dates = this.getDates();
         var indices = getActivityIndices(details, dates);
         var items = _.map(indices, (index, type) => {
@@ -111,7 +111,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderBarChart: function() {
-        var details = _.get(this.props.dailyActivities, 'details', {});
+        var details = mergeDetails(this.props.dailyActivities);
         var dates = this.getDates();
         var series = getActivitySeries(details, dates);
         var upperRange = getUpperRange(series, true);
@@ -144,7 +144,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderLineChart: function() {
-        var details = _.get(this.props.dailyActivities, 'details', {});
+        var details = mergeDetails(this.props.dailyActivities);
         var dates = this.getDates();
         var series = getActivitySeries(details, dates);
         var upperRange = getUpperRange(series, false);
@@ -172,7 +172,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPieChart: function() {
-        var details = _.get(this.props.dailyActivities, 'details', {});
+        var details = mergeDetails(this.props.dailyActivities);
         var dates = this.getDates();
         var series = getActivitySeries(details, dates);
         var seriesTotals = _.map(series, _.sum);
@@ -375,4 +375,12 @@ function LegendItem(props) {
             </span>
         </div>
     )
+}
+
+function mergeDetails(objects) {
+    var details = {};
+    _.each(objects, (object) => {
+        _.assign(details, object.details);
+    });
+    return details;
 }
