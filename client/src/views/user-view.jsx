@@ -244,8 +244,21 @@ module.exports = React.createClass({
     renderTag: function() {
         var t = this.props.locale.translate;
         var user = this.props.user;
-        var tag = (user) ? `@${user.username}` : '\u00a0';
-        return <h3 className="tag">{tag}</h3>;
+        var tag, url;
+        if (user) {
+            var route = this.props.route;
+            var params = route.parameters;
+            tag = `@${user.username}`;
+            url = route.find(require('pages/news-page'), {
+                schema: params.schema,
+                search: tag,
+            });
+        }
+        return (
+            <h3 className="tag">
+                <a href={url}>{tag || '\u00a0'}</a>
+            </h3>
+        );
     },
 
     /**

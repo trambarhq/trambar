@@ -40,8 +40,20 @@
             margin-left: 5.9em;
             margin-top: 0.2em;
             margin-bottom: 0.4em;
-            color: #666666;
             display: inline-block;
+
+            A {
+                color: #666666;
+
+                &:link, &:visited {
+                    color: #666666;
+                    text-decoration: none;
+
+                    &:hover {
+                        color: #cccccc;
+                    }
+                }
+            }
         }
     }
 
