@@ -896,7 +896,7 @@ module.exports = React.createClass({
             }
             if (!_.isEmpty(idsUpdated)) {
                 // retrieve the updated (or new) objects from server
-                return this.retrieveRemoteObjects(location, idsUpdated).then((retrieval) => {
+                return this.retrieveRemoteObjects(location, idsUpdated, background).then((retrieval) => {
                     // then add them to the list and remove missing ones
                     var newObjects = retrieval;
                     var newResults = insertObjects(search.results, newObjects);
@@ -958,11 +958,12 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Array<Number>} ids
+     * @param  {Boolean} background
      *
      * @return {Promise<Array<Object>>}
      */
-    retrieveRemoteObjects: function(location, ids) {
-        return this.performRemoteAction(location, 'retrieval', { ids });
+    retrieveRemoteObjects: function(location, ids, background) {
+        return this.performRemoteAction(location, 'retrieval', { ids, background });
     },
 
     /**

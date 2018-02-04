@@ -234,27 +234,29 @@ module.exports = _.create(LiveData, {
                 });
             }, 50);
         }
-        setTimeout(() => {
-            Database.open().then((db) => {
-                // finalize other listings now for consistency sake
-                var criteria = {
-                    type: row.type,
-                    target_user_id: row.target_user_id,
-                    finalized: false,
-                };
-                return this.find(db, schema, criteria, '*').each((otherRow) => {
-                    if (otherRow.id !== row.id) {
-                        if (chooseStories(otherRow)) {
-                            return this.updateOne(db, schema, {
-                                id: otherRow.id,
-                                details: otherRow.details,
-                                finalized: true,
-                            });
+        if (!backgroundRetrieval) {
+            setTimeout(() => {
+                Database.open().then((db) => {
+                    // finalize other listings now for consistency sake
+                    var criteria = {
+                        type: row.type,
+                        target_user_id: row.target_user_id,
+                        finalized: false,
+                    };
+                    return this.find(db, schema, criteria, '*').each((otherRow) => {
+                        if (otherRow.id !== row.id) {
+                            if (chooseStories(otherRow)) {
+                                return this.updateOne(db, schema, {
+                                    id: otherRow.id,
+                                    details: otherRow.details,
+                                    finalized: true,
+                                });
+                            }
                         }
-                    }
+                    });
                 });
-            });
-        }, 50);
+            }, 50);
+        }
     },
 });
 
