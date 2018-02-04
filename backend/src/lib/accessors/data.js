@@ -758,6 +758,36 @@ module.exports = {
     },
 
     /**
+     * Delete rows that are marked deleted for long enough time (as indicated
+     * by their mtime)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {String} interval
+     *
+     * @return {Promise<Number>}
+     */
+    clean: function(db, schema, interval) {
+        var table = this.getTableName(schema);
+        var params = [ interval ];
+        var sql = `
+            SELECT id FROM ${table}
+            WHERE deleted = true
+            AND mtime + CAST($1 AS INTERVAL) < NOW()
+        `;
+        return db.query(sql, params).then((rows) => {
+            if (_.isEmpty(rows)) {
+                return 0;
+            }
+            var params = [ _.map(rows, 'id') ];
+            var sql = `DELETE FROM ${table} WHERE id = ANY($1)`;
+            return db.execute(sql, params).then((result) => {
+                return result.rowCount;
+            });
+        });
+    },
+
+    /**
      * Add text search to query
      *
      * @param  {Database} db

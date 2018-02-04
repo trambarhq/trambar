@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var Database = require('database');
 var Shutdown = require('shutdown');
 
@@ -37,6 +38,7 @@ module.exports = {
 
 var database;
 var messageQueueInterval;
+var garbageCollectionInterval;
 
 var roles = [
     {
@@ -103,6 +105,9 @@ function start() {
             messageQueueInterval = setInterval(() => {
                 cleanMessageQueue(db);
             }, 5 * 60 * 1000);
+            garbageCollectionInterval = setInterval(() => {
+                collectGarbage(db);
+            }, 10 * 60 * 1000);
         });
     });
 }
@@ -453,6 +458,45 @@ function cleanMessageQueue(db) {
     var sql = `DELETE FROM "message_queue" WHERE ctime + CAST($1 AS INTERVAL) < NOW()`;
     return db.execute(sql, [ lifetime ]);
 }
+
+/**
+ *
+ *
+ * @param  {Database} db
+ */
+function collectGarbage(db) {
+    // do it in the middle of the night
+    var now = Moment();
+    if (now.hour() !== 3) {
+        return;
+    }
+    var elapsed = now - lastGCTime;
+    if (!(elapsed > 23 * 60 * 60 * 1000)) {
+        return;
+    }
+    lastGCTime = now;
+
+    return Project.find(db, 'global', { deleted: false }, 'name').then((projects) => {
+        return _.concat('global', _.map(projects, 'name'));
+    }).then((schemas) => {
+        var preservation = process.env.GARBAGE_PRESERVATION || '2 weeks';
+        var totalRemoved = 0;
+        return Promise.each(schemas, (schema) => {
+            var accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+            return Promise.each(accessors, (accessor) => {
+                return accessor.clean(db, schema, preservation).then((count) => {
+                    totalRemoved += count;
+                });
+            });
+        }).then(() => {
+            if (totalRemoved > 0) {
+                console.log(`Garbage collection: ${totalRemoved} rows`);
+            }
+        });
+    });
+}
+
+var lastGCTime = 0;
 
 if (process.argv[1] === __filename) {
     start();
