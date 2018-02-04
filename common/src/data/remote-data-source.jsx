@@ -15,6 +15,7 @@ module.exports = React.createClass({
         basePath: PropTypes.string,
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
+        committedOnly: PropTypes.bool,
         hasConnection: PropTypes.bool,
         inForeground: PropTypes.bool,
         cache: PropTypes.object,
@@ -37,6 +38,7 @@ module.exports = React.createClass({
             refreshInterval: 15 * 60,   // 15 minutes
             basePath: '',
             hasConnection: true,
+            committedOnly: true,
             inForeground: true,
         };
     },
@@ -520,9 +522,9 @@ module.exports = React.createClass({
                     throw new HTTPError(404);
                 }
             }
-            if (search.committed) {
+            if (this.props.committedOnly || search.committed) {
                 // only return committed results
-                return search.result;
+                return search.results;
             } else {
                 // apply changes that haven't been saved yet
                 return this.applyUncommittedChanges(search);
@@ -999,6 +1001,14 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Add an entry to change queue
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Object}
+     */
     queueChange: function(location, objects) {
         var placeholders = _.map(objects, (object) => {
             if (!object.uncommitted) {
@@ -1043,6 +1053,15 @@ module.exports = React.createClass({
         return change;
     },
 
+    /**
+     * Incorporate changes previously placed into change queue and cancel previous
+     * change if it hasn't been sent yet
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} objects
+     *
+     * @return {Array<Object>}
+     */
     mergePreviousChanges: function(location, objects) {
         var changed = false;
         objects = _.slice(objects);
