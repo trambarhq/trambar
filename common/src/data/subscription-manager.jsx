@@ -82,7 +82,8 @@ module.exports = React.createClass({
                 this.setState({ subscription });
                 return null;
             }).catch((err) => {
-                this.setState({ subscription: null });
+                // TODO retry
+                // this.setState({ subscription: null });
                 return null;
             });
         });

@@ -274,7 +274,7 @@ module.exports = React.createClass({
             ref: setters.remoteDataSource,
             inForeground: !this.state.paused,
             hasConnection: this.state.online,
-            committedOnly: false,
+            committedResultsOnly: false,
             locale: this.state.locale,
 
             onChange: this.handleDatabaseChange,

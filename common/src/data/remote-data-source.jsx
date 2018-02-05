@@ -7,6 +7,7 @@ var HTTPRequest = require('transport/http-request');
 var HTTPError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
 var SessionStartTime = require('data/session-start-time');
+var RemoteDataChange = require('data/remote-data-change');
 
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
@@ -15,7 +16,7 @@ module.exports = React.createClass({
         basePath: PropTypes.string,
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
-        committedOnly: PropTypes.bool,
+        committedResultsOnly: PropTypes.bool,
         hasConnection: PropTypes.bool,
         inForeground: PropTypes.bool,
         cache: PropTypes.object,
@@ -38,7 +39,7 @@ module.exports = React.createClass({
             refreshInterval: 15 * 60,   // 15 minutes
             basePath: '',
             hasConnection: true,
-            committedOnly: true,
+            committedResultsOnly: true,
             inForeground: true,
         };
     },
@@ -522,13 +523,11 @@ module.exports = React.createClass({
                     throw new HTTPError(404);
                 }
             }
-            if (this.props.committedOnly || search.committed) {
-                // only return committed results
-                return search.results;
-            } else {
+            if (!this.props.committedResultsOnly && !search.committed) {
                 // apply changes that haven't been saved yet
-                return this.applyUncommittedChanges(search);
+                search = this.applyUncommittedChanges(search);
             }
+            return search.results;
         });
     },
 
@@ -538,10 +537,11 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Array<Object>} objects
+     * @param  {Number|undefined} delay
      *
      * @return {Promise<Array<Object>>}
      */
-    save: function(location, objects) {
+    save: function(location, objects, delay) {
         var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
@@ -553,7 +553,7 @@ module.exports = React.createClass({
             });
         } else {
             // storeRemoteObjects() will trigger change event
-            return this.storeRemoteObjects(location, objects).then((objects) => {
+            return this.storeRemoteObjects(location, objects, delay).then((objects) => {
                 var endTime = getCurrentTime();
                 this.updateCachedObjects(location, objects);
                 this.updateRecentSearchResults(location, objects);
@@ -813,25 +813,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Wait for props.hasConnection to become true
-     *
-     * @param  {Object} change
-     *
-     * @return {Promise}
-     */
-    waitForConnectivity: function(change) {
-        if (this.props.hasConnection) {
-            return Promise.resolve();
-        } else {
-            return new Promise((resolve, reject) => {
-                // save function so we can call it in componentDidUpdate()
-                change.resolve = resolve;
-                change.reject = reject;
-            });
-        }
-    },
-
-    /**
      * Look for a recent search that has the same criteria
      *
      * @param  {Object} query
@@ -971,141 +952,54 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Array<Object>} objects
+     * @param  {Number|undefined} delay
      *
      * @return {Promise<Array<Object>>}
      */
-    storeRemoteObjects: function(location, objects) {
-        try {
-            // pluck objects from earlier operations
-            objects = this.mergePreviousChanges(location, objects);
-        } catch (err) {
-            return Promise.reject(err);
-        }
-        var change = this.queueChange(location, objects);
-        if (_.isEmpty(change.deliverables)) {
-            // a no-op
-            return Promise.resolve([]);
-        }
-        return this.waitForConnectivity(change).then(() => {
-            // return empty set if change was superceded
-            if (change.canceled) {
-                console.log('canceled')
-                return [];
-            }
-            var objects = change.deliverables;
-            change.dispatched = true;
+    storeRemoteObjects: function(location, objects, delay) {
+        var change = new RemoteDataChange(location, objects);
+        _.each(this.changeQueue, (earlierOp) => {
+            change.merge(earlierOp);
+        });
+        change.onDispatch = (change) => {
+            var objects = change.deliverables();
+            var location = change.location;
             return this.performRemoteAction(location, 'storage', { objects }).then((objects) => {
                 return objects;
             }).finally(() => {
                 this.removeChange(change);
             });
-        });
+        };
+        change.onCancel = (change) => {
+            this.removeChange(change);
+        };
+        this.queueChange(change);
+        if (delay !== undefined) {
+            change.delay(delay);
+        }
+        if (this.props.hasConnection) {
+            // send it if we've connectivity
+            change.dispatch();
+        }
+        return change.promise;
     },
 
     /**
-     * Add an entry to change queue
+     * Add an entry to the change queue
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
-     *
-     * @return {Object}
+     * @param  {RemoteDataChange} change
      */
-    queueChange: function(location, objects) {
-        var placeholders = _.map(objects, (object) => {
-            if (!object.uncommitted) {
-                object = _.clone(object);
-                if (!object.id) {
-                    // assign a temporary id so we can find the object again
-                    object.id = getTemporaryId();
-                }
-                object.uncomitted = true;
-            }
-            return object;
-        });
-        var deliverables = _.map(objects, (object) => {
-            if (object.uncomitted) {
-                // strip out special properties
-                if (object.id < 1) {
-                    object = _.omit(object, 'id', 'uncomitted');
-                } else {
-                    object = _.omit(object, 'uncomitted')
-                }
-            }
-            return object;
-        });
-        // remove delete request for objects that were never saved in the first place
-        deliverables = _.filter(deliverables, (object) => {
-            if (object.deleted && !object.id) {
-                return false;
-            }
-            return true;
-        });
-        // add change to queue
-        var change = {
-            deliverables,
-            placeholders,
-            location,
-            dispatched: false,
-            canceled: false,
-        };
+    queueChange: function(change) {
         this.updateList('changeQueue', (before) => {
             return _.concat(before, change);
         });
-        return change;
     },
 
     /**
-     * Incorporate changes previously placed into change queue and cancel previous
-     * change if it hasn't been sent yet
+     * Remove an entry from the change queue
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
-     *
-     * @return {Array<Object>}
+     * @param  {RemoteDataChange} change
      */
-    mergePreviousChanges: function(location, objects) {
-        var changed = false;
-        objects = _.slice(objects);
-        _.each(this.changeQueue, (earlierOp) => {
-            if (_.isEqual(earlierOp.location, location)) {
-                _.each(objects, (object, i) => {
-                    var index = _.findIndex(earlierOp.placeholders, { id: object.id });
-                    if (index !== -1) {
-                        if (earlierOp.dispatched) {
-                            // can't alter the operation once it's dispatched
-                            throw new HTTPError(409);
-                        }
-                        // merge in changes from earlier op
-                        objects[i] = _.extend(_.clone(earlierOp.deliverables[index]), object);
-                        earlierOp.placeholders.splice(index, 1);
-                        earlierOp.deliverables.splice(index, 1);
-                        changed = true;
-                    }
-                });
-            }
-        });
-        if (changed) {
-            // cancel the changes that have become no-op's
-            this.updateList('changeQueue', (before) => {
-                var after = _.filter(before, (change) => {
-                    if (change.deliverables.length === 0) {
-                        change.canceled = true;
-                        if (change.resolve) {
-                            var f = change.resolve;
-                            change.resolve = null;
-                            change.reject = null;
-                            f();
-                        }
-                        return false;
-                    }
-                    return true;
-                });
-                return after;
-            });
-        }
-        return objects;
-    },
-
     removeChange: function(change) {
         this.updateList('changeQueue', (before) => {
             return _.without(before, change);
@@ -1117,42 +1011,18 @@ module.exports = React.createClass({
      *
      * @param  {Object} search
      *
-     * @return {Array<Object>}
+     * @return {Object}
      */
     applyUncommittedChanges: function(search) {
-        if (_.isEmpty(this.changeQueue)) {
-            return search.results;
+        if (!_.isEmpty(this.changeQueue)) {
+            var includeDeleted = _.get(this.props.discoveryFlags, 'include_deleted');
+            search = _.clone(search);
+            search.results = _.slice(search.results);
+            _.each(this.changeQueue, (change) => {
+                change.apply(search, includeDeleted);
+            });
         }
-        var objects = _.slice(search.results);
-        var location = getSearchLocation(search);
-        var includeDeleted = _.get(this.props.discoveryFlags, 'include_deleted');
-        _.each(this.changeQueue, (change) => {
-            if (_.isEqual(change.location, location)) {
-                _.each(change.placeholders, (placeholder) => {
-                    var index = _.findIndex(objects, { id: placeholder.id });
-                    if (index !== -1) {
-                        if (placeholder.deleted && !includeDeleted) {
-                            objects.splice(index, 1);
-                        } else {
-                            var match = LocalSearch.match(search.table, placeholder, search.criteria);
-                            if (match) {
-                                objects[index] = _.extend(_.clone(objects[index]), placeholder);
-                            } else {
-                                objects.splice(index, 1);
-                            }
-                        }
-                    } else {
-                        if (!(placeholder.deleted && !includeDeleted)) {
-                            var match = LocalSearch.match(search.table, placeholder, search.criteria);
-                            if (match) {
-                                objects.push(placeholder);
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        return objects;
+        return search;
     },
 
     /**
@@ -1511,14 +1381,9 @@ module.exports = React.createClass({
             }, 50);
         }
         if (!prevProps.hasConnection && this.props.hasConnection) {
-            // tell pending operations to proceed
+            // dispatch pending changes
             _.each(this.changeQueue, (change) => {
-                if (change.resolve) {
-                    var f = change.resolve;
-                    change.resolve = null;
-                    change.reject = null;
-                    f();
-                }
+                change.dispatch();
             });
         }
     },

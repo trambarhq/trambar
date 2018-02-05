@@ -43,17 +43,18 @@ Database.prototype.findOne = function(query) {
  *
  * @param  {Object} location
  * @param  {Array<Object>} objects
+ * @param  {Number} delay
  *
  * @return {Promise<Array<Object>>}
  */
-Database.prototype.save = function(location, objects) {
+Database.prototype.save = function(location, objects, delay) {
     if (process.env.NODE_ENV !== 'production') {
         if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
             throw new Error('save() expects an array of objects');
         }
     }
     location = merge(this.context, location);
-    return this.remoteDataSource.save(location, objects);
+    return this.remoteDataSource.save(location, objects, delay);
 };
 
 /**
@@ -61,16 +62,17 @@ Database.prototype.save = function(location, objects) {
  *
  * @param  {Object} location
  * @param  {Object} object
+ * @param  {Number} delay
  *
  * @return {Promise<Object>}
  */
-Database.prototype.saveOne = function(location, object) {
+Database.prototype.saveOne = function(location, object, delay) {
     if (process.env.NODE_ENV !== 'production') {
         if (!_.isObject(object)) {
             throw new Error('saveOne() expects an object');
         }
     }
-    return this.save(location, [ object ]).then((objects) => {
+    return this.save(location, [ object ], delay).then((objects) => {
         return (objects.length > 0) ? objects[0] : null;
     });
 };
