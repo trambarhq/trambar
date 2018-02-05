@@ -493,6 +493,19 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Lukk',
 
+        'time-$hr-ago': (hr) => {
+            return `${hr} t. sitten`;
+        },
+        'time-$hours-ago': (hours) => {
+            return (minutes === 1) ? `En time siden` : `${minutes} timer siden`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} m. siden`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            return (minutes === 1) ? `Et minutt siden` : `${minutes} minutter siden`;
+        },
+        'time-just-now': 'Akkurat nå',
         'time-yesterday': 'I går',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

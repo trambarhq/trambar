@@ -10,6 +10,18 @@ module.exports = React.createClass({
     propTypes: {
         locale: PropTypes.instanceOf(Locale).isRequired,
         time: PropTypes.string,
+        compact: PropTypes.bool,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            compact: false,
+        };
     },
 
     /**
@@ -55,16 +67,38 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      */
     updateText: function(nextState) {
-        var lang = this.props.locale.languageCode;
-        var time = nextState.time.clone().locale(lang);
+        var t = this.props.locale.translate;
+        var locale = this.props.locale.localeCode;
+        var time = nextState.time.clone().locale(locale);
         var text;
         if (nextState.className === 'today') {
-            text = _.capitalize(time.fromNow());
+            var now = Moment();
+            var elapsed = (now - time) * 0.001;
+            if (elapsed < 60) {
+                text = t('time-just-now');
+            } else if (elapsed < 60 * 60) {
+                var minutes = Math.floor(elapsed * (1 / 60));
+                if (this.props.compact) {
+                    text = t('time-$min-ago', minutes);
+                } else {
+                    text = t('time-$minutes-ago', minutes);
+                }
+            } else {
+                var hours = Math.floor(elapsed * (1 / 3600));
+                if (this.props.compact) {
+                    text = t('time-$hr-ago', hours);
+                } else {
+                    text = t('time-$hours-ago', hours);
+                }
+            }
         } else if (nextState.className === 'yesterday') {
-            var t = this.props.locale.translate;
             text = t('time-yesterday');
         } else if (nextState.className === 'older') {
-            text = time.format('ll');
+            if (this.props.compact) {
+                text = time.format('ll');
+            } else {
+                text = time.format('LL');
+            }
         } else {
             text = '';
         }

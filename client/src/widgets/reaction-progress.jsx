@@ -21,7 +21,7 @@ function ReactionProgress(props) {
         if (status) {
             contents = t(`reaction-status-${status.action}`);
         } else {
-            contents = <Time time={props.reaction.ptime} locale={props.locale} />;
+            contents = <Time time={props.reaction.ptime} compact={true} locale={props.locale} />;
         }
     }
     return <span className="reaction-progress">{contents}</span>;

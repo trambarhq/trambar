@@ -623,6 +623,31 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Zamknij',
 
+        'time-$hr-ago': (hr) => {
+            return `${hr} godz temu`;
+        },
+        'time-$hours-ago': (hours) => {
+            if (singular(hours)) {
+                return `Godzina temu`;
+            } else if (plural(hours)) {
+                return `${hours} godziny temu`;
+            } else {
+                return `${hours} godzin temu`;
+            }
+        },
+        'time-$min-ago': (min) => {
+            return `${min} min temu`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            if (singular(minutes)) {
+                return `Minuta temu`;
+            } else if (plural(minutes)) {
+                return `${minutes} minuty temu`;
+            } else {
+                return `${minutes} minut temu`;
+            }
+        },
+        'time-just-now': 'Właśnie teraz',
         'time-yesterday': 'Wczoraj',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

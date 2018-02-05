@@ -541,6 +541,23 @@ var traditionalPhrases = {
 
     'telephone-dialog-close': '關閉',
 
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
+        return `${num}小時前`;
+    },
+    'time-$hours-ago': (hours) => {
+        var num = cardinal(hours);
+        return `${num}小時前`;
+    },
+    'time-$min-ago': (min) => {
+        var num = cardinal(min);
+        return `${num}分鐘前`;
+    },
+    'time-$minutes-ago': (minutes) => {
+        var num = cardinal(minutes);
+        return `${num}分鐘前`;
+    },
+    'time-just-now': '剛才',
     'time-yesterday': '昨天',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
@@ -1154,6 +1171,23 @@ var simplifiedPhrases = {
 
     'telephone-dialog-close': '关闭',
 
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
+        return `${num}小时前`;
+    },
+    'time-$hours-ago': (hours) => {
+        var num = cardinal(hours);
+        return `${num}小时前`;
+    },
+    'time-$min-ago': (min) => {
+        var num = cardinal(min);
+        return `${num}分钟前`;
+    },
+    'time-$minutes-ago': (minutes) => {
+        var num = cardinal(minutes);
+        return `${num}分钟前`;
+    },
+    'time-just-now': '刚才',
     'time-yesterday': '昨天',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
@@ -1547,6 +1581,15 @@ var cantonesePhrases = {
         return `上載（${progress}%）`;
     },
 
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
+        return `${num}個鐘頭前`;
+    },
+    'time-$hours-ago': (hours) => {
+        var num = cardinal(hours);
+        return `${num}個鐘頭前`;
+    },
+    'time-just-now': '啱啱線',
     'time-yesterday': '尋日',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

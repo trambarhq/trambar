@@ -500,6 +500,19 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Close',
 
+        'time-$hr-ago': (hr) => {
+            return `${hr} hr ago`;
+        },
+        'time-$hours-ago': (hours) => {
+            return (hours === 1) ? `An hour ago` : `${hours} hours ago`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} min ago`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            return (minutes === 1) ? `A minute ago` : `${minutes} minutes ago`;
+        },
+        'time-just-now': 'Just now',
         'time-yesterday': 'Yesterday',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

@@ -618,6 +618,31 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Закрыть',
 
+        'time-$hr-ago': (hr) => {
+            return `${hr} ч. назад`;
+        },
+        'time-$hours-ago': (hours) => {
+            if (singularN(hours)) {
+                return `Час назад`;
+            } else if (singularG(hours)) {
+                return `${hours} часа назад`;
+            } else {
+                return `${hours} часов назад`;
+            }
+        },
+        'time-$min-ago': (min) => {
+            return `${min} м. назад`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            if (singularN(minutes)) {
+                return `Минута назад`;
+            } else if (singularG(minutes)) {
+                return `${minutes} минуты назад`;
+            } else {
+                return `${minutes} минут назад`;
+            }
+        },
+        'time-just-now': 'Прямо сейчас',
         'time-yesterday': 'Вчера',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

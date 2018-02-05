@@ -495,6 +495,19 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Sulje',
 
+        'time-$hr-ago': (hr) => {
+            return `${hr} t. sitten`;
+        },
+        'time-$hours-ago': (hours) => {
+            return (minutes === 1) ? `Tunti sitten` : `${minutes} tuntia sitten`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} m. sitten`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            return (minutes === 1) ? `Minuutti sitten` : `${minutes} minuuttia sitten`;
+        },
+        'time-just-now': 'Juuri nyt',
         'time-yesterday': 'Eilen',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
