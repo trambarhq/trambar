@@ -485,17 +485,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             var schema = 'global';
             var db = this.props.database.use({ schema, by: this });
             var system = this.getSystem();
-            var payloads = this.props.payloads;
-            return payloads.prepare(schema, system).then(() => {
-                return db.start().then((userId) => {
-                    return db.saveOne({ table: 'system' }, system).then((system) => {
-                        return payloads.dispatch(schema, system).then(() => {
-                            this.setState({ hasChanges: false, saving: false }, () => {
-                                this.setEditability(false);
-                            });
-                            return null;
-                        });
+            return db.start().then((userId) => {
+                return db.saveOne({ table: 'system' }, system).then((system) => {
+                    this.props.payloads.dispatch(system);
+                    this.setState({ hasChanges: false, saving: false }, () => {
+                        this.setEditability(false);
                     });
+                    return null;
                 });
             }).catch((err) => {
                 console.error(err);

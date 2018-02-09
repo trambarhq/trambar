@@ -4,6 +4,7 @@ module.exports = {
     'diff': () => import('diff' /* webpackChunkName: "diff" */),
     'font-awesome-webpack': () => import('font-awesome-webpack' /* webpackChunkName: "font-awesome-webpack" */),
     'hammerjs': () => import('hammerjs' /* webpackChunkName: "hammerjs" */),
+    'jsmediatags': () => import('jsmediatags/dist/jsmediatags' /* webpackChunkName: "jsmediatags" */),
     'lodash': () => import('lodash' /* webpackChunkName: "lodash" */),
     'mark-gor': () => import('mark-gor' /* webpackChunkName: "mark-gor" */),
     'moment': () => import('moment' /* webpackChunkName: "moment" */),

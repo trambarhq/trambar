@@ -1,6 +1,5 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Crypto = Promise.promisifyAll(require('crypto'));
 var Data = require('accessors/data');
 var HTTPError = require('errors/http-error');
 
@@ -167,10 +166,7 @@ module.exports = _.create(Data, {
             if (taskReceived.user_id !== credentials.user.id) {
                 throw new HTTPError(403);
             }
-            return Crypto.randomBytesAsync(24).then((buffer) => {
-                taskReceived.token = buffer.toString('hex');
-                return taskReceived;
-            });
+            return taskReceived;
         });
     },
 

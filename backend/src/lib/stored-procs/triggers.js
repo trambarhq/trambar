@@ -77,7 +77,7 @@ notifyLiveDataChange.ret = 'trigger';
  */
 function updateResource(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
     var payload = {
-        id: NEW.id,
+        token: NEW.token,
         details: NEW.details,
         completion: NEW.completion,
         etime: NEW.etime,
@@ -86,7 +86,7 @@ function updateResource(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV
     var sql = `
         UPDATE "${TG_TABLE_SCHEMA}"."${TG_ARGV[0]}"
         SET details = "updatePayload"(details, $${params.push(payload)})
-        WHERE "payloadIds"(details) @> $${params.push([ payload.id ])}
+        WHERE "payloadTokens"(details) @> $${params.push([ payload.token ])}
     `;
     plv8.execute(sql, params);
 }
@@ -102,7 +102,7 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
     var oldResources = (OLD) ? OLD.details.resources : undefined;
     var newResources = NEW.details.resources;
     if (!oldResources && !newResources) {
-        if (NEW.details.payload_id) {
+        if (NEW.details.payload_token) {
             oldResources = (OLD) ? [ OLD.details ] : undefined;
             newResources = [ NEW.details ];
         }
@@ -110,10 +110,10 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
     if (newResources && oldResources) {
         for (var i = 0; i < newResources.length; i++) {
             var newRes = newResources[i];
-            if (newRes.payload_id) {
+            if (newRes.payload_token) {
                 for (var j = 0; j < oldResources.length; j++) {
                     var oldRes = oldResources[j];
-                    if (newRes.payload_id === oldRes.payload_id) {
+                    if (newRes.payload_token === oldRes.payload_token) {
                         transferProps(oldRes, newRes);
                         break;
                     }
@@ -122,7 +122,7 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
         }
     }
 
-    // remove ready and payload_id from resources once they're all ready
+    // remove ready and payload_token from resources once they're all ready
     // and the object itself is published
     var readyColumn = TG_ARGV[0];
     var publishedColumn = TG_ARGV[1];
@@ -130,7 +130,7 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
     if (newResources) {
         for (var i = 0; i < newResources.length; i++) {
             var newRes = newResources[i];
-            if (newRes.payload_id) {
+            if (newRes.payload_token) {
                 if (newRes.ready !== true) {
                     allReady = false;
                     break;
@@ -142,10 +142,7 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
                 for (var i = 0; i < newResources.length; i++) {
                     var newRes = newResources[i];
                     delete newRes.ready;
-                    delete newRes.payload_id;
-                    delete newRes.file;
-                    delete newRes.poster_file;
-                    delete newRes.stream;
+                    delete newRes.payload_token;
                 }
             }
         }

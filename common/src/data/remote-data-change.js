@@ -25,6 +25,7 @@ function RemoteDataChange(location, objects) {
     this.delayed = false;
     this.dispatching = false;
     this.committed = false;
+    this.timeout = 0;
     this.promise = new Promise((resolve, reject) => {
         this.resolvePromise = resolve;
         this.rejectPromise = reject;
@@ -36,7 +37,7 @@ RemoteDataChange.prototype.delay = function(delay) {
         return;
     }
     this.delayed = true;
-    setTimeout(() => {
+    this.timeout = setTimeout(() => {
         this.delayed = false;
         if (this.dispatching) {
             this.dispatching = false;
@@ -80,6 +81,9 @@ RemoteDataChange.prototype.cancel = function() {
         return;
     }
     this.canceled = true;
+    if (this.timeout) {
+        clearTimeout(this.timeout);
+    }
     if (this.dispatched) {
         // the change was already sent--don't call onCancel unless
         // onDispatch failed
@@ -103,7 +107,7 @@ RemoteDataChange.prototype.merge = function(earlierOp) {
         return;
     }
     _.each(this.objects, (object, i) => {
-        var index = _.find(earlierOp.objects, { id: object.id });
+        var index = _.findIndex(earlierOp.objects, { id: object.id });
         if (index !== -1 && !earlierOp.removed[index]) {
             var earlierObject = earlierOp.objects[index];
             // merge in missing properties from earlier op

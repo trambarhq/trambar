@@ -3,7 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var HTTPRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
-var BlobManager = require('transport/blob-manager');
+var Payload = require('transport/payload');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -225,10 +225,15 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderVideo: function(res) {
+        var className = 'video';
+        var poster = this.renderImageElement(res);
+        if (!poster) {
+            className += ' posterless';
+        }
         return (
-            <div className="video" onClick={this.handleVideoClick}>
-                {this.renderImageElement(res)}
-                <div className="overlay hidden">
+            <div className={className} onClick={this.handleVideoClick}>
+                {poster}
+                <div className="overlay">
                     <div className="icon">
                         <i className="fa fa-play-circle-o" />
                     </div>
@@ -248,11 +253,18 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderAudio: function(res) {
+        var className = 'audio';
+        var poster = this.renderImageElement(res);
+        if (!poster) {
+            className += ' posterless';
+        }
+        var action = (!this.state.audioURL) ? 'play' : 'stop';
         return (
-            <div className="audio" onClick={this.handleAudioClick}>
+            <div className={className} onClick={this.handleAudioClick}>
+                {poster}
                 <div className="overlay">
                     <div className="icon">
-                        <i className="fa fa-play-circle" />
+                        <i className={`fa fa-${action}-circle`} />
                     </div>
                     <div className="duration">
                         {DurationIndicator.format(res.duration)}
@@ -307,8 +319,8 @@ module.exports = React.createClass({
         }
 
         // image isn't done uploading yet
-        var fileURL = theme.getImageFile(res);
-        if (fileURL && BlobManager.get(fileURL)) {
+        var fileURL = Payload.getImageURL(res);
+        if (fileURL) {
             // use ImageView, which handles orientation and clipping
             return <ImageView url={fileURL} clippingRect={clip} />;
         } else {
@@ -382,10 +394,14 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAudioClick: function(evt) {
-        var res = this.getSelectedResource();
-        var version = chooseAudioVersion(res);
-        var audioURL = this.props.theme.getAudioURL(res, { version });
-        this.setState({ audioURL });
+        if (!this.state.audioURL) {
+            var res = this.getSelectedResource();
+            var version = chooseAudioVersion(res);
+            var audioURL = this.props.theme.getAudioURL(res, { version });
+            this.setState({ audioURL });
+        } else {
+            this.setState({ audioURL: null });
+        }
     },
 
     /**

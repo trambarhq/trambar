@@ -972,6 +972,7 @@ module.exports = React.createClass({
         };
         change.onCancel = (change) => {
             this.removeChange(change);
+            return Promise.resolve();
         };
         this.queueChange(change);
         if (delay !== undefined) {

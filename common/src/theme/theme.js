@@ -27,10 +27,6 @@ Theme.prototype.getImageURL = function(res, params) {
     return this.themeManager.getImageURL(res, params);
 };
 
-Theme.prototype.getImageFile = function(res) {
-    return this.themeManager.getImageFile(res);
-};
-
 Theme.prototype.getVideoURL = function(res, params) {
     return this.themeManager.getVideoURL(res, params);
 };
@@ -41,4 +37,8 @@ Theme.prototype.getAudioURL = function(res, params) {
 
 Theme.prototype.getURL = function(res, params) {
     return this.themeManager.getURL(res, params);
+};
+
+Theme.prototype.getDimensions = function(res) {
+    return this.themeManager.getDimensions(res);
 };

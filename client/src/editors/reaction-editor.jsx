@@ -297,67 +297,29 @@ module.exports = React.createClass({
      */
     saveDraft: function(draft, immediate, resourceIndex) {
         return this.changeDraft(draft, resourceIndex).then((reaction) => {
-            var delay = (immediate) ? 0 : AUTOSAVE_DURATION;
-            this.autosaveReaction(reaction, delay);
+            this.saveReaction(reaction, immediate);
             return reaction;
         });
-    },
-
-    /**
-     * Save reaction to server after specified delay
-     *
-     * @param  {Reactopn} reaction
-     * @param  {Number} delay
-     */
-    autosaveReaction: function(reaction, delay) {
-        if (delay) {
-            this.cancelAutosave();
-            this.autosaveTimeout = setTimeout(() => {
-                this.saveReaction(reaction);
-            }, delay);
-            this.autosaveUnloadHandler = () => {
-                this.saveReaction(reaction);
-            };
-            window.addEventListener('beforeunload', this.autosaveUnloadHandler);
-        } else {
-            this.saveReaction(reaction);
-        }
-    },
-
-    /**
-     * Clear autosave timeout function and event handler
-     */
-    cancelAutosave: function() {
-        if (this.autosaveTimeout) {
-            clearTimeout(this.autosaveTimeout);
-            this.autosaveTimeout = 0;
-        }
-        if (this.autosaveUnloadHandler) {
-            window.removeEventListener('beforeunload', this.autosaveUnloadHandler);
-            this.autosaveUnloadHandler = null;
-        }
     },
 
     /**
      * Save reaction to remote database
      *
      * @param  {Reaction} reaction
+     * @param  {Boolean} immediate
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction: function(reaction) {
-        this.cancelAutosave();
-
+    saveReaction: function(reaction, immediate) {
         // send images and videos to server
         var params = this.props.route.parameters;
-        var payloads = this.props.payloads;
-        return payloads.prepare(params.schema, reaction).then(() => {
-            var db = this.props.database.use({ schema: params.schema, by: this });
-            return db.start().then(() => {
-                return db.saveOne({ table: 'reaction' }, reaction).then((reaction) => {
-                    // start file upload
-                    return payloads.dispatch(params.schema, reaction).return(reaction);
-                });
+        var delay = (immediate) ? undefined : AUTOSAVE_DURATION;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'reaction' }, reaction, delay).then((reaction) => {
+                // start file upload
+                this.props.payloads.dispatch(reaction);
+                return reaction;
             });
         });
     },

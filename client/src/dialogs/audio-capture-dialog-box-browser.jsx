@@ -4,7 +4,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
-var BlobStream = require('transport/blob-stream');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -436,7 +435,8 @@ module.exports = React.createClass({
                 mimeType : 'audio/webm'
             };
             var recorder = new MediaRecorder(this.state.liveAudioStream, options);
-            recorder.outputStream = new BlobStream;
+            var stream = this.props.payloads.stream();
+            recorder.outputStream = stream;
             recorder.addEventListener('dataavailable', function(evt) {
                 this.outputStream.push(evt.data)
             });
@@ -444,6 +444,8 @@ module.exports = React.createClass({
                 this.outputStream.close();
             });
             recorder.start(segmentDuration);
+            // start uploading immediately upon receiving data from MediaRecorder
+            stream.start();
             return recorder;
         });
     },
@@ -486,24 +488,21 @@ module.exports = React.createClass({
             var recorder = this.state.mediaRecorder;
             if (recorder) {
                 recorder.stop();
-                return {
-                    format: _.last(_.split(recorder.mimeType, '/')),
-                    audio_bitrate: recorder.audioBitsPerSecond,
-                    stream: recorder.outputStream,
-                };
             }
         });
     },
 
     /**
      * Inform parent component that an audio has been captured and accepted
+     *
+     * @param {Object} resource
      */
-    triggerCaptureEvent: function(audio) {
+    triggerCaptureEvent: function(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                audio,
+                resource,
             })
         }
     },
@@ -558,19 +557,24 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleStopClick: function(evt) {
-        return this.endRecording().then((audio) => {
-            var blob = audio.stream.toBlob();
+        return this.endRecording().then(() => {
+            var recorder = this.state.mediaRecorder;
+            var blob = recorder.outputStream.toBlob();
             var url = URL.createObjectURL(blob);
             var elapsed = 0;
             if (this.state.startTime) {
                 var now = new Date;
                 elapsed = now - this.state.startTime;
             }
-            audio.duration = this.state.duration + elapsed;
+            var audio = {
+                format: _.last(_.split(recorder.mimeType, '/')),
+                audioBitsPerSecond: recorder.audioBitsPerSecond,
+                stream: recorder.outputStream,
+                duration: this.state.duration + elapsed
+            };
             this.setState({
                 capturedAudio: audio,
                 previewURL: url,
-                capturedImage: null,
                 mediaRecorder: null
             });
         });
@@ -591,8 +595,19 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAcceptClick: function(evt) {
-        console.log(this.state.capturedAudio);
-        this.triggerCaptureEvent(this.state.capturedAudio);
+        var capturedAudio = this.state.capturedAudio;
+        var payload = this.props.payloads.add('audio');
+        payload.attachStream(capturedAudio.stream);
+        var res = {
+            type: 'audio',
+            payload_token: payload.token,
+            duration: capturedAudio.duration,
+            format: capturedAudio.format,
+            bitrates: {
+                audio: capturedAudio.audioBitsPerSecond,
+            },
+        }
+        this.triggerCaptureEvent(res);
     },
 
     /**

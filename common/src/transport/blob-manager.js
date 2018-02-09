@@ -15,41 +15,38 @@ module.exports = {
 var list = [];
 
 /**
- * Add a blob to the list and return its URL, which can be used to find the
- * blob again
+ * Add a blob to the list
  *
  * @param  {Blob} blob
- *
- * @return {String}
  */
 function manage(blob) {
     var atime = new Date;
     var localURL;
-    var remoteURL;
-    if (process.env.PLATFORM === 'cordova') {
-        if (blob instanceof CordovaFile) {
-            localURL = blob.fullPath;
-            list.push({ blob, localURL, remoteURL, atime });
-            return localURL;
+    if (blob instanceof Blob) {
+        localURL = URL.createObjectURL(blob);
+    } else {
+        if (process.env.PLATFORM === 'cordova') {
+            if (blob instanceof CordovaFile) {
+                localURL = blob.fullPath;
+            }
         }
     }
-    localURL = URL.createObjectURL(blob);
-    list.push({ blob, localURL, remoteURL, atime });
+    var urls = [ localURL ];
+    list.push({ blob, localURL, urls, atime });
     return localURL;
 }
 
 /**
- * Find a blob by URL, either local or remote
+ * Find a blob that's associated with the given URL
  *
  * @param  {String} url
  *
  * @return {String|null}
  */
 function find(url) {
-    var entry = _.find(list, { localURL: url });
-    if (!entry) {
-        entry = _.find(list, { remoteURL: url });
-    }
+    var entry = _.find(list, (entry) => {
+        return _.includes(entry.urls, url);
+    });
     if (!entry) {
         return null;
     }
@@ -58,11 +55,11 @@ function find(url) {
 }
 
 /**
- * Return the actual blob from its local URL
+ * Get the actual blob by its local URL
  *
  * @param  {String} localURL
  *
- * @return {Blob}
+ * @return {Blob|CordovaFile|null}
  */
 function get(localURL) {
     var entry = _.find(list, { localURL });
@@ -73,25 +70,18 @@ function get(localURL) {
 }
 
 /**
- * Associate a blob, possibly referenced by its local URL, with a remote URL
+ * Associate a blob with a URL
  *
  * @param  {String|Blob} target
- * @param  {String} remoteURL
- *
- * @return {Boolean}
+ * @param  {String} url
  */
-function associate(target, remoteURL) {
-    var entry;
-    if (typeof(target) === 'string') {
-        entry = _.find(list, { localURL: target });
-    } else {
+function associate(target, url) {
+    var entry = _.find(list, { blob: target });
+    if (!entry) {
+        manage(target);
         entry = _.find(list, { blob: target });
     }
-    if (!entry) {
-        return false;
-    }
-    entry.remoteURL = remoteURL;
-    return true;
+    entry.urls.push(url);
 }
 
 /**
@@ -102,20 +92,17 @@ function associate(target, remoteURL) {
  * @return {Promise<String>}
  */
 function fetch(remoteURL) {
-    if (get(remoteURL)) {
-        // we were actually given a local URL
-        return Promise.resolve(remoteURL);
-    }
-    var localURL = find(remoteURL);
-    if (localURL) {
+    var entry = _.find(list, (entry) => {
+        return _.includes(entry.urls, remoteURL);
+    });
+    if (entry) {
         // we downloaded the file before
-        return Promise.resolve(localURL);
+        return Promise.resolve(entry.localURL);
     }
-
     var options = { responseType: 'blob' };
     return HTTPRequest.fetch('GET', remoteURL, null, options).then((blob) => {
         var localURL = manage(blob);
-        associate(localURL, remoteURL);
+        associate(blob, remoteURL);
         return localURL;
     });
 }
@@ -123,10 +110,12 @@ function fetch(remoteURL) {
 /**
  * Release a blob
  *
- * @param  {String} localURL
+ * @param  {String} url
  */
-function remove(localURL) {
-    var index = _.findIndex(list, { localURL });
+function remove(url) {
+    var index = _.findIndex(list, (entry) => {
+        return _.includes(entry.urls, url);
+    });
     if (index !== -1) {
         var entry = list[index];
         list.splice(index, 1);
@@ -141,7 +130,10 @@ function clearBlobs() {
     var now = new Date;
     _.remove(list, (entry) => {
         // see if we can retrieve the file from the server if need arises
-        if (entry.remoteURL) {
+        var hasRemote = _.some(entry.urls, (url) => {
+            return /https?:/.test(url);
+        });
+        if (hasRemote) {
             var elapsed = now - entry.atime;
             if (elapsed > 5 * 60 * 1000) {
                 // after five minutes, the blob probably won't be used again

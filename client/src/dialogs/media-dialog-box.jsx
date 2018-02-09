@@ -148,18 +148,12 @@ module.exports = React.createClass({
             var viewportAspect = viewportWidth / viewportHeight;
             var maxWidth, maxHeight;
             _.each(this.props.resources, (res) => {
-                var dim;
-                if (res.type === 'video') {
-                    var version = chooseVideoVersion(res);
-                    dim = getVideoVersionDimensions(res, version);
-                } else {
-                    dim = res;
+                var dims = this.props.theme.getDimensions(res);
+                if (!(maxWidth >= dims.width)) {
+                    maxWidth = dims.width;
                 }
-                if (!(maxWidth >= dim.width)) {
-                    maxWidth = dim.width;
-                }
-                if (!(maxHeight >= dim.height)) {
-                    maxHeight = dim.height;
+                if (!(maxHeight >= dims.height)) {
+                    maxHeight = dims.height;
                 }
             });
             var maxAspect = maxWidth / maxHeight;
@@ -232,16 +226,21 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderVideo: function(res) {
-        var video = res;
         var theme = this.props.theme;
-        var version = chooseVideoVersion(res);
-        var dims = getVideoVersionDimensions(res, version);
+        var url = theme.getVideoURL(res);
+        var dims = theme.getDimensions(res);
+        var posterURL = theme.getImageURL(res, {
+            width: dims.width,
+            height: dims.height,
+            clip: null,
+            quality: 60
+        });
         var props = {
             ref: 'video',
-            src: theme.getVideoURL(video, { version }),
+            src: url,
             controls: true,
             autoPlay: true,
-            poster: theme.getImageURL(video, { width: dims.width, height: dims.height, clip: null, quality: 60 }),
+            poster: posterURL,
         };
         return <video {...props} />;
     },
@@ -365,49 +364,3 @@ module.exports = React.createClass({
         }
     },
 });
-
-/**
- * Calculate the actual dimension of one version of the video
- *
- * (videoScaling contains boundary values)
- *
- * @param  {Object} res
- * @param  {Object} name
- *
- * @return {Object}
- */
-function getVideoVersionDimensions(res, name) {
-    var version = (res.versions) ? res.versions[name] : null;
-    if (!version) {
-        return {};
-    }
-    var originalWidth = res.width;
-    var originalHeight = res.height;
-    var maxWidth = version.videoScaling.width;
-    var maxHeight = version.videoScaling.height;
-    var scaling = Math.min(maxWidth / originalWidth, maxHeight / originalHeight);
-    var width = Math.round(originalWidth * scaling);
-    var height = Math.round(originalHeight * scaling);
-    return { width, height };
-}
-
-/**
- * Choose a version of the video that's best suits the screen
- *
- * @param  {Object} res
- *
- * @return {String}
- */
-function chooseVideoVersion(res) {
-    var screenWidth = screen.width;
-    var screenHeight = screen.height;
-    var screenPixelCount = screenWidth * screenHeight;
-    var choices = _.map(_.keys(res.versions), (name) => {
-        var scaledDims = getVideoVersionDimensions(res, name);
-        var scaledPixelCount = scaledDims.width * scaledDims.height;
-        var diff = Math.abs(screenPixelCount - scaledPixelCount);
-        return { name, diff };
-    });
-    var optimal = _.first(_.sortBy(choices, 'diff'));
-    return (optimal) ? optimal.name : null;
-}

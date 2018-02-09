@@ -1,29 +1,25 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
-
 // widgets
+var ImageEditor = require('editors/image-editor');
 var DurationIndicator = require('widgets/duration-indicator');
+
+module.exports = AudioEditor;
 
 require('./audio-editor.scss');
 
-module.exports = React.createClass({
-    displayName: 'AudioEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        resource: PropTypes.object,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        onChange: PropTypes.func,
-    },
-
-    render: function() {
-        var duration = this.props.resource.duration;
+function AudioEditor(props) {
+    var res = props.resource;
+    var duration = res.duration;
+    if (res.width && res.height) {
+        return (
+            <ImageEditor {...props}>
+                <div className="audio-duration">
+                    {DurationIndicator.format(duration)}
+                </div>
+            </ImageEditor>
+        );
+    } else {
         return (
             <div className="audio-editor">
                 <div className="graphic">
@@ -36,5 +32,7 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
-});
+    }
+}
+
+AudioEditor.propTypes = ImageEditor.propTypes;

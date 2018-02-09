@@ -1,12 +1,12 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var FrameGrabber = require('media/frame-grabber');
 var DeviceManager = require('media/device-manager');
 var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
-var BlobStream = require('transport/blob-stream');
 
 // widgets
 var Overlay = require('widgets/overlay');
@@ -102,6 +102,7 @@ module.exports = React.createClass({
             URL.revokeObjectURL(this.state.previewURL);
             this.setState({
                 capturedVideo: null,
+                capturedImage: null,
                 previewURL: null,
             });
         }
@@ -430,20 +431,13 @@ module.exports = React.createClass({
      * @return {Promise<Object>}
      */
     captureImage: function() {
-        return new Promise((resolve, reject) => {
-            var type = 'image/jpeg';
-            var canvas = document.createElement('CANVAS');
-            var context = canvas.getContext('2d');
-            var video = this.videoNode;
-            var width = video.videoWidth;
-            var height = video.videoHeight;
-            canvas.width = width;
-            canvas.height = height;
-            context.drawImage(video, 0, 0, width, height);
-            canvas.toBlob((blob) => {
-                var file = BlobManager.manage(blob);
-                resolve({ type, file, width, height });
-            }, type, 90);
+        var video = this.videoNode;
+        return FrameGrabber.capture(video).then((blob) => {
+            return {
+                file: blob,
+                width: video.videoWidth,
+                height: video.videoHeight,
+            };
         });
     },
 
@@ -461,7 +455,8 @@ module.exports = React.createClass({
                 mimeType : 'video/webm'
             };
             var recorder = new MediaRecorder(this.state.liveVideoStream, options);
-            recorder.outputStream = new BlobStream;
+            var stream = this.props.payloads.stream();
+            recorder.outputStream = stream;
             recorder.addEventListener('dataavailable', function(evt) {
                 this.outputStream.push(evt.data)
             });
@@ -469,6 +464,8 @@ module.exports = React.createClass({
                 this.outputStream.close();
             });
             recorder.start(segmentDuration);
+            // start uploading immediately upon receiving data from MediaRecorder
+            stream.start();
             return recorder;
         });
     },
@@ -509,18 +506,8 @@ module.exports = React.createClass({
     endRecording: function() {
         return Promise.try(() => {
             var recorder = this.state.mediaRecorder;
-            var poster = this.state.capturedImage;
             if (recorder) {
                 recorder.stop();
-                return {
-                    width: poster.width,
-                    height: poster.height,
-                    poster_file: poster.file,
-                    format: _.last(_.split(recorder.mimeType, '/')),
-                    audio_bitrate: recorder.audioBitsPerSecond,
-                    video_bitrate: recorder.videoBitsPerSecond,
-                    stream: recorder.outputStream,
-                };
             }
         });
     },
@@ -528,14 +515,14 @@ module.exports = React.createClass({
     /**
      * Report back to parent component that a video has been captured
      *
-     * @param  {Object} video
+     * @param  {Object} resource
      */
-    triggerCaptureEvent: function(video) {
+    triggerCaptureEvent: function(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                video,
+                resource,
             })
         }
     },
@@ -547,8 +534,6 @@ module.exports = React.createClass({
      */
     handleStartClick: function(evt) {
         return Promise.join(this.captureImage(), this.beginRecording(), (image, recorder) => {
-            // start uploading immediately upon receiving data from MediaRecorder
-            this.props.payloads.stream(recorder.outputStream);
             this.setState({
                 capturedImage: image,
                 mediaRecorder: recorder,
@@ -593,19 +578,25 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleStopClick: function(evt) {
-        return this.endRecording().then((video) => {
-            var blob = video.stream.toBlob();
+        return this.endRecording().then(() => {
+            var recorder = this.state.mediaRecorder;
+            var blob = recorder.outputStream.toBlob();
             var url = URL.createObjectURL(blob);
             var elapsed = 0;
             if (this.state.startTime) {
                 var now = new Date;
                 elapsed = now - this.state.startTime;
             }
-            video.duration = this.state.duration + elapsed;
+            var video = {
+                format: _.last(_.split(recorder.mimeType, '/')),
+                audioBitsPerSecond: recorder.audioBitsPerSecond,
+                videoBitsPerSecond: recorder.videoBitsPerSecond,
+                stream: recorder.outputStream,
+                duration: this.state.duration + elapsed,
+            };
             this.setState({
                 capturedVideo: video,
                 previewURL: url,
-                capturedImage: null,
                 mediaRecorder: null
             });
         });
@@ -626,7 +617,24 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAcceptClick: function(evt) {
-        this.triggerCaptureEvent(this.state.capturedVideo);
+        var capturedVideo = this.state.capturedVideo;
+        var capturedImage = this.state.capturedImage;
+        var payload = this.props.payloads.add('video');
+        payload.attachStream(capturedVideo.stream);
+        payload.attachFile(capturedImage.file, 'poster');
+        var res = {
+            type: 'video',
+            payload_token: payload.token,
+            width: capturedImage.width,
+            height: capturedImage.height,
+            duration: capturedVideo.duration,
+            format: capturedVideo.format,
+            bitrates: {
+                audio: capturedVideo.audioBitsPerSecond,
+                video: capturedVideo.videoBitsPerSecond,
+            }
+        }
+        this.triggerCaptureEvent(res);
     },
 
     /**

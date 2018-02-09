@@ -8,6 +8,7 @@ module.exports = React.createClass({
     propTypes: {
         modes: PropTypes.object,
         serverAddress: PropTypes.string,
+        networkType: PropTypes.string,
         database: PropTypes.instanceOf(Database),
         onChange: PropTypes.func,
     },
@@ -124,26 +125,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return blob URL to local image file. URL might not be valid. Need to call
-     * BlobManager.get() to valididate the blob's existence on running system.
-     *
-     * @param  {Object} res
-     * @param  {Object} options
-     *
-     * @return {String|null}
-     */
-    getImageFile: function(res) {
-        switch(res.type) {
-            case 'video':
-            case 'audio':
-            case 'website':
-                return res.poster_file || null;
-            default:
-                return res.file || null;
-        }
-    },
-
-    /**
      * Return URL to video resource
      *
      * @param  {Object} res
@@ -156,9 +137,9 @@ module.exports = React.createClass({
             return null;
         }
         var url = `${this.props.serverAddress}${res.url}`;
-        if (options && options.version) {
-            var version = res.versions[options.version];
-            url += `.${options.version}.${version.format}`;
+        var version = this.pickVideoVersion(res);
+        if (version) {
+            url += `.${version.name}.${version.format}`;
         }
         return url;
     },
@@ -172,7 +153,79 @@ module.exports = React.createClass({
      * @return {String|null}
      */
     getAudioURL: function(res, options) {
-        return this.getVideoURL(res, options);
+        if (!res.url) {
+            return null;
+        }
+        var url = `${this.props.serverAddress}${res.url}`;
+        var version = this.pickAudioVersion(res);
+        if (version) {
+            url += `.${version.name}.${version.format}`;
+        }
+        return url;
+    },
+
+    /**
+     * Return a resource's dimensions
+     *
+     * @param  {Object} res
+     *
+     * @return {Object}
+     */
+    getDimensions: function(res) {
+        var dims = {
+            width: res.width,
+            height: res.height,
+        };
+        if (res.type === 'video') {
+            var version = this.pickVideoVersion(res);
+            if (version && version.width && version.height) {
+                dims.width = version.width;
+                dims.height = version.height;
+            }
+        }
+        return dims;
+    },
+
+    /**
+     * Get a version of the video with the highest bitrate that is below
+     * the available bandwidth
+     *
+     * @param  {[type]} res
+     *
+     * @return {[type]}
+     */
+    pickVideoVersion: function(res) {
+        // both bitrate and bandwidths are in kbps
+        var bandwidth = parseInt(getBandwidth(this.props.networkType));
+        var bitrate = (version) => {
+            return parseInt(_.get(version, 'bitrates.video'));
+        };
+        var below = (version) => {
+            return (bitrate(version) <= bandwidth) ? 1 : 0;
+        };
+        var versions = _.orderBy(res.versions, [ below, bitrate ], [ 'desc', 'desc' ]);
+        return _.first(versions);
+    },
+
+    /**
+     * Get a version of the video with the highest bitrate that is below
+     * the available bandwidth
+     *
+     * @param  {[type]} res
+     *
+     * @return {[type]}
+     */
+    pickAudioVersion: function(res) {
+        // both bitrate and bandwidths are in kbps
+        var bandwidth = parseInt(getBandwidth(this.props.networkType));
+        var bitrate = (version) => {
+            return parseInt(_.get(version, 'bitrates.audio'));
+        };
+        var below = (version) => {
+            return (bitrate(version) <= bandwidth) ? 1 : 0;
+        };
+        var versions = _.orderBy(res.versions, [ below, bitrate ], [ 'desc', 'desc' ]);
+        return _.first(versions);
     },
 
     /**
@@ -332,6 +385,18 @@ function decodeLength(s) {
     }
 }
 
-function getProtocol(server) {
-    return (server === 'localhost') ? 'http' : 'http'
+function getBandwidth(networkType) {
+    switch (networkType) {
+        case 'cellular':
+        case '2g':
+            return '50kbps';
+        case '3g':
+            return '400kbps';
+        case '4g':
+            return '5000kbps';
+        case 'ethernet':
+        case 'wifi':
+        default:
+            return '10000kpbs';
+    }
 }

@@ -6,6 +6,7 @@ var Relaks = require('relaks');
 var BlobManager = require('transport/blob-manager');
 var MediaLoader = require('media/media-loader');
 
+var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
@@ -25,6 +26,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         currentUser: PropTypes.object,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         onChange: PropTypes.func,
@@ -150,6 +152,7 @@ module.exports = React.createClass({
     renderDialogBox: function() {
         var props = {
             show: this.state.capturing,
+            payloads: this.props.payloads,
             locale: this.props.locale,
             onCapture: this.handlePhotoCapture,
             onCancel: this.handleCaptureCancel,
@@ -221,12 +224,9 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handlePhotoCapture: function(evt) {
-        var image = evt.image;
-        var resource = _.assign({
-            type: 'image',
-            clip: getDefaultClippingRect(image.width, image.height),
-            filename: getFilenameFromTime('.jpg'),
-        }, image);
+        var resource = _.clone(evt.resource);
+        resource.filename = getFilenameFromTime('.jpg');
+        resource.clip = getDefaultClippingRect(image.width, image.height);
         this.setImage(resource);
         this.setState({ capturing: false });
     },

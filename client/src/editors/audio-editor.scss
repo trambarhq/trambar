@@ -24,3 +24,14 @@
         }
     }
 }
+
+.image-editor {
+    .audio-duration {
+        position: absolute;
+        top: 0.5em;
+        right: 0.5em;
+        opacity: 0.5;
+        pointer-events: none;
+        color: #ffffff;
+    }
+}

@@ -1,9 +1,11 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var FrameGrabber = require('media/frame-grabber');
 var DeviceManager = require('media/device-manager');
 var BlobManager = require('transport/blob-manager');
 
+var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
 
 // widgets
@@ -18,6 +20,7 @@ module.exports = React.createClass({
     propTypes: {
         show: PropTypes.bool,
 
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
         onCancel: PropTypes.func,
@@ -210,9 +213,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderCapturedImage: function() {
-        var props = {
-            src: this.state.capturedImage.file,
-        };
+        var props = { src: this.state.capturedImage.url };
         return (
             <div className="container">
                 <img {...props} />
@@ -362,31 +363,15 @@ module.exports = React.createClass({
      * @return {Promise<Object>}
      */
     captureImage: function() {
-        return new Promise((resolve, reject) => {
-            var format = 'jpeg';
-            var canvas = document.createElement('CANVAS');
-            var context = canvas.getContext('2d');
-            var video = this.videoNode;
-            var width = video.videoWidth;
-            var height = video.videoHeight;
-            canvas.width = width;
-            canvas.height = height;
-            context.drawImage(video, 0, 0, width, height);
-            // use toBlob() if browser supports it,
-            // otherwise fallback to toDataURL()
-            if (typeof(canvas.toBlob) === 'function') {
-                canvas.toBlob((blob) => {
-                    var file = BlobManager.manage(blob);
-                    resolve({ format, file, width, height });
-                }, 'image/jpeg', 90);
-            } else {
-                var B64toBlob = require('b64-to-blob');
-                var dataURL = canvas.toDataURL('image/jpeg');
-                var base64Data = dataURL.replace('data:image/jpeg;base64,', '');
-                var blob = B64toBlob(base64Data, 'image/jpeg');
-                var file = BlobManager.manage(blob);
-                resolve({ format, file, width, height });
-            }
+        var video = this.videoNode;
+        return FrameGrabber.capture(video).then((blob) => {
+            var localURL = BlobManager.manage(blob);
+            return {
+                url: localURL,
+                blob: blob,
+                width: video.videoWidth,
+                height: video.videoHeight,
+            };
         });
     },
 
@@ -394,14 +379,14 @@ module.exports = React.createClass({
      * Report back to parent component that an image has been captured and
      * accepted by user
      *
-     * @param  {Object} image
+     * @param  {Object} resource
      */
-    triggerCaptureEvent: function(image) {
+    triggerCaptureEvent: function(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                image,
+                resource,
             });
         }
     },
@@ -437,7 +422,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleRetakeClick: function(evt) {
-        BlobManager.remove(this.state.capturedImage.file);
+        BlobManager.remove(this.state.capturedImage.url);
         this.setState({ capturedImage: null });
     },
 
@@ -447,7 +432,18 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleAcceptClick: function(evt) {
-        this.triggerCaptureEvent(this.state.capturedImage);
+        var capturedImage = this.state.capturedImage;
+        var payload = this.props.payloads.add('image');
+        payload.attachFile(capturedImage.blob);
+        var url = payload.token;
+        var res = {
+            type: 'image',
+            payload_token: payload.token,
+            width: capturedImage.width,
+            height: capturedImage.height,
+            format: 'jpeg'
+        }
+        this.triggerCaptureEvent(res);
     },
 
     /**

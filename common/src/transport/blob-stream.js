@@ -1,16 +1,26 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
+var HTTPRequest = require('transport/http-request');
+var RandomToken = require('utils/random-token');
+var Async = require('async-do-while');
 
 module.exports = BlobStream;
 
-function BlobStream() {
+function BlobStream(address) {
+    this.id = RandomToken.generate();
+    this.address = address;
     this.parts = [];
     this.closed = false;
     this.error = null;
     this.pullResult = null;
     this.waitResult = null;
-    this.id = null;
     this.size = 0;
+    this.started = false;
+    this.online = true;
+    this.transferred = 0;
+    this.promise = null;
     this.onProgress = null;
+    this.onComplete = null;
 }
 
 /**
@@ -158,7 +168,7 @@ BlobStream.prototype.wait = function() {
  */
 BlobStream.prototype.pipe = function(file, chunkSize) {
     if (!chunkSize) {
-        chunkSize = 1 * 1024 * 1024;
+        chunkSize = 50 * 1024 * 1024;
     }
     var total = file.size;
     var type = file.type;
@@ -171,17 +181,146 @@ BlobStream.prototype.pipe = function(file, chunkSize) {
 };
 
 /**
+ * Indicate there's no connectivity
+ */
+BlobStream.prototype.suspend = function(status) {
+    if (this.online) {
+        this.online = false;
+    }
+};
+
+/**
+ * Indicate connectivity has been regained
+ */
+BlobStream.prototype.resume = function() {
+    if (!this.online) {
+        this.online = true;
+        if (this.onConnectivity) {
+            var f = this.onConnectivity;
+            this.onConnectivity = null;
+            this.connectivityPromise = null;
+            f();
+        }
+    }
+};
+
+/**
+ * Resolve immediately if online = false, otherwise wait for resume()
+ * to be called
+ *
+ * @return {Promise}
+ */
+BlobStream.prototype.waitForConnectivity = function() {
+    if (this.online) {
+        return Promise.resolve();
+    }
+    if (!this.connectivityPromise) {
+        this.connectivityPromise = new Promise((resolve, reject) => {
+            this.onConnectivity = resolve;
+        });
+    }
+    return this.connectivityPromise;
+};
+
+/**
+ * Start streaming data to remote server
+ */
+BlobStream.prototype.start = function() {
+    if (!this.promise) {
+        this.promise = this.waitForConnectivity().then(() => {
+            this.started = true;
+            return new Promise((resolve, reject) => {
+                var attempts = 1;
+                var failureCount = 0;
+                var done = false;
+                var uploadedChunkSize = 0;
+                var chunkIndex = 0;
+                var delay = 1000;
+                Async.do(() => {
+                    // get the next unsent part and send it
+                    return this.waitForConnectivity().then(() => {
+                        return this.pull().then((blob) => {
+                            var url = `${this.address}/media/stream/?id=${this.id}`;
+                            var formData = new FormData;
+                            if (blob) {
+                                formData.append('file', blob);
+                                formData.append('chunk', chunkIndex);
+                            } else {
+                                // the server recognize that an empty payload means we've
+                                // reached the end of the stream
+                                done = true;
+                            }
+                            var options = {
+                                responseType: 'json',
+                                onUploadProgress: (evt) => {
+                                    if (blob) {
+                                        // evt.loaded and evt.total are encoded sizes, which are slightly larger than the blob size
+                                        var bytesSentFromChunk = Math.round(blob.size * (evt.loaded / evt.total));
+                                        if (bytesSentFromChunk) {
+                                            this.updateProgress(uploadedChunkSize + bytesSentFromChunk);
+                                        }
+                                    }
+                                },
+                            };
+                            return HTTPRequest.fetch('POST', url, formData, options).then((response) => {
+                                if (blob) {
+                                    this.finalize(blob);
+                                    uploadedChunkSize += blob.size;
+                                }
+                                if (chunkIndex === 0) {
+                                    // resolve promsie after sending first chunk
+                                    resolve();
+                                }
+                                chunkIndex++;
+                            });
+                        }).catch((err) => {
+                            // don't immediately fail unless it's a HTTP error
+                            if (!(err.statusCode >= 400 && err.statusCode <= 499)) {
+                                if (++failureCount < attempts) {
+                                    // try again after a delay
+                                    delay = Math.min(delay * 2, 30 * 1000);
+                                    return Promise.delay(delay);
+                                }
+                            }
+                            throw err;
+                        });
+                    });
+                });
+                Async.while(() => { return !done });
+                Async.end().then(() => {
+                    if (this.onComplete) {
+                        this.onComplete({
+                            type: 'complete',
+                            target: this,
+                        });
+                    }
+                }).catch((err) => {
+                    this.abandon(err);
+                    if (chunkIndex === 0) {
+                        // didn't manage to initiate a stream at all
+                        reject(err);
+                    }
+                });
+            });
+        })
+    }
+    return this.promise;
+};
+
+/**
  * Report upload progress
  *
  * @param  {Number} transferred
  */
-BlobStream.prototype.report = function(transferred) {
+BlobStream.prototype.updateProgress = function(transferred) {
+    this.transferred = transferred;
     if (this.onProgress) {
         this.onProgress({
             type: 'progress',
             target: this,
             loaded: transferred,
             total: this.size,
+            lengthComputable: this.closed,
         });
     }
 };

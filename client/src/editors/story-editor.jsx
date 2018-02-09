@@ -9,6 +9,7 @@ var PlainText = require('utils/plain-text');
 var TagScanner = require('utils/tag-scanner');
 var ComponentRefs = require('utils/component-refs');
 var IssueUtils = require('objects/utils/issue-utils');
+var Payload = require('transport/payload');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -838,68 +839,29 @@ module.exports = React.createClass({
      */
     saveDraft: function(draft, immediate, resourceIndex) {
         return this.changeDraft(draft, resourceIndex).then((story) => {
-            var delay = (immediate) ? 0 : AUTOSAVE_DURATION;
-            this.autosaveStory(story, delay);
+            this.saveStory(story, immediate);
             return story;
         });
-    },
-
-    /**
-     * Save story to remote database after specified delay
-     *
-     * @param  {Story} story
-     * @param  {Number} delay
-     */
-    autosaveStory: function(story, delay) {
-        if (delay) {
-            this.cancelAutosave();
-            this.autosaveTimeout = setTimeout(() => {
-                this.saveStory(story);
-            }, delay);
-            this.autosaveUnloadHandler = () => {
-                this.saveStory(story);
-            };
-            window.addEventListener('beforeunload', this.autosaveUnloadHandler);
-        } else {
-            this.saveStory(story);
-        }
-    },
-
-    /**
-     * Cancel any auto-save operation
-     */
-    cancelAutosave: function() {
-        if (this.autosaveTimeout) {
-            clearTimeout(this.autosaveTimeout);
-            this.autosaveTimeout = 0;
-        }
-        if (this.autosaveUnloadHandler) {
-            window.removeEventListener('beforeunload', this.autosaveUnloadHandler);
-            this.autosaveUnloadHandler = null;
-        }
     },
 
     /**
      * Save story to remote database
      *
      * @param  {Story} story
+     * @param  {Boolean} immediate
      *
      * @return {Promise<Story>}
      */
-    saveStory: function(story) {
-        this.cancelAutosave();
-
+    saveStory: function(story, immediate) {
         // send images and videos to server
         var params = this.props.route.parameters;
         var resources = story.details.resources || [];
-        var payloads = this.props.payloads;
-        return payloads.prepare(params.schema, story).then(() => {
-            var db = this.props.database.use({ schema: params.schema, by: this });
-            return db.start().then(() => {
-                return db.saveOne({ table: 'story' }, story).then((story) => {
-                    // start file upload
-                    return payloads.dispatch(params.schema, story).return(story);
-                });
+        var delay = (immediate) ? undefined : AUTOSAVE_DURATION;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'story' }, story, delay).then((story) => {
+                this.props.payloads.dispatch(story);
+                return story;
             });
         });
     },
@@ -1240,8 +1202,8 @@ module.exports = React.createClass({
                     // images are style at height = 1.5em
                     url = theme.getImageURL(res, { height: 24 });
                     if (!url) {
-                        // use blob if it's attached
-                        var fileURL = theme.getImageFile(res);
+                        // maybe it's a file that isn't done uploading
+                        var fileURL = Payload.getImageURL(res);
                         url = Markdown.attachClipRect(fileURL, res.clip);
                     }
                 }

@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var BlobManager = require('transport/blob-manager');
+var Payload = require('transport/payload');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -76,13 +77,11 @@ module.exports = React.createClass({
      * @return {String|null}
      */
     getFullImageURL: function(res) {
-        // use file we had uploaded earlier if it's there
-        var theme = this.props.theme;
-        var fileURL = theme.getImageFile(res);
-        if (fileURL && BlobManager.get(fileURL)) {
-            return fileURL;
+        var url = this.props.theme.getImageURL(res, { clip: null });
+        if (!url) {
+            url = Payload.getImageURL(res);
         }
-        return theme.getImageURL(res, { clip: null });
+        return url;
     },
 
     /**

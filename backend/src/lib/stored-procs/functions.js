@@ -2,7 +2,7 @@ module.exports = {
     lowerCase,
     matchAny,
     hasCandidates,
-    payloadIds,
+    payloadTokens,
     updatePayload,
     checkAuthorization,
     extendAuthorization,
@@ -61,28 +61,28 @@ hasCandidates.flags = 'IMMUTABLE';
  *
  * @param  {Object} details
  *
- * @return {Array<Number>|null}
+ * @return {Array<String>|null}
  */
-function payloadIds(details) {
-    var payloadIds = [];
+function payloadTokens(details) {
+    var tokens = [];
     var resources = details.resources;
     if (resources instanceof Array) {
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
-            if (res.payload_id) {
-                payloadIds.push(res.payload_id);
+            if (res.payload_token) {
+                tokens.push(res.payload_token);
             }
         }
     } else {
-        if (details.payload_id) {
-            payloadIds.push(details.payload_id);
+        if (details.payload_token) {
+            tokens.push(details.payload_token);
         }
     }
-    return (payloadIds.length > 0) ? payloadIds : null;
+    return (tokens.length > 0) ? tokens : null;
 }
-payloadIds.args = 'details jsonb';
-payloadIds.ret = 'int[]';
-payloadIds.flags = 'IMMUTABLE';
+payloadTokens.args = 'details jsonb';
+payloadTokens.ret = 'text[]';
+payloadTokens.flags = 'IMMUTABLE';
 
 /**
  * Copy properties of payload into matching resource
@@ -100,7 +100,7 @@ function updatePayload(details, payload) {
     if (resources) {
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
-            if (res.payload_id === payload.id) {
+            if (res.payload_token === payload.token) {
                 transferProps(payload.details, res);
                 res.ready = ready;
             }
@@ -108,7 +108,7 @@ function updatePayload(details, payload) {
     } else {
         // info is perhaps stored in the details object itself
         var res = details;
-        if (res.payload_id === payload.id) {
+        if (res.payload_token === payload.token) {
             transferProps(payload.details, res);
             res.ready = ready;
         }

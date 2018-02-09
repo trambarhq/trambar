@@ -92,7 +92,7 @@ module.exports = _.create(ExternalData, {
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
-            CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
+            CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} USING gin(user_ids);
             CREATE INDEX ON ${table} USING gin(("lowerCase"(tags))) WHERE cardinality(tags) <> 0;

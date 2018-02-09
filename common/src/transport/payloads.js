@@ -5,115 +5,53 @@ module.exports = Payloads;
 
 function Payloads(payloadManager) {
     this.payloadManager = payloadManager;
-    this.uploading = this.payloadManager.getUploadProgress();
+    //this.uploading = this.payloadManager.getUploadProgress();
 }
 
+
 /**
- * Create a payload of files needed by a res
+ * Add a new payload
  *
- * @param  {String} schema
- * @param  {Object} res
+ * @param  {String} type
  *
- * @return {Promise<Number>}
+ * @return {Payload}
  */
-Payloads.prototype.queue = function(schema, res) {
-    return this.payloadManager.queue(schema, res);
+Payloads.prototype.add = function(type) {
+    return this.payloadManager.add(type);
 };
 
 /**
- * Look for a payload
+ * Create a stream
  *
- * @param  {String} schema
- * @param  {Object} criteria
- *
- * @return {Object}
+ * @return {Stream}
  */
-Payloads.prototype.find = function(schema, criteria) {
-    return this.payloadManager.find(schema, criteria);
-};
-
-/**
- * Begin sending a previously queued payload
- *
- * @param  {String} schema
- * @param  {Number} payloadId
- */
-Payloads.prototype.send = function(schema, payloadId) {
-    return this.payloadManager.send(schema, payloadId);
-};
-
-/**
- * Send blobs to server as they're added into a BlobStream
- *
- * @param  {BlobStream} stream
- *
- * @return {Promise<Number>}
- */
-Payloads.prototype.stream = function(stream) {
-    return this.payloadManager.stream(stream);
-};
-
-/**
- * Scan an object's resource array and queue blobs for uploading
- *
- * @param  {String} schema
- * @param  {Object} object
- * @param  {Object} options
- *
- * @return {Promise}
- */
-Payloads.prototype.prepare = function(schema, object, options) {
-    var resources = _.get(object, 'details.resources', []);
-    return Promise.each(resources, (res) => {
-        if (!res.payload_id) {
-            // acquire a task id for each attached resource
-            var typeOptions = _.get(options, res.type);
-            return this.queue(schema, res, typeOptions).then((payloadId) => {
-                if (payloadId) {
-                    res.payload_id = payloadId;
-                }
-            });
-        }
-    });
+Payloads.prototype.stream = function() {
+    return this.payloadManager.stream();
 };
 
 /**
  * Scan an object's resource array and upload any blobs to the server
  *
- * @param  {String} schema
  * @param  {Object} object
  *
  * @return {Promise}
  */
-Payloads.prototype.dispatch = function(schema, object) {
-    var resources = _.get(object, 'details.resources', []);
-    var payloadIds = _.filter(_.map(resources, 'payload_id'));
-    return Promise.each(payloadIds, (payloadId) => {
-        this.send(schema, payloadId);
-        return null;
-    });
+Payloads.prototype.dispatch = function(object) {
+    var tokens = getPayloadTokens(object);
+    return this.payloadManager.send(tokens);
 };
 
 /**
  * Scan an object's resource array and calculate the overall progress
  *
- * @param  {String} schema
  * @param  {Object} object
  *
  * @return {Object|null}
  */
-Payloads.prototype.inquire = function(schema, object) {
-    // find the payloads
-    var resources = _.get(object, 'details.resources', []);
-    var payloads = [];
-    _.each(resources, (res) => {
-        if (res.payload_id) {
-            var payload = this.find(schema, { payload_id: res.payload_id });
-            if (payload) {
-                payloads.push(payload)
-            }
-        }
-    });
+Payloads.prototype.inquire = function(object) {
+    return null;
+    var tokens = getPayloadTokens(object);
+
     if (_.isEmpty(payloads)) {
         return null;
     }
@@ -157,3 +95,22 @@ Payloads.prototype.inquire = function(schema, object) {
     }
     return { action, progress };
 };
+
+function getPayloadTokens(object) {
+    var tokens = [];
+    if (object) {
+        var details = object.details;
+        if (details) {
+            if (details.resources) {
+                _.each(details.resources, (res) => {
+                    if (res.payload_token) {
+                        tokens.push(res.payload_token);
+                    }
+                });
+            } else if (details.payload_token) {
+                tokens.push(details.payload_token);
+            }
+        }
+    }
+    return tokens;
+}

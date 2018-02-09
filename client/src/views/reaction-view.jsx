@@ -5,6 +5,7 @@ var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var UserUtils = require('objects/utils/user-utils');
 var LinkUtils = require('objects/utils/link-utils');
+var Payload = require('transport/payload');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -473,8 +474,8 @@ module.exports = React.createClass({
                     // images are style at height = 1.5em
                     url = theme.getImageURL(res, { height: 24 });
                     if (!url) {
-                        // use blob if it's attached
-                        var fileURL = theme.getImageFile(res);
+                        // maybe it's a file that isn't done uploading
+                        var fileURL = Payload.getImageURL(res);
                         url = Markdown.attachClipRect(fileURL, res.clip);
                     }
                 }

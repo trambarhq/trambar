@@ -1066,30 +1066,24 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         this.setState({ saving: true, adding: !user.id, problems: {} }, () => {
             var schema = 'global';
             var db = this.props.database.use({ schema, by: this });
-            var payloads = this.props.payloads;
-            return payloads.prepare(schema, user).then(() => {
-                return db.start().then((userId) => {
-                    return db.saveOne({ table: 'user' }, user).then((user) => {
-                        return payloads.dispatch(schema, user).then(() => {
-                            this.setState({ hasChanges: false, saving: false }, () => {
-                                return this.setEditability(false, user);
-                            });
-                            return null;
-                        }).then(() => {
-                            if (this.props.project) {
-                                // add user to member list if he's not there yet
-                                var userIds = this.props.project.user_ids;
-                                if (!_.includes(userIds, user.id)) {
-                                    var userIdsAfter = _.union(userIds, [ user.id ]);
-                                    var columns = {
-                                        id: this.props.project.id,
-                                        user_ids: userIdsAfter
-                                    };
-                                    return db.saveOne({ table: 'project' }, columns);
-                                }
-                            }
-                        });
+            return db.start().then((userId) => {
+                return db.saveOne({ table: 'user' }, user).then((user) => {
+                    this.props.payloads.dispatch(user);
+                    this.setState({ hasChanges: false, saving: false }, () => {
+                        return this.setEditability(false, user);
                     });
+                    if (this.props.project) {
+                        // add user to member list if he's not there yet
+                        var userIds = this.props.project.user_ids;
+                        if (!_.includes(userIds, user.id)) {
+                            var userIdsAfter = _.union(userIds, [ user.id ]);
+                            var columns = {
+                                id: this.props.project.id,
+                                user_ids: userIdsAfter
+                            };
+                            return db.saveOne({ table: 'project' }, columns);
+                        }
+                    }
                 });
             }).catch((err) => {
                 var problems = {};

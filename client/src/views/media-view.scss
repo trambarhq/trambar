@@ -42,15 +42,9 @@
             }
 
             .duration {
+                padding: 0.25em 0.5em 0.25em 0.5em;
                 font-size: 2em;
-            }
-
-            &.hidden {
-                opacity: 0;
-
-                &:hover {
-                    opacity: 0.6;
-                }
+                border-radius: 0.5em;
             }
         }
 
@@ -64,19 +58,39 @@
             }
         }
 
-        .video {
+        .video, .audio {
             .overlay {
                 color: #111111;
+                opacity: 0;
+
+                &:hover {
+                    opacity: 0.6;
+
+                    .duration {
+                        color: #eeeeee;
+                        background-color: #111111;
+                    }
+                }
             }
-        }
 
-        .audio {
-            padding-top: 50%;
-            padding-bottom: 50%;
-            background-color: #111111;
+            &.posterless {
+                padding-top: 50%;
+                padding-bottom: 50%;
+                background-color: #111111;
 
-            .overlay {
-                color: #eeeeee;
+                .overlay {
+                    color: #eeeeee;
+                    opacity: 0.5;
+
+                    &:hover {
+                        opacity: 1;
+
+                        .duration {
+                            color: #eeeeee;
+                            background-color: transparent;
+                        }
+                    }
+                }
             }
         }
 
@@ -100,6 +114,7 @@
             top: 0;
             left: 0;
             width: 100%;
+            margin-top: 0;
         }
     }
 }

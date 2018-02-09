@@ -117,7 +117,7 @@ function downloadFile(url, dstFolder) {
  * @param  {String|undefined} url
  * @param  {String} dstFolder
  *
- * @return {Promise<Object>}
+ * @return {Promise<String>}
  */
 function preserveFile(file, url, dstFolder) {
     return Promise.try(() => {
@@ -131,10 +131,7 @@ function preserveFile(file, url, dstFolder) {
             return hashFile(srcPath).then((hash) => {
                 var dstPath = `${dstFolder}/${hash}`;
                 return moveFile(srcPath, dstPath).then(() => {
-                    return {
-                        path: dstPath,
-                        hash: hash
-                    };
+                    return dstPath;
                 });
             });
         } else {

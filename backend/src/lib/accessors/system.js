@@ -76,9 +76,11 @@ module.exports = _.create(Data, {
             // order to remove hook created previously
             var propNames = [ 'settings' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                // completion of tasks will automatically update details->resources
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updateSystem', 'updateResource', [ this.table ]);
+                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+                    // completion of tasks will automatically update details->resources
+                    var Task = require('accessors/task');
+                    return Task.createUpdateTrigger(db, schema, 'updateSystem', 'updateResource', [ this.table ]);
+                });
             });
         });
     },

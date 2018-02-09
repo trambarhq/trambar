@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
+var MediaTagReader = require('media/media-tag-reader');
 var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
 var FrameGrabber = require('media/frame-grabber');
@@ -21,6 +22,8 @@ var UpdateCheck = require('mixins/update-check');
 var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
+
+var USE_STREAM = true;
 
 require('./media-editor.scss');
 
@@ -141,8 +144,9 @@ module.exports = React.createClass({
     renderPhotoDialog: function() {
         var props = {
             show: (this.state.capturing === 'image'),
+            payloads: this.props.payloads,
             locale: this.props.locale,
-            onCapture: this.handlePhotoCapture,
+            onCapture: this.handleCapture,
             onCancel: this.handleCaptureCancel,
         };
         return <PhotoCaptureDialogBox {...props} />
@@ -158,7 +162,7 @@ module.exports = React.createClass({
             show: (this.state.capturing === 'video'),
             payloads: this.props.payloads,
             locale: this.props.locale,
-            onCapture: this.handleVideoCapture,
+            onCapture: this.handleCapture,
             onCancel: this.handleCaptureCancel,
         };
         return <VideoCaptureDialogBox {...props} />
@@ -174,7 +178,7 @@ module.exports = React.createClass({
             show: (this.state.capturing === 'audio'),
             payloads: this.props.payloads,
             locale: this.props.locale,
-            onCapture: this.handleAudioCapture,
+            onCapture: this.handleCapture,
             onCancel: this.handleCaptureCancel,
         };
         return <AudioCaptureDialogBox {...props} />
@@ -243,76 +247,13 @@ module.exports = React.createClass({
             var type = parts[0];
             var format = parts[1];
             if (type === 'image') {
-                var blobURL = BlobManager.manage(file);
-                return MediaLoader.loadImage(blobURL).then((image) => {
-                    return {
-                        type: 'image',
-                        format: format,
-                        filename: file.name,
-                        file: blobURL,
-                        width: image.naturalWidth,
-                        height: image.naturalHeight,
-                        clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
-                        imported: true,
-                    };
-                });
+                return this.importImageFile(file, format);
             } else if (type === 'video') {
-                // if file is in a QuickTime container, make sure metadata is
-                // at the beginning of the file
-                return QuickStart.process(file).then((blob) => {
-                    if (!blob) {
-                        // if video wasn't processed, use the original file
-                        blob = file;
-                    }
-                    var blobURL = BlobManager.manage(blob);
-                    return MediaLoader.loadVideo(blobURL).then((video) => {
-                        return FrameGrabber.capture(video).then((posterBlob) => {
-                            var posterBlobURL = BlobManager.manage(posterBlob);
-                            // upload file in small chunks
-                            var stream = new BlobStream;
-                            stream.pipe(blob);
-                            return {
-                                type: 'video',
-                                format: format,
-                                filename: file.name,
-                                file: blobURL,
-                                stream: stream,
-                                poster_file: posterBlobURL,
-                                width: video.videoWidth,
-                                height: video.videoHeight,
-                                clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
-                                duration: Math.round(video.duration * 1000),
-                                imported: true,
-                            };
-                        });
-                    });
-                });
+                return this.importVideoFile(file, format);
             } else if (type === 'audio') {
-                var blobURL = BlobManager.manage(file);
-                return MediaLoader.loadAudio(blobURL).then((audio) => {
-                    var stream = new BlobStream;
-                    stream.pipe(file);
-                    return {
-                        type: 'audio',
-                        format: format,
-                        filename: file.name,
-                        file: blobURL,
-                        stream: stream,
-                        duration: Math.round(audio.duration * 1000),
-                        imported: true,
-                    };
-                });
+                return this.importAudioFile(file, format);
             } else if (type === 'application' && /x-mswinurl|x-desktop/.test(format)) {
-                return BlobReader.loadText(file).then((text) => {
-                    var link = LinkParser.parse(text);
-                    if (link) {
-                        return {
-                            type: 'website',
-                            url: link.url,
-                            title: link.name || _.replace(file.name, /\.\w+$/, ''),
-                        };
-                    }
-                });
+                return this.importBookmarkFile(file, format);
             }
         }).then((resources) => {
             return this.addResources(_.filter(resources));
@@ -320,41 +261,178 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called after user has taken a photo
+     * Import an image file
      *
-     * @param  {Object} evt
+     * @param  {File} file
+     * @param  {String} format
+     *
+     * @return {Promise<Object>}
      */
-    handlePhotoCapture: function(evt) {
-        var res = _.clone(evt.image);
-        res.type = 'image';
-        res.filename = getFilenameFromTime('.jpg');
-        res.clip = getDefaultClippingRect(res.width, res.height);
-        this.addResources([ res ]);
-        this.handleCaptureCancel(evt);
+    importImageFile: function(file, format) {
+        var blobURL = BlobManager.manage(file);
+        var payload = this.props.payloads.add('image');
+        payload.attachFile(file);
+        return MediaLoader.loadImage(blobURL).then((image) => {
+            return {
+                type: 'image',
+                payload_token: payload.token,
+                format: format,
+                filename: file.name,
+                width: image.naturalWidth,
+                height: image.naturalHeight,
+                clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
+                imported: true,
+            };
+        }).catch((err) => {
+            return {
+                type: 'image',
+                payload_token: payload.token,
+                format: format,
+                filename: file.name,
+                imported: true,
+            };
+        });
     },
 
     /**
-     * Called after user has shot a video
+     * Import a video file
      *
-     * @param  {Object} evt
+     * @param  {File} file
+     * @param  {String} format
+     *
+     * @return {Promise<Object>}
      */
-    handleVideoCapture: function(evt) {
-        var res = _.clone(evt.video);
-        res.type = 'video';
-        res.filename = getFilenameFromTime('.' + res.format) ;
-        res.clip = getDefaultClippingRect(res.width, res.height);
-        this.addResources([ res ]);
-        this.handleCaptureCancel(evt);
+    importVideoFile: function(file, format) {
+        // if file is in a QuickTime container, make sure metadata is
+        // at the beginning of the file
+        return QuickStart.process(file).then((blob) => {
+            if (!blob) {
+                // if video wasn't processed, use the original file
+                blob = file;
+            }
+            var blobURL = BlobManager.manage(blob);
+            debugger;
+            var payload = this.props.payloads.add('video');
+            if (USE_STREAM) {
+                // upload file in small chunks
+                var stream = this.props.payloads.stream();
+                stream.pipe(blob);
+                payload.attachStream(stream);
+            } else {
+                payload.attachFile(blob);
+            }
+            return MediaLoader.loadVideo(blobURL).then((video) => {
+                return FrameGrabber.capture(video).then((posterBlob) => {
+                    payload.attachFile(posterBlob, 'poster')
+                    return {
+                        type: 'video',
+                        payload_token: payload.token,
+                        format: format,
+                        filename: file.name,
+                        width: video.videoWidth,
+                        height: video.videoHeight,
+                        clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
+                        duration: Math.round(video.duration * 1000),
+                        imported: true,
+                    };
+                });
+            }).catch((err) => {
+                return {
+                    type: 'video',
+                    payload_token: payload.token,
+                    format: format,
+                    filename: file.name,
+                    imported: true,
+                };
+            });
+        });
     },
 
     /**
-     * Called after user has shot a video
+     * Import an audio file
+     *
+     * @param  {File} file
+     * @param  {String} format
+     *
+     * @return {Promise<Object>}
+     */
+    importAudioFile: function(file, format) {
+        var blobURL = BlobManager.manage(file);
+        var payload = this.props.payloads.add('audio');
+        if (USE_STREAM) {
+            var stream = this.props.payloads.stream();
+            stream.pipe(file);
+            payload.attachStream(stream);
+        } else {
+            payload.attachFile(file);
+        }
+        return MediaLoader.loadAudio(blobURL).then((audio) => {
+            var audio = {
+                type: 'audio',
+                payload_token: payload.token,
+                format: format,
+                filename: file.name,
+                duration: Math.round(audio.duration * 1000),
+                imported: true,
+            };
+            return MediaTagReader.extractAlbumArt(file).then((imageBlob) => {
+                if (!imageBlob) {
+                    return audio;
+                }
+                var imageBlobURL = BlobManager.manage(imageBlob);
+                payload.attachFile(imageBlob, 'poster');
+                return MediaLoader.loadImage(imageBlobURL).then((image) => {
+                    audio.width = image.naturalWidth;
+                    audio.height = image.naturalHeight;
+                    audio.clip = getDefaultClippingRect(image.naturalWidth, image.naturalHeight);
+                    return audio;
+                });
+            });
+        }).catch((err) => {
+            return {
+                type: 'audio',
+                payload_token: payload.token,
+                format: format,
+                filename: file.name,
+                imported: true,
+            };
+        });
+    },
+
+    /**
+     * Import a bookmark/shortcut file
+     *
+     * @param  {File} file
+     * @param  {String} format
+     *
+     * @return {Promise<Object|undefined>}
+     */
+    importBookmarkFile: function(file, format) {
+        return BlobReader.loadText(file).then((text) => {
+            var link = LinkParser.parse(text);
+            if (link && /https?:/.test(link.url)) {
+                var payload = this.props.payloads.add('website');
+                payload.attachURL(link.url, 'poster');
+                return {
+                    type: 'website',
+                    payload_token: payload.token,
+                    url: link.url,
+                    title: link.name || _.replace(file.name, /\.\w+$/, ''),
+                };
+            }
+        });
+    },
+
+    /**
+     * Called after user has taken a photo, video, or audio
      *
      * @param  {Object} evt
      */
-    handleAudioCapture: function(evt) {
-        var res = _.clone(evt.audio);
-        res.type = 'audio';
+    handleCapture: function(evt) {
+        var res = _.clone(evt.resource);
+        if (res.width && res.height) {
+            res.clip = getDefaultClippingRect(res.width, res.height);
+        }
         res.filename = getFilenameFromTime('.' + res.format) ;
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);

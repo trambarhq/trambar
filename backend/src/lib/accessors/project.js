@@ -60,7 +60,7 @@ module.exports = _.create(Data, {
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
-            CREATE INDEX ON ${table} USING gin(("payloadIds"(details))) WHERE "payloadIds"(details) IS NOT NULL;
+            CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
         `;
         return db.execute(sql);
     },
@@ -95,9 +95,11 @@ module.exports = _.create(Data, {
         return this.createChangeTrigger(db, schema).then(() => {
             var propNames = [ 'deleted', 'name', 'repo_ids', 'user_ids', 'archived' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                // completion of tasks will automatically update details->resources
-                var Task = require('accessors/task');
-                return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
+                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
+                    // completion of tasks will automatically update details->resources
+                    var Task = require('accessors/task');
+                    return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
+                });
             });
         });
     },

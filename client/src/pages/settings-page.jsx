@@ -247,6 +247,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticDataPanel type="websocket-notifier" title="Web Socket" />
                     <DiagnoisticDataPanel type="push-notifier" title="Push Notification" />
                     <DiagnoisticDataPanel type="subscription-manager" title="Data Subscription" />
+                    <DiagnoisticDataPanel type="payload-manager" title="Payload Manager" />
                     <DiagnoisticDataPanel type="session-manager" title="Sessions" />
                     <DiagnoisticDataPanel type="link-manager" title="Project Links" />
                     <DiagnoisticDataPanel type="indexed-db-cache" title="IndexedDB Cache" />
@@ -339,6 +340,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     renderUserImagePanel: function() {
         var panelProps = {
             currentUser: this.getUser(),
+            payloads: this.props.payloads,
             locale: this.props.locale,
             theme: this.props.theme,
             onChange: this.handleChange,
@@ -433,44 +435,25 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @return {[type]}
      */
     componentWillUnmount: function() {
-        if (this.autosaveTimeout && this.state.user) {
-            clearTimeout(this.autosaveTimeout);
-            this.saveUser(this.state.user);
-        }
         KonamiCode.removeListener(this.handleKonamiCode);
-    },
-
-    /**
-     * Save changes after a delay
-     *
-     * @param  {User} user
-     */
-    autosaveUser: function(user) {
-        if (this.autosaveTimeout) {
-            clearTimeout(this.autosaveTimeout);
-        }
-        this.autosaveTimeout = setTimeout(() => {
-            this.saveUser(user);
-            this.autosaveTimeout = null;
-        }, 2000);
     },
 
     /**
      * Save new user object to remote database
      *
      * @param  {User} user
+     * @param  {Boolean} immediate
      *
      * @return {Promise<User>}
      */
-    saveUser: function(user) {
-        var payloads = this.props.payloads;
+    saveUser: function(user, immediate) {
         var schema = 'global';
-        return payloads.prepare(schema, user).then(() => {
-            var db = this.props.database.use({ schema, by: this });
-            return db.saveOne({ table: 'user' }, user).then((user) => {
-                // start file upload
-                return payloads.dispatch(schema, user).return(user);
-            });
+        var delay = immediate ? undefined : 2000;
+        var db = this.props.database.use({ schema, by: this });
+        return db.saveOne({ table: 'user' }, user, delay).then((user) => {
+            // start file upload
+            this.props.payloads.dispatch(schema, user);
+            return user;
         });
     },
 
@@ -482,7 +465,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     handleChange: function(evt) {
         var user = evt.user;
         this.setState({ user }, () => {
-            this.autosaveUser(user);
+            this.saveUser(user, false);
         });
     },
 
@@ -494,7 +477,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     handleKonamiCode: function(evt) {
         var user = _.decoupleSet(this.getUser(), 'settings.diagnostics.show_panel', true);
         this.setState({ user }, () => {
-            this.autosaveUser(user);
+            this.saveUser(user, true);
         });
     },
 });

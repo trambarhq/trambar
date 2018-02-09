@@ -313,6 +313,7 @@ module.exports = React.createClass({
                 'double-col': 700,
                 'triple-col': 1300,
             },
+            networkType: this.state.networkType,
             serverAddress: serverAddress,
             onChange: this.handleThemeChange,
         };
@@ -406,10 +407,12 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'browser') {
             window.addEventListener('beforeunload', this.handleBeforeUnload);
         }
-
         if (process.env.PLATFORM === 'cordova') {
             document.addEventListener('pause', this.handlePause, false);
             document.addEventListener('resume', this.handleResume, false);
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            window.addEventListener('keydown', this.handleDebugKeydown);
         }
     },
 
@@ -435,6 +438,9 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'cordova') {
             document.removeEventListener('pause', this.handlePause, false);
             document.removeEventListener('resume', this.handleResume, false);
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            window.removeEventListener('keydown', this.handleDebugKeydown);
         }
     },
 
@@ -902,6 +908,24 @@ module.exports = React.createClass({
             nextState.database = new Database(database.remoteDataSource, database.context, evt.online);
         }
         this.setState(nextState);
+    },
+
+    /**
+     * Called when user press a key in dev environment
+     *
+     * @param  {Event} evt
+     */
+    handleDebugKeydown: function(evt) {
+        if (evt.keyCode === 68 && evt.ctrlKey) {    // ctrl-D
+            var params = this.state.route.parameters;
+            if (params.schema) {
+                this.state.route.push(require('pages/settings-page'), {
+                    diagnostics: true,
+                    schema: params.schema
+                });
+            }
+            evt.preventDefault();
+        }
     },
 
     /**

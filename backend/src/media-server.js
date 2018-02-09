@@ -48,14 +48,13 @@ function start() {
         app.get('/media/videos/:filename', handleVideoRequest);
         app.get('/media/audios/:filename', handleAudioRequest);
         app.get('/media/cliparts/:filename', handleClipartRequest);
-        app.post('/media/html/poster/:schema/:taskId', upload.array(), handleWebsitePoster);
-        app.post('/media/images/upload/:schema/:taskId', upload.single('file'), handleImageUpload);
-        app.post('/media/videos/upload/:schema/:taskId', upload.single('file'), handleVideoUpload);
-        app.post('/media/videos/poster/:schema/:taskId', upload.single('file'), handleVideoPoster);
-        app.post('/media/audios/upload/:schema/:taskId', upload.single('file'), handleAudioUpload);
-        app.post('/media/audios/poster/:schema/:taskId', upload.single('file'), handleAudioPoster);
-        app.post('/media/stream/:jobId', upload.single('file'), handleStreamAppend);
-        app.post('/media/stream', upload.single('file'), handleStreamCreate);
+        app.post('/media/html/poster/:schema/', upload.array(), handleWebsitePoster);
+        app.post('/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
+        app.post('/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
+        app.post('/media/videos/poster/:schema/', upload.single('file'), handleVideoPoster);
+        app.post('/media/audios/upload/:schema/', upload.single('file'), handleAudioUpload);
+        app.post('/media/audios/poster/:schema/', upload.single('file'), handleAudioPoster);
+        app.post('/media/stream/', upload.single('file'), handleStream);
         app.post('/internal/import', upload.single('file'), handleImageImport);
 
         CacheFolders.create();
@@ -147,7 +146,7 @@ function sendError(res, err) {
     var statusCode = err.statusCode;
     var message = err.message;
     if (process.env.NODE_ENV !== 'production') {
-        console.error(err);
+        console.error('sendError', err);
     }
     if (!statusCode) {
         // not an expected error
@@ -243,28 +242,27 @@ function handleClipartRequest(req, res) {
 function handleWebsitePoster(req, res) {
     // generate hash from URL + date
     var schema = req.params.schema;
-    var taskId = parseInt(req.params.taskId);
     var token = req.query.token;
     var url = req.body.url;
-    return checkTaskToken(schema, taskId, token).then(() => {
+    return checkTaskToken(schema, token, 'add-website').then((taskId) => {
         if (!url) {
             throw new HTTPError(400);
         }
         var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.png');
         WebsiteCapturer.createScreenshot(url, tempPath).then((title) => {
             // rename it to its MD5 hash once we have the data
-            return FileManager.hashFile(tempPath).then((hash) => {
-                var dstPath = `${CacheFolders.image}/${hash}`;
-                return FileManager.moveFile(tempPath, dstPath).then(() => {
-                    return ImageManager.getImageMetadata(dstPath).then((metadata) => {
-                        var url = `/media/images/${hash}`;
-                        var width = metadata.width;
-                        var height = metadata.height;
-                        var details = { poster_url: url, title, width, height };
-                        return saveTaskOutcome(schema, taskId, details);
-                    }).then(() => {
-                        return ImageManager.addJPEGDescription(title, dstPath);
-                    });
+            var file = { path: tempPath };
+            return FileManager.preserveFile(file, null, CacheFolders.image).then((imagePath) => {
+                return ImageManager.getImageMetadata(imagePath).then((metadata) => {
+                    var details = {
+                        poster_url: getFileURL(imagePath),
+                        title: metadata.title,
+                        width: metadata.width,
+                        height: metadata.height,
+                    };
+                    return saveTaskOutcome(schema, taskId, 'poster', details);
+                }).then(() => {
+                    return ImageManager.addJPEGDescription(title, dstPath);
                 });
             });
         });
@@ -285,22 +283,25 @@ function handleWebsitePoster(req, res) {
  */
 function handleImageUpload(req, res) {
     var schema = req.params.schema;
-    var taskId = parseInt(req.params.taskId);
     var token = req.query.token;
     var file = req.file;
     var url = req.body.external_url;
-    return checkTaskToken(schema, taskId, req.query.token).then(() => {
-        return FileManager.preserveFile(file, url, CacheFolders.image).then((imageFile) => {
-            if (!imageFile) {
+    return checkTaskToken(schema, token, 'add-image').then((taskId) => {
+        return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
+            if (!imagePath) {
                 throw new HTTPError(400);
             }
-            var url = `/media/images/${imageFile.hash}`;
-            ImageManager.getImageMetadata(imageFile.path).then((metadata) => {
-                var format = metadata.format;
-                var width = metadata.width;
-                var height = metadata.height;
-                var details = { url, format, width, height };
-                return saveTaskOutcome(schema, taskId, details);
+            //
+            var url = getFileURL(imagePath);
+            ImageManager.getImageMetadata(imagePath).then((metadata) => {
+                var details = {
+                    url: url,
+                    format: metadata.format,
+                    width: metadata.width,
+                    height: metadata.height,
+                    title: metadata.title,
+                };
+                return saveTaskOutcome(schema, taskId, 'main', details);
             });
             return { url };
         });
@@ -320,16 +321,18 @@ function handleImageUpload(req, res) {
 function handleImageImport(req, res) {
     var file = req.file;
     var url = req.body.external_url;
-    return FileManager.preserveFile(file, url, CacheFolders.image).then((imageFile) => {
-        if (!imageFile) {
+    return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
+        if (!imagePath) {
             throw new HTTPError(400);
         }
-        return ImageManager.getImageMetadata(imageFile.path).then((metadata) => {
-            var url = `/media/images/${imageFile.hash}`;
-            var format = metadata.format;
-            var width = metadata.width;
-            var height = metadata.height;
-            return { url, format, width, height };
+        return ImageManager.getImageMetadata(imagePath).then((metadata) => {
+            var details = {
+                url: getFileURL(imagePath),
+                format: metadata.format,
+                width: metadata.width,
+                height: metadata.height,
+            };
+            return details;
         });
     }).then((results) => {
         sendJSON(res, results);
@@ -387,53 +390,85 @@ function handleAudioPoster(req, res) {
 function handleMediaUpload(req, res, type) {
     var schema = req.params.schema;
     var token = req.query.token;
-    var taskId = parseInt(req.params.taskId);
     var streamId = req.body.stream;
     var file = req.file;
     var url = req.body.external_url;
-    return checkTaskToken(schema, taskId, token).then(() => {
+    return checkTaskToken(schema, token, `add-${type}`).then((taskId) => {
         if (streamId) {
-            // handle streaming upload
+            // handle streaming upload--transcoding job has been created already
             var job = VideoManager.findTranscodingJob(streamId);
             if (!job) {
                 throw new HTTPError(404);
             }
-            job.onProgress = (evt) => {
-                var progress = evt.target.progress;
-                console.log('Progress: ', progress + '%');
-                saveTaskProgress(schema, taskId, null, progress);
-            };
-            VideoManager.awaitTranscodingJob(job).then((job) => {
-                var details = {
-                    url: `/media/${job.type}s/${job.originalHash}`,
-                    versions: job.profiles
-                };
-                return saveTaskOutcome(schema, taskId, details);
-            });
-            // URL won't be known until after file has fully uploaded
-            return { url: undefined };
+            monitorTranscodingJob(schema, taskId, job);
+            return {};
         } else {
+            // transcode an uploaded file--move it into cache folder first
             var dstFolder = CacheFolders[type];
-            return FileManager.preserveFile(file, url, dstFolder).then((mediaFile) => {
-                if (!mediaFile) {
+            return FileManager.preserveFile(file, url, dstFolder).then((mediaPath) => {
+                if (!mediaPath) {
                     throw new HTTPError(400);
                 }
-                var url = `/media/${type}s/${mediaFile.hash}`;
-                var job = VideoManager.startTranscodingJob(mediaFile.path, type, mediaFile.hash);
-                VideoManager.awaitTranscodingJob(job).then((job) => {
-                    var details = {
-                        url,
-                        versions: job.profiles
-                    };
-                    return saveTaskOutcome(schema, taskId, details);
-                });
-                return { url };
-            })
+                // create the transcoding job, checking if it exists already on
+                // the off-chance the same file is uploaded twice at the same time
+                var jobId = Path.basename(mediaPath);
+                if (!VideoManager.findTranscodingJob(jobId)) {
+                    return VideoManager.startTranscodingJob(mediaPath, type, jobId).then((job) => {
+                        monitorTranscodingJob(schema, taskId, job);
+                        return {};
+                    });
+                }
+            });
         }
     }).then((results) => {
         sendJSON(res, results);
     }).catch((err) => {
         sendError(res, err);
+    });
+}
+
+/**
+ * Monitor a transcoding job, saving progress into a task object
+ *
+ * @param  {String} schema
+ * @param  {Number} taskId
+ * @param  {Object} job
+ */
+function monitorTranscodingJob(schema, taskId, job) {
+    // monitor transcoding progress
+    job.onProgress = (evt) => {
+        var progress = evt.target.progress;
+        console.log('Progress: ', progress + '%');
+        saveTaskProgress(schema, taskId, progress);
+    };
+    // wait for transcoding to finish
+    VideoManager.awaitTranscodingJob(job).then(() => {
+        // save URL and information about available version to task object
+        // (doing so transfer these properties into details.resources of
+        // object that has the Task object's token as payload_token)
+        var details = {
+            url: getFileURL(job.inputFile.path),
+            duration: job.inputFile.duration,
+            width: job.inputFile.width,
+            height: job.inputFile.height,
+            bitrates: {
+                video: job.inputFile.videoBitrate,
+                audio: job.inputFile.audioBitrate,
+            },
+            versions: _.map(job.outputFiles, (outputFile) => {
+                return {
+                    name: outputFile.name,
+                    width: outputFile.width,
+                    height: outputFile.height,
+                    bitrates: {
+                        video: outputFile.videoBitrate,
+                        audio: outputFile.audioBitrate,
+                    },
+                    format: outputFile.format,
+                };
+            }),
+        };
+        return saveTaskOutcome(schema, taskId, 'main', details);
     });
 }
 
@@ -446,53 +481,25 @@ function handleMediaUpload(req, res, type) {
 function handleMediaPoster(req, res, type) {
     var schema = req.params.schema;
     var token = req.query.token;
-    var taskId = parseInt(req.params.taskId);
     var streamId = req.body.stream;
     var file = req.file;
     var url = req.body.external_url;
-    return checkTaskToken(schema, taskId, token).then(() => {
-        return FileManager.preserveFile(file, url, CacheFolders.image).then((imageFile) => {
-            if (!imageFile) {
+    return checkTaskToken(schema, token, `add-${type}`).then((taskId) => {
+        return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
+            if (!imagePath) {
                 throw new HTTPError(400);
             }
-            var posterURL = `/media/images/${imageFile.hash}`;
-            ImageManager.getImageMetadata(imageFile.path).then((metadata) => {
+            var posterURL = getFileURL(imagePath);
+            ImageManager.getImageMetadata(imagePath).then((metadata) => {
                 var details = {
                     poster_url: posterURL,
                     width: metadata.width,
                     height: metadata.height,
                 };
-                return saveTaskProgress(schema, taskId, details);
+                return saveTaskOutcome(schema, taskId, 'poster', details);
             });
-            return { poster_url: posterURL };
+            return { url: posterURL };
         });
-    }).then((results) => {
-        sendJSON(res, results);
-    }).catch((err) => {
-        sendError(res, err);
-    });
-}
-
-/**
- * Handle request for stream creation
- *
- * @param  {Request} req
- * @param  {Response} res
- */
-function handleStreamCreate(req, res) {
-    return VideoManager.createJobId().then((jobId) => {
-        var file = req.file;
-        if (!file) {
-            throw new HTTPError(400);
-        }
-        var type = _.first(_.split(file.mimetype, '/'));
-        if (type !== 'video' && type !== 'audio') {
-            throw new HTTPError(400);
-        }
-        var inputStream = FS.createReadStream(file.path);
-        var job = VideoManager.startTranscodingJob(null, type, jobId);
-        VideoManager.transcodeSegment(job, inputStream, file.size);
-        return { id: jobId };
     }).then((results) => {
         sendJSON(res, results);
     }).catch((err) => {
@@ -506,13 +513,32 @@ function handleStreamCreate(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleStreamAppend(req, res) {
+function handleStream(req, res) {
+    var jobId = req.query.id;
+    var file = req.file;
+    var chunk = parseInt(req.body.chunk);
     return Promise.try(() => {
-        var file = req.file;
-        var job = VideoManager.findTranscodingJob(req.params.jobId);
-        if (!job) {
-            throw new HTTPError(404);
+        var job = VideoManager.findTranscodingJob(jobId);
+        if (chunk === 0) {
+            if (job) {
+                throw new HTTPError(409);
+            }
+            if (!file) {
+                throw new HTTPError(400);
+            }
+            // create the job
+            var type = _.first(_.split(file.mimetype, '/'));
+            if (type !== 'video' && type !== 'audio') {
+                throw new HTTPError(400);
+            }
+            return VideoManager.startTranscodingJob(null, type, jobId);
+        } else {
+            if (!job) {
+                throw new HTTPError(404);
+            }
+            return job;
         }
+    }).then((job) => {
         if (file) {
             var inputStream = FS.createReadStream(file.path);
             return VideoManager.transcodeSegment(job, inputStream, file.size);
@@ -530,18 +556,18 @@ function handleStreamAppend(req, res) {
  * Throw an 403 exception if a task token isn't valid
  *
  * @param  {String} schema
- * @param  {Number} taskId
  * @param  {String} token
+ * @param  {String} action
  *
- * @return {Promise}
+ * @return {Promise<Number>}
  */
-function checkTaskToken(schema, taskId, token) {
+function checkTaskToken(schema, token, action) {
     return Database.open().then((db) => {
-        return Task.findOne(db, schema, { id: taskId }, 'token').then((task) => {
-            if (!task || task.token !== token) {
+        return Task.findOne(db, schema, { token }, 'id, action').then((task) => {
+            if (!task || task.action !== action) {
                 throw new HTTPError(403);
             }
-            return task;
+            return task.id;
         });
     });
 }
@@ -552,31 +578,20 @@ function checkTaskToken(schema, taskId, token) {
  *
  * @param  {String} schema
  * @param  {Number} taskId
- * @param  {Object} details
  * @param  {Number} completion
  *
  * @return {Promise}
  */
-function saveTaskProgress(schema, taskId, details, completion) {
+function saveTaskProgress(schema, taskId, completion) {
     return Database.open().then((db) => {
-        if (details) {
-            // merge with existing details
-            return Task.findOne(db, schema, { id: taskId }, 'id, details').then((task) => {
-                if (!task) {
-                    return;
-                }
-                if (completion) {
-                    task.completion = completion;
-                }
-                _.assign(task.details, details);
-                return Task.updateOne(db, schema, task);
-            });
-        } else {
-            // just set completion
-            if (completion) {
-                return Task.updateOne(db, schema, { id: taskId, completion });
-            }
-        }
+        var params = [ completion, taskId ];
+        var table = Task.getTableName(schema);
+        var sql = `
+            UPDATE ${table} SET
+            completion = $1
+            WHERE id = $2
+        `;
+        return db.execute(sql, params);
     });
 }
 
@@ -589,21 +604,25 @@ function saveTaskProgress(schema, taskId, details, completion) {
  *
  * @return {Promise}
  */
-function saveTaskOutcome(schema, taskId, details) {
+function saveTaskOutcome(schema, taskId, part, details) {
     return Database.open().then((db) => {
-        var completion = 100, etime = Object('NOW()');
-        if (details) {
-            // merge with existing details
-            return Task.findOne(db, schema, { id: taskId }, 'id, details').then((task) => {
-                task.completion = completion;
-                task.etime = etime;
-                _.assign(task.details, details);
-                return Task.updateOne(db, schema, task);
-            });
-        } else {
-            // just set completion and etime
-            return Task.updateOne(db, schema, { id: taskId, completion, etime });
-        }
+        var params = [ details, taskId ];
+        var table = Task.getTableName(schema);
+        // merge in new details
+        var detailsAfter = `details || $1`;
+        // set the part to true
+        var optionsAfter = `options || '{ "${part}": true }'`;
+        // set etime to NOW() when there're no more false value
+        var etimeAfter = `CASE WHEN (${optionsAfter})::text NOT LIKE '%: false%' THEN NOW() ELSE null END`;
+        var sql = `
+            UPDATE ${table} SET
+            details = ${detailsAfter},
+            options = ${optionsAfter},
+            etime = ${etimeAfter},
+            completion = 100
+            WHERE id = $2
+        `;
+        return db.execute(sql, params);
     });
 }
 
@@ -629,6 +648,17 @@ function getFileType(path) {
             return info;
         });
     });
+}
+
+/**
+ * Return the URL of a file in the cache folder
+ *
+ * @param  {String} path
+ *
+ * @return {String}
+ */
+function getFileURL(path) {
+    return `/media/${Path.relative(CacheFolders.root, path)}`
 }
 
 if (process.argv[1] === __filename) {
