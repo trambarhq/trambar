@@ -6,9 +6,10 @@ var Async = require('async-do-while');
 
 module.exports = BlobStream;
 
-function BlobStream(address) {
+function BlobStream(address, options) {
     this.id = RandomToken.generate();
     this.address = address;
+    this.options = options;
     this.parts = [];
     this.closed = false;
     this.error = null;
@@ -47,6 +48,13 @@ BlobStream.prototype.toBlob = function() {
  */
 BlobStream.prototype.toJSON = function() {
     return this.id;
+};
+
+BlobStream.prototype.setOptions = function(options) {
+    if (this.started) {
+        throw new Error('Cannot set options once a stream has started');
+    }
+    this.options = _.assign({}, this.options, options);
 };
 
 /**
@@ -168,7 +176,7 @@ BlobStream.prototype.wait = function() {
  */
 BlobStream.prototype.pipe = function(file, chunkSize) {
     if (!chunkSize) {
-        chunkSize = 50 * 1024 * 1024;
+        chunkSize = 1 * 1024 * 1024;
     }
     var total = file.size;
     var type = file.type;
@@ -245,6 +253,11 @@ BlobStream.prototype.start = function() {
                             if (blob) {
                                 formData.append('file', blob);
                                 formData.append('chunk', chunkIndex);
+                                if (chunkIndex === 0) {
+                                    _.each(this.options, (value, name) => {
+                                        formData.append(name, value);
+                                    });
+                                }
                             } else {
                                 // the server recognize that an empty payload means we've
                                 // reached the end of the stream

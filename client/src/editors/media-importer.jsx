@@ -311,7 +311,6 @@ module.exports = React.createClass({
                 blob = file;
             }
             var blobURL = BlobManager.manage(blob);
-            debugger;
             var payload = this.props.payloads.add('video');
             if (USE_STREAM) {
                 // upload file in small chunks
@@ -337,6 +336,8 @@ module.exports = React.createClass({
                     };
                 });
             }).catch((err) => {
+                // not MP4--poster needs to be generated on server side
+                payload.attachStep('main', 'poster')
                 return {
                     type: 'video',
                     payload_token: payload.token,

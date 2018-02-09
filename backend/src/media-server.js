@@ -414,7 +414,13 @@ function handleMediaUpload(req, res, type) {
                 var jobId = Path.basename(mediaPath);
                 if (!VideoManager.findTranscodingJob(jobId)) {
                     return VideoManager.startTranscodingJob(mediaPath, type, jobId).then((job) => {
-                        monitorTranscodingJob(schema, taskId, job);
+                        if (req.body.generate_poster) {
+                            return VideoManager.requestPosterGeneration(job).then(() => {
+                                monitorTranscodingJob(schema, taskId, job);
+                            });
+                        } else {
+                            monitorTranscodingJob(schema, taskId, job);
+                        }
                         return {};
                     });
                 }
@@ -441,6 +447,18 @@ function monitorTranscodingJob(schema, taskId, job) {
         console.log('Progress: ', progress + '%');
         saveTaskProgress(schema, taskId, progress);
     };
+    if (job.posterFile) {
+        // wait for poster to be generated
+        VideoManager.awaitPosterGeneration(job).then(() => {
+            var details = {
+                poster_url: getFileURL(job.posterFile.path),
+                width: job.posterFile.width,
+                height: job.posterFile.height,
+            };
+            return saveTaskOutcome(schema, taskId, 'poster', details);
+        });
+    }
+
     // wait for transcoding to finish
     VideoManager.awaitTranscodingJob(job).then(() => {
         // save URL and information about available version to task object
@@ -531,7 +549,14 @@ function handleStream(req, res) {
             if (type !== 'video' && type !== 'audio') {
                 throw new HTTPError(400);
             }
-            return VideoManager.startTranscodingJob(null, type, jobId);
+            return VideoManager.startTranscodingJob(null, type, jobId).then((job) => {
+                if (req.body.generate_poster) {
+                    return VideoManager.requestPosterGeneration(job).then(() => {
+                        return job;
+                    });
+                }
+                return job;
+            });
         } else {
             if (!job) {
                 throw new HTTPError(404);
@@ -540,11 +565,11 @@ function handleStream(req, res) {
         }
     }).then((job) => {
         if (file) {
-            var inputStream = FS.createReadStream(file.path);
-            return VideoManager.transcodeSegment(job, inputStream, file.size);
+            VideoManager.transcodeSegment(job, file);
         } else {
-            return VideoManager.endTranscodingJob(job);
+            VideoManager.endTranscodingJob(job);
         }
+        return null;
     }).then(() => {
         sendJSON(res, { status: 'OK' });
     }).catch((err) => {

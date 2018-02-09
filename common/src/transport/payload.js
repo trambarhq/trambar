@@ -114,6 +114,48 @@ Payload.prototype.attachURL = function(url, name) {
 };
 
 /**
+ * Attach a part that generated from the main part (or some other part)
+ *
+ * @param  {String} source
+ * @param  {String} name
+ */
+Payload.prototype.attachStep = function(source, name) {
+    // add options to the source part
+    var options;
+    switch (name) {
+        case 'poster':
+            options = { generate_poster: true };
+            break;
+    }
+    this.setPartOptions(options, source);
+    this.parts.push({ name });
+};
+
+/**
+ * Set options for a part
+ *
+ * @param  {Object} options
+ * @param  {String|undefined} name
+ *
+ * @return {[type]}
+ */
+Payload.prototype.setPartOptions = function(options, name) {
+    if (!name) {
+        name = 'main';
+    }
+    var part = _.find(this.parts, { name });
+    if (!part) {
+        throw new Error(`Unable to find part: ${name}`);
+    }
+    if (part.stream) {
+        // options need to be applied to stream
+        part.stream.setOptions(options);
+    } else {
+        part.options = _.assign({}, part.options, options);
+    }
+};
+
+/**
  * Send the payload
  */
 Payload.prototype.send = function() {
@@ -145,6 +187,8 @@ Payload.prototype.sendPart = function(part) {
         return this.sendCordovaFile(part);
     } else if (part.url) {
         return this.sendURL(part);
+    } else {
+        return Promise.resolve();
     }
 };
 
@@ -160,6 +204,9 @@ Payload.prototype.sendBlob = function(part) {
     var blob = part.blob;
     var formData = new FormData;
     formData.set('file', blob);
+    _.each(part.options, (value, name) => {
+        formData.set(name, value);
+    });
     var options = {
         responseType: 'json',
         onUploadProgress: (evt) => {
@@ -198,6 +245,7 @@ Payload.prototype.sendCordovaFile = function(part) {
         var fileUploadOptions = _.assign(new FileUploadOptions, {
             fileKey: 'file',
             fileName: file.name,
+            params: part.options,
             mimeType: file.type,
         });
         fileTransfer.upload(fileURL, encodedURL, successCB, errorCB, fileUploadOptions);
@@ -243,7 +291,8 @@ Payload.prototype.sendURL = function(part) {
         responseType: 'json',
         contentType: 'json',
     };
-    return HTTPRequest.fetch('POST', url, { url: part.url }, options);
+    var body = _.extend({ url: part.url }, part.options);
+    return HTTPRequest.fetch('POST', url, body, options);
 },
 
 /**
