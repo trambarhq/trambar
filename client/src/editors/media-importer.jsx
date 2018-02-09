@@ -103,7 +103,6 @@ module.exports = React.createClass({
                             filename: filename,
                             width: image.naturalWidth,
                             height: image.naturalHeight,
-                            clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight)
                         };
                     });
                 } else {
@@ -280,7 +279,6 @@ module.exports = React.createClass({
                 filename: file.name,
                 width: image.naturalWidth,
                 height: image.naturalHeight,
-                clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
                 imported: true,
             };
         }).catch((err) => {
@@ -330,7 +328,6 @@ module.exports = React.createClass({
                         filename: file.name,
                         width: video.videoWidth,
                         height: video.videoHeight,
-                        clip: getDefaultClippingRect(video.videoWidth, video.videoHeight),
                         duration: Math.round(video.duration * 1000),
                         imported: true,
                     };
@@ -385,7 +382,6 @@ module.exports = React.createClass({
                 return MediaLoader.loadImage(imageBlobURL).then((image) => {
                     audio.width = image.naturalWidth;
                     audio.height = image.naturalHeight;
-                    audio.clip = getDefaultClippingRect(image.naturalWidth, image.naturalHeight);
                     return audio;
                 });
             });
@@ -431,10 +427,11 @@ module.exports = React.createClass({
      */
     handleCapture: function(evt) {
         var res = _.clone(evt.resource);
-        if (res.width && res.height) {
-            res.clip = getDefaultClippingRect(res.width, res.height);
+        if (res.type === 'image') {
+            res.filename = getFilenameFromTime('.jpg');
+        } else {
+            res.filename = getFilenameFromTime('.' + res.format) ;
         }
-        res.filename = getFilenameFromTime('.' + res.format) ;
         this.addResources([ res ]);
         this.handleCaptureCancel(evt);
     },
@@ -455,28 +452,6 @@ module.exports = React.createClass({
         }
     },
 });
-
-/**
- * Return a square clipping rect
- *
- * @param  {Number} width
- * @param  {Number} height
- * @param  {String} align
- *
- * @return {Object}
- */
-function getDefaultClippingRect(width, height, align) {
-    var left = 0, top = 0;
-    var length = Math.min(width, height);
-    if (align === 'center' || !align) {
-        if (width > length) {
-            left = Math.floor((width - length) / 2);
-        } else if (height > length) {
-            top = Math.floor((height - length) / 2);
-        }
-    }
-    return { left, top, width: length, height: length };
-}
 
 /**
  * Retrieve the text in a DataTransferItem

@@ -224,10 +224,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handlePhotoCapture: function(evt) {
-        var resource = _.clone(evt.resource);
-        resource.filename = getFilenameFromTime('.jpg');
-        resource.clip = getDefaultClippingRect(image.width, image.height);
-        this.setImage(resource);
+        this.setImage(evt.resource);
         this.setState({ capturing: false });
     },
 
@@ -267,7 +264,6 @@ module.exports = React.createClass({
                     file: blobURL,
                     width: image.naturalWidth,
                     height: image.naturalHeight,
-                    clip: getDefaultClippingRect(image.naturalWidth, image.naturalHeight),
                 };
                 this.setImage(resource);
                 return null;
@@ -275,34 +271,3 @@ module.exports = React.createClass({
         }
     }
 });
-
-/**
- * Return a square clipping rect
- *
- * @param  {Number} width
- * @param  {Number} height
- * @param  {String} align
- *
- * @return {Object}
- */
-function getDefaultClippingRect(width, height, align) {
-    var left = 0, top = 0;
-    var length = Math.min(width, height);
-    if (align === 'center' || !align) {
-        if (width > length) {
-            left = Math.floor((width - length) / 2);
-        } else if (height > length) {
-            top = Math.floor((height - length) / 2);
-        }
-    }
-    return { left, top, width: length, height: length };
-}
-
-/**
- * Generate a filename from the current time
- *
- * @return {String}
- */
-function getFilenameFromTime(ext) {
-    return _.toUpper(Moment().format('YYYY-MMM-DD-hhA')) + ext;
-}

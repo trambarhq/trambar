@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var BlobManager = require('transport/blob-manager');
 var Payload = require('transport/payload');
+var ImageCropping = require('media/image-cropping');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -95,8 +96,7 @@ module.exports = React.createClass({
         var theme = this.props.theme;
         var previewURL = theme.getImageURL(res, {
             width: this.props.previewWidth,
-            height: this.props.previewHeight,
-            clip: res.clip || getDefaultClippingRect(res.width, res.height),
+            height: this.props.previewHeight
         });
     },
 
@@ -168,7 +168,7 @@ module.exports = React.createClass({
         var res = this.props.resource;
         var props = {
             url: this.state.fullImageURL,
-            clippingRect: res.clip || getDefaultClippingRect(res.width, res.height),
+            clippingRect: res.clip || ImageCropping.default(res.width, res.height),
             onChange: this.handleClipRectChange,
         };
         return <ImageCropper {...props} />;
@@ -216,25 +216,3 @@ module.exports = React.createClass({
         return this.triggerChangeEvent(res);
     },
 });
-
-/**
- * Return a square clipping rect
- *
- * @param  {Number} width
- * @param  {Number} height
- * @param  {String} align
- *
- * @return {Object}
- */
-function getDefaultClippingRect(width, height, align) {
-    var left = 0, top = 0;
-    var length = Math.min(width, height);
-    if (align === 'center' || !align) {
-        if (width > length) {
-            left = Math.floor((width - length) / 2);
-        } else if (height > length) {
-            top = Math.floor((height - length) / 2);
-        }
-    }
-    return { left, top, width: length, height: length };
-}

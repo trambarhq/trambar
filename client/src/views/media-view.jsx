@@ -304,16 +304,11 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     renderImageElement: function(res) {
-        var clip = res.clip;
+        // get size of the image, with clipping
+        var dims = this.props.theme.getDimensions(res);
         var width = 512;
-        var height;
-        var theme = this.props.theme;
-        if (clip) {
-            height = Math.round(width * clip.height / clip.width);
-        } else {
-            height = Math.round(width * res.height / res.width)
-        }
-        var url = theme.getImageURL(res, { width, height });
+        var height = Math.round(dims.height / dims.width * width);
+        var url = this.props.theme.getImageURL(res, { width });
         if (url) {
             return <img src={url} width={width} height={height} />;
         }

@@ -301,13 +301,15 @@ module.exports = React.createClass({
         if (this.props.onAnchorChange) {
             var ids = _.keys(this.itemNodes);
             var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
-            var item = this.props.items[anchorIndex];
-            this.props.onAnchorChange({
-                type: 'anchorchange',
-                target: this,
-                anchor,
-                item,
-            });
+            if (anchorIndex !== -1) {
+                var item = this.props.items[anchorIndex];
+                this.props.onAnchorChange({
+                    type: 'anchorchange',
+                    target: this,
+                    anchor,
+                    item,
+                });
+            }
         }
     },
 

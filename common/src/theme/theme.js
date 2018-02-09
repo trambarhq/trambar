@@ -39,6 +39,6 @@ Theme.prototype.getURL = function(res, params) {
     return this.themeManager.getURL(res, params);
 };
 
-Theme.prototype.getDimensions = function(res) {
-    return this.themeManager.getDimensions(res);
+Theme.prototype.getDimensions = function(res, params) {
+    return this.themeManager.getDimensions(res, params);
 };

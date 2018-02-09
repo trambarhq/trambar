@@ -148,7 +148,7 @@ module.exports = React.createClass({
             var viewportAspect = viewportWidth / viewportHeight;
             var maxWidth, maxHeight;
             _.each(this.props.resources, (res) => {
-                var dims = this.props.theme.getDimensions(res);
+                var dims = this.props.theme.getDimensions(res, { clip: null });
                 if (!(maxWidth >= dims.width)) {
                     maxWidth = dims.width;
                 }
@@ -228,7 +228,7 @@ module.exports = React.createClass({
     renderVideo: function(res) {
         var theme = this.props.theme;
         var url = theme.getVideoURL(res);
-        var dims = theme.getDimensions(res);
+        var dims = theme.getDimensions(res, { clip: null });
         var posterURL = theme.getImageURL(res, {
             width: dims.width,
             height: dims.height,
