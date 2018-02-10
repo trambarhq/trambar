@@ -13,21 +13,25 @@ if (process.env.PLATFORM === 'cordova') {
 
 module.exports = Payload;
 
-function Payload(address, schema, type) {
+function Payload(address, schema, type, token) {
     this.address = address;
     this.schema = schema;
     this.type = type;
     this.action = `add-${type}`;
-    this.token = RandomToken.generate();
+    this.token = (!token) ? RandomToken.generate() : token;
+    this.recreated = !!token;
     this.options = {};
     this.url = `payload:${this.token}`;
     this.processed = 0;
     this.promise = null;
     this.parts = [];
     this.approved = false;
-    this.sent = false;
+    this.sent = !!token;
     this.failed = false;
     this.completed = false;
+    this.uploadStartTime = null;
+    this.uploadEndTime = null;
+    this.processEndTime = null;
     this.onProgress = null;
 };
 
@@ -136,8 +140,6 @@ Payload.prototype.attachStep = function(source, name) {
  *
  * @param  {Object} options
  * @param  {String|undefined} name
- *
- * @return {[type]}
  */
 Payload.prototype.setPartOptions = function(options, name) {
     if (!name) {
@@ -293,7 +295,31 @@ Payload.prototype.sendURL = function(part) {
     };
     var body = _.extend({ url: part.url }, part.options);
     return HTTPRequest.fetch('POST', url, body, options);
-},
+};
+
+/**
+ * Return the oversize of the payload
+ *
+ * @return {Number}
+ */
+Payload.prototype.getSize = function() {
+    var sizes = _.map(this.parts, (part) => {
+        return part.size || 0;
+    });
+    return _.sum(sizes);
+};
+
+/**
+ * Return the number of bytes uploaded
+ *
+ * @return {Number}
+ */
+Payload.prototype.getUploaded = function() {
+    var counts = _.map(this.parts, (part) => {
+        return part.uploaded || 0;
+    });
+    return _.sum(counts);
+};
 
 /**
  * Return URL for uploading the given payload
@@ -333,17 +359,53 @@ Payload.prototype.getDestinationURL = function(name) {
     return (uri) ? `${this.address}${uri}?token=${this.token}` : null;
 };
 
+/**
+ * Update progress of a given part and trigger change event
+ *
+ * @param  {Object} part
+ * @param  {Number} completed
+ */
 Payload.prototype.updateProgress = function(part, completed) {
     if (completed) {
         part.uploaded = Math.round(part.size * completed);
-    }
-    if (this.onProgress) {
-        this.onProgress({
-            type: 'progress',
-            target: this,
-        });
+        if (this.onProgress) {
+            this.onProgress({
+                type: 'progress',
+                target: this,
+            });
+        }
     }
 };
+
+/**
+ * Update properties that track backend processing with data from backend
+ *
+ * @param  {Object} task
+ *
+ * @return {Boolean}
+ */
+Payload.prototype.updateBackendStatus = function(task) {
+    var changed = false;
+    if (this.type === 'unknown') {
+        // restore type and action
+        this.action = task.action;
+        this.type = _.replace(this.action, /^add\-/, '');
+        changed = true;
+    }
+    if (this.processed !== task.completion) {
+        this.processed = task.completion;
+        changed = true;
+    }
+    if (this.processEndTime !== task.etime) {
+        this.processEndTime = task.etime;
+        changed = true;
+    }
+    if (task.failed && !this.failed) {
+        this.failed = true;
+        changed = true;
+    }
+    return changed;
+}
 
 /**
  * Associate a remote URL with a blob so we don't need to download the file again

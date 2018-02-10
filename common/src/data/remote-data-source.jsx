@@ -1051,7 +1051,7 @@ module.exports = React.createClass({
         var session = getSession(address);
         payload = _.clone(payload) || {};
         if (session.token) {
-            payload.token = session.token;
+            payload.auth_token = session.token;
         }
         if (action === 'retrieval' || action === 'storage') {
             _.assign(payload, this.props.retrievalFlags);

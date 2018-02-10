@@ -317,7 +317,7 @@ module.exports = React.createClass({
         var fileURL = Payload.getImageURL(res);
         if (fileURL) {
             // use ImageView, which handles orientation and clipping
-            return <ImageView url={fileURL} clippingRect={clip} />;
+            return <ImageView url={fileURL} clippingRect={res.clip} />;
         } else {
             // TODO: placeholder for pending images
             return null;

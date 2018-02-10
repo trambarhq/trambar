@@ -5,6 +5,7 @@ var BlobManager = require('transport/blob-manager');
 var BlobReader = require('utils/blob-reader');
 var MediaLoader = require('media/media-loader');
 var JPEGAnalyser = require('media/jpeg-analyser');
+var ImageCropping = require('media/image-cropping');
 var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
@@ -109,16 +110,7 @@ module.exports = React.createClass({
                         this.naturalHeight = image.naturalWidth;
                     }
 
-                    var rect = this.props.clippingRect;
-                    if (!rect) {
-                        rect = {
-                            left: 0,
-                            top: 0,
-                            width: this.naturalWidth,
-                            height: this.naturalHeight
-                        };
-                    }
-                    this.drawImage(rect);
+                    this.drawImage(this.props.clippingRect);
                     this.triggerLoadEvent();
                 });
             });
@@ -181,15 +173,8 @@ module.exports = React.createClass({
     			matrix = [0, -1, 1, 0, 0, imageWidth];
     			break;
     	}
-        // clipping rect has coordinates in post-transform space
-        // need to map them to the pre-transform space
         if (!rect) {
-            rect = {
-                left: 0,
-                top: 0,
-                width: (orientation < 5) ? imageWidth : imageHeight,
-                height: (orientation < 5) ? imageHeight : imageWidth,
-            };
+            rect = ImageCropping.default(this.naturalWidth, this.naturalHeight);
         }
         this.width = rect.width;
         this.height = rect.height;

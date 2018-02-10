@@ -112,6 +112,7 @@ module.exports = _.create(Data, {
         if (criteria.older_than !== undefined) {
             conds.push(`ctime < $${params.push(criteria.older_than)}`);
         }
+        console.log(criteria, conds);
     },
 
     /**
@@ -134,11 +135,15 @@ module.exports = _.create(Data, {
                 object.action = row.action;
                 object.token = row.token;
                 object.user_id = row.user_id;
-                object.server_id = row.server_id;
-                object.options = row.options;
-                object.completion = row.completion;
                 object.etime = row.etime;
                 object.failed = row.failed;
+                object.completion = row.completion;
+                if (credentials.unrestricted) {
+                    object.server_id = row.server_id;
+                    object.options = row.options;
+                } else {
+                    delete object.details;
+                }
             });
             return objects;
         });

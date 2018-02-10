@@ -120,10 +120,10 @@ function handleDiscovery(req, res) {
     var schema = req.params.schema;
     var table = req.params.table;
     return Database.open().then((db) => {
-        return checkAuthorization(db, params.token).then((userId) => {
+        return checkAuthorization(db, params.auth_token).then((userId) => {
             return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
-            var criteria = _.omit(params, 'token', 'include_deleted');
+            var criteria = _.omit(params, 'auth_token', 'include_deleted');
             if (criteria.order) {
                 // check clause for potential SQL injection
                 var clauses = _.split(criteria.order, /\s,\s/);
@@ -200,7 +200,7 @@ function handleRetrieval(req, res) {
     var schema = req.params.schema;
     var table = req.params.table;
     return Database.open().then((db) => {
-        return checkAuthorization(db, params.token).then((userId) => {
+        return checkAuthorization(db, params.auth_token).then((userId) => {
             return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
             var ids;
@@ -270,7 +270,7 @@ function handleStorage(req, res) {
     var table = req.params.table;
     // need exclusive connection for transaction
     return Database.open(true).then((db) => {
-        return checkAuthorization(db, params.token).then((userId) => {
+        return checkAuthorization(db, params.auth_token).then((userId) => {
             return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
             var objects = params.objects;

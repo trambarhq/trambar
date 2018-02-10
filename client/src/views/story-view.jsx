@@ -341,9 +341,7 @@ module.exports = React.createClass({
     renderProgress: function() {
         var uploadStatus;
         if (this.props.story.ready === false) {
-            var schema = this.props.route.parameters.schema;
-            uploadStatus = this.props.payloads.inquire(schema, this.props.story);
-            console.log(uploadStatus);
+            uploadStatus = this.props.payloads.inquire(this.props.story);
         }
         var props = {
             status: uploadStatus,

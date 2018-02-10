@@ -38,7 +38,7 @@ Payloads.prototype.stream = function() {
  */
 Payloads.prototype.dispatch = function(object) {
     var tokens = getPayloadTokens(object);
-    return this.payloadManager.send(tokens);
+    return this.payloadManager.dispatch(tokens);
 };
 
 /**
@@ -49,51 +49,8 @@ Payloads.prototype.dispatch = function(object) {
  * @return {Object|null}
  */
 Payloads.prototype.inquire = function(object) {
-    return null;
     var tokens = getPayloadTokens(object);
-
-    if (_.isEmpty(payloads)) {
-        return null;
-    }
-    var overallSize  = 0;
-    var overallTransferred = 0;
-    var payloadSizes = {};
-    var payloadTransferred = {};
-    _.each(payloads, (payload) => {
-        var payloadId = payload.payload_id;
-        var total = 0, loaded = 0;
-        _.each(payload.transferProgress, (progress, name) => {
-            total += progress.total;
-            loaded += progress.loaded;
-        });
-        payloadSizes[payloadId] = total;
-        payloadTransferred[payloadId] = loaded;
-        overallSize += total;
-        overallTransferred += loaded;
-    });
-    var progress = Math.round(overallTransferred / overallSize * 100) || 0;
-    var action = 'uploading';
-    if (progress >= 100) {
-        // uploading is done--see if transcoding is occurring at the backend
-        var transcodingPayloads = _.filter(payloads, (payload) => {
-            return /transcode/.test(payload.action);
-        });
-        if (_.isEmpty(transcodingPayloads)) {
-            return null;
-        }
-        var transcodingSize = _.sum(_.map(transcodingPayloads, (payload) => {
-            return payloadSizes[payload.payload_id];
-        }));
-        var transcodingProgress = _.sum(_.map(transcodingPayloads, (payload) => {
-            // scale the progress based on file size
-            var payloadSize = payloadSizes[payload.payload_id];
-            var weight = payloadSize / transcodingSize;
-            return payload.backendProgress * weight;
-        }));
-        progress = Math.round(transcodingProgress);
-        action = 'transcoding';
-    }
-    return { action, progress };
+    return this.payloadManager.inquire(tokens);
 };
 
 function getPayloadTokens(object) {
