@@ -184,8 +184,12 @@ function getDate(m) {
 }
 
 function updateTime() {
-    _.each(relativeTimeComponents, (component) => {
-        component.update();
+    // copy the list as components can be removed during an update
+    var list = relativeTimeComponents.slice();
+    _.each(list, (component) => {
+        if (component) {
+            component.update();
+        }
     });
 }
 

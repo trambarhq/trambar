@@ -112,7 +112,6 @@ module.exports = _.create(Data, {
         if (criteria.older_than !== undefined) {
             conds.push(`ctime < $${params.push(criteria.older_than)}`);
         }
-        console.log(criteria, conds);
     },
 
     /**
