@@ -80,6 +80,8 @@ module.exports = function(localeCode) {
         'empty-currently-offline': 'Olet offline-tilassa',
 
         'image-editor-upload-in-progress': 'Lataus käynnissä...',
+        'image-editor-poster-extraction-in-progress': 'Esikatselun poistaminen videosta...',
+        'image-editor-page-rendering-in-progress': 'Sivuston esikatselun luominen...',
 
         'issue-cancel': 'Peruutta',
         'issue-clear': 'Tyhjentä',

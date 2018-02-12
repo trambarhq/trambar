@@ -184,11 +184,30 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
+        var res = this.props.resource;
+        var message, icon;
+        if (res.width && res.height) {
+            // when the dimensions are known, then the image was available to
+            // the client
+            message = t('image-editor-upload-in-progress');
+            icon = 'cloud-upload';
+        } else {
+            if (res.type === 'video') {
+                // poster is being generated in the backend
+                message = t('image-editor-poster-extraction-in-progress');
+                icon = 'film';
+            } else if (res.type === 'web-site') {
+                // web-site preview is being generated
+                message = t('image-editor-page-rendering-in-progress');
+                icon = 'file-image-o';
+            }
+        }
         return (
             <div className="placeholder">
-                <div className="message">
-                    {t('image-editor-upload-in-progress')}
+                <div className="icon">
+                    <i className={`fa fa-${icon}`} />
                 </div>
+                <div className="message">{message}</div>
             </div>
         );
     },

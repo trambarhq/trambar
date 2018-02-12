@@ -112,6 +112,8 @@ module.exports = function(localeCode) {
         'empty-currently-offline': 'Вы не подключены к Интернету',
 
         'image-editor-upload-in-progress': 'Загрузка выполняется...',
+        'image-editor-poster-extraction-in-progress': 'Извлечение предварительного просмотра из видео...',
+        'image-editor-page-rendering-in-progress': 'Создание предварительного просмотра веб-сайта...',
 
         'issue-cancel': 'Отмена',
         'issue-clear': 'Очистить',

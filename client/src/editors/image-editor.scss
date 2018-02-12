@@ -18,8 +18,20 @@
 
     .placeholder {
         display: flex;
+        flex-direction: column;
         bottom: 0;
         align-items: center;
         justify-content: center;
+        color: #666666;
+
+        .icon {
+            font-size: 3em;
+        }
+
+        .message {
+            margin-top: 0.5em;
+            font-size: 0.7em;
+            text-transform: uppercase;
+        }
     }
 }

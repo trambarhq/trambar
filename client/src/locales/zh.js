@@ -122,6 +122,8 @@ var traditionalPhrases = {
     'empty-currently-offline': '你目前離線',
 
     'image-editor-upload-in-progress': '正在上傳⋯⋯',
+    'image-editor-poster-extraction-in-progress': '正在從影片中提取預覽⋯⋯',
+    'image-editor-page-rendering-in-progress': '正在制作網站預覽⋯⋯',
 
     'issue-cancel': '取消',
     'issue-clear': '清除',
@@ -752,6 +754,8 @@ var simplifiedPhrases = {
     'empty-currently-offline': '你目前离线',
 
     'image-editor-upload-in-progress': '正在上传⋯⋯',
+    'image-editor-poster-extraction-in-progress': '正在从影片中提取预览⋯⋯',
+    'image-editor-page-rendering-in-progress': '正在制作网站预览⋯⋯',
 
     'issue-cancel': '取消',
     'issue-clear': '清除',

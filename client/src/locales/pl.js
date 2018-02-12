@@ -116,6 +116,8 @@ module.exports = function(localeCode) {
         'empty-currently-offline': 'Jesteś odłączony od sieci',
 
         'image-editor-upload-in-progress': 'Przesyłanie w toku...',
+        'image-editor-poster-extraction-in-progress': 'Wyodrębnianie podglądu z wideo...',
+        'image-editor-page-rendering-in-progress': 'Renderowanie podglądu strony internetowej...',
 
         'issue-cancel': 'Anuluj',
         'issue-clear': 'Wyczyść',

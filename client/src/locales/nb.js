@@ -80,6 +80,8 @@ module.exports = function(localeCode) {
         'empty-currently-offline': 'Du er frakoblet',
 
         'image-editor-upload-in-progress': 'Opplasting pågår...',
+        'image-editor-poster-extraction-in-progress': 'Extracting forhåndsvisning fra video...',
+        'image-editor-page-rendering-in-progress': 'Gjengir forhåndsvisning av nettsiden...',
 
         'issue-cancel': 'Avbryt',
         'issue-clear': 'Slett',

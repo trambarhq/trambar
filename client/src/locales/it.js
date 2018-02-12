@@ -80,6 +80,8 @@ module.exports = function(localeCode) {
         'empty-currently-offline': "Al momento sei offline",
 
         'image-editor-upload-in-progress': "Carica in corso...",
+        'image-editor-poster-extraction-in-progress': "Estrazione dell'anteprima dal video...",
+        'image-editor-page-rendering-in-progress': "Creazione dell'anteprima del sito...",
 
         'issue-cancel': "Annulla",
         'issue-clear': "Cancella",
