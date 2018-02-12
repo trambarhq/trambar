@@ -1382,7 +1382,10 @@ module.exports = React.createClass({
             }, 50);
         }
         if (!prevProps.hasConnection && this.props.hasConnection) {
-            // dispatch pending changes
+            // invalidate all searches
+            this.invalidate();
+
+            // send pending changes
             _.each(this.changeQueue, (change) => {
                 change.dispatch();
             });
