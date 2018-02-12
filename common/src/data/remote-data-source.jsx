@@ -1227,7 +1227,7 @@ module.exports = React.createClass({
                 var target = search.results[index];
                 var present = (target && target.id === object.id);
                 var match = LocalSearch.match(search.table, object, search.criteria);
-                if (match) {
+                if (match || present) {
                     // create new array so memoized functions won't return old results
                     if (!changed) {
                         search.results = _.slice(search.results);

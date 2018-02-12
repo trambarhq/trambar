@@ -156,14 +156,18 @@ module.exports = React.createClass({
      */
     updateDraft: function(nextState, nextProps) {
         if (nextProps.story) {
-            // check if the newly arriving story isn't the one we saved earlier
-            var priorDraft = this.props.story || createBlankStory(this.props.currentUser);
-            var currentDraft = nextState.draft;
             var nextDraft = nextProps.story;
-            if (currentDraft !== priorDraft && currentDraft) {
-                // merge changes into the remote copy
-                // (properties in nextDraft are favored in conflicts)
-                nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
+            // an uncommitted object is what we had sent to the save queue
+            // earlier so no need to merge
+            if (!nextDraft.uncomitted) {
+                // check if the newly arriving story isn't the one we saved earlier
+                var priorDraft = this.props.story || createBlankStory(this.props.currentUser);
+                var currentDraft = nextState.draft;
+                if (currentDraft !== priorDraft && currentDraft) {
+                    // merge changes into the remote copy
+                    // (properties in nextDraft are favored in conflicts)
+                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
+                }
             }
             nextState.draft = nextDraft;
         } else {

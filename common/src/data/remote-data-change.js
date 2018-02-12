@@ -150,8 +150,21 @@ RemoteDataChange.prototype.apply = function(search, includeDeleted) {
             } else {
                 var match = LocalSearch.match(search.table, uncommittedObject, search.criteria);
                 if (match) {
-                    var newObject = _.clone(search.results[index]);
-                    search.results[index] = _.extend(newObject, uncommittedObject);
+                    // merge the new object with the original if the new one
+                    // doesn't have everything
+                    var originalObject = search.results[index];
+                    var missingProperties = _.some(originalObject, (value, key) => {
+                        if (!uncommittedObject.hasOwnProperty(key)) {
+                            return true;
+                        }
+                    });
+                    var tempObject;
+                    if (missingProperties) {
+                        tempObject = _.extend({}, originalObject, uncommittedObject);
+                    } else {
+                        tempObject = uncommittedObject;
+                    }
+                    search.results[index] = tempObject;
                 } else {
                     search.results.splice(index, 1);
                 }
