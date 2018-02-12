@@ -1152,7 +1152,9 @@ module.exports = React.createClass({
     handleOptionsComplete: function(evt) {
         var section = evt.target.props.section;
         var popUp = this.components[section + 'PopUp'];
-        popUp.close();
+        if (popUp) {
+            popUp.close();
+        }
     },
 
     /**
