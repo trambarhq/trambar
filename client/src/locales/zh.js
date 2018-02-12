@@ -541,12 +541,12 @@ var traditionalPhrases = {
 
     'telephone-dialog-close': '關閉',
 
-    'time-$hr-ago': (hr) => {
-        var num = cardinal(hr);
-        return `${num}小時前`;
-    },
     'time-$hours-ago': (hours) => {
         var num = cardinal(hours);
+        return `${num}小時前`;
+    },
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
         return `${num}小時前`;
     },
     'time-$min-ago': (min) => {
@@ -1171,12 +1171,12 @@ var simplifiedPhrases = {
 
     'telephone-dialog-close': '关闭',
 
-    'time-$hr-ago': (hr) => {
-        var num = cardinal(hr);
-        return `${num}小时前`;
-    },
     'time-$hours-ago': (hours) => {
         var num = cardinal(hours);
+        return `${num}小时前`;
+    },
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
         return `${num}小时前`;
     },
     'time-$min-ago': (min) => {
@@ -1581,12 +1581,12 @@ var cantonesePhrases = {
         return `上載（${progress}%）`;
     },
 
-    'time-$hr-ago': (hr) => {
-        var num = cardinal(hr);
-        return `${num}個鐘頭前`;
-    },
     'time-$hours-ago': (hours) => {
         var num = cardinal(hours);
+        return `${num}個鐘頭前`;
+    },
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
         return `${num}個鐘頭前`;
     },
     'time-just-now': '啱啱線',

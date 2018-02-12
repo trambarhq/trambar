@@ -63,6 +63,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Suositukset',
 
+        'bookmarks-no-bookmarks': 'Ei kirjanmerkkejä',
+
         'bottom-nav-bookmarks': 'Kirjanmerkit',
         'bottom-nav-news': 'Uutiset',
         'bottom-nav-notifications': 'Ilmoitukset',
@@ -74,6 +76,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Näytä diagnostiikka',
         'diagnostics-show-panel': 'Näytä tämä paneeli',
+
+        'empty-currently-offline': 'Olet offline-tilassa',
 
         'image-editor-upload-in-progress': 'Lataus käynnissä...',
 
@@ -108,6 +112,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Palvelimen osoite',
         'mobile-setup-close': 'Sulje',
         'mobile-setup-code': 'Lupakoodi',
+
+        'news-no-stories-by-role': 'Ei juttuja, joilla on rooli',
+        'news-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
+        'news-no-stories-on-date': 'Ei tarinoita tuona päivämääränä',
+        'news-no-stories-yet': 'Ei tarinoita vielä',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} kutsui sinut muokkaamaan viestiä yhdessä`;
@@ -170,6 +179,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Kun joku avaa uuden asian',
         'notification-option-join-request': 'Kun joku haluaa liittyä tähän projektiin',
         'notification-option-like': 'Kun joku tykkää tarinastasi',
+        'notification-option-mention': 'Kun joku mainitsee sinut tarinassa tai kommentissa',
         'notification-option-merge': 'Kun joku linkittää koodin branchien master',
         'notification-option-note': 'Kun joku lähettää viestin commitista tai liikkeestä',
         'notification-option-push': 'Kun joku painaa koodia Gitiin',
@@ -177,6 +187,9 @@ module.exports = function(localeCode) {
         'notification-option-task-completion': 'Kun joku täyttää tehtävän luettelossasi',
         'notification-option-vote': 'Kun joku vastaa kyselyyn',
         'notification-option-web-session': 'Kun web-istunto on aktiivinen',
+
+        'notifications-no-notifications-on-date': 'Ei ilmoituksia kyseisestä päivästä',
+        'notifications-no-notifications-yet': 'Ei vielä ilmoituksia',
 
         'option-add-bookmark': 'Lisää kirjanmerkki',
         'option-add-issue': 'Lisää viesti raportointityökaluun',
@@ -194,6 +207,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Näytä liitetiedostot',
         'option-show-text-preview': 'Näytä tekstin esikatselu',
+
+        'people-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
+        'people-no-stories-on-date': 'Ei toimintaa kyseisenä päivänä',
+        'people-no-users-by-role': 'Mikään projektin jäsen ei ole tällainen rooli',
+        'people-no-users-yet': 'Ei projektin jäseniä vielä',
+
+        'person-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
+        'person-no-stories-on-date': 'Ei tarinoita tuona päivämääränä',
+        'person-no-stories-yet': 'Ei tarinoita vielä',
 
         'photo-capture-accept': 'Hyväksy',
         'photo-capture-cancel': 'Peruutta',
@@ -254,6 +276,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} tykkää tästä`;
         },
+        'reaction-status-storage-pending': 'Odotettaessa',
+        'reaction-status-transcoding': 'Koodaaminen',
+        'reaction-status-uploading': 'Lataaminen',
 
         'role-filter-no-roles': 'Ei rooleja määritelty',
 
@@ -292,15 +317,35 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Twitter-käyttäjänimi',
 
         'start-activation-add-server': 'Lisää projekti toiselta palvelimelta',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'Jos haluat käyttää tämän laitteen palvelimella varustettua palvelinta, kirjaudu ensin palvelimeen WWW-selaimella. Valitse projekti ja siirry sitten ',
+                ui.settings,
+                '-kohtaan. Valitse ',
+                ui.projects,
+                '-paneelissa ',
+                ui.mobileSetup,
+                '. QR-koodi ilmestyy näytölle. Paina tätä laitetta painamalla alla olevaa painiketta ja skannaa koodi. Vaihtoehtoisesti voit syöttää aktivointikoodin manuaalisesti.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Kirjaudu sisään WWW-selaimella ja skannaa QR koodi joka näkyy sivulla ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Manuaalinen syöttö',
         'start-activation-scan-code': 'Skannaa QR-koodi',
         'start-error-access-denied': 'Hakuhakemus hylättiin',
         'start-error-account-disabled': 'Tili on tällä hetkellä poissa käytöstä',
         'start-error-existing-users-only': 'Ainoastaan valtuutettu henkilöstö voi käyttää tätä järjestelmää',
         'start-error-undefined': 'Odottamaton virhe',
+        'start-no-projects': 'Ei projekteja',
+        'start-no-servers': 'Ei OAuth-palveluntarjoajia',
         'start-projects': 'Projektit',
-        'start-social-login': 'Social login',
+        'start-social-login': 'Sosiaalinen sisäänkirjautuminen',
         'start-system-title-default': 'Trambar',
         'start-welcome': 'Tervetuloa!',
         'start-welcome-again': 'Tervetuloa uudelleen',
@@ -436,6 +481,7 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Poista itsesi',
         'story-remove-yourself-are-you-sure': 'Haluatko varmasti poistaa itsesi kirjoittajaksi??',
+        'story-status-storage-pending': 'Odotettaessa',
         'story-status-transcoding-$progress': (progress) => {
             return `Koodaaminen (${progress}%)`;
         },
@@ -449,6 +495,19 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Sulje',
 
+        'time-$hours-ago': (hours) => {
+            return (minutes === 1) ? `Tunti sitten` : `${minutes} tuntia sitten`;
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} t. sitten`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} m. sitten`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            return (minutes === 1) ? `Minuutti sitten` : `${minutes} minuuttia sitten`;
+        },
+        'time-just-now': 'Juuri nyt',
         'time-yesterday': 'Eilen',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

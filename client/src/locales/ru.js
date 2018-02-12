@@ -618,9 +618,6 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Закрыть',
 
-        'time-$hr-ago': (hr) => {
-            return `${hr} ч. назад`;
-        },
         'time-$hours-ago': (hours) => {
             if (singularN(hours)) {
                 return `Час назад`;
@@ -629,6 +626,9 @@ module.exports = function(localeCode) {
             } else {
                 return `${hours} часов назад`;
             }
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} ч. назад`;
         },
         'time-$min-ago': (min) => {
             return `${min} м. назад`;

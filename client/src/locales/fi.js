@@ -495,11 +495,11 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Sulje',
 
-        'time-$hr-ago': (hr) => {
-            return `${hr} t. sitten`;
-        },
         'time-$hours-ago': (hours) => {
             return (minutes === 1) ? `Tunti sitten` : `${minutes} tuntia sitten`;
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} t. sitten`;
         },
         'time-$min-ago': (min) => {
             return `${min} m. sitten`;

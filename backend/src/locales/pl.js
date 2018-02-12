@@ -99,6 +99,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Polecenia',
 
+        'bookmarks-no-bookmarks': 'Żadnych zakładek',
+
         'bottom-nav-bookmarks': 'Zakładki',
         'bottom-nav-news': 'Wiadomości',
         'bottom-nav-notifications': 'Powiadomienia',
@@ -110,6 +112,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Pokaż diagnostykę',
         'diagnostics-show-panel': 'Wyświetl ten panel',
+
+        'empty-currently-offline': 'Jesteś odłączony od sieci',
 
         'image-editor-upload-in-progress': 'Przesyłanie w toku...',
 
@@ -150,6 +154,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Adres serwera',
         'mobile-setup-close': 'Zamknij',
         'mobile-setup-code': 'Kod autoryzacyjny',
+
+        'news-no-stories-by-role': 'Żadnych wiadomości od kogoś z tą rolą',
+        'news-no-stories-found': 'Nie znaleziono pasujących wiadomości',
+        'news-no-stories-on-date': 'Żadnych wiadomości w tym dniu',
+        'news-no-stories-yet': 'Żadnych wiadomości',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             var e = pastTenseEnding(name, 3);
@@ -218,6 +227,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Po zgłoszeniu błędu',
         'notification-option-join-request': 'Po prośbie o dołączenie do projektu',
         'notification-option-like': 'Po upodobaniu Twojej wiadomości',
+        'notification-option-mention': 'Po wspomnieniach o Tobie w wiadomości lub komentarzu',
         'notification-option-merge': 'Po scalaniu kodu w gałąź master',
         'notification-option-note': 'Po komentowaniu zmian kodu ablo złoszenia błedu',
         'notification-option-push': 'Po wgrywaniu zmian do repozytorium Gita',
@@ -225,6 +235,9 @@ module.exports = function(localeCode) {
         'notification-option-task-completion': 'Po wykonaniu zadania na Twojej liście przez innego',
         'notification-option-vote': 'Po odpowiadaniu Twojej ankiety przez innego',
         'notification-option-web-session': 'Gdy jest aktywna sesja przeglądarki',
+
+        'notifications-no-notifications-on-date': 'Żadnych powiadomień w tym dniu',
+        'notifications-no-notifications-yet': 'Żadnych powiadomień',
 
         'option-add-bookmark': 'Dodaj zakładkę',
         'option-add-issue': 'Dodaj zgłoszenie do issue-trackera',
@@ -244,6 +257,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Pokaź dołączone pliki medialne',
         'option-show-text-preview': 'Pokaź podgląd tekstu',
+
+        'people-no-stories-found': 'Nie znaleziono pasujących wiadomości',
+        'people-no-stories-on-date': 'Żadnych działań w tym dniu',
+        'people-no-users-by-role': 'Żaden członek projektu nie ma takiej roli',
+        'people-no-users-yet': 'Żadnych członków projektu',
+
+        'person-no-stories-found': 'Nie znaleziono pasujących wiadomości',
+        'person-no-stories-on-date': 'Żadnych wiadomości w tym dniu',
+        'person-no-stories-yet': 'Żadnych wiadomości',
 
         'photo-capture-accept': 'Przyjmij',
         'photo-capture-cancel': 'Anuluj',
@@ -317,6 +339,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} lubi to`;
         },
+        'reaction-status-storage-pending': 'W oczekiwaniu',
+        'reaction-status-transcoding': 'Transkodowanie',
+        'reaction-status-uploading': 'Przesyłanie',
 
         'role-filter-no-roles': 'Nie ma żadnych ról',
 
@@ -355,13 +380,33 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Nazwa użytkownika na Twitterze',
 
         'start-activation-add-server': 'Add project from another server',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'Aby uzyskać dostęp do serwera Trambar na tym urządzeniu, najpierw zaloguj się do serwera za pomocą przeglądarki internetowej. Wybierz projekt, a następnie przejdź do strony ',
+                ui.settings,
+                '. W panelu ',
+                ui.projects,
+                ' kliknij ',
+                ui.mobileSetup,
+                '. Kod QR pojawi się na ekranie. Następnie—na tym urządzeniu—naciśnij przycisk poniżej i zeskanuj kod. Alternatywnie możesz ręcznie wprowadzić kod aktywacyjny.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Zaloguj się za pomocą przeglądarki internetowej, a następnie zeskanuj wyświetlony kod QR na stronie ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Ręczne wprowadzanie',
         'start-activation-scan-code': 'Zeskanuj kod QR',
         'start-error-access-denied': 'Wniosek o dostęp odrzucono',
         'start-error-account-disabled': 'Konto jest obecnie wyłączone',
         'start-error-existing-users-only': 'Tylko upoważniony personel może uzyskać dostęp do tego systemu',
         'start-error-undefined': 'Niespodziewany błąd',
+        'start-no-projects': 'Żadnych projektów',
+        'start-no-servers': 'Żadnych dostawców OAuth',
         'start-projects': 'Projekty',
         'start-social-login': 'Logowanie społecznościowe',
         'start-system-title-default': 'Trambar',
@@ -390,11 +435,11 @@ module.exports = function(localeCode) {
             return `Stworzył${e} kamień milowy „${milestone}”`;
         },
         'story-$name-created-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             return `Stworzył${e} stronę wiki „${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             var text = `Stworzył${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
@@ -402,7 +447,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-deleted-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             return `Usunał${e} stronę wiki „${page}”`;
         },
         'story-$name-joined-$repo': (name, repo) => {
@@ -422,7 +467,7 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             var text = `Scalił${e} zmiany`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
@@ -457,7 +502,7 @@ module.exports = function(localeCode) {
             return `Poprosił${e} o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
         },
         'story-$name-updated-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            var e = pastTenseEnding(name, 3);
             return `Redagował${e} wiki page „${page}”`;
         },
         'story-add-coauthor': 'Dodaj współautora',
@@ -564,6 +609,7 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Usuń siebie',
         'story-remove-yourself-are-you-sure': 'Czy na pewno chcesz usunąć siebie jako współautora?',
+        'story-status-storage-pending': 'W oczekiwaniu',
         'story-status-transcoding-$progress': (progress) => {
             return `Transkodowanie (${progress}%)`;
         },
@@ -577,6 +623,31 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Zamknij',
 
+        'time-$hours-ago': (hours) => {
+            if (singular(hours)) {
+                return `Godzina temu`;
+            } else if (plural(hours)) {
+                return `${hours} godziny temu`;
+            } else {
+                return `${hours} godzin temu`;
+            }
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} godz temu`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} min temu`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            if (singular(minutes)) {
+                return `Minuta temu`;
+            } else if (plural(minutes)) {
+                return `${minutes} minuty temu`;
+            } else {
+                return `${minutes} minut temu`;
+            }
+        },
+        'time-just-now': 'Właśnie teraz',
         'time-yesterday': 'Wczoraj',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

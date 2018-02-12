@@ -95,6 +95,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Рекомендации',
 
+        'bookmarks-no-bookmarks': 'Без закладок',
+
         'bottom-nav-bookmarks': 'Закладки',
         'bottom-nav-news': 'Новости',
         'bottom-nav-notifications': 'Уведомления',
@@ -106,6 +108,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Показать диагностику',
         'diagnostics-show-panel': 'Показать эту панель',
+
+        'empty-currently-offline': 'Вы не подключены к Интернету',
 
         'image-editor-upload-in-progress': 'Загрузка выполняется...',
 
@@ -140,6 +144,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Адрес сервера',
         'mobile-setup-close': 'Закрыть',
         'mobile-setup-code': 'Код авторизации',
+
+        'news-no-stories-by-role': 'Никаких рассказов кем-то с этой ролью',
+        'news-no-stories-found': 'Не найдено совпадающих рассказов',
+        'news-no-stories-on-date': 'Нет рассказов этой даты',
+        'news-no-stories-yet': 'Нет рассказов',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             var e = pastTenseEnding(name);
@@ -208,6 +217,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Когда кто-то открывает отчёт об ошибке',
         'notification-option-join-request': 'Когда кто-то хочет присоединиться к проекту',
         'notification-option-like': 'Когда кому-то нравится ваш рассказ',
+        'notification-option-mention': 'Когда кто-то упоминает вас в истории или комментарии',
         'notification-option-merge': 'Когда кто-то сливает код в ветку «${branch}»',
         'notification-option-note': 'Когда кто-то публикует заметку о коммите или отчёте об ошибке',
         'notification-option-push': 'Когда кто-то отправляет код в репозиторий git',
@@ -215,6 +225,9 @@ module.exports = function(localeCode) {
         'notification-option-task-completion': 'Когда кто-то завершает задачу в вашем списке',
         'notification-option-vote': 'Когда кто-то отвечает на ваш опрос',
         'notification-option-web-session': 'Когда вы просматриваете этот сайт с помощью веб-браузера',
+
+        'notifications-no-notifications-on-date': 'Нет уведомлений на эту дату',
+        'notifications-no-notifications-yet': 'Пока нет уведомлений',
 
         'option-add-bookmark': 'Добавить закладку',
         'option-add-issue': 'Добавить сообщение в баг трекер',
@@ -237,6 +250,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Показать прикрепленные носители',
         'option-show-text-preview': 'Показать предварительный просмотр текста',
+
+        'people-no-stories-found': 'Не найдено совпадающих рассказов',
+        'people-no-stories-on-date': 'Никаких действий на эту дату',
+        'people-no-users-by-role': 'Ни один из участников проекта не имеет такой роли',
+        'people-no-users-yet': 'Пока нет участников проекта',
+
+        'person-no-stories-found': 'Не найдено совпадающих рассказов',
+        'person-no-stories-on-date': 'Нет рассказов этой даты',
+        'person-no-stories-yet': 'Нет рассказов',
 
         'photo-capture-accept': 'Прими',
         'photo-capture-cancel': 'Отмена',
@@ -307,6 +329,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} любит это`;
         },
+        'reaction-status-storage-pending': 'в ожидании',
+        'reaction-status-transcoding': 'Tранскодирование',
+        'reaction-status-uploading': 'Загрузка',
 
         'role-filter-no-roles': 'Роли не определены',
 
@@ -345,13 +370,33 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Имя пользователя Twitter',
 
         'start-activation-add-server': 'Добавить проект с другого сервера',
-        'start-activation-instructions': 'Лорем ипсум долор сит амет, ат сеа фацер путант цонсеяуунтур, юсто ассум ат меи. Мел солет темпор тибияуе ет, примис цонституто яуо ид.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'Чтобы получить доступ к серверу Трамбар на этом устройстве, сначала войдите в сервер с помощью веб-браузера. Выберите проект, затем перейдите в страницу ',
+                ui.settings,
+                '. На панели ',
+                ui.projects,
+                ' нажмите ',
+                ui.mobileSetup,
+                '. На экране появится QR-код. Затем на этом устройстве нажмите кнопку ниже и сканируйте код. В качестве альтернативы вы можете вручную ввести код активации.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Войдите в систему через веб-браузер, затем сканируйте QR-код показанный на странице ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Ввод вручную',
         'start-activation-scan-code': 'Сканировать QR-код',
         'start-error-access-denied': 'Запрос отклонен',
         'start-error-account-disabled': 'В настоящее время отключена учетная запись',
         'start-error-existing-users-only': 'Доступ к этой системе может получить только уполномоченный персонал',
         'start-error-undefined': 'Неожиданная ошибка',
+        'start-no-projects': 'Нет проектов',
+        'start-no-servers': 'Нет поставщиков OAuth',
         'start-projects': 'Проекты',
         'start-social-login': 'Социальный вход',
         'start-system-title-default': 'Трамбар',
@@ -559,6 +604,7 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Удалите себя',
         'story-remove-yourself-are-you-sure': 'Вы действительно хотите удалить себя как соавтор?',
+        'story-status-storage-pending': 'в ожидании',
         'story-status-transcoding-$progress': (progress) => {
             return `Tранскодирование (${progress}%)`;
         },
@@ -572,6 +618,31 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Закрыть',
 
+        'time-$hours-ago': (hours) => {
+            if (singularN(hours)) {
+                return `Час назад`;
+            } else if (singularG(hours)) {
+                return `${hours} часа назад`;
+            } else {
+                return `${hours} часов назад`;
+            }
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} ч. назад`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} м. назад`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            if (singularN(minutes)) {
+                return `Минута назад`;
+            } else if (singularG(minutes)) {
+                return `${minutes} минуты назад`;
+            } else {
+                return `${minutes} минут назад`;
+            }
+        },
+        'time-just-now': 'Прямо сейчас',
         'time-yesterday': 'Вчера',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

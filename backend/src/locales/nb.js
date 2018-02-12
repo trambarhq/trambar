@@ -63,6 +63,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Anbefalinger',
 
+        'bookmarks-no-bookmarks': 'Ingen bokmerker',
+
         'bottom-nav-bookmarks': 'Bokmerker',
         'bottom-nav-news': 'Nyheter',
         'bottom-nav-notifications': 'Varslinger',
@@ -74,6 +76,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Vis diagnostikk',
         'diagnostics-show-panel': 'Vis dette panelet',
+
+        'empty-currently-offline': 'Du er frakoblet',
 
         'image-editor-upload-in-progress': 'Opplasting pågår...',
 
@@ -108,6 +112,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server adresse',
         'mobile-setup-close': 'Lukk',
         'mobile-setup-code': 'Autorisasjonskode',
+
+        'news-no-stories-by-role': 'Ingen historier av noen med den rollen',
+        'news-no-stories-found': 'Ingen matchende historier funnet',
+        'news-no-stories-on-date': 'Ingen historier på den datoen',
+        'news-no-stories-yet': 'Ingen historier ennå',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} inviterte deg til å redigere et innlegg`;
@@ -170,6 +179,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'Når noen åpner et problem',
         'notification-option-join-request': 'Når noen ønsker å bli med i dette prosjektet',
         'notification-option-like': 'Når noen liker historien din',
+        'notification-option-mention': 'Når noen nevner deg i en historie eller kommentar',
         'notification-option-merge': 'Når noen fusjonerer kode inn i master versjonen',
         'notification-option-note': 'Når noen legger inn et notat om et begå eller et problem',
         'notification-option-push': 'Når noen trykker på kode i Git',
@@ -177,6 +187,9 @@ module.exports = function(localeCode) {
         'notification-option-task-completion': 'Når noen fullfører en oppgave på listen din',
         'notification-option-vote': 'Når noen svarer på undersøkelsen din',
         'notification-option-web-session': 'Når en web økt er aktiv',
+
+        'notifications-no-notifications-on-date': 'Ingen varsler på den datoen',
+        'notifications-no-notifications-yet': 'Ingen varsler ennå',
 
         'option-add-bookmark': 'Legg til bokmerke',
         'option-add-issue': 'Legg til innlegg til feilrapporteringssystemet',
@@ -196,6 +209,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Vis vedlagte medier',
         'option-show-text-preview': 'Vis tekstforhåndsvisning',
+
+        'people-no-stories-found': 'Ingen matchende historier funnet',
+        'people-no-stories-on-date': 'Ingen aktiviteter på den datoen',
+        'people-no-users-by-role': 'Ingen prosjektmedlem har den rollen',
+        'people-no-users-yet': 'Ingen prosjektmedlemmer ennå',
+
+        'person-no-stories-found': 'Ingen matchende historier funnet',
+        'person-no-stories-on-date': 'Ingen historier på den datoen',
+        'person-no-stories-yet': 'Ingen historier ennå',
 
         'photo-capture-accept': 'Aksepter',
         'photo-capture-cancel': 'Avbryt',
@@ -256,6 +278,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} liker dette`;
         },
+        'reaction-status-storage-pending': 'I påvente av',
+        'reaction-status-transcoding': 'Transkoding',
+        'reaction-status-uploading': 'Opplasting',
 
         'role-filter-no-roles': 'Ingen roller definert',
 
@@ -294,13 +319,33 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Twitter brukernavn',
 
         'start-activation-add-server': 'Legg til prosjekt fra en annen server',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'For å få tilgang til en Trambar-server på denne enheten, logg først på serveren ved å bruke en nettleser. Velg et prosjekt og gå til ',
+                ui.settings,
+                '. Klikk på ',
+                ui.mobileSetup,
+                ' i panelet ',
+                ui.projects,
+                '. En QR-kode vil vises på skjermen. Deretter på denne enheten, trykk på knappen nedenfor og skann koden. Alternativt kan du legge inn aktiveringskoden manuelt.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Logg inn med en nettleser, og skann deretter QR-koden som vises på ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Manuell oppføring',
         'start-activation-scan-code': 'Skann QR kode',
         'start-error-access-denied': 'Forespørsel om tilgang avvist',
         'start-error-account-disabled': 'Kontoen er for øyeblikket deaktivert',
         'start-error-existing-users-only': 'Kun autorisert personell kan få tilgang til dette systemet',
         'start-error-undefined': 'Uventet feil',
+        'start-no-projects': 'Ingen prosjekter',
+        'start-no-servers': 'Ingen OAuth-leverandører',
         'start-projects': 'Prosjekter',
         'start-social-login': 'Sosial pålogging',
         'start-system-title-default': 'Trambar',
@@ -434,11 +479,12 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Fjern deg selv',
         'story-remove-yourself-are-you-sure': 'Er du sikker på at du vil fjerne deg selv som medforfatter?',
+        'story-status-storage-pending': 'I påvente av',
         'story-status-transcoding-$progress': (progress) => {
-            return `transkoding (${progress}%)`;
+            return `Transkoding (${progress}%)`;
         },
         'story-status-uploading-$progress': (progress) => {
-            return `opplasting (${progress}%)`;
+            return `Opplasting (${progress}%)`;
         },
         'story-survey': 'Undersøkelse',
         'story-task-list': 'Oppgaveliste',
@@ -447,6 +493,19 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Lukk',
 
+        'time-$hours-ago': (hours) => {
+            return (minutes === 1) ? `En time siden` : `${minutes} timer siden`;
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} t. sitten`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} m. siden`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            return (minutes === 1) ? `Et minutt siden` : `${minutes} minutter siden`;
+        },
+        'time-just-now': 'Akkurat nå',
         'time-yesterday': 'I går',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

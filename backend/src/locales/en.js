@@ -67,6 +67,8 @@ module.exports = function(localeCode) {
         },
         'bookmark-recommendations': 'Recommendations',
 
+        'bookmarks-no-bookmarks': 'No bookmarks',
+
         'bottom-nav-bookmarks': 'Bookmarks',
         'bottom-nav-news': 'News',
         'bottom-nav-notifications': 'Notifications',
@@ -78,6 +80,8 @@ module.exports = function(localeCode) {
 
         'diagnostics-show': 'Show diagnostics',
         'diagnostics-show-panel': 'Display this panel',
+
+        'empty-currently-offline': 'You are currently offline',
 
         'image-editor-upload-in-progress': 'Upload in progress...',
 
@@ -112,6 +116,11 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server address',
         'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
+
+        'news-no-stories-by-role': 'No stories by someone with that role',
+        'news-no-stories-found': 'No matching stories found',
+        'news-no-stories-on-date': 'No stories on that date',
+        'news-no-stories-yet': 'No stories yet',
 
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} invited you to jointly edit a post`;
@@ -174,6 +183,7 @@ module.exports = function(localeCode) {
         'notification-option-issue': 'When someone opens an issue',
         'notification-option-join-request': 'When someone wants to join this project',
         'notification-option-like': 'When someone likes your story',
+        'notification-option-mention': 'When someone mentions you in a story or comment',
         'notification-option-merge': 'When someone merges code into the master branch',
         'notification-option-note': 'When someone posts a note on a commit or issue',
         'notification-option-push': 'When someone pushes code into Git',
@@ -181,6 +191,9 @@ module.exports = function(localeCode) {
         'notification-option-task-completion': 'When someone completes a task on your list',
         'notification-option-vote': 'When someone answers your survey',
         'notification-option-web-session': 'When a web session is active',
+
+        'notifications-no-notifications-on-date': 'No notifications on that date',
+        'notifications-no-notifications-yet': 'No notifications yet',
 
         'option-add-bookmark': 'Add bookmark',
         'option-add-issue': 'Add post to issue tracker',
@@ -199,6 +212,15 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Show attached media',
         'option-show-text-preview': 'Show text preview',
+
+        'people-no-stories-found': 'No matching stories found',
+        'people-no-stories-on-date': 'No activities on that date',
+        'people-no-users-by-role': 'No project member has that role',
+        'people-no-users-yet': 'No project members yet',
+
+        'person-no-stories-found': 'No matching stories found',
+        'person-no-stories-on-date': 'No stories on that date',
+        'person-no-stories-yet': 'No stories yet',
 
         'photo-capture-accept': 'Accept',
         'photo-capture-cancel': 'Cancel',
@@ -259,6 +281,9 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} likes this`;
         },
+        'reaction-status-storage-pending': 'Pending',
+        'reaction-status-transcoding': 'Transcoding',
+        'reaction-status-uploading': 'Uploading',
 
         'role-filter-no-roles': 'No roles defined',
 
@@ -297,13 +322,33 @@ module.exports = function(localeCode) {
         'social-network-twitter': 'Twitter user name',
 
         'start-activation-add-server': 'Add project from another server',
-        'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
+        'start-activation-instructions': (ui) => {
+            return [
+                'To access a Trambar server on this device, first sign into the server using a web browser. Select a project then go to ',
+                ui.settings,
+                '. In the ',
+                ui.projects,
+                ' panel, click ',
+                ui.mobileSetup,
+                '. A QR code will appear on screen. Then on this device, press the button below and scan the code. Alternately, you may manually input the activation code.'
+            ];
+        },
+        'start-activation-instructions-short': (ui) => {
+            return [
+                'Sign in using a web browser then scan the QR code shown in ',
+                ui.settings,
+                ' > ',
+                ui.mobileSetup,
+            ];
+        },
         'start-activation-manual': 'Manual entry',
         'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',
         'start-error-account-disabled': 'Account is currently disabled',
         'start-error-existing-users-only': 'Only authorized personnel can access this system',
         'start-error-undefined': 'Unexpected error',
+        'start-no-projects': 'No projects',
+        'start-no-servers': 'No OAuth providers',
         'start-projects': 'Projects',
         'start-social-login': 'Social login',
         'start-system-title-default': 'Trambar',
@@ -441,6 +486,7 @@ module.exports = function(localeCode) {
         },
         'story-remove-yourself': 'Remove yourself',
         'story-remove-yourself-are-you-sure': 'Are you sure you want to remove yourself as a coauthor?',
+        'story-status-storage-pending': 'Pending',
         'story-status-transcoding-$progress': (progress) => {
             return `Transcoding (${progress}%)`;
         },
@@ -454,6 +500,19 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Close',
 
+        'time-$hours-ago': (hours) => {
+            return (hours === 1) ? `An hour ago` : `${hours} hours ago`;
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} hr ago`;
+        },
+        'time-$min-ago': (min) => {
+            return `${min} min ago`;
+        },
+        'time-$minutes-ago': (minutes) => {
+            return (minutes === 1) ? `A minute ago` : `${minutes} minutes ago`;
+        },
+        'time-just-now': 'Just now',
         'time-yesterday': 'Yesterday',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

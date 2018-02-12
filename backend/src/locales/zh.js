@@ -105,6 +105,8 @@ var traditionalPhrases = {
     },
     'bookmark-recommendations': '推薦',
 
+    'bookmarks-no-bookmarks': '沒有書籤',
+
     'bottom-nav-bookmarks': '書籤',
     'bottom-nav-news': '信息',
     'bottom-nav-notifications': '通知',
@@ -116,6 +118,8 @@ var traditionalPhrases = {
 
     'diagnostics-show': '顯示診斷',
     'diagnostics-show-panel': '顯示此面板',
+
+    'empty-currently-offline': '你目前離線',
 
     'image-editor-upload-in-progress': '正在上傳⋯⋯',
 
@@ -151,6 +155,11 @@ var traditionalPhrases = {
     'mobile-setup-address': '服務器地址',
     'mobile-setup-close': '關閉',
     'mobile-setup-code': '授權碼',
+
+    'news-no-stories-by-role': '沒有這個角色的人的故事',
+    'news-no-stories-found': '沒有找到匹配的故事',
+    'news-no-stories-on-date': '那天沒有故事',
+    'news-no-stories-yet': '沒有故事',
 
     'notification-$name-added-you-as-coauthor': (name) => {
         return `${name}邀請你共同編輯一個貼文`;
@@ -216,6 +225,7 @@ var traditionalPhrases = {
     'notification-option-issue': '當有人打開了一個問題',
     'notification-option-join-request': '當有人想加入這個項目',
     'notification-option-like': '當有人喜歡你的貼文',
+    'notification-option-mention': '當有人在故事或回應中提到你時',
     'notification-option-merge': '當有人將代碼合併到《master》分支',
     'notification-option-note': '當有人在提交或問題上發布註釋',
     'notification-option-push': '當有人推入代碼到git數據庫',
@@ -223,6 +233,9 @@ var traditionalPhrases = {
     'notification-option-task-completion': '當有人完成你列表上的任務',
     'notification-option-vote': '當有人回答你的調查',
     'notification-option-web-session': '當你用網絡瀏覽器查看這個網站時',
+
+    'notifications-no-notifications-on-date': '那天沒有通知',
+    'notifications-no-notifications-yet': '還沒有通知',
 
     'option-add-bookmark': '加書籤',
     'option-add-issue': '加問題入跟蹤管理系統',
@@ -241,6 +254,15 @@ var traditionalPhrases = {
     },
     'option-show-media-preview': '顯示附件媒體',
     'option-show-text-preview': '顯示課文預覽',
+
+    'people-no-stories-found': '沒有找到匹配的故事',
+    'people-no-stories-on-date': '那天沒有活動',
+    'people-no-users-by-role': '沒有項目成員有這個角色',
+    'people-no-users-yet': '沒有項目成員',
+
+    'person-no-stories-found': '沒有找到匹配的故事',
+    'person-no-stories-on-date': '那天沒有故事',
+    'person-no-stories-yet': '還沒有故事',
 
     'photo-capture-accept': '接受',
     'photo-capture-cancel': '取消',
@@ -301,6 +323,9 @@ var traditionalPhrases = {
     'reaction-$name-likes-this': (name) => {
         return `${name}喜歡這個`;
     },
+    'reaction-status-storage-pending': '等待連接',
+    'reaction-status-transcoding': '轉碼',
+    'reaction-status-uploading': '上傳',
 
     'role-filter-no-roles': '沒有角色',
 
@@ -339,15 +364,35 @@ var traditionalPhrases = {
     'social-network-twitter': 'Twitter用戶名',
 
     'start-activation-add-server': '從另一台服務器添加項目',
-    'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
-    'start-activation-manual': '手動輸入',
+    'start-activation-instructions': (ui) => {
+        return [
+            '請先使用網絡瀏覽器登錄電車吧服務器。選擇一個項目，然後進入',
+            ui.settings,
+            '。在',
+            ui.projects,
+            '面板中單擊',
+            ui.mobileSetup,
+            '。 ＱＲ碼將出現在屏幕上。在此裝置按下面的按鈕，然後掃描ＱＲ碼。如果相機出現故障，你可以用鍵盤輸入授權碼。'
+        ];
+    },
+    'start-activation-instructions-short': (ui) => {
+        return [
+            'Sign in using a web browser then scan the QR code shown in ',
+            ui.settings,
+            ' > ',
+            ui.mobileSetup,
+        ];
+    },
+    'start-activation-manual': '鍵盤輸入',
     'start-activation-scan-code': '掃描ＱＲ碼',
     'start-error-access-denied': '請求被拒絕',
     'start-error-account-disabled': '帳戶目前被禁用',
     'start-error-existing-users-only': '只有授權人員才能訪問此系統',
     'start-error-undefined': '意外的錯誤',
-    'start-projects': 'Projects',
-    'start-social-login': 'Social login',
+    'start-no-projects': '沒有項目',
+    'start-no-servers': '沒有OAuth提供者',
+    'start-projects': '項目',
+    'start-social-login': '社交登錄',
     'start-system-title-default': '電車吧',
     'start-welcome': '歡迎!',
     'start-welcome-again': '再次歡迎',
@@ -482,6 +527,7 @@ var traditionalPhrases = {
     },
     'story-remove-yourself': '放棄作者權力',
     'story-remove-yourself-are-you-sure': '你確定你不要做這個貼文的合著者？',
+    'story-status-storage-pending': '等待連接',
     'story-status-transcoding-$progress': (progress) => {
         return `轉碼（${progress}%）`;
     },
@@ -495,6 +541,23 @@ var traditionalPhrases = {
 
     'telephone-dialog-close': '關閉',
 
+    'time-$hours-ago': (hours) => {
+        var num = cardinal(hours);
+        return `${num}小時前`;
+    },
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
+        return `${num}小時前`;
+    },
+    'time-$min-ago': (min) => {
+        var num = cardinal(min);
+        return `${num}分鐘前`;
+    },
+    'time-$minutes-ago': (minutes) => {
+        var num = cardinal(minutes);
+        return `${num}分鐘前`;
+    },
+    'time-just-now': '剛才',
     'time-yesterday': '昨天',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
@@ -672,6 +735,8 @@ var simplifiedPhrases = {
     },
     'bookmark-recommendations': '推荐',
 
+    'bookmarks-no-bookmarks': '没有书签',
+
     'bottom-nav-bookmarks': '书签',
     'bottom-nav-news': '信息',
     'bottom-nav-notifications': '通知',
@@ -683,6 +748,8 @@ var simplifiedPhrases = {
 
     'diagnostics-show': '显示诊断',
     'diagnostics-show-panel': '显示此面板',
+
+    'empty-currently-offline': '你目前离线',
 
     'image-editor-upload-in-progress': '正在上传⋯⋯',
 
@@ -718,6 +785,11 @@ var simplifiedPhrases = {
     'mobile-setup-address': '服务器地址',
     'mobile-setup-close': '关闭',
     'mobile-setup-code': '授权码',
+
+    'news-no-stories-by-role': '没有这个角色的人的故事',
+    'news-no-stories-found': '没有找到匹配的故事',
+    'news-no-stories-on-date': '那天没有故事',
+    'news-no-stories-yet': '还没有故事',
 
     'notification-$name-added-you-as-coauthor': (name) => {
         return `${name}邀请你共同编辑一个贴文`;
@@ -783,6 +855,7 @@ var simplifiedPhrases = {
     'notification-option-issue': '当有人打开了一个问题',
     'notification-option-join-request': '当有人想加入这个项目',
     'notification-option-like': '当有人喜欢你的贴文',
+    'notification-option-mention': '当有人在故事或回应中提到你时',
     'notification-option-merge': '当有人将代码合并到《master》分支',
     'notification-option-note': '当有人在提交或问题上发布注释',
     'notification-option-push': '当有人推入代码到git数据库',
@@ -791,9 +864,11 @@ var simplifiedPhrases = {
     'notification-option-vote': '当有人回答你的调查',
     'notification-option-web-session': '当你用网络浏览器查看这个网站时',
 
+    'notifications-no-notifications-on-date': '那天没有通知',
+    'notifications-no-notifications-yet': '还没有通知',
+
     'option-add-bookmark': '加书签',
     'option-add-issue': '加问题入跟踪管理系统',
-    'option-bookmark-story': '加书签',
     'option-bump-story': '推动故事',
     'option-edit-comment': '编辑回应',
     'option-edit-post': '编辑贴文',
@@ -809,6 +884,15 @@ var simplifiedPhrases = {
     },
     'option-show-media-preview': '显示附件媒体',
     'option-show-text-preview': '显示课文预览',
+
+    'people-no-stories-found': '没有找到匹配的故事',
+    'people-no-stories-on-date': '那天没有活动',
+    'people-no-users-by-role': '没有项目成员有这个角色',
+    'people-no-users-yet': '没有项目成员',
+
+    'person-no-stories-found': '没有找到匹配的故事',
+    'person-no-stories-on-date': '那天没有故事',
+    'person-no-stories-yet': '还没有故事',
 
     'photo-capture-accept': '接受',
     'photo-capture-cancel': '取消',
@@ -869,6 +953,9 @@ var simplifiedPhrases = {
     'reaction-$name-likes-this': (name) => {
         return `${name}喜欢这个`;
     },
+    'reaction-status-storage-pending': '等待连接',
+    'reaction-status-transcoding': '转码',
+    'reaction-status-uploading': '上传',
 
     'role-filter-no-roles': '没有角色',
 
@@ -907,15 +994,35 @@ var simplifiedPhrases = {
     'social-network-twitter': 'Twitter用户名',
 
     'start-activation-add-server': '从另一台服务器添加项目',
-    'start-activation-instructions': 'Lorem ipsum dolor sit amet, sint explicari nec id, nisl civibus deleniti ea qui. Sit in debitis veritus consequat. Nullam delenit menandri his at, audiam fabulas te vel. Sit veri oratio suscipiantur in, mea ut duis facer patrioque. Ut partem accumsan molestiae sit.',
-    'start-activation-manual': '手动输入',
+    'start-activation-instructions': (ui) => {
+        return [
+            '请先使用网络浏览器登录電車吧服务器。选择一个项目，然后进入',
+            ui.settings,
+            '。在',
+            ui.projects,
+            '面板中单击',
+            ui.mobileSetup,
+            '。 ＱＲ码将出现在屏幕上。在此装置按下面的按，钮然后扫描ＱＲ码。如果相机出现故障，你可以用键盘输入授权码。'
+        ];
+    },
+    'start-activation-instructions-short': (ui) => {
+        return [
+            'Sign in using a web browser then scan the QR code shown in ',
+            ui.settings,
+            ' > ',
+            ui.mobileSetup,
+        ];
+    },
+    'start-activation-manual': '键盘输入',
     'start-activation-scan-code': '扫描ＱＲ码',
     'start-error-access-denied': '请求被拒绝',
     'start-error-account-disabled': '帐户目前被禁用',
     'start-error-existing-users-only': '只有授权人员才能访问此系统',
     'start-error-undefined': '意外的错误',
-    'start-projects': 'Projects',
-    'start-social-login': 'Social login',
+    'start-no-projects': '没有项目',
+    'start-no-servers': '没有OAuth提供者',
+    'start-projects': '项目',
+    'start-social-login': '社交登录',
     'start-system-title-default': '电车吧',
     'start-welcome': '欢迎!',
     'start-welcome-again': '再次欢迎',
@@ -1050,6 +1157,7 @@ var simplifiedPhrases = {
     },
     'story-remove-yourself': '放弃作者权力',
     'story-remove-yourself-are-you-sure': '你确定你不要做这个贴文的合著者？',
+    'story-status-storage-pending': '等待连接',
     'story-status-transcoding-$progress': (progress) => {
         return `转码（${progress}%）`;
     },
@@ -1063,6 +1171,23 @@ var simplifiedPhrases = {
 
     'telephone-dialog-close': '关闭',
 
+    'time-$hours-ago': (hours) => {
+        var num = cardinal(hours);
+        return `${num}小时前`;
+    },
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
+        return `${num}小时前`;
+    },
+    'time-$min-ago': (min) => {
+        var num = cardinal(min);
+        return `${num}分钟前`;
+    },
+    'time-$minutes-ago': (minutes) => {
+        var num = cardinal(minutes);
+        return `${num}分钟前`;
+    },
+    'time-just-now': '刚才',
     'time-yesterday': '昨天',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
@@ -1196,12 +1321,19 @@ var cantonesePhrases = {
         return [ `你加咗個書籤（`, others, `推薦）` ];
     },
 
+    'bookmarks-no-bookmarks': '冇書籤',
+
     'bottom-nav-people': '仆街',
 
     'membership-request-$you-are-now-member': '你而家係呢個項目嘅成員',
     'membership-request-$you-have-requested-membership': '你要求成為呢個項目嘅成員',
 
     'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置嘅授權？',
+
+    'news-no-stories-by-role': '冇呢個角色嘅人嘅故事',
+    'news-no-stories-found': '搵唔到配合嘅故事',
+    'news-no-stories-on-date': '嗰日冇故事',
+    'news-no-stories-yet': '重未有故事',
 
     'notification-$name-added-you-as-coauthor': (name) => {
         return `${name}邀請你一齊寫一個帖子`;
@@ -1261,11 +1393,15 @@ var cantonesePhrases = {
     'notification-option-issue': '當有人開咗一個問題',
     'notification-option-join-request': '當有人想加入呢個項目',
     'notification-option-like': '當有人鍾意你嘅帖子',
+    'notification-option-mention': '當有人喺故事或回應中提到你',
     'notification-option-note': '當有人喺提交或問題上發布回應',
     'notification-option-push': '當有人推啲代碼入到git數據庫',
     'notification-option-task-completion': '當有人完成你列表上嘅任務',
     'notification-option-vote': '當有人回答你嘅調查',
     'notification-option-web-session': '當你用緊網絡瀏覽器查嘞睇呢個網站',
+
+    'notifications-no-notifications-on-date': '嗰日冇通知',
+    'notifications-no-notifications-yet': '重未有通知',
 
     'option-edit-post': '編輯帖子',
     'option-hide-comment': '非成員睇唔到',
@@ -1275,6 +1411,15 @@ var cantonesePhrases = {
         var num = cardinalT(count);
         return `發送書籤俾${num}個人`;
     },
+
+    'people-no-stories-found': '搵唔到配合嘅故事',
+    'people-no-stories-on-date': '嗰日冇活動',
+    'people-no-users-by-role': '冇項目成員有呢個角色',
+    'people-no-users-yet': '重未有項目成員',
+
+    'person-no-stories-found': '沒有找到匹配的故事',
+    'person-no-stories-on-date': '嗰日冇故事',
+    'person-no-stories-yet': '重未有故事',
 
     'project-management-mobile-set-up': '手機設置',
     'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
@@ -1327,6 +1472,9 @@ var cantonesePhrases = {
     'settings-device': '流動裝置',
     'settings-devices': '流動裝置',
     'settings-mobile-alert': '流動裝置警報',
+
+    'start-no-projects': '冇項目',
+    'start-no-servers': '冇OAuth提供者',
 
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `喺《${repo}》數據庫中創建咗《${branch}》分支`;
@@ -1433,6 +1581,15 @@ var cantonesePhrases = {
         return `上載（${progress}%）`;
     },
 
+    'time-$hours-ago': (hours) => {
+        var num = cardinal(hours);
+        return `${num}個鐘頭前`;
+    },
+    'time-$hr-ago': (hr) => {
+        var num = cardinal(hr);
+        return `${num}個鐘頭前`;
+    },
+    'time-just-now': '啱啱線',
     'time-yesterday': '尋日',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {

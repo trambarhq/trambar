@@ -500,11 +500,11 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Close',
 
-        'time-$hr-ago': (hr) => {
-            return `${hr} hr ago`;
-        },
         'time-$hours-ago': (hours) => {
             return (hours === 1) ? `An hour ago` : `${hours} hours ago`;
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} hr ago`;
         },
         'time-$min-ago': (min) => {
             return `${min} min ago`;

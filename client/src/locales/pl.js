@@ -623,9 +623,6 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Zamknij',
 
-        'time-$hr-ago': (hr) => {
-            return `${hr} godz temu`;
-        },
         'time-$hours-ago': (hours) => {
             if (singular(hours)) {
                 return `Godzina temu`;
@@ -634,6 +631,9 @@ module.exports = function(localeCode) {
             } else {
                 return `${hours} godzin temu`;
             }
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} godz temu`;
         },
         'time-$min-ago': (min) => {
             return `${min} min temu`;

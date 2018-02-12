@@ -493,11 +493,11 @@ module.exports = function(localeCode) {
 
         'telephone-dialog-close': 'Lukk',
 
-        'time-$hr-ago': (hr) => {
-            return `${hr} t. sitten`;
-        },
         'time-$hours-ago': (hours) => {
             return (minutes === 1) ? `En time siden` : `${minutes} timer siden`;
+        },
+        'time-$hr-ago': (hr) => {
+            return `${hr} t. sitten`;
         },
         'time-$min-ago': (min) => {
             return `${min} m. siden`;
