@@ -156,6 +156,7 @@ module.exports = [
             si: 'Slovenia',
         },
         defaultCountry: 'it',
+        module: () => import('locales/it' /* webpackChunkName: "locale-it" */),
     },
     {
         name: 'Magyar',
