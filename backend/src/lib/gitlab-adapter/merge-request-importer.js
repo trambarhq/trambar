@@ -159,19 +159,19 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
     var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
     mergeRequestLink.merge_request.number = glMergeRequest.iid;
-    _.set(storyAfter, 'type', 'merge-request');
-    _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
-    _.set(storyAfter, 'user_ids', [ author.id ]);
-    _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'published', true);
-    _.set(storyAfter, 'ptime', Moment(new Date(glMergeRequest.created_at)).toISOString());
-    _.set(storyAfter, 'public', !glMergeRequest.confidential);
-    _.set(storyAfter, 'details.state', glMergeRequest.state);
-    _.set(storyAfter, 'details.branch', glMergeRequest.target_branch);
-    _.set(storyAfter, 'details.source_branch', glMergeRequest.source_branch);
-    _.set(storyAfter, 'details.labels', glMergeRequest.labels);
-    _.set(storyAfter, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
-    _.set(storyAfter, 'details.title', glMergeRequest.title);
+    Import.set(storyAfter, 'type', 'merge-request');
+    Import.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
+    Import.set(storyAfter, 'user_ids', [ author.id ]);
+    Import.set(storyAfter, 'role_ids', author.role_ids);
+    Import.set(storyAfter, 'published', true);
+    Import.set(storyAfter, 'ptime', Moment(new Date(glMergeRequest.created_at)).toISOString());
+    Import.set(storyAfter, 'public', !glMergeRequest.confidential);
+    Import.set(storyAfter, 'details.state', glMergeRequest.state);
+    Import.set(storyAfter, 'details.branch', glMergeRequest.target_branch);
+    Import.set(storyAfter, 'details.source_branch', glMergeRequest.source_branch);
+    Import.set(storyAfter, 'details.labels', glMergeRequest.labels);
+    Import.set(storyAfter, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
+    Import.set(storyAfter, 'details.title', glMergeRequest.title);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
@@ -192,11 +192,11 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
 function copyAssignmentProperties(reaction, story, assignee, glMergeRequest, link) {
     var reactionAfter = _.cloneDeep(reaction) || {};
     Import.join(reactionAfter, link);
-    _.set(reactionAfter, 'type', 'assignment');
-    _.set(reactionAfter, 'story_id', story.id);
-    _.set(reactionAfter, 'user_id', assignee.id);
-    _.set(reactionAfter, 'published', true);
-    _.set(reactionAfter, 'ptime', Moment(glMergeRequest.updated_at).toISOString());
+    Import.set(reactionAfter, 'type', 'assignment');
+    Import.set(reactionAfter, 'story_id', story.id);
+    Import.set(reactionAfter, 'user_id', assignee.id);
+    Import.set(reactionAfter, 'published', true);
+    Import.set(reactionAfter, 'ptime', Moment(glMergeRequest.updated_at).toISOString());
     if (_.isEqual(reaction, reactionAfter)) {
         return null;
     }

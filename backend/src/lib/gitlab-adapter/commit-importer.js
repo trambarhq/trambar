@@ -65,15 +65,16 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
 function copyCommitProperties(commit, glCommit, glDiff, glBranch, link) {
     var commitAfter = _.cloneDeep(commit) || {};
     Import.join(commitAfter, link);
-    _.set(commitAfter, 'initial_branch', glBranch);
-    _.set(commitAfter, 'title_hash', hash(glCommit.title));
-    _.set(commitAfter, 'ptime', Moment(glCommit.committed_date).toISOString());
-    _.set(commitAfter, 'details.status', glCommit.status);
-    _.set(commitAfter, 'details.author_name', glCommit.author_name);
-    _.set(commitAfter, 'details.author_email', glCommit.author_email);
-    _.set(commitAfter, 'details.lines.added', glCommit.stats.additions);
-    _.set(commitAfter, 'details.lines.deleted', glCommit.stats.deletions);
-    _.set(commitAfter, 'details.files', countChanges(glDiff));
+    Import.set(commitAfter, 'initial_branch', glBranch);
+    Import.set(commitAfter, 'initial_branch', glBranch);
+    Import.set(commitAfter, 'title_hash', hash(glCommit.title));
+    Import.set(commitAfter, 'ptime', Moment(glCommit.committed_date).toISOString());
+    Import.set(commitAfter, 'details.status', glCommit.status);
+    Import.set(commitAfter, 'details.author_name', glCommit.author_name);
+    Import.set(commitAfter, 'details.author_email', glCommit.author_email);
+    Import.set(commitAfter, 'details.lines.added', glCommit.stats.additions);
+    Import.set(commitAfter, 'details.lines.deleted', glCommit.stats.deletions);
+    Import.set(commitAfter, 'details.files', countChanges(glDiff));
     if (_.isEqual(commit, commitAfter)) {
         return null;
     }

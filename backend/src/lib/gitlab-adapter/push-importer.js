@@ -84,20 +84,20 @@ function copyPushProperties(story, author, push, components, glEvent, link) {
     } else {
         storyType = 'push';
     }
-    _.set(storyAfter, 'type', storyType);
-    _.set(storyAfter, 'user_ids', [ author.id ]);
-    _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'published', true);
-    _.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
-    _.set(storyAfter, 'public', true);
-    _.set(storyAfter, 'details.commit_before', push.tailId);
-    _.set(storyAfter, 'details.commit_after', push.headId);
-    _.set(storyAfter, 'details.lines', _.pickBy(push.lines));   // don't include 0's
-    _.set(storyAfter, 'details.files', _.pickBy(_.mapValues(push.files, 'length')));
-    _.set(storyAfter, 'details.components', components);
-    _.set(storyAfter, 'details.branch', push.branch);
+    Import.set(storyAfter, 'type', storyType);
+    Import.set(storyAfter, 'user_ids', [ author.id ]);
+    Import.set(storyAfter, 'role_ids', author.role_ids);
+    Import.set(storyAfter, 'published', true);
+    Import.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    Import.set(storyAfter, 'public', true);
+    Import.set(storyAfter, 'details.commit_before', push.tailId);
+    Import.set(storyAfter, 'details.commit_after', push.headId);
+    Import.set(storyAfter, 'details.lines', _.pickBy(push.lines));   // don't include 0's
+    Import.set(storyAfter, 'details.files', _.pickBy(_.mapValues(push.files, 'length')));
+    Import.set(storyAfter, 'details.components', components);
+    Import.set(storyAfter, 'details.branch', push.branch);
     if (!_.isEmpty(push.fromBranches)) {
-        _.set(storyAfter, 'details.from_branches', push.fromBranches);
+        Import.set(storyAfter, 'details.from_branches', push.fromBranches);
     }
     if (_.isEqual(story, storyAfter)) {
         return null;

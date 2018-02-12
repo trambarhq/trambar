@@ -51,13 +51,13 @@ function importEvent(db, server, repo, project, author, glEvent) {
 function copyEventProperties(story, author, glEvent, link) {
     var storyAfter = _.cloneDeep(story) || {};
     Import.join(storyAfter, link);
-    _.set(storyAfter, 'type', 'repo');
-    _.set(storyAfter, 'user_ids', [ author.id ]);
-    _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'published', true);
-    _.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
-    _.set(storyAfter, 'public', true);
-    _.set(storyAfter, 'details.action', glEvent.action_name);
+    Import.set(storyAfter, 'type', 'repo');
+    Import.set(storyAfter, 'user_ids', [ author.id ]);
+    Import.set(storyAfter, 'role_ids', author.role_ids);
+    Import.set(storyAfter, 'published', true);
+    Import.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    Import.set(storyAfter, 'public', true);
+    Import.set(storyAfter, 'details.action', glEvent.action_name);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
@@ -205,15 +205,15 @@ function addProjectMembers(db, repo, users) {
 function copyRepoDetails(repo, members, glRepo, glLabels, link) {
     var repoAfter = _.cloneDeep(repo) || {};
     Import.join(repoAfter, link);
-    _.set(repoAfter, 'type', 'gitlab');
-    _.set(repoAfter, 'name', glRepo.name);
-    _.set(repoAfter, 'user_ids', _.map(members, 'id'));
-    _.set(repoAfter, 'details.web_url', glRepo.web_url);
-    _.set(repoAfter, 'details.issues_enabled', glRepo.issues_enabled);
-    _.set(repoAfter, 'details.archived', glRepo.archived);
-    _.set(repoAfter, 'details.default_branch', glRepo.default_branch);
-    _.set(repoAfter, 'details.labels', _.map(glLabels, 'name'));
-    _.set(repoAfter, 'details.label_colors', _.map(glLabels, 'color'));
+    Import.set(repoAfter, 'type', 'gitlab');
+    Import.set(repoAfter, 'name', glRepo.name);
+    Import.set(repoAfter, 'user_ids', _.map(members, 'id'));
+    Import.set(repoAfter, 'details.web_url', glRepo.web_url);
+    Import.set(repoAfter, 'details.issues_enabled', glRepo.issues_enabled);
+    Import.set(repoAfter, 'details.archived', glRepo.archived);
+    Import.set(repoAfter, 'details.default_branch', glRepo.default_branch);
+    Import.set(repoAfter, 'details.labels', _.map(glLabels, 'name'));
+    Import.set(repoAfter, 'details.label_colors', _.map(glLabels, 'color'));
     if (_.isEqual(repo, repoAfter)) {
         return null;
     }

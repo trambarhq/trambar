@@ -163,25 +163,25 @@ function copyIssueProperties(story, author, glIssue, link) {
     var labelTags = _.map(glIssue.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
     issueLink.issue.number = glIssue.iid;
     if (!storyAfter.type || storyAfter.type === 'issue') {
-        _.set(storyAfter, 'type', 'issue');
-        _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
-        _.set(storyAfter, 'user_ids', [ author.id ]);
-        _.set(storyAfter, 'role_ids', author.role_ids);
-        _.set(storyAfter, 'published', true);
-        _.set(storyAfter, 'ptime', Moment(new Date(glIssue.created_at)).toISOString());
-        _.set(storyAfter, 'public', !glIssue.confidential);
-        _.set(storyAfter, 'details.labels', glIssue.labels);
-        _.set(storyAfter, 'details.state', glIssue.state);
-        _.set(storyAfter, 'details.milestone', _.get(glIssue, 'milestone.title'));
+        Import.set(storyAfter, 'type', 'issue');
+        Import.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
+        Import.set(storyAfter, 'user_ids', [ author.id ]);
+        Import.set(storyAfter, 'role_ids', author.role_ids);
+        Import.set(storyAfter, 'published', true);
+        Import.set(storyAfter, 'ptime', Moment(new Date(glIssue.created_at)).toISOString());
+        Import.set(storyAfter, 'public', !glIssue.confidential);
+        Import.set(storyAfter, 'details.labels', glIssue.labels);
+        Import.set(storyAfter, 'details.state', glIssue.state);
+        Import.set(storyAfter, 'details.milestone', _.get(glIssue, 'milestone.title'));
         // title is imported only if issue isn't confidential
         if (!glIssue.confidential) {
-            _.set(storyAfter, 'details.title', glIssue.title);
+            Import.set(storyAfter, 'details.title', glIssue.title);
         }
     } else {
         // a post exported to issue tracker--keep only certain props
-        _.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
-        _.set(storyAfter, 'details.title', glIssue.title);
-        _.set(storyAfter, 'details.labels', glIssue.labels);
+        Import.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
+        Import.set(storyAfter, 'details.title', glIssue.title);
+        Import.set(storyAfter, 'details.labels', glIssue.labels);
     }
     if (story) {
         if (story.details.state !== storyAfter.details.state) {
@@ -209,11 +209,11 @@ function copyAssignmentProperties(reaction, story, assignee, glIssue, link) {
     var reactionAfter = _.cloneDeep(reaction) || {};
     var assignmentLink = Import.join(reactionAfter, link);
     assignmentLink.issue.number = glIssue.iid;
-    _.set(reactionAfter, 'type', 'assignment');
-    _.set(reactionAfter, 'story_id', story.id);
-    _.set(reactionAfter, 'user_id', assignee.id);
-    _.set(reactionAfter, 'published', true);
-    _.set(reactionAfter, 'ptime', Moment(glIssue.updated_at).toISOString());
+    Import.set(reactionAfter, 'type', 'assignment');
+    Import.set(reactionAfter, 'story_id', story.id);
+    Import.set(reactionAfter, 'user_id', assignee.id);
+    Import.set(reactionAfter, 'published', true);
+    Import.set(reactionAfter, 'ptime', Moment(glIssue.updated_at).toISOString());
     if (_.isEqual(reaction, reactionAfter)) {
         return null;
     }
@@ -258,7 +258,7 @@ function getIssueNumber(server, glProjectId, glIssueId) {
     return Transport.fetchEach(server, url, {}, (glIssue) => {
         var issueId = glIssue.id;
         var issueNumber = glIssue.iid;
-        _.set(issueNumberCache, [ baseURL, glProjectId, issueId ], issueNumber);
+        Import.set(issueNumberCache, [ baseURL, glProjectId, issueId ], issueNumber);
     }).then(() => {
         var issueNumber = _.get(issueNumberCache, [ baseURL, glProjectId, glIssueId ]);
         if (!issueNumber) {

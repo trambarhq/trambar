@@ -71,13 +71,13 @@ function importEvent(db, server, repo, project, author, glEvent) {
 function copyEventProperties(story, author, glEvent, link) {
     var storyAfter = _.cloneDeep(story) || {};
     Import.join(storyAfter, link);
-    _.set(storyAfter, 'type', 'member');
-    _.set(storyAfter, 'user_ids', [ author.id ]);
-    _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'details.action', glEvent.action_name);
-    _.set(storyAfter, 'published', true);
-    _.set(storyAfter, 'public', true);
-    _.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    Import.set(storyAfter, 'type', 'member');
+    Import.set(storyAfter, 'user_ids', [ author.id ]);
+    Import.set(storyAfter, 'role_ids', author.role_ids);
+    Import.set(storyAfter, 'details.action', glEvent.action_name);
+    Import.set(storyAfter, 'published', true);
+    Import.set(storyAfter, 'public', true);
+    Import.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
@@ -292,16 +292,16 @@ function copyUserProperties(user, image, server, glUser, link) {
     };
     var userLink = Import.join(userAfter, link);
     if (!userAfter.username || (userLink.user.username === userAfter.username)) {
-        _.set(userAfter, 'username', glUser.username);
+        Import.set(userAfter, 'username', glUser.username);
     }
     userLink.user.username = glUser.username;
-    _.set(userAfter, 'disabled', glUser.state !== 'active');
-    _.set(userAfter, 'details.name', glUser.name);
-    _.set(userAfter, 'details.gitlab_url', glUser.web_url);
-    _.set(userAfter, 'details.skype_username', glUser.skype || undefined);
-    _.set(userAfter, 'details.twitter_username', glUser.twitter || undefined);
-    _.set(userAfter, 'details.linkedin_username', glUser.linkedin_name || undefined);
-    _.set(userAfter, 'details.email', glUser.email);
+    Import.set(userAfter, 'disabled', glUser.state !== 'active');
+    Import.set(userAfter, 'details.name', glUser.name);
+    Import.set(userAfter, 'details.gitlab_url', glUser.web_url);
+    Import.set(userAfter, 'details.skype_username', glUser.skype || undefined);
+    Import.set(userAfter, 'details.twitter_username', glUser.twitter || undefined);
+    Import.set(userAfter, 'details.linkedin_username', glUser.linkedin_name || undefined);
+    Import.set(userAfter, 'details.email', glUser.email);
     Import.attach(userAfter, 'image', image);
 
     // set user type

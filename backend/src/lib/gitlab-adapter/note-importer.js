@@ -209,12 +209,12 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
 function copyEventProperties(reaction, story, author, glEvent, link) {
     var reactionAfter = _.cloneDeep(reaction) || {};
     Import.join(reactionAfter, link);
-    _.set(reactionAfter, 'type', 'note');
-    _.set(reactionAfter, 'story_id', story.id);
-    _.set(reactionAfter, 'user_id', author.id);
-    _.set(reactionAfter, 'public', story.public);
-    _.set(reactionAfter, 'published', true);
-    _.set(reactionAfter, 'ptime', Moment(glEvent.created_at).toISOString());
+    Import.set(reactionAfter, 'type', 'note');
+    Import.set(reactionAfter, 'story_id', story.id);
+    Import.set(reactionAfter, 'user_id', author.id);
+    Import.set(reactionAfter, 'public', story.public);
+    Import.set(reactionAfter, 'published', true);
+    Import.set(reactionAfter, 'ptime', Moment(glEvent.created_at).toISOString());
     if (_.isEqual(reaction, reactionAfter)) {
         return null;
     }

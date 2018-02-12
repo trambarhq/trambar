@@ -69,16 +69,16 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 function copyEventProperties(story, author, glHookEvent, link) {
     var storyAfter = _.cloneDeep(story) || {};
     Import.join(storyAfter, link);
-    _.set(storyAfter, 'type', 'wiki');
-    _.set(storyAfter, 'user_ids', [ author.id ]);
-    _.set(storyAfter, 'role_ids', author.role_ids);
-    _.set(storyAfter, 'published', true);
-    _.set(storyAfter, 'ptime', Moment().toISOString());
-    _.set(storyAfter, 'public', true);
-    _.set(storyAfter, 'details.url', glHookEvent.object_attributes.url);
-    _.set(storyAfter, 'details.title', glHookEvent.object_attributes.title);
-    _.set(storyAfter, 'details.action', glHookEvent.object_attributes.action);
-    _.set(storyAfter, 'details.slug', glHookEvent.object_attributes.slug);
+    Import.set(storyAfter, 'type', 'wiki');
+    Import.set(storyAfter, 'user_ids', [ author.id ]);
+    Import.set(storyAfter, 'role_ids', author.role_ids);
+    Import.set(storyAfter, 'published', true);
+    Import.set(storyAfter, 'ptime', Moment().toISOString());
+    Import.set(storyAfter, 'public', true);
+    Import.set(storyAfter, 'details.url', glHookEvent.object_attributes.url);
+    Import.set(storyAfter, 'details.title', glHookEvent.object_attributes.title);
+    Import.set(storyAfter, 'details.action', glHookEvent.object_attributes.action);
+    Import.set(storyAfter, 'details.slug', glHookEvent.object_attributes.slug);
     if (_.isEqual(story, storyAfter)) {
         return null;
     }
