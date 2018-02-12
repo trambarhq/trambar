@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var BlobStream = require('transport/blob-stream');
 var BlobManager = require('transport/blob-manager');
 var HTTPRequest = require('transport/http-request');
@@ -26,13 +27,15 @@ function Payload(address, schema, type, token) {
     this.promise = null;
     this.parts = [];
     this.approved = false;
-    this.sent = !!token;
+    this.started = !!token;
+    this.sent = false;
     this.failed = false;
     this.completed = false;
     this.uploadStartTime = null;
     this.uploadEndTime = null;
     this.processEndTime = null;
-    this.onProgress = null;
+    this.onUploadProgress = null;
+    this.onUploadComplete = null;
 };
 
 /**
@@ -161,15 +164,25 @@ Payload.prototype.setPartOptions = function(options, name) {
  * Send the payload
  */
 Payload.prototype.send = function() {
-    if (this.sent) {
+    if (this.started) {
         return;
     }
     if (!this.approved) {
         throw new HTTPError(403);
     }
-    this.sent = true;
+    this.started = true;
+    this.uploadStartTime = Moment().toISOString();
     Promise.each(this.parts, (part) => {
         return this.sendPart(part);
+    }).then(() => {
+        this.sent = true;
+        this.uploadEndTime = Moment().toISOString();
+        if (this.onUploadComplete) {
+            this.onUploadComplete({
+                type: 'uploadcomplete',
+                target: this,
+            });
+        }
     });
 };
 
@@ -368,9 +381,9 @@ Payload.prototype.getDestinationURL = function(name) {
 Payload.prototype.updateProgress = function(part, completed) {
     if (completed) {
         part.uploaded = Math.round(part.size * completed);
-        if (this.onProgress) {
-            this.onProgress({
-                type: 'progress',
+        if (this.onUploadProgress) {
+            this.onUploadProgress({
+                type: 'uploadprogress',
                 target: this,
             });
         }
@@ -390,6 +403,7 @@ Payload.prototype.updateBackendStatus = function(task) {
         // restore type and action
         this.action = task.action;
         this.type = _.replace(this.action, /^add\-/, '');
+        this.sent = (task.completion > 0);
         changed = true;
     }
     if (this.processed !== task.completion) {
@@ -398,6 +412,9 @@ Payload.prototype.updateBackendStatus = function(task) {
     }
     if (this.processEndTime !== task.etime) {
         this.processEndTime = task.etime;
+        if (task.etime && !task.failed) {
+            this.completed = true;
+        }
         changed = true;
     }
     if (task.failed && !this.failed) {

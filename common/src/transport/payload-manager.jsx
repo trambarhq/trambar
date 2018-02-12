@@ -72,8 +72,8 @@ module.exports = React.createClass({
     add: function(type) {
         var params = this.props.route.parameters;
         var payload = new Payload(params.address, params.schema || 'global', type);
-        payload.onProgress = this.handleUploadProgress;
-        payload.onComplete = this.handleUploadComplete;
+        payload.onUploadProgress = this.handleUploadProgress;
+        payload.onUploadComplete = this.handleUploadComplete;
         this.updateList('payloads', (before) => {
             return _.concat(before, payload);
         });
@@ -134,6 +134,7 @@ module.exports = React.createClass({
         });
         if (payloads.length < tokens) {
             setImmediate(() => {
+                debugger;
                 // some payloads are not there, either because they were sent by
                 // another browser or a page refresh occurred
                 var params = this.props.route.parameters;
@@ -166,6 +167,12 @@ module.exports = React.createClass({
                 progress: uploadingProgress
             };
         } else {
+            if (_.some(payloads, { failed: true })) {
+                return {
+                    action: 'failed',
+                };
+            }
+
             // maybe a web-site preview is being rendered
             var renderingPayloads = _.filter(payloads, (payload) => {
                 return payload.type === 'web-site';
@@ -326,29 +333,45 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when uploading has finished
+     *
+     * @param  {Object} evt
+     */
+    handleUploadComplete: function(evt) {
+        this.triggerChangeEvent();
+    },
+
+    /**
      * Render diagnostics
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     render: function() {
         var payloads = this.state.payloads;
-        var unsentPayloads = _.filter(payloads, { sent: false });
-        var inTransitPayloads = _.filter(payloads, { sent: true, completed: false, failed: false });
-        var failedPayloads = _.filter(payloads, { sent: true, failed: true });
-        var completedPayloads = _.filter(payloads, { completed: true });
+        if (_.isEmpty(payloads)) {
+            return null;
+        }
+        var pending = _.filter(payloads, { started: false });
+        var uploading = _.filter(payloads, { started: true, sent: false, failed: false });
+        var processing =  _.filter(payloads, { sent: true, completed: false });
+        var failed = _.filter(payloads, { failed: true });
+        var completed = _.filter(payloads, { completed: true });
         return (
             <Diagnostics type="payload-manager">
-                <DiagnosticsSection label="Unsent payloads" hidden={_.isEmpty(unsentPayloads)}>
-                    {_.map(unsentPayloads, this.renderPayload)}
+                <DiagnosticsSection label="Pending payloads" hidden={_.isEmpty(pending)}>
+                    {_.map(pending, this.renderPayload)}
                 </DiagnosticsSection>
-                <DiagnosticsSection label="Payloads in-transit" hidden={_.isEmpty(inTransitPayloads)}>
-                    {_.map(inTransitPayloads, this.renderPayload)}
+                <DiagnosticsSection label="Payloads in transit" hidden={_.isEmpty(uploading)}>
+                    {_.map(uploading, this.renderPayload)}
                 </DiagnosticsSection>
-                <DiagnosticsSection label="Failed payloads" hidden={_.isEmpty(failedPayloads)}>
-                    {_.map(failedPayloads, this.renderPayload)}
+                <DiagnosticsSection label="Payloads in backend process" hidden={_.isEmpty(processing)}>
+                    {_.map(processing, this.renderPayload)}
                 </DiagnosticsSection>
-                <DiagnosticsSection label="Completed payloads" hidden={_.isEmpty(completedPayloads)}>
-                    {_.map(completedPayloads, this.renderPayload)}
+                <DiagnosticsSection label="Failed payloads" hidden={_.isEmpty(failed)}>
+                    {_.map(failed, this.renderPayload)}
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Completed payloads" hidden={_.isEmpty(completed)}>
+                    {_.map(completed, this.renderPayload)}
                 </DiagnosticsSection>
             </Diagnostics>
         );
@@ -365,12 +388,61 @@ module.exports = React.createClass({
     renderPayload: function(payload, index) {
         return (
             <div key={index}>
-                <div>{payload.type} ({payload.token})</div>
+                <div>Payload token: {payload.token}</div>
+                <div>Resource type: {payload.type}</div>
+                {this.renderTransferStatus(payload)}
+                {this.renderBackendStatus(payload)}
                 <ol>
                     {_.map(payload.parts, this.renderPayloadPart)}
                 </ol>
             </div>
         );
+    },
+
+    /**
+     * Render either the upload progress or the duration if it's done
+     *
+     * @param  {[type]} payload
+     *
+     * @return {ReactElement|null}
+     */
+    renderTransferStatus: function(payload) {
+        if (!payload.started) {
+            return null;
+        }
+        if (payload.sent) {
+            var elapsed = (Moment(payload.uploadEndTime) - Moment(payload.uploadStartTime)) * 0.001;
+            var size = payload.getSize();
+            var speed = fileSize(size / elapsed) + ' per sec';
+            var duration = _.round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
+            return <div>Upload duration: {duration} ({speed})</div>;
+        } else {
+            var size = payload.getSize();
+            var uploaded = payload.getUploaded();
+            var progress = Math.round(uploaded / size * 100 || 0) + '%';
+            return <div>Upload progress: {progress}%</div>;
+        }
+    },
+
+    /**
+     * Render either the backend progress or the duration if it's done
+     *
+     * @param  {Payload} payload
+     *
+     * @return {ReactElement|null}
+     */
+    renderBackendStatus: function(payload) {
+        if (!payload.sent) {
+            return null;
+        }
+        if (payload.completed) {
+            var elapsed = (Moment(payload.processEndTime) - Moment(payload.uploadEndTime)) * 0.001;
+            var duration = _.round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
+            return <div>Backend duration: {duration}</div>;
+        } else {
+            var progress = payload.processed + '%';
+            return <div>Backend progress: {progress}</div>;
+        }
     },
 
     /**
@@ -383,7 +455,7 @@ module.exports = React.createClass({
      */
     renderPayloadPart: function(part, index) {
         var type;
-        var description = part.supplemental || 'main contents';
+        var name = part.name;
         if (part.blob || part.cordovaFile) {
             type = 'File';
         } else if (part.stream) {
@@ -391,18 +463,28 @@ module.exports = React.createClass({
         } else if (part.url) {
             type = 'URL'
         }
-        var uploaded;
+        var size;
         if (part.size > 0) {
-            uploaded = (
-                <span style={{ float: 'right' }}>
-                    {part.uploaded}/{part.size}
-                </span>
-            );
+            size = <span style={{ float: 'right' }}>{fileSize(part.size)}</span>;
         }
         return (
             <li key={index}>
-                {type} - {description} {uploaded}
+                {type} - {name} {size}
             </li>
         );
     },
 });
+
+function fileSize(bytes) {
+    if (bytes >= 1024 * 1024 * 1024) {
+        return `${_.round(bytes / (1024 * 1024 * 1024))} GB`;
+    } else if (bytes >= 1024 * 1024) {
+        return `${_.round(bytes / (1024 * 1024))} MB`;
+    } else if (bytes >= 1024) {
+        return `${_.round(bytes / 1024)} KB`;
+    } else if (bytes > 0) {
+        return `${bytes} bytes`;
+    } else {
+        return '0';
+    }
+}
