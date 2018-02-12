@@ -76,7 +76,7 @@ module.exports = React.createClass({
         if (this.props.open) {
             this.updateHeight();
             // sometimes height of the scrollbar isn't accounted for initially
-            setTimeout(this.updateHeight, 10);
+            this.updateTimeout = setTimeout(this.updateHeight, 10);
         }
     },
 
@@ -88,16 +88,27 @@ module.exports = React.createClass({
      */
     componentDidUpdate: function(prevProps, prevState) {
         this.updateHeight();
-        setTimeout(this.updateHeight, 10);
+        this.updateTimeout = setTimeout(this.updateHeight, 10);
+    },
+
+    /**
+     * Clear timeout on unmount
+     */
+    componentWillUnmount: function() {
+        if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
+        }
     },
 
     /**
      * Get the height of the contents, saving it if it's different
      */
     updateHeight: function() {
-        var contentHeight = getContentHeight(this.components.contents);
-        if (this.state.contentHeight !== contentHeight) {
-            this.setState({ contentHeight });
+        if (this.components.contents) {
+            var contentHeight = getContentHeight(this.components.contents);
+            if (this.state.contentHeight !== contentHeight) {
+                this.setState({ contentHeight });
+            }
         }
     },
 });
