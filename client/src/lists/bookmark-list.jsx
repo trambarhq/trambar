@@ -331,6 +331,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
 
         // see if it's being editted
         var editing = false;
+        var selected = false;
         if (story) {
             if (this.props.access === 'read-write') {
                 if (!story.published) {
@@ -344,10 +345,17 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                     }
                 }
             }
+            if (story.id === this.props.selectedStoryId) {
+                // don't set select again if we had scrolled away
+                if (!this.props.route.loosened) {
+                    selected = true;
+                }
+            }
         }
         if (editing || evt.needed) {
             var senders = findSenders(this.props.senders, bookmark);
             var bookmarkProps = {
+                selected,
                 bookmark,
                 senders,
                 currentUser: this.props.currentUser,

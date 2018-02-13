@@ -29,4 +29,14 @@
     .triple-col & {
         margin-bottom: 1em;
     }
+
+    &.selected {
+        animation: flash normal 5s 1 ease-in-out;
+
+        @keyframes flash {
+            25% {
+                border-color: #fc6d26;
+            }
+        }
+    }
 }

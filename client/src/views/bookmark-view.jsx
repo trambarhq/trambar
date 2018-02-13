@@ -14,6 +14,7 @@ require('./bookmark-view.scss');
 module.exports = React.createClass({
     displayName: 'BookmarkView',
     propTypes: {
+        selected: PropTypes.bool,
         bookmark: PropTypes.object,
         senders: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
@@ -24,9 +25,18 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
+        var className = 'bookmark-view';
+        if (this.props.selected) {
+            className += ' selected';
+        }
         return (
-            <div className="bookmark-view">
+            <div className={className}>
                 <div className="title">
                     {this.renderSenderNames()}
                 </div>
@@ -37,6 +47,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render names of senders
+     *
+     * @return {ReactElement}
+     */
     renderSenderNames: function() {
         var t = this.props.locale.translate;
         var n = this.props.locale.name;
