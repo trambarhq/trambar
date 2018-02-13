@@ -104,10 +104,16 @@ module.exports = React.createClass({
                             width: image.naturalWidth,
                             height: image.naturalHeight,
                         };
+                    }).catch((err) => {
+                        // running into cross-site restrictions is quite likely here
+                        console.log(`Unable to load image: ${url}`);
                     });
                 } else {
+                    var payload = this.props.payloads.add('website');
+                    payload.attachURL(url, 'poster');
                     return {
                         type: 'website',
+                        payload_token: payload.token,
                         url: url,
                         title: getInnerText(html),
                     };

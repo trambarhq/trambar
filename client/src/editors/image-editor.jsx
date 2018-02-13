@@ -196,7 +196,7 @@ module.exports = React.createClass({
                 // poster is being generated in the backend
                 message = t('image-editor-poster-extraction-in-progress');
                 icon = 'film';
-            } else if (res.type === 'web-site') {
+            } else if (res.type === 'website') {
                 // web-site preview is being generated
                 message = t('image-editor-page-rendering-in-progress');
                 icon = 'file-image-o';

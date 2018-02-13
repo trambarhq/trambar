@@ -365,7 +365,7 @@ Payload.prototype.getDestinationURL = function(name) {
             break;
         case 'website':
             if (name === 'poster') {
-                url += `/media/html/poster/${this.schema}/`;
+                uri = `/media/html/poster/${this.schema}/`;
             }
             break;
     }
