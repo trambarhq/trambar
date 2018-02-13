@@ -12,10 +12,19 @@ module.exports = {
  *
  * @param  {String} url
  * @param  {String} dstPath
+ * @param  {Object} options
  *
  * @return {Promise<String>}
  */
-function createScreenshot(url, dstPath) {
+function createScreenshot(url, dstPath, options) {
+    var width = _.get(options, 'width', 1024);
+    var height = _.get(options, 'height', 1024);
+    var onProgress = _.get(options, 'onProgress');
+    var reportProgress = (progress) => {
+        if (onProgress) {
+            onProgress(progress);
+        }
+    };
     return startPhantom().then((instance) => {
         return B(instance.createPage()).then((page) => {
             return B(page.setting('userAgent')).then((ua) => {
@@ -27,7 +36,6 @@ function createScreenshot(url, dstPath) {
                     return page.setting(key, settings[key]);
                 });
             }).then(() => {
-                var width = 1024, height = 1024;
                 var properties = {
                     viewportSize: { width,  height },
                     clipRect: { left: 0, top: 0, width, height },
@@ -38,11 +46,23 @@ function createScreenshot(url, dstPath) {
             }).then(() => {
                 return page.open(url);
             }).then(() => {
+                // say it's 50 percent done when we got the page
+                reportProgress(50);
+
                 var start = new Date;
                 var last = start;
+                var count = 0;
                 page.on("onResourceRequested", (requestData) => {
                     // mark the time when a file request occurs
                     last = new Date;
+
+                    // report some number just to show something is happening
+                    count++;
+                    if (count === 20) {
+                        reportProgress(70);
+                    } else if (count === 50) {
+                        reportProgress(80);
+                    }
                 });
                 return new Promise((resolve, reject) => {
                     var interval = setInterval(() => {

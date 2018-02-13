@@ -412,10 +412,13 @@ module.exports = React.createClass({
         }
         if (payload.sent) {
             var elapsed = (Moment(payload.uploadEndTime) - Moment(payload.uploadStartTime)) * 0.001;
+            var speed;
             var size = payload.getSize();
-            var speed = fileSize(size / elapsed) + ' per sec';
+            if (size > 0) {
+                speed = `(${fileSize(size / elapsed)} per sec)`;
+            }
             var duration = _.round(elapsed, (elapsed < 1) ? 2 : 0) + 's';
-            return <div>Upload duration: {duration} ({speed})</div>;
+            return <div>Upload duration: {duration} {speed}</div>;
         } else {
             var size = payload.getSize();
             var uploaded = payload.getUploaded();

@@ -248,8 +248,13 @@ function handleWebsitePoster(req, res) {
         if (!url) {
             throw new HTTPError(400);
         }
-        var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.png');
-        WebsiteCapturer.createScreenshot(url, tempPath).then((title) => {
+        var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.jpg');
+        var options = {
+            onProgress: (progress) => {
+                saveTaskProgress(schema, taskId, progress);
+            }
+        };
+        WebsiteCapturer.createScreenshot(url, tempPath, options).then((title) => {
             // rename it to its MD5 hash once we have the data
             var file = { path: tempPath };
             return FileManager.preserveFile(file, null, CacheFolders.image).then((imagePath) => {
@@ -262,7 +267,7 @@ function handleWebsitePoster(req, res) {
                     };
                     return saveTaskOutcome(schema, taskId, 'poster', details);
                 }).then(() => {
-                    return ImageManager.addJPEGDescription(title, dstPath);
+                    return ImageManager.addJPEGDescription(title, imagePath);
                 });
             });
         });
