@@ -554,7 +554,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': 'Started a survey',
         'user-activity-$name-started-task-list': 'Started a task list',
         'user-activity-$name-wrote-post': 'Wrote a post',
-        'user-activity-more': 'More...',
+        'user-activity-back': 'Back',
+        'user-activity-more': 'More',
 
         'user-image-remove': 'Remove',
         'user-image-select': 'Select',

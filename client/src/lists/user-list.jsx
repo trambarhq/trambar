@@ -27,6 +27,7 @@ module.exports = Relaks.createClass({
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         selectedDate: PropTypes.string,
+        selectedUser: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -71,6 +72,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             today: this.state.today,
             selectedDate: this.props.selectedDate,
+            selectedUser: this.props.selectedUser,
             freshRoute: this.props.route !== prevProps.route,
         };
         meanwhile.show(<UserListSync {...props} />, delay);
@@ -177,6 +179,7 @@ var UserListSync = module.exports.Sync = React.createClass({
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         selectedDate: PropTypes.string,
+        selectedUser: PropTypes.object,
         today: PropTypes.string,
         freshRoute: PropTypes.bool,
 
@@ -216,7 +219,12 @@ var UserListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var users = sortUsers(this.props.users, this.props.locale);
+        var users;
+        if (!this.props.selectedUser) {
+            users = sortUsers(this.props.users, this.props.locale);
+        } else {
+            users = [ this.props.selectedUser ];
+        }
         var smartListProps = {
             items: users,
             behind: 4,
@@ -270,6 +278,7 @@ var UserListSync = module.exports.Sync = React.createClass({
                 theme: this.props.theme,
                 selectedDate: this.props.selectedDate,
                 today: this.props.today,
+                link: (this.props.selectedUser) ? 'team' : 'user',
 
                 onChartSelect: this.handleChartSelect,
             };

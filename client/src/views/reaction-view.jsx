@@ -141,7 +141,7 @@ module.exports = React.createClass({
             size: 'small'
         };
         if (this.props.respondent) {
-            props.url = this.props.route.find(require('pages/person-page'), {
+            props.url = this.props.route.find(require('pages/people-page'), {
                 schema: this.props.route.parameters.schema,
                 user: this.props.respondent.id,
             });

@@ -281,7 +281,7 @@ module.exports = React.createClass({
                 user: this.props.user.id,
                 date: date,
             };
-            route.push(require('pages/person-page'), params);
+            route.push(require('pages/people-page'), params);
         }
     },
 });

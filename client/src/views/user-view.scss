@@ -43,8 +43,6 @@
             display: inline-block;
 
             A {
-                color: #666666;
-
                 &:link, &:visited {
                     color: #666666;
                     text-decoration: none;
@@ -52,6 +50,22 @@
                     &:hover {
                         color: #cccccc;
                     }
+                }
+            }
+        }
+
+        .link {
+            margin-top: 0.5em;
+            text-align: right;
+
+            A {
+                &:link, &:visited {
+                    color: #999999;
+                    text-decoration: none;
+                }
+
+                &:hover {
+                    color: #eeeeee;
                 }
             }
         }

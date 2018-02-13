@@ -30,24 +30,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return URL to PersonPage
-     *
-     * @param  {Story|undefined} story
-     *
-     * @return {[type]}
-     */
-    getURL: function(story) {
-        var route = this.props.route;
-        var params = _.pick(route.parameters, 'schema', 'date', 'search');
-        params.user = this.props.user.id;
-        if (story) {
-            params.story = story.id;
-        }
-        var url = route.find(require('pages/person-page'), params);
-        return url;
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -57,25 +39,6 @@ module.exports = React.createClass({
         return (
             <div className="user-activity-list">
                 {_.map(stories, this.renderActivity)}
-                {this.renderMoreLink()}
-            </div>
-        );
-    },
-
-    /**
-     * Render a "more..." link if there are stories
-     *
-     * @return {ReactElement|null}
-     */
-    renderMoreLink: function() {
-        if (_.isEmpty(this.props.stories)) {
-            return null;
-        }
-        var t = this.props.locale.translate;
-        var url = this.getURL();
-        return (
-            <div className="more">
-                <Link url={url}>{t('user-activity-more')}</Link>
             </div>
         );
     },
@@ -88,8 +51,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderActivity: function(story) {
+        var route = this.props.route;
+        var params = _.pick(route.parameters, 'schema', 'date', 'search');
+        params.user = this.props.user.id;
+        params.story = story.id;
+        var url = route.find(require('pages/people-page'), params);
         var text = this.renderText(story);
-        var url = this.getURL(story);
         var linkClass;
         var time = story.btime || story.ptime;
         if (time >= DateTracker.todayISO || time >= DateTracker.yesterdayISO) {

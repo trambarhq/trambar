@@ -8,10 +8,6 @@ var Database = require('data/database');
 var Route = require('routing/route');
 var Locale = require('locale/locale');
 
-var NewsPage = require('pages/news-page');
-var NotificationsPage = require('pages/notifications-page');
-var PersonPage = require('pages/person-page');
-
 // mixins
 var UpdateCheck = require('mixins/update-check');
 

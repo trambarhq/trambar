@@ -289,7 +289,7 @@ module.exports = React.createClass({
             size: 'medium',
         };
         if (leadAuthor) {
-            props.href = this.props.route.find(require('pages/person-page'), {
+            props.href = this.props.route.find(require('pages/people-page'), {
                 schema: this.props.route.parameters.schema,
                 user: leadAuthor.id,
             });

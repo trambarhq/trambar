@@ -17,6 +17,7 @@ var UserActivityList = require('lists/user-activity-list');
 var UserStatistics = require('views/user-statistics');
 var UserViewOptions = require('views/user-view-options');
 var CornerPopUp = require('widgets/corner-pop-up');
+var Link = require('widgets/link');
 
 require('./user-view.scss');
 
@@ -32,6 +33,7 @@ module.exports = React.createClass({
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
+        link: PropTypes.oneOf([ 'user', 'team' ]),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -93,6 +95,7 @@ module.exports = React.createClass({
                         {this.renderName()}
                         {this.renderTag()}
                         {this.renderRecentActivities()}
+                        {this.renderLink()}
                     </div>
                 </div>
                 <div className="header">
@@ -132,6 +135,7 @@ module.exports = React.createClass({
                         {this.renderName()}
                         {this.renderTag()}
                         {this.renderRecentActivities()}
+                        {this.renderLink()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -167,6 +171,7 @@ module.exports = React.createClass({
                         {this.renderName()}
                         {this.renderTag()}
                         {this.renderRecentActivities()}
+                        {this.renderLink()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -275,6 +280,33 @@ module.exports = React.createClass({
             theme: this.props.theme,
         };
         return <UserActivityList {...props} />;
+    },
+
+    /**
+     * Render a "more..." link if there are stories
+     *
+     * @return {ReactElement|null}
+     */
+    renderLink: function() {
+        if (_.isEmpty(this.props.stories)) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        var route = this.props.route;
+        var params = _.pick(route.parameters, 'schema', 'date', 'search');
+        var label;
+        if (this.props.link === 'user') {
+            params.user = this.props.user.id;
+            label = t('user-activity-more');
+        } else {
+            label = t('user-activity-back');
+        }
+        var url = route.find(require('pages/people-page'), params);
+        return (
+            <div className="link">
+                <Link url={url}>{label}</Link>
+            </div>
+        );
     },
 
     /**
