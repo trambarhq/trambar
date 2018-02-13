@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var NotificationTypes = require('objects/types/notification-types');
+var UserUtils = require('objects/utils/user-utils');
 
 var Locale = require('locale/locale');
 
@@ -97,9 +98,11 @@ module.exports = React.createClass({
         var settings = _.get(this.props.currentUser, 'settings', {});
         var notificationEnabled = !!_.get(settings, `notification.${optionName}`);
         var alertEnabled = !!_.get(settings, `mobile_alert.${optionName}`);
+        var canReceive = UserUtils.canReceiveNotification(this.props.currentUser, this.props.repos, type);
         var buttonProps = {
             label: t(`notification-option-${type}`),
             selected: alertEnabled && (notificationEnabled || type === 'web-session'),
+            hidden: !canReceive,
             disabled: !(notificationEnabled || type === 'web-session'),
             onClick: this.handleOptionClick,
             id: optionName,

@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var NotificationTypes = require('objects/types/notification-types');
+var UserUtils = require('objects/utils/user-utils');
 
 var Locale = require('locale/locale');
 
@@ -19,6 +20,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         currentUser: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
         locale: PropTypes.instanceOf(Locale).isRequired,
         onChange: PropTypes.func,
     },
@@ -89,9 +91,12 @@ module.exports = React.createClass({
         var optionName = _.snakeCase(type);
         var settings = _.get(this.props.currentUser, 'settings', {});
         var enabled = !!_.get(settings, `notification.${optionName}`);
+        var canReceive = UserUtils.canReceiveNotification(this.props.currentUser, this.props.repos, type);
+        console.log(canReceive)
         var buttonProps = {
             label: t(`notification-option-${type}`),
             selected: enabled,
+            hidden: !canReceive,
             onClick: this.handleOptionClick,
             id: optionName,
         };

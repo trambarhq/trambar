@@ -104,6 +104,8 @@ module.exports = Relaks.createClass({
             currentUser: null,
             currentProject: null,
             projectLinks: null,
+            repos: null,
+            devices: null,
             system: null,
 
             database: this.props.database,
@@ -139,6 +141,12 @@ module.exports = Relaks.createClass({
             props.devices = devices;
             return meanwhile.show(<SettingsPageSync {...props} />);
         }).then(() => {
+            var criteria = { id: props.currentProject.repo_ids };
+            return db.find({ schema: 'global', table: 'repo', criteria });
+        }).then((repos) => {
+            props.repos = repos;
+            return meanwhile.show(<SettingsPageSync {...props} />);
+        }).then(() => {
             var criteria = {};
             return db.findOne({ schema: 'global', table: 'system', criteria });
         }).then((system) => {
@@ -154,6 +162,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         currentUser: PropTypes.object,
         currentProject: PropTypes.object,
         projectLinks: PropTypes.arrayOf(PropTypes.object),
+        repos: PropTypes.arrayOf(PropTypes.object),
         devices: PropTypes.arrayOf(PropTypes.object),
         system: PropTypes.object,
 
@@ -370,6 +379,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     renderNotificationPanel: function() {
         var panelProps = {
             currentUser: this.getUser(),
+            repos: this.props.repos,
             locale: this.props.locale,
             onChange: this.handleChange,
         };
@@ -387,6 +397,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         }
         var panelProps = {
             currentUser: this.getUser(),
+            repos: this.props.repos,
             locale: this.props.locale,
             onChange: this.handleChange,
         };
@@ -404,6 +415,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         }
         var panelProps = {
             currentUser: this.getUser(),
+            repos: this.props.repos,
             locale: this.props.locale,
             onChange: this.handleChange,
         };

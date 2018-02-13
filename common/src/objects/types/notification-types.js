@@ -3,6 +3,7 @@ module.exports = exports = [
     'comment',
     'task-completion',
     'vote',
+    'survey',
     'coauthor',
     'bookmark',
     'mention',
@@ -11,10 +12,21 @@ module.exports = exports = [
     'issue',
     'push',
     'merge',
-    'survey',
     'join-request',
 ];
 
 exports.admin = [
     'join-request',
+];
+
+exports.git = [
+    'push',
+    'merge',
+    'note',
+    'assignment',
+    'issue',
+];
+
+exports.git.membership = [
+    'assignment',
 ];

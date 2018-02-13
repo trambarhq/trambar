@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Moment = require('moment');
 var StoryUtils = require('objects/utils/story-utils');
 var ReactionUtils = require('objects/utils/reaction-utils');
+var NotificationTypes = require('objects/types/notification-types');
 
 module.exports = {
     isAuthor,
@@ -18,6 +19,7 @@ module.exports = {
     canEditReaction,
     canHideReaction,
     canRemoveReaction,
+    canReceiveNotification,
 };
 
 function isAuthor(user, story) {
@@ -334,4 +336,39 @@ function canHideReaction(user, story, reaction, access) {
         }
     }
     return false;
+}
+
+/**
+ * Return true if user can receive notification of given type
+ *
+ * @param  {User} user
+ * @param  {Array<Repo>} repos
+ * @param  {type} type
+ *
+ * @return {Boolean}
+ */
+function canReceiveNotification(user, repos, type) {
+    if (_.includes(NotificationTypes.git, type)) {
+        // assume user can receive notification if loading isn't done
+        if (repos) {
+            if (_.isEmpty(repos)) {
+                return false;
+            }
+            if (_.includes(NotificationTypes.git.membership, type)) {
+                if (user) {
+                    var hasAccess = _.some(repos, (repo) => {
+                        return canAccessRepo(user, repo)
+                    });
+                    if (!hasAccess) {
+                        return false;
+                    }
+                }
+            }
+        }
+    } else if (_.includes(NotificationTypes.admin, type)) {
+        if (user && user.type !== 'admin') {
+            return false;
+        }
+    }
+    return true;
 }
