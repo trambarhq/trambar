@@ -860,10 +860,12 @@ module.exports = React.createClass({
         // send images and videos to server
         var params = this.props.route.parameters;
         var resources = story.details.resources || [];
-        var delay = (immediate) ? undefined : AUTOSAVE_DURATION;
+        var options = {
+            delay: (immediate) ? undefined : AUTOSAVE_DURATION
+        };
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
-            return db.saveOne({ table: 'story' }, story, delay).then((story) => {
+            return db.saveOne({ table: 'story' }, story, options).then((story) => {
                 this.props.payloads.dispatch(story);
                 return story;
             });

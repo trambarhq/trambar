@@ -313,10 +313,12 @@ module.exports = React.createClass({
     saveReaction: function(reaction, immediate) {
         // send images and videos to server
         var params = this.props.route.parameters;
-        var delay = (immediate) ? undefined : AUTOSAVE_DURATION;
+        var options = {
+            delay: (immediate) ? undefined : AUTOSAVE_DURATION
+        };
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
-            return db.saveOne({ table: 'reaction' }, reaction, delay).then((reaction) => {
+            return db.saveOne({ table: 'reaction' }, reaction, options).then((reaction) => {
                 // start file upload
                 this.props.payloads.dispatch(reaction);
                 return reaction;

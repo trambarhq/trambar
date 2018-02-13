@@ -537,11 +537,11 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Array<Object>} objects
-     * @param  {Number|undefined} delay
+     * @param  {Object|undefined} options
      *
      * @return {Promise<Array<Object>>}
      */
-    save: function(location, objects, delay) {
+    save: function(location, objects, options) {
         var startTime = getCurrentTime();
         var byComponent = _.get(location, 'by.constructor.displayName',)
         location = getSearchLocation(location);
@@ -553,7 +553,7 @@ module.exports = React.createClass({
             });
         } else {
             // storeRemoteObjects() will trigger change event
-            return this.storeRemoteObjects(location, objects, delay).then((objects) => {
+            return this.storeRemoteObjects(location, objects, options).then((objects) => {
                 var endTime = getCurrentTime();
                 this.updateCachedObjects(location, objects);
                 this.updateRecentSearchResults(location, objects);
@@ -952,12 +952,12 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Array<Object>} objects
-     * @param  {Number|undefined} delay
+     * @param  {Object|undefined} options
      *
      * @return {Promise<Array<Object>>}
      */
-    storeRemoteObjects: function(location, objects, delay) {
-        var change = new RemoteDataChange(location, objects);
+    storeRemoteObjects: function(location, objects, options) {
+        var change = new RemoteDataChange(location, objects, options);
         _.each(this.changeQueue, (earlierOp) => {
             change.merge(earlierOp);
         });
@@ -975,9 +975,6 @@ module.exports = React.createClass({
             return Promise.resolve();
         };
         this.queueChange(change);
-        if (delay !== undefined) {
-            change.delay(delay);
-        }
         if (this.props.hasConnection) {
             // send it if we've connectivity
             change.dispatch();

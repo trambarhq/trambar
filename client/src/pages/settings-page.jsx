@@ -24,6 +24,8 @@ var DiagnoisticDataPanel = require('panels/diagnostic-data-panel');
 
 require('./settings-page.scss');
 
+var AUTOSAVE_DURATION = 2000;
+
 module.exports = Relaks.createClass({
     displayName: 'SettingsPage',
     propTypes: {
@@ -460,9 +462,11 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     saveUser: function(user, immediate) {
         var schema = 'global';
-        var delay = immediate ? undefined : 2000;
+        var options = {
+            delay: immediate ? undefined : AUTOSAVE_DURATION
+        };
         var db = this.props.database.use({ schema, by: this });
-        return db.saveOne({ table: 'user' }, user, delay).then((user) => {
+        return db.saveOne({ table: 'user' }, user, options).then((user) => {
             // start file upload
             this.props.payloads.dispatch(schema, user);
             return user;

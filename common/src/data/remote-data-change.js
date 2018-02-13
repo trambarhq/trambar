@@ -5,7 +5,7 @@ var LocalSearch = require('data/local-search');
 
 module.exports = RemoteDataChange;
 
-function RemoteDataChange(location, objects) {
+function RemoteDataChange(location, objects, options) {
     this.location = location;
     this.objects = _.map(objects, (object) => {
         if (!object.uncommitted) {
@@ -30,21 +30,20 @@ function RemoteDataChange(location, objects) {
         this.resolvePromise = resolve;
         this.rejectPromise = reject;
     });
-}
 
-RemoteDataChange.prototype.delay = function(delay) {
-    if (this.delayed) {
-        return;
-    }
-    this.delayed = true;
-    this.timeout = setTimeout(() => {
-        this.delayed = false;
-        if (this.dispatching) {
-            this.dispatching = false;
-            this.dispatch();
+    if (options) {
+        if (options.delay) {
+            this.delayed = true;
+            this.timeout = setTimeout(() => {
+                this.delayed = false;
+                if (this.dispatching) {
+                    this.dispatching = false;
+                    this.dispatch();
+                }
+            }, options.delay);
         }
-    }, delay);
-};
+    }
+}
 
 RemoteDataChange.prototype.dispatch = function() {
     if (this.dispatched || this.canceled) {
