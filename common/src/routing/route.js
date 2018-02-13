@@ -12,6 +12,7 @@ function Route(routeManager) {
     this.query = this.routeManager.getQuery();
     this.hash = this.routeManager.getHash();
     this.callbacks = [];
+    this.loosened = false;
 }
 
 /**
@@ -79,6 +80,7 @@ Route.prototype.replace = function(component, parameters) {
  */
 Route.prototype.loosen = function() {
     this.routeManager.loosen();
+    this.loosened = true;
 };
 
 /**
