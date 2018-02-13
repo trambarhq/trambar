@@ -43,12 +43,14 @@ module.exports = _.create(Data, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                story_id int NOT NULL DEFAULT 0,
-                user_ids int[] NOT NULL DEFAULT '{}'::int[],
-                target_user_id int NOT NULL DEFAULT 0,
+                story_id int NOT NULL,
+                user_ids int[] NOT NULL,
+                target_user_id int NOT NULL,
                 public boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (story_id) WHERE deleted = false;
+            CREATE INDEX ON ${table} (target_user_id) WHERE deleted = false;
         `;
         return db.execute(sql);
     },

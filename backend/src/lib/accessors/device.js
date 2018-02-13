@@ -50,6 +50,8 @@ module.exports = _.create(Data, {
                 session_handle varchar(16) NOT NULL,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (user_id) WHERE deleted = false;
+            CREATE INDEX ON ${table} (session_handle) WHERE deleted = false;
         `;
         return db.execute(sql);
     },

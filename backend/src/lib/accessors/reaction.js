@@ -71,8 +71,8 @@ module.exports = _.create(ExternalData, {
                 type varchar(32) NOT NULL DEFAULT '',
                 tags varchar(64)[] NOT NULL DEFAULT '{}'::text[],
                 language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
-                story_id int NOT NULL DEFAULT 0,
-                user_id int NOT NULL DEFAULT 0,
+                story_id int NOT NULL,
+                user_id int NOT NULL,
                 published boolean NOT NULL DEFAULT false,
                 ready boolean NOT NULL DEFAULT false,
                 suppressed boolean NOT NULL DEFAULT false,
@@ -81,6 +81,7 @@ module.exports = _.create(ExternalData, {
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (story_id) WHERE deleted = false;
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
         `;
         return db.execute(sql);

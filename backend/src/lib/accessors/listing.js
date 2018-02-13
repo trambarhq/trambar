@@ -61,12 +61,14 @@ module.exports = _.create(LiveData, {
                 ltime timestamp,
                 dirty boolean NOT NULL DEFAULT false,
                 finalized boolean NOT NULL DEFAULT true,
-                type varchar(32) NOT NULL DEFAULT '',
-                target_user_id int NOT NULL DEFAULT 0,
-                filters jsonb NOT NULL DEFAULT '{}',
-                filters_hash varchar(32) DEFAULT '',
+                type varchar(32) NOT NULL,
+                target_user_id int NOT NULL,
+                filters jsonb NOT NULL,
+                filters_hash varchar(32) NOT NULL,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (target_user_id, filters_hash, type) WHERE deleted = false;
+            CREATE UNIQUE INDEX ON ${table} (id) WHERE dirty = true;
         `;
         return db.execute(sql);
     },

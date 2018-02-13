@@ -66,6 +66,7 @@ module.exports = _.create(Data, {
                 etime timestamp,
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} (token) WHERE deleted = false;
         `;
         return db.execute(sql);
     },

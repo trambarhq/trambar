@@ -42,11 +42,12 @@ module.exports = _.create(ExternalData, {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                initial_branch varchar(256) NOT NULL DEFAULT '{}',
+                initial_branch varchar(256) NOT NULL,
                 title_hash varchar(32) NOT NULL,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 PRIMARY KEY (id)
             );
+            CREATE INDEX ON ${table} USING gin(("externalIdStrings"(external, 'gitlab', '{commit}'))) WHERE deleted = false;
         `;
         return db.execute(sql);
     },
