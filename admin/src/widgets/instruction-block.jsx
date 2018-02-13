@@ -1,3 +1,5 @@
+var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var MarkGor = require('mark-gor/react');
 
@@ -39,7 +41,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            text: null,
+            contents: null,
         };
     },
 
@@ -48,7 +50,9 @@ module.exports = React.createClass({
      */
     componentWillMount: function() {
         if (this.props.topic) {
-            this.loadText(this.props.topic, this.props.locale.languageCode);
+            loadMarkdown(this.props.topic, this.props.locale.languageCode).then((contents) => {
+                this.setState({ contents });
+            });
         }
     },
 
@@ -59,27 +63,10 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.topic !== nextProps.topic || this.props.locale !== nextProps.locale) {
-            this.loadText(nextProps.topic, nextProps.locale.languageCode);
-        }
-    },
-
-    /**
-     * Load instruction text
-     *
-     * @param  {String} topic
-     * @param  {String} lang
-     */
-    loadText: function(topic, lang) {
-        import(`instructions/${topic}.${lang}.md`).then((text) => {
-            this.setState({ text });
-        }).catch(() => {
-            if (process.env.NODE_ENV !== 'production') {
-                console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
-            }
-            return import(`instructions/${topic}.en.md`).then((text) => {
-                this.setState({ text });
+            loadMarkdown(nextProps.topic, nextProps.locale.languageCode).then((contents) => {
+                this.setState({ contents });
             });
-        });
+        }
     },
 
     /**
@@ -88,10 +75,9 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     render: function() {
-        if (!this.state.text) {
+        if (!this.state.contents) {
             return null;
         }
-        var contents = MarkGor.parse(this.state.text);
         var classNames = [ 'instruction-block' ];
         if (this.props.hidden) {
             classNames.push('hidden')
@@ -99,9 +85,76 @@ module.exports = React.createClass({
         return (
             <div className={classNames.join(' ')}>
                 <CollapsibleContainer open={!this.props.hidden}>
-                    <div className="contents">{contents}</div>
+                    <div className="contents">{this.state.contents}</div>
                 </CollapsibleContainer>
             </div>
         );
     },
 });
+
+/**
+ * Load and parse instruction text
+ *
+ * @param  {String} topic
+ * @param  {String} lang
+ *
+ * @return {Promise}
+ */
+function loadMarkdown(topic, lang) {
+    return loadText(topic, lang).then((text) => {
+        var contents = MarkGor.parse(text);
+        return loadImages(contents);
+    });
+}
+
+/**
+ * Load instruction text
+ *
+ * @param  {String} topic
+ * @param  {String} lang
+ *
+ * @return {Promise}
+ */
+function loadText(topic, lang) {
+    return import(`instructions/${topic}.${lang}.md`).catch(() => {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
+        }
+        return import(`instructions/${topic}.en.md`);
+    });
+}
+
+/**
+ * Load images used by img tags
+ *
+ * @param  {ReactElement} element
+ *
+ * @return {ReactElement}
+ */
+function loadImages(element) {
+    if (typeof(element) === 'string') {
+        return element;
+    } else if (element instanceof Array) {
+        return Promise.map(element, loadImages);
+    } else if (element.type === 'img') {
+        var url = element.props.src;
+        if (url && !/^\w+:/.test(url)) {
+            return import(`instructions/${url}`).then((url) => {
+                return React.cloneElement(element, { src: url });
+            }).catch((err) => {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log(`Unable to find image: ${url}`);
+                }
+                return element;
+            });
+        } else {
+            return element;
+        }
+    } else if (element.props && !_.isEmpty(element.props.children)) {
+        return Promise.map(element.props.children, loadImages).then((children) => {
+            return React.cloneElement(element, {}, children);
+        });
+    } else {
+        return element;
+    }
+}
