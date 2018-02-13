@@ -267,7 +267,7 @@ module.exports = Relaks.createClass({
                 });
             });
             var criteria = { type: 'daily-activities', filters };
-            return db.findOne({ table: 'statistics', criteria });
+            return db.find({ table: 'statistics', criteria });
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <PersonPageSync {...props} />;
@@ -304,7 +304,7 @@ var PersonPageSync = module.exports.Sync = React.createClass({
         stories: PropTypes.arrayOf(PropTypes.object),
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
-        dailyActivities: PropTypes.object,
+        dailyActivities: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
         selectedDate: PropTypes.string,
