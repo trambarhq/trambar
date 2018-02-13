@@ -21,23 +21,77 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
     },
 
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
     getDefaultProps: function() {
         return {
             hidden: false,
         };
     },
 
-    getText: function(topic, lang) {
-        try {
-            return require(`instructions/${topic}.${lang}.md`);
-        } catch(err) {
-            return require(`instructions/${topic}.en.md`);
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        return {
+            text: null,
+        };
+    },
+
+    /**
+     * Load instruction text on mount
+     */
+    componentWillMount: function() {
+        if (this.props.topic) {
+            this.loadText(this.props.topic, this.props.locale.languageCode);
         }
     },
 
+    /**
+     * Reload text if topic or language changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.topic !== nextProps.topic || this.props.locale !== nextProps.locale) {
+            this.loadText(nextProps.topic, nextProps.locale.languageCode);
+        }
+    },
+
+    /**
+     * Load instruction text
+     *
+     * @param  {String} topic
+     * @param  {String} lang
+     */
+    loadText: function(topic, lang) {
+        import(`instructions/${topic}.${lang}.md`).then((text) => {
+            this.setState({ text });
+        }).catch(() => {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
+            }
+            return import(`instructions/${topic}.en.md`).then((text) => {
+                this.setState({ text });
+            });
+        });
+    },
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement|null}
+     */
     render: function() {
-        var markdown = this.getText(this.props.topic, this.props.locale.languageCode);
-        var contents = MarkGor.parse(markdown);
+        if (!this.state.text) {
+            return null;
+        }
+        var contents = MarkGor.parse(this.state.text);
         var classNames = [ 'instruction-block' ];
         if (this.props.hidden) {
             classNames.push('hidden')
