@@ -119,7 +119,7 @@ module.exports = function(localeCode) {
         'nav-member-new': "Nuovo membro",
         'nav-members': "Membri",
         'nav-project-new': "Nuovo progetto",
-        'nav-projects': "Progetto",
+        'nav-projects': "Progetti",
         'nav-repositories': "Repositories",
         'nav-role-new': "Nuovo ruolo",
         'nav-roles': "Ruoli",
