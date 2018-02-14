@@ -92,7 +92,6 @@ module.exports = React.createClass({
         var settings = _.get(this.props.currentUser, 'settings', {});
         var enabled = !!_.get(settings, `notification.${optionName}`);
         var canReceive = UserUtils.canReceiveNotification(this.props.currentUser, this.props.repos, type);
-        console.log(canReceive)
         var buttonProps = {
             label: t(`notification-option-${type}`),
             selected: enabled,

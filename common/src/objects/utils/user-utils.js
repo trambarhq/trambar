@@ -20,6 +20,7 @@ module.exports = {
     canHideReaction,
     canRemoveReaction,
     canReceiveNotification,
+    mergeRemoteChanges: StoryUtils.mergeRemoteChanges,
 };
 
 function isAuthor(user, story) {

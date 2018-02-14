@@ -14,7 +14,7 @@ function RemoteDataChange(location, objects, options) {
                 // assign a temporary id so we can find the object again
                 object.id = getTemporaryId();
             }
-            object.uncomitted = true;
+            object.uncommitted = true;
         }
         return object;
     });
@@ -42,6 +42,7 @@ function RemoteDataChange(location, objects, options) {
                 }
             }, options.delay);
         }
+        this.onConflict = options.onConflict;
     }
 }
 
@@ -180,12 +181,15 @@ RemoteDataChange.prototype.apply = function(search, includeDeleted) {
 }
 
 RemoteDataChange.prototype.deliverables = function() {
-    return _.map(this.objects, (object) => {
+    var remaining = _.filter(this.objects, (object, index) => {
+        return !this.removed[index];
+    });
+    return _.map(remaining, (object) => {
         // strip out special properties
         if (object.id < 1) {
-            return _.omit(object, 'id', 'uncomitted');
+            return _.omit(object, 'id', 'uncommitted');
         } else {
-            return _.omit(object, 'uncomitted')
+            return _.omit(object, 'uncommitted')
         }
     });
 }

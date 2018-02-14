@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var Moment = require('moment');
+var Merger = require('data/merger');
 var ReactionTypes = require('objects/types/reaction-types');
+var StoryUtils = require('objects/utils/story-utils');
 
 module.exports = {
     isSaved,
@@ -8,6 +10,7 @@ module.exports = {
     isEditable,
     wasPublishedWithin,
     hasUncomittedChanges,
+    mergeRemoteChanges: StoryUtils.mergeRemoteChanges,
 };
 
 /**
@@ -91,5 +94,5 @@ function wasPublishedWithin(reaction, time, unit) {
  */
 function hasUncomittedChanges(reaction) {
     // a special property set by RemoteDataSource
-    return reaction.uncomitted;
+    return reaction.uncommitted;
 }

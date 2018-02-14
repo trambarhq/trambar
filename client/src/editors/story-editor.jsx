@@ -2,12 +2,12 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
-var Merger = require('data/merger');
 var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 var PlainText = require('utils/plain-text');
 var TagScanner = require('utils/tag-scanner');
 var ComponentRefs = require('utils/component-refs');
+var StoryUtils = require('objects/utils/story-utils');
 var IssueUtils = require('objects/utils/issue-utils');
 var Payload = require('transport/payload');
 
@@ -88,6 +88,7 @@ module.exports = React.createClass({
         var nextState = {
             options: defaultOptions,
             selectedResourceIndex: 0,
+            original: null,
             draft: null,
             confirming: false,
             capturing: null,
@@ -156,22 +157,13 @@ module.exports = React.createClass({
      */
     updateDraft: function(nextState, nextProps) {
         if (nextProps.story) {
-            var nextDraft = nextProps.story;
-            // an uncommitted object is what we had sent to the save queue
-            // earlier so no need to merge
-            if (!nextDraft.uncomitted) {
-                // check if the newly arriving story isn't the one we saved earlier
-                var priorDraft = this.props.story || createBlankStory(this.props.currentUser);
-                var currentDraft = nextState.draft;
-                if (currentDraft !== priorDraft && currentDraft) {
-                    // merge changes into the remote copy
-                    // (properties in nextDraft are favored in conflicts)
-                    nextDraft = Merger.mergeObjects(currentDraft, nextDraft, priorDraft);
-                }
+            nextState.draft = nextProps.story;
+            if (!nextProps.story.uncommitted) {
+                nextState.original = nextProps.story;
             }
-            nextState.draft = nextDraft;
         } else {
             nextState.draft = createBlankStory(nextProps.currentUser);
+            nextState.original = null;
         }
     },
 
@@ -860,8 +852,16 @@ module.exports = React.createClass({
         // send images and videos to server
         var params = this.props.route.parameters;
         var resources = story.details.resources || [];
+        var original = this.state.original;
         var options = {
-            delay: (immediate) ? undefined : AUTOSAVE_DURATION
+            delay: (immediate) ? undefined : AUTOSAVE_DURATION,
+            onConflict: (evt) => {
+                // perform merge on conflict, if the object still exists
+                // otherwise saving will be cancelled
+                if (StoryUtils.mergeRemoteChanges(evt.local, evt.remote, original)) {
+                    evt.preventDefault();
+                }
+            },
         };
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {

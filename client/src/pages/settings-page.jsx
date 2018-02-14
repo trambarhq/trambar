@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var KonamiCode = require('utils/konami-code');
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -182,7 +183,8 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     getInitialState: function() {
         return {
-            user: null
+            user: null,
+            original: null,
         };
     },
 
@@ -202,7 +204,10 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.currentUser !== nextProps.currentUser) {
-            // TODO: might need to merge properties
+            var state = { user: null };
+            if (!nextProps.currentUser.uncommitted) {
+                state.original = nextProps.currentUser;
+            }
             this.setState({ user: null });
         }
     },
@@ -462,8 +467,16 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     saveUser: function(user, immediate) {
         var schema = 'global';
+        var original = this.state.original;
         var options = {
-            delay: immediate ? undefined : AUTOSAVE_DURATION
+            delay: (immediate) ? undefined : AUTOSAVE_DURATION,
+            onConflict: (evt) => {
+                // perform merge on conflict, if the object still exists
+                // otherwise saving will be cancelled
+                if (UserUtils.mergeRemoteChanges(evt.local, evt.remote, original)) {
+                    evt.preventDefault();
+                }
+            },
         };
         var db = this.props.database.use({ schema, by: this });
         return db.saveOne({ table: 'user' }, user, options).then((user) => {

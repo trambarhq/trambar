@@ -6,6 +6,7 @@ var DeviceManager = require('media/device-manager');
 var ComponentRefs = require('utils/component-refs');
 var TagScanner = require('utils/tag-scanner');
 var Markdown = require('utils/markdown');
+var ReactionUtils = require('objects/utils/reaction-utils');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -59,6 +60,7 @@ module.exports = React.createClass({
         });
         var nextState = {
             draft: null,
+            original: null,
             selectedResourceIndex: 0,
             hasCamera: DeviceManager.hasDevice('videoinput'),
             hasMicrophone: DeviceManager.hasDevice('audioinput'),
@@ -94,8 +96,12 @@ module.exports = React.createClass({
     updateDraft: function(nextState, nextProps) {
         if (nextProps.reaction) {
             nextState.draft = nextProps.reaction;
+            if (!nextProps.reaction.uncommitted) {
+                nextState.original = nextProps.reaction;
+            }
         } else {
             nextState.draft = createBlankComment(nextProps.story, nextProps.currentUser);
+            nextState.original = null;
         }
     },
 
@@ -313,8 +319,16 @@ module.exports = React.createClass({
     saveReaction: function(reaction, immediate) {
         // send images and videos to server
         var params = this.props.route.parameters;
+        var original = this.state.original;
         var options = {
-            delay: (immediate) ? undefined : AUTOSAVE_DURATION
+            delay: (immediate) ? undefined : AUTOSAVE_DURATION,
+            onConflict: (evt) => {
+                // perform merge on conflict, if the object still exists
+                // otherwise saving will be cancelled
+                if (ReactionUtils.mergeRemoteChanges(evt.local, evt.remote, original)) {
+                    evt.preventDefault();
+                }
+            },
         };
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {

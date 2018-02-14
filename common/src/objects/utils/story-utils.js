@@ -1,6 +1,8 @@
 var _ = require('lodash');
 var Moment = require('moment');
+var Merger = require('data/merger');
 var StoryTypes = require('objects/types/story-types');
+var ResourceUtils = require('objects/utils/resource-utils');
 
 module.exports = {
     isSaved,
@@ -11,6 +13,7 @@ module.exports = {
     wasPublishedWithin,
     wasBumpedWithin,
     hasUncomittedChanges,
+    mergeRemoteChanges,
 };
 
 /**
@@ -131,5 +134,29 @@ function wasBumpedWithin(story, time, unit) {
  */
 function hasUncomittedChanges(story) {
     // a special property set by RemoteDataSource
-    return story.uncomitted;
+    return story.uncommitted;
+}
+
+/**
+ * Perform three-way merge on story, putting merged properties into local copy
+ *
+ * @param  {Story} local
+ * @param  {Story} remote
+ * @param  {Story} common
+ *
+ * @return {Boolean}
+ */
+function mergeRemoteChanges(local, remote, common) {
+    if (!remote) {
+        // no merging if the object has vanished from remote database
+        return false;
+    }
+    var resolveFns = {
+        details: {
+            resources: ResourceUtils.mergeLists
+        }
+    };
+    var merged = Merger.mergeObjects(local, remote, common, resolveFns);
+    _.assign(local, merged);
+    return true;
 }
