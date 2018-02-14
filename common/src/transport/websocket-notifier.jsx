@@ -40,6 +40,7 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
+            hasConnection: true,
             initialReconnectionDelay: 500,
             maximumReconnectionDelay: 30000,
         };
