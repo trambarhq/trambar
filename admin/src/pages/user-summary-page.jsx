@@ -909,7 +909,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'user',
+            folder: 'user',
+            topic: 'user-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };

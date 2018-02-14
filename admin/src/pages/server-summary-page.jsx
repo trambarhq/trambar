@@ -961,10 +961,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'server',
+            folder: 'server',
+            topic: 'server-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };
+        var serverType = this.getServerProperty('type');
+        if (serverType) {
+            instructionProps.topic += `-${serverType}`;
+        }
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />

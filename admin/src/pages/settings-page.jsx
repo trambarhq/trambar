@@ -443,6 +443,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
+            folder: 'settings',
             topic: 'settings',
             hidden: !this.isEditing(),
             locale: this.props.locale,

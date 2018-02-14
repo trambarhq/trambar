@@ -416,7 +416,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'repo',
+            folder: 'repo',
+            topic: 'repo-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };

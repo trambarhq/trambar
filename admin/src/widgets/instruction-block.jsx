@@ -17,6 +17,7 @@ module.exports = React.createClass({
     displayName: 'InstructionBlock',
     mixins: [ UpdateCheck ],
     propTypes: {
+        folder: PropTypes.string.isRequired,
         topic: PropTypes.string.isRequired,
         hidden: PropTypes.bool,
 
@@ -50,7 +51,10 @@ module.exports = React.createClass({
      */
     componentWillMount: function() {
         if (this.props.topic) {
-            loadMarkdown(this.props.topic, this.props.locale.languageCode).then((contents) => {
+            var folder = this.props.folder;
+            var topic = this.props.topic;
+            var lang = this.props.locale.languageCode;
+            loadMarkdown(folder, topic, lang).then((contents) => {
                 this.setState({ contents });
             });
         }
@@ -63,7 +67,10 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.topic !== nextProps.topic || this.props.locale !== nextProps.locale) {
-            loadMarkdown(nextProps.topic, nextProps.locale.languageCode).then((contents) => {
+            var folder = nextProps.folder;
+            var topic = nextProps.topic;
+            var lang = nextProps.locale.languageCode;
+            loadMarkdown(folder, topic, lang).then((contents) => {
                 this.setState({ contents });
             });
         }
@@ -95,32 +102,34 @@ module.exports = React.createClass({
 /**
  * Load and parse instruction text
  *
+ * @param  {String} folder
  * @param  {String} topic
  * @param  {String} lang
  *
  * @return {Promise}
  */
-function loadMarkdown(topic, lang) {
-    return loadText(topic, lang).then((text) => {
+function loadMarkdown(folder, topic, lang) {
+    return loadText(folder, topic, lang).then((text) => {
         var contents = MarkGor.parse(text);
-        return loadImages(contents);
+        return loadImages(contents, folder);
     });
 }
 
 /**
  * Load instruction text
  *
+ * @param  {String} folder
  * @param  {String} topic
  * @param  {String} lang
  *
  * @return {Promise}
  */
-function loadText(topic, lang) {
-    return import(`instructions/${topic}.${lang}.md`).catch(() => {
+function loadText(folder, topic, lang) {
+    return import(`instructions/${folder}/${topic}.${lang}.md`).catch(() => {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
         }
-        return import(`instructions/${topic}.en.md`);
+        return import(`instructions/${folder}/${topic}.en.md`);
     });
 }
 
@@ -128,18 +137,21 @@ function loadText(topic, lang) {
  * Load images used by img tags
  *
  * @param  {ReactElement} element
+ * @param  {String} folder
  *
  * @return {ReactElement}
  */
-function loadImages(element) {
+function loadImages(element, folder) {
     if (typeof(element) === 'string') {
         return element;
     } else if (element instanceof Array) {
-        return Promise.map(element, loadImages);
+        return Promise.map(element, (element) => {
+            return loadImages(element, folder);
+        });
     } else if (element.type === 'img') {
         var url = element.props.src;
         if (url && !/^\w+:/.test(url)) {
-            return import(`instructions/${url}`).then((url) => {
+            return import(`instructions/${folder}/${url}`).then((url) => {
                 return React.cloneElement(element, { src: url });
             }).catch((err) => {
                 if (process.env.NODE_ENV !== 'production') {
@@ -151,7 +163,9 @@ function loadImages(element) {
             return element;
         }
     } else if (element.props && !_.isEmpty(element.props.children)) {
-        return Promise.map(element.props.children, loadImages).then((children) => {
+        return Promise.map(element.props.children, (element) => {
+            return loadImages(element, folder);
+        }).then((children) => {
             return React.cloneElement(element, {}, children);
         });
     } else {

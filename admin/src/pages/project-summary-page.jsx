@@ -625,7 +625,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'project',
+            folder: 'project',
+            topic: 'project-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };

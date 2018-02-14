@@ -557,7 +557,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'role',
+            folder: 'role',
+            topic: 'role-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };
