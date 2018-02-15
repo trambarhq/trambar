@@ -45,9 +45,10 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/projects/:project/repos/?'
             ], (params) => {
-                params.project = parseInt(params.project);
-                params.edit = !!query.edit;
-                return params;
+                return {
+                    project: Route.parseId(params.project),
+                    edit: !!query.edit,
+                };
             });
         },
 

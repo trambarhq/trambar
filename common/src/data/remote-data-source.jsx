@@ -1208,6 +1208,7 @@ module.exports = React.createClass({
             return true;
         }).catch((err) => {
             console.error(err);
+            search.results = [];
             return false;
         });
     },
@@ -1313,6 +1314,7 @@ module.exports = React.createClass({
                     } else if (match && !present) {
                         // insert a new object
                         search.results.splice(index, 0, object);
+                        LocalSearch.limit(search.table, search.results, search.criteria)
                     } else if (!match && present) {
                         // remove object from the list as it no longer
                         // meets the criteria

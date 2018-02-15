@@ -47,11 +47,10 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/roles/:role/?'
             ], (params) => {
-                if (params.role !== 'new') {
-                    params.role = _.strictParseInt(params.role);
-                }
-                params.edit = !!query.edit;
-                return params;
+                return {
+                    role: (params.role === 'new') ? 'new' : Route.parseId(params.role),
+                    edit: !!query.edit,
+                };
             });
         },
 
@@ -557,7 +556,8 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'role',
+            folder: 'role',
+            topic: 'role-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };

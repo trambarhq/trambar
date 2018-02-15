@@ -52,12 +52,11 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/servers/:server/?'
             ], (params) => {
-                if (params.server !== 'new') {
-                    params.server = _.strictParseInt(params.server);
-                }
-                params.edit = !!query.edit;
-                params.task = parseInt(_.replace(hash, /\D+/g, ''));
-                return params;
+                return {
+                    server: (params.server === 'new') ? 'new' : Route.parseId(params.server),
+                    edit: !!query.edit,
+                    task: Route.parseId(hash, /T(\d+)/i),
+                };
             });
         },
 
@@ -961,10 +960,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'server',
+            folder: 'server',
+            topic: 'server-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };
+        var serverType = this.getServerProperty('type');
+        if (serverType) {
+            instructionProps.topic += `-${serverType}`;
+        }
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />

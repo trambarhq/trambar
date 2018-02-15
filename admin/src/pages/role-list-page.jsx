@@ -44,8 +44,9 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/roles/?',
             ], (params) => {
-                params.edit = !!query.edit;
-                return params;
+                return {
+                    edit: !!query.edit,
+                };
             });
         },
 

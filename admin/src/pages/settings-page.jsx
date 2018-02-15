@@ -45,8 +45,9 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/settings/?'
             ], (params) => {
-                params.edit = !!query.edit;
-                return params;
+                return {
+                    edit: !!query.edit,
+                };
             });
         },
 
@@ -443,6 +444,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
+            folder: 'settings',
             topic: 'settings',
             hidden: !this.isEditing(),
             locale: this.props.locale,

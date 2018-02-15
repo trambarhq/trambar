@@ -298,18 +298,30 @@ module.exports = React.createClass({
         }
         var boundingRect = container.getBoundingClientRect();
         var clippingRect = _.clone(this.state.clippingRect);
-        var delta = Math.round((evt.deltaY * clippingRect.height / boundingRect.height) / divider);
-        var newClippingWidth = clippingRect.width + delta;
+        var deltaY;
+        switch (evt.deltaMode) {
+            case 0: // pixel
+                deltaY = evt.deltaY;
+                break;
+            case 1: // line
+                deltaY = evt.deltaY * 18;
+                break;
+            case 2: // page
+                deltaY = evt.deltaY * 480;
+                break;
+        }
+        var expansion = Math.round((deltaY * clippingRect.height / boundingRect.height) / divider);
+        var newClippingWidth = clippingRect.width + expansion;
         // prevent expansion of the clipping rect that'd that it outside the image
         if (newClippingWidth > image.naturalWidth) {
             newClippingWidth = image.naturalWidth;
-            delta = newClippingWidth - clippingRect.width;
+            expansion = newClippingWidth - clippingRect.width;
         }
-        var newClippingHeight = clippingRect.height + delta;
+        var newClippingHeight = clippingRect.height + expansion;
         if (newClippingHeight > image.naturalHeight) {
             newClippingHeight = image.naturalHeight;
-            delta = newClippingHeight - clippingRect.height;
-            newClippingWidth = clippingRect.width + delta;
+            expansion = newClippingHeight - clippingRect.height;
+            newClippingWidth = clippingRect.width + expansion;
         }
 
         // center the change at the mouse cursor
@@ -317,8 +329,8 @@ module.exports = React.createClass({
             x: evt.pageX - boundingRect.left,
             y: evt.pageY - boundingRect.top
         };
-        var dX = - cursorPos.x * delta / boundingRect.width;
-        var dY = - cursorPos.y * delta / boundingRect.height;
+        var dX = - cursorPos.x * expansion / boundingRect.width;
+        var dY = - cursorPos.y * expansion / boundingRect.height;
         clippingRect.left += Math.round(dX);
         clippingRect.top += Math.round(dY);
         clippingRect.width = newClippingWidth;

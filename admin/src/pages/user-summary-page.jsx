@@ -55,14 +55,11 @@ module.exports = Relaks.createClass({
                 '/users/:user/',
                 '/projects/:project/members/:user/?',
             ], (params) => {
-                if (params.user !== 'new') {
-                    params.user = _.strictParseInt(params.user);
-                }
-                if (params.project) {
-                    params.project = _.strictParseInt(params.project);
-                }
-                params.edit = !!query.edit;
-                return params;
+                return {
+                    user: (params.user === 'new') ? 'new' : Route.parseId(params.user),
+                    project: Route.parseId(params.project),
+                    edit: !!query.edit,
+                };
             });
         },
 
@@ -909,7 +906,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     renderInstructions: function() {
         var instructionProps = {
-            topic: 'user',
+            folder: 'user',
+            topic: 'user-summary',
             hidden: !this.isEditing(),
             locale: this.props.locale,
         };

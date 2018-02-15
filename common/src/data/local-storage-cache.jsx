@@ -81,6 +81,7 @@ module.exports = React.createClass({
                 return LocalSearch.match(table, row, criteria);
             });
         }
+        LocalSearch.limit(table, objects, criteria);
         return Promise.resolve(objects);
     },
 

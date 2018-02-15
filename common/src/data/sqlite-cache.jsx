@@ -108,6 +108,7 @@ module.exports = React.createClass({
                     }
                 }
             }
+            LocalSearch.limit(table, objects, criteria);
             var readCount = this.state.readCount;
             readCount += objects.length;
             this.setState({ readCount });

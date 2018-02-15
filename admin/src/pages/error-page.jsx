@@ -22,8 +22,9 @@ module.exports = React.createClass({
             return Route.match(path, [
                 '/error/:code',
             ], (params) => {
-                params.code = parseInt(params.code);
-                return params;
+                return {
+                    code: parseInt(params.code)
+                };
             });
         },
 
