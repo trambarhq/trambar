@@ -201,7 +201,7 @@ module.exports = _.create(Data, {
                     });
                 }
             }
-            return projectReceived;
+            return this.ensureUniqueName(db, schema, projectBefore, projectReceived);
         });
     },
 

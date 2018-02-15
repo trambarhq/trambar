@@ -112,6 +112,25 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials, options) {
+        return ExternalData.import.call(this, db, schema, objects, originals, credentials, options).mapSeries((roleReceived, index) => {
+            var roleBefore = originals[index];
+            return this.ensureUniqueName(db, schema, roleBefore, roleReceived);
+        });
+    },
+
+    /**
      * Synchronize table with data sources
      *
      * @param  {Database} db

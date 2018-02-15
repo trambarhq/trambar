@@ -54,7 +54,7 @@ module.exports = _.create(ExternalData, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                username varchar(128),
+                username varchar(128) NOT NULL,
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 requested_project_ids int[],
                 hidden boolean NOT NULL DEFAULT false,
@@ -214,7 +214,7 @@ module.exports = _.create(ExternalData, {
         return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((userReceived, index) => {
             var userBefore = originals[index];
             this.checkWritePermission(userReceived, userBefore, credentials);
-            if (_.isEmpty(userReceived.requested_project_ids)) {
+            if (!userBefore.deleted && !_.isEmpty(userReceived.requested_project_ids)) {
                 // remove ids of projects that'd accept the user automatically
                 // as well as those that can't be joined
                 var Project = require('accessors/project');
@@ -240,7 +240,7 @@ module.exports = _.create(ExternalData, {
                     return userReceived;
                 });
             }
-            return userReceived;
+            return this.ensureUniqueName(db, schema, userBefore, userReceived, 'username');
         });
     },
 

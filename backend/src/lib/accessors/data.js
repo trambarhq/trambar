@@ -981,6 +981,39 @@ module.exports = {
     },
 
     /**
+     * Ensure that an object has a unique name when undeleting
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} objectBefore
+     * @param  {Object} objectReceived
+     * @param  {String|undefined} propName
+     *
+     * @return {Object|Promise<Object>}
+     */
+    ensureUniqueName: function(db, schema, objectBefore, objectReceived, propName) {
+        if (objectBefore) {
+            if (objectBefore.deleted === true && objectReceived.deleted === false) {
+                if (!propName) {
+                    propName = 'name';
+                }
+                var criteria = {
+                    deleted: false
+                };
+                criteria[propName] = objectBefore[propName];
+                return this.findOne(db, schema, criteria, 'id').then((row) => {
+                    if (row && row.id !== objectBefore.id) {
+                        // change the name to avoid conflict
+                        objectReceived[propName] = `old_${this.table}_${objectBefore[propName]}`;
+                    }
+                    return objectReceived;
+                });
+            }
+        }
+        return objectReceived;
+    },
+
+    /**
      * Find matching rows, retrieving from earlier searches if possible
      *
      * @param  {Database} db

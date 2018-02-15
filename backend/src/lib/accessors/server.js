@@ -147,7 +147,7 @@ module.exports = _.create(Data, {
                     }
                 });
             }
-            return serverReceived;
+            return this.ensureUniqueName(db, schema, serverBefore, serverReceived);
         });
     },
 
