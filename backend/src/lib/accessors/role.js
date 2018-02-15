@@ -13,7 +13,6 @@ module.exports = _.create(ExternalData, {
         mtime: String,
         details: Object,
         name: String,
-        hidden: Boolean,
         disabled: Boolean,
         external: Array(Object),
         settings: Object,
@@ -22,7 +21,6 @@ module.exports = _.create(ExternalData, {
         id: Number,
         deleted: Boolean,
         name: String,
-        hidden: Boolean,
         disabled: Boolean,
     },
 
@@ -45,7 +43,6 @@ module.exports = _.create(ExternalData, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 name varchar(128) NOT NULL DEFAULT '',
-                hidden boolean NOT NULL DEFAULT false,
                 disabled boolean NOT NULL DEFAULT false,
                 general boolean NOT NULL DEFAULT true,
                 external jsonb[] NOT NULL DEFAULT '{}',
@@ -67,7 +64,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'hidden', 'disabled', 'general' ];
+            var propNames = [ 'deleted', 'disabled', 'general' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
                 var Task = require('accessors/task');
@@ -95,13 +92,9 @@ module.exports = _.create(ExternalData, {
                 object.name = row.name;
 
                 if (credentials.unrestricted) {
-                    object.hidden = row.hidden;
                     object.disabled = row.disabled;
                     object.settings = row.settings;
                 } else {
-                    if (row.hidden) {
-                        object.hidden = row.hidden;
-                    }
                     if (row.disabled) {
                         object.disabled = row.disabled;
                     }

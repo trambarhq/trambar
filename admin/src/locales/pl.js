@@ -828,9 +828,6 @@ module.exports = function(localeCode) {
         'user-summary-type-moderator': 'Moderator',
         'user-summary-type-regular': 'Zwykły użytkownik',
         'user-summary-username': 'Nazwa użytkownika',
-        'user-summary-visibility': 'Widoczność',
-        'user-summary-visibility-hidden': 'Użytkownik nie jest wyświetlany na stronie „Ludzie”',
-        'user-summary-visibility-shown': 'Użytkownik jest wyświetlany na stronie „Ludzie”',
 
         'user-tooltip-$count': (count) => {
             if (singular(count)) {

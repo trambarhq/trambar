@@ -598,9 +598,6 @@ var traditionalPhrases = {
     'user-summary-type-moderator': '檢查員',
     'user-summary-type-regular': '普通用戶',
     'user-summary-username': '用戶名',
-    'user-summary-visibility': '能見度',
-    'user-summary-visibility-hidden': '用戶不會在《人員》頁出現',
-    'user-summary-visibility-shown': '用戶會在《人員》頁出現',
 
     'user-tooltip-$count': (count) => {
         return `${count}個用戶`;
@@ -1185,9 +1182,6 @@ var simplifiedPhrases = {
     'user-summary-type-moderator': '检查员',
     'user-summary-type-regular': '普通用户',
     'user-summary-username': '用户名',
-    'user-summary-visibility': '能见度',
-    'user-summary-visibility-hidden': '用户不会在《人员》页出现',
-    'user-summary-visibility-shown': '用户会在《人员》页出现',
 
     'user-tooltip-$count': (count) => {
         return `${count}个用户`;

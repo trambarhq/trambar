@@ -227,14 +227,12 @@ module.exports = Relaks.createClass({
                 var userIds = _.uniq(_.flatten(_.map(stories, 'user_ids')));
                 var criteria = {
                     id: userIds,
-                    hidden: false
                 };
                 return db.find({ schema: 'global', table: 'user', criteria });
             } else {
                 // find all users that are project members
                 var criteria = {
                     id: props.project.user_ids,
-                    hidden: false
                 };
                 if (!_.isEmpty(params.roles)) {
                     criteria.role_ids = params.roles;

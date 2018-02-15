@@ -584,9 +584,6 @@ module.exports = function(localeCode) {
         'user-summary-type-moderator': 'Moderator',
         'user-summary-type-regular': 'Regular user',
         'user-summary-username': 'User name',
-        'user-summary-visibility': 'Visibility',
-        'user-summary-visibility-hidden': 'User is not shown in People section',
-        'user-summary-visibility-shown': 'User is listed in People section',
 
         'user-tooltip-$count': (count) => {
             return (count === 1) ? `1 user` : `${count} users`;

@@ -580,9 +580,6 @@ module.exports = function(localeCode) {
         'user-summary-type-moderator': 'Sovittelija',
         'user-summary-type-regular': 'Tavallinen käyttäjä',
         'user-summary-username': 'Käyttäjänimi',
-        'user-summary-visibility': 'Näkyvyys',
-        'user-summary-visibility-hidden': 'Käyttäjä näkyy osassa “Ihmiset”',
-        'user-summary-visibility-shown': 'Käyttäjä ei näy osiossa “Ihmiset”',
 
         'user-tooltip-$count': (count) => {
             return (count === 1) ? `1 käyttäjä` : `${count} käyttäjää`;

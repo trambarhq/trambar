@@ -843,9 +843,6 @@ module.exports = function(localeCode) {
         'user-summary-type-moderator': 'Модератор',
         'user-summary-type-regular': 'Постоянный пользователь',
         'user-summary-username': 'Имя пользователя',
-        'user-summary-visibility': 'Видимость',
-        'user-summary-visibility-hidden': 'Пользователь не отображается на странице «Люди»',
-        'user-summary-visibility-shown': 'Пользователь указан на странице «Люди»',
 
         'user-tooltip-$count': (count) => {
             if (singularN(count)) {

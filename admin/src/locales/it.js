@@ -615,9 +615,6 @@ module.exports = function(localeCode) {
         'user-summary-type-moderator': "Moderatore",
         'user-summary-type-regular': "Utente normale",
         'user-summary-username': "Nome utente",
-        'user-summary-visibility': "Visibilità",
-        'user-summary-visibility-hidden': "L'utente non è mostrato nella sezione «Persone»",
-        'user-summary-visibility-shown': "L'utente è elencato nella sezione «Persone»",
 
         'user-tooltip-$count': (count) => {
             return (count === 1) ? `1 utente` : `${count} untenti`;

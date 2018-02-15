@@ -658,7 +658,6 @@ function findUserByName(username) {
                     type: 'admin',
                     details: { name },
                     settings: UserSettings.default,
-                    hidden: true,
                 };
                 return User.insertOne(db, 'global', user);
             }

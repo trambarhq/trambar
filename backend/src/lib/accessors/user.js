@@ -18,7 +18,6 @@ module.exports = _.create(ExternalData, {
         role_ids: Array(Number),
         requested_project_ids: Array(Number),
         disabled: Boolean,
-        hidden: Boolean,
         settings: Object,
         external: Array(Object),
     },
@@ -30,7 +29,6 @@ module.exports = _.create(ExternalData, {
         role_ids: Array(Number),
         requested_project_ids: Array(Number),
         disabled: Boolean,
-        hidden: Boolean,
 
         external_object: Object,
     },
@@ -57,7 +55,6 @@ module.exports = _.create(ExternalData, {
                 username varchar(128) NOT NULL,
                 role_ids int[] NOT NULL DEFAULT '{}'::int[],
                 requested_project_ids int[],
-                hidden boolean NOT NULL DEFAULT false,
                 disabled boolean NOT NULL DEFAULT false,
                 settings jsonb NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
@@ -175,7 +172,6 @@ module.exports = _.create(ExternalData, {
                 object.username = row.username;
                 object.role_ids = row.role_ids;
                 if (credentials.unrestricted) {
-                    object.hidden = row.hidden;
                     object.disabled = row.disabled;
                     object.requested_project_ids = row.requested_project_ids;
                     object.settings = row.settings;
@@ -186,9 +182,6 @@ module.exports = _.create(ExternalData, {
                         object.requested_project_ids = row.requested_project_ids;
                     }
                     // don't export these unless they're not their usual values
-                    if (row.hidden) {
-                        object.hidden = row.hidden;
-                    }
                     if (row.disabled) {
                         object.disabled = row.disabled;
                     }

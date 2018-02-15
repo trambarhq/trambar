@@ -11,5 +11,3 @@
 **User type** -
 
 **Roles** -
-
-**Visibility** -

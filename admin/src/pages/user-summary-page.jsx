@@ -473,7 +473,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderProfileImageSelector()}
                 {this.renderTypeSelector()}
                 {this.renderRoleSelector()}
-                {this.renderVisiblityOptions()}
             </div>
         );
     },
@@ -660,42 +659,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <OptionList {...listProps}>
                 <label>{t('user-summary-roles')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
-            </OptionList>
-        );
-    },
-
-    /**
-     * Render visibility options
-     *
-     * @return {ReactElement}
-     */
-    renderVisiblityOptions: function() {
-        var t = this.props.locale.translate;
-        var hiddenCurr = this.getUserProperty('hidden', 'current') || false;
-        var hiddenPrev = this.getUserProperty('hidden', 'original') || false;
-        var newUser = !!this.getUserProperty('id');
-        var optionProps = [
-            {
-                name: 'show',
-                selected: hiddenCurr === false,
-                previous: (newUser) ? hiddenPrev === false : undefined,
-                children: t('user-summary-visibility-shown'),
-            },
-            {
-                name: 'hidden',
-                selected: hiddenCurr === true,
-                previous: hiddenCurr === true,
-                children: t('user-summary-visibility-hidden'),
-            }
-        ];
-        var listProps = {
-            onOptionClick: this.handleVisibilityOptionClick,
-            readOnly: !this.isEditing(),
-        };
-        return (
-            <OptionList {...listProps}>
-                <label>{t('user-summary-visibility')}</label>
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
@@ -1170,16 +1133,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             }
         }
         this.setUserProperty('role_ids', roleIds);
-    },
-
-    /**
-     * Called when user clicks on a role
-     *
-     * @param  {Object} evt
-     */
-    handleVisibilityOptionClick: function(evt) {
-        var hidden = (evt.name === 'hidden');
-        this.setUserProperty('hidden', hidden);
     },
 
     /**

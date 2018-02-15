@@ -572,9 +572,6 @@ module.exports = function(localeCode) {
         'user-summary-type-moderator': 'Moderator',
         'user-summary-type-regular': 'Vanlig bruker',
         'user-summary-username': 'Brukernavn',
-        'user-summary-visibility': 'Synlighet',
-        'user-summary-visibility-hidden': 'Brukeren er ikke vist i seksjonen "Brukere"',
-        'user-summary-visibility-shown': 'Brukeren er oppført',
 
         'user-tooltip-$count': (count) => {
             return (count === 1) ? `1 bruker` : `${count} brukere`;
