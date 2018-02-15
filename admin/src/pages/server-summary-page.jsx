@@ -52,12 +52,11 @@ module.exports = Relaks.createClass({
             return Route.match(path, [
                 '/servers/:server/?'
             ], (params) => {
-                if (params.server !== 'new') {
-                    params.server = _.strictParseInt(params.server);
-                }
-                params.edit = !!query.edit;
-                params.task = parseInt(_.replace(hash, /\D+/g, ''));
-                return params;
+                return {
+                    server: (params.server === 'new') ? 'new' : Route.parseId(params.server),
+                    edit: !!query.edit,
+                    task: Route.parseId(hash, /T(\d+)/i),
+                };
             });
         },
 
