@@ -263,12 +263,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticDataPanel type="websocket-notifier" title="Web Socket" />
                     <DiagnoisticDataPanel type="push-notifier" title="Push Notification" />
                     <DiagnoisticDataPanel type="subscription-manager" title="Data Subscription" />
-                    <DiagnoisticDataPanel type="payload-manager" title="Payload Manager" />
                     <DiagnoisticDataPanel type="session-manager" title="Sessions" />
                     <DiagnoisticDataPanel type="link-manager" title="Project Links" />
+                    <DiagnoisticDataPanel type="locale-manager" title="Locale Manager" />
                     <DiagnoisticDataPanel type="indexed-db-cache" title="IndexedDB Cache" />
                     <DiagnoisticDataPanel type="sqlite-cache" title="SQLite Cache" />
-                    <DiagnoisticDataPanel type="locale-manager" title="Locale Manager" />
+                    <DiagnoisticDataPanel type="remote-data-source" title="Remote Data Source" />
+                    <DiagnoisticDataPanel type="payload-manager" title="Payload Manager" />
                 </div>
             </div>
         );

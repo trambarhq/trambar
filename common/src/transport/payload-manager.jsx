@@ -468,7 +468,7 @@ module.exports = React.createClass({
         }
         var size;
         if (part.size > 0) {
-            size = <span style={{ float: 'right' }}>{fileSize(part.size)}</span>;
+            size = <span className="file-size">{fileSize(part.size)}</span>;
         }
         return (
             <li key={index}>

@@ -9,8 +9,16 @@ var LocalSearch = require('data/local-search');
 var SessionStartTime = require('data/session-start-time');
 var RemoteDataChange = require('data/remote-data-change');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
+// widgets
+var Diagnostics = require('widgets/diagnostics');
+var DiagnosticsSection = require('widgets/diagnostics-section');
+
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
+    mixins: [ UpdateCheck ],
     propTypes: {
         refreshInterval: PropTypes.number,
         basePath: PropTypes.string,
@@ -461,6 +469,7 @@ module.exports = React.createClass({
                 by: byComponent ? [ byComponent ]: [],
                 dirty: false,
                 updating: false,
+                lastRetrieved: 0,
             });
 
             // look for records in cache first
@@ -554,19 +563,23 @@ module.exports = React.createClass({
         } else {
             // storeRemoteObjects() will trigger change event
             return this.storeRemoteObjects(location, objects, options).then((objects) => {
+                if (_.isEmpty(objects)) {
+                    return [];
+                }
                 var endTime = getCurrentTime();
                 this.updateCachedObjects(location, objects);
                 this.updateRecentSearchResults(location, objects);
 
                 this.updateList('recentStorageResults', (before) => {
                     var after = _.slice(before);
-                    after.unshift({
+                    var store = _.extend({
                         start: startTime,
                         finish: endTime,
                         duration: getTimeElapsed(startTime, endTime),
                         results: objects,
                         by: byComponent,
-                    });
+                    }, location);
+                    after.unshift(store);
                     while (after.length > 32) {
                         after.pop();
                     }
@@ -614,13 +627,14 @@ module.exports = React.createClass({
 
                 this.updateList('recentRemovalResults', (before) => {
                     var after = _.clone(before);
-                    after.unshift({
+                    var removal = _.extend({
                         start: startTime,
                         finish: endTime,
                         duration: getTimeElapsed(startTime, endTime),
                         results: objects,
                         by: byComponent,
-                    });
+                    }, location);
+                    after.unshift(removal);
                     while (after.length > 32) {
                         after.pop();
                     }
@@ -958,13 +972,16 @@ module.exports = React.createClass({
                     var newObjects = retrieval;
                     var newResults = insertObjects(search.results, newObjects);
                     newResults = removeObjects(newResults, idsRemoved);
+                    search.lastRetrieved = newObjects.length;
                     return newResults;
                 });
             } else if (!_.isEmpty(idsRemoved)) {
                 // update the result set by removing objects
                 var newResults = removeObjects(search.results, idsRemoved);
+                search.lastRetrieved = 0;
                 return newResults;
             } else {
+                search.lastRetrieved = 0;
                 return null;
             }
         }).then((newResults) => {
@@ -1416,15 +1433,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return <div />
-    },
-
-    /**
      * Signal that the component is ready
      */
     componentDidMount: function() {
@@ -1513,7 +1521,31 @@ module.exports = React.createClass({
             clearTimeout(this.prefetchTimeout);
             this.prefetchTimeout = null;
         }
-    }
+    },
+
+    /**
+     * Render diagnostics
+     *
+     * @return {ReactElement}
+     */
+    render: function() {
+        var searches = this.state.recentSearchResults;
+        var stores = this.state.recentStorageResults;
+        var removals = this.state.recentRemovalResults;
+        return (
+            <Diagnostics type="remote-data-source">
+                <DiagnosticsSection label="Recent searches">
+                    <RecentSearchTable searches={searches} />
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Recent storage" hidden={_.isEmpty(stores)}>
+                    <RecentStorageTable stores={stores} />
+                </DiagnosticsSection>
+                <DiagnosticsSection label="Recent removal" hidden={_.isEmpty(removals)}>
+                    <RecentStorageTable stores={removals} />
+                </DiagnosticsSection>
+            </Diagnostics>
+        );
+    },
 });
 
 var authCache = {};
@@ -1833,6 +1865,7 @@ function getExpectedObjectCount(search) {
     }
     if (search.criteria) {
         return countCriteria(search.criteria, 'id')
+            || countCriteria(search.criteria, 'name')
             || countCriteria(search.criteria, 'filters');
     }
 }
@@ -1856,15 +1889,86 @@ function countCriteria(criteria, name) {
     }
 }
 
-/**
- * Return a temporary id that can be used to identify an uncommitted object
- *
- * @return {Number}
- */
-function getTemporaryId() {
-    var newTemporaryId = lastTemporaryId + 0.000000001;
-    lastTemporaryId = newTemporaryId;
-    return newTemporaryId;
+function RecentSearchTable(props) {
+    var remoteSearches = _.filter(props.searches, (search) => {
+        return search.schema !== 'local';
+    });
+    var renderRow = (search, index) => {
+        var className;
+        if (search.updating) {
+            className = 'updating';
+        } else if (search.dirty) {
+            className = 'dirty';
+        }
+        var time = (search.duration) ? search.duration + 'ms' : '';
+        var criteriaJSON1 = JSON.stringify(search.criteria, undefined, 4);
+        var criteriaJSON2 = JSON.stringify(search.criteria);
+        return (
+            <tr key={index} className={className}>
+                <td className="time">{time}</td>
+                <td className="schema">{search.schema}</td>
+                <td className="table">{search.table}</td>
+                <td className="criteria" title={truncateLongArray(criteriaJSON1)}>
+                    {criteriaJSON2}
+                </td>
+                <td className="objects">{_.size(search.results)} ({search.lastRetrieved})</td>
+                <td className="by">{_.join(search.by, ', ')}</td>
+            </tr>
+        );
+    };
+    return (
+        <table className="recent-search-table">
+            <thead>
+                <th className="time">Time</th>
+                <th className="schema">Schema</th>
+                <th className="table">Table</th>
+                <th className="criteria">Criteria</th>
+                <th className="objects">Objects (fresh)</th>
+                <th className="by">By</th>
+            </thead>
+            <tbody>
+                {_.map(remoteSearches, renderRow)}
+            </tbody>
+        </table>
+    );
 }
 
-var lastTemporaryId = 0;
+function RecentStorageTable(props) {
+    var remoteStores = _.filter(props.stores, (store) => {
+        return store.schema !== 'local';
+    });
+    var renderRow = (store, index) => {
+        var time = (store.duration) ? store.duration + 'ms' : '';
+        var criteriaJSON1 = JSON.stringify(store.results, undefined, 4);
+        var criteriaJSON2 = JSON.stringify(store.results);
+        return (
+            <tr key={index}>
+                <td className="time">{time}</td>
+                <td className="schema">{store.schema}</td>
+                <td className="table">{store.table}</td>
+                <td className="objects" title={criteriaJSON1}>
+                    {criteriaJSON2}
+                </td>
+                <td className="by">{store.by}</td>
+            </tr>
+        );
+    };
+    return (
+        <table className="recent-storage-table">
+            <thead>
+                <th className="time">Time</th>
+                <th className="schema">Schema</th>
+                <th className="table">Table</th>
+                <th className="objects">Objects</th>
+                <th className="by">By</th>
+            </thead>
+            <tbody>
+                {_.map(remoteStores, renderRow)}
+            </tbody>
+        </table>
+    );
+}
+
+function truncateLongArray(json) {
+    return json.replace(/\[([^\]]{1,50},\s*)[^\]]{50,}?(\s*)\]/g, '[$1...$2]');
+}

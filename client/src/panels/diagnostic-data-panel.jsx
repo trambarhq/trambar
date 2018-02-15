@@ -35,8 +35,9 @@ module.exports = React.createClass({
         if (!this.state.contents) {
             return null;
         }
+        var className = `diagnostic-data ${this.props.type}`;
         return (
-            <SettingsPanel className="diagnostic-data">
+            <SettingsPanel className={className}>
                 <header>
                     <i className="fa fa-gear" /> {this.props.title}
                 </header>
