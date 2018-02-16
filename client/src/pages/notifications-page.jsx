@@ -69,12 +69,13 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         configureUI: function(currentRoute) {
+            var params = currentRoute.parameters;
             var route = {
-                parameters: _.pick(currentRoute.parameters, 'schema')
+                schema: params.schema,
             };
             var statistics = {
                 type: 'daily-notifications',
-                filters: {},
+                // user_id will default to current user
             };
             return {
                 calendar: { route, statistics },

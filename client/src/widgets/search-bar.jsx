@@ -3,8 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
 var TagScanner = require('utils/tag-scanner');
+var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -44,22 +44,8 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<SearchBarSync {...props} />, 1000);
         return db.start().then((userId) => {
-            // load daily activities statistics
-            var start = DateTracker.startOfLastMonth;
-            var end = DateTracker.endOfMonth;
-            var timeRanges = DateUtils.getMonthRanges(start, end);
-            var tzOffset = DateUtils.getTimeZoneOffset();
-            var stats = this.props.settings.statistics;
-            var criteria = {
-                type: stats.type,
-                filters: _.map(timeRanges, (timeRange) => {
-                    return _.extend({
-                        time_range: timeRange,
-                        tz_offset: tzOffset,
-                    }, stats.filters);
-                }),
-            };
-            return db.find({ table: 'statistics', criteria });
+            var params = _.assign({ user_id: userId }, this.props.settings.statistics);
+            return StatisticsUtils.fetch(db, params);
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <SearchBarSync {...props} />;
@@ -71,7 +57,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
     displayName: 'SearchBar.Sync',
     propTypes: {
         settings: PropTypes.object.isRequired,
-        dailyActivities: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
         route: PropTypes.instanceOf(Route),
         locale: PropTypes.instanceOf(Locale),
     },
@@ -171,8 +157,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
      */
     renderHashTag: function(tag, index) {
         var route = this.props.route;
-        var params = _.clone(this.props.settings.route.parameters);
-        params.search = tag.name;
+        var params = _.assign({ search: tag.name }, this.props.settings.route.parameters);
         var url = route.find(route.component, params);
         var props = {
             className: 'tag',
@@ -324,13 +309,9 @@ function isWrapping(nodes) {
 }
 
 function extractTags(dailyActivities) {
-    // merge stats from the months
-    var details = _.transform(dailyActivities, (counts, da) => {
-        _.assign(counts, da.details);
-    }, {});
     // score the tags based on how often they are used
     var scores = {}, frequency = {};
-    _.each(details, (activities, date) => {
+    _.each(dailyActivities.daily, (activities, date) => {
         _.each(activities, (count, key) => {
             // more recent usage count for more
             var multiplier;

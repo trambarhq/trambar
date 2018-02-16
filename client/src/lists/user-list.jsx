@@ -20,168 +20,20 @@ var UserView = require('views/user-view');
 
 require('./user-list.scss');
 
-module.exports = Relaks.createClass({
+module.exports = React.createClass({
     displayName: 'UserList',
-    propTypes: {
-        users: PropTypes.arrayOf(PropTypes.object).isRequired,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
-        selectedDate: PropTypes.string,
-        selectedUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            today: DateTracker.today,
-        };
-    },
-
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
-     *
-     * @return {Promise<ReactElement>}
-     */
-    renderAsync: function(meanwhile, prevProps) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
-        var props = {
-            roles: null,
-            dailyActivities: null,
-            listings: null,
-            stories: null,
-
-            users: this.props.users,
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            today: this.state.today,
-            selectedDate: this.props.selectedDate,
-            selectedUser: this.props.selectedUser,
-            freshRoute: this.props.route !== prevProps.route,
-        };
-        meanwhile.show(<UserListSync {...props} />, delay);
-        return db.start().then((userId) => {
-            // load roles
-            var roleIds = _.flatten(_.map(props.users, 'role_ids'));
-            var criteria = {
-                id: _.uniq(roleIds)
-            };
-            return db.find({ schema: 'global', table: 'role', criteria });
-        }).then((roles) => {
-            props.roles = roles;
-            return meanwhile.show(<UserListSync {...props} />);
-        }).then(() => {
-            // load daily-activities statistics
-            var startDate, endDate;
-            if (this.props.selectedDate) {
-                endDate = Moment(this.props.selectedDate).add(6, 'day');
-            } else {
-                endDate = Moment(this.state.today);
-            }
-            startDate = endDate.clone().subtract(14, 'day');
-            var ranges = DateUtils.getMonthRanges(startDate, endDate);
-            var filters = [];
-            _.each(props.users, (user) => {
-                _.each(ranges, (range) => {
-                    filters.push({
-                        user_ids: [ user.id ],
-                        time_range: range,
-                    });
-                });
-            });
-            var criteria = { type: 'daily-activities', filters };
-            return db.find({ table: 'statistics', criteria });
-        }).then((statistics) => {
-            props.dailyActivities = statistics;
-            return meanwhile.show(<UserListSync {...props} />);
-        }).then(() => {
-            if (!this.props.stories) {
-                // load story listings, one per user
-                var criteria = {
-                    type: 'news',
-                    target_user_id: props.currentUser.id,
-                    filters: _.map(props.users, (user) => {
-                        return {
-                            user_ids: [ user.id ]
-                        };
-                    }),
-                };
-                return db.find({ table: 'listing', criteria }).then((listings) => {
-                    props.listings = listings;
-                }).then(() => {
-                    // load stories in listings
-                    var storyIds = _.flatten(_.map(props.listings, (listing) => {
-                        // return only the five latest
-                        return _.slice(listing.story_ids, -5);
-                    }));
-                    var criteria = {
-                        id: _.uniq(storyIds)
-                    };
-                    return db.find({ table: 'story', criteria });
-                });
-            } else {
-                // we already got the stories from search
-                return this.props.stories;
-            }
-        }).then((stories) => {
-            props.stories = stories;
-            return <UserListSync {...props} />;
-        });
-    },
-
-    /**
-     * Listen for date change event
-     */
-    componentDidMount: function() {
-        DateTracker.addEventListener('change', this.handleDateChange);
-    },
-
-    /**
-     * Remove event listener
-     */
-    componentWillUnmount: function() {
-        DateTracker.removeEventListener('change', this.handleDateChange);
-    },
-
-    /**
-     * Force rerendering by setting today's date
-     */
-    handleDateChange: function() {
-        // force rerendering
-        this.setState({ today: DateTracker.today });
-    },
-});
-
-var UserListSync = module.exports.Sync = React.createClass({
-    displayName: 'UserList.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
         users: PropTypes.arrayOf(PropTypes.object).isRequired,
         roles: PropTypes.arrayOf(PropTypes.object),
-        dailyActivities: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         selectedDate: PropTypes.string,
-        selectedUser: PropTypes.object,
         today: PropTypes.string,
         freshRoute: PropTypes.bool,
+        link: PropTypes.oneOf([ 'user', 'team' ]),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -219,12 +71,7 @@ var UserListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var users;
-        if (!this.props.selectedUser) {
-            users = sortUsers(this.props.users, this.props.locale);
-        } else {
-            users = [ this.props.selectedUser ];
-        }
+        var users = sortUsers(this.props.users, this.props.locale);
         var smartListProps = {
             items: users,
             behind: 4,
@@ -256,13 +103,16 @@ var UserListSync = module.exports.Sync = React.createClass({
         if (evt.needed) {
             var user = evt.item;
             var roles = findRoles(this.props.roles, user);
-            var dailyActivities = findDailyActivities(this.props.dailyActivities, user);
+            var dailyActivities = _.get(this.props.dailyActivities, user.id);
             var stories;
             if (this.props.listings) {
                 var listing = findListing(this.props.listings, user);
                 stories = findListingStories(this.props.stories, listing);
             } else {
                 stories = findUserStories(this.props.stories, user);
+            }
+            if (stories && stories.length > 5) {
+                stories = _.slice(stories, -5);
             }
             var chartType = this.state.chartSelection[user.id];
             var userProps = {
@@ -278,7 +128,7 @@ var UserListSync = module.exports.Sync = React.createClass({
                 theme: this.props.theme,
                 selectedDate: this.props.selectedDate,
                 today: this.props.today,
-                link: (this.props.selectedUser) ? 'team' : 'user',
+                link: this.props.link,
 
                 onChartSelect: this.handleChartSelect,
             };
@@ -322,16 +172,6 @@ var findRoles = Memoize(function(roles, user) {
         }));
     } else {
         return [];
-    }
-});
-
-var findDailyActivities = Memoize(function(dailyActivities, user) {
-    if (user) {
-        return _.filter(dailyActivities, (stats) => {
-            return stats.filters.user_ids[0] === user.id;
-        });
-    } else {
-        return null;
     }
 });
 

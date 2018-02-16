@@ -2,7 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
-var DateUtils = require('utils/date-utils');
+var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -37,41 +37,16 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var currentUserId;
         var props = {
-            projectRange: null,
             dailyActivities: null,
 
+            settings: this.props.settings,
             route: this.props.route,
             locale: this.props.locale,
         };
         meanwhile.show(<CalendarBarSync {...props} />, 1000);
         return db.start().then((userId) => {
-            // load story-date-range statistics
-            var criteria = {
-                type: 'story-date-range',
-                filters: {},
-            };
-            currentUserId = userId;
-            return db.findOne({ table: 'statistics', criteria });
-        }).then((statistics) => {
-            props.projectRange = statistics;
-            return meanwhile.show(<CalendarBarSync {...props} />);
-        }).then(() => {
-            // load daily-activities statistics
-            var startTime = _.get(props.projectRange, 'details.start_time');
-            var endTime = _.get(props.projectRange, 'details.end_time');
-            var timeRanges = DateUtils.getMonthRanges(startTime, endTime);
-            var tzOffset = DateUtils.getTimeZoneOffset();
-            var stats = this.props.settings.statistics;
-            var criteria = {
-                type: stats.type,
-                filters: _.map(timeRanges, (timeRange) => {
-                    return _.extend({
-                        time_range: timeRange,
-                        tz_offset: tzOffset
-                    }, stats.filters);
-                }),
-            };
-            return db.find({ table: 'statistics', criteria });
+            var params = _.assign({ user_id: userId }, this.props.settings.statistics);
+            return StatisticsUtils.fetch(db, params);
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <CalendarBarSync {...props} />;
@@ -83,8 +58,8 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
     displayName: 'CalendarBar.Sync',
     mixins: [ UpdateCheck ],
     propTypes: {
-        projectRange: PropTypes.object,
-        dailyActivities: PropTypes.arrayOf(PropTypes.object),
+        settings: PropTypes.object.isRequired,
+        dailyActivities: PropTypes.object,
 
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -94,8 +69,8 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
         var endOfThisMonth = Moment().endOf('month');
         var months = [];
         var multiyear = false;
-        var startTime = _.get(this.props.projectRange, 'details.start_time');
-        var endTime = _.get(this.props.projectRange, 'details.end_time');
+        var startTime = _.get(this.props.dailyActivities, 'range.start');
+        var endTime = _.get(this.props.dailyActivities, 'range.end');
         var selectedDate = this.props.route.parameters.date;
         if (startTime && endTime) {
             var s = Moment(startTime).startOf('month');
@@ -142,21 +117,15 @@ var CalendarBarSync = module.exports.Sync = React.createClass({
     /**
      * Called when calendar needs the URL for the
      *
-     * @param  {[type]} evt
+     * @param  {Object} evt
      *
-     * @return {[type]}
+     * @return {String|undefined}
      */
     handleDateURL: function(evt) {
-        var date = evt.date;
-        var hasActivities = _.some(this.props.dailyActivities, (stats) => {
-            if (stats.details[date]) {
-                return true;
-            }
-        });
-        if (hasActivities) {
+        var activities = _.get(this.props.dailyActivities, [ 'daily', evt.date ]);
+        if (activities) {
             var route = this.props.route;
-            var params = _.omit(route.parameters, 'date', 'roles', 'search', 'story');
-            params.date = date;
+            var params = _.assign({ date: evt.date }, this.props.settings.route);
             var url = route.find(route.component, params);
             return url;
         }

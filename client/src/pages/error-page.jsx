@@ -62,7 +62,8 @@ module.exports = React.createClass({
          * @return {Object}
          */
         configureUI: function(currentRoute) {
-            var hasSchema = !!currentRoute.parameters.schema;
+            var params = currentRoute.parameters;
+            var hasSchema = !!params.schema;
             return {
                 navigation: {
                     top: hasSchema,

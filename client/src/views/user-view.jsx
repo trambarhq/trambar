@@ -29,7 +29,7 @@ module.exports = React.createClass({
         roles: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         chartType: PropTypes.string,
-        dailyActivities: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
@@ -298,8 +298,10 @@ module.exports = React.createClass({
         if (this.props.link === 'user') {
             params.user = this.props.user.id;
             label = t('user-activity-more');
-        } else {
+        } else if (this.props.link === 'team') {
             label = t('user-activity-back');
+        } else {
+            return null;
         }
         var url = route.find(require('pages/people-page'), params);
         return (

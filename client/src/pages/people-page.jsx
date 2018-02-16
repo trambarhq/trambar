@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
@@ -6,8 +7,8 @@ var Memoize = require('utils/memoize');
 var DateTracker = require('utils/date-tracker');
 var DateUtils = require('utils/date-utils');
 var TagScanner = require('utils/tag-scanner');
-
 var ProjectSettings = require('objects/settings/project-settings');
+var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -98,14 +99,17 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         configureUI: function(currentRoute) {
-            if (!currentRoute.parameters.user) {
-                var route = {
-                    parameters: _.pick(currentRoute.parameters, 'schema')
-                };
-                var statistics = {
-                    type: 'daily-activities',
-                    filters: {},
-                };
+            var params = currentRoute.parameters;
+            var route = {
+                schema: params.schema,
+                user: params.user,
+            };
+            var statistics = {
+                type: 'daily-activities',
+                schema: params.schema,
+                user_id: params.user,
+            };
+            if (!params.user) {
                 return {
                     calendar: { route, statistics },
                     filter: { route },
@@ -113,22 +117,12 @@ module.exports = Relaks.createClass({
                     navigation: { route, section: 'people' }
                 };
             } else {
-                var route = {
-                    parameters: _.pick(currentRoute.parameters, 'schema', 'user')
-                };
-                var statistics = {
-                    type: 'daily-activities',
-                    filters: {
-                        user_ids: [ route.parameters.user ]
-                    },
-                };
                 return {
                     calendar: { route, statistics },
                     search: { route, statistics },
                     navigation: {
-                        route: {
-                            parameters: _.pick(currentRoute.parameters, 'schema')
-                        },
+                        // go back to full list
+                        route: _.omit(route, 'user'),
                         section: 'people'
                     }
                 };
@@ -159,12 +153,19 @@ module.exports = Relaks.createClass({
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
+        var tags;
+        if (_.trim(params.search) && !TagScanner.removeTags(params.search)) {
+            // search by tags only (which can happen locally)
+            tags = TagScanner.findTags(params.search);
+        }
         var props = {
             project: null,
-            users: null,
+            members: null,
             stories: null,
             currentUser: null,
             selectedDate: params.date,
+            selectedUser: null,
+            visibleUsers: null,
             today: this.state.today,
 
             database: this.props.database,
@@ -189,20 +190,83 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
         }).then((project) => {
             props.project = project;
+            meanwhile.check();
+        }).then(() => {
+            // load project members
+            var criteria = {
+                id: props.project.user_ids,
+            };
+            return db.find({ schema: 'global', table: 'user', criteria });
+        }).then((users) => {
+            props.members = users;
+            if (params.user) {
+                // find the selected user
+                var user = _.find(users, { id: params.user });
+                if (user) {
+                    props.selectedUser = user;
+                    props.visibleUsers = [ user ];
+                } else {
+                    // not on the member list apparently
+                    var criteria = { id: selectedUser };
+                    return db.findOne({ schema: 'global', table: 'user', criteria, required: true }).then((user) => {
+                        props.selectedUser = user;
+                        props.visibleUsers = [ user ];
+                    });
+                }
+            } else {
+                if (!_.isEmpty(params.roles)) {
+                    // show users with roles
+                    props.visibleUsers = findUsersWithRoles(users, params.roles);
+                } else {
+                    // all project members are shown
+                    props.visibleUsers = users;
+                }
+            }
+        }).then(() => {
+            if (params.search || params.date) {
+                // not ready to render anything yet (run check() in case a new
+                // rendering cycle was initiated)
+                return meanwhile.check();
+            } else {
+                // we got enough
+                return meanwhile.show(<PeoplePageSync {...props} />);
+            }
+        }).then(() => {
+            // load daily-activities statistics
+            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, props.members);
+        }).then((statistics) => {
+            props.dailyActivities = statistics;
+            if (params.search && !tags) {
+                // need to search for stories first before anything is shown
+                return meanwhile.check();
+            }
+            if (!params.user) {
+                var users;
+                if (params.date) {
+                    users = findUsersWithActivitiesOnDate(props.members, statistics, params.date);
+                } else if (tags) {
+                    users = findUsersWithStoriesWithTags(props.members, statistics, tags);
+                }
+                if (users) {
+                    if (!_.isEmpty(params.roles)) {
+                        props.visibleUsers = findUsersWithRoles(users, params.roles);
+                    } else {
+                        props.visibleUsers = users;
+                    }
+                }
+            }
             return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
             if (params.search || params.date) {
                 // search for matching stories
                 var criteria = {
                     published: true,
-                    ready: true,
-                    per_user_limit: 5
+                    ready: true
                 };
                 var remote;
                 if (params.search) {
-                    if (!TagScanner.removeTags(params.search)) {
-                        // search by tags only (which can happen locally)
-                        criteria.tags = TagScanner.findTags(params.search);
+                    if (tags) {
+                        criteria.tags = tags;
                     } else {
                         criteria.search = {
                             lang: this.props.locale.languageCode,
@@ -211,110 +275,123 @@ module.exports = Relaks.createClass({
                         // don't scan local cache
                         remote = true;
                     }
-                    criteria.limit = 100;
-                } else if (params.date) {
-                    criteria.time_range = DateUtils.getDayRange(params.date);
                 }
-                if (!_.isEmpty(params.roles)) {
-                    criteria.role_ids = params.roles;
-                }
-                return db.find({ table: 'story', criteria, remote });
-            }
-        }).then((stories) => {
-            if (stories) {
-                // list authors of matching stories
-                props.stories = stories;
-                var userIds = _.uniq(_.flatten(_.map(stories, 'user_ids')));
-                var criteria = {
-                    id: userIds,
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            } else {
-                // find all users that are project members
-                var criteria = {
-                    id: props.project.user_ids,
-                };
-                if (!_.isEmpty(params.roles)) {
-                    criteria.role_ids = params.roles;
-                }
-                return db.find({ schema: 'global', table: 'user', criteria });
-            }
-        }).then((users) => {
-            props.users = users;
-            return meanwhile.show(<PeoplePageSync {...props} />);
-        }).then(() => {
-            if (!params.user) {
-                return;
-            }
-            // look for stories of selected user
-            props.selectedUser = _.find(props.users, { id: params.user });
-            if (params.date || params.search) {
-                var remote;
-                // load story matching filters
-                var criteria = {
-                    user_ids: [ params.user ],
-                };
                 if (params.date) {
                     criteria.time_range = DateUtils.getDayRange(params.date);
                 }
-                if (params.search) {
-                    if (!TagScanner.removeTags(params.search)) {
-                        // search by tags only (which can happen locally)
-                        criteria.tags = TagScanner.findTags(params.search);
+                if (props.selectedUser) {
+                    // limit the number of results
+                    if (params.search) {
+                        criteria.limit = 100;
                     } else {
-                        criteria.search = {
-                            lang: this.props.locale.languageCode,
-                            text: params.search,
-                        };
-                        // don't scan local cache
-                        remote = true;
+                        criteria.limit = 500;
                     }
-                    criteria.limit = 100;
                 } else {
-                    criteria.limit = 500;
+                    // fetch only 5 per user for summary display
+                    criteria.per_user_limit = 5;
                 }
                 return db.find({ table: 'story', criteria, remote });
             } else {
-                // load story in listing
-                var criteria = {
-                    type: 'news',
-                    target_user_id: props.currentUser.id,
-                    filters: {
-                        user_ids: [ params.user ]
-                    },
-                };
-                return db.findOne({ table: 'listing', criteria }).then((listing) => {
-                    if (!listing) {
-                        return [];
-                    }
-                    var criteria = {};
-                    criteria.id = listing.story_ids;
-                    return db.find({ table: 'story', criteria });
-                }).then((stories) => {
-                    if (params.story) {
-                        // see if the story is in the list
-                        if (!_.find(stories, { id: params.story })) {
-                            // redirect to page showing stories on the date
-                            // of the story; to do that, we need the object
-                            // itself
-                            var criteria = { id: params.story };
-                            return db.findOne({ table: 'story', criteria }).then((story) => {
-                                if (story) {
-                                    return this.props.route.replace(require('pages/people-page'), {
-                                        date: Moment(story.ptime).format('YYYY-MM-DD'),
-                                        user: params.user,
-                                        story: params.story
-                                    }).return([]);
-                                }
-                                return stories;
-                            });
+                if (!props.selectedUser) {
+                    // load story listings, one per user, doing so in separate
+                    // requests to enable cache hit when a user is selected
+                    return Promise.map(props.visibleUsers, (user) => {
+                        var criteria = {
+                            type: 'news',
+                            target_user_id: props.currentUser.id,
+                            filters: {
+                                user_ids: [ user.id ]
+                            },
+                        };
+                        return db.findOne({ table: 'listing', criteria });
+                    }, { concurrency: 8 }).then((listings) => {
+                        props.listings = listings;
+                        // load stories in listings
+                        var storyIds = _.flatten(_.map(props.listings, (listing) => {
+                            // return only the five latest
+                            return _.slice(listing.story_ids, -5);
+                        }));
+                        var criteria = {
+                            id: _.uniq(storyIds),
+                            published: true,
+                            ready: true
+                        };
+                        return db.find({ table: 'story', criteria });
+                    });
+                } else {
+                    // load listing for selected user
+                    var criteria = {
+                        type: 'news',
+                        target_user_id: props.currentUser.id,
+                        filters: {
+                            user_ids: [ props.selectedUser.id ]
+                        },
+                    };
+                    return db.findOne({ table: 'listing', criteria }).then((listing) => {
+                        if (!listing) {
+                            return [];
                         }
-                    }
-                    return stories;
-                });
+                        props.listings = [ listing ];
+                        var criteria = {
+                            id: listing.story_ids,
+                            published: true,
+                            ready: true
+                        };
+                        return db.find({ table: 'story', criteria });
+                    }).then((stories) => {
+                        // when a user is selected, the URL can point to a specific
+                        // story; we need to make sure the story is there
+                        if (params.story) {
+                            if (!_.find(stories, { id: params.story })) {
+                                // redirect to page showing stories on the date of the
+                                // story; to do that, we need the object itself
+                                var criteria = { id: params.story };
+                                return db.findOne({ table: 'story', criteria }).then((story) => {
+                                    if (story) {
+                                        return this.props.route.replace(require('pages/people-page'), {
+                                            date: Moment(story.ptime).format('YYYY-MM-DD'),
+                                            user: params.user,
+                                            story: params.story
+                                        }).return([]);
+                                    }
+                                    return stories;
+                                });
+                            }
+                        }
+                        return stories;
+                    });
+                }
             }
         }).then((stories) => {
-            props.selectedUserStories = stories;
+            props.stories = stories;
+            if (!props.selectedUser) {
+                if (params.search && !tags) {
+                    // now that we have the stories, we can see whom should be
+                    // shown
+                    props.visibleUsers = findUsersWithStories(props.members, stories);
+                } else {
+                    // TODO: get rid of this once we're done debugging
+                    //
+                    // do this for date search as well, even through
+                    // we use the stats to narrow down the list earlier, just in
+                    // case we got an incomplete list due to out-of-date stats
+                    var users = findUsersWithStories(props.members, stories);
+                    var userIds1 = _.map(users, 'id');
+                    var userIds2 = _.map(props.visibleUsers, 'id');
+                    if (!_.isEqual(userIds1, userIds2)) {
+                        console.log('From stories:', userIds1);
+                        console.log('From stats:', userIds2);
+                        props.visibleUsers = users;
+                    }
+                }
+            }
+            return meanwhile.show(<PeoplePageSync {...props} />);
+        }).then(() => {
+            // TODO: deal with situation where we're showing someone who're not
+            // on the team
+            if (!props.selectedUser) {
+                var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+            }
             return <PeoplePageSync {...props} />;
         });
     },
@@ -346,11 +423,12 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
     displayName: 'PeoplePageSync',
     propTypes: {
         project: PropTypes.object,
-        users: PropTypes.arrayOf(PropTypes.object),
+        members: PropTypes.arrayOf(PropTypes.object),
+        selectedUser: PropTypes.object,
+        visibleUsers: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
-        selectedUser: PropTypes.object,
-        selectedUserStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
@@ -403,15 +481,18 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderUserList: function() {
-        if (!this.props.currentUser || !this.props.users) {
+        if (!this.props.currentUser || !this.props.visibleUsers) {
             return null;
         }
         var listProps = {
-            users: this.props.users,
+            users: this.props.visibleUsers,
+            dailyActivities: this.props.dailyActivities,
+            listings: this.props.listings,
             stories: this.props.stories,
             currentUser: this.props.currentUser,
             selectedDate: this.props.selectedDate,
-            selectedUser: this.props.selectedUser,
+            today: this.props.today,
+            link: (this.props.selectedUser) ? 'team' : 'user',
 
             database: this.props.database,
             route: this.props.route,
@@ -427,13 +508,13 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderSelectedUserStoryList: function() {
-        if (!this.props.selectedUserStories) {
+        if (!this.props.selectedUser || !this.props.stories) {
             return null;
         }
         var params = this.props.route.parameters;
         var listProps = {
             access: this.getAccessLevel(),
-            stories: this.props.selectedUserStories,
+            stories: this.props.stories,
             currentUser: this.props.currentUser,
             project: this.props.project,
             selectedStoryId: params.story,
@@ -458,9 +539,9 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
     renderEmptyMessage: function() {
         var list;
         if (!this.props.selectedUser) {
-            list = this.props.users;
+            list = this.props.visibleUsers;
         } else {
-            list = this.props.selectedUserStories;
+            list = this.props.stories;
         }
         if (!_.isEmpty(list)) {
             return null;
@@ -488,4 +569,40 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             return <EmptyMessage {...props} />;
         }
     },
+});
+
+var findUsersWithRoles = Memoize(function(users, roleIds) {
+    return _.filter(users, (user) => {
+        return _.some(user.role_ids, (roleId) => {
+            return _.includes(roleIds, roleId);
+        });
+    });
+});
+
+var findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
+    return _.filter(users, (user) => {
+        var userStats = statistics[user.id];
+        if (userStats) {
+            return userStats.daily[date];
+        }
+    });
+});
+
+var findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
+    return _.filter(users, (user) => {
+        var userStats = statistics[user.id];
+        return _.some(userStats.daily, (counts, date) => {
+            return _.some(tags, (tag) => {
+                return !!counts[tag];
+            });
+        });
+    });
+});
+
+var findUsersWithStories = Memoize(function(users, stories) {
+    return _.filter(users, (user) => {
+        return _.some(stories, (story) => {
+            return _.includes(story.user_ids, user.id);
+        });
+    });
 });

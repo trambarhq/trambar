@@ -136,7 +136,7 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
         var users = findUsers(this.props.users, role);
         var route = this.props.route;
         var roleIds = route.parameters.roles;
-        var params = _.clone(this.props.settings.route.parameters);
+        var params = _.clone(this.props.settings.route);
         if (_.includes(roleIds, role.id)) {
             params.roles = _.without(roleIds, role.id);
         } else {

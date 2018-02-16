@@ -91,7 +91,7 @@ module.exports = React.createClass({
         if (!settings) {
             return null;
         }
-        var params = _.clone(settings.route.parameters);
+        var params = _.clone(settings.route);
         if (control !== selected) {
             // add empty parameters to trigger the control's activation
             switch (control) {

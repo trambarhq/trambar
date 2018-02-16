@@ -21,7 +21,7 @@ module.exports = React.createClass({
     propTypes: {
         chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
         user: PropTypes.object,
-        dailyActivities: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
 
@@ -75,9 +75,9 @@ module.exports = React.createClass({
             return null;
         }
         var t = this.props.locale.translate;
-        var details = mergeDetails(this.props.dailyActivities);
+        var activities = _.get(this.props.dailyActivities, 'daily', {});
         var dates = this.getDates();
-        var indices = getActivityIndices(details, dates);
+        var indices = getActivityIndices(activities, dates);
         var items = _.map(indices, (index, type) => {
             var props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
@@ -111,9 +111,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderBarChart: function() {
-        var details = mergeDetails(this.props.dailyActivities);
+        var activities = _.get(this.props.dailyActivities, 'daily', {});
         var dates = this.getDates();
-        var series = getActivitySeries(details, dates);
+        var series = getActivitySeries(activities, dates);
         var upperRange = getUpperRange(series, true);
         var labels = getDateLabel(dates, this.props.locale.localeCode);
         var chartProps = {
@@ -144,9 +144,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderLineChart: function() {
-        var details = mergeDetails(this.props.dailyActivities);
+        var activities = _.get(this.props.dailyActivities, 'daily', {});
         var dates = this.getDates();
-        var series = getActivitySeries(details, dates);
+        var series = getActivitySeries(activities, dates);
         var upperRange = getUpperRange(series, false);
         var labels = getDateLabel(dates, this.props.locale.localeCode);
         var chartProps = {
@@ -172,9 +172,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPieChart: function() {
-        var details = mergeDetails(this.props.dailyActivities);
+        var activities = _.get(this.props.dailyActivities, 'daily', {});
         var dates = this.getDates();
-        var series = getActivitySeries(details, dates);
+        var series = getActivitySeries(activities, dates);
         var seriesTotals = _.map(series, _.sum);
         var chartProps = {
             type: 'pie',
@@ -375,12 +375,4 @@ function LegendItem(props) {
             </span>
         </div>
     )
-}
-
-function mergeDetails(objects) {
-    var details = {};
-    _.each(objects, (object) => {
-        _.assign(details, object.details);
-    });
-    return details;
 }

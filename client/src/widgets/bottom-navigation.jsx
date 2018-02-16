@@ -82,7 +82,7 @@ module.exports = React.createClass({
             route = this.props.route;
         }
         var settings = (pageClass.configureUI) ? pageClass.configureUI(route) : null;
-        var params = _.get(settings, 'navigation.route.parameters');
+        var params = _.get(settings, 'navigation.route');
         if (!params) {
             return null;
         }

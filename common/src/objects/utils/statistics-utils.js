@@ -5,7 +5,7 @@ var Memoize = require('utils/memoize');
 var DateUtils = require('utils/date-utils');
 
 module.exports = {
-    fetchDailyActivities,
+    fetch,
     fetchProjectDailyActivities,
     fetchProjectsDailyActivities,
     fetchUserDailyActivities,
@@ -15,16 +15,17 @@ module.exports = {
 };
 
 /**
- * Fetch daily activities, given certain parameters
+ * Fetch statistics, given certain parameters
  *
  * @param  {Database} db
  * @param  {Object} project
  *
  * @return {Promise<Object>}
  */
-function fetchDailyActivities(db, params) {
-    var user, project;
+function fetch(db, params) {
+    var type, user, project;
     if (params) {
+        type = params.type;
         if (params.user) {
             user = params.user;
         } else if (params.user_id) {
@@ -40,13 +41,17 @@ function fetchDailyActivities(db, params) {
         }
     }
 
-    if (user && project) {
-        return fetchUserDailyActivities(db, project, user);
-    } else if (project) {
-        return fetchProjectDailyActivities(db, project, user);
-    } else {
-        return Promise.resolve(null)
+    if (type === 'daily-activities') {
+        if (user && project) {
+            return fetchUserDailyActivities(db, project, user);
+        } else if (project) {
+            return fetchProjectDailyActivities(db, project, user);
+        }
     }
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('Unrecognized statistics parameters: ', params);
+    }
+    return Promise.resolve(null)
 }
 
 /**
