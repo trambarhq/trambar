@@ -157,7 +157,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
      */
     renderHashTag: function(tag, index) {
         var route = this.props.route;
-        var params = _.assign({ search: tag.name }, this.props.settings.route.parameters);
+        var params = _.assign({ search: tag.name }, this.props.settings.route);
         var url = route.find(route.component, params);
         var props = {
             className: 'tag',
@@ -309,6 +309,9 @@ function isWrapping(nodes) {
 }
 
 function extractTags(dailyActivities) {
+    if (!dailyActivities) {
+        return [];
+    }
     // score the tags based on how often they are used
     var scores = {}, frequency = {};
     _.each(dailyActivities.daily, (activities, date) => {

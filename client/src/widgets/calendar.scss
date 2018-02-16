@@ -41,6 +41,8 @@
             cursor: default;
 
             A {
+                display: block;
+                
                 &:link, &:visited {
                     text-decoration: none;
                     color: #cccccc;

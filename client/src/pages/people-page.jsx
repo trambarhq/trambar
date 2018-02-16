@@ -190,7 +190,6 @@ module.exports = Relaks.createClass({
             return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
         }).then((project) => {
             props.project = project;
-            meanwhile.check();
         }).then(() => {
             // load project members
             var criteria = {
@@ -206,8 +205,8 @@ module.exports = Relaks.createClass({
                     props.selectedUser = user;
                     props.visibleUsers = [ user ];
                 } else {
-                    // not on the member list apparently
-                    var criteria = { id: selectedUser };
+                    // not on the member list
+                    var criteria = { id: params.user };
                     return db.findOne({ schema: 'global', table: 'user', criteria, required: true }).then((user) => {
                         props.selectedUser = user;
                         props.visibleUsers = [ user ];
@@ -223,24 +222,14 @@ module.exports = Relaks.createClass({
                 }
             }
         }).then(() => {
-            if (params.search || params.date) {
-                // not ready to render anything yet (run check() in case a new
-                // rendering cycle was initiated)
-                return meanwhile.check();
-            } else {
-                // we got enough
-                return meanwhile.show(<PeoplePageSync {...props} />);
-            }
+            return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
             // load daily-activities statistics
             return StatisticsUtils.fetchUsersDailyActivities(db, props.project, props.members);
         }).then((statistics) => {
             props.dailyActivities = statistics;
-            if (params.search && !tags) {
-                // need to search for stories first before anything is shown
-                return meanwhile.check();
-            }
-            if (!params.user) {
+            if (!props.visibleUsers) {
+                // find users with stories using stats
                 var users;
                 if (params.date) {
                     users = findUsersWithActivitiesOnDate(props.members, statistics, params.date);
@@ -254,7 +243,15 @@ module.exports = Relaks.createClass({
                         props.visibleUsers = users;
                     }
                 }
+            } else if (props.selectedUser) {
+                // load statistics of selected user if he's not a member
+                if (!_.some(props.members, { id: props.selectedUser })) {
+                    return StatisticsUtils.fetchUsersDailyActivities(db, props.project, [ props.selectedUser ]).then((selectedUserStats) => {
+                        props.dailyActivities = _.assign({}, props.dailyActivities, selectedUserStats);
+                    });
+                }
             }
+        }).then(() => {
             return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
             if (params.search || params.date) {
@@ -280,6 +277,7 @@ module.exports = Relaks.createClass({
                     criteria.time_range = DateUtils.getDayRange(params.date);
                 }
                 if (props.selectedUser) {
+                    criteria.user_ids = [ props.selectedUser.id ];
                     // limit the number of results
                     if (params.search) {
                         criteria.limit = 100;
@@ -391,7 +389,19 @@ module.exports = Relaks.createClass({
             // on the team
             if (!props.selectedUser) {
                 var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+                var memberIds = _.map(props.members, 'id');
+                var nonMemberUserIds = _.difference(authorIds, memberIds);
+                if (!_.isEmpty(nonMemberUserIds)) {
+                    var criteria = { id: nonMemberUserIds };
+                    return db.find({ schema: 'global', table: 'user', criteria }).then((nonmembers) => {
+                        props.visibleUsers = _.concat(props.visibleUsers, nonmembers);
+                        return StatisticsUtils.fetchUsersDailyActivities(db, props.project, nonmembers).then((nonmemberStats) => {
+                            props.dailyActivities = _.assign({}, props.dailyActivities, nonmemberStats);
+                        });
+                    });
+                }
             }
+        }).then(() => {
             return <PeoplePageSync {...props} />;
         });
     },
