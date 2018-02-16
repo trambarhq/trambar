@@ -127,7 +127,7 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<ProjectListPageSync {...props} />);
         }).then(() => {
             // load statistics of each project
-            return StatisticsUtils.fetchProjectDailyActivities(db, props.projects);
+            return StatisticsUtils.fetchProjectsDailyActivities(db, props.projects);
         }).then((statistics) => {
             props.statistics = statistics;
             return <ProjectListPageSync {...props} />;

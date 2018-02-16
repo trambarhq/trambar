@@ -114,9 +114,7 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<RepoSummaryPageSync {...props} />);
         }).then(() => {
             // load statistics
-            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, [ props.repo ]).then((hash) => {
-                return hash[props.repo.id];
-            });
+            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, props.repo);
         }).then((statistics) => {
             props.statistics = statistics;
             return <RepoSummaryPageSync {...props} />;

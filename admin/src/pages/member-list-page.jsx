@@ -117,7 +117,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load statistics of members
             var users = findUsers(props.users, props.project)
-            return StatisticsUtils.fetchUserDailyActivities(db, props.project, users);
+            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, users);
         }).then((statistics) => {
             props.statistics = statistics;
             return <MemberListPageSync {...props} />;

@@ -117,7 +117,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // load user statistics of the project's repo
             var repos = findRepos(props.repos, props.project);
-            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, repos);
+            return StatisticsUtils.fetchReposDailyActivities(db, props.project, repos);
         }).then((statistics) => {
             props.statistics = statistics;
             return <RepoListPageSync {...props} />;

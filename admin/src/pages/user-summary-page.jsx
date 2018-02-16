@@ -141,13 +141,8 @@ module.exports = Relaks.createClass({
             props.project = project;
             return meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
-            // load statistics if project is specified (unless we're creating a
-            // new member)
-            if (props.project && props.user) {
-                return StatisticsUtils.fetchUserDailyActivities(db, props.project, [ props.user ]).then((hash) => {
-                    return hash[props.user.id];
-                });
-            }
+            // load statistics if project is specified (unless we're creating a new member)
+            return StatisticsUtils.fetchUserDailyActivities(db, props.project, props.user);
         }).then((statistics) => {
             props.statistics = statistics;
             return <UserSummaryPageSync {...props} />;
