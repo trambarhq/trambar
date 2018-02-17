@@ -1,7 +1,6 @@
 var _ = require('lodash');
 var Moment = require('moment-timezone');
-
-var Reaction = require('accessors/reaction');
+var Notification = require('accessors/notification');
 
 module.exports = {
     type: 'daily-notifications',
@@ -10,22 +9,21 @@ module.exports = {
     // filters and the columns they act on--determine which objects are
     // included in the statistics;
     filteredColumns: {
-        story: {
+        notification: {
             target_user_id: 'target_user_id',
             time_range: 'ctime',
         },
     },
     // additional criteria that objects must also meet to be included
     fixedFilters: {
-        story: {
+        notification: {
             deleted: false,
-            published: true,
         }
     },
     // columns in the table(s) that affects the results (columns used by the
     // filters would, of course, also impact the results)
     depedentColumns: {
-        story: [
+        notification: [
             'type',
             'ctime',
         ],
@@ -33,29 +31,27 @@ module.exports = {
 
     generate: function(db, schema, filters) {
         // apply fixed filters
-        var criteria = _.clone(this.fixedFilters.story);
+        var criteria = _.clone(this.fixedFilters.notification);
         // then apply per-row filters
         _.assign(criteria, _.omit(filters, 'timezone'));
 
-        // load the stories
-        console.log(criteria)
-        return Reaction.find(db, schema, criteria, 'type, ctime').then((rows) => {
-            console.log('Rows: ' + rows.length)
+        // load the notifications
+        return Notification.find(db, schema, criteria, 'type, ctime').then((rows) => {
             var timezone = _.get(filters, 'timezone', 'GMT');
 
-            var activities = {};
+            var notifications = {};
             _.each(rows, (row) => {
                 // get the date, taking into consideration the timezone requested
-                var date = Moment(row.ptime).tz(timezone).format('YYYY-MM-DD');
-                var counts = activities[date];
+                var date = Moment(row.ctime).tz(timezone).format('YYYY-MM-DD');
+                var counts = notifications[date];
                 if (!counts) {
-                    counts = activities[date] = {};
+                    counts = notifications[date] = {};
                 }
                 // increment the count for story type
                 counts[row.type] = (counts[row.type] || 0) + 1;
             });
             return {
-                details: activities,
+                details: notifications,
                 sample_count: rows.length,
             };
         });

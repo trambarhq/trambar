@@ -10,6 +10,8 @@ module.exports = {
     fetchProjectsDailyActivities,
     fetchUserDailyActivities,
     fetchUsersDailyActivities,
+    fetchUserDailyNotifications,
+    fetchUsersDailyNotifications,
     fetchRepoDailyActivities,
     fetchReposDailyActivities,
 };
@@ -46,6 +48,10 @@ function fetch(db, params) {
             return fetchUserDailyActivities(db, project, user);
         } else if (project) {
             return fetchProjectDailyActivities(db, project, user);
+        }
+    } else if (type === 'daily-notifications') {
+        if (user && project) {
+            return fetchUserDailyNotifications(db, project, user);
         }
     }
     if (process.env.NODE_ENV !== 'production') {
@@ -179,6 +185,80 @@ function fetchUsersDailyActivities(db, project, users) {
                     return (d.filters.user_ids[0] === userId);
                 });
                 results[userId] = summarizeStatistics(dailyActivities, dateRange);
+            }, {});
+        });
+    });
+}
+
+/**
+ * Fetch notification stats of one user in a given project
+ *
+ * @param  {Database} db
+ * @param  {Project} project
+ *
+ * @return {Promise<Object>}
+ */
+function fetchUserDailyNotifications(db, project, user) {
+    if (!user) {
+        return null;
+    }
+    return fetchUsersDailyNotifications(db, project, [ user ]).then((hash) => {
+        return _.get(hash, user.id, null);
+    });
+}
+
+/**
+ * Fetch notification stats of multiple users, with results keyed by user id
+ *
+ * @param  {Database} db
+ * @param  {Project} project
+ * @param  {Array<User>} users
+ *
+ * @return {Promise<Object>}
+ */
+function fetchUsersDailyNotifications(db, project, users) {
+    if (!project) {
+        return Promise.resolve(null);
+    }
+    var schema = project.name;
+    // load notification-date-range statistics
+    var currentUsers = _.filter(users, (user) => {
+        return !user.deleted;
+    });
+    var criteria = {
+        type: 'notification-date-range',
+        filters: _.map(currentUsers, (user) => {
+            return {
+                target_user_id: user.id
+            };
+        }),
+    };
+    return db.find({ schema, table: 'statistics', criteria }).then((dateRanges) => {
+        dateRanges = _.filter(dateRanges, isValidRange);
+        // load daily-activities statistics
+        var filterLists = _.map(dateRanges, (dateRange) => {
+            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            var tzOffset = DateUtils.getTimeZoneOffset();
+            return _.map(timeRanges, (timeRange) => {
+                return {
+                    target_user_id: dateRange.filters.target_user_id,
+                    time_range: timeRange,
+                    tz_offset: tzOffset,
+                };
+            });
+        });
+        var filters = _.flatten(filterLists);
+        if (_.isEmpty(filters)) {
+            return {};
+        }
+        var criteria = { type: 'daily-notifications', filters };
+        return db.find({ schema, table: 'statistics', criteria }).then((dailyNotificationsAllUsers) => {
+            return _.transform(dateRanges, (results, dateRange) => {
+                var userId = dateRange.filters.target_user_id;
+                var dailyNotifications = _.filter(dailyNotificationsAllUsers, (d) => {
+                    return (d.filters.target_user_id === userId);
+                });
+                results[userId] = summarizeStatistics(dailyNotifications, dateRange);
             }, {});
         });
     });
