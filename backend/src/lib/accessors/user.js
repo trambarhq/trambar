@@ -207,7 +207,7 @@ module.exports = _.create(ExternalData, {
         return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((userReceived, index) => {
             var userBefore = originals[index];
             this.checkWritePermission(userReceived, userBefore, credentials);
-            if (!userBefore.deleted && !_.isEmpty(userReceived.requested_project_ids)) {
+            if (userBefore && !userBefore.deleted && !_.isEmpty(userReceived.requested_project_ids)) {
                 // remove ids of projects that'd accept the user automatically
                 // as well as those that can't be joined
                 var Project = require('accessors/project');

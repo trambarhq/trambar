@@ -265,7 +265,8 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @return {Boolean}
      */
     isCreating: function(props) {
-        return (this.props.route.parameters.user === 'new');
+        props = props || this.props;
+        return (props.route.parameters.user === 'new');
     },
 
     /**
@@ -277,7 +278,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return this.isCreating() || props.route.query.edit;
+        return this.isCreating(props) || props.route.parameters.edit;
     },
 
     /**
@@ -1040,6 +1041,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                             return db.saveOne({ table: 'project' }, columns);
                         }
                     }
+                    return null;
                 });
             }).catch((err) => {
                 var problems = {};

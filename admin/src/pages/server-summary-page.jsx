@@ -282,7 +282,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     isEditing: function(props) {
         props = props || this.props;
-        return this.isCreating(props) || props.route.query.edit;
+        return this.isCreating(props) || props.route.parameters.edit;
     },
 
     /**

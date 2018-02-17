@@ -34,14 +34,16 @@ function fromPersonalName(fullName) {
     var name = '';
     var lang;
     for (var lang in fullName) {
-        var parts = String(fullName[lang]).split(/\s+/).filter(Boolean);
-        var last = latinize(parts[parts.length - 1]);
+        var parts = String(fullName[lang]).split(/\s+/).map((s) => {
+            return latinize(s).replace(/[^a-z]/g, '');
+        }).filter(Boolean);
+        // last name plus initials of other names
+        var last = parts[parts.length - 1];
         var initials = '';
         for (var i = 0; i < parts.length - 1; i++) {
-            initials += latinize(parts[i]).charAt(0);
+            initials += parts[i].charAt(0);
         }
         name = initials + last;
-        name = name.replace(/[^a-z]/g, '');
         if (name) {
             break;
         }
