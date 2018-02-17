@@ -35,6 +35,7 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        var params = this.props.route.parameters;
         var db = this.props.database.use({ by: this });
         var props = {
             users: null,
@@ -44,16 +45,18 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             onSelect: this.props.onSelect,
-            loading: true,
         };
         meanwhile.show(<UserSelectionListSync {...props} />, 1000);
         return db.start().then((userId) => {
-            // load all users 
-            var criteria = {};
-            return db.find({ schema: 'global', table: 'user', criteria });
+            // load project
+            var criteria = { name: params.schema };
+            return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
+                // load all project members
+                var criteria = { id: project.user_ids };
+                return db.find({ schema: 'global', table: 'user', criteria });
+            });
         }).then((users) => {
             props.users = users;
-            props.loading = false;
             return <UserSelectionListSync {...props} />
         });
     }
