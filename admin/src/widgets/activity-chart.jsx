@@ -53,11 +53,11 @@ module.exports = React.createClass({
             // the previous month
             endDate = endOfThisMonth;
         } else {
-            // otherwise now one month of no activities
+            // otherwise add one month of no activities
             endDate.add(1, 'month');
         }
 
-        var dates = getDateStrings(startDate, today);
+        var dates = getDateStrings(startDate, endDate);
         var series = getActivitySeries(this.props.statistics.daily, dates);
         var upperRange = getUpperRange(series, true);
         var labels = getDateStrings(startDate, endDate);
