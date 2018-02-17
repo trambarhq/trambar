@@ -443,7 +443,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderProjectsColumn: function(user) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;

@@ -505,7 +505,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderLastMonthColumn: function(repo) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -529,7 +529,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderThisMonthColumn: function(repo) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -553,7 +553,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderToDateColumn: function(repo) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;

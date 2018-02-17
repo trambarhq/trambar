@@ -527,7 +527,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderDateRangeColumn: function(user, editing) {
-        if (this.props.theme.isBelowMode('wide')) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -553,7 +553,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderLastMonthColumn: function(user) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -578,7 +578,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderThisMonthColumn: function(user) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -603,7 +603,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderToDateColumn: function(user) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+        if (this.props.theme.isBelowMode('super-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
