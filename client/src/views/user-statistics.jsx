@@ -175,7 +175,9 @@ module.exports = React.createClass({
         var activities = _.get(this.props.dailyActivities, 'daily', {});
         var dates = this.getDates();
         var series = getActivitySeries(activities, dates);
-        var seriesTotals = _.map(series, _.sum);
+        var seriesTotals = _.map(series, (series) => {
+            return _.sum(_.map(series.data, 'value'));
+        });
         var chartProps = {
             type: 'pie',
             data: { series: seriesTotals },
