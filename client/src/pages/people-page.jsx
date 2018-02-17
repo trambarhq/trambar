@@ -213,12 +213,14 @@ module.exports = Relaks.createClass({
                     });
                 }
             } else {
-                if (!_.isEmpty(params.roles)) {
-                    // show users with roles
-                    props.visibleUsers = findUsersWithRoles(users, params.roles);
-                } else {
-                    // all project members are shown
-                    props.visibleUsers = users;
+                if (!(params.search || params.date )) {
+                    if (!_.isEmpty(params.roles)) {
+                        // show users with roles
+                        props.visibleUsers = findUsersWithRoles(users, params.roles);
+                    } else {
+                        // all project members are shown
+                        props.visibleUsers = users;
+                    }
                 }
             }
         }).then(() => {
@@ -363,31 +365,17 @@ module.exports = Relaks.createClass({
         }).then((stories) => {
             props.stories = stories;
             if (!props.selectedUser) {
-                if (params.search && !tags) {
-                    // now that we have the stories, we can see whom should be
-                    // shown
-                    props.visibleUsers = findUsersWithStories(props.members, stories);
-                } else {
-                    // TODO: get rid of this once we're done debugging
-                    //
-                    // do this for date search as well, even through
-                    // we use the stats to narrow down the list earlier, just in
-                    // case we got an incomplete list due to out-of-date stats
-                    var users = findUsersWithStories(props.members, stories);
-                    var userIds1 = _.map(users, 'id');
-                    var userIds2 = _.map(props.visibleUsers, 'id');
-                    if (!_.isEqual(userIds1, userIds2)) {
-                        console.log('From stories:', userIds1);
-                        console.log('From stats:', userIds2);
-                        props.visibleUsers = users;
-                    }
-                }
+                // now that we have the stories, we can see whom should be shown
+                //
+                // do this for date search as well, even through
+                // we use stats to narrow down the list earlier, just in
+                // case we got an incomplete list due to out-of-date stats
+                props.visibleUsers = findUsersWithStories(props.members, stories);
             }
             return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
-            // TODO: deal with situation where we're showing someone who're not
-            // on the team
             if (!props.selectedUser) {
+                // deal with situation where we're showing someone who're not on the team
                 var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
                 var memberIds = _.map(props.members, 'id');
                 var nonMemberUserIds = _.difference(authorIds, memberIds);
