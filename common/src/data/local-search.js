@@ -33,9 +33,17 @@ function match(table, object, criteria) {
                         matching = false;
                     }
                 } else {
-                    // array value matches a scalar when the former contains
-                    // the latter
-                    if (!_.includes(desiredValue, actualValue)) {
+                    // array value matches a scalar or object when the former
+                    // contains the latter
+                    var containing;
+                    if (actualValue instanceof Object) {
+                        containing = _.some(desiredValue, (desiredElement) => {
+                            return _.isEqual(desiredElement, actualValue);
+                        });
+                    } else {
+                        containing = _.includes(desiredValue, actualValue);
+                    }
+                    if (!containing) {
                         matching = false;
                     }
                 }

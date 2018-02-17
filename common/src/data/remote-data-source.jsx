@@ -423,6 +423,7 @@ module.exports = React.createClass({
         var byComponent = _.get(query, 'by.constructor.displayName',)
         var required = query.required;
         query = getSearchQuery(query);
+        query = removeUndefined(query);
         var search = this.findRecentSearch(query);
         if (search) {
             if (byComponent) {
@@ -1713,6 +1714,41 @@ function getSearchLocation(search) {
  */
 function getSearchQuery(search) {
     return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote', 'committed');
+}
+
+/**
+ * Remove properties from objects that are undefined (some _.isEqual() would)
+ *
+ * @param  {[type]} object
+ *
+ * @return {[type]}
+ */
+function removeUndefined(object) {
+    if (object instanceof Array) {
+        var dst = [];
+        for (var i = 0; i < object.length; i++) {
+            var value = object[i];
+            if (value !== undefined) {
+                if (value instanceof Object) {
+                    value = removeUndefined(value);
+                }
+                dst.push(value);
+            }
+        }
+        return dst;
+    } else if (object instanceof Object) {
+        var dst = {};
+        for (var key in object) {
+            var value = object[key];
+            if (value !== undefined) {
+                if (value instanceof Object) {
+                    value = removeUndefined(value);
+                }
+                dst[key] = value;
+            }
+        }
+        return dst;
+    }
 }
 
 var sessions = [];

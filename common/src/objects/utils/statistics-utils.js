@@ -82,7 +82,6 @@ function fetchProjectDailyActivities(db, project) {
         var tzOffset = DateUtils.getTimeZoneOffset();
         var filters = _.map(timeRanges, (timeRange) => {
             return {
-                external_object: dateRange.filters.external_object,
                 time_range: timeRange,
                 tz_offset: tzOffset,
             };
