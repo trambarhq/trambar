@@ -26,12 +26,14 @@
         font-size: 1.4em;
         font-weight: bold;
         margin-bottom: 0.3em;
+        user-select: text;
     }
 
     .description {
         margin-top: 0.5em;
         margin-bottom: 0.5em;
         white-space: pre-line;
+        user-select: text;
 
         img {
             float: right;
@@ -49,6 +51,7 @@
         font-size: 0.9em;
         padding: 0.35em 0.35em 0.35em 0.35em;
         color: #000000;
+        user-select: text;
 
         &.accepted {
             background-color: #66cc66;

@@ -4,6 +4,7 @@
 
     .text {
         color: #cccccc;
+        user-select: text;
 
         A {
             &:link, &:visited {
@@ -183,6 +184,7 @@
     .impact {
         .message {
             color: #cccccc;
+            user-select: text;
         }
 
         .scrollable {

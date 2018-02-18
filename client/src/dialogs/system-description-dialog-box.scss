@@ -13,6 +13,7 @@
     .scrollable {
         flex: 1 1 auto;
         flex-basis: auto;
+        user-select: text;
     }
 
     .buttons {

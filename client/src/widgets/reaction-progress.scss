@@ -5,6 +5,8 @@
     margin-left: 0.5em;
 
     .time {
+        user-select: text;
+
         &.today {
             color: #aaaaaa;
         }

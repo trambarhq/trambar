@@ -51,6 +51,10 @@
         padding: 0.25em 0.25em 0.25em 0.5em;
     }
 
+    .selectable {
+        user-select: text;
+    }
+
     .single-col & {
         margin-bottom: 0.5em;
     }

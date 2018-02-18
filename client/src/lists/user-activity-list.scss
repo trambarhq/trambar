@@ -8,6 +8,7 @@
             float: right;
             color: #666666;
             font-size: 0.9em;
+            user-select: text;
 
             &.today, &.yesterday {
                 color: #cccccc;

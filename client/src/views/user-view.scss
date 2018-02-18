@@ -33,6 +33,7 @@
             margin-top: 0.4em;
             margin-bottom: 0.2em;
             color: #eeeeee;
+            user-select: text;
         }
 
         .tag {
@@ -41,6 +42,7 @@
             margin-top: 0.2em;
             margin-bottom: 0.4em;
             display: inline-block;
+            user-select: text;
 
             A {
                 &:link, &:visited {
@@ -52,6 +54,10 @@
                     }
                 }
             }
+        }
+
+        .user-activity-list {
+            user-select: text;
         }
 
         .link {
@@ -73,6 +79,10 @@
 
     .padded {
         padding: 0.25em 0.25em 0.25em 0.5em;
+    }
+
+    .selectable {
+        user-select: text;
     }
 
     .single-col & {

@@ -111,7 +111,7 @@ module.exports = React.createClass({
         return (
             <div className="user-view">
                 <div className="header">
-                    <div className="column-1 padded">
+                    <div className="column-1 padded selectable">
                         {this.renderProfileImage()}
                         {this.renderRoles()}
                         {this.renderPopUpMenu('main')}
@@ -149,7 +149,7 @@ module.exports = React.createClass({
         return (
             <div className="user-view">
                 <div className="header">
-                    <div className="column-1 padded">
+                    <div className="column-1 padded selectable">
                         {this.renderProfileImage()}
                         {this.renderRoles()}
                         {this.renderPopUpMenu('main')}
@@ -184,7 +184,7 @@ module.exports = React.createClass({
         return (
             <div className="user-view triple-col">
                 <div className="header">
-                    <div className="column-1 padded">
+                    <div className="column-1 padded selectable">
                         {this.renderProfileImage()}
                         {this.renderRoles()}
                     </div>

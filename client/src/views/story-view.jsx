@@ -179,7 +179,7 @@ module.exports = React.createClass({
         return (
             <div className={this.getClassName()}>
                 <div className="header">
-                    <div className="column-1 padded">
+                    <div className="column-1 padded selectable">
                         {this.renderProfileImage()}
                         {this.renderAuthorNames()}
                         {this.renderPopUpMenu('main')}
@@ -215,7 +215,7 @@ module.exports = React.createClass({
         return (
             <div className={this.getClassName()}>
                 <div className="header">
-                    <div className="column-1 padded">
+                    <div className="column-1 padded selectable">
                         {this.renderProfileImage()}
                         {this.renderAuthorNames()}
                         {this.renderPopUpMenu('main')}
@@ -248,7 +248,7 @@ module.exports = React.createClass({
         return (
             <div className={this.getClassName()}>
                 <div className="header">
-                    <div className="column-1 padded">
+                    <div className="column-1 padded selectable">
                         {this.renderProfileImage()}
                         {this.renderAuthorNames()}
                     </div>
