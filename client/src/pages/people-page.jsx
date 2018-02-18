@@ -479,9 +479,6 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderUserList: function() {
-        if (!this.props.currentUser || !this.props.visibleUsers) {
-            return null;
-        }
         var listProps = {
             users: this.props.visibleUsers,
             dailyActivities: this.props.dailyActivities,

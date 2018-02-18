@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -28,7 +29,7 @@ module.exports = React.createClass({
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
-        chartType: PropTypes.string,
+        options: PropTypes.object.isRequired,
         dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
@@ -40,7 +41,20 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onChartSelect: PropTypes.func,
+        onOptionChange: PropTypes.func,
+    },
+
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
+    getInitialState: function() {
+        this.components = ComponentRefs({
+            mainPopUp: CornerPopUp,
+            statisticsPopUp: CornerPopUp,
+        });
+        return {};
     },
 
     /**
@@ -49,7 +63,7 @@ module.exports = React.createClass({
      * @return {String}
      */
     getChartType: function() {
-        var chartType = this.props.chartType;
+        var chartType = this.props.options.chartType;
         if (!chartType) {
             // always show statistics in double and triple column mode
             if (this.props.theme.mode !== 'single-col') {
@@ -57,6 +71,19 @@ module.exports = React.createClass({
             }
         }
         return chartType;
+    },
+
+    /**
+     * Return the selected chart range, applying default selection where appropriate
+     *
+     * @return {String}
+     */
+    getChartRange: function() {
+        var chartRange = this.props.options.chartRange;
+        if (!chartRange) {
+            chartRange = 'biweekly';
+        }
+        return chartRange;
     },
 
     /**
@@ -101,6 +128,7 @@ module.exports = React.createClass({
                 <div className="header">
                     <div className="column-2 padded">
                         {this.renderChartToolbar()}
+                        {this.renderPopUpMenu('statistics')}
                     </div>
                 </div>
                 <div className="body">
@@ -128,6 +156,7 @@ module.exports = React.createClass({
                     </div>
                     <div className="column-2 padded">
                         {this.renderChartToolbar()}
+                        {this.renderPopUpMenu('statistics')}
                     </div>
                 </div>
                 <div className="body">
@@ -322,6 +351,8 @@ module.exports = React.createClass({
             story: this.props.story,
             dailyActivities: this.props.dailyActivities,
             chartType: this.getChartType(),
+            chartRange: this.getChartRange(),
+
             selectedDate: this.props.selectedDate,
             today: this.props.today,
 
@@ -341,8 +372,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderPopUpMenu: function(section) {
+        var ref = this.components.setters[section + 'PopUp'];
         return (
-            <CornerPopUp>
+            <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
@@ -359,8 +391,11 @@ module.exports = React.createClass({
         var props = {
             section,
             user: this.props.user,
+            options: this.props.options,
             locale: this.props.locale,
             theme: this.props.theme,
+            onChange: this.handleOptionChange,
+            onComplete: this.handleOptionComplete,
         };
         return <UserViewOptions {...props} />;
     },
@@ -373,15 +408,46 @@ module.exports = React.createClass({
     handleAction: function(evt) {
         switch (evt.action) {
             case 'chart-type-set':
-                if (this.props.onChartSelect) {
-                    this.props.onChartSelect({
-                        type: 'chartselect',
+                var options = _.clone(this.props.options);
+                options.chartType = evt.value;
+                if (this.props.onOptionChange) {
+                    this.props.onOptionChange({
+                        type: 'optionchange',
                         target: this,
-                        chart: evt.value,
                         user: this.props.user,
+                        options,
                     });
                 }
                 break;
+        }
+    },
+
+    /**
+     * Called when user changes display options
+     *
+     * @param  {Object} evt
+     */
+    handleOptionChange: function(evt) {
+        if (this.props.onOptionChange) {
+            this.props.onOptionChange({
+                type: 'optionchange',
+                target: this,
+                user: this.props.user,
+                options: evt.options,
+            });
+        }
+    },
+
+    /**
+     * Called when a change to the story options is complete
+     *
+     * @param  {Object} evt
+     */
+    handleOptionComplete: function(evt) {
+        var section = evt.target.props.section;
+        var popUp = this.components[section + 'PopUp'];
+        if (popUp) {
+            popUp.close();
         }
     },
 });

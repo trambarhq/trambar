@@ -3,7 +3,7 @@
         text-align: right;
         font-size: 0.8em;
         color: #999999;
-        padding: 0.5em 0.5em 0 0;
+        padding: 0.5em 0.5em 0.25em 0;
 
         .item {
             display: inline-block;
@@ -48,6 +48,55 @@
             font-family: FontAwesome;
             font-size: 12px;
             fill: #eeeeee;
+        }
+
+        .ct-grid.ct-horizontal.month-start {
+            stroke: #666666;
+            stroke-width: 1px;
+            stroke-dasharray: none;
+        }
+    }
+
+    .scroll-container-frame {
+        position: relative;
+        height: 12.8em;
+
+        .scroll-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            direction: rtl;
+            overflow-x: auto;
+            overflow-x: overlay;
+            overflow-y: hidden;
+
+            .scroll-container-contents {
+                direction: ltr;
+            }
+
+            &::-webkit-scrollbar-track {
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+                background-color: transparent;
+            }
+
+            &::-webkit-scrollbar {
+                height: 10px;
+                background-color: transparent;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                border-radius: 2px;
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+                background-color: rgba(0,0,0,.1);
+            }
+        }
+
+        .ct-label.ct-horizontal.ct-end {
+            width: 100px !important;
+            text-align: left;
+            justify-content: normal;
         }
     }
 }

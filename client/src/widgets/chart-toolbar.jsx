@@ -6,6 +6,8 @@ var Locale = require('locale/locale');
 // widgets
 var HeaderButton = require('widgets/header-button');
 
+require('./chart-toolbar.scss');
+
 module.exports = React.createClass({
     displayName: 'ChartToolbar',
     propTypes: {
@@ -40,7 +42,7 @@ module.exports = React.createClass({
             onClick: this.handlePieChartClick,
         };
         return (
-            <div>
+            <div className="chart-toolbar">
                 <HeaderButton {...barChartProps} />
                 <HeaderButton {...lineChartProps} />
                 <HeaderButton {...pieChartProps} />

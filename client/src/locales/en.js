@@ -214,6 +214,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Show attached media',
         'option-show-text-preview': 'Show text preview',
+        'option-statistics-biweekly': 'Show activities of last 14 days',
+        'option-statistics-monthly': 'Show monthly activities',
+        'option-statistics-to-date': 'Show activities to date',
 
         'people-no-stories-found': 'No matching stories found',
         'people-no-stories-on-date': 'No activities on that date',

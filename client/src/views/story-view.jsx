@@ -777,6 +777,11 @@ module.exports = React.createClass({
      */
     handleOptionsChange: function(evt) {
         this.setOptions(evt.options);
+        var section = evt.target.props.section;
+        var popUp = this.components[section + 'PopUp'];
+        if (popUp) {
+            popUp.close();
+        }
     },
 
     /**

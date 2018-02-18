@@ -739,8 +739,8 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onChange: this.handleOptionsChange,
-            onComplete: this.handleOptionsComplete,
+            onChange: this.handleOptionChange,
+            onComplete: this.handleOptionComplete,
         };
         return <StoryEditorOptions {...props} />;
     },
@@ -1142,7 +1142,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    handleOptionsChange: function(evt) {
+    handleOptionChange: function(evt) {
         return this.changeOptions(evt.options);
     },
 
@@ -1151,7 +1151,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      */
-    handleOptionsComplete: function(evt) {
+    handleOptionComplete: function(evt) {
         var section = evt.target.props.section;
         var popUp = this.components[section + 'PopUp'];
         if (popUp) {

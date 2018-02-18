@@ -118,7 +118,6 @@ module.exports = React.createClass({
             _.set(settings, `web_alert.${optionName}`, true);
             _.set(settings, `mobile_alert.${optionName}`, true);
         }
-        console.log(enabled, settings);
         this.setUserProperty('settings', settings);
     },
 });

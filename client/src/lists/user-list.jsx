@@ -24,12 +24,12 @@ module.exports = React.createClass({
     displayName: 'UserList',
     mixins: [ UpdateCheck ],
     propTypes: {
-        users: PropTypes.arrayOf(PropTypes.object).isRequired,
+        users: PropTypes.arrayOf(PropTypes.object),
         roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.object,
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
+        currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
         freshRoute: PropTypes.bool,
@@ -49,7 +49,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            chartSelection: {}
+            viewOptions
         };
     },
 
@@ -114,13 +114,13 @@ module.exports = React.createClass({
             if (stories && stories.length > 5) {
                 stories = _.slice(stories, -5);
             }
-            var chartType = this.state.chartSelection[user.id];
+            var options = this.state.viewOptions[user.id] || {};
             var userProps = {
                 user,
                 roles,
                 dailyActivities,
                 stories,
-                chartType,
+                options,
                 currentUser: this.props.currentUser,
                 database: this.props.database,
                 route: this.props.route,
@@ -129,8 +129,7 @@ module.exports = React.createClass({
                 selectedDate: this.props.selectedDate,
                 today: this.props.today,
                 link: this.props.link,
-
-                onChartSelect: this.handleChartSelect,
+                onOptionChange: this.handleOptionChange,
             };
             return <UserView {...userProps} />;
         } else {
@@ -140,22 +139,20 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when the user select a chart type
+     * Called when the user change chart options
      *
      * @param  {Object} evt
      */
-    handleChartSelect: function(evt) {
+    handleOptionChange: function(evt) {
         // storing chart selection at this level to avoid loss of state
         // due to on-demand rendering
-        var chartSelection = _.clone(this.state.chartSelection);
-        if (chartSelection[evt.user.id] !== evt.chart) {
-            chartSelection[evt.user.id] = evt.chart;
-        } else {
-            delete chartSelection[evt.user.id];
-        }
-        this.setState({ chartSelection });
+        viewOptions = _.clone(this.state.viewOptions);
+        viewOptions[evt.user.id] = evt.options;
+        this.setState({ viewOptions });
     },
 });
+
+var viewOptions = {};
 
 var sortUsers = Memoize(function(users, locale) {
     var p = locale.pick;

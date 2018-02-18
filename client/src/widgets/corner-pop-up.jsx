@@ -31,6 +31,7 @@ module.exports = React.createClass({
      * Close the pop-up menu
      */
     close: function() {
+        this.setState({ open: false });
         this.components.popUpMenu.close();
     },
 
