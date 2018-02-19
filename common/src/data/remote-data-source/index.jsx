@@ -6,8 +6,10 @@ var Moment = require('moment');
 var HTTPRequest = require('transport/http-request');
 var HTTPError = require('errors/http-error');
 var LocalSearch = require('data/local-search');
-var SessionStartTime = require('data/session-start-time');
-var RemoteDataChange = require('data/remote-data-change');
+var Search = require('data/remote-data-source/search');
+var Change = require('data/remote-data-source/change');
+var Storage = require('data/remote-data-source/storage');
+var Removal = require('data/remote-data-source/removal');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -15,6 +17,8 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var Diagnostics = require('widgets/diagnostics');
 var DiagnosticsSection = require('widgets/diagnostics-section');
+var RecentSearchTable = require('data/remote-data-source/recent-search-table');
+var RecentStorageTable = require('data/remote-data-source/recent-storage-table');
 
 module.exports = React.createClass({
     displayName: 'RemoteDataSource',
@@ -422,26 +426,26 @@ module.exports = React.createClass({
     find: function(query) {
         var byComponent = _.get(query, 'by.constructor.displayName',)
         var required = query.required;
-        query = getSearchQuery(query);
-        query = removeUndefined(query);
-        var search = this.findRecentSearch(query);
-        if (search) {
+        var search;
+        var newSearch = new Search(query);
+        var existingSearch = this.findExistingSearch(newSearch);
+        if (existingSearch) {
             if (byComponent) {
                 // add the component to the "by" array so we can figure out
                 // who requested the data
-                if (!_.includes(search.by, byComponent)) {
-                    search.by.push(byComponent);
+                if (!_.includes(existingSearch.by, byComponent)) {
+                    existingSearch.by.push(byComponent);
                 }
             }
-            if (search.promise.isFulfilled()) {
-                if (!isFresh(search)) {
+            if (existingSearch.promise.isFulfilled()) {
+                if (!existingSearch.isFresh()) {
                     // search is perhaps out-of-date--indicate that the data
                     // is speculative and check with the server
-                    if (!search.updating) {
+                    if (!existingSearch.updating) {
                         if (this.props.hasConnection) {
-                            search.updating = true;
-                            this.searchRemoteDatabase(search).then((changed) => {
-                                search.updating = false;
+                            existingSearch.updating = true;
+                            this.searchRemoteDatabase(existingSearch).then((changed) => {
+                                existingSearch.updating = false;
                                 if (changed) {
                                     // data returned earlier wasn't entirely correct
                                     // trigger a new search through a onChange event
@@ -452,79 +456,57 @@ module.exports = React.createClass({
                         }
                     }
                 }
-            } else if (search.promise.isRejected()) {
-                search.promise = this.searchRemoteDatabase(search).then((changed) => {
+            } else if (existingSearch.promise.isRejected()) {
+                // search didn't succeed--try again
+                existingSearch.promise = this.searchRemoteDatabase(existingSearch).then((changed) => {
                     if (changed) {
                         this.triggerChangeEvent();
                         return null;
                     }
-                    return search.results;
+                    return existingSearch.results;
                 });
             }
+            search = existingSearch;
         } else {
-            search = _.extend({}, query, {
-                start: null,
-                finish: null,
-                results: null,
-                promise: null,
-                by: byComponent ? [ byComponent ]: [],
-                dirty: false,
-                updating: false,
-                lastRetrieved: 0,
-            });
+            newSearch = this.initializeSearch(newSearch);
 
             // look for records in cache first
-            var localSearchPromise = this.searchLocalCache(search).then(() => {
-                // don't search remotely when there's no connection
-                if (!this.props.hasConnection) {
-                    return true;
-                }
+            newSearch.promise = this.searchLocalCache(newSearch).then(() => {
                 // if we have the right number of objects and they were
                 // retrieved recently, then don't perform server check
-                if (isMeetingExpectation(search)) {
-                    if (isSufficientlyRecent(search, this.props.refreshInterval)) {
-                        return true;
+                if (newSearch.isMeetingExpectation()) {
+                    if (newSearch.isSufficientlyRecent(this.props.refreshInterval)) {
+                        return newSearch.results;
                     }
                 }
-                return false;
-            });
-            var remoteSearchPromise = localSearchPromise.then((localDataValid) => {
-                if (localDataValid) {
-                    return false;
+
+                // don't search remotely when there's no connection
+                if (!this.props.hasConnection) {
+                    return newSearch.results;
                 }
-                return this.searchRemoteDatabase(search).then((changed) => {
+
+                // perform search on remote server
+                var remoteSearchPromise = this.searchRemoteDatabase(newSearch).then((changed) => {
                     if (changed) {
                         this.triggerChangeEvent();
                         return null;
                     }
                 });
-            });
-            search.promise = localSearchPromise.then((localDataValid) => {
-                if (localDataValid) {
-                    return search.results;
-                }
+
                 // if there're enough cached records, return them immediately,
                 // without waiting for the remote search to finish
                 //
                 // if the remote search yield new data, an onChange event will
                 // trigger a new search
-                if (isSufficientlyCached(search)) {
-                    return search.results;
+                if (newSearch.isSufficientlyCached()) {
+                    return newSearch.results;
+                } else {
+                    return remoteSearchPromise.then(() => {
+                        return newSearch.results;
+                    });
                 }
-                return remoteSearchPromise.then(() => {
-                    return search.results;
-                });
             });
-
-            // save the search
-            this.updateList('recentSearchResults', (before) => {
-                var after = _.slice(before);
-                after.unshift(search);
-                while (after.length > 256) {
-                    after.pop();
-                }
-                return after;
-            });
+            search = newSearch;
         }
         return search.promise.then((results) => {
             if (required && query.expected) {
@@ -552,41 +534,22 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     save: function(location, objects, options) {
-        var startTime = getCurrentTime();
-        var byComponent = _.get(location, 'by.constructor.displayName',)
-        location = getSearchLocation(location);
-        if (location.schema === 'local') {
-            return this.storeLocalObjects(location, objects).then((objects) => {
-                this.updateRecentSearchResults(location, objects);
+        var storage = this.initializeStorage(new Storage(location, objects, options));
+        if (storage.isLocal()) {
+            return this.storeLocalObjects(storage).then(() => {
+                this.updateRecentSearchResults(storage);
                 this.triggerChangeEvent();
-                return objects;
+                return storage.results;
             });
         } else {
             // storeRemoteObjects() will trigger change event
-            return this.storeRemoteObjects(location, objects, options).then((objects) => {
-                if (_.isEmpty(objects)) {
+            return this.storeRemoteObjects(storage).then(() => {
+                if (storage.cancelled) {
                     return [];
                 }
-                var endTime = getCurrentTime();
-                this.updateCachedObjects(location, objects);
-                this.updateRecentSearchResults(location, objects);
-
-                this.updateList('recentStorageResults', (before) => {
-                    var after = _.slice(before);
-                    var store = _.extend({
-                        start: startTime,
-                        finish: endTime,
-                        duration: getTimeElapsed(startTime, endTime),
-                        results: objects,
-                        by: byComponent,
-                    }, location);
-                    after.unshift(store);
-                    while (after.length > 32) {
-                        after.pop();
-                    }
-                    return after;
-                });
-                return objects;
+                this.updateCachedObjects(storage);
+                this.updateRecentSearchResults(storage);
+                return storage.results;
             });
         }
     },
@@ -600,14 +563,12 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     remove: function(location, objects) {
-        var startTime = getCurrentTime();
-        var byComponent = _.get(location, 'by.constructor.displayName',)
-        location = getSearchLocation(location);
-        if (location.schema === 'local') {
-            return this.removeLocalObjects(location, objects).then((objects) => {
-                this.removeFromRecentSearchResults(location, objects);
+        var removal = this.initializeRemoval(new Removal(location, objects));
+        if (removal.isLocal()) {
+            return this.storeLocalObjects(removal).then(() => {
+                this.removeFromRecentSearchResults(removal);
                 this.triggerChangeEvent();
-                return objects;
+                return removal.results;
             });
         } else {
             if (process.env.NODE_ENV !== 'production') {
@@ -615,33 +576,11 @@ module.exports = React.createClass({
                     console.warn('remove() should not be used when deleted objects are not automatically filtered out');
                 }
             }
-            // set the deleted flag
-            objects = _.map(objects, (object) => {
-                // only the id is needed--no point in sending the other properties
-                return { id: object.id, deleted: true };
-            });
             // storeRemoteObjects() will trigger change event
-            return this.storeRemoteObjects(location, objects).then((objects) => {
-                var endTime = getCurrentTime();
-                this.removeCachedObjects(location, objects);
-                this.removeFromRecentSearchResults(location, objects);
-
-                this.updateList('recentRemovalResults', (before) => {
-                    var after = _.clone(before);
-                    var removal = _.extend({
-                        start: startTime,
-                        finish: endTime,
-                        duration: getTimeElapsed(startTime, endTime),
-                        results: objects,
-                        by: byComponent,
-                    }, location);
-                    after.unshift(removal);
-                    while (after.length > 32) {
-                        after.pop();
-                    }
-                    return after;
-                });
-                return objects;
+            return this.storeRemoteObjects(removal).then(() => {
+                this.removeCachedObjects(removal);
+                this.removeFromRecentSearchResults(removal);
+                return removal.results;
             });
         }
     },
@@ -668,8 +607,7 @@ module.exports = React.createClass({
                     var relevantSearches = this.getRelevantRecentSearches(location);
                     _.each(relevantSearches, (search) => {
                         var dirty = false;
-                        var expectedCount = getExpectedObjectCount(search);
-                        if (expectedCount === search.results.length) {
+                        if (search.isMeetingExpectation()) {
                             // see if the ids show up in the results
                             _.each(idList, (id) => {
                                 var index = _.sortedIndexBy(search.results, { id }, 'id');
@@ -695,8 +633,7 @@ module.exports = React.createClass({
                 this.updateList('recentSearchResults', (before) => {
                     var after = _.slice(before);
                     _.each(after, (search) => {
-                        var searchLocation = getSearchLocation(search);
-                        if (!address || searchLocation.address === address) {
+                        if (!address || search.address === address) {
                             search.dirty = true;
                             changed = true;
                         }
@@ -906,40 +843,104 @@ module.exports = React.createClass({
     /**
      * Look for a recent search that has the same criteria
      *
-     * @param  {Object} query
+     * @param  {Search} newSearch
      *
-     * @return {Object|null}
+     * @return {Search|null}
      */
-    findRecentSearch: function(query) {
-        var index = _.findIndex(this.recentSearchResults, (search) => {
-            var searchQuery = getSearchQuery(search);
-            return _.isEqual(query, searchQuery);
+    findExistingSearch: function(newSearch) {
+        var index = _.findIndex(this.recentSearchResults, (existingSearch) => {
+            return newSearch.match(existingSearch);
         });
         if (index !== -1) {
             // move the matching search to the top
-            var search = this.recentSearchResults[index];
+            var existingSearch = this.recentSearchResults[index];
             this.updateList('recentSearchResults', (before) => {
                 var after = _.slice(before);
                 after.splice(index, 1);
-                after.unshift(search);
+                after.unshift(existingSearch);
                 return after;
             });
-            return search;
+            return existingSearch;
         } else {
             return null;
         }
     },
 
     /**
+     * @param  {Search} newSearch
+     *
+     * @return {Search}
+     */
+    initializeSearch: function(newSearch) {
+        /*
+        var candidates = _.map(this.recentSearchResults, (existingSearch) => {
+            if (newSearch.remote) {
+                return;
+            }
+            if (existingSearch.remote || _.isEmpty(existingSearch.results)) {
+                return;
+            }
+            if (newSearch.matchLocation(existingSearch)) {
+                if (newSearch.matchCriteriaShape(existingSearch)) {
+                    var diff = newSearch.findCriteriaDifference(existingSearch);
+
+                }
+            }
+        });
+        if (_.isEmpty(candidates)) {
+            return null;
+        }
+        candidates = _.filter(candidates)
+        candidates = _.sortBy(candidates, [ 'similarityNewToOld', 'similarityOldToNew' ]);
+        var candidate = _.last(candidates);
+        */
+
+        // save the search
+        this.updateList('recentSearchResults', (before) => {
+            var after = _.slice(before);
+            after.unshift(newSearch);
+            while (after.length > 256) {
+                after.pop();
+            }
+            return after;
+        });
+        return newSearch;
+    },
+
+    initializeStorage: function(newStorage) {
+        this.updateList('recentStorageResults', (before) => {
+            var after = _.slice(before);
+            after.unshift(newStorage);
+            while (after.length > 32) {
+                after.pop();
+            }
+            return after;
+        });
+        return newStorage;
+    },
+
+    initializeRemoval: function(newRemoval) {
+        this.updateList('recentRemovalResults', (before) => {
+            var after = _.clone(before);
+            after.unshift(newRemoval);
+            while (after.length > 32) {
+                after.pop();
+            }
+            return after;
+        });
+        return newRemoval;
+    },
+
+    /**
      * Perform a search on the server sude
      *
-     * @param  {Object} search
+     * @param  {Search} search
      * @param  {Boolean|undefined} background
      *
      * @return {Promise<Boolean>}
      */
     searchRemoteDatabase: function(search, background) {
-        if (search.schema === 'local') {
+        if (search.isLocal()) {
             return Promise.resolve(false);
         }
         if (!background) {
@@ -948,10 +949,10 @@ module.exports = React.createClass({
             });
         }
 
-        var location = getSearchLocation(search);
-        var query = getSearchQuery(search);
-        search.start = getCurrentTime();
-        return this.discoverRemoteObjects(query).then((discovery) => {
+        var location = search.getLocation();
+        var criteria = search.criteria;
+        search.setStartTime();
+        return this.discoverRemoteObjects(location, criteria).then((discovery) => {
             // use the list of ids and gns (generation number) to determine
             // which objects have changed and which have gone missing
             var ids = discovery.ids;
@@ -990,8 +991,7 @@ module.exports = React.createClass({
                 search.results = newResults;
                 search.promise = Promise.resolve(newResults);
             }
-            search.finish = getCurrentTime();
-            search.duration = getTimeElapsed(search.start, search.finish);
+            search.setFinishTime();
             search.dirty = false;
 
             // update activeSearches unless search is done in the background
@@ -1010,7 +1010,7 @@ module.exports = React.createClass({
             _.each(search.results, (object) => {
                 object.rtime = rtime;
             });
-            this.updateCachedObjects(location, search.results);
+            this.updateCachedObjects(search);
             return !!newResults;
         });
     },
@@ -1019,13 +1019,13 @@ module.exports = React.createClass({
      * Discover objects that mean the criteria specified in the query. Will
      * produce an array of ids and generation numbers.
      *
-     * @param  {Object} query
+     * @param  {Object} location
+     * @param  {Object} criteria
      *
      * @return {Promise<Array<Object>>}
      */
-    discoverRemoteObjects: function(query) {
-        var location = getSearchLocation(query);
-        return this.performRemoteAction(location, 'discovery', query.criteria);
+    discoverRemoteObjects: function(location, criteria) {
+        return this.performRemoteAction(location, 'discovery', criteria);
     },
 
     /**
@@ -1044,14 +1044,13 @@ module.exports = React.createClass({
     /**
      * Save objects to remote database
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
+     * @param  {Storage} storage
      * @param  {Object|undefined} options
      *
      * @return {Promise<Array<Object>>}
      */
-    storeRemoteObjects: function(location, objects, options) {
-        var change = new RemoteDataChange(location, objects, options);
+    storeRemoteObjects: function(storage) {
+        var change = new Change(storage.getLocation(), storage.objects, storage.options);
         _.each(this.changeQueue, (earlierOp) => {
             change.merge(earlierOp);
         });
@@ -1072,14 +1071,22 @@ module.exports = React.createClass({
         if (this.props.hasConnection) {
             // send it if we've connectivity
             change.dispatch();
+            storage.setStartTime();
         }
-        return change.promise;
+        return change.promise.then((objects) => {
+            if (!change.canceled) {
+                storage.setFinishTime();
+                storage.results = objects;
+            } else {
+                storage.canceled = true;
+            }
+        });
     },
 
     /**
      * Add an entry to the change queue
      *
-     * @param  {RemoteDataChange} change
+     * @param  {Change} change
      */
     queueChange: function(change) {
         this.updateList('changeQueue', (before) => {
@@ -1090,7 +1097,7 @@ module.exports = React.createClass({
     /**
      * Remove an entry from the change queue
      *
-     * @param  {RemoteDataChange} change
+     * @param  {Change} change
      */
     removeChange: function(change) {
         this.updateList('changeQueue', (before) => {
@@ -1101,7 +1108,7 @@ module.exports = React.createClass({
     /**
      * Apply uncommitted changes to search results
      *
-     * @param  {Object} search
+     * @param  {Search} search
      *
      * @return {Object}
      */
@@ -1173,39 +1180,30 @@ module.exports = React.createClass({
     /**
      * Store objects in local schema
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
+     * @param  {Storage} storage
      *
      * @return {Promise<Array<Object>>}
      */
-    storeLocalObjects: function(location, objects) {
+    storeLocalObjects: function(storage) {
         var cache = this.props.cache;
         if (!cache) {
             return Promise.reject(new Error('No local cache'));
         }
-        return cache.save(location, objects);
-    },
-
-    /**
-     * Remove objects from local schema
-     *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
-     *
-     * @return {Promise<Array<Object>>}
-     */
-    removeLocalObjects: function(location, objects) {
-        var cache = this.props.cache;
-        if (!cache) {
-            return Promise.reject(new Error('No local cache'))
+        if (storage instanceof Removal) {
+            storage.promise = cache.remove(storage.getLocation(), storage.objects);
+        } else {
+            storage.promise = cache.save(storage.getLocation(), storage.objects);
         }
-        return cache.remove(location, objects);
+        return storage.promise.then((objects) => {
+            storage.setFinishTime();
+            storage.results = objects;
+        });
     },
 
     /**
      * Search local cache
      *
-     * @param  {Object} search
+     * @param  {Search} search
      *
      * @return {Promise<Boolean>}
      */
@@ -1214,19 +1212,16 @@ module.exports = React.createClass({
         if (!cache) {
             return Promise.resolve(false);
         }
-        var query = getSearchQuery(search);
         if (search.remote || this.cleaningCache) {
             // don't scan cache if query is designed as remote
             // and if the cache is currently being cleaned
-            search.results = [];
             return Promise.resolve(true);
         }
-        return cache.find(search).then((objects) => {
+        return cache.find(search.getQuery()).then((objects) => {
             search.results = objects;
             return true;
         }).catch((err) => {
             console.error(err);
-            search.results = [];
             return false;
         });
     },
@@ -1234,17 +1229,16 @@ module.exports = React.createClass({
     /**
      * Update objects in local cache with remote copies
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
+     * @param  {Search|Storage} storage
      *
      * @return {Promise<Boolean>}
      */
-    updateCachedObjects: function(location, objects) {
+    updateCachedObjects: function(storage) {
         var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(false);
         }
-        return cache.save(location, objects).then((objects) => {
+        return cache.save(storage.getLocation(), storage.results).then((objects) => {
             return true;
         }).catch((err) => {
             console.error(err);
@@ -1255,17 +1249,16 @@ module.exports = React.createClass({
     /**
      * Remove cached objects
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
+     * @param  {Removal} removal
      *
      * @return {Promise<Boolean>}
      */
-    removeCachedObjects: function(location, objects) {
+    removeCachedObjects: function(removal) {
         var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(false);
         }
-        return cache.remove(location, objects).then((objects) => {
+        return cache.remove(removal.getLocation(), removal.results).then((objects) => {
             return true;
         }).catch((err) => {
             console.error(err);
@@ -1293,29 +1286,19 @@ module.exports = React.createClass({
     },
 
     /**
-     * Insert new objects into recent search results (if the objects match the
-     * criteria)
+     * Insert new objects into recent search results if the objects match the
+     * criteria
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
+     * @param  {Storage} storage
      */
-    updateRecentSearchResults: function(location, objects) {
-        var relevantSearches = this.getRelevantRecentSearches(location);
-        var remote = (location.schema !== 'local');
+    updateRecentSearchResults: function(storage) {
+        var relevantSearches = this.getRelevantRecentSearches(storage.getLocation());
         _.each(relevantSearches, (search) => {
             var changed = false;
-            _.each(objects, (object) => {
-                var index;
-                if (remote) {
-                    // remote objects are sorted by id
-                    index = _.sortedIndexBy(search.results, object, 'id');
-                } else {
-                    // local objects have string key and not id
-                    index = _.findIndex(search.results, { key: object.key });
-                    if (index === -1) {
-                        index = search.results.length;
-                    }
-                }
+            _.each(storage.results, (object) => {
+                // local objects have string key and not id
+                var keyName = storage.isLocal() ? 'key' : 'id';
+                var index = _.sortedIndexBy(search.results, object, 'id');
                 var target = search.results[index];
                 var present = (target && target.id === object.id);
                 var match = LocalSearch.match(search.table, object, search.criteria);
@@ -1346,26 +1329,19 @@ module.exports = React.createClass({
     /**
      * Remove objects from recent search results (because they've been deleted)
      *
-     * @param  {Object} location
-     * @param  {Array<Object>} objects
+     * @param  {Removal} removal
      */
-    removeFromRecentSearchResults: function(location, objects) {
-        var relevantSearches = this.getRelevantRecentSearches(location);
-        var remote = (location.schema !== 'local');
+    removeFromRecentSearchResults: function(removal) {
+        var relevantSearches = this.getRelevantRecentSearches(removal.getLocation());
         _.each(relevantSearches, (search) => {
             var changed = false;
-            _.each(objects, (object) => {
-                var index;
-                if (remote) {
-                    index = _.sortedIndexBy(search.results, object, 'id');
-                } else {
-                    index = _.findIndex(search.results, { key: object.key });
-                }
+            _.each(removal.results, (object) => {
+                var keyName = removal.isLocal() ? 'key' : 'id';
+                var index = _.sortedIndexBy(search.results, object, keyName);
                 var target = search.results[index];
                 var present = (target && target.id === object.id);
                 if (present) {
-                    // remove object from the list as it no longer
-                    // meets the criteria
+                    // remove object from the list as it no longer exists
                     if (!changed) {
                         search.results = _.slice(search.results);
                         search.promise = Promise.resolve(search.results);
@@ -1386,8 +1362,7 @@ module.exports = React.createClass({
      */
     getRelevantRecentSearches: function(location) {
         return _.filter(this.recentSearchResults, (search) => {
-            var searchLocation = getSearchLocation(search);
-            if (search.results && _.isEqual(location, searchLocation)) {
+            if (search.matchLocation(location)) {
                 return true;
             }
         });
@@ -1411,7 +1386,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Creation interval function to check for expiration of
+     * Creation interval function to check for expiration of sessions
      */
     componentWillMount: function() {
         this.sessionCheckTimeout = setInterval(() => {
@@ -1508,7 +1483,7 @@ module.exports = React.createClass({
                 if (!search.dirty) {
                     return false;
                 }
-                console.log('Prefetching', getSearchQuery(search));
+                console.log('Prefetching', search.getQuery());
                 return this.searchRemoteDatabase(search, true);
             }, { concurrency: 4 });
         }, 1000);
@@ -1660,97 +1635,6 @@ function insertObjects(objects, newObjects) {
     return objects;
 }
 
-/**
- * Return the current time as a ISO string
- *
- * @return {String}
- */
-function getCurrentTime() {
-    var now = new Date;
-    return now.toISOString();
-}
-
-/**
- * Get the difference between two time in milliseconds
- *
- * @param  {Date|String|null} start
- * @param  {Date|String|null} end
- *
- * @return {Number}
- */
-function getTimeElapsed(start, end) {
-    if (!start) {
-        return Infinity;
-    }
-    if (!end) {
-        return 0;
-    }
-    var s = (typeof(start) === 'string') ? new Date(start) : start;
-    var e = (typeof(end) === 'string') ? new Date(end) : end;
-    return (e - s);
-}
-
-/**
- * Obtain a location object from a search object
- *
- * @param  {Object} search
- *
- * @return {Object}
- */
-function getSearchLocation(search) {
-    if (search.schema === 'local') {
-        return _.pick(search, 'schema', 'table');
-    } else {
-        return _.pick(search, 'address', 'schema', 'table');
-    }
-}
-
-/**
- * Obtain a query object from a search object
- *
- * @param  {Object} search
- *
- * @return {Object}
- */
-function getSearchQuery(search) {
-    return _.pick(search, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote', 'committed');
-}
-
-/**
- * Remove properties from objects that are undefined (some _.isEqual() would)
- *
- * @param  {[type]} object
- *
- * @return {[type]}
- */
-function removeUndefined(object) {
-    if (object instanceof Array) {
-        var dst = [];
-        for (var i = 0; i < object.length; i++) {
-            var value = object[i];
-            if (value !== undefined) {
-                if (value instanceof Object) {
-                    value = removeUndefined(value);
-                }
-                dst.push(value);
-            }
-        }
-        return dst;
-    } else if (object instanceof Object) {
-        var dst = {};
-        for (var key in object) {
-            var value = object[key];
-            if (value !== undefined) {
-                if (value instanceof Object) {
-                    value = removeUndefined(value);
-                }
-                dst[key] = value;
-            }
-        }
-        return dst;
-    }
-}
-
 var sessions = [];
 
 /**
@@ -1791,220 +1675,4 @@ function findSessions(predicate) {
  */
 function destroySession(session) {
     _.pull(sessions, session);
-}
-
-/**
- * Check if a recent search is fresh
- *
- * @param  {Object} search
- * @param  {Number} refreshInterval
- *
- * @return {Boolean}
- */
-function isFresh(search, refreshInterval) {
-    if (search.schema === 'local') {
-        return true;
-    }
-    // we received a notification earlier indicate changes might have occurred
-    if (search.dirty) {
-        return false;
-    }
-    // the result hasn't been invalidated via notification
-    // still, we want to check with the server once in a while
-    var elapsed = getTimeElapsed(search.finish, new Date) * (1 / 1000);
-    if (elapsed > refreshInterval) {
-        return false;
-    }
-    return true;
-}
-
-/**
- * Check if there're enough cached records to warrant displaying them
- * while a remote search at takes place
- *
- * @param  {Object} search
- *
- * @return {Boolean}
- */
-function isSufficientlyCached(search) {
-    var minimum = search.minimum;
-    if (minimum === undefined) {
-        // use the expected object count
-        minimum = getExpectedObjectCount(search);
-    }
-    if (minimum === undefined) {
-        minimum = 1;
-    }
-    var count = search.results.length;
-    if (count < minimum) {
-        return false;
-    }
-    return true;
-}
-
-/**
- * Check if the number of object retrieved from cache meet expectation
- *
- * @param  {Object}  search
- *
- * @return {Boolean}
- */
-function isMeetingExpectation(search) {
-    var expected = getExpectedObjectCount(search);
-    var count = search.results.length;
-    if (count < expected) {
-        return false;
-    }
-    return true;
-};
-
-/**
- * Check if cached objects are retrieved so long enough ago that a
- * server-side search is advisable
- *
- * @param  {Object} search
- * @param  {Number} refreshInterval
- *
- * @return {Boolean}
- */
-function isSufficientlyRecent(search, refreshInterval) {
-    if (search.schema === 'local') {
-        return true;
-    }
-    var rtimes = _.map(search.results, 'rtime');
-    var minRetrievalTime = _.min(rtimes);
-    if (minRetrievalTime < SessionStartTime) {
-        // one of the objects was retrieved in an earlier session
-        return false;
-    }
-    // see how much time has elapsed
-    var elapsed = getTimeElapsed(minRetrievalTime, new Date) * (1 / 1000);
-    if (elapsed > refreshInterval) {
-        return false;
-    }
-    // use the retrieval time of the oldest object as the search's finish
-    // time
-    search.finish = minRetrievalTime;
-    return true;
-}
-
-/**
- * Return the number of object expected
- *
- * @param  {Object} search
- *
- * @return {Number|undefined}
- */
-function getExpectedObjectCount(search) {
-    if (typeof(search.expected) === 'number') {
-        return search.expected;
-    }
-    if (search.criteria) {
-        return countCriteria(search.criteria, 'id')
-            || countCriteria(search.criteria, 'name')
-            || countCriteria(search.criteria, 'filters');
-    }
-}
-
-/**
- * Count criteria of a given type
- *
- * @param  {Object} criteria
- * @param  {String} name
- *
- * @return {Number|undefined}
- */
-function countCriteria(criteria, name) {
-    var value = criteria[name];
-    if (value != undefined) {
-        if (value instanceof Array) {
-            return value.length;
-        } else {
-            return 1;
-        }
-    }
-}
-
-function RecentSearchTable(props) {
-    var remoteSearches = _.filter(props.searches, (search) => {
-        return search.schema !== 'local';
-    });
-    var renderRow = (search, index) => {
-        var className;
-        if (search.updating) {
-            className = 'updating';
-        } else if (search.dirty) {
-            className = 'dirty';
-        }
-        var time = (search.duration) ? search.duration + 'ms' : '';
-        var criteriaJSON1 = JSON.stringify(search.criteria, undefined, 4);
-        var criteriaJSON2 = JSON.stringify(search.criteria);
-        return (
-            <tr key={index} className={className}>
-                <td className="time">{time}</td>
-                <td className="schema">{search.schema}</td>
-                <td className="table">{search.table}</td>
-                <td className="criteria" title={truncateLongArray(criteriaJSON1)}>
-                    {criteriaJSON2}
-                </td>
-                <td className="objects">{_.size(search.results)} ({search.lastRetrieved})</td>
-                <td className="by">{_.join(search.by, ', ')}</td>
-            </tr>
-        );
-    };
-    return (
-        <table className="recent-search-table">
-            <thead>
-                <th className="time">Time</th>
-                <th className="schema">Schema</th>
-                <th className="table">Table</th>
-                <th className="criteria">Criteria</th>
-                <th className="objects">Objects (fresh)</th>
-                <th className="by">By</th>
-            </thead>
-            <tbody>
-                {_.map(remoteSearches, renderRow)}
-            </tbody>
-        </table>
-    );
-}
-
-function RecentStorageTable(props) {
-    var remoteStores = _.filter(props.stores, (store) => {
-        return store.schema !== 'local';
-    });
-    var renderRow = (store, index) => {
-        var time = (store.duration) ? store.duration + 'ms' : '';
-        var criteriaJSON1 = JSON.stringify(store.results, undefined, 4);
-        var criteriaJSON2 = JSON.stringify(store.results);
-        return (
-            <tr key={index}>
-                <td className="time">{time}</td>
-                <td className="schema">{store.schema}</td>
-                <td className="table">{store.table}</td>
-                <td className="objects" title={criteriaJSON1}>
-                    {criteriaJSON2}
-                </td>
-                <td className="by">{store.by}</td>
-            </tr>
-        );
-    };
-    return (
-        <table className="recent-storage-table">
-            <thead>
-                <th className="time">Time</th>
-                <th className="schema">Schema</th>
-                <th className="table">Table</th>
-                <th className="objects">Objects</th>
-                <th className="by">By</th>
-            </thead>
-            <tbody>
-                {_.map(remoteStores, renderRow)}
-            </tbody>
-        </table>
-    );
-}
-
-function truncateLongArray(json) {
-    return json.replace(/\[([^\]]{1,50},\s*)[^\]]{50,}?(\s*)\]/g, '[$1...$2]');
 }

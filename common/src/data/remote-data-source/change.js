@@ -3,9 +3,9 @@ var Promise = require('bluebird');
 
 var LocalSearch = require('data/local-search');
 
-module.exports = RemoteDataChange;
+module.exports = Change;
 
-function RemoteDataChange(location, objects, options) {
+function Change(location, objects, options) {
     this.location = location;
     this.objects = _.map(objects, (object) => {
         if (!object.uncommitted) {
@@ -46,7 +46,7 @@ function RemoteDataChange(location, objects, options) {
     }
 }
 
-RemoteDataChange.prototype.dispatch = function() {
+Change.prototype.dispatch = function() {
     if (this.dispatched || this.canceled) {
         // already sent or canceled
         return;
@@ -75,7 +75,7 @@ RemoteDataChange.prototype.dispatch = function() {
     });
 };
 
-RemoteDataChange.prototype.cancel = function() {
+Change.prototype.cancel = function() {
     if (this.canceled) {
         // already canceled
         return;
@@ -102,7 +102,7 @@ RemoteDataChange.prototype.cancel = function() {
  *
  * @param  {Object} earlierOp
  */
-RemoteDataChange.prototype.merge = function(earlierOp) {
+Change.prototype.merge = function(earlierOp) {
     if (!_.isEqual(earlierOp.location, this.location)) {
         return;
     }
@@ -132,7 +132,7 @@ RemoteDataChange.prototype.merge = function(earlierOp) {
  * @param  {Object} search
  * @param  {Boolean} includeDeleted
  */
-RemoteDataChange.prototype.apply = function(search, includeDeleted) {
+Change.prototype.apply = function(search, includeDeleted) {
     if (this.canceled) {
         return;
     }
@@ -180,7 +180,7 @@ RemoteDataChange.prototype.apply = function(search, includeDeleted) {
     });
 }
 
-RemoteDataChange.prototype.deliverables = function() {
+Change.prototype.deliverables = function() {
     var remaining = _.filter(this.objects, (object, index) => {
         return !this.removed[index];
     });
