@@ -29,7 +29,7 @@ var MediaImporter = require('editors/media-importer');
 
 require('./reaction-editor.scss');
 
-const AUTOSAVE_DURATION = 5000;
+const AUTOSAVE_DURATION = 2000;
 
 module.exports = React.createClass({
     displayName: 'CommentEditor',
@@ -425,11 +425,11 @@ module.exports = React.createClass({
      * @return {Promise<Reaction>}
      */
     handlePublishClick: function(evt) {
+        this.triggerFinishEvent();
+
         var reaction = _.clone(this.state.draft);
         reaction.published = true;
-        return this.saveDraft(reaction, true).then(() => {
-            this.triggerFinishEvent();
-        });
+        return this.saveDraft(reaction, true);
     },
 
     /**
@@ -441,9 +441,10 @@ module.exports = React.createClass({
      */
     handleCancelClick: function(evt) {
         return Promise.try(() => {
-            this.cancelAutosave();
+            this.triggerFinishEvent();
+
             var reaction = this.props.reaction;
-            if (reaction && reaction.id) {
+            if (reaction) {
                 if (reaction.ptime) {
                     // reaction was published before--publish it again
                     reaction = _.clone(reaction);
@@ -453,11 +454,7 @@ module.exports = React.createClass({
                     // delete saved unpublished reaction
                     return this.removeReaction(reaction);
                 }
-            } else {
-                return reaction;
             }
-        }).then((reaction) => {
-            this.triggerFinishEvent();
             return reaction;
         });
     },

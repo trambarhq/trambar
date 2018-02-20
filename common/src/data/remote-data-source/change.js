@@ -46,6 +46,10 @@ function Change(location, objects, options) {
     }
 }
 
+/**
+ * Send a pending change to remote server by triggering the attached
+ * onDispatch handler
+ */
 Change.prototype.dispatch = function() {
     if (this.dispatched || this.canceled) {
         // already sent or canceled
@@ -75,6 +79,9 @@ Change.prototype.dispatch = function() {
     });
 };
 
+/**
+ * Cancel a change, triggering the attached onCancel handler
+ */
 Change.prototype.cancel = function() {
     if (this.canceled) {
         // already canceled
@@ -85,8 +92,7 @@ Change.prototype.cancel = function() {
         clearTimeout(this.timeout);
     }
     if (this.dispatched) {
-        // the change was already sent--don't call onCancel unless
-        // onDispatch failed
+        // the change was already sent
         return;
     }
     this.onCancel(this).then(() => {
@@ -178,8 +184,13 @@ Change.prototype.apply = function(search, includeDeleted) {
             }
         }
     });
-}
+};
 
+/**
+ * Return data that should be sent to the server
+ *
+ * @return {Array<Object>}
+ */
 Change.prototype.deliverables = function() {
     var remaining = _.filter(this.objects, (object, index) => {
         return !this.removed[index];
@@ -192,7 +203,23 @@ Change.prototype.deliverables = function() {
             return _.omit(object, 'uncommitted')
         }
     });
-}
+};
+
+/**
+ * Remove deleted objects with temporary ids, returning true if there's
+ * nothing left to be saved
+ *
+ * @return {Boolean}
+ */
+Change.prototype.noop = function() {
+    this.objects = _.filter(this.objects, (object) => {
+        if (object.deleted && object.id < 1) {
+            return false;
+        }
+        return true;
+    });
+    return _.isEmpty(this.objects);
+};
 
 /**
  * Return a temporary id that can be used to identify an uncommitted object

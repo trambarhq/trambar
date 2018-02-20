@@ -121,7 +121,7 @@ module.exports = React.createClass({
     handleReactionIdentity: function(evt) {
         // use a fixed id for the first editor, so we don't lose focus
         // when the new reaction acquires an id after being saved automatically
-        if (!evt.item) {
+        if (!evt.item || evt.item.id < 1) {
             return 'reaction-top';
         }
         return `reaction-${evt.item.id}`;

@@ -69,10 +69,7 @@ module.exports = React.createClass({
         var nextState = {
             options: defaultOptions,
             commentsExpanded: this.shouldExpandComments(this.props),
-            addingComment: _.some(this.props.reactions, {
-                user_id: this.props.currentUserId,
-                published: false
-            }),
+            addingComment: false,
             isTall: false,
         };
         this.updateOptions(nextState, this.props);
@@ -90,6 +87,21 @@ module.exports = React.createClass({
             className += ' selected';
         }
         return className;
+    },
+
+    /**
+     * Return true if there's a non-published comment by the current user
+     *
+     * @return {Boolean}
+     */
+    hasUserDraft: function() {
+        return _.some(this.props.reactions, (r) => {
+            if (!r.published) {
+                if (r.user_id === this.props.currentUser.id) {
+                    return true;
+                }
+            }
+        });
     },
 
     /**
@@ -803,16 +815,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleCommentFinish: function(evt) {
-        var hasDraft = _.some(this.props.reactions, (r) => {
-            if (!r.published) {
-                if (r.user_id === this.props.currentUser.id) {
-                    return true;
-                }
-            }
-        });
-        if (!hasDraft) {
-            this.setState({ addingComment: false });
-        }
+        this.setState({ addingComment: false });
     },
 
     /**

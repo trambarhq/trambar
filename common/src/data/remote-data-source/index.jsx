@@ -1047,6 +1047,11 @@ module.exports = React.createClass({
         _.each(this.changeQueue, (earlierOp) => {
             change.merge(earlierOp);
         });
+        if (change.noop()) {
+            storage.setFinishTime();
+            storage.results = storage.objects;
+            return Promise.resolve();
+        }
         change.onDispatch = (change) => {
             var objects = change.deliverables();
             var location = change.location;
