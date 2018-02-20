@@ -468,7 +468,7 @@ module.exports = React.createClass({
             }
             search = existingSearch;
         } else {
-            newSearch = this.initializeSearch(newSearch);
+            newSearch = this.addSearch(newSearch);
 
             // look for records in cache first
             newSearch.promise = this.searchLocalCache(newSearch).then(() => {
@@ -534,7 +534,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     save: function(location, objects, options) {
-        var storage = this.initializeStorage(new Storage(location, objects, options));
+        var storage = this.addStorage(new Storage(location, objects, options));
         if (storage.isLocal()) {
             return this.storeLocalObjects(storage).then(() => {
                 this.updateRecentSearchResults(storage);
@@ -563,7 +563,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     remove: function(location, objects) {
-        var removal = this.initializeRemoval(new Removal(location, objects));
+        var removal = this.addRemoval(new Removal(location, objects));
         if (removal.isLocal()) {
             return this.storeLocalObjects(removal).then(() => {
                 this.removeFromRecentSearchResults(removal);
@@ -854,6 +854,7 @@ module.exports = React.createClass({
         if (index !== -1) {
             // move the matching search to the top
             var existingSearch = this.recentSearchResults[index];
+            existingSearch.prefetching = true;
             this.updateList('recentSearchResults', (before) => {
                 var after = _.slice(before);
                 after.splice(index, 1);
@@ -871,30 +872,7 @@ module.exports = React.createClass({
      *
      * @return {Search}
      */
-    initializeSearch: function(newSearch) {
-        /*
-        var candidates = _.map(this.recentSearchResults, (existingSearch) => {
-            if (newSearch.remote) {
-                return;
-            }
-            if (existingSearch.remote || _.isEmpty(existingSearch.results)) {
-                return;
-            }
-            if (newSearch.matchLocation(existingSearch)) {
-                if (newSearch.matchCriteriaShape(existingSearch)) {
-                    var diff = newSearch.findCriteriaDifference(existingSearch);
-
-                }
-            }
-        });
-        if (_.isEmpty(candidates)) {
-            return null;
-        }
-        candidates = _.filter(candidates)
-        candidates = _.sortBy(candidates, [ 'similarityNewToOld', 'similarityOldToNew' ]);
-        var candidate = _.last(candidates);
-        */
-
+    addSearch: function(newSearch) {
         // save the search
         this.updateList('recentSearchResults', (before) => {
             var after = _.slice(before);
@@ -907,10 +885,18 @@ module.exports = React.createClass({
         return newSearch;
     },
 
-    initializeStorage: function(newStorage) {
+    /**
+     * Add storage to list
+     *
+     * @param  {Storage} newStorage
+     *
+     * @return {Storage}
+     */
+    addStorage: function(newStorage) {
         this.updateList('recentStorageResults', (before) => {
             var after = _.slice(before);
             after.unshift(newStorage);
+            _.remove(after, { canceled: true });
             while (after.length > 32) {
                 after.pop();
             }
@@ -919,7 +905,14 @@ module.exports = React.createClass({
         return newStorage;
     },
 
-    initializeRemoval: function(newRemoval) {
+    /**
+     * Add removal operation to list
+     *
+     * @param  {Removal} newRemoval
+     *
+     * @return {Removal}
+     */
+    addRemoval: function(newRemoval) {
         this.updateList('recentRemovalResults', (before) => {
             var after = _.clone(before);
             after.unshift(newRemoval);
@@ -1057,6 +1050,7 @@ module.exports = React.createClass({
         change.onDispatch = (change) => {
             var objects = change.deliverables();
             var location = change.location;
+            storage.setStartTime();
             return this.performRemoteAction(location, 'storage', { objects }).then((objects) => {
                 return objects;
             }).finally(() => {
@@ -1071,7 +1065,6 @@ module.exports = React.createClass({
         if (this.props.hasConnection) {
             // send it if we've connectivity
             change.dispatch();
-            storage.setStartTime();
         }
         return change.promise.then((objects) => {
             if (!change.canceled) {
@@ -1208,6 +1201,7 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     searchLocalCache: function(search) {
+        var start = new Date;
         var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(false);
@@ -1218,6 +1212,8 @@ module.exports = React.createClass({
             return Promise.resolve(true);
         }
         return cache.find(search.getQuery()).then((objects) => {
+            var end = new Date;
+            console.log('Cache access: ', end - start, objects.length + ' objects');
             search.results = objects;
             return true;
         }).catch((err) => {

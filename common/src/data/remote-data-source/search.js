@@ -84,53 +84,6 @@ Search.prototype.matchCriteriaShape = function(other) {
     return false;
 };
 
-/**
- * Return an object detailing the difference in criteria, if the other search
- * is fairly similar
- *
- * @param  {Object} other
- *
- * @return {Object|null}
- */
-Search.prototype.findCriteriaDifference = function(other) {
-    var criteriaKeys = _.keys(this.criteria);
-    var diffKey, diffValue1, diffValue2;
-    for (var i = 0; i < criteriaKeys.length; i++) {
-        var key = criteriaKeys[i];
-        var value1 = this.criteria[key];
-        var value2 = other.criteria[key];
-        if (!_.isEqual(value1, value2)) {
-            if (!diffKey) {
-                diffKey = key;
-                diffValue1 = value1;
-                diffValue2 = value2;
-            } else {
-                // more than one value differ
-                return;
-            }
-        }
-    }
-    if (diffValue1 instanceof Array && diffValue2 instanceof Array) {
-        // see if the two list only differ slightly
-        if (diffValue1.length > 0 && diffValue2.length > 0) {
-            var diff21 = _.difference(diffValue2, diffValue1);
-            var similarity21 = 1 - (diff21.length / diffValue2.length);
-            if (similarity1 > 0.9) {
-                var diff12 = _.difference(diffValue1, diffValue2);
-                var similarity12 = 1 - (diff12.length / diffValue1.length);
-                return {
-                    key: diffKey,
-                    similarityToThis: similarity21,
-                    similarityToOther: similarity12,
-                    differenceFromThis: diff21,
-                    differenceFromOther: diff12,
-                };
-            }
-        }
-    }
-    return null;
-}
-
 Search.prototype.matchOptions = function(other) {
     if (this.minimum !== other.minimum) {
         return false;
