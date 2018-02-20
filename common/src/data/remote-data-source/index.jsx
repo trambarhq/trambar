@@ -1201,7 +1201,6 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     searchLocalCache: function(search) {
-        var start = new Date;
         var cache = this.props.cache;
         if (!cache) {
             return Promise.resolve(false);
@@ -1212,8 +1211,6 @@ module.exports = React.createClass({
             return Promise.resolve(true);
         }
         return cache.find(search.getQuery()).then((objects) => {
-            var end = new Date;
-            console.log('Cache access: ', end - start, objects.length + ' objects');
             search.results = objects;
             return true;
         }).catch((err) => {

@@ -34,6 +34,7 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.tables = {};
         return {
             database: null,
             recordCounts: {},
@@ -56,79 +57,36 @@ module.exports = React.createClass({
         var address = query.address;
         var schema = query.schema;
         var table = query.table;
-        var local = (schema === 'local');
-        var storeName = (local) ? 'local-data' : 'remote-data';
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                var transaction = db.transaction(storeName, 'readonly');
-                var path = (local) ? table : `${address}/${schema}/${table}`;
-                var objectStore = transaction.objectStore(storeName);
-                var results = [];
-                var criteria = query.criteria;
-                if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
-                    // look up by id
-                    var ids = criteria.id;
-                    if (ids instanceof Array) {
-                        if (!_.isEmpty(ids)) {
-                            var maxId = _.max(ids);
-                            var minId = _.min(ids);
-                            var maxKey = primaryKey(path, maxId);
-                            var minKey = primaryKey(path, minId);
-                            var range = IDBKeyRange.bound(minKey, maxKey);
-                            var req = objectStore.openCursor(range);
-                            req.onsuccess = (evt) => {
-                                var cursor = evt.target.result;
-                                if(cursor) {
-                                    var record = cursor.value;
-                                    var object = record.data;
-                                    if (_.includes(ids, object.id)) {
-                                        var index = _.sortedIndexBy(results, object, 'id');
-                                        results.splice(index, 0, object);
-                                    }
-                                    cursor.continue();
-                                } else {
-                                    resolve(results);
-                                }
-                            };
-                            req.onerror = (evt) => {
-                                resolve(results);
-                            };
-                        } else {
-                            resolve(results);
-                        }
-                    } else {
-                        var key = primaryKey(path, ids);
-                        var req = objectStore.get(key);
-                        req.onsuccess = (evt) => {
-                            var record = evt.target.result;
-                            if (record) {
-                                results.push(record.data);
-                            }
-                            resolve(results);
-                        };
-                        req.onerror = (evt) => {
-                            resolve(results);
-                        };
-                    }
+        var criteria = query.criteria;
+        return this.fetchTable(address, schema, table).then((objects) => {
+            var keyName = this.getObjectKeyName(schema);
+            var results = [];
+            if (_.isEqual(_.keys(criteria), [ keyName ])) {
+                var keys = criteria[keyName];
+                if (keys instanceof Array) {
+                    keys = _.slice(keys).sort();
                 } else {
-                    var index = objectStore.index('location');
-                    var req = index.openCursor(path);
-                    req.onsuccess = (evt) => {
-                        var cursor = evt.target.result;
-                        if(cursor) {
-                            var record = cursor.value;
-                            var object = record.data;
-                            if (LocalSearch.match(table, object, criteria)) {
-                                var index = _.sortedIndexBy(results, object, 'id');
-                                results.splice(index, 0, object);
-                            }
-                            cursor.continue();
-                        } else {
-                            resolve(results);
-                        }
-                    };
+                    keys = [ keys ];
                 }
-            });
+                // look up by sorted key
+                _.each(keys, (key) => {
+                    var keyObj = {};
+                    keyObj[keyName] = key;
+                    var index = _.sortedIndexBy(objects, keyObj, keyName);
+                    var object = objects[index];
+                    if (object && object[keyName] === key) {
+                        results.push(object);
+                    }
+                });
+                return results;
+            } else {
+                _.each(objects, (object) => {
+                    if (LocalSearch.match(table, object, criteria)) {
+                        results.push(object);
+                    }
+                });
+            }
+            return results;
         }).then((objects) => {
             LocalSearch.limit(table, objects, query.criteria);
             var readCount = this.state.readCount;
@@ -150,12 +108,12 @@ module.exports = React.createClass({
         var address = location.address;
         var schema = location.schema;
         var table = location.table;
-        var local = (schema === 'local');
-        var storeName = (local) ? 'local-data' : 'remote-data';
+        var storeName = this.getObjectStoreName(schema);
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
+                var path = this.getTablePath(address, schema, table);
+                var pk = this.getPrimaryKeyGenerator(address, schema, table);
                 var transaction = db.transaction(storeName, 'readwrite');
-                var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
                 transaction.oncomplete = (evt) => {
                     resolve(objects);
@@ -164,7 +122,7 @@ module.exports = React.createClass({
                     reject(new Error(evt.message));
                 };
                 _.each(objects, (object) => {
-                    var key = (local) ? nonumericKey(path, object.key) : primaryKey(path, object.id);
+                    var key = pk(object);
                     var record = {
                         address: address,
                         location: path,
@@ -177,6 +135,7 @@ module.exports = React.createClass({
             var writeCount = this.state.writeCount;
             writeCount += objects.length;
             this.setState({ writeCount });
+            this.updateTableEntry(address, schema, table, objects, false);
             this.updateRecordCount(storeName, 500);
             return objects;
         });
@@ -194,12 +153,12 @@ module.exports = React.createClass({
         var address = location.address;
         var schema = location.schema;
         var table = location.table;
-        var local = (schema === 'local');
-        var storeName = (local) ? 'local-data' : 'remote-data';
+        var storeName = this.getObjectStoreName(schema);
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
+                var pk = this.getPrimaryKeyGenerator(address, schema, table);
+                var path = this.getTablePath(address, schema, table);
                 var transaction = db.transaction(storeName, 'readwrite');
-                var path = (local) ? table : `${address}/${schema}/${table}`;
                 var objectStore = transaction.objectStore(storeName);
                 transaction.oncomplete = (evt) => {
                     resolve(objects);
@@ -208,7 +167,7 @@ module.exports = React.createClass({
                     reject(new Error(evt.message));
                 };
                 _.each(objects, (object) => {
-                    var key = (local) ? nonumericKey(path, object.key) : primaryKey(path, object.id);
+                    var key = pk(object);
                     objectStore.delete(key);
                 });
             });
@@ -216,6 +175,7 @@ module.exports = React.createClass({
             var deleteCount = this.state.deleteCount;
             deleteCount += objects.length;
             this.setState({ deleteCount });
+            this.updateTableEntry(address, schema, table, objects, true);
             this.updateRecordCount(storeName, 500);
             return objects;
         });
@@ -306,6 +266,93 @@ module.exports = React.createClass({
     },
 
     /**
+     * Update list of objects that have been loaded
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     * @param  {Array<Objects>} objects
+     * @param  {Boolean} remove
+     */
+    updateTableEntry: function(address, schema, table, objects, remove) {
+        var tbl = this.getTableEntry(address, schema, table);
+        if (tbl.objects) {
+            var keyName = this.getObjectKeyName(schema);
+            _.each(objects, (object) => {
+                var index = _.sortedIndexBy(tbl.objects, object, keyName);
+                var target = tbl.objects[index];
+                if (target && target[keyName] === object[keyName]) {
+                    if (!remove) {
+                        tbl.objects[index] = object;
+                    } else {
+                        tbl.objects.splice(index);
+                    }
+                } else {
+                    if (!remove) {
+                        tbl.objects.splice(index, 0, object);
+                    }
+                }
+            });
+        }
+    },
+
+    /**
+     * Fetch cached rows of a table
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    fetchTable: function(address, schema, table) {
+        var tbl = this.getTableEntry(address, schema, table);
+        if (!tbl.promise) {
+            tbl.promise = this.loadTable(address, schema, table).then((objects) => {
+                tbl.objects = objects;
+                return tbl.objects;
+            });
+        }
+        return tbl.promise;
+    },
+
+    /**
+     * Load all rows for a table into memory
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Promise<Object>}
+     */
+    loadTable: function(address, schema, table) {
+        return this.open().then((db) => {
+            return new Promise((resolve, reject) => {
+                var storeName = this.getObjectStoreName(schema);
+                var keyName = this.getObjectKeyName(schema);
+                var transaction = db.transaction(storeName, 'readonly');
+                var objectStore = transaction.objectStore(storeName);
+                var index = objectStore.index('location');
+                var path = this.getTablePath(address, schema, table);
+                var req = index.openCursor(path);
+                var results = [];
+                req.onsuccess = (evt) => {
+                    var cursor = evt.target.result;
+                    if(cursor) {
+                        var record = cursor.value;
+                        var object = record.data;
+                        var index = _.sortedIndexBy(results, object, keyName);
+                        results.splice(index, 0, object);
+                        cursor.continue();
+                    } else {
+                        resolve(results);
+                    }
+                };
+            });
+        });
+    },
+
+    /**
      * Open database, creating schema if it doesn't exist already
      *
      * @return {Promise<IDBDatabase>}
@@ -337,6 +384,95 @@ module.exports = React.createClass({
             });
         }
         return this.databasePromise;
+    },
+
+    /**
+     * Return name of object store
+     *
+     * @param  {String} schema
+     *
+     * @return {String}
+     */
+    getObjectStoreName: function(schema) {
+        if (schema === 'local') {
+            return 'local-data';
+        } else {
+            return 'remote-data';
+        }
+    },
+
+    /**
+     * Return name of object key
+     *
+     * @param  {String} schema
+     *
+     * @return {String}
+     */
+    getObjectKeyName: function(schema) {
+        if (schema === 'local') {
+            return 'key';
+        } else {
+            return 'id';
+        }
+    },
+
+    /**
+     * Return path to table
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {String}
+     */
+    getTablePath: function(address, schema, table) {
+        var path = (schema === 'local') ? table : `${address}/${schema}/${table}`;
+        return path;
+    },
+
+    /**
+     * Return a function for generating primary key
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Function}
+     */
+    getPrimaryKeyGenerator: function(address, schema, table) {
+        var path = this.getTablePath(address, schema, table);
+        if (schema === 'local') {
+            return (object) => {
+                return `${path}/${object.key}`;
+            };
+        } else {
+            return (object) => {
+                var idStr = ('0000000000' + object.id).slice(-10);
+                return `${path}/${idStr}`;
+            };
+        }
+    },
+
+    /**
+     * Return in-memory object for storing table rows
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Object}
+     */
+    getTableEntry: function(address, schema, table) {
+        var path = (schema === 'local') ? [ 'local', table ] : [ 'remote', address, schema, table ];
+        var tbl = _.get(this.tables, path);
+        if (!tbl) {
+            tbl = {
+                promise: null,
+                objects: null,
+            };
+            _.set(this.tables, path, tbl);
+        }
+        return tbl;
     },
 
     /**
@@ -402,12 +538,3 @@ module.exports = React.createClass({
         );
     },
 });
-
-function primaryKey(path, id) {
-    var idStr = ('0000000000' + id).slice(-10);
-    return path + '/' + idStr;
-}
-
-function nonumericKey(path, key) {
-    return path + '/' + key;
-}
