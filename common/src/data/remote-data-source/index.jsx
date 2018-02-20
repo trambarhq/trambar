@@ -1468,6 +1468,7 @@ module.exports = React.createClass({
                     }
                 }
             });
+            var fetched = [];
             Promise.map(dirtySearches, (search) => {
                 // prefetching was cancelled
                 if (this.prefetchTimeout !== prefetchTimeout) {
@@ -1476,10 +1477,27 @@ module.exports = React.createClass({
                 if (!search.dirty) {
                     return false;
                 }
+                // don't prefetch a search if the same component has done a
+                // search with the same shape more recently
+                var shape = search.getCriteriaShape();
+                var similar = _.find(fetched, (f) => {
+                    if (_.includes(search.by, f.component)) {
+                        if (_.isEqual(shape, f.shape)) {
+                            return true;
+                        }
+                    }
+                });
+                if (similar) {
+                    return false;
+                }
                 console.log('Prefetching', search.getQuery());
-                return this.searchRemoteDatabase(search, true);
+                return this.searchRemoteDatabase(search, true).then(() => {
+                    _.each(search.by, (component) => {
+                        fetched.push({ component, shape });
+                    });
+                });
             }, { concurrency: 4 });
-        }, 1000);
+        }, 200);
     },
 
     /**

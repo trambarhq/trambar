@@ -6,7 +6,7 @@ module.exports = Search;
 
 function Search(query) {
     Operation.call(this, query);
-    this.criteria = removeUndefined(query.criteria);
+    this.criteria = query.criteria;
     this.minimum = query.minimum;
     this.expected = query.expected;
     this.remote = query.remote;
@@ -15,6 +15,10 @@ function Search(query) {
     this.dirty = false;
     this.updating = false;
     this.lastRetrieved = 0;
+
+    // filter out bad values
+    this.criteria = removeUndefined(this.criteria);
+    this.criteria = removeTemporaryIds(this.criteria);
 
     if (typeof(this.expected) !== 'number') {
         // if expected object count isn't specified, try inferring it from
@@ -35,6 +39,22 @@ Search.prototype = Object.create(Operation.prototype)
  */
 Search.prototype.getQuery = function() {
     return _.pick(this, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote', 'committed');
+};
+
+/**
+ * Return the types of properties in the criteria object
+ *
+ * @return {Object}
+ */
+Search.prototype.getCriteriaShape = function() {
+    var shape = _.mapValues(this.criteria, (value) => {
+        if (value != null) {
+            return value.constructor;
+        } else {
+            return null;
+        }
+    });
+    return shape;
 };
 
 /**
@@ -66,22 +86,6 @@ Search.prototype.match = function(other) {
  */
 Search.prototype.matchCriteria = function(other) {
     return _.isEqual(this.criteria, other.criteria);
-};
-
-/**
- * Return true if other object is the criteria with the same fields
- *
- * @param  {Object} other
- *
- * @return {Boolean}
- */
-Search.prototype.matchCriteriaShape = function(other) {
-    var criteriaKeys1 = _.keys(this.criteria).sort();
-    var criteriaKeys2 = _.keys(other.criteria).sort();
-    if (_.isEqual(criteriaKeys1, criteriaKeys2)) {
-        return true;
-    }
-    return false;
 };
 
 Search.prototype.matchOptions = function(other) {
@@ -206,14 +210,14 @@ function countCriteria(criteria, name) {
             if (value instanceof Array) {
                 return value.length;
             } else {
-                return 1;
+                return (value) ? 1 : 0;
             }
         }
     }
 }
 
 /**
- * Remove properties from objects that are undefined (some _.isEqual() would)
+ * Remove properties from objects that are undefined
  *
  * @param  {Object} object
  *
@@ -247,4 +251,29 @@ function removeUndefined(object) {
     } else {
         return object;
     }
+}
+
+/**
+ * Return ids that is less than one from criteria object
+ *
+ * @param  {Object} criteria
+ *
+ * @return {Object}
+ */
+function removeTemporaryIds(criteria) {
+    return _.mapValues(criteria, (value, name) => {
+        if (value instanceof Array) {
+            if (/(^|_)ids?$/.test(name)) {
+                value = _.filter(value, (v) => {
+                    if (typeof(v) === 'number') {
+                        if (v < 1) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            }
+        }
+        return value;
+    });
 }
