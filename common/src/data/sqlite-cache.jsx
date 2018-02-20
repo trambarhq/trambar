@@ -60,55 +60,38 @@ module.exports = React.createClass({
         var address = query.address;
         var schema = query.schema;
         var table = query.table;
-        var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
         var criteria = query.criteria;
-        var sql, params
-        if (schema === 'local') {
-            sql = `
-                SELECT json FROM ${cacheTableName}
-                WHERE table_name = ?
-            `;
-            params = [ table ];
-            if (criteria && criteria.key !== undefined && _.size(criteria) === 1) {
-                // look up by key
-                sql += ` AND key = ?`;
-                params.push(criteria.key);
-                criteria = null;
-            }
-            sql += ' ORDER BY key';
-        } else {
-            sql = `
-                SELECT json FROM ${cacheTableName}
-                WHERE address = ?
-                AND schema_name = ?
-                AND table_name = ?
-            `;
-            params = [ address, schema, table ];
-            if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
-                // look up by id
-                var ids = criteria.id;
-                if (ids instanceof Array) {
-                    sql += ` AND id IN (${_.fill(_.clone(ids), '?').join(',')})`;
-                    params.push.apply(params, ids);
+        return this.fetchTable(address, schema, table).then((objects) => {
+            var keyName = this.getObjectKeyName(schema);
+            var results = [];
+            if (_.isEqual(_.keys(criteria), [ keyName ])) {
+                var keys = criteria[keyName];
+                if (keys instanceof Array) {
+                    keys = _.slice(keys).sort();
                 } else {
-                    sql += ` AND id = ?`;
-                    params.push(ids);
+                    keys = [ keys ];
                 }
-                criteria = null;
-            }
-            sql += ' ORDER BY id';
-        }
-        return this.query(sql, params).then((rows) => {
-            var objects = [];
-            for (var i = 0; i < rows.length; i++) {
-                var object = decodeJSON(rows[i].json);
-                if (object) {
-                    if (!criteria || LocalSearch.match(table, object, criteria)) {
-                        objects.push(object);
+                // look up by sorted key
+                _.each(keys, (key) => {
+                    var keyObj = {};
+                    keyObj[keyName] = key;
+                    var index = _.sortedIndexBy(objects, keyObj, keyName);
+                    var object = objects[index];
+                    if (object && object[keyName] === key) {
+                        results.push(object);
                     }
-                }
+                });
+                return results;
+            } else {
+                _.each(objects, (object) => {
+                    if (LocalSearch.match(table, object, criteria)) {
+                        results.push(object);
+                    }
+                });
             }
-            LocalSearch.limit(table, objects, criteria);
+            return results;
+        }).then((objects) => {
+            LocalSearch.limit(table, objects, query.criteria);
             var readCount = this.state.readCount;
             readCount += objects.length;
             this.setState({ readCount });
@@ -129,12 +112,11 @@ module.exports = React.createClass({
         var schema = location.schema;
         var table = location.table;
         var statements = [], paramSets = [];
-        var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
         _.each(objects, (object) => {
             var json = JSON.stringify(object);
             if (schema === 'local') {
                 statements.push(`
-                    INSERT OR REPLACE INTO ${cacheTableName}
+                    INSERT OR REPLACE INTO local_data
                     (table_name, key, json)
                     VALUES (?, ?, ?)
                 `);
@@ -142,7 +124,7 @@ module.exports = React.createClass({
             } else {
                 var rtime = (new Date(object.rtime)).getTime();
                 statements.push(`
-                    INSERT OR REPLACE INTO ${cacheTableName}
+                    INSERT OR REPLACE INTO remote_data
                     (address, schema_name, table_name, id, json, rtime)
                     VALUES (?, ?, ?, ?, ?, ?)
                 `);
@@ -153,7 +135,8 @@ module.exports = React.createClass({
             var writeCount = this.state.writeCount;
             writeCount += objects.length;
             this.setState({ writeCount });
-            this.updateRecordCount(cacheTableName, 500);
+            this.updateTableEntry(address, schema, table, objects, false);
+            this.updateRecordCount(schema, 500);
             return objects;
         });
     },
@@ -170,18 +153,17 @@ module.exports = React.createClass({
         var address = location.address;
         var schema = location.schema;
         var table = location.table;
-        var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
         return Promise.mapSeries(objects, (object) => {
             var sql, params;
             if (schema === 'local') {
                 sql = `
-                    DELETE FROM ${cacheTableName}
+                    DELETE FROM local_data
                     WHERE table_name = ? AND key = ?
                 `;
                 params = [ table, object.key ];
             } else {
                 sql = `
-                    DELETE FROM ${cacheTableName}
+                    DELETE FROM remote_data
                     WHERE address = ?
                     AND schema_name = ?
                     AND table_name = ?
@@ -194,7 +176,8 @@ module.exports = React.createClass({
             var deleteCount = this.state.deleteCount;
             deleteCount += objects.length;
             this.setState({ deleteCount });
-            this.updateRecordCount(cacheTableName, 500);
+            this.updateTableEntry(address, schema, table, objects, true);
+            this.updateRecordCount(schema, 500);
             return objects;
         });
     },
@@ -301,6 +284,62 @@ module.exports = React.createClass({
     },
 
     /**
+     * Fetch cached rows of a table
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    fetchTable: function(address, schema, table) {
+        var tbl = this.getTableEntry(address, schema, table);
+        if (!tbl.promise) {
+            tbl.promise = this.loadTable(address, schema, table).then((objects) => {
+                tbl.objects = objects;
+                return tbl.objects;
+            });
+        }
+        return tbl.promise;
+    },
+
+    /**
+     * Load all rows for a table into memory
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Promise<Object>}
+     */
+    loadTable: function(address, schema, table) {
+        var sql, params;
+        if (schema === 'local') {
+            sql = `
+                SELECT json FROM local_data
+                WHERE table_name = ?
+                ORDER BY key
+            `;
+            params = [ table ];
+        } else {
+            sql = `
+                SELECT json FROM remote_data
+                WHERE address = ?
+                AND schema_name = ?
+                AND table_name = ?
+                ORDER BY id
+            `;
+            params = [ address, schema, table ];
+        }
+        return this.query(sql, params).then((rows) => {
+            var objects = _.map(rows, (row) => {
+                return decodeJSON(row.json);
+            });
+            return objects;
+        });
+    },
+
+    /**
      * Open database, creating schema if it doesn't exist already
      *
      * @return {Promise<Database>}
@@ -377,22 +416,91 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return name of object key
+     *
+     * @param  {String} schema
+     *
+     * @return {String}
+     */
+    getObjectKeyName: function(schema) {
+        if (schema === 'local') {
+            return 'key';
+        } else {
+            return 'id';
+        }
+    },
+
+    /**
+     * Return in-memory object for storing table rows
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Object}
+     */
+    getTableEntry: function(address, schema, table) {
+        var path = (schema === 'local') ? [ 'local', table ] : [ 'remote', address, schema, table ];
+        var tbl = _.get(this.tables, path);
+        if (!tbl) {
+            tbl = {
+                promise: null,
+                objects: null,
+            };
+            _.set(this.tables, path, tbl);
+        }
+        return tbl;
+    },
+
+    /**
+     * Update list of objects that have been loaded
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     * @param  {Array<Objects>} objects
+     * @param  {Boolean} remove
+     */
+    updateTableEntry: function(address, schema, table, objects, remove) {
+        var tbl = this.getTableEntry(address, schema, table);
+        if (tbl.objects) {
+            var keyName = this.getObjectKeyName(schema);
+            _.each(objects, (object) => {
+                var index = _.sortedIndexBy(tbl.objects, object, keyName);
+                var target = tbl.objects[index];
+                if (target && target[keyName] === object[keyName]) {
+                    if (!remove) {
+                        tbl.objects[index] = object;
+                    } else {
+                        tbl.objects.splice(index);
+                    }
+                } else {
+                    if (!remove) {
+                        tbl.objects.splice(index, 0, object);
+                    }
+                }
+            });
+        }
+    },
+
+    /**
      * Count the number of rows in the table (on a time delay)
      *
-     * @param  {String} tableName
+     * @param  {String} schema
      * @param  {Number} delay
      */
-    updateRecordCount: function(tableName, delay) {
-        var timeoutPath = `updateRecordCountTimeouts.${tableName}`;
+    updateRecordCount: function(schema, delay) {
+        var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
+        var timeoutPath = `updateRecordCountTimeouts.${cacheTableName}`;
         var timeout = _.get(this, timeoutPath);
         if (timeout) {
             clearTimeout(timeout);
         }
         timeout = setTimeout(() => {
-            var sql = `SELECT COUNT(*) as count FROM ${tableName}`;
+            var sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
             this.query(sql).then((rows) => {
                 var recordCounts = _.clone(this.state.recordCounts);
-                recordCounts[tableName] = rows[0].count;
+                recordCounts[cacheTableName] = rows[0].count;
                 this.setState({ recordCounts });
             }).catch((err) => {
             });
@@ -405,8 +513,8 @@ module.exports = React.createClass({
      * Count the number of rows in the object stores on mount
      */
     componentDidMount: function() {
-        this.updateRecordCount('remote_data');
-        this.updateRecordCount('local_data');
+        this.updateRecordCount('remote');
+        this.updateRecordCount('local');
     },
 
     /**

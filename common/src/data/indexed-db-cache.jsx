@@ -108,11 +108,11 @@ module.exports = React.createClass({
         var address = location.address;
         var schema = location.schema;
         var table = location.table;
-        var storeName = this.getObjectStoreName(schema);
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
                 var path = this.getTablePath(address, schema, table);
                 var pk = this.getPrimaryKeyGenerator(address, schema, table);
+                var storeName = this.getObjectStoreName(schema);
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
                 transaction.oncomplete = (evt) => {
@@ -136,7 +136,7 @@ module.exports = React.createClass({
             writeCount += objects.length;
             this.setState({ writeCount });
             this.updateTableEntry(address, schema, table, objects, false);
-            this.updateRecordCount(storeName, 500);
+            this.updateRecordCount(schema, 500);
             return objects;
         });
     },
@@ -153,11 +153,11 @@ module.exports = React.createClass({
         var address = location.address;
         var schema = location.schema;
         var table = location.table;
-        var storeName = this.getObjectStoreName(schema);
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
                 var pk = this.getPrimaryKeyGenerator(address, schema, table);
                 var path = this.getTablePath(address, schema, table);
+                var storeName = this.getObjectStoreName(schema);
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
                 transaction.oncomplete = (evt) => {
@@ -176,7 +176,7 @@ module.exports = React.createClass({
             deleteCount += objects.length;
             this.setState({ deleteCount });
             this.updateTableEntry(address, schema, table, objects, true);
-            this.updateRecordCount(storeName, 500);
+            this.updateRecordCount(schema, 500);
             return objects;
         });
     },
@@ -195,9 +195,9 @@ module.exports = React.createClass({
      * @return {Promise<Number>}
      */
     clean: function(criteria) {
-        var storeName = 'remote-data';
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
+                var storeName = this.getObjectStoreName('remote');
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
                 if (criteria.address !== undefined) {
@@ -259,96 +259,9 @@ module.exports = React.createClass({
                 var deleteCount = this.state.deleteCount;
                 deleteCount += count;
                 this.setState({ deleteCount });
-                this.updateRecordCount(storeName, 500);
+                this.updateRecordCount('remote', 500);
             }
             return count;
-        });
-    },
-
-    /**
-     * Update list of objects that have been loaded
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     * @param  {String} table
-     * @param  {Array<Objects>} objects
-     * @param  {Boolean} remove
-     */
-    updateTableEntry: function(address, schema, table, objects, remove) {
-        var tbl = this.getTableEntry(address, schema, table);
-        if (tbl.objects) {
-            var keyName = this.getObjectKeyName(schema);
-            _.each(objects, (object) => {
-                var index = _.sortedIndexBy(tbl.objects, object, keyName);
-                var target = tbl.objects[index];
-                if (target && target[keyName] === object[keyName]) {
-                    if (!remove) {
-                        tbl.objects[index] = object;
-                    } else {
-                        tbl.objects.splice(index);
-                    }
-                } else {
-                    if (!remove) {
-                        tbl.objects.splice(index, 0, object);
-                    }
-                }
-            });
-        }
-    },
-
-    /**
-     * Fetch cached rows of a table
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     * @param  {String} table
-     *
-     * @return {Promise<Array<Object>>}
-     */
-    fetchTable: function(address, schema, table) {
-        var tbl = this.getTableEntry(address, schema, table);
-        if (!tbl.promise) {
-            tbl.promise = this.loadTable(address, schema, table).then((objects) => {
-                tbl.objects = objects;
-                return tbl.objects;
-            });
-        }
-        return tbl.promise;
-    },
-
-    /**
-     * Load all rows for a table into memory
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     * @param  {String} table
-     *
-     * @return {Promise<Object>}
-     */
-    loadTable: function(address, schema, table) {
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                var storeName = this.getObjectStoreName(schema);
-                var keyName = this.getObjectKeyName(schema);
-                var transaction = db.transaction(storeName, 'readonly');
-                var objectStore = transaction.objectStore(storeName);
-                var index = objectStore.index('location');
-                var path = this.getTablePath(address, schema, table);
-                var req = index.openCursor(path);
-                var results = [];
-                req.onsuccess = (evt) => {
-                    var cursor = evt.target.result;
-                    if(cursor) {
-                        var record = cursor.value;
-                        var object = record.data;
-                        var index = _.sortedIndexBy(results, object, keyName);
-                        results.splice(index, 0, object);
-                        cursor.continue();
-                    } else {
-                        resolve(results);
-                    }
-                };
-            });
         });
     },
 
@@ -476,12 +389,100 @@ module.exports = React.createClass({
     },
 
     /**
+     * Update list of objects that have been loaded
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     * @param  {Array<Objects>} objects
+     * @param  {Boolean} remove
+     */
+    updateTableEntry: function(address, schema, table, objects, remove) {
+        var tbl = this.getTableEntry(address, schema, table);
+        if (tbl.objects) {
+            var keyName = this.getObjectKeyName(schema);
+            _.each(objects, (object) => {
+                var index = _.sortedIndexBy(tbl.objects, object, keyName);
+                var target = tbl.objects[index];
+                if (target && target[keyName] === object[keyName]) {
+                    if (!remove) {
+                        tbl.objects[index] = object;
+                    } else {
+                        tbl.objects.splice(index);
+                    }
+                } else {
+                    if (!remove) {
+                        tbl.objects.splice(index, 0, object);
+                    }
+                }
+            });
+        }
+    },
+
+    /**
+     * Fetch cached rows of a table
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    fetchTable: function(address, schema, table) {
+        var tbl = this.getTableEntry(address, schema, table);
+        if (!tbl.promise) {
+            tbl.promise = this.loadTable(address, schema, table).then((objects) => {
+                tbl.objects = objects;
+                return tbl.objects;
+            });
+        }
+        return tbl.promise;
+    },
+
+    /**
+     * Load all rows for a table into memory
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} table
+     *
+     * @return {Promise<Object>}
+     */
+    loadTable: function(address, schema, table) {
+        return this.open().then((db) => {
+            return new Promise((resolve, reject) => {
+                var storeName = this.getObjectStoreName(schema);
+                var keyName = this.getObjectKeyName(schema);
+                var transaction = db.transaction(storeName, 'readonly');
+                var objectStore = transaction.objectStore(storeName);
+                var index = objectStore.index('location');
+                var path = this.getTablePath(address, schema, table);
+                var req = index.openCursor(path);
+                var results = [];
+                req.onsuccess = (evt) => {
+                    var cursor = evt.target.result;
+                    if(cursor) {
+                        var record = cursor.value;
+                        var object = record.data;
+                        var index = _.sortedIndexBy(results, object, keyName);
+                        results.splice(index, 0, object);
+                        cursor.continue();
+                    } else {
+                        resolve(results);
+                    }
+                };
+            });
+        });
+    },
+
+    /**
      * Count the number of rows in the object store (on a time delay)
      *
-     * @param  {String} storeName
+     * @param  {String} schema
      * @param  {Number} delay
      */
-    updateRecordCount: function(storeName, delay) {
+    updateRecordCount: function(schema, delay) {
+        var storeName = this.getObjectStoreName(schema);
         var timeoutPath = `updateRecordCountTimeouts.${storeName}`;
         var timeout = _.get(this, timeoutPath);
         if (timeout) {
@@ -508,8 +509,8 @@ module.exports = React.createClass({
      * Count the number of rows in the object stores on mount
      */
     componentDidMount: function() {
-        this.updateRecordCount('remote-data');
-        this.updateRecordCount('local-data');
+        this.updateRecordCount('remote');
+        this.updateRecordCount('local');
     },
 
     /**
