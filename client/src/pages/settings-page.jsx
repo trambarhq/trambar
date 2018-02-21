@@ -481,7 +481,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         var db = this.props.database.use({ schema, by: this });
         return db.saveOne({ table: 'user' }, user, options).then((user) => {
             // start file upload
-            this.props.payloads.dispatch(schema, user);
+            this.props.payloads.dispatch(user);
             return user;
         });
     },

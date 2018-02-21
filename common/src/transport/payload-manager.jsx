@@ -66,12 +66,20 @@ module.exports = React.createClass({
      * Add a payload
      *
      * @param  {String} type
+     * @param  {Object|undefined} destination
      *
      * @return {Payload}
      */
-    add: function(type) {
+    add: function(type, destination) {
+        // the payload goes to the server and schema indicated by the current
+        // route unless specified otherwise
+        if (!destination) {
+            destination = {};
+        }
         var params = this.props.route.parameters;
-        var payload = new Payload(params.address, params.schema || 'global', type);
+        var address = destination.address || params.address;
+        var schema = destination.schema || params.schema || 'global';
+        var payload = new Payload(address, schema, type);
         payload.onUploadProgress = this.handleUploadProgress;
         payload.onUploadComplete = this.handleUploadComplete;
         this.updateList('payloads', (before) => {

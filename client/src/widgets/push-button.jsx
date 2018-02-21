@@ -29,6 +29,7 @@ function FileButton(props) {
         value: '',
         disabled: props.disabled,
         multiple: props.multiple,
+        accept: props.accept,
         onChange: props.onChange,
     };
     var classNames = [ 'push-button' ];

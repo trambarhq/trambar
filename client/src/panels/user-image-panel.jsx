@@ -3,8 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
-var BlobManager = require('transport/blob-manager');
-var MediaLoader = require('media/media-loader');
+var ComponentRefs = require('utils/component-refs');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
@@ -17,7 +16,7 @@ var UpdateCheck = require('mixins/update-check');
 var SettingsPanel = require('widgets/settings-panel');
 var PushButton = require('widgets/push-button');
 var ImageEditor = require('editors/image-editor');
-var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
+var MediaImporter = require('editors/media-importer');
 
 require('./user-image-panel.scss');
 
@@ -38,9 +37,10 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        return {
-            capturing: false
-        };
+        this.components = ComponentRefs({
+            importer: MediaImporter
+        })
+        return {};
     },
 
     /**
@@ -75,23 +75,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Replace or add image to user object
-     *
-     * @param  {Object} resource
-     */
-    setImage: function(resource) {
-        var resources = this.getUserProperty('details.resources');
-        var resourcesAfter = _.slice(resources);
-        var index = _.findIndex(resourcesAfter, { type: 'image' });
-        if (index !== -1) {
-            resourcesAfter[index] = resource;
-        } else {
-            resourcesAfter.push(resource);
-        }
-        this.setUserProperty('details.resources', resourcesAfter);
-    },
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -105,7 +88,7 @@ module.exports = React.createClass({
                 </header>
                 <body>
                     {this.renderProfilePicture()}
-                    {this.renderDialogBox()}
+                    {this.renderMediaImporter()}
                 </body>
                 <footer>
                     {this.renderButtons()}
@@ -145,19 +128,24 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render dialogbox for capturing picture through MediaStream API
+     * Render media importer
      *
      * @return {ReactElement}
      */
-    renderDialogBox: function() {
+    renderMediaImporter: function() {
+        var setters = this.components.setters;
+        var resources = _.get(this.props.currentUser, 'details.resources', []);
         var props = {
-            show: this.state.capturing,
-            payloads: this.props.payloads,
+            ref: setters.importer,
+            types: [ 'image' ],
+            limit: 1,
+            schema: 'global',
             locale: this.props.locale,
-            onCapture: this.handlePhotoCapture,
-            onCancel: this.handleCaptureCancel,
+            theme: this.props.theme,
+            payloads: this.props.payloads.override({ schema: 'global' }),
+            onChange: this.handleChange,
         };
-        return <PhotoCaptureDialogBox {...props} />
+        return <MediaImporter {...props} />
     },
 
     /**
@@ -181,6 +169,7 @@ module.exports = React.createClass({
         var selectProps = {
             label: t('user-image-select'),
             highlighted: !hasPicture,
+            accept: 'image/*',
             onChange: this.handleFileChange,
         };
         return (
@@ -215,26 +204,17 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleTakeClick: function(evt) {
-        this.setState({ capturing: true });
+        this.components.importer.capture('image');
     },
 
     /**
-     * Called when user has taken a photo
+     * Called when a file is selected
      *
-     * @param  {Object} evt
+     * @param  {Event} evt
      */
-    handlePhotoCapture: function(evt) {
-        this.setImage(evt.resource);
-        this.setState({ capturing: false });
-    },
-
-    /**
-     * Called when user cancel photo taking
-     *
-     * @param  {Object} evt
-     */
-    handleCaptureCancel: function(evt) {
-        this.setState({ capturing: false });
+    handleFileChange: function(evt) {
+        var files = evt.target.files;
+        this.components.importer.importFiles(files);
     },
 
     /**
@@ -243,31 +223,26 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleImageChange: function(evt) {
-        this.setImage(evt.resource);
+        var resources = this.getUserProperty('details.resources');
+        var resourcesAfter = _.slice(resources);
+        var index = _.findIndex(resourcesAfter, { type: 'image' });
+        if (index !== -1) {
+            resourcesAfter[index] = evt.resource;
+        } else {
+            resourcesAfter.push(evt.resource);
+        }
+        this.setUserProperty('details.resources', resourcesAfter);
     },
 
     /**
-     * Called when user selects a file
+     * Called when MediaImporter has imported an image
      *
-     * @param  {Event} evt
+     * @param  {Object} evt
+     *
+     * @return {Promise}
      */
-    handleFileChange: function(evt) {
-        var file = evt.target.files[0];
-        if (file) {
-            var format = _.last(_.split(file.type, '/'));
-            var blobURL = BlobManager.manage(file);
-            return MediaLoader.loadImage(blobURL).then((image) => {
-                var resource = {
-                    type: 'image',
-                    format: format,
-                    filename: file.name,
-                    file: blobURL,
-                    width: image.naturalWidth,
-                    height: image.naturalHeight,
-                };
-                this.setImage(resource);
-                return null;
-            });
-        }
-    }
+    handleChange: function(evt) {
+        this.setUserProperty('details.resources', evt.resources);
+        return Promise.resolve();
+    },
 });

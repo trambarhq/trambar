@@ -784,7 +784,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (process.env.PLATFORM == 'browser') {
             return (
                 <div className="section buttons">
-                    <h2>{t('start-projects')}</h2>
+                    <h2>{projects ? t('start-projects') : ''}</h2>
                     <Scrollable>
                         {this.renderEmptyMessage()}
                         {_.map(projects, this.renderProjectButton)}

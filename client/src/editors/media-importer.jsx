@@ -10,6 +10,7 @@ var FrameGrabber = require('media/frame-grabber');
 var QuickStart = require('media/quick-start');
 var BlobStream = require('transport/blob-stream');
 var BlobManager = require('transport/blob-manager');
+var ResourceTypes = require('objects/types/resource-types');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -32,6 +33,8 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         resources: PropTypes.arrayOf(PropTypes.object),
+        types: PropTypes.arrayOf(PropTypes.oneOf(ResourceTypes)),
+        limit: PropTypes.number,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -43,6 +46,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            types: ResourceTypes,
+            limit: Infinity,
+        };
+    },
+
+    /**
      * Return initial state of component
      *
      * @return {Object}
@@ -51,6 +66,17 @@ module.exports = React.createClass({
         return {
             capturing: null,
         };
+    },
+
+    /**
+     * Return true if a media type is acceptable
+     *
+     * @param  {String} type
+     *
+     * @return {Boolean}
+     */
+    isAcceptable: function(type) {
+        return _.includes(this.props.types, type);
     },
 
     /**
@@ -70,173 +96,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Attach non-file drag-and-drop contents
-     *
-     * @param  {Array<DataTransferItem>} items
-     *
-     * @return {Promise}
-     */
-    importDataItems: function(items) {
-        var stringItems = _.filter(items, (item) => {
-            if (item.kind === 'string') {
-                return /^text\/(html|uri-list)/.test(item.type);
-            }
-        });
-        // since items are ephemeral, we need to call getAsString() on each
-        // of them at this point (and not in a callback)
-        var stringPromises = {};
-        _.each(stringItems, (item) => {
-            stringPromises[item.type] = retrieveDataItemText(item);
-        });
-        return Promise.props(stringPromises).then((strings) => {
-            var html = strings['text/html'];
-            var url = strings['text/uri-list'];
-            if (url) {
-                // see if it's an image being dropped
-                var isImage = /<img\b/i.test(html);
-                if (isImage) {
-                    return MediaLoader.loadImage(url).then((image) => {
-                        var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                        return {
-                            type: 'image',
-                            external_url: url,
-                            filename: filename,
-                            width: image.naturalWidth,
-                            height: image.naturalHeight,
-                        };
-                    }).catch((err) => {
-                        // running into cross-site restrictions is quite likely here
-                        console.log(`Unable to load image: ${url}`);
-                    });
-                } else {
-                    var payload = this.props.payloads.add('website');
-                    payload.attachURL(url, 'poster');
-                    return {
-                        type: 'website',
-                        payload_token: payload.token,
-                        url: url,
-                        title: getInnerText(html),
-                    };
-                }
-            }
-        }).then((res) => {
-            if (res) {
-                return this.addResources([ res ]);
-            }
-        });
-    },
-
-    /**
-     * Render component
-     *
-     * @return {ReactELement}
-     */
-    render: function() {
-        return (
-            <div>
-                {this.renderPhotoDialog()}
-                {this.renderAudioDialog()}
-                {this.renderVideoDialog()}
-            </div>
-        );
-    },
-
-    /**
-     * Render dialogbox for capturing picture through MediaStream API
-     *
-     * @return {ReactElement}
-     */
-    renderPhotoDialog: function() {
-        var props = {
-            show: (this.state.capturing === 'image'),
-            payloads: this.props.payloads,
-            locale: this.props.locale,
-            onCapture: this.handleCapture,
-            onCancel: this.handleCaptureCancel,
-        };
-        return <PhotoCaptureDialogBox {...props} />
-    },
-
-    /**
-     * Render dialogbox for capturing video through MediaStream API
-     *
-     * @return {ReactElement}
-     */
-    renderVideoDialog: function() {
-        var props = {
-            show: (this.state.capturing === 'video'),
-            payloads: this.props.payloads,
-            locale: this.props.locale,
-            onCapture: this.handleCapture,
-            onCancel: this.handleCaptureCancel,
-        };
-        return <VideoCaptureDialogBox {...props} />
-    },
-
-    /**
-     * Render dialogbox for capturing video through MediaStream API
-     *
-     * @return {ReactElement}
-     */
-    renderAudioDialog: function() {
-        var props = {
-            show: (this.state.capturing === 'audio'),
-            payloads: this.props.payloads,
-            locale: this.props.locale,
-            onCapture: this.handleCapture,
-            onCancel: this.handleCaptureCancel,
-        };
-        return <AudioCaptureDialogBox {...props} />
-    },
-
-    componentWillUnmount: function() {
-        if (this.state.capturing) {
-            if (this.props.onCaptureEnd) {
-                this.props.onCaptureEnd({
-                    type: 'captureend',
-                    target: this,
-                    mediaType: this.state.capturing,
-                });
-            }
-        }
-    },
-
-    /**
-     * Call onChange handler
-     *
-     * @param  {Array<Object>} resources
-     * @param  {Number} selection
-     *
-     * @return {Promise}
-     */
-    triggerChangeEvent: function(resources, selection) {
-        return this.props.onChange({
-            type: 'change',
-            target: this,
-            resources,
-            selection,
-        });
-    },
-
-    /**
-     * Add new resources
-     *
-     * @param  {Array<Object>} newResources
-     *
-     * @return {Promise<Number|undefined>}
-     */
-    addResources: function(newResources) {
-        if (_.isEmpty(newResources)) {
-            return Promise.resolve();
-        }
-        var path = 'details.resources'
-        var resourcesBefore = this.props.resources || [];
-        var resources = _.concat(resourcesBefore, newResources);
-        var firstIndex = resourcesBefore.length;
-        return this.triggerChangeEvent(resources, firstIndex);
-    },
-
-    /**
      * Add the contents of a file
      *
      * @param  {Array<File>} files
@@ -251,14 +110,20 @@ module.exports = React.createClass({
             var parts = _.split(file.type, '/');
             var type = parts[0];
             var format = parts[1];
-            if (type === 'image') {
-                return this.importImageFile(file, format);
-            } else if (type === 'video') {
-                return this.importVideoFile(file, format);
-            } else if (type === 'audio') {
-                return this.importAudioFile(file, format);
-            } else if (type === 'application' && /x-mswinurl|x-desktop/.test(format)) {
-                return this.importBookmarkFile(file, format);
+            if (type === 'application' && /x-mswinurl|x-desktop/.test(format)) {
+                type = 'website';
+            }
+            if (this.isAcceptable(type)) {
+                switch (type) {
+                    case 'image':
+                        return this.importImageFile(file, format);
+                    case 'video':
+                        return this.importVideoFile(file, format);
+                    case 'audio':
+                        return this.importAudioFile(file, format);
+                    case 'website':
+                        return this.importBookmarkFile(file, format);
+                }
             }
         }).then((resources) => {
             return this.addResources(_.filter(resources));
@@ -423,6 +288,187 @@ module.exports = React.createClass({
                     title: link.name || _.replace(file.name, /\.\w+$/, ''),
                 };
             }
+        });
+    },
+
+    /**
+     * Attach non-file drag-and-drop contents
+     *
+     * @param  {Array<DataTransferItem>} items
+     *
+     * @return {Promise}
+     */
+    importDataItems: function(items) {
+        var stringItems = _.filter(items, (item) => {
+            if (item.kind === 'string') {
+                return /^text\/(html|uri-list)/.test(item.type);
+            }
+        });
+        // since items are ephemeral, we need to call getAsString() on each
+        // of them at this point (and not in a callback)
+        var stringPromises = {};
+        _.each(stringItems, (item) => {
+            stringPromises[item.type] = retrieveDataItemText(item);
+        });
+        return Promise.props(stringPromises).then((strings) => {
+            var html = strings['text/html'];
+            var url = strings['text/uri-list'];
+            if (url) {
+                // see if it's an image being dropped
+                var type = /<img\b/i.test(html) ? 'image' : 'website';
+                if (this.isAcceptable(type)) {
+                    if (type === 'image') {
+                        return MediaLoader.loadImage(url).then((image) => {
+                            var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
+                            var payload = this.props.payloads.add('image');
+                            payload.attachURL(url);
+                            return {
+                                type: 'image',
+                                payload_token: payload.token,
+                                filename: filename,
+                                width: image.naturalWidth,
+                                height: image.naturalHeight,
+                            };
+                        }).catch((err) => {
+                            // running into cross-site restrictions is quite likely here
+                            console.log(`Unable to load image: ${url}`);
+                        });
+                    } else if (type === 'webiste') {
+                        var payload = this.props.payloads.add('website');
+                        payload.attachURL(url, 'poster');
+                        return {
+                            type: 'website',
+                            payload_token: payload.token,
+                            url: url,
+                            title: getInnerText(html),
+                        };
+                    }
+                }
+            }
+        }).then((res) => {
+            if (res) {
+                return this.addResources([ res ]);
+            }
+        });
+    },
+
+    /**
+     * Render component
+     *
+     * @return {ReactELement}
+     */
+    render: function() {
+        return (
+            <div>
+                {this.renderPhotoDialog()}
+                {this.renderAudioDialog()}
+                {this.renderVideoDialog()}
+            </div>
+        );
+    },
+
+    /**
+     * Render dialogbox for capturing picture through MediaStream API
+     *
+     * @return {ReactElement}
+     */
+    renderPhotoDialog: function() {
+        var props = {
+            show: (this.state.capturing === 'image'),
+            payloads: this.props.payloads,
+            locale: this.props.locale,
+            onCapture: this.handleCapture,
+            onCancel: this.handleCaptureCancel,
+        };
+        return <PhotoCaptureDialogBox {...props} />
+    },
+
+    /**
+     * Render dialogbox for capturing video through MediaStream API
+     *
+     * @return {ReactElement}
+     */
+    renderVideoDialog: function() {
+        var props = {
+            show: (this.state.capturing === 'video'),
+            payloads: this.props.payloads,
+            locale: this.props.locale,
+            onCapture: this.handleCapture,
+            onCancel: this.handleCaptureCancel,
+        };
+        return <VideoCaptureDialogBox {...props} />
+    },
+
+    /**
+     * Render dialogbox for capturing video through MediaStream API
+     *
+     * @return {ReactElement}
+     */
+    renderAudioDialog: function() {
+        var props = {
+            show: (this.state.capturing === 'audio'),
+            payloads: this.props.payloads,
+            locale: this.props.locale,
+            onCapture: this.handleCapture,
+            onCancel: this.handleCaptureCancel,
+        };
+        return <AudioCaptureDialogBox {...props} />
+    },
+
+    componentWillUnmount: function() {
+        if (this.state.capturing) {
+            if (this.props.onCaptureEnd) {
+                this.props.onCaptureEnd({
+                    type: 'captureend',
+                    target: this,
+                    mediaType: this.state.capturing,
+                });
+            }
+        }
+    },
+
+    /**
+     * Add new resources
+     *
+     * @param  {Array<Object>} newResources
+     *
+     * @return {Promise<Number|undefined>}
+     */
+    addResources: function(newResources) {
+        if (_.isEmpty(newResources)) {
+            return Promise.resolve();
+        }
+        var path = 'details.resources'
+        var resourcesBefore = this.props.resources || [];
+        var resources;
+        if (this.props.limit === 1) {
+            var newResource = _.first(newResources);
+            var index = _.findIndex(resourcesBefore, { type: newResource.type });
+            resources = _.concat(resourcesBefore, newResource);
+            if (index !== -1) {
+                resources.splice(index, 1);
+            }
+        } else {
+            resources = _.concat(resourcesBefore, newResources);
+        }
+        var firstIndex = resourcesBefore.length;
+        return this.triggerChangeEvent(resources, firstIndex);
+    },
+
+    /**
+     * Call onChange handler
+     *
+     * @param  {Array<Object>} resources
+     * @param  {Number} selection
+     *
+     * @return {Promise}
+     */
+    triggerChangeEvent: function(resources, selection) {
+        return this.props.onChange({
+            type: 'change',
+            target: this,
+            resources,
+            selection,
         });
     },
 

@@ -3,8 +3,9 @@ var Promise = require('bluebird');
 
 module.exports = Payloads;
 
-function Payloads(payloadManager) {
+function Payloads(payloadManager, destination) {
     this.payloadManager = payloadManager;
+    this.destination = destination;
     //this.uploading = this.payloadManager.getUploadProgress();
 }
 
@@ -17,7 +18,19 @@ function Payloads(payloadManager) {
  * @return {Payload}
  */
 Payloads.prototype.add = function(type) {
-    return this.payloadManager.add(type);
+    return this.payloadManager.add(type, this.destination);
+};
+
+/**
+ * Create a new instance of object with a destination overriding that indicated
+ * by the current route
+ *
+ * @param  {Object} destination
+ *
+ * @return {Payloads}
+ */
+Payloads.prototype.override = function(destination) {
+    return new Payloads(this.payloadManager, destination);
 };
 
 /**
