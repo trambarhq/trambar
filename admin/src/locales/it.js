@@ -314,7 +314,7 @@ module.exports = function(localeCode) {
         'server-summary-edit': "Modifica il server",
         'server-summary-gitlab-admin': "Amministratore GitLab",
         'server-summary-gitlab-external-user': "Utente esterno GitLab",
-        'server-summary-gitlab-regular-user': "Utente normale Gitlab",
+        'server-summary-gitlab-regular-user': "Utente normale GitLab",
         'server-summary-member-$name': (name) => {
             return `Server: ${name}`;
         },

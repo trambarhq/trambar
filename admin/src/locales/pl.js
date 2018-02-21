@@ -481,7 +481,7 @@ module.exports = function(localeCode) {
         'server-summary-type': 'Typ serwera',
         'server-summary-user-automatic-approval': 'Zatwierdź nowych użytkowników automatyczne',
         'server-summary-user-import-disabled': 'Nie rejestruj nowych użytkowników',
-        'server-summary-user-import-gitlab-admin-disabled': 'Nie importuj administratorów Gitlaba',
+        'server-summary-user-import-gitlab-admin-disabled': 'Nie importuj administratorów GitLaba',
         'server-summary-user-import-gitlab-external-user-disabled': 'Nie importuj zewnętrznych użytkowników GitLaba',
         'server-summary-user-import-gitlab-user-disabled': 'Nie importuj użytkowników GitLaba',
         'server-summary-user-type-admin': 'Administrator',

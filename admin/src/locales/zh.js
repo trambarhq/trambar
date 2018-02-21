@@ -345,7 +345,7 @@ var traditionalPhrases = {
     'server-summary-edit': '編輯服務器',
     'server-summary-gitlab-admin': 'GitLab管理員',
     'server-summary-gitlab-external-user': 'GitLab外部用戶',
-    'server-summary-gitlab-regular-user': 'Gitlab普通用戶',
+    'server-summary-gitlab-regular-user': 'GitLab普通用戶',
     'server-summary-member-$name': (name) => {
         return `服務器: ${name}`;
     },
@@ -375,9 +375,9 @@ var traditionalPhrases = {
     'server-summary-type': '服務器類型',
     'server-summary-user-automatic-approval': '自動批准新用戶',
     'server-summary-user-import-disabled': '不要註冊新用戶',
-    'server-summary-user-import-gitlab-admin-disabled': '不要導入Gitlab管理員',
-    'server-summary-user-import-gitlab-external-user-disabled': '不要導入Gitlab外部用戶',
-    'server-summary-user-import-gitlab-user-disabled': '不要導入Gitlab普通用戶',
+    'server-summary-user-import-gitlab-admin-disabled': '不要導入GitLab管理員',
+    'server-summary-user-import-gitlab-external-user-disabled': '不要導入GitLab外部用戶',
+    'server-summary-user-import-gitlab-user-disabled': '不要導入GitLab普通用戶',
     'server-summary-user-type-admin': '管理員',
     'server-summary-user-type-guest': '訪客用戶',
     'server-summary-user-type-moderator': '檢查員',
@@ -929,7 +929,7 @@ var simplifiedPhrases = {
     'server-summary-edit': '编辑服务器',
     'server-summary-gitlab-admin': 'GitLab管理员',
     'server-summary-gitlab-external-user': 'GitLab外部用户',
-    'server-summary-gitlab-regular-user': 'Gitlab普通用户',
+    'server-summary-gitlab-regular-user': 'GitLab普通用户',
     'server-summary-member-$name': (name) => {
         return `服务器: ${name}`;
     },
@@ -959,9 +959,9 @@ var simplifiedPhrases = {
     'server-summary-type': '服务器类型',
     'server-summary-user-automatic-approval': '自动批准新用户',
     'server-summary-user-import-disabled': '不要注册新用户',
-    'server-summary-user-import-gitlab-admin-disabled': '不要导入Gitlab管理员',
-    'server-summary-user-import-gitlab-external-user-disabled': '不要导入Gitlab外部用户',
-    'server-summary-user-import-gitlab-user-disabled': '不要导入Gitlab普通用户',
+    'server-summary-user-import-gitlab-admin-disabled': '不要导入GitLab管理员',
+    'server-summary-user-import-gitlab-external-user-disabled': '不要导入GitLab外部用户',
+    'server-summary-user-import-gitlab-user-disabled': '不要导入GitLab普通用户',
     'server-summary-user-type-admin': '管理员',
     'server-summary-user-type-guest': '访客用户',
     'server-summary-user-type-moderator': '检查员',

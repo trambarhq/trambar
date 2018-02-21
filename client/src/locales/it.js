@@ -8,8 +8,8 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': "Contatto con Skype",
         'action-contact-by-slack': "Contatto con Slack",
         'action-contact-by-twitter': "Contatto con Twitter",
-        'action-view-github-page': "Visualizza la pagina Github",
-        'action-view-gitlab-page': "Visualizza la pagina Gitlab",
+        'action-view-github-page': "Visualizza la pagina GitHub",
+        'action-view-gitlab-page': "Visualizza la pagina GitLab",
         'action-view-linkedin-page': "Visualizza la pagina LinkedIn",
         'action-view-stackoverflow-page': "Visualizza la pagina Stack Overflow",
 

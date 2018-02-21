@@ -8,8 +8,8 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': 'Kontakt via Skype',
         'action-contact-by-slack': 'Kontakt via Slack',
         'action-contact-by-twitter': 'Kontakt via Twitter',
-        'action-view-github-page': 'Se Github-siden',
-        'action-view-gitlab-page': 'Se Gitlab-siden',
+        'action-view-github-page': 'Se GitHub-siden',
+        'action-view-gitlab-page': 'Se GitLab-siden',
         'action-view-linkedin-page': 'Se LinkedIn-siden',
         'action-view-stackoverflow-page': 'Se Stack-Overflow-siden',
 
@@ -311,7 +311,7 @@ module.exports = function(localeCode) {
         'settings-web-alert': 'Webvarsel',
 
         'social-network-github': 'GitHub profil URL',
-        'social-network-gitlab': 'Gitlab profil URL',
+        'social-network-gitlab': 'GitLab profil URL',
         'social-network-ichat': 'iChat brukernavn',
         'social-network-linkedin': 'Linkedin profil URL',
         'social-network-skype': 'Skype brukernavn',

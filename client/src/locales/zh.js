@@ -356,7 +356,7 @@ var traditionalPhrases = {
     'settings-web-alert': '瀏覽器警報',
 
     'social-network-github': 'GitHub個人資料網址',
-    'social-network-gitlab': 'Gitlab個人資料網址',
+    'social-network-gitlab': 'GitLab個人資料網址',
     'social-network-ichat': 'iChat用戶名',
     'social-network-linkedin': 'LinkedIn個人資料網址',
     'social-network-skype': 'Skype用戶名',
@@ -988,7 +988,7 @@ var simplifiedPhrases = {
     'settings-web-alert': '浏览器警报',
 
     'social-network-github': 'GitHub个人资料网址',
-    'social-network-gitlab': 'Gitlab个人资料网址',
+    'social-network-gitlab': 'GitLab个人资料网址',
     'social-network-ichat': 'iChat用户名',
     'social-network-linkedin': 'LinkedIn个人资料网址',
     'social-network-skype': 'Skype用户名',

@@ -8,7 +8,7 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': 'Skontaktuj się przez Skype',
         'action-contact-by-slack': 'Skontaktuj się przez Slack',
         'action-contact-by-twitter': 'Skontaktuj się przez Twitter',
-        'action-view-github-page': 'Wyświetl profil na Githubie',
+        'action-view-github-page': 'Wyświetl profil na GitHubie',
         'action-view-gitlab-page': 'Wyświetl profil na GitLabie',
         'action-view-linkedin-page': 'Wyświetl profil na LinkedInie',
         'action-view-stackoverflow-page': 'Wyświetl profil na StackOverflowie',

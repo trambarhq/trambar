@@ -12,8 +12,8 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': 'Contact by Skype',
         'action-contact-by-slack': 'Contact by Slack',
         'action-contact-by-twitter': 'Contact by Twitter',
-        'action-view-github-page': 'View Github page',
-        'action-view-gitlab-page': 'View Gitlab page',
+        'action-view-github-page': 'View GitHub page',
+        'action-view-gitlab-page': 'View GitLab page',
         'action-view-linkedin-page': 'View LinkedIn page',
         'action-view-stackoverflow-page': 'View Stack Overflow Page',
 
@@ -317,7 +317,7 @@ module.exports = function(localeCode) {
         'settings-web-alert': 'Web Alert',
 
         'social-network-github': 'GitHub profile URL',
-        'social-network-gitlab': 'Gitlab profile URL',
+        'social-network-gitlab': 'GitLab profile URL',
         'social-network-ichat': 'iChat user name',
         'social-network-linkedin': 'Linkedin profile URL',
         'social-network-skype': 'Skype user name',
