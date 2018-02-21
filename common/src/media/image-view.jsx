@@ -5,7 +5,6 @@ var BlobManager = require('transport/blob-manager');
 var BlobReader = require('utils/blob-reader');
 var MediaLoader = require('media/media-loader');
 var JPEGAnalyser = require('media/jpeg-analyser');
-var ImageCropping = require('media/image-cropping');
 var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
@@ -174,7 +173,12 @@ module.exports = React.createClass({
     			break;
     	}
         if (!rect) {
-            rect = ImageCropping.default(this.naturalWidth, this.naturalHeight);
+            rect = {
+                left: 0,
+                top: 0,
+                width: this.naturalWidth,
+                height: this.naturalHeight
+            };
         }
         this.width = rect.width;
         this.height = rect.height;

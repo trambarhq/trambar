@@ -2,7 +2,9 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
 var ImageView = require('media/image-view');
+var ImageCropping = require('media/image-cropping');
 var BlobManager = require('transport/blob-manager');
+var Payload = require('transport/payload');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -145,9 +147,12 @@ module.exports = React.createClass({
                 imgHeight = image.clip.height;
             }
             width = Math.round(imgWidth * height / imgHeight);
-            var clip = image.clip;
-            if (!(this.props.desiredWidth && this.props.desiredHeight)) {
-                clip = null;
+            var clip = null;
+            if (this.props.desiredWidth && this.props.desiredHeight) {
+                clip = image.clip;
+                if (!clip) {
+                    clip = ImageCropping.default(image.width, image.height);
+                }
             }
             if (image.url) {
                 var url = this.props.theme.getImageURL(image, {
@@ -172,12 +177,15 @@ module.exports = React.createClass({
                         </a>
                     </div>
                 );
-            } else if (image.file && BlobManager.get(image.file)) {
-                return (
-                    <div className="image">
-                        <ImageView url={image.file} clippingRect={clip} style={{ width, height }} />
-                    </div>
-                );
+            } else {
+                var url = Payload.getImageURL(image);
+                if (url) {
+                    return (
+                        <div className="image">
+                            <ImageView url={url} clippingRect={clip} style={{ width, height }} />
+                        </div>
+                    );
+                }
             }
         } else {
             if (this.props.desiredWidth && this.props.desiredHeight) {
@@ -375,14 +383,16 @@ module.exports = React.createClass({
     handleUploadChange: function(evt) {
         var file = evt.target.files[0];
         if (file) {
+            var payload = this.props.payloads.add('image');
+            payload.attachFile(file);
             var blobURL = BlobManager.manage(file);
             return MediaLoader.loadImage(blobURL).then((img) => {
                 var image = {
+                    payload_token: payload.token,
                     format: _.last(_.split(file.type, '/')),
                     width: img.naturalWidth,
                     height: img.naturalHeight,
                     type: 'image',
-                    file: blobURL,
                 };
                 return this.setImage(image);
             });

@@ -4,6 +4,7 @@ var HTTPRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var Payload = require('transport/payload');
+var ImageCropping = require('media/image-cropping');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -317,7 +318,8 @@ module.exports = React.createClass({
         var fileURL = Payload.getImageURL(res);
         if (fileURL) {
             // use ImageView, which handles orientation and clipping
-            return <ImageView url={fileURL} clippingRect={res.clip} />;
+            var clip = res.clip || ImageCropping.default(res.width, res.height);
+            return <ImageView url={fileURL} clippingRect={clip} />;
         } else {
             // TODO: placeholder for pending images
             return null;

@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var Payload = require('transport/payload');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -120,7 +121,8 @@ module.exports = React.createClass({
         var image = this.props.image;
         var imageURL = this.props.theme.getImageURL(image, { clip: null });
         if (!imageURL) {
-            imageURL = image.file;
+            // file hasn't been uploaded
+            imageURL = Payload.getImageURL(image);
         }
         var props = {
             url: imageURL,

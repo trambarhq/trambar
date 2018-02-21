@@ -287,14 +287,15 @@ module.exports = React.createClass({
 
     updateBackendProgress: function() {
         var params = this.props.route.parameters;
+        var schema = params.schema || 'global';
         var inProgressPayloads = _.filter(this.payloads, {
             sent: true,
             completed: false,
             address: params.address,
-            schema: params.schema || 'global',
+            schema: schema,
         });
         if (!_.isEmpty(inProgressPayloads)) {
-            var db = this.props.database.use({ schema: params.schema, by: this });
+            var db = this.props.database.use({ schema, by: this });
             db.start().then((userId) => {
                 var criteria = {
                     token: _.map(inProgressPayloads, 'token'),

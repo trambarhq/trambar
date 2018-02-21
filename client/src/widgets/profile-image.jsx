@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var BlobManager = require('transport/blob-manager');
 var ImageView = require('media/image-view');
+var ImageCropping = require('media/image-cropping');
 
 var Theme = require('theme/theme');
 
@@ -24,6 +25,9 @@ function ProfileImage(props) {
             } else {
                 var fileURL = profileImage.file;
                 var clip = profileImage.clip;
+                if (!clip)  {
+                    clip = ImageCropping.default(profileImage.width, profileImage.height);
+                }
                 if (BlobManager.get(fileURL)) {
                     image = <ImageView url={fileURL} clippingRect={clip} />;
                 }
