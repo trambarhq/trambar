@@ -2,9 +2,9 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
-var BlobManager = require('transport/blob-manager');
 var CordovaFile = require('utils/cordova-file');
 
+var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
 
 module.exports = React.createClass({
@@ -12,6 +12,7 @@ module.exports = React.createClass({
     propTypes: {
         show: PropTypes.bool,
 
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
         onCancel: PropTypes.func,
@@ -56,14 +57,14 @@ module.exports = React.createClass({
      * Report back to parent component that an image has been captured and
      * accepted by user
      *
-     * @param  {Object} video
+     * @param  {Object} resource
      */
-    triggerCaptureEvent: function(video) {
+    triggerCaptureEvent: function(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                video,
+                resource,
             });
         }
     },
@@ -93,19 +94,20 @@ module.exports = React.createClass({
                     var file = new CordovaFile(mediaFile.fullPath, mediaFile.type, mediaFile.size);
                     var posterFile = new CordovaFile(thumbnailURL, 'image/jpeg');
                     return posterFile.obtainSize().then(() => {
-                        var fileURL = BlobManager.manage(file);
-                        var posterFileURL = BlobManager.manage(posterFile);
                         var [ type, format ] = _.split(mediaFile.type, '/');
-                        var video = {
-                            format,
-                            file: fileURL,
-                            poster_file: posterFileURL,
+                        var payload = this.props.payloads.add('video');
+                        payload.attachFile(file);
+                        payload.attachFile(posterFile, 'poster');
+                        var res = {
+                            type: 'video',
+                            payload_token: payload.token,
+                            format: format,
                             width: mediaFileData.width,
                             height: mediaFileData.height,
                             filename: mediaFile.name,
                             duration: mediaFileData.duration * 1000,
                         };
-                        this.triggerCaptureEvent(video);
+                        this.triggerCaptureEvent(res);
                         return null;
                     });
                 });

@@ -246,7 +246,7 @@ Payload.prototype.sendCordovaFile = function(part) {
     var url = this.getDestinationURL(part.name);
     var file = part.cordovaFile;
     return new Promise((resolve, reject) => {
-        var encodedURL = encodeURI(remoteURL);
+        var encodedURL = encodeURI(url);
         var fileTransfer = new FileTransfer;
         fileTransfer.onprogress = (evt) => {
             this.updateProgress(part, evt.loaded / evt.total)
@@ -263,7 +263,7 @@ Payload.prototype.sendCordovaFile = function(part) {
             params: part.options,
             mimeType: file.type,
         });
-        fileTransfer.upload(fileURL, encodedURL, successCB, errorCB, fileUploadOptions);
+        fileTransfer.upload(file.fullPath, encodedURL, successCB, errorCB, fileUploadOptions);
     }).then((res) => {
         this.associateRemoteURL(res.url, file);
         return res;

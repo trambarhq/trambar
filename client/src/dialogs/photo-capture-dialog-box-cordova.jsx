@@ -2,9 +2,9 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
-var BlobManager = require('transport/blob-manager');
 var CordovaFile = require('utils/cordova-file');
 
+var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
 
 module.exports = React.createClass({
@@ -64,14 +64,14 @@ module.exports = React.createClass({
      * Report back to parent component that an image has been captured and
      * accepted by user
      *
-     * @param  {Object} video
+     * @param  {Object} resource
      */
-    triggerCaptureEvent: function(image) {
+    triggerCaptureEvent: function(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
                 target: this,
-                image,
+                resource,
             });
         }
     },
@@ -97,14 +97,16 @@ module.exports = React.createClass({
         MediaLoader.loadImage(imageURL).then((image) => {
             var file = new CordovaFile(imageURL, 'image/jpeg');
             return file.obtainSize().then(() => {
-                var fileURL = BlobManager.manage(file);
-                var image = {
+                var payload = this.props.payloads.add('image');
+                payload.attachFile(file);
+                var res = {
+                    type: 'image',
+                    payload_token: payload.token,
                     format: 'jpeg',
-                    file: fileURL,
                     width: image.naturalWidth,
                     height: image.naturalHeight,
                 };
-                this.triggerCaptureEvent(image);
+                this.triggerCaptureEvent(res);
             });
             return null;
         }).catch((err) => {

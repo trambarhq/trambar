@@ -432,7 +432,7 @@ module.exports = React.createClass({
             var size = payload.getSize();
             var uploaded = payload.getUploaded();
             var progress = Math.round(uploaded / size * 100 || 0) + '%';
-            return <div>Upload progress: {progress}%</div>;
+            return <div>Upload progress: {progress}</div>;
         }
     },
 

@@ -2,8 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
-var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
+var Locale = require('locale/locale');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');

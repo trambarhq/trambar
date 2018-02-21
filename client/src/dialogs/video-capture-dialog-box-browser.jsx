@@ -5,8 +5,8 @@ var FrameGrabber = require('media/frame-grabber');
 var DeviceManager = require('media/device-manager');
 var BlobManager = require('transport/blob-manager');
 
-var Locale = require('locale/locale');
 var Payloads = require('transport/payloads');
+var Locale = require('locale/locale');
 
 // widgets
 var Overlay = require('widgets/overlay');
