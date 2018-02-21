@@ -115,15 +115,13 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
         var db = this.props.database.use({ schema: params.schema, by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             listing: null,
             stories: null,
@@ -139,7 +137,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<NewsPageSync {...props} />, delay);
+        meanwhile.show(<NewsPageSync {...props} />, 100);
         return db.start().then((userId) => {
             // load current user
             var criteria = {

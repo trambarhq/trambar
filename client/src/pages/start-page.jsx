@@ -109,14 +109,12 @@ var StartPage = module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: 'global', by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             currentUser: null,
             system: null,
@@ -139,7 +137,7 @@ var StartPage = module.exports = Relaks.createClass({
             if (process.env.PLATFORM === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
-                meanwhile.show(<StartPageSync {...props} />, delay);
+                meanwhile.show(<StartPageSync {...props} />, 100);
                 return db.beginSession('client').then((info) => {
                     props.system = info.system;
                     props.servers = info.servers;

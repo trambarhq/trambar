@@ -145,14 +145,12 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var tags;
         if (_.trim(params.search) && !TagScanner.removeTags(params.search)) {
             // search by tags only (which can happen locally)
@@ -174,7 +172,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<PeoplePageSync {...props} />, delay);
+        meanwhile.show(<PeoplePageSync {...props} />, 100);
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };
