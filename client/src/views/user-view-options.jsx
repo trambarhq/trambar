@@ -137,7 +137,7 @@ module.exports = React.createClass({
                 icon: 'github',
                 url: details.github_url,
                 target: '_blank',
-                hidden: !details.linkedin_username,
+                hidden: !details.github_url,
                 onClick: this.handleLinkClick,
             };
             var linkedInProps = {
