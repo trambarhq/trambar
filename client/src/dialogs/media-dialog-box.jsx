@@ -200,9 +200,9 @@ module.exports = React.createClass({
         var width = res.width;
         var height = res.height;
         var url;
-        // don't resize when it's a GIF since it might be animated
+        // don't reencode when it's a GIF since it might be animated
         if (res.format === 'gif') {
-            url = theme.getImageURL(res, { clip: null });
+            url = theme.getImageURL(res, { original: true });
         } else {
             if (width > maxWidth) {
                 height = Math.round(maxWidth * (height / width));
@@ -330,7 +330,7 @@ module.exports = React.createClass({
             var theme = this.props.theme;
             var url;
             switch (res.type) {
-                case 'image': url = theme.getImageURL(res, { clip: null }); break;
+                case 'image': url = theme.getImageURL(res, { original: true }); break;
                 case 'video': url = theme.getVideoURL(res); break;
             }
             link.href = url;

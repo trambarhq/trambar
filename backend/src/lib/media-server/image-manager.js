@@ -121,6 +121,7 @@ function applyFilters(path, filters, format) {
     switch (_.toLower(format)) {
         case 'webp':
             image.webp({ quality })
+            break;
         case 'png':
             image.png();
             break;
