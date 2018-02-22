@@ -20,6 +20,16 @@
                 left: 0;
             }
         }
+
+        .reaction-link {
+            float: right;
+            cursor: pointer;
+            color: #666666;
+
+            &:hover {
+                color: #eeeeee;
+            }
+        }
     }
 
     .body {

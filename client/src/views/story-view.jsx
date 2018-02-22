@@ -144,6 +144,9 @@ module.exports = React.createClass({
         if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations) {
             this.updateOptions(nextState, nextProps);
         }
+        if (this.props.reactions !== nextProps.reactions) {
+            nextState.commentsExpanded = this.shouldExpandComments(nextProps);
+        }
         var changes = _.pickBy(nextState, (value, name) => {
             return this.state[name] !== value;
         });
@@ -207,6 +210,7 @@ module.exports = React.createClass({
                 <div className="header">
                     <div className="column-2 padded">
                         {this.renderReactionToolbar()}
+                        {this.renderReactionLink()}
                     </div>
                 </div>
                 <div className="body">
@@ -343,6 +347,27 @@ module.exports = React.createClass({
             onAction: this.handleAction,
         };
         return <ReactionToolbar {...props} />;
+    },
+
+    /**
+     * Render link for expanding reaction section
+     *
+     * @return {ReactElement|null}
+     */
+    renderReactionLink: function() {
+        if (this.state.commentsExpanded) {
+            return null;
+        }
+        var count = countRespondents(this.props.reactions);
+        if (count === 0) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        return (
+            <span className="reaction-link" onClick={this.handleExpansionClick}>
+                {t('story-$count-user-reacted-to-story', count)}
+            </span>
+        );
     },
 
     /**
@@ -783,6 +808,15 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user clicks on reaction link
+     *
+     * @param  {Event} evt
+     */
+    handleExpansionClick: function(evt) {
+        this.setState({ commentsExpanded: true });
+    },
+
+    /**
      * Called when options are changed
      *
      * @param  {Object} evt
@@ -880,3 +914,8 @@ var findRepo = Memoize(function(repos, story) {
         return !!link;
     });
 });
+
+var countRespondents = Memoize(function(reactions) {
+    var userIds = _.map(reactions, 'user_id');
+    return _.size(_.uniq(userIds));
+}, 0);

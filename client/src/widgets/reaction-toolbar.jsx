@@ -87,7 +87,7 @@ module.exports = React.createClass({
             }
         }
         return (
-            <div>
+            <div className="reaction-toolbar">
                 <HeaderButton {...likeButtonProps} />
                 <HeaderButton {...commentButtonProps} />
                 <HeaderButton {...showButtonProps} />
