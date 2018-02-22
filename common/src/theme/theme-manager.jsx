@@ -23,6 +23,7 @@ module.exports = React.createClass({
         return {
             mode: this.selectMode(),
             devicePixelRatio: window.devicePixelRatio,
+            webpSupport: isWebpSupported(),
             details: null,
         };
     },
@@ -444,4 +445,16 @@ function getClippingRect(res, params) {
         }
     }
     return clip;
+}
+
+function isWebpSupported() {
+    var canvas = document.createElement('CANVAS');
+    canvas.width = canvas.height = 1;
+    if (canvas.toDataURL) {
+        var url = canvas.toDataURL('image/webp');
+        if (url.indexOf('image/webp') === 5) {
+            return true;
+        }
+    }
+    return false;
 }
