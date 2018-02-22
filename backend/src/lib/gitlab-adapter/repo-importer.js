@@ -119,8 +119,11 @@ function importRepositories(db, server) {
                             modified.push(repoAfter.name);
                             return Repo.updateOne(db, 'global', repoAfter).then((repoAfter) => {
                                 var newMembers = _.filter(members, (user) => {
-                                    if (!user.disabled && !user.deleted) {
-                                        return !_.includes(repo.user_ids);
+                                    // exclude root user
+                                    if (user.username !== 'root') {
+                                        if (!user.disabled && !user.deleted) {
+                                            return !_.includes(repo.user_ids);
+                                        }
                                     }
                                 });
                                 return addProjectMembers(db, repoAfter, newMembers).return(repoAfter);
