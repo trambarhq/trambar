@@ -4,7 +4,9 @@ module.exports = Operation;
 
 function Operation(location) {
     var byComponent = _.get(location, 'by.constructor.displayName')
-    this.address = location.address;
+    if (location.schema !== 'local') {
+        this.address =  location.address;
+    }
     this.schema = location.schema;
     this.table = location.table;
     this.start = null;

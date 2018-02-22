@@ -229,7 +229,11 @@ module.exports = React.createClass({
                     selectedLanguageCode: this.state.localeCode
                 };
                 if (settings.selectedLanguageCode === getBrowserLocale()) {
-                    return db.removeOne({ table: 'settings' }, settings);
+                    // remove the language entry if user has selected the
+                    // default language
+                    if (prevState.localeCode) {
+                        return db.removeOne({ table: 'settings' }, settings);
+                    }
                 } else {
                     return db.saveOne({ table: 'settings' }, settings);
                 }

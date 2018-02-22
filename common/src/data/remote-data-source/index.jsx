@@ -633,9 +633,11 @@ module.exports = React.createClass({
                 this.updateList('recentSearchResults', (before) => {
                     var after = _.slice(before);
                     _.each(after, (search) => {
-                        if (!address || search.address === address) {
-                            search.dirty = true;
-                            changed = true;
+                        if (!search.isLocal()) {
+                            if (!address || search.address === address) {
+                                search.dirty = true;
+                                changed = true;
+                            }
                         }
                     });
                     return after;
