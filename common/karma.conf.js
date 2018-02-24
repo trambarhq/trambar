@@ -44,7 +44,21 @@ module.exports = function(config) {
                     {
                         test: /\.jpg|\.mp4/,
                         loader: 'bin-loader',
-                    }
+                    },
+                    {
+                        test: /\.scss$/,
+                        use: [
+                            {
+                                loader: 'style-loader'
+                            },
+                            {
+                                loader: 'css-loader'
+                            },
+                            {
+                                loader: 'sass-loader',
+                            }
+                        ]
+                    },
                 ]
             },
             resolve: {

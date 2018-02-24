@@ -21,6 +21,7 @@
     "bluebird": "^3.5.0",
     "chai": "^3.5.0",
     "chartist": "^0.11.0",
+    "css-loader": "^0.28.10",
     "diff": "^3.2.0",
     "enzyme": "^2.8.2",
     "karma": "^1.7.0",
@@ -33,9 +34,12 @@
     "lodash": "^4.17.4",
     "mark-gor": "0.0.4",
     "mocha": "^3.4.1",
+    "node-sass": "^4.7.2",
     "react": "~15.4.0",
     "react-addons-test-utils": "~15.4.0",
     "react-dom": "~15.4.0",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.20.2",
     "webpack": "^2.5.1"
   }
 }
