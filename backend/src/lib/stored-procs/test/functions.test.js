@@ -7,21 +7,21 @@ for(var name in Runtime) {
 }
 
 describe('Functions', function() {
-    describe('#payloadIds()', function() {
+    describe('#payloadTokens()', function() {
         it('should return a list of payload ids of items in the object\'s resources array', function() {
             var details = {
                 resources: [
                     {
                         type: 'image',
-                        payload_id: 3,
+                        payload_token: 'abc',
                     },
                     {
                         type: 'video',
-                        payload_id: 4
+                        payload_token: 'efg',
                     }
                 ]
             };
-            expect(Functions.payloadIds(details)).to.deep.equal([3, 4]);
+            expect(Functions.payloadTokens(details)).to.deep.equal([ 'abc', 'efg' ]);
         })
         it('should return null when there are no payload ids', function() {
             var details = {
@@ -34,19 +34,20 @@ describe('Functions', function() {
                     }
                 ]
             };
-            expect(Functions.payloadIds(details)).to.equal(null);
+            expect(Functions.payloadTokens(details)).to.equal(null);
         })
         it('should return id when it is stored in the details object itself', function() {
             var details = {
-                payload_id: 3
+                payload_token: 'abc'
             };
-            expect(Functions.payloadIds(details)).to.deep.equal([ 3 ]);
+            expect(Functions.payloadTokens(details)).to.deep.equal([ 'abc' ]);
         })
     })
     describe('#updatePayload()', function() {
         it('should copy properties from payload into matching resource', function() {
             var payload = {
-                id: 3,
+                id: 1,
+                token: 'abc',
                 details: {
                     url: 'image.jpg',
                     width: 400,
@@ -58,11 +59,11 @@ describe('Functions', function() {
                 resources: [
                     {
                         type: 'image',
-                        payload_id: 3,
+                        payload_token: 'abc',
                     },
                     {
                         type: 'video',
-                        payload_id: 4
+                        payload_token: 'efg'
                     }
                 ]
             };
@@ -76,7 +77,8 @@ describe('Functions', function() {
         })
         it('should not overwrite existing properties', function() {
             var payload = {
-                id: 3,
+                id: 1,
+                token: 'abc',
                 details: {
                     url: '/somewhere/image.jpg',
                     width: 400,
@@ -88,12 +90,12 @@ describe('Functions', function() {
                 resources: [
                     {
                         type: 'image',
-                        payload_id: 3,
+                        payload_token: 'abc',
                         height: 314,
                     },
                     {
                         type: 'video',
-                        payload_id: 4
+                        payload_token: 'efg'
                     }
                 ]
             };
@@ -104,7 +106,8 @@ describe('Functions', function() {
         })
         it('should set ready = true when the payload is 100% processed', function() {
             var payload = {
-                id: 3,
+                id: 1,
+                token: 'abc',
                 details: {
                     url: '/somewhere/image.jpg',
                     width: 400,
@@ -116,11 +119,11 @@ describe('Functions', function() {
                 resources: [
                     {
                         type: 'image',
-                        payload_id: 3,
+                        payload_token: 'abc',
                     },
                     {
                         type: 'video',
-                        payload_id: 4
+                        payload_token: 'efg',
                     }
                 ]
             };
@@ -130,7 +133,8 @@ describe('Functions', function() {
         })
         it('should set ready = false when the payload is less than 100% processed', function() {
             var payload = {
-                id: 3,
+                id: 1,
+                token: 'abc',
                 details: {
                     url: '/somewhere/image.jpg',
                     width: 400,
@@ -142,11 +146,11 @@ describe('Functions', function() {
                 resources: [
                     {
                         type: 'image',
-                        payload_id: 3,
+                        payload_token: 'abc',
                     },
                     {
                         type: 'video',
-                        payload_id: 4
+                        payload_token: 'efg'
                     }
                 ]
             };
@@ -156,7 +160,8 @@ describe('Functions', function() {
         })
         it('should copy properties into the details object itself when there payload id is there', function() {
             var payload = {
-                id: 3,
+                id: 1,
+                token: 'abc',
                 details: {
                     url: '/somewhere/image.jpg',
                     width: 400,
@@ -166,13 +171,13 @@ describe('Functions', function() {
             };
             var details = {
                 type: 'image',
-                payload_id: 3,
+                payload_token: 'abc',
             };
             var newDetails = Functions.updatePayload(details, payload, true);
             expect(newDetails).to.have.property('url');
             expect(newDetails).to.have.property('width');
             expect(newDetails).to.have.property('height');
-            expect(newDetails).to.have.property('payload_id');
+            expect(newDetails).to.have.property('payload_token');
             expect(newDetails).to.have.property('ready', false);
         })
     })

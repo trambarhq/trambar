@@ -180,14 +180,14 @@ describe('Triggers', function() {
                     resources: [
                         {
                             type: 'image',
-                            payload_id: 3,
+                            payload_token: 'abc',
                             width: 400,
                             height: 300,
                             ready: true
                         },
                         {
                             type: 'video',
-                            payload_id: 4,
+                            payload_token: 'efg',
                         }
                     ]
                 }
@@ -197,11 +197,11 @@ describe('Triggers', function() {
                     resources: [
                         {
                             type: 'image',
-                            payload_id: 3,
+                            payload_token: 'abc',
                         },
                         {
                             type: 'video',
-                            payload_id: 4,
+                            payload_token: 'efg',
                         }
                     ]
                 }
@@ -217,14 +217,14 @@ describe('Triggers', function() {
                     resources: [
                         {
                             type: 'image',
-                            payload_id: 3,
+                            payload_token: 'abc',
                             width: 400,
                             height: 300,
                             ready: true,
                         },
                         {
                             type: 'video',
-                            payload_id: 4,
+                            payload_token: 'efg',
                             ready: true,
                         }
                     ]
@@ -237,11 +237,11 @@ describe('Triggers', function() {
                     resources: [
                         {
                             type: 'image',
-                            payload_id: 3,
+                            payload_token: 'abc',
                         },
                         {
                             type: 'video',
-                            payload_id: 4,
+                            payload_token: 'efg',
                         }
                     ]
                 },
@@ -251,19 +251,19 @@ describe('Triggers', function() {
             var TG_ARGV = [ 'ready', 'published' ];
             Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
             expect(NEW).to.not.have.deep.property('details.resources[0].ready');
-            expect(NEW).to.not.have.deep.property('details.resources[0].payload_id');
+            expect(NEW).to.not.have.deep.property('details.resources[0].payload_token');
             expect(NEW).to.have.property('ready', true);
         })
         it('should clear payload ids when they are stored in the details object itself', function() {
             var OLD = {
                 details: {
-                    payload_id: 3,
+                    payload_token: 'abc',
                     ready: false,
                 }
             };
             var NEW = {
                 details: {
-                    payload_id: 3,
+                    payload_token: 'abc',
                     width: 400,
                     height: 300,
                     ready: true,
@@ -272,7 +272,7 @@ describe('Triggers', function() {
             var TG_ARGV = [];
             Triggers.coalesceResources(OLD, NEW, 'UPDATE', 'schema', 'table', TG_ARGV);
             expect(NEW).to.not.have.deep.property('details.ready');
-            expect(NEW).to.not.have.deep.property('details.payload_id');
+            expect(NEW).to.not.have.deep.property('details.payload_token');
         })
         it('should set ready to true where there are no resources', function() {
             var OLD = {
