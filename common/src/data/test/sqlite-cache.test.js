@@ -197,7 +197,7 @@ describe('SQLiteCache', function() {
                 table: 'comment',
             };
             var location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -212,7 +212,7 @@ describe('SQLiteCache', function() {
             }).then(() => {
                 return cache.save(location2, objects);
             }).then(() => {
-                return cache.clean({ server: 'mordor.me' });
+                return cache.clean({ address: 'http://mordor.me' });
             }).then(() => {
                 return cache.find(location1).then((objects1) => {
                     return cache.find(location2).then((objects2) => {
@@ -228,7 +228,7 @@ describe('SQLiteCache', function() {
                 table: 'comment',
             };
             var location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -259,7 +259,7 @@ describe('SQLiteCache', function() {
                 table: 'comment',
             };
             var location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };

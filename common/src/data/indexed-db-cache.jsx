@@ -54,7 +54,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
-        var address = query.address;
+        var address = query.address || '';
         var schema = query.schema;
         var table = query.table;
         var criteria = query.criteria;
@@ -105,7 +105,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     save: function(location, objects) {
-        var address = location.address;
+        var address = location.address || '';
         var schema = location.schema;
         var table = location.table;
         return this.open().then((db) => {
@@ -150,7 +150,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     remove: function(location, objects) {
-        var address = location.address;
+        var address = location.address || '';
         var schema = location.schema;
         var table = location.table;
         return this.open().then((db) => {
@@ -202,64 +202,85 @@ module.exports = React.createClass({
                 var objectStore = transaction.objectStore(storeName);
                 if (criteria.address !== undefined) {
                     var index = objectStore.index('address');
-                    var req = index.openCursor(criteria.address);
-                    var count = 0;
+                    var req = index.openCursor(criteria.address || '');
+                    var records = [];
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
-                            count++;
+                            records.push(cursor.value);
                             cursor.delete();
                             cursor.continue();
                         } else {
-                            resolve(count);
+                            resolve(records);
                         }
                     };
                 } else if (criteria.count !== undefined) {
                     var index = objectStore.index('rtime');
                     var req = index.openCursor();
-                    var count = 0;
+                    var records = [];
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
-                            count++;
+                            records.push(cursor.value);
                             cursor.delete();
-                            if (count < criteria.count) {
+                            if (records.length < criteria.count) {
                                 cursor.continue();
                             } else {
-                                resolve(count);
+                                resolve(records);
                             }
                         } else {
-                            resolve(count);
+                            resolve(records);
                         }
                     };
                 } else if (criteria.before !== undefined) {
                     var index = objectStore.index('rtime');
                     var req = index.openCursor();
-                    var count = 0;
+                    var records = [];
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
                             var record = cursor.value;
                             var object = record.data;
                             if (object.rtime < criteria.before) {
-                                count++;
+                                records.push(record);
                                 cursor.delete();
                                 cursor.continue();
                             } else {
-                                resolve(count);
+                                resolve(records);
                             }
                         } else {
-                            resolve(count);
+                            resolve(records);
                         }
                     };
+                } else {
+                    if (process.env.NODE_ENV !== 'production') {
+                        console.warn('Invalid removal criteria: ', criteria);
+                    }
+                    return [];
                 }
             });
-        }).then((count) => {
+        }).then((records) => {
+            var count = records.length;
             if (count > 0) {
                 var deleteCount = this.state.deleteCount;
-                deleteCount += count;
+                deleteCount += records.length;
                 this.setState({ deleteCount });
                 this.updateRecordCount('remote', 500);
+
+                var changes = [];
+                _.each(records, (record) => {
+                    var address = record.address || '';
+                    var [ schema, table ] = record.location.substr(address.length + 1).split('/');
+                    var change = _.find(changes, { address, schema, table });
+                    if (!change) {
+                        change = { address, schema, table, objects: [] };
+                        changes.push(change);
+                    }
+                    change.objects.push(record.data);
+                });
+                _.each(changes, (c) => {
+                    this.updateTableEntry(c.address, c.schema, c.table, c.objects, true);
+                });
             }
             return count;
         });
@@ -408,7 +429,7 @@ module.exports = React.createClass({
                     if (!remove) {
                         tbl.objects[index] = object;
                     } else {
-                        tbl.objects.splice(index);
+                        tbl.objects.splice(index, 1);
                     }
                 } else {
                     if (!remove) {

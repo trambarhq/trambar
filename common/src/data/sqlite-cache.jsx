@@ -39,6 +39,7 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.tables = {};
         return {
             recordCounts: {},
             writeCount: 0,
@@ -57,7 +58,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
-        var address = query.address;
+        var address = query.address || '';
         var schema = query.schema;
         var table = query.table;
         var criteria = query.criteria;
@@ -108,7 +109,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     save: function(location, objects) {
-        var address = location.address;
+        var address = location.address || '';
         var schema = location.schema;
         var table = location.table;
         var statements = [], paramSets = [];
@@ -150,7 +151,7 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     remove: function(location, objects) {
-        var address = location.address;
+        var address = location.address || '';
         var schema = location.schema;
         var table = location.table;
         return Promise.mapSeries(objects, (object) => {
@@ -172,11 +173,12 @@ module.exports = React.createClass({
                 params = [ address, schema, table, object.id ];
             }
             return this.execute(sql, params);
-        }).then((objects) => {
+        }).then(() => {
             var deleteCount = this.state.deleteCount;
             deleteCount += objects.length;
             this.setState({ deleteCount });
             this.updateTableEntry(address, schema, table, objects, true);
+
             this.updateRecordCount(schema, 500);
             return objects;
         });
@@ -202,7 +204,7 @@ module.exports = React.createClass({
                 DELETE FROM remote_data
                 WHERE address = ?
             `;
-            params = [ criteria.address ];
+            params = [ criteria.address || '' ];
         } else if (criteria.count !== undefined) {
             sql = `
                 DELETE FROM remote_data
@@ -218,6 +220,11 @@ module.exports = React.createClass({
                 WHERE rtime < ?
             `;
             params = [ rtime ];
+        } else {
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn('Invalid removal criteria: ', criteria);
+            }
+            return Promise.resolve(0);
         }
         return this.execute(sql, params).then((count) => {
             if (count > 0) {
@@ -225,6 +232,7 @@ module.exports = React.createClass({
                 deleteCount += count;
                 this.setState({ deleteCount });
                 this.updateRecordCount('remote_data');
+                this.tables['remote'] = {};
             }
         });
     },
@@ -472,7 +480,7 @@ module.exports = React.createClass({
                     if (!remove) {
                         tbl.objects[index] = object;
                     } else {
-                        tbl.objects.splice(index);
+                        tbl.objects.splice(index, 1);
                     }
                 } else {
                     if (!remove) {

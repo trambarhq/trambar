@@ -12,6 +12,7 @@
   "dependencies": {},
   "devDependencies": {
     "async-do-while": "0.0.3",
+    "b64-to-blob": "^1.2.19",
     "babel-core": "^6.24.1",
     "babel-loader": "^7.0.0",
     "babel-preset-env": "^1.4.0",
