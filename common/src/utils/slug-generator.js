@@ -11,7 +11,7 @@ function fromTitle(title) {
     var lang;
     for (var lang in title) {
         name = String(title[lang]);
-        name = latinize(name);
+        name = removeDiacritics(name).toLowerCase();
         name = name.replace(/\s+/g, '-');
         name = name.replace(/[^0-9a-z\-]/g, '');
         if (/^\-+$/.test(name)) {
@@ -35,25 +35,26 @@ function fromPersonalName(fullName) {
     var lang;
     for (var lang in fullName) {
         var parts = String(fullName[lang]).split(/\s+/).map((s) => {
-            return latinize(s).replace(/[^a-z]/g, '');
+            return removeDiacritics(s).toLowerCase().replace(/[^a-z]/g, '');
         }).filter(Boolean);
-        // last name plus initials of other names
-        var last = parts[parts.length - 1];
-        var initials = '';
-        for (var i = 0; i < parts.length - 1; i++) {
-            initials += parts[i].charAt(0);
-        }
-        name = initials + last;
-        if (name) {
-            break;
+        if (parts.length > 0) {
+            // last name plus initials of other names
+            var last = parts[parts.length - 1];
+            var initials = '';
+            for (var i = 0; i < parts.length - 1; i++) {
+                initials += parts[i].charAt(0);
+            }
+            name = initials + last;
+            if (name) {
+                break;
+            }
         }
     }
     return name;
 }
 
-function latinize(s) {
+function removeDiacritics(s) {
     return String(s)
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
+        .replace(/[\u0300-\u036f]/g, '');
 }

@@ -57,6 +57,7 @@ describe('HTTPRequest', function() {
             });
         })
         it('should reject with an error when the host is unreachable', function() {
+            this.timeout(5000);
             var url = 'http://domain.test/';
             return HTTPRequest.fetch('GET', url).catch((err) => {
                 expect(err).to.be.an('error');

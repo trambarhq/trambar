@@ -38,8 +38,9 @@ module.exports = function(config) {
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
                         query: {
-                            presets: [ 'es2015', 'react' ]
-                        }
+                            presets: [ 'es2015', 'react' ],
+                            plugins: [ 'syntax-dynamic-import' ],
+                        },
                     },
                     {
                         test: /\.jpg|\.mp4/,
