@@ -13,6 +13,7 @@ module.exports = React.createClass({
         url: PropTypes.string,
         clippingRect: PropTypes.object,
         onLoad: PropTypes.func,
+        onError: PropTypes.func,
     },
 
     /**
@@ -84,6 +85,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Inform parent component that an error occurred
+     *
+     * @param  {Error} err
+     */
+    triggerErrorEvent: function(err) {
+        if (this.props.onError) {
+            this.props.onError({
+                type: 'error',
+                target: this,
+                error: err
+            });
+        }
+    },
+
+    /**
      * Load file at given URL or clear the canvas if it's empty
      *
      * @param  {String} url
@@ -112,6 +128,8 @@ module.exports = React.createClass({
                     this.drawImage(this.props.clippingRect);
                     this.triggerLoadEvent();
                 });
+            }).catch((err) => {
+                this.triggerErrorEvent(err);
             });
         } else {
             this.clearCanvas();

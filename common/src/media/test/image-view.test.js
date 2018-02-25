@@ -16,7 +16,10 @@ describe('ImageView', function() {
                 url: URL.createObjectURL(blob),
                 onLoad: () => {
                     resolve(wrapper);
-                }
+                },
+                onError: (evt) => {
+                    reject(evt.error);
+                },
             };
             var wrapper = Enzyme.mount(<ImageView {...props} />);
         }).then((wrapper) => {

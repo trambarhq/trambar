@@ -72,7 +72,7 @@ function get(localURL) {
 /**
  * Associate a blob with a URL
  *
- * @param  {String|Blob} target
+ * @param  {Blob|CordovaFile} target
  * @param  {String} url
  */
 function associate(target, url) {
