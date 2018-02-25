@@ -8,6 +8,8 @@ var videoData = require('./videos/small.mp4');
 describe('FrameGrabber', function() {
     describe('#capture', function() {
         it('should obtain a frame from test video', function() {
+            this.timeout(5000);
+
             var blob = new Blob([ videoData ], { type: 'video/mp4' });
             var url = URL.createObjectURL(blob);
             return MediaLoader.loadVideo(url).then((video) => {

@@ -41,15 +41,6 @@ BlobStream.prototype.toBlob = function() {
     }
 };
 
-/**
- * Return the stream id
- *
- * @return {String}
- */
-BlobStream.prototype.toJSON = function() {
-    return this.id;
-};
-
 BlobStream.prototype.setOptions = function(options) {
     if (this.started) {
         throw new Error('Cannot set options once a stream has started');
@@ -238,7 +229,7 @@ BlobStream.prototype.start = function() {
         this.promise = this.waitForConnectivity().then(() => {
             this.started = true;
             return new Promise((resolve, reject) => {
-                var attempts = 1;
+                var attempts = 10;
                 var failureCount = 0;
                 var done = false;
                 var uploadedChunkSize = 0;
@@ -288,7 +279,7 @@ BlobStream.prototype.start = function() {
                             });
                         }).catch((err) => {
                             // don't immediately fail unless it's a HTTP error
-                            if (!(err.statusCode >= 400 && err.statusCode <= 499)) {
+                            if (!(err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429)) {
                                 if (++failureCount < attempts) {
                                     // try again after a delay
                                     delay = Math.min(delay * 2, 30 * 1000);
