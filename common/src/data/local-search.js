@@ -118,16 +118,33 @@ function limit(table, objects, criteria) {
             }
         }
         if (criteria.per_user_limit) {
-            var objectsByUser = _.groupBy(objects, 'user_id');
-            _.each(objectsByUser, (list) => {
-                if (list.length > criteria.per_user_limit) {
-                    var count = list.length - criteria.per_user_limit;
-                    for (var i = 0; i < list.length; i++) {
-                        var index = objects.indexOf(list[0]);
-                        objects.splice(index, 1);
+            // apply per user limit
+            var limit = criteria.per_user_limit;
+            var countsByUser = {};
+            var excessObjects = [];
+            _.eachRight(objects, (object) => {
+                var keep = false;
+                if (object.hasOwnProperty('user_id')) {
+                    var userId = object.user_id;
+                    var count = countsByUser[userId] || 0;
+                    if (count < limit) {
+                        countsByUser[userId] = count + 1;
+                        keep = true;
                     }
+                } else if (object.hasOwnProperty('user_ids')) {
+                    _.each(object.user_ids, (userId) => {
+                        var count = countsByUser[userId] || 0;
+                        if (count < limit) {
+                            countsByUser[userId] = count + 1;
+                            keep = true;
+                        }
+                    });
+                }
+                if (!keep) {
+                    excessObjects.push(object);
                 }
             });
+            _.pullAll(objects, excessObjects);
         }
     }
 }
