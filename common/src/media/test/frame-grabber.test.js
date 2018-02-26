@@ -13,7 +13,7 @@ describe('FrameGrabber', function() {
             var blob = new Blob([ videoData ], { type: 'video/mp4' });
             var url = URL.createObjectURL(blob);
             return MediaLoader.loadVideo(url).then((video) => {
-                return FrameGrabber.capture(video).then((blob) => {
+                return FrameGrabber.capture(video, { timeout: 5000 }).then((blob) => {
                     expect(blob).to.have.property('type', 'image/jpeg');
                     expect(blob).to.have.property('size').that.is.above(30000);
                 });

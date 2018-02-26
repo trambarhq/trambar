@@ -5,7 +5,15 @@ module.exports = {
     capture,
 }
 
-function capture(video, startTime) {
+/**
+ * Capture a frame from a video element
+ *
+ * @param  {HTMLVideoElement} video
+ * @param  {Object} options
+ *
+ * @return {Promise<Blob>}
+ */
+function capture(video, options) {
     return new Promise((resolve, reject) => {
         var width = video.videoWidth;
         var height = video.videoHeight;
@@ -15,6 +23,8 @@ function capture(video, startTime) {
         var attempts = 1;
         var biggest = null;
         var live = (video.duration === Infinity);
+        var startTime = _.get(options, 'start', 0);
+        var timeLimit = _.get(options, 'timeout', 1000);
 
         function onBlob(blob) {
             if (live) {
@@ -75,12 +85,12 @@ function capture(video, startTime) {
             video.addEventListener('ended', () => {
                 onFailure(new Error('Unable to obtain an image before video ended'));
             });
-            video.currentTime = startTime || 0;
+            video.currentTime = startTime;
 
             // set a timeout, in case we're not getting expected events from video
             var timeout = setTimeout(() => {
                 onFailure(new Error('Unable to obtain an image within time limit'));
-            }, 1000);
+            }, timeLimit);
         }
 
         function cleanUp() {

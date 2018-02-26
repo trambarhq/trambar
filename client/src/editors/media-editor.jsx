@@ -1,14 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-var BlobReader = require('utils/blob-reader');
-var LinkParser = require('utils/link-parser');
-var FrameGrabber = require('media/frame-grabber');
-var QuickStart = require('media/quick-start');
-var BlobStream = require('transport/blob-stream');
-var BlobManager = require('transport/blob-manager');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
