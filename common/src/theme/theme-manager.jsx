@@ -112,28 +112,43 @@ module.exports = React.createClass({
                 width = Math.round(width * this.state.devicePixelRatio);
                 height = Math.round(height * this.state.devicePixelRatio);
             }
-            if (width && height) {
-                filters.push(`re${width}-${height}`);
-            } else if (!width && height) {
-                filters.push(`h${height}`);
-            } else if (!height && width) {
-                filters.push(`w${width}`);
+            var resizing = width || height;
+            if (resizing) {
+                if (width && height) {
+                    filters.push(`re${width}-${height}`);
+                } else if (!width && height) {
+                    filters.push(`h${height}`);
+                } else if (!height && width) {
+                    filters.push(`w${width}`);
+                }
+                if (res.format === 'png' || res.format === 'gif') {
+                    // add sharpen filter to reduce blurriness
+                    filters.push(`sh`);
+                }
             }
             // set quality
             if (params.quality !== undefined) {
                 filters.push(`q${params.quality}`);
             }
-            versionPath = `/${filters.join('+')}`;
-            if (this.props.useWebP === true || (this.state.webpSupport && this.props.useWebP !== false)) {
-                versionPath += `.webp`;
+            // choose format
+            var ext;
+            if ((this.state.webpSupport && this.props.useWebP !== false) || this.props.useWebP === true) {
+                ext = 'webp';
+                if (res.format === 'png' || res.format === 'gif') {
+                    if (!resizing) {
+                        // use lossless compression (since it'll likely produce a smaller file)
+                        filters.push(`l`);
+                    }
+                }
             } else {
                 if (res.format === 'png' || res.format === 'gif') {
                     // use PNG to preserve alpha channel
-                    versionPath += `.png`;
+                    ext = `png`;
                 } else {
-                    versionPath += `.jpg`;
+                    ext = 'jpg';
                 }
             }
+            versionPath = `/${filters.join('+')}.${ext}`;
         }
         return `${this.props.serverAddress}${resURL}${versionPath}`;
     },

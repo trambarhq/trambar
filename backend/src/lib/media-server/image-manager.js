@@ -54,14 +54,19 @@ var operators = {
     grayscale: function() {
         this.grayscale();
     },
-    normalize: function() {
-        this.normalize();
-    },
     negate: function() {
         this.negate();
     },
+    normalize: function() {
+        this.normalize();
+    },
+    lossless: function() {
+        this.settings.lossless = true;
+    },
     quality: function(quality) {
-        this.settings.quality = quality;
+        if (quality) {
+            this.settings.quality = quality;
+        }
     },
     rotate: function(degree) {
         this.rotate(degree);
@@ -93,6 +98,7 @@ function applyFilters(path, filters, format) {
     var image = Sharp(path);
     image.settings = {
         quality: 90,
+        lossless: false,
     };
     _.each(_.split(filters, /[ +]/), (filter) => {
         var cmd = '', args = [];
@@ -117,10 +123,11 @@ function applyFilters(path, filters, format) {
             }
         });
     });
-    var quality = image.settings.quality || 90;
+    var quality = image.settings.quality;
+    var lossless = image.settings.lossless;
     switch (_.toLower(format)) {
         case 'webp':
-            image.webp({ quality })
+            image.webp({ quality, lossless });
             break;
         case 'png':
             image.png();

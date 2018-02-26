@@ -150,7 +150,8 @@ describe('ThemeManager', function() {
             var url = manager.getImageURL(jpeg);
             expect(url).to.equal('http://some-server/media/images/12345/cr5-5-250-250.webp');
         })
-        it('should choose WebP also when original is PNG', function() {
+        it('should choose lossless WebP when original is PNG', function() {
+            wrapper.setProps({ useWebP: true });
             var png = {
                 type: 'image',
                 url: '/media/images/23456',
@@ -160,9 +161,10 @@ describe('ThemeManager', function() {
                 format: 'png'
             };
             var url = manager.getImageURL(png);
-            expect(url).to.equal('http://some-server/media/images/23456/cr5-5-250-250.webp');
+            expect(url).to.equal('http://some-server/media/images/23456/cr5-5-250-250+l.webp');
         })
-        it('should choose WebP also when original is GIF', function() {
+        it('should choose lossless WebP when original is GIF', function() {
+            wrapper.setProps({ useWebP: true });
             var gif = {
                 type: 'image',
                 url: '/media/images/34567',
@@ -172,7 +174,20 @@ describe('ThemeManager', function() {
                 format: 'gif'
             };
             var url = manager.getImageURL(gif);
-            expect(url).to.equal('http://some-server/media/images/34567/cr5-5-250-250.webp');
+            expect(url).to.equal('http://some-server/media/images/34567/cr5-5-250-250+l.webp');
+        })
+        it('should use sharpen filter when resizing a PNG', function() {
+            wrapper.setProps({ useWebP: true });
+            var png = {
+                type: 'image',
+                url: '/media/images/23456',
+                width: 1000,
+                height: 1000,
+                clip: { left: 5, top: 5, width: 250, height: 250 },
+                format: 'png'
+            };
+            var url = manager.getImageURL(png, { width: 200 });
+            expect(url).to.equal('http://some-server/media/images/23456/cr5-5-250-250+w200+sh.webp');
         })
     })
     describe('#getAudioURL()', function() {
