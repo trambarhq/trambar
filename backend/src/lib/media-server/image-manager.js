@@ -20,7 +20,13 @@ module.exports = {
  * @return {Promise<Object>}
  */
 function getImageMetadata(path) {
-    return Promise.resolve(Sharp(path).metadata());
+    return Promise.try(() => {
+        return Sharp(path).metadata();
+    }).catch((err) => {
+        return FS.readFileAsync(path).then((data) => {
+            return Sharp(data).metadata();
+        });
+    })
 }
 
 var operators = {
@@ -92,51 +98,64 @@ var operators = {
  * @param  {String} filters
  * @param  {String} format
  *
- * @return {Buffer}
+ * @return {Promise<Buffer>}
  */
 function applyFilters(path, filters, format) {
     var image = Sharp(path);
-    image.settings = {
-        quality: 90,
-        lossless: false,
-    };
-    _.each(_.split(filters, /[ +]/), (filter) => {
-        var cmd = '', args = [];
-        var regExp = /(\D+)(\d*)/g, m;
-        while(m = regExp.exec(filter)) {
-            if (!cmd) {
-                cmd = m[1];
-            } else {
-                // ignore the delimiter
-            }
-            var arg = parseInt(m[2]);
-            if (arg === arg) {
-                args.push(arg);
-            }
-        }
-        var operator = null;
-        _.each(operators, (operator, name) => {
-            // see which operator's name start with the letter(s)
-            if (name.substr(0, cmd.length) === cmd) {
-                operator.apply(image, args);
-                return false;
-            }
+    return applyFiltersToImage(image, filters, format).catch((err) => {
+        // sometimes Sharp will fail when a file path is given
+        // whereas a blob will work
+        return FS.readFileAsync(path).then((data) => {
+            var image = Sharp(data);
+            return applyFiltersToImage(image, filters, format);
         });
+    })
+}
+
+function applyFiltersToImage(image, filters, format) {
+    return Promise.try(() => {
+        image.settings = {
+            quality: 90,
+            lossless: false,
+        };
+        _.each(_.split(filters, /[ +]/), (filter) => {
+            var cmd = '', args = [];
+            var regExp = /(\D+)(\d*)/g, m;
+            while(m = regExp.exec(filter)) {
+                if (!cmd) {
+                    cmd = m[1];
+                } else {
+                    // ignore the delimiter
+                }
+                var arg = parseInt(m[2]);
+                if (arg === arg) {
+                    args.push(arg);
+                }
+            }
+            var operator = null;
+            _.each(operators, (operator, name) => {
+                // see which operator's name start with the letter(s)
+                if (name.substr(0, cmd.length) === cmd) {
+                    operator.apply(image, args);
+                    return false;
+                }
+            });
+        });
+        var quality = image.settings.quality;
+        var lossless = image.settings.lossless;
+        switch (_.toLower(format)) {
+            case 'webp':
+                image.webp({ quality, lossless });
+                break;
+            case 'png':
+                image.png();
+                break;
+            case 'jpeg':
+                image.jpeg({ quality });
+                break;
+        }
+        return image.toBuffer();
     });
-    var quality = image.settings.quality;
-    var lossless = image.settings.lossless;
-    switch (_.toLower(format)) {
-        case 'webp':
-            image.webp({ quality, lossless });
-            break;
-        case 'png':
-            image.png();
-            break;
-        case 'jpeg':
-            image.jpeg({ quality });
-            break;
-    }
-    return Promise.resolve(image.toBuffer());
 }
 
 /**
