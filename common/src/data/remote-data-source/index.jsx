@@ -194,12 +194,8 @@ module.exports = React.createClass({
         var options = { responseType: 'json', contentType: 'json' };
         return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
             _.assign(session, res.session);
-            if (session.token) {
-                this.triggerAuthorizationEvent(session);
-                return null;
-            } else {
-                throw new HTTPError(session.error);
-            }
+            this.triggerAuthorizationEvent(session);
+            return null;
         }).catch((err) => {
             if (err.statusCode !== 401) {
                 // clear the promise if the session is no longer valid
@@ -222,7 +218,7 @@ module.exports = React.createClass({
         var session = getSession(address);
         var handle = session.handle;
         if (!handle) {
-            return Promise.resolve(false);
+            return Promise.resolve(null);
         }
         return Promise.resolve(session.promise).then(() => {
             var url = `${address}/session/`;
@@ -357,7 +353,7 @@ module.exports = React.createClass({
         } else if (type === 'test') {
             query += '&test=1';
         }
-        var url = `${address}/session/${oauthServer.type}?${query}`;
+        var url = `${address}/session/${oauthServer.type}/?${query}`;
         return url;
     },
 
@@ -403,7 +399,7 @@ module.exports = React.createClass({
      */
     start: function(location) {
         // Promise.resolve() ensures that the callback won't get called
-        // within render()
+        // within render(), where an exception can cause a cascade of other failures
         return Promise.resolve().then(() => {
             if (location.schema === 'local') {
                 return 0;
