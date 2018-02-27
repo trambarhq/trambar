@@ -272,9 +272,9 @@ module.exports = React.createClass({
             ref: setters.remoteDataSource,
             inForeground: !this.state.paused,
             hasConnection: this.state.online,
-            committedResultsOnly: false,
-            locale: this.state.locale,
-
+            discoveryFlags: {
+                include_uncommitted: true,
+            },
             onChange: this.handleDatabaseChange,
             onSearch: this.handleDatabaseSearch,
             onAuthorization: this.handleAuthorization,

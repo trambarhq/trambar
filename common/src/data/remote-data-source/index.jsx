@@ -28,7 +28,6 @@ module.exports = React.createClass({
         basePath: PropTypes.string,
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
-        committedResultsOnly: PropTypes.bool,
         hasConnection: PropTypes.bool,
         inForeground: PropTypes.bool,
         cache: PropTypes.object,
@@ -50,8 +49,9 @@ module.exports = React.createClass({
         return {
             refreshInterval: 15 * 60,   // 15 minutes
             basePath: '',
+            discoveryFlags: {},
+            retrievalFlags: {},
             hasConnection: true,
-            committedResultsOnly: true,
             inForeground: true,
         };
     },
@@ -515,7 +515,8 @@ module.exports = React.createClass({
                     throw new HTTPError(404);
                 }
             }
-            if (!this.props.committedResultsOnly && !search.committed) {
+            var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
+            if (includeUncommitted && !search.committed) {
                 // apply changes that haven't been saved yet
                 search = this.applyUncommittedChanges(search);
             }
@@ -583,6 +584,24 @@ module.exports = React.createClass({
                 return removal.results;
             });
         }
+    },
+
+    /**
+     * Remove recent searches on schema
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     */
+    clear: function(address, schema) {
+        this.updateList('recentSearchResults', (before) => {
+            var after = _.filter(before, (search) => {
+                if (_.isMatch(search, { address, schema })) {
+                    return false;
+                }
+                return true;
+            });
+            return after;
+        });
     },
 
     /**
@@ -730,24 +749,6 @@ module.exports = React.createClass({
                 }
                 return null;
             });
-        });
-    },
-
-    /**
-     * Remove recent searches on schema
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     */
-    clear: function(address, schema) {
-        this.updateList('recentSearchResults', (before) => {
-            var after = _.filter(before, (search) => {
-                if (_.isMatch(search, { address, schema })) {
-                    return false;
-                }
-                return true;
-            });
-            return after;
         });
     },
 
@@ -1145,22 +1146,20 @@ module.exports = React.createClass({
         if (!table) {
             return Promise.reject(new Error('No table specified'));
         }
+        var flags;
+        if (action === 'retrieval' || action === 'storage') {
+            flags = this.props.retrievalFlags;
+        } else if (action === 'discovery') {
+            flags = _.omit(this.props.discoveryFlags, 'include_uncommitted');
+        }
         var url = `${address}${prefix}/data/${action}/${schema}/${table}/`;
         var session = getSession(address);
-        payload = _.clone(payload) || {};
-        if (session.token) {
-            payload.auth_token = session.token;
-        }
-        if (action === 'retrieval' || action === 'storage') {
-            _.assign(payload, this.props.retrievalFlags);
-        } else if (action === 'discovery') {
-            _.assign(payload, this.props.discoveryFlags);
-        }
+        var req = _.assign({}, payload, flags, { auth_token: session.token });
         var options = {
             contentType: 'json',
             responseType: 'json',
         };
-        return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
+        return HTTPRequest.fetch('POST', url, req, options).then((result) => {
             return result;
         }).catch((err) => {
             this.clearRecentSearches(address);

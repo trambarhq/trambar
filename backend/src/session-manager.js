@@ -246,9 +246,8 @@ function handleSessionRetrieval(req, res) {
                     throw new HTTPError(error);
                 }
             }
-        } else {
-            throw new HTTPError(400);
         }
+        return {};
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {
@@ -302,7 +301,7 @@ function handleOAuthRequest(req, res, done) {
                     });
                 }).catch((err) => {
                     // save the error
-                    session.details.error = _.pick(err, 'statusCode', 'code', 'message', 'stack');
+                    session.details.error = _.pick(err, 'statusCode', 'code', 'message', 'reason', 'stack');
                     return saveSession(session);
                 });
             });
