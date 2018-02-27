@@ -24,13 +24,14 @@ module.exports = React.createClass({
     displayName: 'RemoteDataSource',
     mixins: [ UpdateCheck ],
     propTypes: {
-        refreshInterval: PropTypes.number,
         basePath: PropTypes.string,
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
         hasConnection: PropTypes.bool,
         inForeground: PropTypes.bool,
         cache: PropTypes.object,
+        refreshInterval: PropTypes.number,
+        sessionRetryInterval: PropTypes.number,
 
         onChange: PropTypes.func,
         onSearch: PropTypes.func,
@@ -47,12 +48,13 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            refreshInterval: 15 * 60,   // 15 minutes
             basePath: '',
             discoveryFlags: {},
             retrievalFlags: {},
             hasConnection: true,
             inForeground: true,
+            refreshInterval: 15 * 60,   // 15 minutes
+            sessionRetryInterval: 5000,
         };
     },
 
@@ -129,7 +131,7 @@ module.exports = React.createClass({
                 session.promise = null;
                 // trigger a change event after a delay, which should cause the
                 // caller to try again
-                setTimeout(this.triggerChangeEvent, 5000);
+                setTimeout(this.triggerChangeEvent, this.props.sessionRetryInterval);
                 throw err;
             });
         }
