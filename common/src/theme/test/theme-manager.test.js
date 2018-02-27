@@ -4,7 +4,7 @@ var React = require('react');
 var Chai = require('chai'), expect = Chai.expect;
 var Enzyme = require('enzyme');
 
-var ThemeManager = require('theme/theme-manager.jsx');
+var ThemeManager = require('theme/theme-manager');
 
 describe('ThemeManager', function() {
     var props = {

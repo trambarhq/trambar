@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var CORSRewriter = require('routing/cors-rewriter');
 
 describe('CORSRewriter', function() {
-    describe('#extract()'), function() {
+    describe('#extract()', function() {
         it('should extract an address from the path part of a URL', function() {
             var urlParts = {
                 path: '/https/death-star.ge/somewhere/info'
@@ -26,7 +26,7 @@ describe('CORSRewriter', function() {
             expect(params.cors).to.be.false;
         })
     })
-    describe('#insert()'), function() {
+    describe('#insert()', function() {
         it('should insert CORS host address into path', function() {
             var urlParts = {
                 path: '/somewhere/info'

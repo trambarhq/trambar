@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var MarkdownExporter = require('utils/markdown-exporter');
 
 describe('MarkdownExporter', function() {
-    describe('#escape()'), function() {
+    describe('#escape()', function() {
         it('should escape Markdown characters with slashes', function() {
             var text1 = '_hello_ world';
             var text2 = '* This is a [test]';
@@ -14,7 +14,7 @@ describe('MarkdownExporter', function() {
             expect(result2).to.equal('\\* This is a \\[test\\]');
         });
     })
-    describe('#attachResources()'), function() {
+    describe('#attachResources()', function() {
         it('should attach resources as thumbnails', function() {
             var resources = [
                 { type: 'image', url: '/images/0', clip: { left: 5, top: 5, width: 100, height: 100 } },

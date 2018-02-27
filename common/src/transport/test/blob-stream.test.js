@@ -29,7 +29,7 @@ describe('BlobStream', function() {
             });
         })
     })
-    describe('#push()'), function() {
+    describe('#push()', function() {
         it('should cause an earlier call to pull() to resolve', function() {
             var stream = new BlobStream('http://somewhere/3', {});
             var promise1 = stream.pull();
@@ -43,7 +43,7 @@ describe('BlobStream', function() {
             });
         })
     })
-    describe('#close()'), function() {
+    describe('#close()', function() {
         it('should cause an earlier call to pull() to resolve to null', function() {
             var stream = new BlobStream('http://somewhere/4', {});
             var promise1 = stream.pull();
@@ -56,7 +56,7 @@ describe('BlobStream', function() {
             });
         })
     })
-    describe('#wait()'), function() {
+    describe('#wait()', function() {
         it('should wait til all blobs to be finalized', function() {
             var stream = new BlobStream('http://somewhere/5', {});
             _.each(_.range(1, 5), (num) => {
@@ -108,7 +108,7 @@ describe('BlobStream', function() {
             });
         })
     })
-    describe('#start()'), function() {
+    describe('#start()', function() {
         it('should send chunks to remote server, one at a time', function() {
             this.timeout(5000);
 

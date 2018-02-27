@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var UniversalLink = require('routing/universal-link');
 
 describe('UniversalLink', function() {
-    describe('#form()'), function() {
+    describe('#form()', function() {
         it('should form a URL with given address and path', function() {
             var url = UniversalLink.form('https://example.net', '/trambar/news');
             expect(url).to.equal('https://trambar.io/https/example.net/trambar/news');
@@ -18,7 +18,7 @@ describe('UniversalLink', function() {
             expect(url).to.equal('https://trambar.io/https/example.net/trambar/news?a=hello&b=1#world');
         })
     })
-    describe('#parse()'), function() {
+    describe('#parse()', function() {
         it('should find the address and path', function() {
             var url = 'https://trambar.io/https/example.net/trambar/news';
             var info = UniversalLink.parse(url);

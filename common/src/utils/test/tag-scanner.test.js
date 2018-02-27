@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var TagScanner = require('utils/tag-scanner');
 
 describe('TagScanner', function() {
-    describe('#findTags()'), function() {
+    describe('#findTags()', function() {
         it('should find a tag in text', function() {
             var result = TagScanner.findTags('Hello #world');
             expect(result).to.deep.equal([ '#world' ]);
@@ -32,7 +32,7 @@ describe('TagScanner', function() {
             expect(result).to.deep.equal([]);
         });
     })
-    describe('#isTag()'), function() {
+    describe('#isTag()', function() {
         it('should return true when given a tag', function() {
             var result = TagScanner.isTag('#hello');
             expect(result).to.be.true;

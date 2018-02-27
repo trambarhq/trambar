@@ -4,7 +4,7 @@ var React = require('react');
 var Chai = require('chai'), expect = Chai.expect;
 var Enzyme = require('enzyme');
 
-var RouteManager = require('routing/route-manager.jsx');
+var RouteManager = require('routing/route-manager');
 var Database = require('data/database');
 
 function MockPage(url, params) {

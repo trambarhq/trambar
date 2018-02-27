@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var Merger = require('data/merger.js');
 
 describe('Merger', function() {
-    describe('#mergeStrings()'), function() {
+    describe('#mergeStrings()', function() {
         it('should take changes from both A and B', function() {
             var c = 'This is a test. This is only a test.';
             var a = 'Well, this is a test. This is only a test.';
@@ -14,7 +14,7 @@ describe('Merger', function() {
             expect(actual).to.equal(expected);
         })
     })
-    describe('#mergeObjects()'), function() {
+    describe('#mergeObjects()', function() {
         it('should take changes from A when B is unchanged', function() {
             var c = {
                 id: 5,

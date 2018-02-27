@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var SlugGenerator = require('utils/slug-generator');
 
 describe('SlugGenerator', function() {
-    describe('#fromTitle()'), function() {
+    describe('#fromTitle()', function() {
         it('should convert string to lowercase and replace spaces with dashes', function() {
             var result = SlugGenerator.fromTitle('Hello World');
             expect(result).to.equal('hello-world');
@@ -28,7 +28,7 @@ describe('SlugGenerator', function() {
             expect(result).to.equal('dead-souls');
         })
     })
-    describe('#fromPersonalName()'), function() {
+    describe('#fromPersonalName()', function() {
         it('should return one name when there\'s just one', function() {
             var result = SlugGenerator.fromPersonalName('Tadeusz');
             expect(result).to.equal('tadeusz');

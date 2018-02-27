@@ -36,6 +36,7 @@
     "lodash": "^4.17.4",
     "mark-gor": "0.0.4",
     "mocha": "^3.4.1",
+    "moment": "^2.20.1",
     "node-sass": "^4.7.2",
     "react": "~15.4.0",
     "react-addons-test-utils": "~15.4.0",

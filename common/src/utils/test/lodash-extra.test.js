@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 require('utils/lodash-extra');
 
 describe('LodashExtra', function() {
-    describe('#decouple()'), function() {
+    describe('#decouple()', function() {
         it('should clone an object shallowly, and clone the object at the specified path', function() {
             var before = {
                 a: 1,
@@ -33,7 +33,7 @@ describe('LodashExtra', function() {
             expect(after.b.c).to.be.an('array');
         })
     })
-    describe('#decoupleSet()'), function() {
+    describe('#decoupleSet()', function() {
         it('should decouple objects along a given path then set the property', function() {
             var before = {
                 a: 1,
@@ -48,7 +48,7 @@ describe('LodashExtra', function() {
             expect(after.b.c.value).to.equal(6);
         })
     })
-    describe('#decouplePush()'), function() {
+    describe('#decouplePush()', function() {
         it('should decouple objects along a given path then push a value', function() {
             var before = {
                 a: 1,
@@ -63,7 +63,7 @@ describe('LodashExtra', function() {
             expect(after.b.c.array).to.have.lengthOf(3);
         })
     })
-    describe('#shallowDiff()'), function() {
+    describe('#shallowDiff()', function() {
         it('should return differences of two objects, comparing shallowly', function() {
             var cat = { name: 'Garfield' }
             var a = {
@@ -101,7 +101,7 @@ describe('LodashExtra', function() {
             expect(diff).to.deep.equal(expected);
         })
     })
-    describe('#obscure()'), function() {
+    describe('#obscure()', function() {
         it('should change numbers to zero', function() {
             var before = {
                 a: 1,

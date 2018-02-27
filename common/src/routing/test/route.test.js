@@ -5,7 +5,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var Route = require('routing/route');
 
 describe('Route', function() {
-    describe('#match()'), function() {
+    describe('#match()', function() {
         it('should extract parameters from a matching URL', function() {
             var url = '/forum/123/msg/4/';
             var params = Route.match(url, [ '/forum/:forumId/msg/:msgId/' ], (params) => {
@@ -22,7 +22,7 @@ describe('Route', function() {
             expect(params).to.be.undefined;
         })
     })
-    describe('#change()'), function() {
+    describe('#change()', function() {
         it('should try to change the URL through RouteManager', function() {
             var newURL = '/before/'
             var routeManager = {
