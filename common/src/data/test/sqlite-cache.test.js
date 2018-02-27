@@ -10,7 +10,7 @@ describe('SQLiteCache', function() {
     var wrapper = Enzyme.mount(<SQLiteCache databaseName="test"/>);
     var cache = wrapper.instance();
 
-    describe('#save', function() {
+    describe('#save()'), function() {
         it('should save an object to SQLite', function() {
             var location = {
                 server: 'somewhere.net',
@@ -87,7 +87,7 @@ describe('SQLiteCache', function() {
             return cache.save(location, [ object ]);
         })
     })
-    describe('#find', function() {
+    describe('#find()'), function() {
         it('should be able to find object saved earlier', function() {
             var query = {
                 server: 'somewhere.net',
@@ -138,7 +138,7 @@ describe('SQLiteCache', function() {
             });
         })
     })
-    describe('#remove', function() {
+    describe('#remove()'), function() {
         it('should remove an object saved earlier', function() {
             var location = {
                 server: 'somewhere.net',
@@ -190,7 +190,7 @@ describe('SQLiteCache', function() {
             });
         })
     })
-    describe('#clean', function() {
+    describe('#clean()'), function() {
         it('should remove objects by server name', function() {
             var location1 = {
                 schema: 'global',

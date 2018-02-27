@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var ListParser = require('utils/list-parser');
 
 describe('ListParser', function() {
-    describe('#extract', function() {
+    describe('#extract()'), function() {
         it('should extract list from text', function() {
             var text = `
 Pick an item:
@@ -83,7 +83,7 @@ Pick an item:
             expect(tokens[0]).to.be.a('string').that.equals(text);
         })
     })
-    describe('#update', function() {
+    describe('#update()'), function() {
         it('should not alter whitespace within the text', function() {
             var text = `
                 Pick an item:

@@ -6,7 +6,7 @@ var FrameGrabber = require('media/frame-grabber');
 var videoData = require('./videos/small.mp4');
 
 describe('FrameGrabber', function() {
-    describe('#capture', function() {
+    describe('#capture()'), function() {
         it('should obtain a frame from test video', function() {
             this.timeout(5000);
 

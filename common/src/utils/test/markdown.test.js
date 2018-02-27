@@ -4,7 +4,7 @@ var Chai = require('chai'), expect = Chai.expect;
 var Markdown = require('utils/markdown');
 
 describe('Markdown', function() {
-    describe('#detect', function() {
+    describe('#detect()'), function() {
         it('should detect that text contains Markdown formatting', function() {
             var text = `_hello_ world`;
             var result = Markdown.detect(text);
@@ -16,7 +16,7 @@ describe('Markdown', function() {
             expect(result).to.be.false;
         })
     });
-    describe('#findReferencedResource', function() {
+    describe('#findReferencedResource()'), function() {
         var resources = [
             { type: 'image' },
             { type: 'video' },
@@ -40,7 +40,7 @@ describe('Markdown', function() {
             expect(Markdown.findReferencedResource(resources, 'website')).to.equal(resources[3]);
         })
     })
-    describe('#attachClipRect', function() {
+    describe('#attachClipRect()'), function() {
         it('should attach clipping rectangle coordinates as query variables to URL', function() {
             var url = 'blob://something';
             var rect = { left: 4, top: 8, width: 50, height: 100 };

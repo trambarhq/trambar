@@ -6,7 +6,7 @@ var MediaLoader = require('media/media-loader');
 var videoData = require('./videos/small.mp4');
 
 describe('QuickStart', function() {
-    describe('#process', function() {
+    describe('#process()'), function() {
         it('should yield a new video with moov repositioned', function() {
             var blob = new Blob([ videoData ], { type: 'video/mp4' });
             return QuickStart.process(blob).then((processed) => {

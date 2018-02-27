@@ -25,7 +25,7 @@ describe('BlobManager', function() {
             })
         }
     })
-    describe('#find', function() {
+    describe('#find()'), function() {
         it('should find a blob by its URL', function() {
             var blob = new Blob([ 'Hello' ]);
             var url1 = BlobManager.manage(blob);
@@ -37,7 +37,7 @@ describe('BlobManager', function() {
             return expect(url).to.be.null;
         })
     })
-    describe('#associate', function() {
+    describe('#associate()'), function() {
         it('should associate a blob with an external URL', function() {
             var blob = new Blob([ 'Hello' ]);
             var url1 = BlobManager.manage(blob);
@@ -47,7 +47,7 @@ describe('BlobManager', function() {
             return expect(url2).to.equal(url1);
         })
     })
-    describe('#get', function() {
+    describe('#get()'), function() {
         it('should return a blob given its URL', function() {
             var blob1 = new Blob([ 'Hello' ]);
             var url = BlobManager.manage(blob1);
@@ -55,7 +55,7 @@ describe('BlobManager', function() {
             return expect(blob2).to.equal(blob1);
         })
     })
-    describe('#fetch', function() {
+    describe('#fetch()'), function() {
         it('should fetch a blob over HTTP', function() {
             var blob1 = new Blob([ 'Hello' ]);
             HTTPRequest.fetch = (method, url, payload, options) => {
@@ -83,7 +83,7 @@ describe('BlobManager', function() {
             });
         })
     })
-    describe('#remove', function() {
+    describe('#remove()'), function() {
         it('should remove a loaded blob', function() {
             var blob1 = new Blob([ 'Hello' ]);
             HTTPRequest.fetch = (method, url, payload, options) => {
