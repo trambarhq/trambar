@@ -7,7 +7,7 @@ var HTTPError = require('errors/http-error');
 
 describe('BlobStream', function() {
     var fetchOriginal = HTTPRequest.fetch;
-    after (function() {
+    after(function() {
         HTTPRequest.fetch = fetchOriginal;
     })
 

@@ -7,7 +7,7 @@ var HTTPRequest = require('transport/http-request');
 
 describe('BlobManager', function() {
     var fetchOriginal = HTTPRequest.fetch;
-    after (function() {
+    after(function() {
         HTTPRequest.fetch = fetchOriginal;
     })
 
