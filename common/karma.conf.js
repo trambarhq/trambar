@@ -14,6 +14,9 @@ module.exports = function(config) {
         files: [
             'tests.bundle.js',
         ],
+        client: {
+            args: parseTestPattern(process.argv),
+        },
 
         preprocessors: {
             'tests.bundle.js': [ 'webpack', 'sourcemap' ]
@@ -90,3 +93,13 @@ module.exports = function(config) {
         },
     })
 };
+
+function parseTestPattern(argv) {
+    var index = argv.indexOf('--');
+    var patterns = (index !== -1) ? argv.slice(index + 1) : [];
+    if (patterns.length > 0) {
+        return [ '--grep' ].concat(patterns);
+    } else {
+        return [];
+    }
+}

@@ -6,8 +6,8 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --single-run",
-    "test:start": "./node_modules/karma/bin/karma start"
+    "test": "./node_modules/karma/bin/karma start --single-run --",
+    "test:start": "./node_modules/karma/bin/karma start --"
   },
   "dependencies": {},
   "devDependencies": {

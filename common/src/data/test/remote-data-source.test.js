@@ -405,16 +405,8 @@ describe('RemoteDataSource', function() {
     })
     describe('#find()', function() {
         it('should request objects from remote server', function() {
-            var session = {
-                handle: 'abcdefg',
-                address: 'http://minas-tirith.me',
-                token: '123456789',
-                user_id: 3,
-                etime: Moment().subtract(1, 'day').toISOString(),
-            };
-            dataSource.restoreSession(session);
             var query = {
-                address: session.address,
+                address: 'http://minas-tirith.me',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -439,7 +431,9 @@ describe('RemoteDataSource', function() {
                     } else if (/retrieval/.test(url)) {
                         retrieval++;
                         expect(payload).to.have.property('ids').that.deep.equal([ 3 ]);
-                        return objects;
+                        return _.filter(objects, (object) => {
+                            return _.includes(payload.ids, object.id);
+                        });
                     }
                 });
             };
@@ -450,16 +444,8 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should reuse results from a previous search', function() {
-            var session = {
-                handle: 'abcdefg',
-                address: 'http://minas-tirith.me',
-                token: '123456789',
-                user_id: 3,
-                etime: Moment().subtract(1, 'day').toISOString(),
-            };
-            dataSource.restoreSession(session);
             var query = {
-                address: session.address,
+                address: 'http://minas-tirith.me',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -484,7 +470,9 @@ describe('RemoteDataSource', function() {
                     } else if (/retrieval/.test(url)) {
                         retrieval++;
                         expect(payload).to.have.property('ids').that.deep.equal([ 1 ]);
-                        return objects;
+                        return _.filter(objects, (object) => {
+                            return _.includes(payload.ids, object.id);
+                        });
                     }
                 });
             };
@@ -497,17 +485,8 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should return objects from cache without hitting remote server when the object count matches and the objects are retrieved recently', function() {
-            var session = {
-                handle: 'abcdefg',
-                address: 'http://moria.me',
-                token: '123456789',
-                user_id: 3,
-                etime: Moment().subtract(1, 'day').toISOString(),
-            };
-            dataSource.restoreSession(session);
-
             // put objects into cache first
-            var location = { address: session.address, schema: 'global', table: 'user' };
+            var location = { address: 'http://moria.me', schema: 'global', table: 'user' };
             var rtime = Moment().toISOString();
             var objects = [
                 { id: 1, gn: 70, username: 'gandolf', rtime },
@@ -515,7 +494,7 @@ describe('RemoteDataSource', function() {
             ];
             return cache.save(location, objects).then(() => {
                 var query = {
-                    address: session.address,
+                    address: location.address,
                     schema: 'global',
                     table: 'user',
                     criteria: {
@@ -535,7 +514,9 @@ describe('RemoteDataSource', function() {
                             };
                         } else if (/retrieval/.test(url)) {
                             retrieval++;
-                            return objects;
+                            return _.filter(objects, (object) => {
+                                return _.includes(payload.ids, object.id);
+                            });
                         }
                     });
                 };
@@ -548,16 +529,7 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should return objects from cache then perform a server-side check when cached objects might be stale', function() {
-            var session = {
-                handle: 'abcdefg',
-                address: 'http://level2.moria.me',
-                token: '123456789',
-                user_id: 3,
-                etime: Moment().subtract(1, 'day').toISOString(),
-            };
-            dataSource.restoreSession(session);
-
-            var location = { address: session.address, schema: 'global', table: 'user' };
+            var location = { address: 'http://level2.moria.me', schema: 'global', table: 'user' };
             var rtime = Moment().subtract(1, 'day').toISOString();
             var objects = [
                 { id: 1, gn: 70, username: 'gandolf', rtime },
@@ -565,7 +537,7 @@ describe('RemoteDataSource', function() {
             ];
             return cache.save(location, objects).then(() => {
                 var query = {
-                    address: session.address,
+                    address: location.address,
                     schema: 'global',
                     table: 'user',
                     criteria: {
@@ -584,7 +556,9 @@ describe('RemoteDataSource', function() {
                             };
                         } else if (/retrieval/.test(url)) {
                             retrieval++;
-                            return objects;
+                            return _.filter(objects, (object) => {
+                                return _.includes(payload.ids, object.id);
+                            });
                         }
                     });
                 };
@@ -602,16 +576,7 @@ describe('RemoteDataSource', function() {
                     onChange: (evt) => { resolve(evt) }
                 });
             });
-            var session = {
-                handle: 'abcdefg',
-                address: 'http://level3.moria.me',
-                token: '123456789',
-                user_id: 3,
-                etime: Moment().subtract(1, 'day').toISOString(),
-            };
-            dataSource.restoreSession(session);
-
-            var location = { address: session.address, schema: 'global', table: 'user' };
+            var location = { address: 'http://level3.moria.me', schema: 'global', table: 'user' };
             var rtime = Moment().subtract(1, 'day').toISOString();
             var objects = [
                 { id: 1, gn: 70, username: 'gandolf', rtime },
@@ -622,7 +587,7 @@ describe('RemoteDataSource', function() {
                 objects[1] = _.cloneDeep(objects[1]);
                 objects[1].gn++;
                 var query = {
-                    address: session.address,
+                    address: location.address,
                     schema: 'global',
                     table: 'user',
                     criteria: {
@@ -643,7 +608,9 @@ describe('RemoteDataSource', function() {
                             } else if (/retrieval/.test(url)) {
                                 expect(payload).to.have.property('ids').that.deep.equal([ objects[1].id ])
                                 retrieval++;
-                                return objects;
+                                return _.filter(objects, (object) => {
+                                    return _.includes(payload.ids, object.id);
+                                });
                             }
                         });
                     });
@@ -666,6 +633,166 @@ describe('RemoteDataSource', function() {
                         expect(users[1]).to.have.property('id', objects[1].id);
                         expect(users[1]).to.have.property('gn', objects[1].gn);
                     });
+                });
+            });
+        })
+        it('should return objects from cache on an open-ended search, perform discovery, then conclude that the initial result set was correct', function() {
+            var event = null;
+            setHandlers({
+                onChange: (evt) => { event = evt }
+            });
+            var location = { address: 'http://level4.moria.me', schema: 'global', table: 'user' };
+            var rtime = Moment().toISOString();
+            var objects = [
+                { id: 1, gn: 70, username: 'gandolf', rtime },
+                { id: 2, gn: 3, username: 'bilbo', rtime },
+            ];
+            return cache.save(location, objects).then(() => {
+                var query = {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'user',
+                    criteria: {}
+                };
+                var discovery = 0;
+                var retrieval = 0;
+                HTTPRequest.fetch = (method, url, payload, options) => {
+                    return Promise.delay(50).then(() => {
+                        return Promise.try(() => {
+                            if (/discovery/.test(url)) {
+                                discovery++;
+                                return {
+                                    ids: _.map(objects, 'id'),
+                                    gns: _.map(objects, 'gn')
+                                };
+                            } else if (/retrieval/.test(url)) {
+                                retrieval++;
+                                return _.filter(objects, (object) => {
+                                    return _.includes(payload.ids, object.id);
+                                });
+                            }
+                        });
+                    });
+                };
+                return dataSource.find(query).then((users) => {
+                    expect(discovery).to.equal(0);
+                    expect(retrieval).to.equal(0);
+                    expect(users).to.have.property('length', 2);
+                    return Promise.delay(100);
+                }).then(() => {
+                    expect(discovery).to.equal(1);
+                    expect(retrieval).to.equal(0);
+                    expect(event).to.be.null;
+                });
+            });
+        })
+        it('should return objects from cache, perform discovery, then retrieve an additional object', function() {
+            var onChangePromise = new Promise((resolve, reject) => {
+                setHandlers({
+                    onChange: (evt) => { resolve(evt) }
+                });
+            });
+            var location = { address: 'http://level5.moria.me', schema: 'global', table: 'user' };
+            var rtime = Moment().toISOString();
+            var objects = [
+                { id: 1, gn: 70, username: 'gandolf', rtime },
+                { id: 2, gn: 3, username: 'bilbo', rtime },
+            ];
+            return cache.save(location, objects).then(() => {
+                objects.push({ id: 3, gn: 1, username: 'sauron' });
+                var query = {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'user',
+                    criteria: {}
+                };
+                var discovery = 0;
+                var retrieval = 0;
+                HTTPRequest.fetch = (method, url, payload, options) => {
+                    return Promise.delay(50).then(() => {
+                        return Promise.try(() => {
+                            if (/discovery/.test(url)) {
+                                discovery++;
+                                return {
+                                    ids: _.map(objects, 'id'),
+                                    gns: _.map(objects, 'gn')
+                                };
+                            } else if (/retrieval/.test(url)) {
+                                retrieval++;
+                                return _.filter(objects, (object) => {
+                                    return _.includes(payload.ids, object.id);
+                                });
+                            }
+                        });
+                    });
+                };
+                return dataSource.find(query).then((users) => {
+                    expect(discovery).to.equal(0);
+                    expect(retrieval).to.equal(0);
+                    expect(users).to.have.property('length', 2);
+                    return onChangePromise.timeout(1000);
+                }).then(() => {
+                    return dataSource.find(query).then((users) => {
+                        expect(discovery).to.equal(1);
+                        expect(retrieval).to.equal(1);
+                        expect(users).to.have.property('length', 3);
+                    });
+                });
+            });
+        })
+        it('should not perform remote search when there is no connection', function() {
+            dataSourceWrapper.setProps({ hasConnection: false });
+            after(function() {
+                dataSourceWrapper.setProps({ hasConnection: true });
+            })
+            var onChangePromise = new Promise((resolve, reject) => {
+                setHandlers({
+                    onChange: (evt) => { resolve(evt) }
+                });
+            });
+            var location = { address: 'http://level6.moria.me', schema: 'global', table: 'user' };
+            var rtime = Moment().toISOString();
+            var objects = [
+                { id: 1, gn: 70, username: 'gandolf', rtime },
+                { id: 2, gn: 3, username: 'bilbo', rtime },
+            ];
+            return cache.save(location, objects).then(() => {
+                objects.push({ id: 3, gn: 1, username: 'sauron' });
+                var query = {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'user',
+                    criteria: {}
+                };
+                var discovery = 0;
+                var retrieval = 0;
+                HTTPRequest.fetch = (method, url, payload, options) => {
+                    return Promise.delay(50).then(() => {
+                        return Promise.try(() => {
+                            if (/discovery/.test(url)) {
+                                discovery++;
+                                return {
+                                    ids: _.map(objects, 'id'),
+                                    gns: _.map(objects, 'gn')
+                                };
+                            } else if (/retrieval/.test(url)) {
+                                retrieval++;
+                                return _.filter(objects, (object) => {
+                                    return _.includes(payload.ids, object.id);
+                                });
+                            }
+                        });
+                    });
+                };
+                return dataSource.find(query).then((users) => {
+                    expect(discovery).to.equal(0);
+                    expect(retrieval).to.equal(0);
+                    expect(users).to.have.property('length', 2);
+                    return onChangePromise.timeout(200);
+                }).catch((err) => {
+                    return err;
+                }).then((err) => {
+                    expect(err).to.be.instanceof(Promise.TimeoutError);
                 });
             });
         })
