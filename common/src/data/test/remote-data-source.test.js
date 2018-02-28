@@ -23,23 +23,28 @@ describe('RemoteDataSource', function() {
     var cache = cacheWrapper.instance();
     var dataSourceProps = {
         discoveryFlags: {
-            include_uncommitted: true
+        },
+        retrievalFlags: {
         },
         hasConnection: true,
         inForeground: true,
         sessionRetryInterval: 100,
         cache: cache,
+
+        onChange: null,
+        onSearch: null,
+        onAuthorization: null,
+        onExpiration: null,
+        onViolation: null,
+        onStupefaction: null,
     };
     var dataSourceWrapper = Enzyme.mount(<RemoteDataSource {...dataSourceProps} />);
     var dataSource = dataSourceWrapper.instance();
-    var cleared = true;
-    var setHandlers = (handlers) => {
-        dataSourceWrapper.setProps(handlers);
-        after(() => {
-            var nulls = _.mapValues(handlers, () => { return null });
-            dataSourceWrapper.setProps(null);
-        });
-    };
+
+    // restore props to default values after each test
+    afterEach(function() {
+        dataSourceWrapper.setProps(dataSourceProps);
+    })
 
     describe('#beginSession()', function() {
         it('should initiate a session', function() {
@@ -76,10 +81,9 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should trigger onChange after failing', function() {
-            var onChangePromise = new Promise((resolve, reject) => {
-                setHandlers({
-                    onChange: (evt) => { resolve(evt) }
-                });
+            var onChangePromise = new ManualPromise;
+            dataSourceWrapper.setProps({
+                onChange: onChangePromise.resolve
             });
             var location = { address: 'http://gondor.me' };
             HTTPRequest.fetch = (method, url, payload, options) => {
@@ -100,7 +104,7 @@ describe('RemoteDataSource', function() {
     describe('#checkSession()', function() {
         it('should fire onAuthorization when remote server indicates session is authorized', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onAuthorization: (evt) => { event = evt }
             });
             var location = { address: 'http://isengard.me' };
@@ -138,7 +142,7 @@ describe('RemoteDataSource', function() {
         })
         it('should simply return false when session is not authorized', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onExpiration: (evt) => { event = evt },
                 onViolation: (evt) => { event = evt },
             });
@@ -169,7 +173,7 @@ describe('RemoteDataSource', function() {
     describe('#submitPassword()', function() {
         it('should trigger onAuthorization when server accepts username/password', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onAuthorization: (evt) => { event = evt }
             });
             var location = { address: 'http://mdoom.mordor.me' };
@@ -210,7 +214,7 @@ describe('RemoteDataSource', function() {
         })
         it('should reject when username/password are wrong, with error object containing information sent by server', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt },
                 onExpiration: (evt) => { event = evt },
                 onViolation: (evt) => { event = evt },
@@ -248,7 +252,7 @@ describe('RemoteDataSource', function() {
         })
         it('should trigger onChange to restart session when failure is other than 401 Unauthorized', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt },
                 onExpiration: (evt) => { event = evt },
                 onViolation: (evt) => { event = evt },
@@ -283,7 +287,7 @@ describe('RemoteDataSource', function() {
     describe('#endSession()', function() {
         it('should end a session', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt },
                 onExpiration: (evt) => { event = evt },
                 onViolation: (evt) => { event = evt },
@@ -320,7 +324,7 @@ describe('RemoteDataSource', function() {
     describe('#getOAuthURL()', function() {
         it('should return a URL for logging in through OAuth', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt },
                 onExpiration: (evt) => { event = evt },
                 onViolation: (evt) => { event = evt },
@@ -571,10 +575,9 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should update object whose gn has changed', function() {
-            var onChangePromise = new Promise((resolve, reject) => {
-                setHandlers({
-                    onChange: (evt) => { resolve(evt) }
-                });
+            var onChangePromise = new ManualPromise;
+            dataSourceWrapper.setProps({
+                onChange: onChangePromise.resolve
             });
             var location = { address: 'http://level3.moria.me', schema: 'global', table: 'user' };
             var rtime = Moment().subtract(1, 'day').toISOString();
@@ -638,7 +641,7 @@ describe('RemoteDataSource', function() {
         })
         it('should return objects from cache on an open-ended search, perform discovery, then conclude that the initial result set was correct', function() {
             var event = null;
-            setHandlers({
+            dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt }
             });
             var location = { address: 'http://level4.moria.me', schema: 'global', table: 'user' };
@@ -687,10 +690,9 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should return objects from cache, perform discovery, then retrieve an additional object', function() {
-            var onChangePromise = new Promise((resolve, reject) => {
-                setHandlers({
-                    onChange: (evt) => { resolve(evt) }
-                });
+            var onChangePromise = new ManualPromise;
+            dataSourceWrapper.setProps({
+                onChange: onChangePromise.resolve
             });
             var location = { address: 'http://level5.moria.me', schema: 'global', table: 'user' };
             var rtime = Moment().toISOString();
@@ -741,14 +743,10 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should not perform remote search when there is no connection', function() {
-            dataSourceWrapper.setProps({ hasConnection: false });
-            after(function() {
-                dataSourceWrapper.setProps({ hasConnection: true });
-            })
-            var onChangePromise = new Promise((resolve, reject) => {
-                setHandlers({
-                    onChange: (evt) => { resolve(evt) }
-                });
+            var onChangePromise = new ManualPromise;
+            dataSourceWrapper.setProps({
+                hasConnection: false,
+                onChange: onChangePromise.resolve,
             });
             var location = { address: 'http://level6.moria.me', schema: 'global', table: 'user' };
             var rtime = Moment().toISOString();
@@ -798,6 +796,261 @@ describe('RemoteDataSource', function() {
         })
     })
     describe('#save()', function() {
+        it('should send an object to remote server and save result to cache', function() {
+            var event = null;
+            dataSourceWrapper.setProps({
+                onChange: (evt) => { event = evt }
+            });
+            var location = { address: 'level1.misty-mountain.me', schema: 'global', table: 'project' };
+            var newObject = { name: 'anduril' };
+            var storage = 0, id = 1;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/storage/.test(url)) {
+                            storage++;
+                            expect(method).to.match(/post/i);
+                            expect(payload).to.have.property('objects').that.is.an.array;
+                            return _.map(payload.objects, (object) => {
+                                object = _.clone(object);
+                                if (!object.id) {
+                                    object.id = id++;
+                                }
+                                return object;
+                            });
+                        }
+                    });
+                });
+            };
+            return dataSource.save(location, [ newObject ]).each((object) => {
+                expect(event).to.have.property('type', 'change');
+                return cache.find(location, { id: object.id }).then((objects) => {
+                    expect(objects).to.have.length(1);
+                });
+            });
+        })
+        it('should update an existing object', function() {
+            var event = null;
+            dataSourceWrapper.setProps({
+                onChange: (evt) => { event = evt }
+            });
+            var location = { address: 'level2.misty-mountain.me', schema: 'global', table: 'project' };
+            var objects = [
+                { id: 3, name: 'smeagol' }
+            ];
+            return cache.save(location, objects).then(() => {
+                var storage = 0;
+                var updatedObject = _.clone(objects[0]);
+                updatedObject.name = 'gollum';
+                HTTPRequest.fetch = (method, url, payload, options) => {
+                    return Promise.delay(50).then(() => {
+                        return Promise.try(() => {
+                            if (/storage/.test(url)) {
+                                storage++;
+                                expect(method).to.match(/post/i);
+                                expect(payload).to.have.property('objects').that.is.an.array;
+                                var object = _.clone(payload.objects[0]);
+                                objects[0] = object;
+                                return [ object ];
+                            }
+                        });
+                    });
+                };
+                return dataSource.save(location, [ updatedObject ]).each((object) => {
+                    expect(event).to.have.property('type', 'change');
+                    return cache.find(location, { id: object.id }).then((objects) => {
+                        expect(objects).to.have.length(1);
+                        expect(objects[0]).to.have.property('name', updatedObject.name);
+                    });
+                });
+            });
+        })
+        it('should make uncommitted objects available immediately when feature is on', function() {
+            var event = null;
+            var postSaveSearchHappened = new ManualPromise;
+            dataSourceWrapper.setProps({
+                discoveryFlags: {
+                    include_uncommitted: true
+                },
+                onChange: (evt) => {
+                    if (!postSaveSearchHappened.isResolved()) {
+                        var query = _.assign({ criteria: {} }, location);
+                        dataSource.find(query).then((projects) => {
+                            expect(projects).to.have.length(1);
+                            expect(projects[0]).to.have.property('id').that.is.below(1);
+                            postSaveSearchHappened.resolve();
+                        }).catch((err) => {
+                            postSaveSearchHappened.reject(err);
+                        });
+                    }
+                }
+            });
+            var location = { address: 'level3.misty-mountain.me', schema: 'global', table: 'project' };
+            var newObject = { name: 'anduril' };
+            var storage = 0, id = 1;
+            var discovery = 0;
+            var retrieval = 0;
+            var objects = []
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.try(() => {
+                    if (/storage/.test(url)) {
+                        storage++;
+                        expect(method).to.match(/post/i);
+                        expect(payload).to.have.property('objects').that.is.an.array;
+                        return postSaveSearchHappened.then(() => {
+                            // return the results only after we've done a search
+                            var object = _.clone(payload.objects[0]);
+                            object.id = id++;
+                            object.gn = 1;
+                            objects.push(object);
+                            return [ object ];
+                        });
+                    } else if (/discovery/.test(url)) {
+                        discovery++;
+                        return {
+                            ids: _.map(objects, 'id'),
+                            gns: _.map(objects, 'gn'),
+                        };
+                    } else if (/retrieval/.test(url)) {
+                        retrieval++;
+                        return objects;
+                    }
+                });
+            };
+            return dataSource.save(location, [ newObject ]).each((object) => {
+                // this search should not trigger a remote search,
+                // since it's the same as the one performed in the
+                // onChange handler
+                return dataSource.find(location, {}).then((projects) => {
+                    expect(projects).to.have.length(1);
+                    expect(projects[0]).to.have.property('id').that.is.at.least(1);
+                    expect(discovery).to.equal(1);
+                    expect(retrieval).to.equal(0);
+                });
+            });
+        })
+        it('should block search on a table until saving is complete', function() {
+            var event = null;
+            dataSourceWrapper.setProps({
+                discoveryFlags: {
+                    include_uncommitted: true
+                },
+            });
+            var location = { address: 'level4.misty-mountain.me', schema: 'global', table: 'project' };
+            var newObject = { name: 'anduril' };
+            var storage = 0, id = 1;
+            var discovery = 0;
+            var retrieval = 0;
+            var objects = [];
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.try(() => {
+                    if (/storage/.test(url)) {
+                        storage++;
+                        // make object available, then wait a bit
+                        var object = _.clone(payload.objects[0]);
+                        object.id = id++;
+                        object.gn = 1;
+                        objects.push(object);
+                        return Promise.delay(100).then(() => {
+                            return [ object ];
+                        });
+                    } else if (/discovery/.test(url)) {
+                        discovery++;
+                        return {
+                            ids: _.map(objects, 'id'),
+                            gns: _.map(objects, 'gn'),
+                        };
+                    } else if (/retrieval/.test(url)) {
+                        retrieval++;
+                        return objects;
+                    }
+                });
+            };
+            dataSource.save(location, [ newObject ]);
+            return dataSource.find(location, {}).then((projects) => {
+                // it would return two objects--the uncommitted and the committed
+                // one if search is allowed to proceed before before a save() is
+                // finished
+                expect(projects).to.have.length(1);
+            });
+        })
+        it('should merge multiple deferred saves', function() {
+            var event = null;
+            var additionalSavePromises = [];
+            var additionalSavesTriggeredPromise = new ManualPromise;
+            dataSourceWrapper.setProps({
+                discoveryFlags: {
+                    include_uncommitted: true
+                },
+                onChange: () => {
+                    var num = additionalSavePromises.length + 1;
+                    if (num <= 4) {
+                        // load the only object and modify it
+                        var query = _.assign({ criteria: {} }, location);
+                        var promise = dataSource.find(query).get(0).then((object) => {
+                            // should still be uncommitted at this point
+                            expect(object).to.have.property('id').that.is.below(1);
+                            expect(object).to.have.property('uncommitted').that.is.true;
+                            object = _.clone(object);
+                            object['prop' + num] = num;
+                            return dataSource.save(location, [ object ], { delay: 200 });
+                        });
+                        additionalSavePromises.push(promise);
+                    } else {
+                        additionalSavesTriggeredPromise.resolve();
+                    }
+                }
+            });
+            var location = { address: 'level5.misty-mountain.me', schema: 'global', table: 'project' };
+            var newObject = { name: 'anduril' };
+            var storage = 0, id = 1;
+            var discovery = 0;
+            var retrieval = 0;
+            var objects = [];
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.try(() => {
+                    if (/storage/.test(url)) {
+                        storage++;
+                        var object = _.clone(payload.objects[0]);
+                        object.id = id++;
+                        object.gn = 1;
+                        objects.push(object);
+                        return [ object ];
+                    } else if (/discovery/.test(url)) {
+                        discovery++;
+                        return {
+                            ids: _.map(objects, 'id'),
+                            gns: _.map(objects, 'gn'),
+                        };
+                    } else if (/retrieval/.test(url)) {
+                        retrieval++;
+                        return objects;
+                    }
+                });
+            };
+            return dataSource.save(location, [ newObject ], { delay: 200 }).then((objects) => {
+                // initial call should get canceled
+                expect(objects).to.have.length(0);
+            }).then(() => {
+                // wait for addition saves to be triggered
+                return additionalSavesTriggeredPromise.timeout(1000);
+            }).then(() => {
+                return Promise.all(additionalSavePromises);
+            }).then((results) => {
+                expect(storage).to.equal(1);
+                // all but the last should be canceled
+                expect(results[0]).to.have.length(0);
+                expect(results[1]).to.have.length(0);
+                expect(results[2]).to.have.length(0);
+                expect(results[3]).to.have.length(1);
+                var savedObject = results[3][0];
+                expect(savedObject).to.have.property('id').that.is.at.least(1);
+                expect(savedObject).to.have.property('prop1', 1);
+                expect(savedObject).to.have.property('prop2', 2);
+                expect(savedObject).to.have.property('prop3', 3);
+                expect(savedObject).to.have.property('prop4', 4);
+            });
+        })
     })
     describe('#remove()', function() {
     })
@@ -814,3 +1067,12 @@ describe('RemoteDataSource', function() {
     describe('#endMobileSession()', function() {
     })
 })
+
+function ManualPromise() {
+    Promise.call(this, (resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+    });
+}
+
+ManualPromise.prototype = Object.create(Promise.prototype);
