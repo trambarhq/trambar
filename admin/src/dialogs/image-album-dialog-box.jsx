@@ -4,8 +4,6 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var MediaLoader = require('media/media-loader');
-var ImageView = require('media/image-view');
-var BlobManager = require('transport/blob-manager');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -15,6 +13,7 @@ var Payloads = require('transport/payloads');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var ResourceView = require('widgets/resource-view');
 
 require('./image-album-dialog-box.scss');
 
@@ -193,25 +192,11 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
                 }
             }
         }
-        var height = 120;
-        var width = Math.round(image.width * height / image.height);
-        var style = { height, width };
-        if (image.url) {
-            var url = this.props.theme.getImageURL(image, { height, width });
-            return (
-                <div key={i} {...props}>
-                    <img src={url} style={style} />
-                </div>
-            );
-        } else if (image.file && BlobManager.get(image.file)) {
-            props.className += ' disabled';
-            props.onClick = null;
-            return (
-                <div key={i} {...props}>
-                    <ImageView url={image.file} style={style} />
-                </div>
-            );
-        }
+        return (
+            <div key={i}{ ...props}>
+                <ResourceView resource={image} height={120} theme={this.props.theme} />
+            </div>
+        );
     },
 
     /**
@@ -312,41 +297,28 @@ var ImageAlbumDialogBoxSync = module.exports.Sync = React.createClass({
         files = _.filter(files, (file) => {
             return /^image\//.test(file.type);
         });
-        var schema = 'global';
-        var db = this.props.database.use({ schema, by: this });
-        var payloads = this.props.payloads;
+        var db = this.props.database.use({ schema: 'global', by: this });
         return db.start().then((userId) => {
+            // create a picture object for each file, attaching payloads to them
             return Promise.mapSeries(files, (file, index) => {
-                var [ type, format ] = _.split(file.type, '/');
-                if (type !== 'image') {
-                    return null;
-                }
-                var blobURL = BlobManager.manage(file);
-                // load the image to determine its dimension
-                return MediaLoader.loadImage(blobURL).then((img) => {
-                    // add to payload queue
-                    var res = {
-                        format: format,
-                        width: img.naturalWidth,
-                        height: img.naturalHeight,
-                        file: blobURL,
-                        type: 'image',
+                var payload = this.props.payloads.add('image').attachFile(file);
+                return MediaLoader.getImageMetadata(file).then((meta) => {
+                    return {
+                        purpose: this.props.purpose,
+                        user_id: userId,
+                        details: {
+                            payload_token: payload.token,
+                            width: meta.width,
+                            height: meta.height,
+                            format: meta.format,
+                        },
                     };
-                    return payloads.queue(schema, res).then((payloadId) => {
-                        res.payload_id = payloadId;
-                        return {
-                            purpose: this.props.purpose,
-                            user_id: userId,
-                            details: _.omit(res, 'type'),
-                        };
-                    });
                 });
             }).then((pictures) => {
                 // save picture objects
                 return db.save({ table: 'picture' }, pictures).each((picture) => {
-                    // send the file
-                    var payloadId = picture.details.payload_id;
-                    payloads.send(schema, payloadId);
+                    // send the payload
+                    this.props.payloads.dispatch(picture);
                     return null;
                 });
             });

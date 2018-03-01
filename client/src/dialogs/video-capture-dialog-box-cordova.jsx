@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
-var CordovaFile = require('utils/cordova-file');
+var CordovaFile = require('transport/cordova-file');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
@@ -92,16 +92,15 @@ module.exports = React.createClass({
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
                 return createThumbnail(mediaFile).then((thumbnailURL) => {
                     var file = new CordovaFile(mediaFile.fullPath, mediaFile.type, mediaFile.size);
-                    var posterFile = new CordovaFile(thumbnailURL, 'image/jpeg');
-                    return posterFile.obtainSize().then(() => {
-                        var [ type, format ] = _.split(mediaFile.type, '/');
+                    var posterFile = new CordovaFile(thumbnailURL);
+                    return posterFile.obtainMetadata().then(() => {
                         var payload = this.props.payloads.add('video');
                         payload.attachFile(file);
                         payload.attachFile(posterFile, 'poster');
                         var res = {
                             type: 'video',
                             payload_token: payload.token,
-                            format: format,
+                            format: MediaLoader.extractFileFormat(mediaFile.type),
                             width: mediaFileData.width,
                             height: mediaFileData.height,
                             filename: mediaFile.name,

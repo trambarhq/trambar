@@ -4,12 +4,9 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
 var MediaTagReader = require('media/media-tag-reader');
-var BlobReader = require('utils/blob-reader');
 var LinkParser = require('utils/link-parser');
-var FrameGrabber = require('media/frame-grabber');
 var QuickStart = require('media/quick-start');
-var BlobStream = require('transport/blob-stream');
-var BlobManager = require('transport/blob-manager');
+var BlobReader = require('transport/blob-reader');
 var ResourceTypes = require('objects/types/resource-types');
 
 var Locale = require('locale/locale');
@@ -107,22 +104,20 @@ module.exports = React.createClass({
         // asynchronous operation
         files = _.slice(files);
         return Promise.map(files, (file, index) => {
-            var parts = _.split(file.type, '/');
-            var type = parts[0];
-            var format = parts[1];
-            if (type === 'application' && /x-mswinurl|x-desktop/.test(format)) {
+            var type = MediaLoader.extractFileCategory(file.type);
+            if (/application\/(x-mswinurl|x-desktop)/.test(file.type)) {
                 type = 'website';
             }
             if (this.isAcceptable(type)) {
                 switch (type) {
                     case 'image':
-                        return this.importImageFile(file, format);
+                        return this.importImageFile(file);
                     case 'video':
-                        return this.importVideoFile(file, format);
+                        return this.importVideoFile(file);
                     case 'audio':
-                        return this.importAudioFile(file, format);
+                        return this.importAudioFile(file);
                     case 'website':
-                        return this.importBookmarkFile(file, format);
+                        return this.importBookmarkFile(file);
                 }
             }
         }).then((resources) => {
@@ -134,44 +129,41 @@ module.exports = React.createClass({
      * Import an image file
      *
      * @param  {File} file
-     * @param  {String} format
      *
      * @return {Promise<Object>}
      */
-    importImageFile: function(file, format) {
-        var blobURL = BlobManager.manage(file);
-        var payload = this.props.payloads.add('image');
-        payload.attachFile(file);
-        return MediaLoader.loadImage(blobURL).then((image) => {
+    importImageFile: function(file) {
+        var payload = this.props.payloads.add('image').attachFile(file);
+        return MediaLoader.getImageMetadata(file).then((meta) => {
             return {
                 type: 'image',
                 payload_token: payload.token,
-                format: format,
+                width: meta.width,
+                height: meta.height,
+                format: meta.format,
                 filename: file.name,
-                width: image.naturalWidth,
-                height: image.naturalHeight,
                 imported: true,
             };
         }).catch((err) => {
+            // not a format that the browser recognizes
             return {
                 type: 'image',
                 payload_token: payload.token,
-                format: format,
+                format: MediaLoader.extractFileFormat(file.type),
                 filename: file.name,
                 imported: true,
             };
-        });
+        });;
     },
 
     /**
      * Import a video file
      *
      * @param  {File} file
-     * @param  {String} format
      *
      * @return {Promise<Object>}
      */
-    importVideoFile: function(file, format) {
+    importVideoFile: function(file) {
         // if file is in a QuickTime container, make sure metadata is
         // at the beginning of the file
         return QuickStart.process(file).then((blob) => {
@@ -179,37 +171,33 @@ module.exports = React.createClass({
                 // if video wasn't processed, use the original file
                 blob = file;
             }
-            var blobURL = BlobManager.manage(blob);
             var payload = this.props.payloads.add('video');
             if (USE_STREAM) {
                 // upload file in small chunks
-                var stream = this.props.payloads.stream();
-                stream.pipe(blob);
+                var stream = this.props.payloads.stream().pipe(blob);
                 payload.attachStream(stream);
             } else {
                 payload.attachFile(blob);
             }
-            return MediaLoader.loadVideo(blobURL).then((video) => {
-                return FrameGrabber.capture(video).then((posterBlob) => {
-                    payload.attachFile(posterBlob, 'poster')
-                    return {
-                        type: 'video',
-                        payload_token: payload.token,
-                        format: format,
-                        filename: file.name,
-                        width: video.videoWidth,
-                        height: video.videoHeight,
-                        duration: Math.round(video.duration * 1000),
-                        imported: true,
-                    };
-                });
+            return MediaLoader.getVideoMetadata(blob).then((meta) => {
+                payload.attachFile(meta.poster, 'poster')
+                return {
+                    type: 'video',
+                    payload_token: payload.token,
+                    width: meta.width,
+                    height: meta.height,
+                    format: meta.format,
+                    duration: meta.duration,
+                    filename: file.name,
+                    imported: true,
+                };
             }).catch((err) => {
                 // not MP4--poster needs to be generated on server side
                 payload.attachStep('main', 'poster')
                 return {
                     type: 'video',
                     payload_token: payload.token,
-                    format: format,
+                    format: MediaLoader.extractFileFormat(file.type),
                     filename: file.name,
                     imported: true,
                 };
@@ -221,38 +209,34 @@ module.exports = React.createClass({
      * Import an audio file
      *
      * @param  {File} file
-     * @param  {String} format
      *
      * @return {Promise<Object>}
      */
-    importAudioFile: function(file, format) {
-        var blobURL = BlobManager.manage(file);
+    importAudioFile: function(file) {
         var payload = this.props.payloads.add('audio');
         if (USE_STREAM) {
-            var stream = this.props.payloads.stream();
-            stream.pipe(file);
+            var stream = this.props.payloads.stream().pipe(file);
             payload.attachStream(stream);
         } else {
             payload.attachFile(file);
         }
-        return MediaLoader.loadAudio(blobURL).then((audio) => {
+        return MediaLoader.getAudioMetadata(file).then((meta) => {
             var audio = {
                 type: 'audio',
                 payload_token: payload.token,
-                format: format,
+                format: meta.format,
+                duration: meta.duration,
                 filename: file.name,
-                duration: Math.round(audio.duration * 1000),
                 imported: true,
             };
             return MediaTagReader.extractAlbumArt(file).then((imageBlob) => {
                 if (!imageBlob) {
                     return audio;
                 }
-                var imageBlobURL = BlobManager.manage(imageBlob);
                 payload.attachFile(imageBlob, 'poster');
-                return MediaLoader.loadImage(imageBlobURL).then((image) => {
-                    audio.width = image.naturalWidth;
-                    audio.height = image.naturalHeight;
+                return MediaLoader.getImageMetadata(imageBlob).then((meta) => {
+                    audio.width = meta.width;
+                    audio.height = meta.height;
                     return audio;
                 });
             });
@@ -260,7 +244,7 @@ module.exports = React.createClass({
             return {
                 type: 'audio',
                 payload_token: payload.token,
-                format: format,
+                format: MediaLoader.extractFileFormat(file.type),
                 filename: file.name,
                 imported: true,
             };
@@ -271,16 +255,14 @@ module.exports = React.createClass({
      * Import a bookmark/shortcut file
      *
      * @param  {File} file
-     * @param  {String} format
      *
      * @return {Promise<Object|undefined>}
      */
-    importBookmarkFile: function(file, format) {
+    importBookmarkFile: function(file) {
         return BlobReader.loadText(file).then((text) => {
             var link = LinkParser.parse(text);
             if (link && /https?:/.test(link.url)) {
-                var payload = this.props.payloads.add('website');
-                payload.attachURL(link.url, 'poster');
+                var payload = this.props.payloads.add('website').attachURL(link.url, 'poster');
                 return {
                     type: 'website',
                     payload_token: payload.token,
@@ -318,24 +300,22 @@ module.exports = React.createClass({
                 var type = /<img\b/i.test(html) ? 'image' : 'website';
                 if (this.isAcceptable(type)) {
                     if (type === 'image') {
-                        return MediaLoader.loadImage(url).then((image) => {
+                        return MediaLoader.getImageMetadata(url).then((meta) => {
                             var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                            var payload = this.props.payloads.add('image');
-                            payload.attachURL(url);
+                            var payload = this.props.payloads.add('image').attachURL(url);
                             return {
                                 type: 'image',
                                 payload_token: payload.token,
                                 filename: filename,
-                                width: image.naturalWidth,
-                                height: image.naturalHeight,
+                                width: meta.width,
+                                height: meta.height,
                             };
                         }).catch((err) => {
                             // running into cross-site restrictions is quite likely here
                             console.log(`Unable to load image: ${url}`);
                         });
                     } else if (type === 'webiste') {
-                        var payload = this.props.payloads.add('website');
-                        payload.attachURL(url, 'poster');
+                        var payload = this.props.payloads.add('website').attachURL(url, 'poster');
                         return {
                             type: 'website',
                             payload_token: payload.token,

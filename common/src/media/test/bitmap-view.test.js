@@ -4,11 +4,11 @@ var React = require('react');
 var Chai = require('chai'), expect = Chai.expect;
 var Enzyme = require('enzyme');
 
-var ImageView = require('media/image-view');
+var BitmapView = require('media/bitmap-view');
 
 var imageWithOrientation = require('./images/jpeg-orientation-sample.jpg');
 
-describe('ImageView', function() {
+describe('BitmapView', function() {
     it ('should extract orientation and dimension from blob', function() {
         return new Promise((resolve, reject) => {
             var blob = new Blob([ imageWithOrientation ], { type: 'image/jpeg' });
@@ -21,7 +21,7 @@ describe('ImageView', function() {
                     reject(evt.error);
                 },
             };
-            var wrapper = Enzyme.mount(<ImageView {...props} />);
+            var wrapper = Enzyme.mount(<BitmapView {...props} />);
         }).then((wrapper) => {
             var comp = wrapper.instance();
             expect(comp).to.have.property('width', 4);

@@ -40,12 +40,4 @@ describe('Markdown', function() {
             expect(Markdown.findReferencedResource(resources, 'website')).to.equal(resources[3]);
         })
     })
-    describe('#attachClipRect()', function() {
-        it('should attach clipping rectangle coordinates as query variables to URL', function() {
-            var url = 'blob://something';
-            var rect = { left: 4, top: 8, width: 50, height: 100 };
-            var newURL = Markdown.attachClipRect(url, rect);
-            expect(newURL).to.equal(`${url}?left=4&top=8&width=50&height=100`);
-        })
-    })
 })

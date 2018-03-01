@@ -9,7 +9,7 @@ var FileError = require('errors/file-error');
 var RandomToken = require('utils/random-token');
 
 if (process.env.PLATFORM === 'cordova') {
-    var CordovaFile = require('utils/cordova-file');
+    var CordovaFile = require('transport/cordova-file');
 }
 
 module.exports = Payload;
@@ -66,6 +66,8 @@ Payload.getImageURL = function(res) {
  *
  * @param  {Blob|CordovaFile} file
  * @param  {String|undefined} name
+ *
+ * @return {Payload}
  */
 Payload.prototype.attachFile = function(file, name) {
     if (!name) {
@@ -90,6 +92,7 @@ Payload.prototype.attachFile = function(file, name) {
             name
         });
     }
+    return this;
 };
 
 /**
@@ -97,6 +100,8 @@ Payload.prototype.attachFile = function(file, name) {
  *
  * @param  {BlobStream} stream
  * @param  {String|undefined} name
+ *
+ * @return {Payload}
  */
 Payload.prototype.attachStream = function(stream, name) {
     if (!name) {
@@ -108,6 +113,7 @@ Payload.prototype.attachStream = function(stream, name) {
         uploaded: stream.transferred,
         name
     });
+    return this;
 };
 
 /**
@@ -115,9 +121,12 @@ Payload.prototype.attachStream = function(stream, name) {
  *
  * @param  {BlobStream} stream
  * @param  {String|undefined} name
+ *
+ * @return {Payload}
  */
 Payload.prototype.attachURL = function(url, name) {
     this.parts.push({ url, name });
+    return this;
 };
 
 /**
@@ -125,6 +134,8 @@ Payload.prototype.attachURL = function(url, name) {
  *
  * @param  {String} source
  * @param  {String} name
+ *
+ * @return {Payload}
  */
 Payload.prototype.attachStep = function(source, name) {
     // add options to the source part
@@ -136,6 +147,7 @@ Payload.prototype.attachStep = function(source, name) {
     }
     this.setPartOptions(options, source);
     this.parts.push({ name });
+    return this;
 };
 
 /**

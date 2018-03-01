@@ -1,15 +1,17 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var HTTPRequest = require('transport/http-request');
-var CordovaFile = (process.env.PLATFORM === 'cordova') ? require('utils/cordova-file') : null;
+if (process.env.PLATFORM === 'cordova') {
+    var CordovaFile = require('transport/cordova-file');
+}
 
 module.exports = {
     manage,
     find,
-    get,
     associate,
     fetch,
-    remove,
+    release,
+    url: manage,
 };
 
 var list = [];
@@ -21,6 +23,11 @@ var list = [];
  */
 function manage(blob) {
     var atime = new Date;
+    var entry = _.find(list, { blob });
+    if (entry) {
+        entry.atime = atime;
+        return entry.localURL;
+    }
     var localURL;
     if (blob instanceof Blob) {
         localURL = URL.createObjectURL(blob);
@@ -41,7 +48,7 @@ function manage(blob) {
  *
  * @param  {String} url
  *
- * @return {String|null}
+ * @return {Blob|CordovaFile|null}
  */
 function find(url) {
     var entry = _.find(list, (entry) => {
@@ -51,21 +58,6 @@ function find(url) {
         return null;
     }
     entry.atime = new Date;
-    return entry.localURL;
-}
-
-/**
- * Get the actual blob by its local URL
- *
- * @param  {String} localURL
- *
- * @return {Blob|CordovaFile|null}
- */
-function get(localURL) {
-    var entry = _.find(list, { localURL });
-    if (!entry) {
-        return null;
-    }
     return entry.blob;
 }
 
@@ -89,33 +81,29 @@ function associate(target, url) {
  *
  * @param  {String} remoteURL
  *
- * @return {Promise<String>}
+ * @return {Promise<Blob>}
  */
 function fetch(remoteURL) {
-    var entry = _.find(list, (entry) => {
-        return _.includes(entry.urls, remoteURL);
-    });
-    if (entry) {
-        // we downloaded the file before
-        return Promise.resolve(entry.localURL);
+    var blob = find(remoteURL);
+    if (blob) {
+        // we downloaded the file before (or we had uploaded it earlier)
+        return Promise.resolve(blob);
     }
     var options = { responseType: 'blob' };
     return HTTPRequest.fetch('GET', remoteURL, null, options).then((blob) => {
         var localURL = manage(blob);
         associate(blob, remoteURL);
-        return localURL;
+        return blob;
     });
 }
 
 /**
  * Release a blob
  *
- * @param  {String} url
+ * @param  {Blob} blob
  */
-function remove(url) {
-    var index = _.findIndex(list, (entry) => {
-        return _.includes(entry.urls, url);
-    });
+function release(blob) {
+    var index = _.findIndex(list, { blob });
     if (index !== -1) {
         var entry = list[index];
         list.splice(index, 1);

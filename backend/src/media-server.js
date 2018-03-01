@@ -167,7 +167,7 @@ function sendError(res, err) {
 function handleImageFiltersRequest(req, res) {
     var hash = req.params.hash;
     var filename = req.params.filename;
-    var m = /([^.]*?)(\.(jpg|jpeg|png|webp))?$/i.exec(filename);
+    var m = /([^.]*?)(\.(.+))?$/i.exec(filename);
     if (!m) {
         res.status(400).json({ message: 'Invalid filename' });
     }

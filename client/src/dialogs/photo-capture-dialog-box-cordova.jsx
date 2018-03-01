@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
-var CordovaFile = require('utils/cordova-file');
+var CordovaFile = require('transport/cordova-file');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
@@ -94,21 +94,20 @@ module.exports = React.createClass({
      * @param  {String} imageURL
      */
     handleCaptureSuccess: function(imageURL) {
-        MediaLoader.loadImage(imageURL).then((image) => {
-            var file = new CordovaFile(imageURL, 'image/jpeg');
-            return file.obtainSize().then(() => {
-                var payload = this.props.payloads.add('image');
-                payload.attachFile(file);
+        var file = new CordovaFile(imageURL);
+        file.obtainMetadata().then(() => {
+            return MediaLoader.getImageMetadata(file).then((meta) => {
+                var payload = this.props.payloads.add('image').attachFile(file);
                 var res = {
                     type: 'image',
                     payload_token: payload.token,
-                    format: 'jpeg',
-                    width: image.naturalWidth,
-                    height: image.naturalHeight,
+                    format: meta.format,
+                    width: meta.width,
+                    height: meta.height,
                 };
                 this.triggerCaptureEvent(res);
+                return null;
             });
-            return null;
         }).catch((err) => {
             this.triggerCancelEvent();
             return null;

@@ -19,7 +19,9 @@
                 display: block;
             }
 
-            IMG {
+            IMG, CANVAS, svg {
+                height: 120px;
+                width: auto;
             }
 
             .placeholder {

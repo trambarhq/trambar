@@ -1,6 +1,5 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
-var Payload = require('transport/payload');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -9,7 +8,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
-var ImageCropper = require('media/image-cropper');
+var ImageCropper = require('widgets/image-cropper');
 
 require('./image-cropping-dialog-box.scss');
 
@@ -119,15 +118,11 @@ module.exports = React.createClass({
      */
     renderImage: function() {
         var image = this.props.image;
-        var imageURL = this.props.theme.getImageURL(image, { clip: null });
-        if (!imageURL) {
-            // file hasn't been uploaded
-            imageURL = Payload.getImageURL(image);
-        }
+        var imageURL = this.props.theme.getImageURL(image, { original: true });
         var props = {
             url: imageURL,
             clippingRect: this.state.clippingRect,
-            aspectRatio: this.props.desiredWidth / this.props.desiredHeight,
+            vector: image.format === 'svg',
             onChange: this.handleChange,
         };
         var style = {

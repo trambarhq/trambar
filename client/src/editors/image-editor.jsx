@@ -12,7 +12,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var ImageCropper = require('media/image-cropper');
+var ImageCropper = require('widgets/image-cropper');
 
 require('./image-editor.scss');
 
@@ -169,6 +169,7 @@ module.exports = React.createClass({
         var props = {
             url: this.state.fullImageURL,
             clippingRect: res.clip || ImageCropping.default(res.width, res.height),
+            vector: (res.format === 'svg'),
             onChange: this.handleClipRectChange,
         };
         return <ImageCropper {...props} />;

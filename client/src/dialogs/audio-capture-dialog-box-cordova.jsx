@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
-var CordovaFile = require('utils/cordova-file');
+var CordovaFile = require('transport/cordova-file');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');

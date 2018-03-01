@@ -11,8 +11,7 @@ describe('FrameGrabber', function() {
             this.timeout(5000);
 
             var blob = new Blob([ videoData ], { type: 'video/mp4' });
-            var url = URL.createObjectURL(blob);
-            return MediaLoader.loadVideo(url).then((video) => {
+            return MediaLoader.loadVideo(blob).then((video) => {
                 return FrameGrabber.capture(video, { timeout: 5000 }).then((blob) => {
                     expect(blob).to.have.property('type', 'image/jpeg');
                     expect(blob).to.have.property('size').that.is.above(30000);

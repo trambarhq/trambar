@@ -28,6 +28,7 @@ describe('RemoteDataSource', function() {
         },
         hasConnection: true,
         inForeground: true,
+        prefetching: false,
         sessionRetryInterval: 100,
         cache: cache,
 
@@ -840,6 +841,7 @@ describe('RemoteDataSource', function() {
             ];
             return cache.save(location, objects).then(() => {
                 var storage = 0;
+                var discovery = 0;
                 var updatedObject = _.clone(objects[0]);
                 updatedObject.name = 'gollum';
                 HTTPRequest.fetch = (method, url, payload, options) => {
@@ -852,6 +854,12 @@ describe('RemoteDataSource', function() {
                                 var object = _.clone(payload.objects[0]);
                                 objects[0] = object;
                                 return [ object ];
+                            } else if (/discovery/.test(url)) {
+                                discovery++;
+                                return {
+                                    ids: _.map(objects, 'id'),
+                                    gns: _.map(objects, 'gn')
+                                };
                             }
                         });
                     });

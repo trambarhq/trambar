@@ -164,6 +164,8 @@ BlobStream.prototype.wait = function() {
  *
  * @param  {File} file
  * @param  {Number} chunkSize
+ *
+ * @return {BlobStream}
  */
 BlobStream.prototype.pipe = function(file, chunkSize) {
     if (!chunkSize) {
@@ -177,6 +179,7 @@ BlobStream.prototype.pipe = function(file, chunkSize) {
         this.push(chunk);
     }
     this.close();
+    return this;
 };
 
 /**

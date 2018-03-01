@@ -41,9 +41,9 @@ function FileButton(props) {
                     mediaType: Camera.MediaType.ALLMEDIA,
                 };
                 var handleSuccess = (url) => {
-                    var CordovaFile = require('utils/cordova-file');
+                    var CordovaFile = require('transport/cordova-file');
                     var file = new CordovaFile(url);
-                    return file.obtainSize().then(() => {
+                    return file.obtainMetadata().then(() => {
                         var evt = {
                             target: {
                                 files: [ file ]

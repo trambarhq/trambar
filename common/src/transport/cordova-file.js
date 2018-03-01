@@ -55,16 +55,13 @@ CordovaFile.prototype.getFile = function() {
 };
 
 /**
- * Obtain the size of the file
+ * Obtain the size and mime type of the file
  *
  * @return {Promise}
  */
-CordovaFile.prototype.obtainSize = function() {
+CordovaFile.prototype.obtainMetadata = function() {
     return this.getFile().then((file) => {
         this.size = file.size;
-        if (!this.type) {
-            // set the type as well if it's missing
-            this.type = file.type;
-        }
+        this.type = file.type;
     });
 };

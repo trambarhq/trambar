@@ -11,9 +11,8 @@ describe('QuickStart', function() {
             var blob = new Blob([ videoData ], { type: 'video/mp4' });
             return QuickStart.process(blob).then((processed) => {
                 expect(processed).to.not.be.null;
-                var url = URL.createObjectURL(processed);
                 // load the video to see if it's correct
-                return MediaLoader.loadVideo(url).then((video) => {
+                return MediaLoader.loadVideo(processed).then((video) => {
                     expect(video).to.have.property('videoWidth').that.is.above(0);
                     expect(video).to.have.property('videoHeight').that.is.above(0);
                 });

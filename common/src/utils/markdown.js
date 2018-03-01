@@ -6,7 +6,7 @@ var ListParser = require('utils/list-parser');
 var Theme = require('theme/theme');
 
 // widgets
-var ImageView = require('media/image-view');
+var ResourceView = require('widgets/resource-view');
 
 module.exports = {
     detect,
@@ -17,7 +17,6 @@ module.exports = {
     createParser,
     createRenderer,
     findReferencedResource,
-    attachClipRect,
 };
 
 /**
@@ -291,27 +290,19 @@ function createRenderer() {
     return new MarkGor.Renderer({ renderImage });
 }
 
+/**
+ * Render image referenced in text
+ *
+ * @param  {Object} token
+ * @param  {Number} key
+ *
+ * @return {ReactElement}
+ */
 function renderImage(token, key) {
     var href = token.href;
     var title = token.title;
     var text = token.text;
-    if (/^blob:/.test(href)) {
-        var queryIndex = href.indexOf('?');
-        var clip;
-        if (queryIndex !== -1) {
-            var pairs = _.split(href.substr(queryIndex + 1), '&');
-            clip = _.transform(pairs, (clip, pair) => {
-                var p = _.split(pair, '=');
-                var name = p[0];
-                var value = parseInt(p[1]);
-                clip[name] = value;
-            }, {});
-            href = href.substr(0, queryIndex);
-        }
-        return <ImageView key={key} url={href} clippingRect={clip} alt={text} title={title} />;
-    } else {
-        return <img key={key} src={href} alt={text} title={title} />;
-    }
+    return <ResoureceView key={key} url={href} alt={text} title={title} />;
 };
 
 /**
@@ -353,22 +344,4 @@ function findReferencedResource(resources, name) {
         }
     }
     return null;
-}
-
-/**
- * Attach clipping rectangle coordinates to a blob URL
- *
- * @param  {String} blobURL
- * @param  {Object} clip
- *
- * @return {String}
- */
-function attachClipRect(blobURL, clip) {
-    if (blobURL && clip) {
-        var query = _.join(_.map(clip, (value, name) => {
-            return `${name}=${value}`;
-        }), '&');
-        blobURL += '?' + query;
-    }
-    return blobURL;
 }

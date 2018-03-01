@@ -1,8 +1,9 @@
 .image-cropper {
     overflow: hidden;
 
-    CANVAS {
+    CANVAS, svg {
         width: 100%;
+        height: auto;
         display: block;
     }
 }

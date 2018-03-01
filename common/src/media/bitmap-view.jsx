@@ -2,13 +2,13 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var BlobManager = require('transport/blob-manager');
-var BlobReader = require('utils/blob-reader');
+var BlobReader = require('transport/blob-reader');
 var MediaLoader = require('media/media-loader');
 var JPEGAnalyser = require('media/jpeg-analyser');
 var ComponentRefs = require('utils/component-refs');
 
 module.exports = React.createClass({
-    displayName: 'ImageView',
+    displayName: 'BitmapView',
     propTypes: {
         url: PropTypes.string,
         clippingRect: PropTypes.object,
@@ -59,6 +59,9 @@ module.exports = React.createClass({
     render: function() {
         var setters = this.components.setters;
         var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
+        // give empty canvas a size so it scale correctly when empty
+        props.width = 4;
+        props.height = 4;
         return <canvas ref={setters.canvas} {...props} />
     },
 
@@ -108,10 +111,10 @@ module.exports = React.createClass({
      */
     load: function(url) {
         if (url) {
-            return BlobManager.fetch(url).then((blobURL) => {
+            return BlobManager.fetch(url).then((blob) => {
                 // load the image and its bytes
-                var imageP = MediaLoader.loadImage(blobURL);
-                var bytesP = BlobReader.loadUint8Array(BlobManager.get(blobURL));
+                var imageP = MediaLoader.loadImage(blob);
+                var bytesP = BlobReader.loadUint8Array(blob);
                 return Promise.join(imageP, bytesP, (image, bytes) => {
                     var orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
@@ -129,6 +132,7 @@ module.exports = React.createClass({
                     this.triggerLoadEvent();
                 });
             }).catch((err) => {
+                console.error(err)
                 this.triggerErrorEvent(err);
             });
         } else {

@@ -1,10 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var MediaLoader = require('media/media-loader');
-var ImageView = require('media/image-view');
-var ImageCropping = require('media/image-cropping');
-var BlobManager = require('transport/blob-manager');
-var Payload = require('transport/payload');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -14,6 +10,7 @@ var Payloads = require('transport/payloads');
 // widgets
 var ImageCroppingDialogBox = require('dialogs/image-cropping-dialog-box');
 var ImageAlbumDialogBox = require('dialogs/image-album-dialog-box');
+var ResourceView = require('widgets/resource-view');
 
 require('./image-selector.scss');
 
@@ -137,56 +134,30 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function() {
-        var height = 120, width = 160;
+        var height = 120, width;
         var image = this.getImage();
         if (image) {
-            var imgWidth = image.width;
-            var imgHeight = image.height;
-            if (image.clip) {
-                imgWidth = image.clip.width;
-                imgHeight = image.clip.height;
-            }
-            width = Math.round(imgWidth * height / imgHeight);
-            var clip = null;
-            if (this.props.desiredWidth && this.props.desiredHeight) {
-                clip = image.clip;
-                if (!clip) {
-                    clip = ImageCropping.default(image.width, image.height);
-                }
-            }
-            if (image.url) {
-                var url = this.props.theme.getImageURL(image, {
-                    width,
-                    height,
-                    clip,
-                });
-                var fullResURL = this.props.theme.getImageURL(image, {
-                    clip
-                });
-                var linkProps = {
-                    href: fullResURL,
-                    target: '_blank',
-                    'data-width': imgWidth,
-                    'data-height': imgHeight,
-                    onClick: this.handleImageClick,
-                };
-                return (
-                    <div className="image">
-                        <a {...linkProps}>
-                            <img src={url} style={{ width, height }} />
-                        </a>
-                    </div>
-                );
-            } else {
-                var url = Payload.getImageURL(image);
-                if (url) {
-                    return (
-                        <div className="image">
-                            <ImageView url={url} clippingRect={clip} style={{ width, height }} />
-                        </div>
-                    );
-                }
-            }
+            var fullResURL = this.props.theme.getImageURL(image, { original: true, remote: true });
+            var linkProps = {
+                href: fullResURL,
+                target: '_blank',
+                'data-width': image.width,
+                'data-height': image.height,
+                onClick: this.handleImageClick,
+            };
+            var viewProps = {
+                resource: image,
+                clip: !!(this.props.desiredWidth && this.props.desiredHeight),
+                height: height,
+                theme: this.props.theme,
+            };
+            return (
+                <div className="image">
+                    <a {...linkProps}>
+                        <ResourceView {...viewProps} />
+                    </a>
+                </div>
+            );
         } else {
             if (this.props.desiredWidth && this.props.desiredHeight) {
                 width = Math.round(this.props.desiredWidth * height / this.props.desiredHeight);
@@ -383,15 +354,13 @@ module.exports = React.createClass({
     handleUploadChange: function(evt) {
         var file = evt.target.files[0];
         if (file) {
-            var payload = this.props.payloads.add('image');
-            payload.attachFile(file);
-            var blobURL = BlobManager.manage(file);
-            return MediaLoader.loadImage(blobURL).then((img) => {
+            var payload = this.props.payloads.add('image').attachFile(file);
+            return MediaLoader.getImageMetadata(file).then((meta) => {
                 var image = {
                     payload_token: payload.token,
-                    format: _.last(_.split(file.type, '/')),
-                    width: img.naturalWidth,
-                    height: img.naturalHeight,
+                    width: meta.width,
+                    height: meta.height,
+                    format: meta.format,
                     type: 'image',
                 };
                 return this.setImage(image);
@@ -431,15 +400,31 @@ module.exports = React.createClass({
     handleImageClick: function(evt) {
         // open URL in pop-up instead of a tab
         var url = evt.currentTarget.href;
-        var width = parseInt(evt.currentTarget.getAttribute('data-width'));
-        var height = parseInt(evt.currentTarget.getAttribute('data-height'));
-        var params = [
-            `left=${(screen.width - width) / 3}`,
-            `top=${(screen.height - height) / 3}`,
-            `width=${Math.min(screen.width - 100, width)}`,
-            `height=${Math.min(screen.height - 100, height)}`,
-        ];
-        window.open(url, '_blank', params.join(','));
-        evt.preventDefault();
+        if (url) {
+            var width = parseInt(evt.currentTarget.getAttribute('data-width'));
+            var height = parseInt(evt.currentTarget.getAttribute('data-height'));
+            var windowWidth = width;
+            var windowHeight = height;
+            var availableWidth = screen.width - 100;
+            var availableHeight = screen.height - 100;
+            if (windowWidth > availableWidth) {
+                windowWidth = availableWidth;
+                windowHeight = Math.round(windowWidth * height / width);
+            }
+            if (windowHeight > availableHeight) {
+                windowHeight = availableHeight;
+                windowWidth = Math.round(windowHeight * width / height);
+            }
+            var windowLeft = Math.round((screen.width - windowHeight) / 3);
+            var windowTop = Math.round((screen.height - windowHeight) / 3);
+            var params = [
+                `left=${windowLeft}`,
+                `top=${windowTop}`,
+                `width=${windowWidth}`,
+                `height=${windowHeight}`,
+            ];
+            window.open(url, '_blank', params.join(','));
+            evt.preventDefault();
+        }
     },
 });

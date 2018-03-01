@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ImageCropping = require('media/image-cropping');
+var BlobManager = require('transport/blob-manager');
 
 var Database = require('data/database');
 
@@ -77,9 +78,69 @@ module.exports = React.createClass({
      * @return {String|undefined}
      */
     getImageURL: function(res, params) {
+        if (!res) {
+            return null;
+        }
         if (!params) {
             params = {};
         }
+        var url = this.getRemoteImageURL(res, params);
+        if (!url) {
+            if (!params.remote) {
+                url = this.getLocalImageURL(res, params);
+            }
+        }
+        return url;
+    },
+
+    /**
+     * Return URL of a resource's image at that has not been uploaded yet
+     *
+     * @param  {Object} res
+     * @param  {Object} params
+     *
+     * @return {String|undefined}
+     */
+    getLocalImageURL: function(res, params) {
+        if (!res.payload_token) {
+            return;
+        }
+        var name;
+        switch (res.type) {
+            case 'video':
+            case 'audio':
+            case 'website':
+                name = 'poster';
+                break;
+            default:
+                name = 'main';
+                break;
+        }
+        var url = `payload:${res.payload_token}/${name}`;
+        var blob = BlobManager.find(url);
+        if (!blob) {
+            return null;
+        }
+        var localURL = BlobManager.url(blob);
+        var hash = 'format=' + encodeURIComponent(res.format);
+        var clip = getClippingRect(res, params);
+        if (clip) {
+            hash += '&' + _.join(_.map(clip, (value, name) => {
+                return `${name}=${value}`;
+            }), '&');
+        }
+        return localURL + '#' + hash;
+    },
+
+    /**
+     * Return URL of a resource's image at remote server
+     *
+     * @param  {Object} res
+     * @param  {Object} params
+     *
+     * @return {String|undefined}
+     */
+    getRemoteImageURL: function(res, params) {
         var resURL;
         switch(res.type) {
             case 'video':
@@ -132,20 +193,25 @@ module.exports = React.createClass({
             }
             // choose format
             var ext;
-            if ((this.state.webpSupport && this.props.useWebP !== false) || this.props.useWebP === true) {
-                ext = 'webp';
-                if (res.format === 'png' || res.format === 'gif') {
-                    if (!resizing) {
-                        // use lossless compression (since it'll likely produce a smaller file)
-                        filters.push(`l`);
-                    }
-                }
+            if (res.format === 'svg') {
+                // stick with SVG
+                ext = 'svg';
             } else {
-                if (res.format === 'png' || res.format === 'gif') {
-                    // use PNG to preserve alpha channel
-                    ext = `png`;
+                if ((this.state.webpSupport && this.props.useWebP !== false) || this.props.useWebP === true) {
+                    ext = 'webp';
+                    if (res.format === 'png' || res.format === 'gif') {
+                        if (!resizing) {
+                            // use lossless compression (since it'll likely produce a smaller file)
+                            filters.push(`l`);
+                        }
+                    }
                 } else {
-                    ext = 'jpg';
+                    if (res.format === 'png' || res.format === 'gif') {
+                        // use PNG to preserve alpha channel
+                        ext = `png`;
+                    } else {
+                        ext = 'jpg';
+                    }
                 }
             }
             versionPath = `/${filters.join('+')}.${ext}`;
@@ -204,6 +270,25 @@ module.exports = React.createClass({
         return url;
     },
 
+    getImageDimensions: function(res, params) {
+        if (!params) {
+            params = {};
+        }
+        var clip = getClippingRect(res, params);
+        if (clip && !params.original) {
+            // return the dimensions of the clipping rect
+            return {
+                width: clip.width,
+                height: clip.height,
+            }
+        } else {
+            return {
+                width: res.width,
+                height: res.height,
+            };
+        }
+    },
+
     /**
      * Return a resource's dimensions
      *
@@ -213,33 +298,22 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getDimensions: function(res, params) {
-        if (!params) {
-            params = {};
-        }
-        var clip = getClippingRect(res, params);
-        var dims = {};
-        if (clip && !params.original) {
-            // return the dimensions of the clipping rect
-            dims = {
-                width: clip.width,
-                height: clip.height,
+        if (res.type === 'video') {
+            if (!params.original) {
+                var version = this.pickVideoVersion(res, params);
+                if (version && version.width && version.height) {
+                    return {
+                        width: version.width,
+                        height: version.height,
+                    };
+                }
             }
-        } else {
-            dims = {
+            return {
                 width: res.width,
                 height: res.height,
             };
-            if (res.type === 'video') {
-                if (!params.original) {
-                    var version = this.pickVideoVersion(res, params);
-                    if (version && version.width && version.height) {
-                        dims.width = version.width;
-                        dims.height = version.height;
-                    }
-                }
-            }
         }
-        return dims;
+        return this.getImageDimensions(res, params);
     },
 
     /**

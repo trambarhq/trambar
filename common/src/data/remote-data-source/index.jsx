@@ -29,6 +29,7 @@ module.exports = React.createClass({
         retrievalFlags: PropTypes.object,
         hasConnection: PropTypes.bool,
         inForeground: PropTypes.bool,
+        prefetching: PropTypes.bool,
         cache: PropTypes.object,
         refreshInterval: PropTypes.number,
         sessionRetryInterval: PropTypes.number,
@@ -53,6 +54,7 @@ module.exports = React.createClass({
             retrievalFlags: {},
             hasConnection: true,
             inForeground: true,
+            prefetching: true,
             refreshInterval: 15 * 60,   // 15 minutes
             sessionRetryInterval: 5000,
         };
@@ -668,8 +670,10 @@ module.exports = React.createClass({
                 this.triggerChangeEvent();
 
                 // update recent searches that aren't being used currently
-                if (this.props.inForeground) {
-                    this.schedulePrefetch(address);
+                if (this.props.prefetching) {
+                    if (this.props.inForeground) {
+                        this.schedulePrefetch(address);
+                    }
                 }
             }
             return changed;

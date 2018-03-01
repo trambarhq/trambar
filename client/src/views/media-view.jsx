@@ -13,8 +13,8 @@ var Theme = require('theme/theme');
 var Overlay = require('widgets/overlay');
 var MediaButton = require('widgets/media-button');
 var MediaDialogBox = require('dialogs/media-dialog-box');
-var ImageView = require('media/image-view');
-var DurationIndicator = require('widgets/duration-indicator')
+var ResourceView = require('widgets/resource-view');
+var DurationIndicator = require('widgets/duration-indicator');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
@@ -305,25 +305,8 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     renderImageElement: function(res) {
-        // get size of the image, with clipping
-        var dims = this.props.theme.getDimensions(res);
-        var width = 512;
-        var height = Math.round(dims.height / dims.width * width);
-        var url = this.props.theme.getImageURL(res, { width });
-        if (url) {
-            return <img src={url} width={width} height={height} />;
-        }
-
-        // image isn't done uploading yet
-        var fileURL = Payload.getImageURL(res);
-        if (fileURL) {
-            // use ImageView, which handles orientation and clipping
-            var clip = res.clip || ImageCropping.default(res.width, res.height);
-            return <ImageView url={fileURL} clippingRect={clip} />;
-        } else {
-            // TODO: placeholder for pending images
-            return null;
-        }
+        // TODO: placeholder for pending images
+        return <ResourceView resource={res} theme={this.props.theme} />;
     },
 
     /**
