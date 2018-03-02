@@ -1009,7 +1009,30 @@ module.exports = React.createClass({
                 object.rtime = rtime;
             });
             this.updateCachedObjects(search);
-            return !!newResults;
+
+            if (newResults) {
+                // wait for any storage operation currently in flight to finish so
+                // we don't end up with both the committed and the uncommitted copy
+                var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
+                if (includeUncommitted && !search.committed) {
+                    var relatedChanges = _.filter(this.changeQueue, (change) => {
+                        if (change.dispatched && !change.committed) {
+                            if (_.isEqual(change.location, location)) {
+                                return true;
+                            }
+                        }
+                    });
+                    if (!_.isEmpty(relatedChanges)) {
+                        var promises = _.map(relatedChanges, 'promise');
+                        return Promise.all(promises).reflect().then(() => {
+                            return true;
+                        });
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
         });
     },
 
