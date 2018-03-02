@@ -3,8 +3,9 @@
     vertical-align: middle;
     overflow: hidden;
 
-    IMG, CANVAS, .placeholder {
+    IMG, CANVAS, svg, .placeholder {
         width: 100%;
+        height: auto;
     }
 
     .placeholder {
@@ -20,6 +21,7 @@
             left: 0;
             right: 0;
             bottom: 0;
+            width: auto;
             height: 100%;
             margin: auto;
         }

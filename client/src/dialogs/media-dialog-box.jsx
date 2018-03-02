@@ -8,6 +8,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var ResourceView = require('widgets/resource-view');
 
 require('./media-dialog-box.scss');
 
@@ -196,24 +197,23 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function(res, maxWidth, maxHeight) {
-        var theme = this.props.theme;
-        var width = res.width;
-        var height = res.height;
-        var url;
-        // don't reencode when it's a GIF since it might be animated
-        if (res.format === 'gif') {
-            url = theme.getImageURL(res, { original: true });
-        } else {
-            if (width > maxWidth) {
-                height = Math.round(maxWidth * (height / width));
-                width = maxWidth;
-            } else if (height > maxHeight) {
-                width = Math.round(maxHeight * (width / height));
-                height = maxHeight;
-            }
-            url = theme.getImageURL(res, { width, height, clip: null })
+        var props = {
+            resource: res,
+            width: res.width,
+            height: res.height,
+            theme: this.props.theme,
+            clip: false,
+            animation: true,
+        };
+        if (props.width > maxWidth) {
+            props.height = Math.round(maxWidth * (props.height / props.width));
+            props.width = maxWidth;
         }
-        return <img src={url} width={width} height={height} />;
+        if (props.height > maxHeight) {
+            props.width = Math.round(maxHeight * (props.width / props.height));
+            props.height = maxHeight;
+        }
+        return <ResourceView {...props} />;
     },
 
     /**
@@ -251,22 +251,25 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderThumbnails: function(index) {
-        var t = this.props.locale.translate;
-        var theme = this.props.theme;
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
-            var url = this.props.theme.getImageURL(res, { width: 28, height: 28 });
-            var props = {
+            var frameProps = {
                 className: 'thumbnail',
                 'data-index': index,
                 onClick: this.handleThumbnailClick,
             };
             if (index === selectedIndex) {
-                props.className += ' selected';
+                frameProps.className += ' selected';
             }
+            var viewProps = {
+                resource: res,
+                theme: this.props.theme,
+                width: 28,
+                height: 28,
+            };
             return (
-                <div key={index} {...props}>
-                    <img src={url} />
+                <div key={index} {...frameProps}>
+                    <ResourceView {...viewProps} />
                 </div>
             );
         });

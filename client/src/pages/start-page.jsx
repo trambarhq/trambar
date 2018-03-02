@@ -15,6 +15,7 @@ var Theme = require('theme/theme');
 var Scrollable = require('widgets/scrollable');
 var PushButton = require('widgets/push-button');
 var ProfileImage = require('widgets/profile-image');
+var ResourceView = require('widgets/resource-view');
 var MembershipRequestDialogBox = require('dialogs/membership-request-dialog-box');
 var QRScannerDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/qr-scanner-dialog-box') : null;
 var ActivationDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialogs/activation-dialog-box') : null;
@@ -816,10 +817,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
         // project picture
         var icon;
         var resources = _.get(project, 'details.resources');
-        var projectImage = _.find(resources, { type: 'image' });
-        if (projectImage) {
-            var imageURL = this.props.theme.getImageURL(projectImage, { width: 56, height: 56 });
-            icon = <img src={imageURL} />;
+        var image = _.find(resources, { type: 'image' });
+        if (image) {
+            icon = <ResourceView resource={image} width={56} height={56} theme={this.props.theme} />;
         } else {
             // use logo, with alternating background color
             var Logo = require('trambar-logo.svg');

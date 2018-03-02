@@ -12,14 +12,22 @@ function ResourceView(props) {
     var url;
     if (props.resource) {
         var params = {};
-        if (!props.clip) {
-            params.clip = null;
-        }
-        if (props.width) {
-            params.width = props.width;
-        }
-        if (props.height) {
-            params.height = props.height;
+        if (props.animation && props.resource.format === 'gif') {
+            // use the original file when it's a gif and we wish to show animation
+            params.original = true;
+        } else {
+            if (!props.clip) {
+                // don't apply clip rectangle
+                params.clip = null;
+            }
+            if (props.width) {
+                // resize source image
+                params.width = props.width;
+            }
+            if (props.height) {
+                // ditto
+                params.height = props.height;
+            }
         }
         url = props.theme.getImageURL(props.resource, params);
     } else {
@@ -70,6 +78,7 @@ function ResourceView(props) {
 
 ResourceView.propTypes = {
     clip: PropTypes.bool,
+    animation: PropTypes.bool,
     resource: PropTypes.object,
     url: PropTypes.string,
     width: PropTypes.number,

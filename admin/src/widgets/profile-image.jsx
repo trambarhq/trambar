@@ -3,27 +3,32 @@ var React = require('react'), PropTypes = React.PropTypes;
 
 var Theme = require('theme/theme');
 
+// widgets
+var ResourceView = require('widgets/resource-view');
+
 module.exports = ProfileImage;
 
 require('./profile-image.scss');
 
 function ProfileImage(props) {
     var classNames = [ 'profile-image', props.size ];
-    var imageURL;
     if (props.user) {
         var resources = _.get(props.user, 'details.resources');
-        var profileImage = _.find(resources, { type: 'image' });
-        if (profileImage) {
+        var image = _.find(resources, { type: 'image' });
+        if (image) {
             var width = imageResolutions[props.size];
-            imageURL = props.theme.getImageURL(profileImage, { width: width, height: width });
+            var props = {
+                className: classNames.join(' '),
+                resource: image,
+                width: width,
+                height: width,
+                theme: props.theme,
+            };
+            return <ResourceView {...props} />;
         }
     }
-    if (imageURL) {
-        return <img className={classNames.join(' ')} src={imageURL} />;
-    } else {
-        var Icon = require('octicons/build/svg/person.svg');
-        return <Icon className={classNames.join(' ')} />;
-    }
+    var Icon = require('octicons/build/svg/person.svg');
+    return <Icon className={classNames.join(' ')} />;
 }
 
 ProfileImage.propTypes = {

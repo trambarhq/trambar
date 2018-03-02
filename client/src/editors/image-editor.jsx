@@ -93,11 +93,11 @@ module.exports = React.createClass({
      * @return {String|null}
      */
     getPreviewImageURL: function(res) {
-        var theme = this.props.theme;
-        var previewURL = theme.getImageURL(res, {
+        var url = this.props.theme.getImageURL(res, {
             width: this.props.previewWidth,
             height: this.props.previewHeight
         });
+        return url;
     },
 
     /**
@@ -108,16 +108,16 @@ module.exports = React.createClass({
     prepareImage: function(res) {
         var fullImageURL = this.getFullImageURL(res);
         var previewImageURL = null;
-        var blobURL = BlobManager.find(fullImageURL);
-        if (blobURL) {
-            fullImageURL = blobURL;
+        var blob = BlobManager.find(fullImageURL);
+        if (blob) {
+            fullImageURL = BlobManager.url(blob);
         } else {
             previewImageURL = this.getPreviewImageURL(res);
             if (this.state.fullImageURL !== fullImageURL) {
                 // load it
-                BlobManager.fetch(fullImageURL).then((blobURL) => {
+                BlobManager.fetch(fullImageURL).then((blob) => {
                     this.setState({
-                        fullImageURL: blobURL,
+                        fullImageURL: BlobManager.url(blob),
                         previewImageURL: null
                     });
                 });

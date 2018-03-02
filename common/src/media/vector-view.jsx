@@ -114,6 +114,8 @@ module.exports = React.createClass({
                 }
                 this.originX = viewBox.x;
                 this.originY = viewBox.y;
+                this.zoomX = (viewBox.width) ? viewBox.width / width : 1;
+                this.zoomY = (viewBox.height) ? viewBox.height / height : 1;
                 this.naturalWidth = width;
                 this.naturalHeight = height;
                 this.setViewBox(this.props.clippingRect);
@@ -124,6 +126,8 @@ module.exports = React.createClass({
             this.clear();
             this.originX = 0;
             this.originY = 0;
+            this.zoomX = 1;
+            this.zoomY = 1;
             this.naturalWidth = 4;
             this.naturalHeight = 4;
             this.setViewBox();
@@ -161,8 +165,8 @@ module.exports = React.createClass({
         var height = svg.height.baseVal;
         viewBox.x = clip.left + this.originX;
         viewBox.y = clip.top + this.originY;
-        viewBox.width = clip.width;
-        viewBox.height = clip.height;
+        viewBox.width = clip.width * this.zoomX;
+        viewBox.height = clip.height * this.zoomY;
         width.value = clip.width;
         height.value = clip.height;
     },

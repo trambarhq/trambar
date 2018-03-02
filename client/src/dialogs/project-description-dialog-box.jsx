@@ -7,6 +7,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var ResourceView = require('widgets/resource-view');
 var Scrollable = require('widgets/scrollable');
 
 require('./project-description-dialog-box.scss');
@@ -51,20 +52,15 @@ module.exports = React.createClass({
     renderText: function() {
         var p = this.props.locale.pick;
         var project = this.props.project;
-        var title = p(project.details.title) || project.name;
-        var description = p(project.details.description);
-        var projectImage = _.find(project.details.resources, { type: 'image' });
-        var image;
-        if (projectImage) {
-            var imageURL = this.props.theme.getImageURL(projectImage, { width: 160 });
-            image = <img src={imageURL} />;
-        }
+        var image = _.find(project.details.resources, { type: 'image' });
         return (
             <Scrollable>
-                <div className="title">{title}</div>
+                <div className="title">{p(project.details.title) || project.name}</div>
                 <div className="description">
-                    {image}
-                    {description}
+                    <div className="image">
+                        <ResourceView resource={image} width={160} theme={this.props.theme} />
+                    </div>
+                    {p(project.details.description)}
                 </div>
             </Scrollable>
         );

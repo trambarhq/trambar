@@ -170,6 +170,9 @@ var svgOperators = {
  * @return {Promise<Buffer>}
  */
 function applyFiltersToSVGDocument(path, filters) {
+    if (!filters) {
+        return FS.readFileAsync(path);
+    }
     return FS.readFileAsync(path, 'utf-8').then((xml) => {
         // parse the XML doc
         var parser = new DOMParser;
@@ -208,7 +211,7 @@ function applyFiltersToSVGDocument(path, filters) {
                 viewBox[2] = params.crop.width;
                 viewBox[3] = params.crop.height;
             }
-            if (params.width || params.height) {
+            if (params.width !== undefined || params.height !== undefined) {
                 if (params.width && params.height === undefined) {
                     height = Math.round(height * (params.width / width));
                     width = params.width;
@@ -253,13 +256,15 @@ function applyOperators(target, operators, filters) {
                 args.push(arg);
             }
         }
-        _.each(operators, (operator, name) => {
-            // see which operator's name start with the letter(s)
-            if (name.substr(0, cmd.length) === cmd) {
-                operator.apply(target, args);
-                return false;
-            }
-        });
+        if (cmd) {
+            _.each(operators, (operator, name) => {
+                // see which operator's name start with the letter(s)
+                if (name.substr(0, cmd.length) === cmd) {
+                    operator.apply(target, args);
+                    return false;
+                }
+            });
+        }
     });
 }
 

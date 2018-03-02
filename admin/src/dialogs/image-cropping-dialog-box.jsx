@@ -118,7 +118,7 @@ module.exports = React.createClass({
      */
     renderImage: function() {
         var image = this.props.image;
-        var imageURL = this.props.theme.getImageURL(image, { original: true });
+        var imageURL = this.props.theme.getImageURL(image, { clip: null });
         var props = {
             url: imageURL,
             clippingRect: this.state.clippingRect,

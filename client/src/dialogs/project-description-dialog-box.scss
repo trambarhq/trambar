@@ -34,11 +34,15 @@
         margin-bottom: 0.5em;
         white-space: pre-line;
 
-        img {
+        .image {
             float: right;
-            width: 10em;
             margin-left: 0.5em;
             margin-bottom: 0.3em;
+
+            IMG, CANVAS, svg {
+                width: 10em;
+                height: auto;
+            }
         }
     }
 

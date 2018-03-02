@@ -7,6 +7,7 @@ var Theme = require('theme/theme');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var ResourceView = require('widgets/resource-view');
 
 require('./app-component-dialog-box.scss');
 
@@ -54,10 +55,9 @@ module.exports = React.createClass({
     renderPicture: function() {
         var component = this.props.component;
         if (component.image) {
-            var url = this.props.theme.getImageURL(component.image);
             return (
                 <div className="picture">
-                    <img src={url} />
+                    <ResourceView resource={component.image} height={48} theme={this.props.theme} />
                 </div>
             );
         } else {

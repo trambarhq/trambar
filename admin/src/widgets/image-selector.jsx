@@ -137,7 +137,7 @@ module.exports = React.createClass({
         var height = 120, width;
         var image = this.getImage();
         if (image) {
-            var fullResURL = this.props.theme.getImageURL(image, { original: true, remote: true });
+            var fullResURL = this.props.theme.getImageURL(image, { clip: null, remote: true });
             var linkProps = {
                 href: fullResURL,
                 target: '_blank',
