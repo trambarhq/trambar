@@ -26,7 +26,6 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        acceptNewReaction: PropTypes.bool,
         story: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
@@ -42,17 +41,6 @@ module.exports = React.createClass({
 
         onFinish: PropTypes.func,
         onSelectionClear: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            acceptNewReaction: false,
-        };
     },
 
     /**
@@ -76,20 +64,6 @@ module.exports = React.createClass({
      */
     render: function() {
         var reactions = sortReactions(this.props.reactions, this.props.currentUser);
-        if (this.props.acceptNewReaction) {
-            // see if there's an unpublished reaction belonging to the current user
-            var hasUserDraft = _.some(this.props.reactions, (r) => {
-                if (r.user_id === this.props.currentUser.id) {
-                    if (!r.published) {
-                        return true;
-                    }
-                }
-            });
-            if (!hasUserDraft) {
-                // add editor for blank comment
-                reactions = _.concat(null, reactions);
-            }
-        }
         var anchorId = this.props.selectedReactionId;
         var props = {
             items: reactions,
@@ -100,6 +74,7 @@ module.exports = React.createClass({
             inverted: true,
 
             onIdentity: this.handleReactionIdentity,
+            onTransition: this.handleReactionTransition,
             onRender: this.handleReactionRender,
             onAnchorChange: this.handleReactionAnchorChange,
             onBeforeAnchor: this.handleReactionBeforeAnchor,
@@ -116,15 +91,34 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      *
-     * @return {String}
+     * @return {String|undefined}
      */
     handleReactionIdentity: function(evt) {
-        // use a fixed id for the first editor, so we don't lose focus
-        // when the new reaction acquires an id after being saved automatically
-        if (!evt.item || evt.item.id < 1) {
-            return 'reaction-top';
+        if (evt.alternative) {
+            var params = this.props.route.parameters;
+            var location = { schema: params.schema, table: 'reaction' };
+            var temporaryId = this.props.database.findTemporaryID(location, evt.item.id);
+            if (temporaryId) {
+                return `reaction-${temporaryId}`;
+            }
+        } else {
+            return `reaction-${evt.item.id}`;
         }
-        return `reaction-${evt.item.id}`;
+    },
+
+    /**
+     * Called when SmartList wants to know if it should use transition effect
+     *
+     * @param  {Object} evt
+     *
+     * @return {Boolean}
+     */
+    handleReactionTransition: function(evt) {
+        // don't transition in comment editor with a temporary object
+        if (!evt.item.published && evt.item.id < 1) {
+            return false;
+        }
+        return true;
     },
 
     /**

@@ -365,7 +365,17 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 return 'story-top';
             }
         }
-        return `story-${evt.item.id}`;
+        if (evt.alternative) {
+            // look for temporary id
+            var params = this.props.route.parameters;
+            var location = { schema: params.schema, table: 'story' };
+            var temporaryId = this.props.database.findTemporaryID(location, evt.item.id);
+            if (temporaryId) {
+                return `story-${temporaryId}`;
+            }
+        } else {
+            return `story-${evt.item.id}`;
+        }
     },
 
     /**

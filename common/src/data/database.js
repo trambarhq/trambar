@@ -258,6 +258,19 @@ Database.prototype.getOAuthURL = function(oauthServer, type) {
     return this.remoteDataSource.getOAuthURL(this.context, oauthServer, type);
 };
 
+/**
+ * Return the temporary used to reference an object prior to it being saved
+ *
+ * @param  {Object} location
+ * @param  {Number} id
+ *
+ * @return {Number|undefined}
+ */
+Database.prototype.findTemporaryID = function(location, id) {
+    location = merge(this.context, location);
+    return this.remoteDataSource.findTemporaryID(location, id);
+};
+
 function merge(context, query) {
     return _.assign({}, context, query);
 }

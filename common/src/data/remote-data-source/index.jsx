@@ -67,6 +67,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         this.searching = false;
+        this.idMappings = {};
         var lists = {
             recentSearchResults: [],
             recentStorageResults: [],
@@ -1085,6 +1086,7 @@ module.exports = React.createClass({
             var location = change.location;
             storage.setStartTime();
             return this.performRemoteAction(location, 'storage', { objects }).then((objects) => {
+                this.saveIDMapping(location, change.objects, objects);
                 return objects;
             }).finally(() => {
                 this.removeChange(change);
@@ -1129,6 +1131,52 @@ module.exports = React.createClass({
         this.updateList('changeQueue', (before) => {
             return _.without(before, change);
         });
+    },
+
+    /**
+     * Save relationships between temporary IDs and database IDs
+     *
+     * @param  {Object} location
+     * @param  {Array<Object>} localObjects
+     * @param  {Array<Object>} remoteObjects
+     */
+    saveIDMapping: function(location, localObjects, remoteObjects) {
+        if (localObjects.length !== remoteObjects.length) {
+            return;
+        }
+        var path = [ location.address, location.schema, location.table ];
+        var list = _.get(this.idMappings, path);
+        if (!list) {
+            list = [];
+            _.set(this.idMappings, path, list);
+        }
+        _.each(localObjects, (localObject, index) => {
+            if (localObject.id < 1) {
+                var remoteObject = remoteObjects[index];
+                list.push({
+                    temporary: localObject.id,
+                    permanent: remoteObject.id,
+                });
+            }
+        });
+    },
+
+    /**
+     * Return the tempoprary ID used to reference an object before it
+     * was saved
+     *
+     * @param  {Object} location
+     * @param  {Number} permanentID
+     *
+     * @return {Number|undefined}
+     */
+    findTemporaryID: function(location, permanentID) {
+        var path = [ location.address, location.schema, location.table ];
+        var list = _.get(this.idMappings, path);
+        var entry = _.find(list, { permanent: permanentID });
+        if (entry) {
+            return entry.temporary;
+        }
     },
 
     /**

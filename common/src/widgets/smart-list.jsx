@@ -17,6 +17,7 @@ module.exports = React.createClass({
         loadDuration: PropTypes.number,
 
         onIdentity: PropTypes.func.isRequired,
+        onTransition: PropTypes.func,
         onRender: PropTypes.func.isRequired,
         onAnchorChange: PropTypes.func,
         onBeforeAnchor: PropTypes.func,
@@ -98,6 +99,17 @@ module.exports = React.createClass({
                 alternative: alt,
             });
         };
+        var transition = (item, index) => {
+            if (!nextProps.onTransition) {
+                return true;
+            }
+            return nextProps.onTransition({
+                type: 'transition',
+                target: this,
+                item: item,
+                currentIndex: index,
+            });
+        };
         if (_.isEmpty(nextState.slots)) {
             nextState.slots = _.map(items, (item, index) => {
                 var id = identity(item, index);
@@ -124,11 +136,17 @@ module.exports = React.createClass({
                 var id = identity(item, index);
                 var slot = slotHash[id];
                 if (!slot) {
+                    // maybe item was rendered under a different id
                     var prevId = identity(item, index, true);
-                    slot = slotHash[prevId];
+                    if (prevId) {
+                        slot = slotHash[prevId];
+                        if (slot) {
+                            // use new id from now on
+                            slot.id = id;
+                        }
+                    }
                 }
                 if (slot) {
-                    slot.id = id;
                     slot.item = item;
                     slot.index = index;
                     if (slot.state === 'disappearing') {
@@ -136,7 +154,14 @@ module.exports = React.createClass({
                         slot.removed = null;
                     }
                 } else {
-                    slot = this.createSlot(id, item, index, newSlotState, now);
+                    var state = newSlotState;
+                    if (state !== 'present') {
+                        // parent component might choose to not transition in item
+                        if (!transition(item, index)) {
+                            state = 'present';
+                        }
+                    }
+                    slot = this.createSlot(id, item, index, state, now);
                     newSlots.push(slot);
                 }
                 isPresent[id] = true;
@@ -208,6 +233,7 @@ module.exports = React.createClass({
             removed: null,
             transition: false,
             rendering: undefined,
+            contents: null,
             unseen: false,
             height: undefined,
             node: null,
@@ -238,18 +264,25 @@ module.exports = React.createClass({
         var onRender = this.props.onRender;
         var children = _.map(slots, (slot, index) => {
             var rendering = (startIndex <= index && index < endIndex);
-            var evt = {
-                type: 'render',
-                target: this,
-                item: slot.item,
-                needed: rendering,
-                startIndex: startIndex,
-                currentIndex: index,
-                endIndex: endIndex,
-                previousHeight: slot.height,
-                estimatedHeight: this.state.estimatedHeight,
-            };
-            var contents = onRender(evt);
+            var contents;
+            if (slot.state !== 'disappearing') {
+                var evt = {
+                    type: 'render',
+                    target: this,
+                    item: slot.item,
+                    needed: rendering,
+                    startIndex: startIndex,
+                    currentIndex: index,
+                    endIndex: endIndex,
+                    previousHeight: slot.height,
+                    estimatedHeight: this.state.estimatedHeight,
+                };
+                contents = slot.contents = onRender(evt)
+            } else {
+                // use what was rendered before, since parent component might
+                // not be able to render something that's no longer there
+                contents = slot.contents;
+            }
             if (rendering) {
                 slot.rendering = true;
             }

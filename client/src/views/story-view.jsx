@@ -69,7 +69,6 @@ module.exports = React.createClass({
         var nextState = {
             options: defaultOptions,
             commentsExpanded: this.shouldExpandComments(this.props),
-            addingComment: false,
             isTall: false,
         };
         this.updateOptions(nextState, this.props);
@@ -341,7 +340,6 @@ module.exports = React.createClass({
             currentUser: this.props.currentUser,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
-            addingComment: this.state.addingComment,
             locale: this.props.locale,
             theme: this.props.theme,
             onAction: this.handleAction,
@@ -432,15 +430,9 @@ module.exports = React.createClass({
                 return null;
             }
         }
-        if (!this.state.addingComment) {
-            if (_.isEmpty(this.props.reactions)) {
-                return null;
-            }
-        }
         var setters = this.components.setters;
         var listProps = {
             access: this.props.access,
-            acceptNewReaction: this.state.addingComment,
             story: this.props.story,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
@@ -452,7 +444,6 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             selectedReactionId: this.props.selectedReactionId,
-            onFinish: this.handleCommentFinish,
         };
         var className = 'scrollable';
         if (this.state.isTall && this.props.theme.mode !== 'single-col') {
@@ -844,15 +835,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when comment editing has ended
-     *
-     * @param  {Object} evt
-     */
-    handleCommentFinish: function(evt) {
-        this.setState({ addingComment: false });
-    },
-
-    /**
      * Called when user initiates an action
      *
      * @param  {Object} evt
@@ -865,7 +847,7 @@ module.exports = React.createClass({
                     story_id: this.props.story.id,
                     user_id: this.props.currentUser.id,
                     published: true,
-                    public: true,
+                    public: this.props.story.public,
                 };
                 this.saveReaction(like);
                 break;
@@ -873,11 +855,20 @@ module.exports = React.createClass({
                 this.removeReaction(evt.like);
                 break;
             case 'reaction-add':
-                if (!this.state.addingComment) {
-                    this.setState({
-                        addingComment: true,
-                        commentsExpanded: true
-                    });
+                var existing = _.some(this.props.reactions, {
+                    user_id: this.props.currentUser.id,
+                    published: false,
+                });
+                if (!existing) {
+                    var comment = {
+                        type: 'comment',
+                        story_id: this.props.story.id,
+                        user_id: this.props.currentUser.id,
+                        details: {},
+                        published: false,
+                        public: this.props.story.public,
+                    };
+                    this.saveReaction(comment);
                 } else {
                     this.components.reactionList.focus();
                 }
