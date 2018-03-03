@@ -1153,6 +1153,7 @@ module.exports = React.createClass({
         _.each(localObjects, (localObject, index) => {
             if (localObject.id < 1) {
                 var remoteObject = remoteObjects[index];
+                _.remove(list, { permanent: remoteObject.id });
                 list.push({
                     temporary: localObject.id,
                     permanent: remoteObject.id,
