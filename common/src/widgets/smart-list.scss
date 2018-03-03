@@ -1,0 +1,31 @@
+.smart-list {
+    .slot {
+        &.transition {
+            overflow: hidden;
+            opacity: 1;
+
+            &.in {
+                transition: height 0.2s linear 0.0s,
+                            margin-top 0.2s linear 0.0s,
+                            margin-bottom 0.2s linear 0.0s,
+                            opacity 0.3s linear 0.2s;
+            }
+
+            &.out {
+                transition: height 0.3s linear 0.2s,
+                            margin-top 0.3s linear 0.2s,
+                            margin-bottom 0.3s linear 0.2s,
+                            opacity 0.3s linear 0.0s;
+            }
+
+            &.hidden {
+                pointer-events: none;
+                user-select: none;
+                opacity: 0;
+                height: 0;
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+        }
+    }
+}

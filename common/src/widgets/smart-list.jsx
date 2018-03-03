@@ -2,6 +2,8 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 
+require('./smart-list.scss');
+
 module.exports = React.createClass({
     displayName: 'SmartList',
     propTypes: {
@@ -12,6 +14,7 @@ module.exports = React.createClass({
         anchor: PropTypes.string,
         offset: PropTypes.number,
         inverted: PropTypes.bool,
+        loadDuration: PropTypes.number,
 
         onIdentity: PropTypes.func.isRequired,
         onRender: PropTypes.func.isRequired,
@@ -31,6 +34,7 @@ module.exports = React.createClass({
             ahead: 10,
             offset: 0,
             inverted: false,
+            loadDuration: 2000,
         };
     },
 
@@ -40,13 +44,10 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        this.itemHeights = {};
-        this.itemNodes = {};
-        this.anchorOffset = this.props.offset;
-        return {
-            currentAnchor: this.props.anchor,
-            estimatedHeight: undefined,
-        };
+        var nextState = {};
+        this.updateAnchor(this.props, nextState);
+        this.updateSlots(this.props, nextState);
+        return nextState;
     },
 
     /**
@@ -55,14 +56,123 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
+        var nextState = _.clone(this.state);
         if (this.props.anchor !== nextProps.anchor) {
-            this.setState({ currentAnchor: nextProps.anchor });
-            this.anchorOffset = nextProps.offset;
+            this.updateAnchor(nextProps, nextState);
         }
-        if (this.props.fresh) {
-            this.stillFresh = true;
+        if (this.props.items !== nextProps.items) {
+            this.updateSlots(nextProps, nextState);
+        }
+        var changes = _.shallowDiff(nextState, this.state);
+        if (!_.isEmpty(changes)) {
+            this.setState(changes);
+        }
+    },
+
+    /**
+     * Update anchor
+     *
+     * @param  {Object} nextProps
+     * @param  {Object} nextState
+     */
+    updateAnchor: function(nextProps, nextState) {
+        nextState.currentAnchor = nextProps.anchor;
+        this.anchorOffset = nextProps.offset;
+    },
+
+    /**
+     * Assign items passed as prop to slots
+     *
+     * @param  {Object} nextProps
+     * @param  {Object} nextState
+     */
+    updateSlots: function(nextProps, nextState) {
+        var now = new Date;
+        var items = nextProps.items;
+        var identity = (item, index, alt) => {
+            return nextProps.onIdentity({
+                type: 'identity',
+                target: this,
+                item: item,
+                currentIndex: index,
+                alternative: alt,
+            });
+        };
+        if (_.isEmpty(nextState.slots)) {
+            nextState.slots = _.map(items, (item, index) => {
+                var id = identity(item, index);
+                return this.createSlot(id, item, index, 'present', now);
+            });
+        } else {
+            var slots = nextState.slots = _.slice(nextState.slots);
+            var then = _.minBy(slots, 'created').created;
+            var elapsed = now - then;
+            var newSlotState = 'appearing';
+            if (elapsed < this.props.loadDuration) {
+                // consider items that appear within a certain time to be part
+                // of the initial load; don't transition them in and don't
+                // trigger onBeforeAnchor on them
+                newSlotState = 'present;'
+            }
+            var slotHash = _.transform(slots, (hash, slot) => {
+                hash[slot.id] = slot;
+            }, {});
+            // find existing slots and get a list of new slots
+            var isPresent = {};
+            var newSlots = [];
+            _.each(items, (item, index) => {
+                var id = identity(item, index);
+                var slot = slotHash[id];
+                if (!slot) {
+                    var prevId = identity(item, index, true);
+                    slot = slotHash[prevId];
+                }
+                if (slot) {
+                    slot.id = id;
+                    slot.item = item;
+                    slot.index = index;
+                    if (slot.state === 'disappearing') {
+                        slot.state = 'present';
+                        slot.removed = null;
+                    }
+                } else {
+                    slot = this.createSlot(id, item, index, newSlotState, now);
+                    newSlots.push(slot);
+                }
+                isPresent[id] = true;
+            });
+
+            // see which slots are disappearing
+            var oldSlots = [];
+            _.each(slots, (slot) => {
+                if (!isPresent[slot.id]) {
+                    if (this.isSlotVisible(slot)) {
+                        // use transition animation
+                        slot.state = 'disappearing';
+                        slot.removed = now;
+                    } else {
+                        // don't bother
+                        oldSlots.push(slot);
+                    }
+                }
+            });
+            _.pullAll(slots, oldSlots);
+
+            if (_.some(oldSlots, { unseen: true })) {
+                // items were deleted before the user has a chance to see them
+                var unseenSlots = _.filter(slots, { unseen: true });
+                this.triggerBeforeAnchorEvent(unseenSlots);
+            }
+
+            // add new slots
+            _.each(newSlots, (slot) => {
+                var index = _.sortedIndexBy(slots, slot, 'index');
+                slots.splice(index, 0, slot);
+            });
+        }
+        if (nextProps.fresh) {
             // reset the anchor
-            this.setState({ currentAnchor: nextProps.anchor });
+            nextState.currentAnchor = nextProps.anchor;
             this.anchorOffset = nextProps.offset;
 
             if (!nextProps.anchor) {
@@ -77,70 +187,91 @@ module.exports = React.createClass({
     },
 
     /**
+     * Create a slot object
+     *
+     * @param  {String} id
+     * @param  {Object} item
+     * @param  {Number} index
+     * @param  {String} state
+     * @param  {Date} time
+     *
+     * @return {Object}
+     */
+    createSlot: function(id, item, index, state, time) {
+        var slot = {
+            id: id,
+            key: id,
+            index: index,
+            state: state,
+            item: item,
+            created: time,
+            removed: null,
+            transition: false,
+            rendering: undefined,
+            unseen: false,
+            height: undefined,
+            node: null,
+            setter: null,
+        };
+        slot.setter = setter.bind(slot);
+        return slot;
+    },
+
+    /**
      * Render list items, with the help of callbacks
      *
      * @return {ReactElement}
      */
     render: function() {
-        // first, get the ids of the items
-        var items = this.props.items;
-        var onIdentity = this.props.onIdentity;
-        var ids = _.map(items, (item, index) => {
-            return onIdentity({
-                type: 'identity',
-                target: this,
-                item: item,
-                currentIndex: index,
-            });
-        });
-        var anchorIndex = (this.state.currentAnchor) ? _.indexOf(ids, this.state.currentAnchor) : 0;
-        if (anchorIndex === -1 && items) {
-            // anchor item has vanished--find the closest one that still exists
-            var previousIds = _.keys(this.itemNodes);
-            var previousAnchorIndex = _.indexOf(previousIds, this.state.currentAnchor);
-            for (var i = previousAnchorIndex + 1; i < previousIds.length; i++) {
-                var newAnchorIndex = _.indexOf(ids, previousIds[i]);
-                if (newAnchorIndex !== -1) {
-                    // pretend the value was correct all along by modifying
-                    // the state directly
-                    anchorIndex = newAnchorIndex;
-                    this.state.currentAnchor = ids[newAnchorIndex];
-                    setImmediate(() => {
-                        this.triggerAnchorChangeEvent(ids[newAnchorIndex]);
-                    });
-                    break;
-                }
-            }
-            if (anchorIndex === -1) {
-                this.state.currentAnchor = undefined;
-                setImmediate(() => {
-                    this.triggerAnchorChangeEvent(undefined);
-                });
-            }
+        var slots = this.state.slots;
+        var anchorIndex = 0;
+        if (this.state.currentAnchor) {
+            anchorIndex = _.findIndex(slots, { id: this.state.currentAnchor });
         }
+
         // render some items behind (i.e. above) the anchored item
         var startIndex = Math.max(0, anchorIndex - this.props.behind);
         // render some items ahead of (i.e. below) the anchored item
         // (presumably the number is sufficient to fill the viewport)
-        var endIndex = Math.min(_.size(items), anchorIndex + this.props.ahead + 1);
+        var endIndex = Math.min(_.size(slots), anchorIndex + this.props.ahead + 1);
 
         var onRender = this.props.onRender;
-        var children = _.map(this.props.items, (item, index) => {
-            var id = ids[index];
+        var children = _.map(slots, (slot, index) => {
+            var rendering = (startIndex <= index && index < endIndex);
             var evt = {
                 type: 'render',
                 target: this,
-                item: item,
-                needed: (startIndex <= index && index < endIndex),
+                item: slot.item,
+                needed: rendering,
                 startIndex: startIndex,
                 currentIndex: index,
                 endIndex: endIndex,
-                previousHeight: this.itemHeights[id],
+                previousHeight: slot.height,
                 estimatedHeight: this.state.estimatedHeight,
             };
             var contents = onRender(evt);
+            if (rendering) {
+                slot.rendering = true;
+            }
+            var className = 'slot';
+            var style;
+            if (slot.state === 'appearing') {
+                className += ' transition in';
+                if (slot.transition) {
+                    style = { height: slot.height };
+                } else {
+                    className += ' hidden';
+                }
+            } else if (slot.state === 'disappearing') {
+                className += ' transition out';
+                if (slot.transition) {
+                    className += ' hidden';
+                } else {
+                    style = { height: slot.height };
+                }
+            }
             return (
-                <div key={id} id={id}>
+                <div key={slot.key} ref={slot.setter} className={className} style={style}>
                     {contents}
                 </div>
             );
@@ -151,11 +282,16 @@ module.exports = React.createClass({
         if (this.props.inverted) {
             _.reverse(children);
         }
-        return <div className="smart-list">{children}</div>;
+        return (
+            <div className="smart-list" onTransitionEnd={this.handleTransitionEnd}>
+                {children}
+            </div>
+        );
     },
 
     /**
-     * Find DOM nodes and add event listeners on mount
+     * Find DOM nodes on mount, add event listeners, and set initial scroll
+     * position based on given anchor
      */
     componentDidMount: function() {
         // find the list's DOM node and its scroll container
@@ -170,34 +306,203 @@ module.exports = React.createClass({
         this.scrollContainerWidth = this.scrollContainer.clientWidth;
         this.scrollContainer.addEventListener('scroll', this.handleScroll);
         window.addEventListener('resize', this.handleWindowResize);
-        this.scanItemNodes();
+
+        this.maintainScrollPosition();
+        this.setSlotHeights();
     },
 
     /**
-     * Scan the DOM nodes after we've rendered them
+     * Adjust scroll position and trigger transitions on update
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        if (!this.stillFresh) {
-            var updatingList = !_.isEmpty(this.itemNodes);
-            var newItemIndices = this.scanItemNodes();
-            if (this.state.currentAnchor && updatingList) {
-                // see which new items are behind (i.e. above) the anchor element
-                var ids = _.keys(this.itemNodes);
-                var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
-                var items = _.transform(newItemIndices, (list, index) => {
-                    if (index < anchorIndex) {
-                        list.push(this.props.items[index]);
+        if (!this.scrolling) {
+            this.maintainScrollPosition();
+        }
+        this.setSlotHeights();
+        this.markUnseenSlots();
+        this.setTransitionState();
+    },
+
+    /**
+     * Adjust scroll position so anchor remains at the same on-screen location
+     */
+    maintainScrollPosition: function() {
+        // maintain the position of the anchor node
+        var anchorSlot, anchorOffset;
+        if (this.state.currentAnchor) {
+            anchorSlot = _.find(this.state.slots, { id: this.state.currentAnchor });
+            anchorOffset = this.anchorOffset;
+        } else {
+            if (this.props.inverted) {
+                // the first slot is at the bottom
+                anchorSlot = _.first(this.state.slots);
+                anchorOffset = Infinity;
+            }
+        }
+        if (anchorSlot) {
+            if (anchorOffset !== undefined) {
+                var containerOffsetTop = this.scrollContainer.offsetTop;
+                var containerScrollTop = this.scrollContainer.scrollTop;
+                var anchorTop = anchorSlot.node.offsetTop - containerOffsetTop;
+                if (!this.props.inverted) {
+                    var actualOffset = anchorTop - containerScrollTop;
+                    if (actualOffset !== anchorOffset) {
+                        // don't reposition when it's at the top
+                        var newScrollTop = Math.max(0, anchorTop - anchorOffset);
+                        this.scrollContainer.scrollTop = newScrollTop;
                     }
-                }, []);
-                if (!_.isEmpty(items)) {
-                    this.triggerBeforeAnchorEvent(items);
+                } else {
+                    // calculate the equivalent of offsetTop and scrollTop,
+                    // measured from the bottom of the container
+                    var containerScrollHeight = this.scrollContainer.scrollHeight;
+                    var containerOffsetHeight = this.scrollContainer.offsetHeight;
+                    var containerScrollBottom = containerScrollHeight - containerScrollTop - containerOffsetHeight;
+                    var anchorHeight = anchorSlot.node.offsetHeight;
+                    var anchorBottom = containerScrollHeight - anchorTop - anchorHeight;
+
+                    var actualOffset = anchorBottom - containerScrollBottom;
+                    if (actualOffset !== anchorOffset) {
+                        var newScrollBottom = Math.max(0, anchorBottom - anchorOffset);
+                        var newScrollTop = containerScrollHeight - newScrollBottom - containerOffsetHeight
+                        this.scrollContainer.scrollTop = newScrollTop;
+                    }
                 }
             }
         }
-        this.stillFresh = false;
+    },
+
+    /**
+     * Return true if a slot if visible
+     *
+     * @param  {Object} slot
+     *
+     * @return {Boolean}
+     */
+    isSlotVisible: function(slot) {
+        if (!slot.rendering || !slot.node) {
+            return false;
+        }
+        if (slot.transition) {
+            // if the slot is already in transition, don't end it
+            return true;
+        }
+        if (this.scrollContainer) {
+            var containerOffsetHeight = this.scrollContainer.offsetHeight;
+            var containerOffsetTop = this.scrollContainer.offsetTop;
+            var visibleTop = this.scrollContainer.scrollTop;
+            var visibleBottom = visibleTop + containerOffsetHeight;
+            var slotTop = slot.node.offsetTop - containerOffsetTop;
+            if (visibleTop < slotTop && slotTop <= visibleBottom) {
+                return true;
+            }
+            var slotBottom = slotTop + slot.height;
+            if (visibleTop < slotBottom && slotBottom <= visibleBottom) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    /**
+     * Remember height of items that're being rendered
+     */
+    setSlotHeights: function() {
+        var heights = [];
+        _.each(this.state.slots, (slot) => {
+            if (slot.rendering) {
+                var child = slot.node.firstChild;
+                var height = (child) ? child.offsetHeight : 0;
+                slot.height = height;
+                heights.push(height);
+            }
+        });
+        if (!this.state.estimatedHeight) {
+            if (!_.isEmpty(heights)) {
+                var avg = _.sum(heights) / heights.length;
+                var estimatedHeight = Math.round(avg);
+                this.setState({ estimatedHeight })
+            }
+        }
+    },
+
+    /**
+     * Mark new slots that cannot be seen currently, firing an event when the
+     * list of unseen items changes
+     */
+    markUnseenSlots: function() {
+        var slots = this.state.slots;
+        var anchorSlotIndex = _.findIndex(slots, { id: this.state.currentAnchor });
+        var changed = false;
+        _.each(slots, (slot, index) => {
+            if (slot.state === 'appearing') {
+                if (index < anchorSlotIndex) {
+                    // if the slot is behind the anchor (i.e. above it when
+                    // inverted = false; below it when inverted = true)
+                    // then the user won't see it yet
+                    //
+                    // we're not tracking items appearing from the other
+                    // direction at the moment
+                    if (!this.isSlotVisible(slot)) {
+                        slot.unseen = true;
+                        changed = true;
+                    }
+                }
+            } else if (slot.unseen) {
+                if (slot.rendering) {
+                    // if we're rendering the item and it's ahead of the anchor
+                    // consider it seen
+                    if (index >= anchorSlotIndex) {
+                        slot.unseen = false;
+                        changed = true;
+                    }
+                }
+            }
+        });
+        if (changed) {
+            // see which ones are before the anchor
+            var unseenSlots = _.filter(slots, { unseen: true });
+            this.triggerBeforeAnchorEvent(unseenSlots);
+        }
+    },
+
+    /**
+     * Trigger transitions of slots that are appearing or disappearing
+     */
+    setTransitionState: function() {
+        var slots = _.clone(this.state.slots);
+        var changed = false;
+        _.each(slots, (slot) => {
+            if (slot.state !== 'present') {
+                if (!slot.transition) {
+                    var useTransition = this.isSlotVisible(slot);
+                    if (this.props.inverted) {
+                        if (slot.state === 'appearing' && !this.state.currentAnchor) {
+                            // need to update the scroll position continually
+                            // as the slot expands so the bottom of the container
+                            // is visible
+                            if (!this.scrollPositionInterval) {
+                                this.scrollPositionInterval = setInterval(this.maintainScrollPosition, 10);
+                            }
+                            this.scrollToAnchorNode = slot.node;
+                            useTransition = true;
+                        }
+                    }
+                    if (useTransition) {
+                        slot.transition = true;
+                    } else {
+                        // don't bother transitioning when it can't be seen
+                        slot.state = 'present';
+                    }
+                    changed = true;
+                }
+            }
+        });
+        if (changed) {
+            this.setState({ slots });
+        }
     },
 
     /**
@@ -209,149 +514,63 @@ module.exports = React.createClass({
     },
 
     /**
-     * Find DOM nodes, record their heights, as well as maintaining the position
-     * of the anchored element. Return indices new nodes
-     *
-     * @return {Array<Number>}
-     */
-    scanItemNodes: function() {
-        var startIndex = this.startIndex;
-        var endIndex = this.endIndex;
-        var index = 0;
-        var itemNodesBefore = this.itemNodes;
-        var newItemIndices = []
-        this.itemNodes = {};
-        for (var c = this.container.firstChild; c; c = c.nextSibling) {
-            var id = c.id;
-            this.itemNodes[id] = c;
-            if (startIndex <= index && index < endIndex) {
-                this.itemHeights[id] = c.offsetHeight;
-            }
-            if (!itemNodesBefore[id]) {
-                newItemIndices.push(index);
-            }
-            index++;
-        }
-        if (this.state.estimatedHeight === undefined) {
-            var heights = _.values(this.itemHeights);
-            if (!_.isEmpty(heights)) {
-                var avg = _.sum(heights) / heights.length;
-                var estimatedHeight = Math.round(avg);
-                this.setState({ estimatedHeight })
-            }
-        } else if (!this.scrolling) {
-            // maintain the position of the anchor node
-            var anchorNode, anchorOffset;
-            if (this.state.currentAnchor) {
-                anchorNode = this.itemNodes[this.state.currentAnchor];
-                anchorOffset = this.anchorOffset;
-            } else if (this.props.inverted) {
-                // scroll down all the way to the bottom
-                anchorNode = this.container.lastChild;
-                anchorOffset = Infinity;
-            }
-            if (anchorNode) {
-                if (anchorNode && anchorOffset !== undefined) {
-                    var containerOffsetTop = this.scrollContainer.offsetTop;
-                    var containerScrollTop = this.scrollContainer.scrollTop;
-                    var anchorTop = anchorNode.offsetTop - containerOffsetTop;
-                    if (!this.props.inverted) {
-                        var actualOffset = anchorTop - containerScrollTop;
-                        if (actualOffset !== anchorOffset) {
-                            // don't reposition when it's at the top
-                            var newScrollTop = Math.max(0, anchorTop - anchorOffset);
-                            this.scrollContainer.scrollTop = newScrollTop;
-                        }
-                    } else {
-                        // calculate the equivalent of offsetTop and scrollTop,
-                        // measured from the bottom of the container
-                        var containerScrollHeight = this.scrollContainer.scrollHeight;
-                        var containerOffsetHeight = this.scrollContainer.offsetHeight;
-                        var containerScrollBottom = containerScrollHeight - containerScrollTop - containerOffsetHeight;
-                        var anchorHeight = anchorNode.offsetHeight;
-                        var anchorBottom = containerScrollHeight - anchorTop - anchorHeight;
-
-                        var actualOffset = anchorBottom - containerScrollBottom;
-                        if (actualOffset !== anchorOffset) {
-                            var newScrollBottom = Math.max(0, anchorBottom - anchorOffset);
-                            var newScrollTop = containerScrollHeight - newScrollBottom - containerOffsetHeight
-                            this.scrollContainer.scrollTop = newScrollTop;
-                        }
-                    }
-                }
-            }
-        }
-        return newItemIndices;
-    },
-
-    /**
-     * Clear the saved item heights and force rerender
-     */
-    resetHeights: function() {
-        this.itemHeights = {};
-        this.setState({ estimatedHeight: undefined });
-    },
-
-    /**
      * Inform parent component that the anchor has changed
      *
-     * @param  {String} anchor
+     * @param  {Object} slot
      */
-    triggerAnchorChangeEvent: function(anchor) {
+    triggerAnchorChangeEvent: function(slot) {
         if (this.props.onAnchorChange) {
-            var ids = _.keys(this.itemNodes);
-            var anchorIndex = _.indexOf(ids, this.state.currentAnchor);
-            if (anchorIndex !== -1) {
-                var item = this.props.items[anchorIndex];
-                this.props.onAnchorChange({
-                    type: 'anchorchange',
-                    target: this,
-                    anchor,
-                    item,
-                });
-            }
-        }
-    },
-
-    /**
-     * Inform parent component that so items were rendered behind the anchor
-     *
-     * @param  {String} anchor
-     */
-    triggerBeforeAnchorEvent: function(items) {
-        if (this.props.onBeforeAnchor) {
-            this.props.onBeforeAnchor({
-                type: 'beforeanchor',
+            this.props.onAnchorChange({
+                type: 'anchorchange',
                 target: this,
-                items,
+                anchor: (slot) ? slot.id : null,
+                item: (slot) ? slot.item : null,
             });
         }
     },
 
     /**
-     * Called after scrolling has occurred
+     * Inform parent component that new items were rendered before the anchor
+     * and therefore cannot be seen
      *
-     * @param  {Event} evt
+     * @param  {Array<Object>} slots
      */
-    handleScroll: function(evt) {
+    triggerBeforeAnchorEvent: function(slots) {
+        if (this.props.onBeforeAnchor) {
+            this.props.onBeforeAnchor({
+                type: 'beforeanchor',
+                target: this,
+                items: _.map(slots, 'item'),
+            });
+        }
+    },
+
+    /**
+     * Find the slot that's current at the top (or bottom if inverted = true)
+     * of the scroll box's viewable area
+     *
+     * @param  {Array<Object>} slots
+     *
+     * @return {Object|null}
+     */
+    findAnchorSlot: function(slots) {
         var containerScrollTop = this.scrollContainer.scrollTop;
         var containerOffsetTop = this.scrollContainer.offsetTop;
-        var anchorNode;
+        var anchorSlot;
         if (!this.props.inverted) {
             // release the anchor when user scrolls to the very top
             var anchorTop;
             if (containerScrollTop > 0) {
-                var ids = _.keys(this.itemNodes);
-                for (var i = 0; i < ids.length; i++) {
-                    var id = ids[i];
-                    anchorNode = this.itemNodes[id];
-                    anchorTop = anchorNode.offsetTop - containerOffsetTop;
+                for (var i = 0; i < slots.length; i++) {
+                    var slot =  slots[i];
+                    anchorSlot = slot;
+                    anchorTop = anchorSlot.node.offsetTop - containerOffsetTop;
                     if (anchorTop > containerScrollTop) {
                         break;
                     }
                 }
             }
-            this.anchorOffset = (anchorNode) ? anchorTop - containerScrollTop : undefined;
+            this.anchorOffset = (anchorSlot) ? anchorTop - containerScrollTop : undefined;
         } else {
             var containerScrollHeight = this.scrollContainer.scrollHeight;
             var containerOffsetHeight = this.scrollContainer.offsetHeight;
@@ -360,25 +579,42 @@ module.exports = React.createClass({
             var anchorBottom;
             // release the anchor when user scrolls to the very bottom
             if (containerScrollBottom > 0) {
-                var ids = _.keys(this.itemNodes);
-                for (var i = ids.length - 1; i >= 0; i--) {
-                    var id = ids[i];
-                    anchorNode = this.itemNodes[id];
-                    var anchorTop = anchorNode.offsetTop - containerOffsetTop;
-                    var anchorHeight = anchorNode.offsetHeight;
+                for (var i = 0; i < slots.length; i++) {
+                    var slot = slots[i];
+                    anchorSlot = slot;
+                    var anchorTop = anchorSlot.node.offsetTop - containerOffsetTop;
+                    var anchorHeight = anchorSlot.node.offsetHeight;
                     var anchorBottom = containerScrollHeight - anchorTop - anchorHeight;
                     if (anchorBottom > containerScrollBottom) {
                         break;
                     }
                 }
             }
-            this.anchorOffset = (anchorNode) ? anchorBottom - containerScrollBottom : undefined;
+            this.anchorOffset = (anchorSlot) ? anchorBottom - containerScrollBottom : undefined;
         }
+        return anchorSlot;
+    },
 
-        var currentAnchor = (anchorNode) ? anchorNode.id : undefined;
+    /**
+     * Called after scrolling has occurred
+     *
+     * @param  {Event} evt
+     */
+    handleScroll: function(evt) {
+        if (this.scrollPositionInterval) {
+            // don't do anything if the event is trigger by interval function
+            return;
+        }
+        if (this.resizing) {
+            // counteract scrolling due to resizing
+            this.maintainScrollPosition();
+            return;
+        }
+        var anchorSlot = this.findAnchorSlot(this.state.slots);
+        var currentAnchor = (anchorSlot) ? anchorSlot.id : undefined;
         if (this.state.currentAnchor !== currentAnchor) {
             this.setState({ currentAnchor });
-            this.triggerAnchorChangeEvent(currentAnchor);
+            this.triggerAnchorChangeEvent(anchorSlot);
         }
         this.scrolling = true;
         if (this.scrollingEndTimeout) {
@@ -399,7 +635,68 @@ module.exports = React.createClass({
         // recalculate heights if the container width is different
         if (this.scrollContainerWidth !== this.scrollContainer.clientWidth) {
             this.scrollContainerWidth = this.scrollContainer.clientWidth;
-            this.resetHeights();
+            var slots = _.slice(this.state.slots);
+            _.each(slots, (slot) => {
+                slot.height = undefined;
+            });
+            this.setState({ slots, estimatedHeight: undefined });
+
+            this.resizing = true;
+            if (this.resizingEndTimeout) {
+                clearTimeout(this.resizingEndTimeout);
+            }
+            this.resizingEndTimeout = setTimeout(() => {
+                this.resizing = false;
+                this.resizingEndTimeout = 0;
+            }, 50);
+        }
+    },
+
+    /**
+     * Called when transition is done
+     *
+     * @return {Event}
+     */
+    handleTransitionEnd: function(evt) {
+        var slots = _.slice(this.state.slots);
+        if (evt.propertyName === 'opacity') {
+            var slot = _.find(slots, { node: evt.target });
+            if (slot) {
+                if (slot.state === 'appearing') {
+                    // slot has transitioned in--render normally from now on
+                    slot.state = 'present';
+                    slot.transition = false;
+                    this.setState({ slots });
+
+                    if (this.scrollToAnchorNode === evt.target) {
+                        this.maintainScrollPosition();
+                        clearInterval(this.scrollPositionInterval);
+                        this.scrollPositionInterval = null;
+                        this.scrollToAnchorNode = null;
+                    }
+                }
+            }
+        } else if (evt.propertyName === 'height') {
+            var slot = _.find(slots, { node: evt.target });
+            if (slot) {
+                if (slot.state === 'disappearing') {
+                    // slot has transitioned out--remove it
+                    var index = _.indexOf(slots, slot);
+                    slots.splice(index, 1);
+
+                    // find a new anchor
+                    var anchorSlot = this.findAnchorSlot(slots);
+                    var currentAnchor = (anchorSlot) ? anchorSlot.id : undefined;
+                    if (currentAnchor !== this.state.currentAnchor) {
+                        this.triggerAnchorChangeEvent(anchorSlot);
+                    }
+                    this.setState({ slots, currentAnchor });
+                }
+            }
         }
     },
 });
+
+function setter(node) {
+    this.node = node;
+}

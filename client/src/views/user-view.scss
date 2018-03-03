@@ -86,8 +86,6 @@
     }
 
     .single-col & {
-        margin-bottom: 0.5em;
-
         .column-2 {
             &:empty {
                 display :none;
@@ -98,7 +96,6 @@
     .double-col &,
     .triple-col & {
         display: table;
-        margin-bottom: 1em;
 
         .header {
             display: table-row;

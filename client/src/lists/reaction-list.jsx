@@ -198,11 +198,6 @@ module.exports = React.createClass({
      */
     handleReactionAnchorChange: function(evt) {
         var reactionId = _.get(evt.item, 'id');
-        if (!reactionId || _.includes(this.state.hiddenReactionIds, reactionId)) {
-            // clear the whole list as soon as one of them come into view
-            // or if we've reach the bottom (where the reaction might be null)
-            this.setState({ hiddenReactionIds: [] });
-        }
         if (this.props.selectedReactionId && reactionId !== this.props.selectedReactionId) {
             if (this.props.onSelectionClear) {
                 this.props.onSelectionClear({
@@ -219,8 +214,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleReactionBeforeAnchor: function(evt) {
-        var reactionIds = _.map(evt.items, 'id');
-        var hiddenReactionIds = _.union(reactionIds, this.state.hiddenReactionIds);
+        var hiddenReactionIds = _.map(evt.items, 'id');
         this.setState({ hiddenReactionIds });
     },
 

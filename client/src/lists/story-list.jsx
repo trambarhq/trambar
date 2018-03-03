@@ -288,18 +288,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             // sync component could receive the route change first, then the
             // story list change in a subsequent rerender
             this.freshList = this.props.freshRoute;
-
-            if (this.props.freshRoute) {
-                this.setState({ hiddenStoryIds: [] });
-            } else {
-                // make sure hiddenStoryIds contain valid ids
-                if (!_.isEmpty(this.state.hiddenStoryIds)) {
-                    var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
-                        return _.some(nextProps.stories, { id });
-                    });
-                    this.setState({ hiddenStoryIds });
-                }
-            }
         }
         if (this.props.route !== nextProps.route) {
             this.setState({ selectedStoryId: null });
@@ -477,11 +465,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
      */
     handleStoryAnchorChange: function(evt) {
         var storyId = _.get(evt.item, 'id');
-        if (!storyId || _.includes(this.state.hiddenStoryIds, storyId)) {
-            // clear the whole list as soon as one of them come into view
-            // or if we've reach the top (where the story might be null)
-            this.setState({ hiddenStoryIds: [] });
-        }
         if (this.props.selectedStoryId && storyId !== this.props.selectedStoryId) {
             if (this.props.onSelectionClear) {
                 this.props.onSelectionClear({
@@ -498,8 +481,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleStoryBeforeAnchor: function(evt) {
-        var storyIds = _.map(evt.items, 'id');
-        var hiddenStoryIds = _.union(storyIds, this.state.hiddenStoryIds);
+        var hiddenStoryIds = _.map(evt.items, 'id');
         this.setState({ hiddenStoryIds });
     },
 

@@ -55,8 +55,6 @@
     }
 
     .single-col & {
-        margin-bottom: 0.5em;
-
         .body {
             .autosize-text-area {
                 TEXTAREA {
@@ -69,7 +67,6 @@
     .double-col &,
     .triple-col & {
         display: table;
-        margin-bottom: 1em;
 
         .column-1,
         .column-2,

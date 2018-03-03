@@ -237,14 +237,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.stories !== nextProps.stories) {
-            if (!_.isEmpty(this.state.hiddenStoryIds)) {
-                var hiddenStoryIds = _.filter(this.state.hiddenStoryIds, (id) => {
-                    return _.some(nextProps.stories, { id });
-                });
-                this.setState({ hiddenStoryIds });
-            }
-        }
         if (this.props.route !== nextProps.route) {
             this.setState({ selectedStoryId: null });
         }
@@ -434,11 +426,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      */
     handleBookmarkAnchorChange: function(evt) {
         var storyId = _.get(evt.item, 'story_id');
-        if (!storyId || _.includes(this.state.hiddenStoryIds, storyId)) {
-            // clear the whole list as soon as one of them come into view
-            // or if we've reach the top (where the story might be null)
-            this.setState({ hiddenStoryIds: [] });
-        }
         if (this.props.selectedStoryId && storyId !== this.props.selectedStoryId) {
             if (this.props.onSelectionClear) {
                 this.props.onSelectionClear({
@@ -455,8 +442,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleBookmarkBeforeAnchor: function(evt) {
-        var storyIds = _.map(evt.items, 'story_id');
-        var hiddenStoryIds = _.union(storyIds, this.state.hiddenStoryIds);
+        var hiddenStoryIds = _.map(evt.items, 'story_id');
         this.setState({ hiddenStoryIds });
     },
 
