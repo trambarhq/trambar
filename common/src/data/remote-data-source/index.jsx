@@ -624,12 +624,29 @@ module.exports = React.createClass({
                         schema: parts[0],
                         table: parts[1]
                     };
+                    var ids = _.filter(idList, (id) => {
+                        if (this.isBeingSaved(location, id)) {
+                            // change notification has arrived even before the
+                            // save request has finished
+                            return false;
+                        } else if (this.isRecentlySaved(location, id)) {
+                            // change notification arrived shortly after save
+                            // operation finishes
+                            return false;
+                        } else {
+                            // change caused by someone else (or backend)
+                            return true;
+                        }
+                    });
+                    if (_.isEmpty(ids)) {
+                        return;
+                    }
                     var relevantSearches = this.getRelevantRecentSearches(location);
                     _.each(relevantSearches, (search) => {
                         var dirty = false;
                         if (search.isMeetingExpectation()) {
                             // see if the ids show up in the results
-                            _.each(idList, (id) => {
+                            _.each(ids, (id) => {
                                 var index = _.sortedIndexBy(search.results, { id }, 'id');
                                 var object = search.results[index];
                                 if (object && object.id === id) {
@@ -678,6 +695,47 @@ module.exports = React.createClass({
                 }
             }
             return changed;
+        });
+    },
+
+    /**
+     * Return true if an object with given id is currently being saved
+     *
+     * @param  {Object} location
+     * @param  {Number} id
+     *
+     * @return {Boolean}
+     */
+    isBeingSaved: function(location, id) {
+        return _.some(this.state.changeQueue, (change) => {
+            if (change.dispatched) {
+                if (change.matchLocation(location)) {
+                    if (_.some(change.objects, { id })) {
+                        return true;
+                    }
+                }
+            }
+        });
+    },
+
+    /**
+     * Return true if an object with given id was saved recently
+     *
+     * @param  {Object} location
+     * @param  {Number} id
+     *
+     * @return {Boolean}
+     */
+    isRecentlySaved: function(location, id) {
+        return _.some(this.recentStorageResults, (storage) => {
+            if (storage.matchLocation(location)) {
+                if (_.some(storage.results, { id })) {
+                    var elapsed = storage.getTimeElapsed();
+                    if (elapsed < 1000) {
+                        return true;
+                    }
+                }
+            }
         });
     },
 
@@ -981,7 +1039,7 @@ module.exports = React.createClass({
                     if (includeUncommitted && !search.committed) {
                         var relatedChanges = _.filter(this.changeQueue, (change) => {
                             if (change.dispatched && !change.committed) {
-                                if (_.isEqual(change.location, location)) {
+                                if (change.matchLocation(location)) {
                                     return true;
                                 }
                             }
@@ -1551,6 +1609,9 @@ module.exports = React.createClass({
                     return false;
                 }
                 if (!search.dirty) {
+                    return false;
+                }
+                if (!search.prefetch) {
                     return false;
                 }
                 // don't prefetch a search if the same component has done a

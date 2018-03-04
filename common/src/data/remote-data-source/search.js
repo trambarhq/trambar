@@ -9,9 +9,10 @@ function Search(query) {
     this.criteria = query.criteria;
     this.minimum = query.minimum;
     this.expected = query.expected;
-    this.remote = query.remote;
-    this.committed = query.committed;
-    this.required = query.required;
+    this.remote = query.remote || false;
+    this.committed = query.committed || false;
+    this.required = query.required || false;
+    this.prefetch = query.prefetch;
     this.dirty = false;
     this.updating = false;
     this.lastRetrieved = 0;
@@ -28,6 +29,10 @@ function Search(query) {
                      || countCriteria(this.criteria, 'filters')
                      || undefined;
     }
+    if (typeof(this.prefetch) !== 'boolean') {
+        // use prefetching by default
+        this.prefetch = true;
+    }
 }
 
 Search.prototype = Object.create(Operation.prototype)
@@ -38,7 +43,7 @@ Search.prototype = Object.create(Operation.prototype)
  * @return {Object}
  */
 Search.prototype.getQuery = function() {
-    return _.pick(this, 'address', 'schema', 'table', 'criteria', 'minimum', 'expected', 'remote', 'committed');
+    return _.pick(this, 'address', 'schema', 'table', 'criteria');
 };
 
 /**

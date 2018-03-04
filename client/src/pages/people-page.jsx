@@ -260,7 +260,7 @@ module.exports = Relaks.createClass({
                     published: true,
                     ready: true
                 };
-                var remote;
+                var remote, prefetch;
                 if (params.search) {
                     if (tags) {
                         criteria.tags = tags;
@@ -269,12 +269,16 @@ module.exports = Relaks.createClass({
                             lang: this.props.locale.languageCode,
                             text: params.search,
                         };
-                        // don't scan local cache
+                        // don't scan local cache and don't prefetch
                         remote = true;
+                        prefetch = false;
                     }
                 }
                 if (params.date) {
                     criteria.time_range = DateUtils.getDayRange(params.date);
+                    if (params.date < DateTracker.today) {
+                        prefetch = false;
+                    }
                 }
                 if (props.selectedUser) {
                     criteria.user_ids = [ props.selectedUser.id ];
@@ -288,7 +292,7 @@ module.exports = Relaks.createClass({
                     // fetch only 5 per user for summary display
                     criteria.per_user_limit = 5;
                 }
-                return db.find({ table: 'story', criteria, remote });
+                return db.find({ table: 'story', criteria, remote, prefetch });
             } else {
                 if (!props.selectedUser) {
                     // load story listings, one per user, doing so in separate

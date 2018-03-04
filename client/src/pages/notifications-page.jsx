@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
+var DateTracker = require('utils/date-tracker');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -114,8 +115,10 @@ module.exports = Relaks.createClass({
             return meanwhile.show(<NotificationsPageSync {...props} />);
         }).then(() => {
             // load notifications
-            var criteria = {};
-            criteria.target_user_id = props.currentUser.id;
+            var criteria = {
+                target_user_id: props.currentUser.id
+            };
+            var prefetch;
             if (params.date) {
                 var s = Moment(params.date);
                 var e = s.clone().endOf('day');
@@ -123,17 +126,12 @@ module.exports = Relaks.createClass({
                 var rangeEnd = e.toISOString();
                 var range = `[${rangeStart},${rangeEnd}]`;
                 criteria.time_range = range;
+                if (params.date < DateTracker.today) {
+                    prefetch = false;
+                }
             }
-            if (params.search) {
-                criteria.search = {
-                    lang: this.props.locale.languageCode,
-                    text: params.search,
-                };
-                criteria.limit = 100;
-            } else {
-                criteria.limit = 500;
-            }
-            return db.find({ table: 'notification', criteria });
+            criteria.limit = 500;
+            return db.find({ table: 'notification', criteria, prefetch });
         }).then((notifications) => {
             props.notifications = notifications;
             return <NotificationsPageSync {...props} />;

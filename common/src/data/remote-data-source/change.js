@@ -222,6 +222,17 @@ Change.prototype.noop = function() {
 };
 
 /**
+ * Return true if location matches
+ *
+ * @param  {Object} location
+ *
+ * @return {Boolean}
+ */
+Change.prototype.matchLocation = function(location) {
+    return _.isEqual(this.location, location);
+}
+
+/**
  * Return a temporary id that can be used to identify an uncommitted object
  *
  * @return {Number}

@@ -162,9 +162,13 @@ module.exports = Relaks.createClass({
                     published: true,
                     ready: true,
                 };
-                var remote;
+                var remote, prefetch;
                 if (params.date) {
                     criteria.time_range = DateUtils.getDayRange(params.date);
+                    if (params.date < DateTracker.today) {
+                        // older stories aren't likely to change
+                        prefetch = false;
+                    }
                 }
                 if (!_.isEmpty(params.roles)) {
                     criteria.role_ids = params.roles;
@@ -181,6 +185,7 @@ module.exports = Relaks.createClass({
                         };
                         // don't scan local cache
                         remote = true;
+                        prefetch = false;
                     }
                     criteria.limit = 100;
                 } else {
@@ -189,7 +194,7 @@ module.exports = Relaks.createClass({
                 if (props.currentUser.type === 'guest') {
                     criteria.public = true;
                 }
-                return db.find({ table: 'story', criteria, remote });
+                return db.find({ table: 'story', criteria, remote, prefetch });
             } else {
                 // load story in listing
                 var criteria = {
@@ -258,7 +263,7 @@ module.exports = Relaks.createClass({
                     published: false,
                     user_ids: [ props.currentUser.id ],
                 };
-                return db.find({ table: 'story', criteria });
+                return db.find({ table: 'story', criteria, prefetch: false });
             }
         }).then((stories) => {
             if (stories) {
@@ -283,7 +288,7 @@ module.exports = Relaks.createClass({
                     user_ids: [ props.currentUser.id ],
                     newer_than: DateTracker.yesterdayISO,
                 };
-                return db.find({ table: 'story', criteria });
+                return db.find({ table: 'story', criteria, prefetch: false });
             }
         }).then((stories) => {
             if (stories) {
