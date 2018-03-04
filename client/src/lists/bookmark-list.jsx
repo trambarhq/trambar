@@ -53,7 +53,6 @@ module.exports = Relaks.createClass({
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var defaultAuthors = array(this.props.currentUser);
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             stories: null,
             authors: defaultAuthors,
@@ -76,11 +75,12 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            freshRoute: (this.props.route !== prevProps.route),
 
             onSelectionClear: this.props.onSelectionClear,
 
         };
-        meanwhile.show(<BookmarkListSync {...props} />, delay);
+        meanwhile.show(<BookmarkListSync {...props} />, 100);
         return db.start().then((userId) => {
             // load stories
             var criteria = {
@@ -227,19 +227,18 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             hiddenStoryIds: [],
-            selectedStoryId: null,
+            freshRoute: true,
         };
     },
 
     /**
-     * Make sure hiddenStoryIds contain valid ids
+     *
      *
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route) {
-            this.setState({ selectedStoryId: null });
-        }
+        var freshRoute = (this.props.route !== nextProps.route);
+        this.setState({ freshRoute });
     },
 
     /**
@@ -249,13 +248,14 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var bookmarks = sortBookmark(this.props.bookmarks);
-        var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
+        var anchorId = this.props.selectedStoryId;
         var smartListProps = {
             items: bookmarks,
             behind: 4,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
             offset: 20,
+            fresh: this.state.freshRoute,
 
             onIdentity: this.handleBookmarkIdentity,
             onRender: this.handleBookmarkRender,

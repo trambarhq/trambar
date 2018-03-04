@@ -45,7 +45,7 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        var nextState = {};
+        var nextState = { creationTime: new Date };
         this.updateAnchor(this.props, nextState);
         this.updateSlots(this.props, nextState);
         return nextState;
@@ -90,13 +90,14 @@ module.exports = React.createClass({
     updateSlots: function(nextProps, nextState) {
         var now = new Date;
         var items = nextProps.items;
+        var fresh = !this.state || this.props.fresh === true;
         var identity = (item, index, alt) => {
             return nextProps.onIdentity({
                 type: 'identity',
                 target: this,
                 item: item,
                 currentIndex: index,
-                alternative: alt,
+                alternative: alt || false,
             });
         };
         var transition = (item, index) => {
@@ -110,21 +111,21 @@ module.exports = React.createClass({
                 currentIndex: index,
             });
         };
-        if (_.isEmpty(nextState.slots)) {
+        // items simply appear when they first arrive
+        if (fresh) {
             nextState.slots = _.map(items, (item, index) => {
                 var id = identity(item, index);
                 return this.createSlot(id, item, index, 'present', now);
             });
         } else {
             var slots = nextState.slots = _.slice(nextState.slots);
-            var then = _.minBy(slots, 'created').created;
-            var elapsed = now - then;
+            var elapsed = now - nextState.creationTime;
             var newSlotState = 'appearing';
             if (elapsed < this.props.loadDuration) {
                 // consider items that appear within a certain time to be part
                 // of the initial load; don't transition them in and don't
                 // trigger onBeforeAnchor on them
-                newSlotState = 'present;'
+                newSlotState = 'present';
             }
             var slotHash = _.transform(slots, (hash, slot) => {
                 hash[slot.id] = slot;
@@ -508,7 +509,7 @@ module.exports = React.createClass({
         var slots = _.clone(this.state.slots);
         var changed = false;
         _.each(slots, (slot) => {
-            if (slot.state !== 'present') {
+            if (slot.state === 'appearing' || slot.state === 'disappearing') {
                 if (!slot.transition) {
                     var useTransition = this.isSlotVisible(slot);
                     if (this.props.inverted) {

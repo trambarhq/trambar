@@ -66,7 +66,6 @@ module.exports = Relaks.createClass({
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var defaultAuthors = array(this.props.currentUser);
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             authors: defaultAuthors,
             draftAuthors: defaultAuthors,
@@ -91,11 +90,11 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            freshRoute: this.props.route !== prevProps.route,
+            freshRoute: (this.props.route !== prevProps.route),
 
             onSelectionClear: this.props.onSelectionClear,
         };
-        meanwhile.show(<StoryListSync {...props} />, delay);
+        meanwhile.show(<StoryListSync {...props} />, 100);
         return db.start().then((userId) => {
             if (!_.isEmpty(props.stories)) {
                 // load authors of stories
@@ -272,23 +271,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.stories !== nextProps.stories) {
-            // when we receive a new list of stories, we need to know if
-            //
-            // (a) it's the previous list with new stories added, in which case
-            //     we want to maintain the scroll position
-            //
-            // (b) the user has apply new conditions (e.g. role filter), in which
-            //     case we want to reset the scroll position
-            //
-            // we can tell by looking at the route; if we get new stories without
-            // a route change, it's (a); otherwise it's (b)
-            //
-            // the route check has to be done by the async component, since the
-            // sync component could receive the route change first, then the
-            // story list change in a subsequent rerender
-            this.freshList = this.props.freshRoute;
-        }
         if (this.props.route !== nextProps.route) {
             this.setState({ selectedStoryId: null });
         }
@@ -308,7 +290,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             behind: 4,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
-            fresh: this.freshList,
+            fresh: this.props.freshRoute,
 
             onIdentity: this.handleStoryIdentity,
             onRender: this.handleStoryRender,

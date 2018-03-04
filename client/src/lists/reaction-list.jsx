@@ -94,6 +94,9 @@ module.exports = React.createClass({
      * @return {String|undefined}
      */
     handleReactionIdentity: function(evt) {
+        if (this.props.story.id === 779) {
+            console.log('identity: ' + evt.item.id + ' (' + evt.alternative + ')');
+        }
         if (evt.alternative) {
             var params = this.props.route.parameters;
             var location = { schema: params.schema, table: 'reaction' };
@@ -115,7 +118,7 @@ module.exports = React.createClass({
      */
     handleReactionTransition: function(evt) {
         // don't transition in comment editor with a temporary object
-        if (!evt.item.published && evt.item.id < 1) {
+        if (evt.item.id < 1) {
             return false;
         }
         return true;

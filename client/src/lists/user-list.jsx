@@ -32,7 +32,6 @@ module.exports = React.createClass({
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
-        freshRoute: PropTypes.bool,
         link: PropTypes.oneOf([ 'user', 'team' ]),
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -49,7 +48,8 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            viewOptions
+            viewOptions,
+            freshRoute: true,
         };
     },
 
@@ -59,10 +59,8 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.users !== nextProps.users) {
-            // see explanation in story-list.jsx
-            this.freshList = this.props.freshRoute;
-        }
+        var freshRoute = (this.props.route !== nextProps.route);
+        this.setState({ freshRoute });
     },
 
     /**
@@ -76,7 +74,7 @@ module.exports = React.createClass({
             items: users,
             behind: 4,
             ahead: 8,
-            fresh: this.freshList,
+            fresh: this.state.freshRoute,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,

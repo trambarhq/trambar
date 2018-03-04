@@ -44,7 +44,6 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             users: null,
 
@@ -54,10 +53,11 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            freshRoute: (this.props.route !== prevProps.route),
 
             onSelectionClear: this.props.onSelectionClear,
         };
-        meanwhile.show(<NotificationListSync {...props} />, delay);
+        meanwhile.show(<NotificationListSync {...props} />, 100);
         return db.start().then((userId) => {
             // load authors of comments
             var criteria = {};
@@ -120,6 +120,7 @@ var NotificationListSync = module.exports.Sync = React.createClass({
             ahead: 40,
             anchor: (selectedNotificationId) ? `notification-${selectedNotificationId}` : undefined,
             offset: 10,
+            fresh: this.props.freshRoute,
 
             onIdentity: this.handleNotificationIdentity,
             onRender: this.handleNotificationRender,
