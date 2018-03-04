@@ -344,7 +344,7 @@ module.exports = function(localeCode) {
         'reaction-$name-likes-this': (name) => {
             return `${name} lubi to`;
         },
-        'reaction-status-storage-pending': 'W oczekiwaniu',
+        'reaction-status-storage-pending': 'W toku',
         'reaction-status-transcoding': 'Transkodowanie',
         'reaction-status-uploading': 'Przesyłanie',
 
@@ -717,6 +717,7 @@ module.exports = function(localeCode) {
             return `Wysłał${e} ${links} do ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
+            var pictures;
             if (singular(count)) {
                 pictures = 'zdjęcie';
             } else if (plural(count)) {
@@ -728,16 +729,16 @@ module.exports = function(localeCode) {
             return `Wysłał${e} ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var wideos;
+            var videos;
             if (singular(count)) {
-                wideos = 'klip wideo';
+                videos = 'klip wideo';
             } else if (plural(count)) {
-                wideos = `${count} klipy wideo`;
+                videos = `${count} klipy wideo`;
             } else {
-                wideos = `${count} klipów wideo`;
+                videos = `${count} klipów wideo`;
             }
             var e = pastTenseEnding(name, 3);
-            return `Wysłał${e} ${wideos}`;
+            return `Wysłał${e} ${videos}`;
         },
         'user-activity-$name-pushed-code': (name) => {
             var e = pastTenseEnding(name, 3);
