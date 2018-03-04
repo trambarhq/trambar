@@ -79,9 +79,9 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Olet offline-tilassa',
 
-        'image-editor-upload-in-progress': 'Lataus käynnissä...',
-        'image-editor-poster-extraction-in-progress': 'Esikatselun poistaminen videosta...',
         'image-editor-page-rendering-in-progress': 'Sivuston esikatselun luominen...',
+        'image-editor-poster-extraction-in-progress': 'Esikatselun poistaminen videosta...',
+        'image-editor-upload-in-progress': 'Lataus käynnissä...',
 
         'issue-cancel': 'Peruutta',
         'issue-clear': 'Tyhjentä',
@@ -209,6 +209,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Näytä liitetiedostot',
         'option-show-text-preview': 'Näytä tekstin esikatselu',
+        'option-statistics-biweekly': 'Show activities of last 14 days',
+        'option-statistics-monthly': 'Show monthly activities',
+        'option-statistics-to-date': 'Show activities to date',
 
         'people-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
         'people-no-stories-on-date': 'Ei toimintaa kyseisenä päivänä',
@@ -548,7 +551,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': 'Aloitti kyselyn',
         'user-activity-$name-started-task-list': 'Aloitti tehtäväluettelon',
         'user-activity-$name-wrote-post': 'Kirjoitti viestin',
-        'user-activity-more': 'Lisää...',
+        'user-activity-back': 'Palataa',
+        'user-activity-more': 'Lisää',
 
         'user-image-remove': 'Poista',
         'user-image-select': 'Select',

@@ -79,9 +79,9 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': "Al momento sei offline",
 
-        'image-editor-upload-in-progress': "Carica in corso...",
-        'image-editor-poster-extraction-in-progress': "Estrazione dell'anteprima dal video...",
         'image-editor-page-rendering-in-progress': "Creazione dell'anteprima del sito...",
+        'image-editor-poster-extraction-in-progress': "Estrazione dell'anteprima dal video...",
+        'image-editor-upload-in-progress': "Carica in corso...",
 
         'issue-cancel': "Annulla",
         'issue-clear': "Cancella",
@@ -211,6 +211,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': "Mostra media allegati",
         'option-show-text-preview': "Mostra anteprima di testo",
+        'option-statistics-biweekly': 'Mostra le attività degli ultimi 14 giorni',
+        'option-statistics-monthly': 'Mostra attività mensili',
+        'option-statistics-to-date': 'Mostra le attività fino ad oggi',
 
         'people-no-stories-found': "Nessuna storia corrispondente trovata",
         'people-no-stories-on-date': "Nessuna attività in quella data",
@@ -577,7 +580,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': "Ha iniziato un sondaggio",
         'user-activity-$name-started-task-list': "Ha iniziato un elenco di attività",
         'user-activity-$name-wrote-post': "Ha scritto un post",
-        'user-activity-more': "Altre...",
+        'user-activity-back': 'Indietro',
+        'user-activity-more': "Altre",
 
         'user-image-remove': "Rimuovi",
         'user-image-select': "Seleziona",

@@ -83,9 +83,9 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'You are currently offline',
 
-        'image-editor-upload-in-progress': 'Upload in progress...',
-        'image-editor-poster-extraction-in-progress': 'Extracting preview from video...',
         'image-editor-page-rendering-in-progress': 'Rendering web-site preview...',
+        'image-editor-poster-extraction-in-progress': 'Extracting preview from video...',
+        'image-editor-upload-in-progress': 'Upload in progress...',
 
         'issue-cancel': 'Cancel',
         'issue-clear': 'Clear',

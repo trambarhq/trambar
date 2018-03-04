@@ -111,9 +111,9 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Вы не подключены к Интернету',
 
-        'image-editor-upload-in-progress': 'Загрузка выполняется...',
-        'image-editor-poster-extraction-in-progress': 'Извлечение предварительного просмотра из видео...',
         'image-editor-page-rendering-in-progress': 'Создание предварительного просмотра веб-сайта...',
+        'image-editor-poster-extraction-in-progress': 'Извлечение предварительного просмотра из видео...',
+        'image-editor-upload-in-progress': 'Загрузка выполняется...',
 
         'issue-cancel': 'Отмена',
         'issue-clear': 'Очистить',
@@ -252,6 +252,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Показать прикрепленные носители',
         'option-show-text-preview': 'Показать предварительный просмотр текста',
+        'option-statistics-biweekly': 'Показать действия за последние 14 дней',
+        'option-statistics-monthly': 'Показать ежемесячные мероприятия',
+        'option-statistics-to-date': 'Показывать действия на сегодняшний день',
 
         'people-no-stories-found': 'Не найдено совпадающих рассказов',
         'people-no-stories-on-date': 'Никаких действий на эту дату',
@@ -761,7 +764,8 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Написал${e} сообщение`;
         },
-        'user-activity-more': 'Более...',
+        'user-activity-back': 'Назад',
+        'user-activity-more': 'Более',
 
         'user-image-remove': 'Удалить',
         'user-image-select': 'Выбрать',

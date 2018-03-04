@@ -79,9 +79,9 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Du er frakoblet',
 
-        'image-editor-upload-in-progress': 'Opplasting pågår...',
-        'image-editor-poster-extraction-in-progress': 'Extracting forhåndsvisning fra video...',
         'image-editor-page-rendering-in-progress': 'Gjengir forhåndsvisning av nettsiden...',
+        'image-editor-poster-extraction-in-progress': 'Extracting forhåndsvisning fra video...',
+        'image-editor-upload-in-progress': 'Opplasting pågår...',
 
         'issue-cancel': 'Avbryt',
         'issue-clear': 'Slett',
@@ -211,6 +211,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Vis vedlagte medier',
         'option-show-text-preview': 'Vis tekstforhåndsvisning',
+        'option-statistics-biweekly': 'Vis aktiviteter de siste 14 dagene',
+        'option-statistics-monthly': 'Vis månedlige aktiviteter',
+        'option-statistics-to-date': 'Vis aktivitet til dags dato',
 
         'people-no-stories-found': 'Ingen matchende historier funnet',
         'people-no-stories-on-date': 'Ingen aktiviteter på den datoen',
@@ -547,7 +550,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': 'Startet en undersøkelse',
         'user-activity-$name-started-task-list': 'Startet en oppgaveliste',
         'user-activity-$name-wrote-post': 'Skrev et innlegg',
-        'user-activity-more': 'Flere...',
+        'user-activity-back': 'Tilbake',
+        'user-activity-more': 'Flere',
 
         'user-image-remove': 'Fjerne',
         'user-image-select': 'Velge',

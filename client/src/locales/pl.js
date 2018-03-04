@@ -115,9 +115,9 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Jesteś odłączony od sieci',
 
-        'image-editor-upload-in-progress': 'Przesyłanie w toku...',
-        'image-editor-poster-extraction-in-progress': 'Wyodrębnianie podglądu z wideo...',
         'image-editor-page-rendering-in-progress': 'Renderowanie podglądu strony internetowej...',
+        'image-editor-poster-extraction-in-progress': 'Wyodrębnianie podglądu z wideo...',
+        'image-editor-upload-in-progress': 'Przesyłanie w toku...',
 
         'issue-cancel': 'Anuluj',
         'issue-clear': 'Wyczyść',
@@ -259,6 +259,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Pokaź dołączone pliki medialne',
         'option-show-text-preview': 'Pokaź podgląd tekstu',
+        'option-statistics-biweekly': 'Pokaż działania z ostatnich 14 dni',
+        'option-statistics-monthly': 'Pokaż działania miesięczne',
+        'option-statistics-to-date': 'Pokaż działania do tej pory',
 
         'people-no-stories-found': 'Nie znaleziono pasujących wiadomości',
         'people-no-stories-on-date': 'Żadnych działań w tym dniu',
@@ -752,7 +755,8 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Napisał${e} post`;
         },
-        'user-activity-more': 'Więcej...',
+        'user-activity-back': 'Powrót',
+        'user-activity-more': 'Więcej',
 
         'user-image-remove': 'Usuń',
         'user-image-select': 'Wybierz',
