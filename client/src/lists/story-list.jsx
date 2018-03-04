@@ -340,14 +340,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {String}
      */
     handleStoryIdentity: function(evt) {
-        if (this.props.acceptNewStory) {
-            // use a fixed id for the first editor, so we don't lose focus
-            // when the new story acquires an id after being saved automatically
-            if (evt.currentIndex === 0) {
-                return 'story-top';
-            }
-        }
-        if (evt.alternative) {
+        if (evt.alternative && evt.item) {
             // look for temporary id
             var params = this.props.route.parameters;
             var location = { schema: params.schema, table: 'story' };
@@ -356,6 +349,13 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 return `story-${temporaryId}`;
             }
         } else {
+            if (this.props.acceptNewStory) {
+                // use a fixed id for the first editor, so we don't lose focus
+                // when the new story acquires an id after being saved automatically
+                if (evt.currentIndex === 0) {
+                    return 'story-top';
+                }
+            }
             return `story-${evt.item.id}`;
         }
     },

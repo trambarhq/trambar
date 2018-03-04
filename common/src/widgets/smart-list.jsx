@@ -45,7 +45,7 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        var nextState = { creationTime: new Date };
+        var nextState = { startTime: new Date };
         this.updateAnchor(this.props, nextState);
         this.updateSlots(this.props, nextState);
         return nextState;
@@ -58,6 +58,10 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         var nextState = _.clone(this.state);
+        if (nextProps.fresh) {
+            nextState.startTime = new Date;
+            nextState.estimatedHeight = undefined;
+        }
         if (this.props.anchor !== nextProps.anchor) {
             this.updateAnchor(nextProps, nextState);
         }
@@ -88,9 +92,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      */
     updateSlots: function(nextProps, nextState) {
-        var now = new Date;
         var items = nextProps.items;
-        var fresh = !this.state || this.props.fresh === true;
         var identity = (item, index, alt) => {
             return nextProps.onIdentity({
                 type: 'identity',
@@ -111,22 +113,19 @@ module.exports = React.createClass({
                 currentIndex: index,
             });
         };
-        // items simply appear when they first arrive
-        if (fresh) {
+        // consider items that appear within a certain time to be part
+        // of the initial load; don't transition them in and don't
+        // trigger onBeforeAnchor on them
+        var now = new Date;
+        var elapsed = now - nextState.startTime;
+        if (elapsed < this.props.loadDuration) {
+            // items simply appear when they first arrive
             nextState.slots = _.map(items, (item, index) => {
                 var id = identity(item, index);
                 return this.createSlot(id, item, index, 'present', now);
             });
         } else {
             var slots = nextState.slots = _.slice(nextState.slots);
-            var elapsed = now - nextState.creationTime;
-            var newSlotState = 'appearing';
-            if (elapsed < this.props.loadDuration) {
-                // consider items that appear within a certain time to be part
-                // of the initial load; don't transition them in and don't
-                // trigger onBeforeAnchor on them
-                newSlotState = 'present';
-            }
             var slotHash = _.transform(slots, (hash, slot) => {
                 hash[slot.id] = slot;
             }, {});
@@ -155,13 +154,8 @@ module.exports = React.createClass({
                         slot.removed = null;
                     }
                 } else {
-                    var state = newSlotState;
-                    if (state !== 'present') {
-                        // parent component might choose to not transition in item
-                        if (!transition(item, index)) {
-                            state = 'present';
-                        }
-                    }
+                    // parent component might choose to not transition in item
+                    var state = transition(item, index) ? 'appearing' : 'present';
                     slot = this.createSlot(id, item, index, state, now);
                     newSlots.push(slot);
                 }
