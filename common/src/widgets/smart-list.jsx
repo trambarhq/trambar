@@ -447,11 +447,13 @@ module.exports = React.createClass({
                 heights.push(height);
             }
         });
-        if (!this.state.estimatedHeight) {
+        if (this.state.estimatedHeight === undefined) {
             if (!_.isEmpty(heights)) {
                 var avg = _.sum(heights) / heights.length;
                 var estimatedHeight = Math.round(avg);
-                this.setState({ estimatedHeight })
+                if (estimatedHeight !== 0) {
+                    this.setState({ estimatedHeight })
+                }
             }
         }
     },
