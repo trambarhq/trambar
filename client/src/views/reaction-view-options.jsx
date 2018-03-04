@@ -13,7 +13,7 @@ var OptionButton = require('widgets/option-button');
 require('./reaction-view-options.scss');
 
 module.exports = React.createClass({
-    displayName: 'ReactViewOptions',
+    displayName: 'ReactionViewOptions',
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         currentUser: PropTypes.object.isRequired,
