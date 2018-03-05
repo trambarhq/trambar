@@ -5,17 +5,17 @@
             opacity: 1;
 
             &.in {
-                transition: height 0.3s linear 0.0s,
-                            margin-top 0.3s linear 0.0s,
-                            margin-bottom 0.3s linear 0.0s,
-                            opacity 0.3s linear 0.2s;
+                transition: height 0.5s ease-out 0.0s,
+                            margin-top 0.5s ease-out 0.0s,
+                            margin-bottom 0.5s ease-out 0.0s,
+                            opacity 0.5s linear 0.2s;
             }
 
             &.out {
-                transition: height 0.3s linear 0.2s,
-                            margin-top 0.3s linear 0.2s,
-                            margin-bottom 0.3s linear 0.2s,
-                            opacity 0.3s linear 0.0s;
+                transition: height 0.5s ease-in 0.2s,
+                            margin-top 0.5s ease-in 0.2s,
+                            margin-bottom 0.5s ease-in 0.2s,
+                            opacity 0.5s linear 0.0s;
             }
 
             &.hidden {
