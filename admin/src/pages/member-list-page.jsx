@@ -1,4 +1,4 @@
-var _ = require('lodash');
+>, 250)var _ = require('lodash');
 var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
@@ -73,14 +73,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
+        // don't wait for remote data unless the route changes
+        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
+        var db = this.props.database.use({ schema: 'global', blocking: freshRoute, by: this });
         var props = {
             project: null,
             users: null,
@@ -91,7 +91,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<MemberListPageSync {...props} />, delay);
+        meanwhile.show(<MemberListPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load project
             var criteria = { id: params.project };

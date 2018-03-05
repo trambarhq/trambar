@@ -72,6 +72,7 @@ module.exports = React.createClass({
             anchor: (anchorId) ? `reaction-${anchorId}` : undefined,
             offset: 4,
             inverted: true,
+            fresh: false,
 
             onIdentity: this.handleReactionIdentity,
             onTransition: this.handleReactionTransition,

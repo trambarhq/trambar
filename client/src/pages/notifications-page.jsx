@@ -105,7 +105,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<NotificationsPageSync {...props} />, 100);
+        meanwhile.show(<NotificationsPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };

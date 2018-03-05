@@ -26,6 +26,7 @@ module.exports = Relaks.createClass({
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         acceptNewStory: PropTypes.bool,
+        refreshList: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
@@ -80,6 +81,7 @@ module.exports = Relaks.createClass({
             selectedReactionId: this.props.selectedReactionId,
             access: this.props.access,
             acceptNewStory: this.props.acceptNewStory,
+            refreshList: this.props.refreshList,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
@@ -90,7 +92,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            freshRoute: (this.props.route !== prevProps.route),
 
             onSelectionClear: this.props.onSelectionClear,
         };
@@ -227,6 +228,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         acceptNewStory: PropTypes.bool,
+        refreshList: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
@@ -242,7 +244,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
         repos: PropTypes.arrayOf(PropTypes.object),
         selectedStoryId: PropTypes.number,
         selectedReactionId: PropTypes.number,
-        freshRoute: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -290,7 +291,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             behind: 4,
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
-            fresh: this.props.freshRoute,
+            fresh: this.props.refreshList,
 
             onIdentity: this.handleStoryIdentity,
             onRender: this.handleStoryRender,

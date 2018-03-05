@@ -28,13 +28,11 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var db = this.props.database.use({ by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
         var props = {
             system: null,
             servers: null,
@@ -46,7 +44,7 @@ module.exports = Relaks.createClass({
         };
         // start authorization process--will receive system description
         // and list of OAuth providers along with links
-        meanwhile.show(<SignInPageSync {...props} />, delay);
+        meanwhile.show(<SignInPageSync {...props} />, 250);
         return db.beginSession('admin').then((info) => {
             props.system = info.system;
             props.servers = info.servers;

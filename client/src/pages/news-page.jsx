@@ -119,9 +119,11 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        // don't wait for remote data unless the route changes
+        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
         var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var props = {
             listing: null,
             stories: null,
@@ -131,13 +133,14 @@ module.exports = Relaks.createClass({
             project: null,
 
             acceptNewStory: !searching,
+            freshRoute: freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<NewsPageSync {...props} />, 100);
+        meanwhile.show(<NewsPageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
             var criteria = {
@@ -304,6 +307,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         acceptNewStory: PropTypes.bool,
+        freshRoute: PropTypes.bool,
         listing: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
@@ -353,6 +357,7 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             access: access,
             acceptNewStory: this.props.acceptNewStory && access === 'read-write',
+            refreshList: this.props.freshRoute,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,

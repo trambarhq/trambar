@@ -58,11 +58,10 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var db = this.props.database.use({ by: this });
         var props = {
             locale: this.props.locale,

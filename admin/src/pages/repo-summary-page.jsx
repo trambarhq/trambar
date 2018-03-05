@@ -73,14 +73,14 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
+        // don't wait for remote data unless the route changes
+        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var delay = (this.props.route !== prevProps.route) ? 100 : 1000;
+        var db = this.props.database.use({ schema: 'global', blocking: freshRoute, by: this });
         var props = {
             system: null,
             project: null,
@@ -92,7 +92,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<RepoSummaryPageSync {...props} />, delay);
+        meanwhile.show(<RepoSummaryPageSync {...props} />, 250);
         return db.start().then((userId) => {
             var criteria = {};
             return db.findOne({ table: 'system', criteria });

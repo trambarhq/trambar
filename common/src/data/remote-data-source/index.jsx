@@ -425,8 +425,10 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
-        var byComponent = _.get(query, 'by.constructor.displayName',)
+        var byComponent = _.get(query, 'by.constructor.displayName');
         var required = query.required;
+        var committed = query.committed;
+        var blocking = query.blocking;
         var search;
         var newSearch = new Search(query);
         var existingSearch = this.findExistingSearch(newSearch);
@@ -494,12 +496,17 @@ module.exports = React.createClass({
                     }
                 });
 
+                if (search.remote) {
+                    // remote only search always block
+                    blocking = true;
+                }
+
                 // if there're enough cached records, return them immediately,
                 // without waiting for the remote search to finish
                 //
                 // if the remote search yield new data, an onChange event will
                 // trigger a new search
-                if (newSearch.isSufficientlyCached()) {
+                if (blocking === false || newSearch.isSufficientlyCached()) {
                     return newSearch.results;
                 } else {
                     return remoteSearchPromise.then(() => {
@@ -517,7 +524,7 @@ module.exports = React.createClass({
                 }
             }
             var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
-            if (includeUncommitted && !search.committed) {
+            if (includeUncommitted && committed !== true) {
                 // apply changes that haven't been saved yet
                 search = this.applyUncommittedChanges(search);
             }
@@ -1036,7 +1043,7 @@ module.exports = React.createClass({
                     // wait for any storage operation currently in flight to finish so
                     // we don't end up with both the committed and the uncommitted copy
                     var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
-                    if (includeUncommitted && !search.committed) {
+                    if (includeUncommitted) {
                         var relatedChanges = _.filter(this.changeQueue, (change) => {
                             if (change.dispatched && !change.committed) {
                                 if (change.matchLocation(location)) {

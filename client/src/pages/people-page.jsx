@@ -149,8 +149,10 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        // don't wait for remote data unless the route changes
+        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var tags;
         if (_.trim(params.search) && !TagScanner.removeTags(params.search)) {
             // search by tags only (which can happen locally)
@@ -161,18 +163,19 @@ module.exports = Relaks.createClass({
             members: null,
             stories: null,
             currentUser: null,
-            selectedDate: params.date,
             selectedUser: null,
             visibleUsers: null,
-            today: this.state.today,
 
+            selectedDate: params.date,
+            today: this.state.today,
+            freshRoute: freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<PeoplePageSync {...props} />, 100);
+        meanwhile.show(<PeoplePageSync {...props} />, 250);
         return db.start().then((userId) => {
             // load current user
             var criteria = { id: userId };
@@ -422,6 +425,7 @@ module.exports = Relaks.createClass({
 var PeoplePageSync = module.exports.Sync = React.createClass({
     displayName: 'PeoplePageSync',
     propTypes: {
+        freshRoute: PropTypes.bool,
         project: PropTypes.object,
         members: PropTypes.arrayOf(PropTypes.object),
         selectedUser: PropTypes.object,
@@ -482,6 +486,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      */
     renderUserList: function() {
         var listProps = {
+            refreshList: this.props.freshRoute,
             users: this.props.visibleUsers,
             dailyActivities: this.props.dailyActivities,
             listings: this.props.listings,
@@ -510,6 +515,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         }
         var params = this.props.route.parameters;
         var listProps = {
+            refreshList: this.props.freshRoute,
             access: this.getAccessLevel(),
             stories: this.props.stories,
             currentUser: this.props.currentUser,

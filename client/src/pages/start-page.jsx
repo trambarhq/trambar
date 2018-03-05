@@ -138,7 +138,7 @@ var StartPage = module.exports = Relaks.createClass({
             if (process.env.PLATFORM === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
-                meanwhile.show(<StartPageSync {...props} />, 100);
+                meanwhile.show(<StartPageSync {...props} />, 250);
                 return db.beginSession('client').then((info) => {
                     props.system = info.system;
                     props.servers = info.servers;

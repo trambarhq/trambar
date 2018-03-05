@@ -22,6 +22,7 @@ require('./notification-list.scss');
 module.exports = Relaks.createClass({
     displayName: 'NotificationList',
     propTypes: {
+        refreshList: PropTypes.bool,
         notifications: PropTypes.arrayOf(PropTypes.object),
         selectedNotificationId: PropTypes.number,
 
@@ -37,11 +38,10 @@ module.exports = Relaks.createClass({
      * Retrieve data needed by synchronous component
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
@@ -53,7 +53,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            freshRoute: (this.props.route !== prevProps.route),
+            refreshList: this.props.refreshList,
 
             onSelectionClear: this.props.onSelectionClear,
         };
@@ -120,7 +120,7 @@ var NotificationListSync = module.exports.Sync = React.createClass({
             ahead: 40,
             anchor: (selectedNotificationId) ? `notification-${selectedNotificationId}` : undefined,
             offset: 10,
-            fresh: this.props.freshRoute,
+            fresh: this.props.refreshList,
 
             onIdentity: this.handleNotificationIdentity,
             onRender: this.handleNotificationRender,

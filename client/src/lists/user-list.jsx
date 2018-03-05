@@ -24,6 +24,7 @@ module.exports = React.createClass({
     displayName: 'UserList',
     mixins: [ UpdateCheck ],
     propTypes: {
+        refreshList: PropTypes.bool,
         users: PropTypes.arrayOf(PropTypes.object),
         roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.object,
@@ -49,18 +50,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             viewOptions,
-            freshRoute: true,
         };
-    },
-
-    /**
-     * Update state on prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        var freshRoute = (this.props.route !== nextProps.route);
-        this.setState({ freshRoute });
     },
 
     /**
@@ -74,7 +64,7 @@ module.exports = React.createClass({
             items: users,
             behind: 4,
             ahead: 8,
-            fresh: this.state.freshRoute,
+            fresh: this.props.refreshList,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,

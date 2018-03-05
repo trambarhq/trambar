@@ -27,6 +27,7 @@ module.exports = Relaks.createClass({
     displayName: 'BookmarkList',
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        refreshList: PropTypes.bool,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
@@ -45,11 +46,10 @@ module.exports = Relaks.createClass({
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var defaultAuthors = array(this.props.currentUser);
@@ -75,7 +75,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            freshRoute: (this.props.route !== prevProps.route),
+            refreshList: this.props.refreshList,
 
             onSelectionClear: this.props.onSelectionClear,
 
@@ -195,6 +195,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        refreshList: PropTypes.bool,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         senders: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
@@ -227,18 +228,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             hiddenStoryIds: [],
-            freshRoute: true,
         };
-    },
-
-    /**
-     *
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        var freshRoute = (this.props.route !== nextProps.route);
-        this.setState({ freshRoute });
     },
 
     /**
@@ -255,7 +245,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             ahead: 8,
             anchor: (anchorId) ? `story-${anchorId}` : undefined,
             offset: 20,
-            fresh: this.state.freshRoute,
+            fresh: this.props.refreshList,
 
             onIdentity: this.handleBookmarkIdentity,
             onRender: this.handleBookmarkRender,
