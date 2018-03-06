@@ -18,6 +18,7 @@ module.exports = {
     findStoriesByUserOnDate,
     findStoriesByUserInListing,
     findStoriesByUsersInListings,
+    findStoriesWithRolesInListing,
     findStoriesOfNotifications,
     findStoriesOfBookmarks,
 };
@@ -211,11 +212,20 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit) {
             limit: (!perUserLimit) ? 500 : undefined,
             per_user_limit: perUserLimit,
         },
-        prefetch: (params.date >= DateTracker.today),
+        prefetch: (date >= DateTracker.today),
         minimum: 5,
     });
 }
 
+/**
+ * Find stories in listing for current user
+ *
+ * @param  {Database} db
+ * @param  {String} type
+ * @param  {User} currentUser
+ *
+ * @return {[type]}
+ */
 function findStoriesInListing(db, type, currentUser) {
     if (!currentUser) {
         return Promise.resolve(Empty.array);
@@ -371,6 +381,35 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
             return _.slice(listing.story_ids, - perUserLimit);
         }));
         return findViewableStories(db, storyIds, currentUser);
+    });
+}
+
+/**
+ * Find stories by selected users in their listings
+ *
+ * @param  {Database} db
+ * @param  {String} type
+ * @param  {Array<Number>} roleIds
+ * @param  {User} currentUser
+ *
+ * @return {Promise<Array<Story>>}
+ */
+function findStoriesWithRolesInListing(db, type, roleIds, currentUser) {
+    if (!currentUser) {
+        return Promise.resolve(Empty.array);
+    }
+    return db.findOne({
+        table: 'listing',
+        criteria: {
+            type: type,
+            target_user_id: currentUser.id,
+            filters: {
+                role_ids: roleIds,
+                public: publicOnly(currentUser)
+            },
+        }
+    }).then((listing) => {
+        return findViewableStories(db, listing ? listing.story_ids : null, currentUser);
     });
 }
 

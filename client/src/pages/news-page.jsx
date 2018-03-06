@@ -154,7 +154,7 @@ module.exports = Relaks.createClass({
                     props.stories = stories;
                 });
             } else if (params.date) {
-                return StoryFinder.findStoriesonDate(db, params.date, props.currentUser).then((stories) => {
+                return StoryFinder.findStoriesOnDate(db, params.date, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
             } else if (params.roles) {
