@@ -551,13 +551,13 @@ module.exports = React.createClass({
                 return storage.results;
             });
         } else {
-            // storeRemoteObjects() will trigger change event
             return this.storeRemoteObjects(storage).then(() => {
                 if (storage.cancelled) {
                     return [];
                 }
                 this.updateCachedObjects(storage);
                 this.updateRecentSearchResults(storage);
+                this.triggerChangeEvent();
                 return storage.results;
             });
         }
@@ -585,10 +585,10 @@ module.exports = React.createClass({
                     console.warn('remove() should not be used when deleted objects are not automatically filtered out');
                 }
             }
-            // storeRemoteObjects() will trigger change event
             return this.storeRemoteObjects(removal).then(() => {
                 this.removeCachedObjects(removal);
                 this.removeFromRecentSearchResults(removal);
+                this.triggerChangeEvent();
                 return removal.results;
             });
         }
@@ -1162,6 +1162,7 @@ module.exports = React.createClass({
             // send it if we've connectivity
             change.dispatch();
         }
+        this.triggerChangeEvent();
         return change.promise.then((objects) => {
             if (!change.canceled) {
                 storage.setFinishTime();
@@ -1169,6 +1170,9 @@ module.exports = React.createClass({
             } else {
                 storage.canceled = true;
             }
+        }).catch((err) => {
+            // signal that the change was removed
+            this.triggerChangeEvent();
         });
     },
 
@@ -1556,9 +1560,6 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        if (prevState.changeQueue !== this.state.changeQueue) {
-            this.triggerChangeEvent();
-        }
         if (prevState.activeSearches !== this.state.activeSearches) {
             // since a search can start immediately after another one has ended,
             // use a timeout function to reduce the freqeuncy of events
