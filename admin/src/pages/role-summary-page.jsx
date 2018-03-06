@@ -3,6 +3,9 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var RoleFinder = require('objects/finders/role-finder');
+var SystemFinder = require('objects/finders/system-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -81,7 +84,7 @@ module.exports = Relaks.createClass({
         // don't wait for remote data unless the route changes
         var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
+        var db = this.props.database.use({ by: this });
         var props = {
             system: null,
             role: null,
@@ -93,28 +96,22 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            var criteria = {};
-            return db.findOne({ table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+        return db.start().then((currentUserId) => {
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            });
         }).then(() => {
             if (params.role !== 'new') {
-                var criteria = { id: params.role };
-                return db.findOne({ table: 'role', criteria });
+                return RoleFinder.findRole(db, params.role).then((role) => {
+                    props.role = role;
+                });
             }
-        }).then((role) => {
-            props.role = role;
-            meanwhile.show(<RoleSummaryPageSync {...props} />);
         }).then(() => {
-            // load all users (not deleted or disabled)
-            var criteria = {
-                deleted: false,
-                disabled: false,
-            };
-            return db.find({ table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
+            meanwhile.show(<RoleSummaryPageSync {...props} />);
+            return UserFinder.findActiveUsers(db).then((users) => {
+                props.users = users;
+            });
+        }).then(() => {
             return <RoleSummaryPageSync {...props} />;
         });
     }

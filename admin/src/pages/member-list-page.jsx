@@ -1,8 +1,11 @@
->, 250)var _ = require('lodash');
+var _ = require('lodash');
 var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ProjectFinder = require('objects/finders/project-finder');
+var RoleFinder = require('objects/finders/role-finder');
+var UserFinder = require('objects/finders/user-finder');
 var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
@@ -93,33 +96,25 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<MemberListPageSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load project
-            var criteria = { id: params.project };
-            return db.findOne({ table: 'project', criteria, required: true });
-        }).then((project) => {
-            props.project = project;
+            return ProjectFinder.findProject(db, params.project).then((project) => {
+                props.project = project;
+            });
         }).then(() => {
-            // load all users that weren't deleted
-            var criteria = { deleted: false };
-            return db.find({ table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
-            return meanwhile.show(<MemberListPageSync {...props} />);
+            return UserFinder.findExistingUsers(db).then((users) => {
+                props.users = users;
+            });
         }).then(() => {
-            // load roles
-            var criteria = {
-                id: _.uniq(_.flatten(_.map(props.users, 'role_ids')))
-            };
-            return db.find({ table: 'role', criteria });
-        }).then((roles) => {
-            props.roles = roles;
-            return meanwhile.show(<MemberListPageSync {...props} />);
+            meanwhile.show(<MemberListPageSync {...props} />);
+            return RoleFinder.findRolesOfUsers(db, props.users).then((roles) => {
+                props.roles = roles;
+            });
         }).then(() => {
-            // load statistics of members
+            meanwhile.show(<MemberListPageSync {...props} />);
             var users = findUsers(props.users, props.project)
-            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, users);
-        }).then((statistics) => {
-            props.statistics = statistics;
+            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, users).then((statistics) => {
+                props.statistics = statistics;
+            });
+        }).then(() => {
             return <MemberListPageSync {...props} />;
         });
     }

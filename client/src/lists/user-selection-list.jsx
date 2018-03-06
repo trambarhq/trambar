@@ -2,6 +2,8 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ProjectFinder = require('objects/finders/project-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -46,17 +48,14 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             onSelect: this.props.onSelect,
         };
-        meanwhile.show(<UserSelectionListSync {...props} />, 1000);
-        return db.start().then((userId) => {
-            // load project
-            var criteria = { name: params.schema };
-            return db.findOne({ schema: 'global', table: 'project', criteria }).then((project) => {
-                // load all project members
-                var criteria = { id: project.user_ids };
-                return db.find({ schema: 'global', table: 'user', criteria });
+        meanwhile.show(<UserSelectionListSync {...props} />, 250);
+        return db.start().then((currentUserId) => {
+            return ProjectFinder.findCurrentProject(db).then((project) => {
+                return UserFinder.findProjectMembers(db, project).then((users) => {
+                    props.users = users;
+                });
             });
-        }).then((users) => {
-            props.users = users;
+        }).then(() => {
             return <UserSelectionListSync {...props} />
         });
     }

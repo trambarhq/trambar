@@ -4,6 +4,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ServerFinder = require('objects/finders/server-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -88,20 +90,16 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<ServerListPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load all servers
-            var criteria = {};
-            return db.find({ table: 'server', criteria });
-        }).then((servers) => {
-            props.servers = servers;
-            return meanwhile.show(<ServerListPageSync {...props} />);
+        return db.start().then((currentUserId) => {
+            return ServerFinder.findAllServers(db).then((servers) => {
+                props.servers = servers;
+            });
         }).then(() => {
-            var criteria = {
-                deleted: false,
-            };
-            return db.find({ table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
+            meanwhile.show(<ServerListPageSync {...props} />);
+            return UserFinder.findActiveUsers(db).then((users) => {
+                props.users = users;
+            });
+        }).then(() => {
             return <ServerListPageSync {...props} />;
         });
     }

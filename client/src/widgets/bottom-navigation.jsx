@@ -8,6 +8,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var HTTPError = require('errors/http-error');
+var NotificationFinder = require('objects/finders/notification-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -314,24 +316,21 @@ var NewNotificationsBadge = Relaks.createClass({
             return null;
         }
         var db = this.props.database.use({ schema: params.schema, by: this });
-        return db.start().then((userId) => {
-            var criteria = {
-                target_user_id: userId,
-                seen: false,
-                limit: 100,
-            };
-            return db.find({ table: 'notification', criteria });
-        }).then((notifications) => {
-            var count = notifications.length;
-            this.changeFavIcon(count);
-            if (!count) {
-                return null;
-            }
-            return (
-                <span className="badge">
-                    <span className="number">{count}</span>
-                </span>
-            )
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
+                    var count = notifications.length;
+                    this.changeFavIcon(count);
+                    if (!count) {
+                        return null;
+                    }
+                    return (
+                        <span className="badge">
+                            <span className="number">{count}</span>
+                        </span>
+                    )
+                });
+            });
         }).catch(HTTPError, (err) => {
             // don't try again when a failure occurs
             var failedSchemas = _.union(this.state.failedSchemas, [ params.schema ]);

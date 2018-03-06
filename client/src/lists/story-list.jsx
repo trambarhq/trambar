@@ -3,6 +3,10 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var UserFinder = require('objects/finders/user-finder');
+var RepoFinder = require('objects/finders/repo-finder');
+var BookmarkFinder = require('objects/finders/bookmark-finder');
+var ReactionFinder = require('objects/finders/reaction-finder');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -66,11 +70,8 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
-        var defaultAuthors = array(this.props.currentUser);
         var props = {
-            authors: defaultAuthors,
-            draftAuthors: defaultAuthors,
-            pendingAuthors: defaultAuthors,
+            authors: null,
             reactions: null,
             respondents: null,
             recommendations: null,
@@ -95,128 +96,42 @@ module.exports = Relaks.createClass({
 
             onSelectionClear: this.props.onSelectionClear,
         };
-        meanwhile.show(<StoryListSync {...props} />, 100);
-        return db.start().then((userId) => {
-            if (!_.isEmpty(props.stories)) {
-                // load authors of stories
-                var criteria = {
-                    id: getAuthorIds(props.stories),
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            }
-        }).then((users) => {
-            if (users) {
-                props.authors = users;
-                return meanwhile.show(<StoryListSync {...props} />);
-            }
-        }).then(() => {
-            var stories = props.stories || [];
-            if (props.pendingStories) {
-                stories = _.concat(props.pendingStories, stories);
-            }
-            if (!_.isEmpty(stories)) {
-                // load reactions to stories
-                var criteria = {
-                    story_id: _.map(_.concat(props.pendingStories, props.stories), 'id')
-                };
-                if (props.currentUser.type === 'guest') {
-                    criteria.public = true;
-                }
-                return db.find({ table: 'reaction', criteria });
-            }
-        }).then((reactions) => {
-            if (reactions) {
-                props.reactions = reactions;
-                return meanwhile.show(<StoryListSync {...props} />);
-            }
-        }).then(() => {
-            if (!_.isEmpty(props.reactions)) {
-                // load users of reactions
-                var criteria = {
-                    id: _.uniq(_.map(props.reactions, 'user_id'))
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            }
-        }).then((users) => {
-            if (users) {
-                props.respondents = users;
-                return meanwhile.show(<StoryListSync {...props} />);
-            }
-        }).then(() => {
-            if (props.draftStories) {
-                // load other authors also working on drafts
-                var authorIds = getAuthorIds(props.draftStories);
-                var otherUserIds = _.difference(authorIds, [ props.currentUser.id ]);
-                if (otherUserIds.length > 0) {
-                    // always include the current user, since he can immediately
-                    // start a draft
-                    var criteria = {
-                        id: _.union(otherUserIds, [ props.currentUser.id ])
-                    };
-                    return db.find({ schema: 'global', table: 'user', criteria });
-                }
-            }
-        }).then((users) => {
-            if (users) {
-                props.draftAuthors = users;
-                return meanwhile.show(<StoryListSync {...props} />);
-            }
-        }).then(() => {
-            if (props.pendingStories) {
-                // load other authors of pending stories (most of the time, this is
-                // going to be the current user)
-                var authorIds = getAuthorIds(props.pendingStories);
-                var otherUserIds = _.difference(authorIds, [ props.currentUser.id ]);
-                if (otherUserIds.length > 0) {
-                    var criteria = {
-                        id: authorIds
-                    };
-                    return db.find({ schema: 'global', table: 'user', criteria });
-                }
-            }
-        }).then((users) => {
-            if (users) {
-                props.pendingAuthors = users;
-                return meanwhile.show(<StoryListSync {...props} />);
-            }
-        }).then(() => {
-            // look for bookmark sent by current user
-            if (props.currentUser) {
-                var criteria = {
-                    story_id: _.map(props.stories, 'id'),
-                    user_ids: [ props.currentUser.id ],
-                };
-                return db.find({ table: 'bookmark', criteria });
-            }
-        }).then((recommendations) => {
-            if (recommendations) {
-                props.recommendations = recommendations;
-                return <StoryListSync {...props} />;
-            }
-        }).then(() => {
-            // look for recipient of these bookmarks
-            if (props.recommendations) {
-                var criteria = {
-                    id: _.map(props.recommendations, 'target_user_id')
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            }
-        }).then((recipients) => {
-            if (recipients) {
-                props.recipients = recipients;
-            }
-        }).then(() => {
-            if (props.project) {
-                // load repos linked to project
-                var criteria = {
-                    id: _.get(props.project, 'repo_ids', [])
-                };
-                return db.find({ schema: 'global', table: 'repo', criteria });
-            }
-        }).then((repos) => {
-            if (repos) {
+        meanwhile.show(<StoryListSync {...props} />, 250);
+        return db.start().then((currentUserId) => {
+            // load repos first, so "add to issue tracker" option doesn't pop in
+            // suddenly in triple-column mode
+            return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
                 props.repos = repos;
-            }
+            });
+        }).then(() => {
+            meanwhile.show(<StoryListSync {...props} />);
+            var stories = _.filter(_.concat(props.pendingStories, props.draftStories, props.stories));
+            return UserFinder.findStoryAuthors(db, stories).then((users) => {
+                props.authors = users;
+            });
+        }).then(() => {
+            meanwhile.show(<StoryListSync {...props} />);
+            var stories = _.filter(_.concat(props.pendingStories, props.stories));
+            return ReactionFinder.findReactionsToStories(db, stories, props.currentUser).then((reactions) => {
+                props.reactions = reactions;
+            });
+        }).then(() => {
+            meanwhile.show(<StoryListSync {...props} />);
+            return UserFinder.findReactionAuthors(db, props.reactions).then((users) => {
+                props.respondents = users;
+            })
+        }).then(() => {
+            meanwhile.show(<StoryListSync {...props} />);
+            var stories = _.filter(_.concat(props.pendingStories, props.stories));
+            return BookmarkFinder.findBookmarksByUser(db, props.currentUser, stories).then((bookmarks) => {
+                props.recommendations = bookmarks;
+            });
+        }).then(() => {
+            meanwhile.show(<StoryListSync {...props} />);
+            return UserFinder.findBookmarkRecipients(db, props.bookmarks).then((users) => {
+                props.recipients = users;
+            });
+        }).then(() => {
             return <StoryListSync {...props} />;
         });
     },
@@ -232,9 +147,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
-        draftAuthors: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
-        pendingAuthors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
         recommendations: PropTypes.arrayOf(PropTypes.object),
@@ -283,7 +196,10 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var stories = sortStories(this.props.stories, this.props.pendingStories, this.props.draftStories, this.props.currentUser, this.props.acceptNewStory);
+        var stories = sortStories(this.props.stories, this.props.pendingStories);
+        if (this.props.acceptNewStory) {
+            stories = attachDrafts(stories, this.props.draftStories, this.props.currentUser);
+        }
         var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
         var smartListProps = {
             items: stories,
@@ -396,7 +312,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             isDraft = true;
         }
         if (isDraft) {
-            var authors = findAuthors(this.props.draftAuthors, story);
+            var authors = findAuthors(this.props.authors, story);
             var recommendations = findRecommendations(this.props.recommendations, story);
             var recipients = findRecipients(this.props.recipients, recommendations);
             if (!story) {
@@ -495,7 +411,7 @@ var array = Memoize(function(object) {
     return [ object ];
 });
 
-var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser, acceptNewStory) {
+var sortStories = Memoize(function(stories, pendingStories) {
     if (!_.isEmpty(pendingStories)) {
         stories = _.slice(stories);
         _.each(pendingStories, (story) => {
@@ -504,33 +420,35 @@ var sortStories = Memoize(function(stories, pendingStories, drafts, currentUser,
             }
         });
     }
-    stories = _.orderBy(stories, [ getStoryTime, 'id' ], [ 'desc', 'desc' ]);
+    return _.orderBy(stories, [ getStoryTime, 'id' ], [ 'desc', 'desc' ]);
 
-    if (acceptNewStory) {
-        // add new drafts (drafts includes published stories being edited)
-        var newDrafts = _.filter(drafts, (story) => {
-            return !story.published_version_id;
-        });
-        // current user's own drafts are listed first
-        var own = function(story) {
-            return story.user_ids[0] === currentUser.id;
-        };
-        newDrafts = _.orderBy(newDrafts, [ own, 'id' ], [ 'desc', 'desc' ]);
-
-        // see if the current user has a draft
-        var currentUserDraft = _.find(newDrafts, (story) => {
-            if (story.user_ids[0] === currentUser.id) {
-                return true;
-            }
-        });
-        if (!currentUserDraft) {
-            // add a blank
-            newDrafts = _.concat(null, newDrafts);
-        }
-        stories = _.concat(newDrafts, stories);
-    }
     return stories;
 });
+
+var attachDrafts = Memoize(function(stories, drafts, currentUser) {
+    // add new drafts (drafts includes published stories being edited)
+    var newDrafts = _.filter(drafts, (story) => {
+        return !story.published_version_id;
+    });
+
+    // current user's own drafts are listed first
+    var own = function(story) {
+        return story.user_ids[0] === currentUser.id;
+    };
+    newDrafts = _.orderBy(newDrafts, [ own, 'id' ], [ 'desc', 'desc' ]);
+
+    // see if the current user has a draft
+    var currentUserDraft = _.find(newDrafts, (story) => {
+        if (story.user_ids[0] === currentUser.id) {
+            return true;
+        }
+    });
+    if (!currentUserDraft) {
+        // add a blank
+        newDrafts.unshift(null);
+    }
+    return _.concat(newDrafts, stories);
+}, [ null ]);
 
 var getStoryTime = function(story) {
     return story.btime || story.ptime;

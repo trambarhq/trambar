@@ -2,7 +2,10 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
+var ProjectFinder = require('objects/finders/project-finder');
+var RepoFinder = require('objects/finders/repo-finder');
 var StatisticsUtils = require('objects/utils/statistics-utils');
+var SystemFinder = require('objects/finders/system-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -93,30 +96,25 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            var criteria = {};
-            return db.findOne({ table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+        return db.start().then((currentUserId) => {
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            });
         }).then(() => {
-            if (params.repo) {
-                var criteria = { id: params.repo };
-                return db.findOne({ table: 'repo', criteria, required: true });
-            }
-        }).then((repo) => {
-            props.repo = repo;
-            return meanwhile.show(<RepoSummaryPageSync {...props} />);
+            return RepoFinder.findRepo(db, params.repo).then((repo) => {
+                props.repo = repo;
+            });
         }).then(() => {
-            var criteria = { id: params.project };
-            return db.findOne({ table: 'project', criteria, required: true });
-        }).then((project) => {
-            props.project = project;
-            return meanwhile.show(<RepoSummaryPageSync {...props} />);
+            meanwhile.show(<RepoSummaryPageSync {...props} />);
+            return ProjectFinder.findProject(db).then((project) => {
+                props.project = project;
+            });
         }).then(() => {
-            // load statistics
-            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, props.repo);
-        }).then((statistics) => {
-            props.statistics = statistics;
+            meanwhile.show(<RepoSummaryPageSync {...props} />);
+            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, props.repo).then((statistics) => {
+                props.statistics = statistics;
+            });
+        }).then(() => {
             return <RepoSummaryPageSync {...props} />;
         });
     }

@@ -4,6 +4,11 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
+var UserFinder = require('objects/finders/user-finder');
+var StoryFinder = require('objects/finders/story-finder');
+var RepoFinder = require('objects/finders/repo-finder');
+var BookmarkFinder = require('objects/finders/bookmark-finder');
+var ReactionFinder = require('objects/finders/reaction-finder');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -52,12 +57,10 @@ module.exports = Relaks.createClass({
     renderAsync: function(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
-        var defaultAuthors = array(this.props.currentUser);
         var props = {
             stories: null,
-            authors: defaultAuthors,
             draftStories: null,
-            draftAuthors: defaultAuthors,
+            authors: null,
             senders: null,
             reactions: null,
             respondents: null,
@@ -80,111 +83,52 @@ module.exports = Relaks.createClass({
             onSelectionClear: this.props.onSelectionClear,
 
         };
-        meanwhile.show(<BookmarkListSync {...props} />, 100);
+        meanwhile.show(<BookmarkListSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load stories
-            var criteria = {
-                id: _.map(props.bookmarks, 'story_id')
-            };
-            return db.find({ table: 'story', criteria });
-        }).then((stories) => {
-            props.stories = stories
+            return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
+                props.repos = repos;
+            });
         }).then(() => {
-            // load authors of stories
-            var criteria = {
-                id: _.uniq(_.flatten(_.map(props.stories, 'user_ids'))),
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.authors = users;
-            return meanwhile.show(<BookmarkListSync {...props} />);
+            return StoryFinder.findStoriesOfBookmarks(db, props.bookmarks, props.currentUser).then((stories) => {
+                props.stories = stories
+            });
         }).then(() => {
-            var criteria = {
-                id: _.flatten(_.map(props.bookmarks, 'user_ids')),
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.senders = users;
-            return meanwhile.show(<BookmarkListSync {...props} />);
-        }).then(() => {
-            // load reactions to stories
-            var criteria = {
-                story_id: _.map(props.stories, 'id')
-            };
-            if (props.currentUser && props.currentUser.type === 'guest') {
-                criteria.filters.public = true;
-            }
-            return db.find({ table: 'reaction', criteria });
-        }).then((reactions) => {
-            props.reactions = reactions;
-            return meanwhile.show(<BookmarkListSync {...props} />);
-        }).then(() => {
-            // load users of reactions
-            var criteria = {
-                id: _.map(props.reactions, 'user_id')
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.respondents = users;
-            return meanwhile.show(<BookmarkListSync {...props} />);
-        }).then(() => {
-            if (props.currentUser) {
-                // look for story drafts
-                var criteria = {
-                    published: false,
-                    user_ids: [ props.currentUser.id ],
-                };
-                return db.find({ table: 'story', criteria });
-            }
-        }).then((stories) => {
-            if (stories) {
+            meanwhile.show(<BookmarkListSync {...props} />);
+            return StoryFinder.findDraftStories(db, props.currentUser).then((stories) => {
                 props.draftStories = stories;
-                return meanwhile.show(<BookmarkListSync {...props} />);
-            }
+            });
         }).then(() => {
-            // load other authors also working on drafts
-            var authorIds = getAuthorIds(props.draftStories, props.currentUser);
-            if (authorIds.length > 1) {
-                var criteria = {
-                    id: authorIds
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            }
-        }).then((users) => {
-            if (users) {
-                props.draftAuthors = users;
-            }
+            meanwhile.show(<BookmarkListSync {...props} />);
+            var stories = _.filter(_.concat(props.draftStories, props.stories));
+            return UserFinder.findStoryAuthors(db, stories).then((users) => {
+                props.authors = users;
+            });
         }).then(() => {
-            // look for bookmark sent by current user
-            if (props.currentUser) {
-                var criteria = {
-                    story_id: _.map(props.stories, 'id'),
-                    user_ids: [ props.currentUser.id ],
-                };
-                return db.find({ table: 'bookmark', criteria });
-            }
-        }).then((recommendations) => {
-            props.recommendations = recommendations;
-            return meanwhile.show(<BookmarkListSync {...props} />);
+            meanwhile.show(<BookmarkListSync {...props} />);
+            return UserFinder.findBookmarkSenders(db, props.bookmarks).then((users) => {
+                props.senders = users;
+            });
         }).then(() => {
-            // look for recipient of these bookmarks
-            if (props.recommendations) {
-                var criteria = {
-                    id: _.map(props.recommendations, 'target_user_id')
-                };
-                return db.find({ schema: 'global', table: 'user', criteria });
-            }
-        }).then((recipients) => {
-            props.recipients = recipients;
-            return meanwhile.show(<BookmarkListSync {...props} />);
+            meanwhile.show(<BookmarkListSync {...props} />);
+            return ReactionFinder.findReactionsToStories(db, props.stories, props.currentUser).then((reactions) => {
+                props.reactions = reactions;
+            });
         }).then(() => {
-            // load repos linked to project
-            var criteria = {
-                id: _.get(props.project, 'repo_ids', [])
-            };
-            return db.find({ schema: 'global', table: 'repo', criteria });
-        }).then((repos) => {
-            props.repos = repos;
+            meanwhile.show(<BookmarkListSync {...props} />);
+            return UserFinder.findReactionAuthors(db, props.reactions).then((users) => {
+                props.respondents = users;
+            });
+        }).then(() => {
+            meanwhile.show(<BookmarkListSync {...props} />);
+            return BookmarkFinder.findBookmarksByUser(db, props.currentUser).then((bookmarks) => {
+                props.recommendations = bookmarks;
+            });
+        }).then(() => {
+            meanwhile.show(<BookmarkListSync {...props} />);
+            return UserFinder.findBookmarkRecipients(db, props.recommendations).then((users) => {
+                props.recipients = users;
+            });
+        }).then(() => {
             return <BookmarkListSync {...props} />;
         });
     },

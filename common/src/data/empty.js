@@ -2,5 +2,5 @@ module.exports = {
     array: [],
     object: {},
     string: '',
-    func: function() {};
+    func: function() {},
 };

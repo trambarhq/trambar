@@ -4,6 +4,9 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ProjectFinder = require('objects/finders/project-finder');
+var RoleFinder = require('objects/finders/role-finder');
+var UserFinder = require('objects/finders/user-finder');
 var UserTypes = require('objects/types/user-types');
 
 var Database = require('data/database');
@@ -92,29 +95,21 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<UserListPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load all users
-            var criteria = {};
-            return db.find({ table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
-            return meanwhile.show(<UserListPageSync {...props} />);
+        return db.start().then((currentUserId) => {
+            return UserFinder.findAllUsers(db).then((users) => {
+                props.users = users;
+            });
         }).then(() => {
-            // load projects
-            var criteria = {
-                user_ids: _.map(props.users, 'id')
-            };
-            return db.find({ table: 'project', criteria });
-        }).then((projects) => {
-            props.projects = projects;
+            meanwhile.show(<UserListPageSync {...props} />);
+            return ProjectFinder.findProjectsWithMembers(db, props.users).then((projects) => {
+                props.projects = projects;
+            });
         }).then(() => {
-            // load roles
-            var criteria = {
-                id: _.flatten(_.map(props.users, 'role_ids'))
-            };
-            return db.find({ table: 'role', criteria });
+            meanwhile.show(<UserListPageSync {...props} />);
+            return RoleFinder.findRolesOfUsers(db, props.users).then((roles) => {
+                props.roles = roles;
+            });
         }).then((roles) => {
-            props.roles = roles;
             return <UserListPageSync {...props} />;
         });
     }

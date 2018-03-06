@@ -1,10 +1,10 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-
 var ComponentRefs = require('utils/component-refs');
 var HTTPError = require('errors/http-error');
 var CorsRewriter = require('routing/cors-rewriter');
+var SystemFinder = require('objects/finders/system-finder');
 
 // non-visual components
 var RemoteDataSource = require('data/remote-data-source');
@@ -448,8 +448,8 @@ module.exports = React.createClass({
     discoverPushRelay: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var db = this.state.database.use({ schema: 'global', by: this });
-        db.start().then((userId) => {
-            return db.findOne({ table: 'system' }).then((system) => {
+        db.start().then((currentUserId) => {
+            return SystemFinder.findSystem(db).then((system) => {
                 var address = db.context.address;
                 var url = _.get(system, 'settings.push_relay', '');
                 var pushRelay = { address, url };

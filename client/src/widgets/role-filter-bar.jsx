@@ -2,6 +2,9 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ProjectFinder = require('objects/finders/project-finder');
+var RoleFinder = require('objects/finders/role-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -47,32 +50,20 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             theme: this.props.theme,
         };
-        meanwhile.show(<RoleFilterBarSync {...props} />, 1000);
+        meanwhile.show(<RoleFilterBarSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load project
-            var criteria = {
-                name: params.schema
-            };
-            return db.findOne({ schema: 'global', table: 'project', criteria });
-        }).then((project) => {
-            props.project = project;
+            return ProjectFinder.findCurrentProject(db).then((project) => {
+                props.project = project;
+            });
         }).then(() => {
-            // load project members
-            var criteria = {
-                id: props.project.user_ids
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
+            return UserFinder.findProjectMembers(db, props.project).then((users) => {
+                props.users = users;
+            });
         }).then(() => {
-            // load roles that members have
-            var roleIds = _.flatten(_.map(props.users, 'role_ids'));
-            var criteria = {
-                id: _.uniq(roleIds)
-            };
-            return db.find({ schema: 'global', table: 'role', criteria });
+            return RoleFinder.findRolesOfUsers(db, props.users).then((roles) => {
+                props.roles = roles;
+            });
         }).then((roles) => {
-            props.roles = roles;
             return <RoleFilterBarSync {...props} />;
         });
     },

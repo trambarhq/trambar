@@ -2,8 +2,10 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
+var ProjectFinder = require('objects/finders/project-finder');
 var ProjectSettings = require('objects/settings/project-settings');
 var StatisticsUtils = require('objects/utils/statistics-utils');
+var SystemFinder = require('objects/finders/system-finder');
 var SlugGenerator = require('utils/slug-generator');
 
 var Database = require('data/database');
@@ -98,24 +100,24 @@ module.exports = Relaks.createClass({
             payloads: this.props.payloads,
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            var criteria = {};
-            return db.findOne({ table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+        return db.start().then((currentUserId) => {
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            })
         }).then(() => {
             if (params.project !== 'new') {
-                var criteria = { id: params.project };
-                return db.findOne({ table: 'project', criteria, required: true });
+                return ProjectFinder.findProject(db, params.project).then((project) => {
+                    props.project = project;
+                });
             }
-        }).then((project) => {
-            props.project = project;
-            return meanwhile.show(<ProjectSummaryPageSync {...props} />);
         }).then(() => {
-            // load project statistics (unless we're creating a new project)
-            return StatisticsUtils.fetchProjectDailyActivities(db, props.project);
-        }).then((statistics) => {
-            props.statistics = statistics;
+            if (params.project !== 'new') {
+                meanwhile.show(<ProjectSummaryPageSync {...props} />);
+                return StatisticsUtils.fetchProjectDailyActivities(db, props.project).then((statistics) => {
+                    props.statistics = statistics;
+                });
+            }
+        }).then(() => {
             return <ProjectSummaryPageSync {...props} />;
         });
     }

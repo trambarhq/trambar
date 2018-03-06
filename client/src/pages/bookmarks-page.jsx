@@ -1,7 +1,11 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var UserFinder = require('objects/finders/user-finder');
+var BookmarkFinder = require('objects/finders/bookmark-finder');
+var ProjectFinder = require('objects/finders/project-finder');
 var ProjectSettings = require('objects/settings/project-settings');
+
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -102,29 +106,19 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<BookmarksPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load current user
-            var criteria = {};
-            criteria.id = userId;
-            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
-        }).then((user) => {
-            props.currentUser = user;
-            meanwhile.check();
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                props.currentUser = user;
+            });
         }).then(() => {
-            // load project
-            var criteria = { name: params.schema };
-            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+            return ProjectFinder.findCurrentProject(db).then((project) => {
+                props.project = project;
+            });
         }).then((project) => {
-            props.project = project;
-            return meanwhile.show(<BookmarksPageSync {...props} />);
+            return BookmarkFinder.findBookmarksForUser(db, props.currentUser).then((bookmarks) => {
+                props.bookmarks = bookmarks;
+            });
         }).then(() => {
-            // load boomarks
-            var criteria = {
-                target_user_id: props.currentUser.id
-            };
-            return db.find({ table: 'bookmark', criteria });
-        }).then((bookmarks) => {
-            props.bookmarks = bookmarks;
             return <BookmarksPageSync {...props} />;
         });
     }

@@ -1,6 +1,8 @@
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var UniversalLink = require('routing/universal-link');
+var DeviceFinder = require('objects/finders/device-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -37,6 +39,7 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ by: this });
         var props = {
             activationCode: null,
+            currentUser: null,
             devices: null,
 
             show: this.props.show,
@@ -45,22 +48,20 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             onClose: this.props.onClose,
         };
-        var currentUserId;
         meanwhile.show(<MobileSetupDialogBoxSync {...props} />);
-        return db.start().then((userId) => {
-            currentUserId = userId;
-            return db.beginMobileSession('client');
-        }).then((code) => {
-            props.activationCode = code;
-            meanwhile.show(<MobileSetupDialogBoxSync {...props} />);
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                props.currentUser = user;
+            });
         }).then(() => {
-            // get the user's list of devices
-            var criteria = {
-                user_id: currentUserId,
-            };
-            return db.find({ schema: 'global', table: 'device', criteria });
-        }).then((devices) => {
-            props.devices = devices;
+            return db.beginMobileSession('client').then((code) => {
+                props.activationCode = code;
+            });
+        }).then(() => {
+            return DeviceFinder.findUserDevices(db, props.user).then((devices) => {
+                props.devices = devices;
+            });
+        }).then(() => {
             return <MobileSetupDialogBoxSync {...props} />;
         });
     },
@@ -80,6 +81,7 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
         show: PropTypes.bool,
         activationCode: PropTypes.string,
         devices: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         onClose: PropTypes.func,

@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var MediaLoader = require('media/media-loader');
+var PictureFinder = require('objects/finders/picture-finder');
 
 var Database = require('data/database');
 var Locale = require('locale/locale');
@@ -82,14 +83,11 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load pictures for given purpose if we're showing the dialog box
             if (this.props.show || this.state.shown) {
-                var criteria = {
-                    purpose: this.props.purpose,
-                    deleted: false,
-                };
-                return db.find({ table: 'picture', criteria });
+                return PictureFinder.findPictures(db).then((pictures) => {
+                    props.pictures = pictures;
+                });
             }
-        }).then((pictures) => {
-            props.pictures = pictures;
+        }).then(() => {
             return <ImageAlbumDialogBoxSync {...props} />
         });
     },

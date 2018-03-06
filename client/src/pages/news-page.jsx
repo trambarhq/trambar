@@ -3,10 +3,10 @@ var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 var Moment = require('moment');
 var Relaks = require('relaks');
-var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
+var UserFinder = require('objects/finders/user-finder');
+var ProjectFinder = require('objects/finders/project-finder');
+var StoryFinder = require('objects/finders/story-finder');
 var ProjectSettings = require('objects/settings/project-settings');
-var TagScanner = require('utils/tag-scanner');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -122,17 +122,15 @@ module.exports = Relaks.createClass({
         // don't wait for remote data unless the route changes
         var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var searching = !!(params.date || !_.isEmpty(params.roles) || params.search);
         var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var props = {
-            listing: null,
             stories: null,
             draftStories: null,
             pendingStories: null,
-            currentUser: null,
             project: null,
+            currentUser: null,
 
-            acceptNewStory: !searching,
+            acceptNewStory: (!params.date && _.isEmpty(params.roles) && !params.search),
             freshRoute: freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
@@ -142,164 +140,75 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<NewsPageSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load current user
-            var criteria = {
-                id: userId
-            };
-            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
-        }).then((user) => {
-            props.currentUser = user;
-            return meanwhile.show(<NewsPageSync {...props} />);
+            return UserFinder.findUser(db, userId).then((user) => {
+                props.currentUser = user;
+            });
         }).then(() => {
-            var criteria = {
-                name: params.schema
-            };
-            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+            return ProjectFinder.findCurrentProject(db).then((project) => {
+                props.project = project;
+            });
         }).then((project) => {
-            props.project = project;
-            return meanwhile.show(<NewsPageSync {...props} />);
-        }).then(() => {
-            if (searching) {
-                // load story matching filters
-                var criteria = {
-                    published: true,
-                    ready: true,
-                };
-                var remote, prefetch;
-                if (params.date) {
-                    criteria.time_range = DateUtils.getDayRange(params.date);
-                    if (params.date < DateTracker.today) {
-                        // older stories aren't likely to change
-                        prefetch = false;
-                    }
-                }
-                if (!_.isEmpty(params.roles)) {
-                    criteria.role_ids = params.roles;
-                }
-                if (params.search) {
-                    if (!TagScanner.removeTags(params.search)) {
-                        // search by tags only (which can happen locally)
-                        var tags = TagScanner.findTags(params.search);
-                        criteria.tags = tags;
-                    } else {
-                        criteria.search = {
-                            lang: this.props.locale.languageCode,
-                            text: params.search,
-                        };
-                        // don't scan local cache
-                        remote = true;
-                        prefetch = false;
-                    }
-                    criteria.limit = 100;
-                } else {
-                    criteria.limit = 500;
-                }
-                if (props.currentUser.type === 'guest') {
-                    criteria.public = true;
-                }
-                return db.find({ table: 'story', criteria, remote, prefetch });
+            meanwhile.show(<NewsPageSync {...props} />);
+            if (params.search) {
+                return StoryFinder.findStoriesWithMatchingText(db, params.search, props.locale, props.currentUser).then((stories) => {
+                    props.stories = stories;
+                });
+            } else if (params.date) {
+                return StoryFinder.findStoriesonDate(db, params.date, props.currentUser).then((stories) => {
+                    props.stories = stories;
+                });
+            } else if (params.roles) {
+                return StoryFinder.findStoriesWithRolesInListing(db, params.roles, props.currentUser).then((stories) => {
+                    props.stories = stories;
+                });
             } else {
-                // load story in listing
-                var criteria = {
-                    type: 'news',
-                    target_user_id: props.currentUser.id,
-                    filters: {},
-                };
-                if (!_.isEmpty(params.roles)) {
-                    criteria.filters.role_ids = params.roles;
-                }
-                if (props.currentUser.type === 'guest') {
-                    criteria.filters.public = true;
-                }
-                return db.findOne({ table: 'listing', criteria }).then((listing) => {
-                    if (!listing) {
-                        return [];
+                return StoryFinder.findStoriesInListing(db, 'news', props.currentUser).then((stories) => {
+                    props.stories = stories;
+                    if (params.story && !_.find(stories, { id: params.story })) {
+                        return StoryFinder.findStory(db, params.story).then((story) => {
+                            return this.redirectToStory(story);
+                        }).catch((err) => {
+                        });
                     }
-                    props.listing = listing;
-                    var criteria = {
-                        id: listing.story_ids
-                    };
-                    if (props.currentUser.type === 'guest') {
-                        // enforce condition here as well, as change in the listing
-                        // is going to lag behind the change in the story
-                        criteria.public = true;
-                    }
-                    return db.find({ table: 'story', criteria });
-                }).then((stories) => {
-                    if (params.story) {
-                        // see if the story is in the list
-                        if (!_.find(stories, { id: params.story })) {
-                            // redirect to page showing stories on the date
-                            // of the story; to do that, we need the object
-                            // itself
-                            var criteria = { id: params.story };
-                            return db.findOne({ table: 'story', criteria }).then((story) => {
-                                var redirect = false;
-                                if (story && story.ptime && story.published && story.ready !== false) {
-                                    // don't redirect if the story is very recent
-                                    var elapsed = Moment() - Moment(story.ptime);
-                                    if (elapsed > 60 * 1000) {
-                                        redirect = true;
-                                    }
-                                }
-                                if (redirect) {
-                                    var newParams = _.clone(params);
-                                    newParams.date = Moment(story.ptime).format('YYYY-MM-DD');
-                                    return this.props.route.replace(require('pages/news-page'), newParams).then(() => {
-                                        return [];
-                                    });
-                                }
-                                return stories;
-                            });
-                        }
-                    }
-                    return stories;
+                }).then(() => {
+                    meanwhile.show(<NewsPageSync {...props} />);
+                    return StoryFinder.findDraftStories(db, props.currentUser).then((stories) => {
+                        props.draftStories = stories;
+                    });
+                }).then(() => {
+                    return StoryFinder.findUnlistedStories(db, props.currentUser, props.stories).then((stories) => {
+                        props.pendingStories = stories;
+                    });
                 });
             }
-        }).then((stories) => {
-            props.stories = stories
-            return meanwhile.show(<NewsPageSync {...props} />);
         }).then(() => {
-            if (!searching) {
-                // look for story drafts
-                var criteria = {
-                    published: false,
-                    user_ids: [ props.currentUser.id ],
-                };
-                return db.find({ table: 'story', criteria, prefetch: false });
-            }
-        }).then((stories) => {
-            if (stories) {
-                props.draftStories = stories;
-                return meanwhile.show(<NewsPageSync {...props} />);
-            }
-        }).then(() => {
-            if (!searching) {
-                // look for pending stories, those written by the user but
-                // is too recent to be included in the listing
-                var recentUserStories = _.filter(props.stories, (story) => {
-                    if (_.includes(story.user_ids, props.currentUser.id)) {
-                        if (story.ptime > DateTracker.yesterdayISO) {
-                            return true;
-                        }
-                    }
-                });
-                var recentUserStoryIds = _.map(recentUserStories, 'id');
-                var criteria = {
-                    published: true,
-                    exclude: recentUserStoryIds,
-                    user_ids: [ props.currentUser.id ],
-                    newer_than: DateTracker.yesterdayISO,
-                };
-                return db.find({ table: 'story', criteria, prefetch: false });
-            }
-        }).then((stories) => {
-            if (stories) {
-                props.pendingStories = stories;
-            }
             return <NewsPageSync {...props} />;
         });
     },
+
+    /**
+     * Redirect to page showing stories on the date of a story
+     *
+     * @param  {Story} story
+     *
+     * @return {Promise|undefined}
+     */
+    redirectToStory: function(story) {
+        var redirect = true;
+        if (story.ptime && story.published && story.ready !== false) {
+            // don't redirect if the story is very recent
+            var elapsed = Moment() - Moment(story.ptime);
+            if (elapsed < 60 * 1000) {
+                return;
+            }
+        }
+        if (redirect) {
+            return this.props.route.replace(require('pages/news-page'), {
+                date: Moment(story.ptime).format('YYYY-MM-DD'),
+                story: story.id,
+            });
+        }
+    }
 });
 
 var NewsPageSync = module.exports.Sync = React.createClass({

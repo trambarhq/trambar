@@ -2,6 +2,11 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var ProjectFinder = require('objects/finders/project-finder');
+var RepoFinder = require('objects/finders/repo-finder');
+var RoleFinder = require('objects/finders/role-finder');
+var ServerFinder = require('objects/finders/server-finder');
+var UserFinder = require('objects/finders/user-finder');
 var ComponentRefs = require('utils/component-refs');
 
 var Database = require('data/database');
@@ -42,18 +47,26 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<NavigationTreeSync {...props} />);
-        return db.start().then((userId) => {
-            // load objects needed for labels
-            var objectTypes = _.keys(_.pickBy(props, _.isNull));
-            return Promise.each(objectTypes, (table) => {
-                var id = parseInt(params[table]);
-                var schema = 'global';
-                if (id) {
-                    var criteria = { id };
-                    return db.findOne({ schema, table, criteria }).then((object) => {
-                        props[table] = object;
-                    });
-                }
+        return db.start().then((currentUserId) => {
+            var promises = {};
+            if (typeof(params.project) === 'number') {
+                promises.project = ProjectFinder.findProject(db, params.project);
+            }
+            if (typeof(params.user) === 'number') {
+                promises.user = UserFinder.findUser(db, params.user);
+            }
+            if (typeof(params.role) === 'number') {
+                promises.role = RoleFinder.findRole(db, params.role);
+            }
+            if (typeof(params.repo) === 'number') {
+                promises.repo = RepoFinder.findRepo(db, params.repo);
+            }
+            if (typeof(params.server) === 'number') {
+                promises.server = ServerFinder.findServer(db, params.server);
+            }
+            return Promise.props(promises).then((objects) => {
+                _.assign(props, objects);
+            }).catch((err) => {
             });
         }).then(() => {
             return <NavigationTreeSync {...props} />;

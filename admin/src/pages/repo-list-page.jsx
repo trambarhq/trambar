@@ -4,7 +4,11 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ProjectFinder = require('objects/finders/project-finder');
+var RepoFinder = require('objects/finders/repo-finder');
+var ServerFinder = require('objects/finders/server-finder');
 var StatisticsUtils = require('objects/utils/statistics-utils');
+var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -92,34 +96,26 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<RepoListPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load project
-            var criteria = { id: params.project };
-            return db.findOne({ table: 'project', criteria, required: true });
-        }).then((project) => {
-            props.project = project;
+        return db.start().then((currentUserId) => {
+            return ProjectFinder.findProject(db, params.project).then((project) => {
+                props.project = project;
+            });
         }).then(() => {
-            // load all repos
-            var criteria = {};
-            return db.find({ table: 'repo', criteria });
-        }).then((repos) => {
-            props.repos = repos;
-            return meanwhile.show(<RepoListPageSync {...props} />);
+            return RepoFinder.findAllRepos(db).then((repos) => {
+                props.repos = repos;
+            });
         }).then(() => {
-            // load servers
-            var criteria = {
-                id: _.map(props.repos, 'server_id')
-            };
-            return db.find({ table: 'server', criteria });
-        }).then((servers) => {
-            props.servers = servers;
-            return meanwhile.show(<RepoListPageSync {...props} />);
+            meanwhile.show(<RepoListPageSync {...props} />);
+            return ServerFinder.findServersOfRepos(db, props.repos).then((servers) => {
+                props.servers = servers;
+            });
         }).then(() => {
-            // load user statistics of the project's repo
+            meanwhile.show(<RepoListPageSync {...props} />);
             var repos = findRepos(props.repos, props.project);
-            return StatisticsUtils.fetchReposDailyActivities(db, props.project, repos);
-        }).then((statistics) => {
-            props.statistics = statistics;
+            return StatisticsUtils.fetchReposDailyActivities(db, props.project, repos).then((statistics) => {
+                props.statistics = statistics;
+            });
+        }).then(() => {
             return <RepoListPageSync {...props} />;
         });
     }
@@ -723,10 +719,12 @@ var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, di
 
 var findServer = Memoize(function(servers, repo) {
     if (repo) {
-        return _.find(servers, { id: repo.server_id });
-    } else {
-        return null;
+        var link = LinkUtils.find(repo, { type: repo.type });
+        if (link) {
+            return _.find(servers, { id: link.server_id });
+        }
     }
+    return null;
 });
 
 var findRepos = Memoize(function(repos, project) {

@@ -3,9 +3,13 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ProjectFinder = require('objects/finders/project-finder');
+var RoleFinder = require('objects/finders/role-finder');
+var UserFinder = require('objects/finders/user-finder');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 var StatisticsUtils = require('objects/utils/statistics-utils');
+var SystemFinder = require('objects/finders/system-finder');
 var SlugGenerator = require('utils/slug-generator');
 
 var Database = require('data/database');
@@ -110,41 +114,38 @@ module.exports = Relaks.createClass({
             payloads: this.props.payloads,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            var criteria = {};
-            return db.findOne({ table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+        return db.start().then((currentUserId) => {
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            });
         }).then(() => {
             // load selected user
             if (params.user !== 'new') {
-                var criteria = { id: params.user };
-                return db.findOne({ table: 'user', criteria, required: true });
+                return UserFinder.findUser(db, params.user).then((user) => {
+                    props.user = user;
+                });
             }
-        }).then((user) => {
-            props.user = user;
-            return meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
-            // load all roles
-            var criteria = {};
-            return db.find({ table: 'role', criteria });
-        }).then((roles) => {
-            props.roles = roles;
-            return meanwhile.show(<UserSummaryPageSync {...props} />);
+            meanwhile.show(<UserSummaryPageSync {...props} />);
+            return RoleFinder.findActiveRoles(db).then((roles) => {
+                props.roles = roles;
+            })
         }).then(() => {
             // load project if project id is provider (i.e. member summary)
             if (params.project) {
-                var criteria = { id: params.project };
-                return db.findOne({ table: 'project', criteria, required: true });
+                meanwhile.show(<UserSummaryPageSync {...props} />);
+                return ProjectFinder.findProject(db, params.project).then((project) => {
+                    props.project = project;
+                });
             }
-        }).then((project) => {
-            props.project = project;
-            return meanwhile.show(<UserSummaryPageSync {...props} />);
         }).then(() => {
-            // load statistics if project is specified (unless we're creating a new member)
-            return StatisticsUtils.fetchUserDailyActivities(db, props.project, props.user);
-        }).then((statistics) => {
-            props.statistics = statistics;
+            meanwhile.show(<UserSummaryPageSync {...props} />);
+            if (props.project && props.user) {
+                return StatisticsUtils.fetchUserDailyActivities(db, props.project, props.user).then((statistics) => {
+                    props.statistics = statistics;
+                });
+            }
+        }).then(() => {
             return <UserSummaryPageSync {...props} />;
         });
     }

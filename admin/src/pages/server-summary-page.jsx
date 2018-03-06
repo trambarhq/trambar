@@ -4,8 +4,11 @@ var ReactDOM = require('react-dom');
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var RoleFinder = require('objects/finders/role-finder');
+var ServerFinder = require('objects/finders/server-finder');
 var ServerTypes = require('objects/types/server-types');
 var ServerSettings = require('objects/settings/server-settings');
+var SystemFinder = require('objects/finders/system-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -103,23 +106,21 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
         return db.start().then((userId) => {
-            var criteria = {};
-            return db.findOne({ table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            });
         }).then(() => {
             if (params.server !== 'new') {
-                var criteria = { id: params.server };
-                return db.findOne({ table: 'server', criteria, required: true });
+                return ServerFinder.findServer(db, params.server).then((server) => {
+                    props.server = server;
+                });
             }
-        }).then((server) => {
-            props.server = server;
-            return meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
         }).then(() => {
-            var criteria = {};
-            return db.find({ table: 'role', criteria });
-        }).then((roles) => {
-            props.roles = roles;
+            meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
+            return RoleFinder.findActiveRoles(db).then((roles) => {
+                props.roles = roles;
+            });
+        }).then(() => {
             return <ServerSummaryPageSync {...props} />;
         });
     }

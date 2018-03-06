@@ -5,10 +5,12 @@ var Relaks = require('relaks');
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
 var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
-var TagScanner = require('utils/tag-scanner');
+var ProjectFinder = require('objects/finders/project-finder');
 var ProjectSettings = require('objects/settings/project-settings');
+var StoryFinder = require('objects/finders/story-finder');
 var StatisticsUtils = require('objects/utils/statistics-utils');
+var UserFinder = require('objects/finders/user-finder');
+var TagScanner = require('utils/tag-scanner');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -154,8 +156,7 @@ module.exports = Relaks.createClass({
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var tags;
-        if (_.trim(params.search) && !TagScanner.removeTags(params.search)) {
-            // search by tags only (which can happen locally)
+        if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
         }
         var props = {
@@ -176,226 +177,169 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<PeoplePageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load current user
-            var criteria = { id: userId };
-            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
-        }).then((user) => {
-            props.currentUser = user;
-            meanwhile.check();
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                props.currentUser = user;
+            });
         }).then(() => {
-            // load project
-            var criteria = {
-                name: params.schema
-            };
-            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
+            return ProjectFinder.findCurrentProject(db).then((project) => {
+                props.project = project;
+            });
         }).then((project) => {
-            props.project = project;
-        }).then(() => {
-            // load project members
-            var criteria = {
-                id: props.project.user_ids,
-            };
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.members = users;
-            if (params.user) {
-                // find the selected user
-                var user = _.find(users, { id: params.user });
-                if (user) {
-                    props.selectedUser = user;
-                    props.visibleUsers = [ user ];
-                } else {
-                    // not on the member list
-                    var criteria = { id: params.user };
-                    return db.findOne({ schema: 'global', table: 'user', criteria, required: true }).then((user) => {
+            return UserFinder.findProjectMembers(db, props.project).then((users) => {
+                props.members = users;
+                if (params.user) {
+                    // find the selected user
+                    var user = _.find(users, { id: params.user });
+                    if (!user) {
                         props.selectedUser = user;
                         props.visibleUsers = [ user ];
-                    });
-                }
-            } else {
-                if (!(params.search || params.date )) {
-                    if (!_.isEmpty(params.roles)) {
-                        // show users with roles
-                        props.visibleUsers = findUsersWithRoles(users, params.roles);
                     } else {
-                        // all project members are shown
-                        props.visibleUsers = users;
+                        // not on the member list
+                        return UserFinder.findUser(db, params.user).then((user) => {
+                            props.selectedUser = user;
+                            props.visibleUsers = [ user ];
+                        });
+                    }
+                } else {
+                    // if we're not searching for stories, then we know which
+                    // users to list at this point
+                    if (!(params.search || params.date)) {
+                        if (!_.isEmpty(params.roles)) {
+                            // show users with roles
+                            props.visibleUsers = findUsersWithRoles(users, params.roles);
+                        } else {
+                            // all project members are shown
+                            props.visibleUsers = users;
+                        }
                     }
                 }
-            }
+            });
         }).then(() => {
-            return meanwhile.show(<PeoplePageSync {...props} />);
-        }).then(() => {
-            // load daily-activities statistics
-            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, props.members);
-        }).then((statistics) => {
-            props.dailyActivities = statistics;
-            if (!props.visibleUsers) {
-                // find users with stories using stats
-                var users;
-                if (params.date) {
-                    users = findUsersWithActivitiesOnDate(props.members, statistics, params.date);
-                } else if (tags) {
-                    users = findUsersWithStoriesWithTags(props.members, statistics, tags);
-                }
-                if (users) {
-                    if (!_.isEmpty(params.roles)) {
-                        props.visibleUsers = findUsersWithRoles(users, params.roles);
-                    } else {
-                        props.visibleUsers = users;
+            meanwhile.show(<PeoplePageSync {...props} />);
+            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, props.members).then((statistics) => {
+                props.dailyActivities = statistics;
+                if (!props.visibleUsers) {
+                    // find users with stories using stats
+                    var users;
+                    if (params.date) {
+                        users = findUsersWithActivitiesOnDate(props.members, statistics, params.date);
+                    } else if (params.search) {
+                        if (tags) {
+                            users = findUsersWithStoriesWithTags(props.members, statistics, tags);
+                        }
+                    }
+                    if (users) {
+                        if (!_.isEmpty(params.roles)) {
+                            props.visibleUsers = findUsersWithRoles(users, params.roles);
+                        } else {
+                            props.visibleUsers = users;
+                        }
+                    }
+                } else if (props.selectedUser) {
+                    // load statistics of selected user if he's not a member
+                    if (!_.some(props.members, { id: props.selectedUser })) {
+                        return StatisticsUtils.fetchUsersDailyActivities(db, props.project, [ props.selectedUser ]).then((selectedUserStats) => {
+                            props.dailyActivities = _.assign({}, props.dailyActivities, selectedUserStats);
+                        });
                     }
                 }
-            } else if (props.selectedUser) {
-                // load statistics of selected user if he's not a member
-                if (!_.some(props.members, { id: props.selectedUser })) {
-                    return StatisticsUtils.fetchUsersDailyActivities(db, props.project, [ props.selectedUser ]).then((selectedUserStats) => {
-                        props.dailyActivities = _.assign({}, props.dailyActivities, selectedUserStats);
-                    });
-                }
-            }
+            });
         }).then(() => {
-            return meanwhile.show(<PeoplePageSync {...props} />);
-        }).then(() => {
-            if (params.search || params.date) {
-                // search for matching stories
-                var criteria = {
-                    published: true,
-                    ready: true
-                };
-                var remote, prefetch;
+            meanwhile.show(<PeoplePageSync {...props} />);
+            if (props.selectedUser) {
                 if (params.search) {
                     if (tags) {
-                        criteria.tags = tags;
+                        return StoryFinder.findStoriesByUserWithTags(db, props.selectedUser, tags).then((stories) => {
+                            props.stories = stories;
+                        });
                     } else {
-                        criteria.search = {
-                            lang: this.props.locale.languageCode,
-                            text: params.search,
-                        };
-                        // don't scan local cache and don't prefetch
-                        remote = true;
-                        prefetch = false;
+                        return StoryFinder.findStoriesByUserMatchingText(db, props.selectedUser, params.search, this.props.locale).then((stories) => {
+                            props.stories = stories;
+                        });
                     }
-                }
-                if (params.date) {
-                    criteria.time_range = DateUtils.getDayRange(params.date);
-                    if (params.date < DateTracker.today) {
-                        prefetch = false;
-                    }
-                }
-                if (props.selectedUser) {
-                    criteria.user_ids = [ props.selectedUser.id ];
-                    // limit the number of results
-                    if (params.search) {
-                        criteria.limit = 100;
-                    } else {
-                        criteria.limit = 500;
-                    }
-                } else {
-                    // fetch only 5 per user for summary display
-                    criteria.per_user_limit = 5;
-                }
-                return db.find({ table: 'story', criteria, remote, prefetch });
-            } else {
-                if (!props.selectedUser) {
-                    // load story listings, one per user, doing so in separate
-                    // requests to enable cache hit when a user is selected
-                    return Promise.map(props.visibleUsers, (user) => {
-                        var criteria = {
-                            type: 'news',
-                            target_user_id: props.currentUser.id,
-                            filters: {
-                                user_ids: [ user.id ]
-                            },
-                        };
-                        return db.findOne({ table: 'listing', criteria });
-                    }, { concurrency: 8 }).then((listings) => {
-                        props.listings = listings;
-                        // load stories in listings
-                        var storyIds = _.flatten(_.map(props.listings, (listing) => {
-                            // return only the five latest
-                            return _.slice(listing.story_ids, -5);
-                        }));
-                        var criteria = {
-                            id: _.uniq(storyIds),
-                            published: true,
-                            ready: true
-                        };
-                        return db.find({ table: 'story', criteria });
+                } else if (params.date) {
+                    return StoryFinder.findStoriesByUserOnDate(db, props.selectedUser, params.date).then((stories) => {
+                        props.stories = stories;
                     });
                 } else {
-                    // load listing for selected user
-                    var criteria = {
-                        type: 'news',
-                        target_user_id: props.currentUser.id,
-                        filters: {
-                            user_ids: [ props.selectedUser.id ]
-                        },
-                    };
-                    return db.findOne({ table: 'listing', criteria }).then((listing) => {
-                        if (!listing) {
-                            return [];
-                        }
-                        props.listings = [ listing ];
-                        var criteria = {
-                            id: listing.story_ids,
-                            published: true,
-                            ready: true
-                        };
-                        return db.find({ table: 'story', criteria });
-                    }).then((stories) => {
+                    return StoryFinder.findStoriesByUserInListing(db, 'news', props.selectedUser, props.currentUser).then((stories) => {
+                        props.stories = stories;
                         // when a user is selected, the URL can point to a specific
                         // story; we need to make sure the story is there
-                        if (params.story) {
-                            if (!_.find(stories, { id: params.story })) {
-                                // redirect to page showing stories on the date of the
-                                // story; to do that, we need the object itself
-                                var criteria = { id: params.story };
-                                return db.findOne({ table: 'story', criteria }).then((story) => {
-                                    if (story) {
-                                        return this.props.route.replace(require('pages/people-page'), {
-                                            date: Moment(story.ptime).format('YYYY-MM-DD'),
-                                            user: params.user,
-                                            story: params.story
-                                        }).return([]);
-                                    }
-                                    return stories;
-                                });
-                            }
+                        if (params.story && !_.find(stories, { id: params.story })) {
+                            return StoryFinder.findStory(db, params.story).then((story) => {
+                                return this.redirectToStory(story);
+                            }).catch((err) => {
+                            });
                         }
-                        return stories;
+                    });
+                }
+            } else {
+                if (params.search) {
+                    if (tags) {
+                        return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
+                            // now that we have the stories, we can see whom should be shown
+                            props.stories = stories;
+                            props.visibleUsers = findUsersWithStories(props.members, stories);
+                        });
+                    } else {
+                        return StoryFinder.findStoriesWithMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
+                            // now that we have the stories, we can see whom should be shown
+                            props.stories = stories;
+                            props.visibleUsers = findUsersWithStories(props.members, stories);
+                        });
+                    }
+                } else if (params.date) {
+                    return StoryFinder.findStoriesOnDate(db, params.date, 5).then((stories) => {
+                        // do this for date search as well, even through
+                        // we use stats to narrow down the list earlier, just in
+                        // case we got an incomplete list due to out-of-date stats
+                        props.stories = stories;
+                        props.visibleUsers = findUsersWithStories(props.members, stories);
+                    })
+                } else {
+                    return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5).then((stories) => {
+                        props.stories = stories;
                     });
                 }
             }
-        }).then((stories) => {
-            props.stories = stories;
-            if (!props.selectedUser) {
-                // now that we have the stories, we can see whom should be shown
-                //
-                // do this for date search as well, even through
-                // we use stats to narrow down the list earlier, just in
-                // case we got an incomplete list due to out-of-date stats
-                props.visibleUsers = findUsersWithStories(props.members, stories);
-            }
-            return meanwhile.show(<PeoplePageSync {...props} />);
         }).then(() => {
             if (!props.selectedUser) {
-                // deal with situation where we're showing someone who're not on the team
+                // deal with situation where we're showing stories by someone
+                // who're not on the team
                 var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
                 var memberIds = _.map(props.members, 'id');
                 var nonMemberUserIds = _.difference(authorIds, memberIds);
                 if (!_.isEmpty(nonMemberUserIds)) {
-                    var criteria = { id: nonMemberUserIds };
-                    return db.find({ schema: 'global', table: 'user', criteria }).then((nonmembers) => {
-                        props.visibleUsers = _.concat(props.visibleUsers, nonmembers);
-                        return StatisticsUtils.fetchUsersDailyActivities(db, props.project, nonmembers).then((nonmemberStats) => {
-                            props.dailyActivities = _.assign({}, props.dailyActivities, nonmemberStats);
+                    return UserFinder.findUsers(db, nonMemberUserIds).then((users) => {
+                        // add non-members
+                        props.visibleUsers = _.concat(props.visibleUsers, users);
+                        meanwhile.show(<PeoplePageSync {...props} />);
+                        return StatisticsUtils.fetchUsersDailyActivities(db, props.project, users).then((stats) => {
+                            // add their stats
+                            props.dailyActivities = _.assign({}, props.dailyActivities, stats);
                         });
                     });
                 }
             }
         }).then(() => {
             return <PeoplePageSync {...props} />;
+        });
+    },
+
+    /**
+     * Redirect to page showing stories on the date of a story
+     *
+     * @param  {Story} story
+     *
+     * @return {Promise}
+     */
+    redirectToStory: function(story) {
+        return this.props.route.replace(require('pages/people-page'), {
+            date: Moment(story.ptime).format('YYYY-MM-DD'),
+            user: story.user_id,
+            story: story.id,
         });
     },
 

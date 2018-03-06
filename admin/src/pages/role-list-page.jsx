@@ -3,6 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var RoleFinder = require('objects/finders/role-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -88,19 +90,15 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<RoleListPageSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load all roles
-            var criteria = {};
-            return db.find({ table: 'role', criteria });
-        }).then((roles) => {
-            props.roles = roles;
-            return meanwhile.show(<RoleListPageSync {...props} />);
+            return RoleFinder.findAllRoles(db).then((roles) => {
+                props.roles = roles;
+            });
         }).then(() => {
-            var criteria = {
-                role_ids: _.flatten(_.map(props.roles, 'id')),
-            };
-            return db.find({ table: 'user', criteria });
+            meanwhile.show(<RoleListPageSync {...props} />);
+            return UserFinder.findUsersWithRoles(db, props.roles).then((users) => {
+                props.users = users;
+            });
         }).then((users) => {
-            props.users = users;
             return <RoleListPageSync {...props} />;
         });
     }

@@ -3,6 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var Merger = require('data/merger');
+var UserFinder = require('objects/finders/user-finder');
+var StoryFinder = require('objects/finders/story-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -24,6 +26,7 @@ module.exports = Relaks.createClass({
     propTypes: {
         refreshList: PropTypes.bool,
         notifications: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
         selectedNotificationId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -48,6 +51,7 @@ module.exports = Relaks.createClass({
             users: null,
 
             selectedNotificationId: this.props.selectedNotificationId,
+            currentUser: this.props.currentUser,
             notifications: this.props.notifications,
             database: this.props.database,
             route: this.props.route,
@@ -57,22 +61,17 @@ module.exports = Relaks.createClass({
 
             onSelectionClear: this.props.onSelectionClear,
         };
-        meanwhile.show(<NotificationListSync {...props} />, 100);
+        meanwhile.show(<NotificationListSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load authors of comments
-            var criteria = {};
-            criteria.id = _.uniq(_.map(props.notifications, 'user_id'));
-            return db.find({ schema: 'global', table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
-            return meanwhile.show(<NotificationListSync {...props} />);
+            return UserFinder.findNotificationTriggerers(db, props.notifications).then((users) => {
+                props.users = users;
+            });
         }).then(() => {
-            // load stories
-            var criteria = {};
-            criteria.id = _.uniq(_.map(props.notifications, 'story_id'));
-            return db.find({ table: 'story', criteria });
-        }).then((stories) => {
-            props.stories = stories;
+            meanwhile.show(<NotificationListSync {...props} />);
+            return StoryFinder.findStoriesOfNotifications(db, props.notifications, props.currentUser).then((stories) => {
+                props.stories = stories;
+            });
+        }).then(() => {
             return <NotificationListSync {...props} />;
         })
     },

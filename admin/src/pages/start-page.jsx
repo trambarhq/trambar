@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var SystemFinder = require('objects/finders/system-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -67,18 +68,16 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
         };
         return db.start().then((currentUserId) => {
-            var criteria = {
-                deleted: false
-            };
-            return db.findOne({ schema: 'global', table: 'system', criteria });
+            return SystemFinder.findSystem(db).then((system) => {
+                return this.props.route.replace(require('pages/project-list-page'));
+            }).catch((err) => {
+                if (!this.redirectTimeout) {
+                    this.redirectTimeout = setTimeout(() => {
+                        this.props.route.replace(require('pages/settings-page'), { edit: true });
+                    }, 2500);
+                }
+            });
         }).then((system) => {
-            if (system) {
-                this.props.route.replace(require('pages/project-list-page'));
-                return null;
-            }
-            setTimeout(() => {
-                this.props.route.replace(require('pages/settings-page'), { edit: true });
-            }, 2500);
             return <StartPageSync {...props} />;
         });
     },

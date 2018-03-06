@@ -2,6 +2,11 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var KonamiCode = require('utils/konami-code');
+var DeviceFinder = require('objects/finders/device-finder');
+var ProjectFinder = require('objects/finders/project-finder');
+var RepoFinder = require('objects/finders/repo-finder');
+var SystemFinder = require('objects/finders/system-finder');
+var UserFinder = require('objects/finders/user-finder');
 var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
@@ -117,42 +122,34 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<SettingsPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load current user
-            var criteria = { id: userId };
-            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
-        }).then((user) => {
-            props.currentUser = user;
-            return meanwhile.show(<SettingsPageSync {...props} />);
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                props.currentUser = user;
+            });
         }).then(() => {
-            var criteria = {};
-            return db.find({ schema: 'local', table: 'project_link', criteria });
-        }).then((projectLinks) => {
-            props.projectLinks = projectLinks;
-            return meanwhile.show(<SettingsPageSync {...props} />);
+            return ProjectFinder.findProjectLinks(db).then((links) => {
+                props.projectLinks = links;
+            });
         }).then(() => {
-            var criteria = { name: params.schema };
-            return db.findOne({ schema: 'global', table: 'project', criteria, required: true });
-        }).then((project) => {
-            props.currentProject = project;
-            return meanwhile.show(<SettingsPageSync {...props} />);
+            return ProjectFinder.findCurrentProject(db).then((project) => {
+                props.currentProject = project;
+            });
         }).then(() => {
-            var criteria = { user_id: props.currentUser.id };
-            return db.find({ schema: 'global', table: 'device', criteria });
-        }).then((devices) => {
-            props.devices = devices;
-            return meanwhile.show(<SettingsPageSync {...props} />);
+            meanwhile.show(<SettingsPageSync {...props} />);
+            return DeviceFinder.findUserDevices(db, props.currentUser).then((devices) => {
+                props.devices = devices;
+            });
         }).then(() => {
-            var criteria = { id: props.currentProject.repo_ids };
-            return db.find({ schema: 'global', table: 'repo', criteria });
-        }).then((repos) => {
-            props.repos = repos;
-            return meanwhile.show(<SettingsPageSync {...props} />);
+            meanwhile.show(<SettingsPageSync {...props} />);
+            return RepoFinder.findProjectRepos(db, props.currentProject).then((repos) => {
+                props.repos = repos;
+            })
         }).then(() => {
-            var criteria = {};
-            return db.findOne({ schema: 'global', table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+            meanwhile.show(<SettingsPageSync {...props} />);
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            });
+        }).then(() => {
             return <SettingsPageSync {...props} />;
         });
     },

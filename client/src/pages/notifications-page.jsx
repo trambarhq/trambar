@@ -3,6 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
 var DateTracker = require('utils/date-tracker');
+var UserFinder = require('objects/finders/user-finder');
+var NotificationFinder = require('objects/finders/notification-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -106,34 +108,15 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<NotificationsPageSync {...props} />, 250);
-        return db.start().then((userId) => {
-            // load current user
-            var criteria = { id: userId };
-            return db.findOne({ schema: 'global', table: 'user', criteria, required: true });
-        }).then((user) => {
-            props.currentUser = user;
-            return meanwhile.show(<NotificationsPageSync {...props} />);
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                props.currentUser = user;
+            });
         }).then(() => {
-            // load notifications
-            var criteria = {
-                target_user_id: props.currentUser.id
-            };
-            var prefetch;
-            if (params.date) {
-                var s = Moment(params.date);
-                var e = s.clone().endOf('day');
-                var rangeStart = s.toISOString();
-                var rangeEnd = e.toISOString();
-                var range = `[${rangeStart},${rangeEnd}]`;
-                criteria.time_range = range;
-                if (params.date < DateTracker.today) {
-                    prefetch = false;
-                }
-            }
-            criteria.limit = 500;
-            return db.find({ table: 'notification', criteria, prefetch });
-        }).then((notifications) => {
-            props.notifications = notifications;
+            return NotificationFinder.findNotificationsForUser(db, props.currentUser).then((notifications) => {
+                props.notifications = notifications;
+            });
+        }).then(() => {
             return <NotificationsPageSync {...props} />;
         });
     }
@@ -173,6 +156,7 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
     renderList: function() {
         var listProps = {
             notifications: this.props.notifications,
+            currentUser: this.props.currentUser,
 
             database: this.props.database,
             route: this.props.route,

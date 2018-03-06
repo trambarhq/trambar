@@ -11,6 +11,9 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ProjectFinder = require('objects/finders/project-finder');
+var RepoFinder = require('objects/finders/repo-finder');
+var UserFinder = require('objects/finders/user-finder');
 var StatisticsUtils = require('objects/utils/statistics-utils');
 
 var Database = require('data/database');
@@ -101,35 +104,23 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<ProjectListPageSync {...props} />, 250);
         return db.start().then((userId) => {
-            // load all projects
-            var criteria = {};
-            return db.find({ table: 'project', criteria });
+            return ProjectFinder.findAllProjects(db).then((projects) => {
+                props.projects = projects;
+            });
         }).then((projects) => {
-            props.projects = projects;
-            return meanwhile.show(<ProjectListPageSync {...props} />);
+            meanwhile.show(<ProjectListPageSync {...props} />);
+            return RepoFinder.findProjectRepos(db, props.projects).then((repos) => {
+                props.repos = repos;
+            });
         }).then(() => {
-            // load repos
-            var criteria = {
-                id: _.flatten(_.map(props.projects, 'repo_ids'))
-            };
-            return db.find({ table: 'repo', criteria });
-        }).then((repos) => {
-            props.repos = repos;
-            return meanwhile.show(<ProjectListPageSync {...props} />);
+            return UserFinder.findProjectMembers(db, props.projects).then((users) => {
+                props.users = users;
+            });
         }).then(() => {
-            // load members of projects
-            var criteria = {
-                id: _.flatten(_.map(props.projects, 'user_ids'))
-            };
-            return db.find({ table: 'user', criteria });
-        }).then((users) => {
-            props.users = users;
-            return meanwhile.show(<ProjectListPageSync {...props} />);
+            return StatisticsUtils.fetchProjectsDailyActivities(db, props.projects).then((statistics) => {
+                props.statistics = statistics;
+            });
         }).then(() => {
-            // load statistics of each project
-            return StatisticsUtils.fetchProjectsDailyActivities(db, props.projects);
-        }).then((statistics) => {
-            props.statistics = statistics;
             return <ProjectListPageSync {...props} />;
         });
     }

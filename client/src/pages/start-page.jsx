@@ -5,6 +5,9 @@ var Relaks = require('relaks');
 var HTTPRequest = require('transport/http-request');
 var Memoize = require('utils/memoize');
 var UniversalLink = require('routing/universal-link');
+var ProjectFinder = require('objects/finders/project-finder');
+var SystemFinder = require('objects/finders/system-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -186,36 +189,25 @@ var StartPage = module.exports = Relaks.createClass({
             // keep showing what was there before until we've retrieved
             // (delay = undefined)
             meanwhile.show(<StartPageSync {...props} />);
-            return db.start().then((userId) => {
-                // load current user
-                var criteria = {
-                    id: userId
-                };
-                return db.findOne({ table: 'user', criteria });
-            }).then((user) => {
-                props.currentUser = user;
+            return db.start().then((currentUserId) => {
+                return UserFinder.findUser(db, currentUserId).then((user) => {
+                    props.currentUser = user;
+                });
             }).then(() => {
-                // load system info
-                var criteria = {};
-                return db.findOne({ table: 'system', criteria, required: true });
-            }).then((system) => {
-                props.system = system;
-                return meanwhile.show(<StartPageSync {...props} />);
+                return SystemFinder.findSystem(db).then((system) => {
+                    props.system = system;
+                });
             }).then(() => {
-                // load projects
-                var criteria = {
-                    archived: false
-                };
-                return db.find({ table: 'project', criteria });
-            }).then((projects) => {
-                props.projects = projects;
-                return meanwhile.show(<StartPageSync {...props} />);
+                meanwhile.show(<StartPageSync {...props} />);
+                return ProjectFinder.findActiveProjects(db).then((projects) => {
+                    props.projects = projects;
+                });
             }).then(() => {
-                // load project links from local schema
-                var criteria = {};
-                return db.find({ schema: 'local', table: 'project_link', criteria });
-            }).then((links) => {
-                props.projectLinks = links;
+                meanwhile.show(<StartPageSync {...props} />);
+                return ProjectFinder.findProjectLinks(db).then((links) => {
+                    props.projectLinks = links;
+                });
+            }).then(() => {
                 return <StartPageSync {...props} />;
             });
         }

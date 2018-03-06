@@ -3,6 +3,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var SessionStartTime = require('data/session-start-time');
+var TaskFinder = require('objects/finders/task-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -57,18 +58,11 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
         };
         meanwhile.show(<TaskAlertBarSync {...props} />);
-        return db.start().then((userId) => {
-            // load active tasks
-            var criteria = {
-                etime: null,
-                deleted: false,
-                newer_than: this.state.searchStartTime,
-                limit: 10,
-                user_id: null,
-            };
-            return db.find({ table: 'task', criteria });
-        }).then((tasks) => {
-            props.tasks = tasks;
+        return db.start().then((currentUserId) => {
+            return TaskFinder.findActiveTasks(db, this.state.searchStartTime).then((tasks) => {
+                props.tasks = tasks;
+            });
+        }).then(() => {
             return <TaskAlertBarSync {...props} />;
         });
     },

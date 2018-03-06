@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -24,28 +25,25 @@ module.exports = Relaks.createClass({
 
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
-        return db.start().then((userId) => {
-            var criteria = {
-                id: userId,
-            };
-            return db.findOne({ table: 'user', criteria });
-        }).then((user) => {
-            var t = this.props.locale.translate;
-            var p = this.props.locale.pick;
-            var url = require('pages/user-summary-page').getURL({ userId: user.id });
-            return (
-                <div className="sign-off-menu">
-                    <a href={url}>
-                        <ProfileImage user={user} theme={this.props.theme} size="large" />
-                        <div className="name">
-                            {p(user.details.name)}
+        return db.start().then((currentUserId) => {
+            return UserFinder.findUser(db, currentUserId).then((user) => {
+                var t = this.props.locale.translate;
+                var p = this.props.locale.pick;
+                var url = require('pages/user-summary-page').getURL({ userId: user.id });
+                return (
+                    <div className="sign-off-menu">
+                        <a href={url}>
+                            <ProfileImage user={user} theme={this.props.theme} size="large" />
+                            <div className="name">
+                                {p(user.details.name)}
+                            </div>
+                        </a>
+                        <div className="sign-off" onClick={this.handleSignOffClick}>
+                            {t('sign-off-menu-sign-off')}
                         </div>
-                    </a>
-                    <div className="sign-off" onClick={this.handleSignOffClick}>
-                        {t('sign-off-menu-sign-off')}
                     </div>
-                </div>
-            );
+                );
+            })
         });
     },
 

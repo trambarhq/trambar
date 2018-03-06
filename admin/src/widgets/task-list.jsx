@@ -3,6 +3,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var TaskFinder = require('objects/finders/task-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -51,18 +52,11 @@ module.exports = Relaks.createClass({
         meanwhile.show(<TaskListSync {...props} />);
         return db.start().then((userId) => {
             if (this.props.server) {
-                // load up to 1000 tasks
-                var criteria = {
-                    options: {
-                        server_id: this.props.server.id,
-                    },
-                    deleted: false,
-                    limit: 1000,
-                };
-                return db.find({ table: 'task', criteria });
+                return TaskFinder.findServerTasks(db, props.server).then((tasks) => {
+                    props.tasks = tasks;
+                });
             }
-        }).then((tasks) => {
-            props.tasks = tasks;
+        }).then(() => {
             return <TaskListSync {...props} />;
         });
     },

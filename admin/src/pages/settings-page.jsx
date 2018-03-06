@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
+var SystemFinder = require('objects/finders/system-finder');
 var SystemSettings = require('objects/settings/system-settings');
 
 var Database = require('data/database');
@@ -90,12 +91,10 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<SettingsPageSync {...props} />, 250);
         return db.start().then((userId) => {
-            var criteria = {
-                deleted: false
-            };
-            return db.findOne({ table: 'system', criteria });
-        }).then((system) => {
-            props.system = system;
+            return SystemFinder.findSystem(db).then((system) => {
+                props.system = system;
+            });
+        }).then(() => {
             return <SettingsPageSync {...props} />;
         });
     }
