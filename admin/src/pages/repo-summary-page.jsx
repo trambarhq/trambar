@@ -4,7 +4,7 @@ var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var ProjectFinder = require('objects/finders/project-finder');
 var RepoFinder = require('objects/finders/repo-finder');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 var SystemFinder = require('objects/finders/system-finder');
 
 var Database = require('data/database');
@@ -111,7 +111,7 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<RepoSummaryPageSync {...props} />);
-            return StatisticsUtils.fetchRepoDailyActivities(db, props.project, props.repo).then((statistics) => {
+            return StatisticsFinder.findDailyActivitiesOfRepo(db, props.project, props.repo).then((statistics) => {
                 props.statistics = statistics;
             });
         }).then(() => {

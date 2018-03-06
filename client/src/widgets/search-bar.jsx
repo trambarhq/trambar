@@ -4,7 +4,7 @@ var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var DateTracker = require('utils/date-tracker');
 var TagScanner = require('utils/tag-scanner');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -45,7 +45,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<SearchBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             var params = _.assign({ user_id: userId }, this.props.settings.statistics);
-            return StatisticsUtils.fetch(db, params);
+            return StatisticsFinder.fetch(db, params);
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <SearchBarSync {...props} />;

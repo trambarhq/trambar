@@ -5,15 +5,15 @@ var Memoize = require('utils/memoize');
 var DateUtils = require('utils/date-utils');
 
 module.exports = {
-    fetch,
-    fetchProjectDailyActivities,
-    fetchProjectsDailyActivities,
-    fetchUserDailyActivities,
-    fetchUsersDailyActivities,
-    fetchUserDailyNotifications,
-    fetchUsersDailyNotifications,
-    fetchRepoDailyActivities,
-    fetchReposDailyActivities,
+    find,
+    findDailyActivitiesOfProject,
+    findDailyActivitiesOfProjects,
+    findDailyActivitiesOfUser,
+    findDailyActivitiesOfUsers,
+    findDailyNotificationsOfUser,
+    findDailyNotificationsOfUsers,
+    findDailyActivitiesOfRepo,
+    findDailyActivitiesOfRepos,
 };
 
 /**
@@ -24,7 +24,7 @@ module.exports = {
  *
  * @return {Promise<Object>}
  */
-function fetch(db, params) {
+function find(db, params) {
     var type, user, project;
     if (params) {
         type = params.type;
@@ -45,13 +45,13 @@ function fetch(db, params) {
 
     if (type === 'daily-activities') {
         if (user && project) {
-            return fetchUserDailyActivities(db, project, user);
+            return findDailyActivitiesOfUser(db, project, user);
         } else if (project) {
-            return fetchProjectDailyActivities(db, project, user);
+            return findDailyActivitiesOfProject(db, project, user);
         }
     } else if (type === 'daily-notifications') {
         if (user && project) {
-            return fetchUserDailyNotifications(db, project, user);
+            return findDailyNotificationsOfUser(db, project, user);
         }
     }
     if (process.env.NODE_ENV !== 'production') {
@@ -68,7 +68,7 @@ function fetch(db, params) {
  *
  * @return {Promise<Object>}
  */
-function fetchProjectDailyActivities(db, project) {
+function findDailyActivitiesOfProject(db, project) {
     if (!project || project.deleted) {
         return null;
     }
@@ -107,9 +107,9 @@ function fetchProjectDailyActivities(db, project) {
  *
  * @return {Promise<Object>}
  */
-function fetchProjectsDailyActivities(db, projects) {
+function findDailyActivitiesOfProjects(db, projects) {
     return Promise.mapSeries(projects, (project) => {
-        return fetchProjectDailyActivities(db, project);
+        return findDailyActivitiesOfProject(db, project);
     }).then((list) => {
         var projectIds = _.map(projects, 'id');
         return _.zipObject(projectIds, list);
@@ -124,11 +124,11 @@ function fetchProjectsDailyActivities(db, projects) {
  *
  * @return {Promise<Object>}
  */
-function fetchUserDailyActivities(db, project, user) {
+function findDailyActivitiesOfUser(db, project, user) {
     if (!user) {
         return null;
     }
-    return fetchUsersDailyActivities(db, project, [ user ]).then((hash) => {
+    return findDailyActivitiesOfUsers(db, project, [ user ]).then((hash) => {
         return _.get(hash, user.id, null);
     });
 }
@@ -142,7 +142,7 @@ function fetchUserDailyActivities(db, project, user) {
  *
  * @return {Promise<Object>}
  */
-function fetchUsersDailyActivities(db, project, users) {
+function findDailyActivitiesOfUsers(db, project, users) {
     if (!project) {
         return Promise.resolve(null);
     }
@@ -198,11 +198,11 @@ function fetchUsersDailyActivities(db, project, users) {
  *
  * @return {Promise<Object>}
  */
-function fetchUserDailyNotifications(db, project, user) {
+function findDailyNotificationsOfUser(db, project, user) {
     if (!user) {
         return null;
     }
-    return fetchUsersDailyNotifications(db, project, [ user ]).then((hash) => {
+    return findDailyNotificationsOfUsers(db, project, [ user ]).then((hash) => {
         return _.get(hash, user.id, null);
     });
 }
@@ -216,7 +216,7 @@ function fetchUserDailyNotifications(db, project, user) {
  *
  * @return {Promise<Object>}
  */
-function fetchUsersDailyNotifications(db, project, users) {
+function findDailyNotificationsOfUsers(db, project, users) {
     if (!project) {
         return Promise.resolve(null);
     }
@@ -273,11 +273,11 @@ function fetchUsersDailyNotifications(db, project, users) {
  *
  * @return {Promise<Object>}
  */
-function fetchRepoDailyActivities(db, project, repo) {
+function findDailyActivitiesOfRepo(db, project, repo) {
     if (!repo) {
         return null;
     }
-    return fetchReposDailyActivities(db, project, [ repo ]).then((hash) => {
+    return findDailyActivitiesOfRepos(db, project, [ repo ]).then((hash) => {
         return _.get(hash, repo.id, null);
     });
 }
@@ -291,7 +291,7 @@ function fetchRepoDailyActivities(db, project, repo) {
  *
  * @return {Promise<Object>}
  */
-function fetchReposDailyActivities(db, project, repos) {
+function findDailyActivitiesOfRepos(db, project, repos) {
     if (!project) {
         return Promise.resolve(null);
     }

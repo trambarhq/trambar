@@ -4,7 +4,7 @@ var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var ProjectFinder = require('objects/finders/project-finder');
 var ProjectSettings = require('objects/settings/project-settings');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 var SystemFinder = require('objects/finders/system-finder');
 var SlugGenerator = require('utils/slug-generator');
 
@@ -113,7 +113,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             if (params.project !== 'new') {
                 meanwhile.show(<ProjectSummaryPageSync {...props} />);
-                return StatisticsUtils.fetchProjectDailyActivities(db, props.project).then((statistics) => {
+                return StatisticsFinder.findDailyActivitiesOfProject(db, props.project).then((statistics) => {
                     props.statistics = statistics;
                 });
             }

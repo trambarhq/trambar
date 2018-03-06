@@ -14,7 +14,7 @@ var ComponentRefs = require('utils/component-refs');
 var ProjectFinder = require('objects/finders/project-finder');
 var RepoFinder = require('objects/finders/repo-finder');
 var UserFinder = require('objects/finders/user-finder');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -117,7 +117,7 @@ module.exports = Relaks.createClass({
                 props.users = users;
             });
         }).then(() => {
-            return StatisticsUtils.fetchProjectsDailyActivities(db, props.projects).then((statistics) => {
+            return StatisticsFinder.findDailyActivitiesOfProjects(db, props.projects).then((statistics) => {
                 props.statistics = statistics;
             });
         }).then(() => {

@@ -2,7 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -46,7 +46,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<CalendarBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             var params = _.assign({ user_id: userId }, this.props.settings.statistics);
-            return StatisticsUtils.fetch(db, params);
+            return StatisticsFinder.find(db, params);
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <CalendarBarSync {...props} />;

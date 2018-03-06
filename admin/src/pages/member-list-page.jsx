@@ -6,7 +6,7 @@ var Memoize = require('utils/memoize');
 var ProjectFinder = require('objects/finders/project-finder');
 var RoleFinder = require('objects/finders/role-finder');
 var UserFinder = require('objects/finders/user-finder');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -111,7 +111,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             meanwhile.show(<MemberListPageSync {...props} />);
             var users = findUsers(props.users, props.project)
-            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, users).then((statistics) => {
+            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users).then((statistics) => {
                 props.statistics = statistics;
             });
         }).then(() => {

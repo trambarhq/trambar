@@ -8,7 +8,7 @@ var RoleFinder = require('objects/finders/role-finder');
 var UserFinder = require('objects/finders/user-finder');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
-var StatisticsUtils = require('objects/utils/statistics-utils');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 var SystemFinder = require('objects/finders/system-finder');
 var SlugGenerator = require('utils/slug-generator');
 
@@ -141,7 +141,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             meanwhile.show(<UserSummaryPageSync {...props} />);
             if (props.project && props.user) {
-                return StatisticsUtils.fetchUserDailyActivities(db, props.project, props.user).then((statistics) => {
+                return StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.user).then((statistics) => {
                     props.statistics = statistics;
                 });
             }

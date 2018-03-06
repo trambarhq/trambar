@@ -7,8 +7,8 @@ var Memoize = require('utils/memoize');
 var DateTracker = require('utils/date-tracker');
 var ProjectFinder = require('objects/finders/project-finder');
 var ProjectSettings = require('objects/settings/project-settings');
+var StatisticsFinder = require('objects/finders/statistics-finder');
 var StoryFinder = require('objects/finders/story-finder');
-var StatisticsUtils = require('objects/utils/statistics-utils');
 var UserFinder = require('objects/finders/user-finder');
 var TagScanner = require('utils/tag-scanner');
 
@@ -217,7 +217,7 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<PeoplePageSync {...props} />);
-            return StatisticsUtils.fetchUsersDailyActivities(db, props.project, props.members).then((statistics) => {
+            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members).then((statistics) => {
                 props.dailyActivities = statistics;
                 if (!props.visibleUsers) {
                     // find users with stories using stats
@@ -239,8 +239,8 @@ module.exports = Relaks.createClass({
                 } else if (props.selectedUser) {
                     // load statistics of selected user if he's not a member
                     if (!_.some(props.members, { id: props.selectedUser })) {
-                        return StatisticsUtils.fetchUsersDailyActivities(db, props.project, [ props.selectedUser ]).then((selectedUserStats) => {
-                            props.dailyActivities = _.assign({}, props.dailyActivities, selectedUserStats);
+                        return StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.selectedUser).then((selectedUserStats) => {
+                            _.set(props.dailyActivities, props.selectedUser.id, selectedUserStats);
                         });
                     }
                 }
@@ -316,7 +316,7 @@ module.exports = Relaks.createClass({
                         // add non-members
                         props.visibleUsers = _.concat(props.visibleUsers, users);
                         meanwhile.show(<PeoplePageSync {...props} />);
-                        return StatisticsUtils.fetchUsersDailyActivities(db, props.project, users).then((stats) => {
+                        return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users).then((stats) => {
                             // add their stats
                             props.dailyActivities = _.assign({}, props.dailyActivities, stats);
                         });
