@@ -102,75 +102,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return clipping rectangle
-     *
-     * @param  {Object} props
-     *
-     * @return {Object|undefined}
-     */
-    getClippingRect: function(props) {
-        props = props || this.props;
-        if (!props.clip) {
-            return;
-        }
-        var clip;
-        if (props.resource) {
-            clip = props.resource.clip;
-            if (!clip) {
-                // apply default
-                clip = ImageCropping.default(props.resource.width, props.resource.height);
-            }
-        } else {
-            var url = props.url;
-            if (url) {
-                // extract from URL hash
-                var hashIndex = url.indexOf('#');
-                if (hashIndex !== -1) {
-                    var hash = parseQueryString(url.substr(hashIndex + 1));
-                    url = url.substr(0, hashIndex);
-                    if (hash.left && hash.top && hash.width && hash.height) {
-                        clip = {
-                            left: parseInt(hash.left),
-                            top: parseInt(hash.top),
-                            width: parseInt(hash.width),
-                            height: parseInt(hash.height),
-                        };
-                    }
-                }
-            }
-        }
-        return clip;
-    },
-
-    /**
-     * Return true if file is SVG
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isVector: function(props) {
-        props = props || this.props;
-        if (!props.clip) {
-            return;
-        }
-        var format;
-        if (props.resource) {
-            format = props.resource.format;
-        } else {
-            var url = props.url;
-            if (url) {
-                var hashIndex = url.indexOf('#');
-                if (hashIndex !== -1) {
-                    var hash = parseQueryString(url.substr(hashIndex + 1));
-                    format = hash.format;
-                }
-            }
-        }
-        return (format === 'svg');
-    },
-
-    /**
      * Check if we're switching for showing blob to showing remote file
      *
      * @param  {Object} nextProps
@@ -179,8 +110,7 @@ module.exports = React.createClass({
         if (this.props.resource !== nextProps.resource) {
             var urlBefore = this.getURL();
             var urlAfter = this.getURL(nextProps);
-            if (!remote.test(urlBefore) && remote.test(urlAfter)) {
-                //
+            if (isJSONEncoded(urlBefore) && !isJSONEncoded(urlAfter)) {
                 this.setState({ isWaitingForImage: true });
                 MediaLoader.loadImage(urlAfter).catch((err) => {
                 }).then(() => {
@@ -216,35 +146,30 @@ module.exports = React.createClass({
             return this.props.children || null;
         }
         var props = _.omit(this.props, 'clip', 'animation', 'resource', 'url', 'width', 'height', 'theme');
-        if (remote.test(url)) {
+        if (isJSONEncoded(url)) {
+            var image = parseJSONEncodedURL(url);
+            props.url = image.url;
+            props.clippingRect = image.clip;
+            if (image.format === 'svg') {
+                return <VectorView {...props} />;
+            } else {
+                return <BitmapView {...props} />;
+            }
+        } else {
             var dims = this.getDimensions();
             props.src = url;
             props.width = dims.width;
             props.height = dims.height;
             return <img {...props} />;
-        } else {
-            props.url = url;
-            props.clippingRect = this.getClippingRect();
-            if (this.isVector()) {
-                return <VectorView {...props} />;
-            } else {
-                return <BitmapView {...props} />;
-            }
         }
     },
 });
 
-var remote = /^https?:/;
+function isJSONEncoded(url) {
+    return _.startsWith(url, 'json:');
+}
 
-function parseQueryString(queryString) {
-    var values = {};
-    var pairs = _.filter(_.split(queryString, '&'));
-    _.each(pairs, (pair) => {
-        var parts = _.split(pair, '=');
-        var name = decodeURIComponent(parts[0]);
-        var value = decodeURIComponent(parts[1] || '');
-        value = _.replace(value, /\+/g, ' ');
-        values[name] = value;
-    });
-    return values;
+function parseJSONEncodedURL(url) {
+    var json = url.substr(5);
+    return JSON.parse(json);
 }

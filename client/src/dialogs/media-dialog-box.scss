@@ -18,7 +18,7 @@
         align-items: center;
         justify-content: center;
 
-        IMG {
+        IMG, CANVAS, svg {
             width: 100%;
             height: auto;
             display: block;
@@ -63,7 +63,7 @@
             border: 2px solid #e24329;
         }
 
-        IMG {
+        IMG, CANVAS, svg {
             display: block;
             width: 100%;
         }

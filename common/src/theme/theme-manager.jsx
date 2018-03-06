@@ -121,15 +121,12 @@ module.exports = React.createClass({
         if (!blob) {
             return null;
         }
-        var localURL = BlobManager.url(blob);
-        var hash = 'format=' + encodeURIComponent(res.format);
-        var clip = getClippingRect(res, params);
-        if (clip) {
-            hash += '&' + _.join(_.map(clip, (value, name) => {
-                return `${name}=${value}`;
-            }), '&');
-        }
-        return localURL + '#' + hash;
+        var data = {
+            url: BlobManager.url(blob),
+            clip: getClippingRect(res, params),
+            format: res.format,
+        };
+        return `json:${JSON.stringify(data)}`;
     },
 
     /**

@@ -71,48 +71,34 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return URL to full image
-     *
-     * @param  {Object} res
-     *
-     * @return {String|null}
-     */
-    getFullImageURL: function(res) {
-        var url = this.props.theme.getImageURL(res, { clip: null });
-        if (!url) {
-            url = Payload.getImageURL(res);
-        }
-        return url;
-    },
-
-    /**
-     * Return URL to preview image
-     *
-     * @param  {Object} res
-     *
-     * @return {String|null}
-     */
-    getPreviewImageURL: function(res) {
-        var url = this.props.theme.getImageURL(res, {
-            width: this.props.previewWidth,
-            height: this.props.previewHeight
-        });
-        return url;
-    },
-
-    /**
      * Load the image if it isn't available locally
      *
      * @param  {Object} res
      */
     prepareImage: function(res) {
-        var fullImageURL = this.getFullImageURL(res);
-        var previewImageURL = null;
-        var blob = BlobManager.find(fullImageURL);
-        if (blob) {
-            fullImageURL = BlobManager.url(blob);
+        var fullImageURL = this.props.theme.getImageURL(res, { original: true });
+        var hasBlob = false;
+        if (isJSONEncoded(fullImageURL)) {
+            // a blob that hasn't been uploaded yet
+            var image = parseJSONEncodedURL(fullImageURL)
+            fullImageURL = image.url;
+            hasBlob = true;
         } else {
-            previewImageURL = this.getPreviewImageURL(res);
+            // the remote URL might point to a file we had uploaded
+            var blob = BlobManager.find(fullImageURL);
+            if (blob) {
+                fullImageURL = BlobManager.url(blob);
+                hasBlob = true;
+            }
+        }
+        var previewImageURL = null;
+        if (!hasBlob) {
+            // we don't have a blob--show a preview image (clipped) while the
+            // full image is retrieved
+            previewImageURL = this.props.theme.getImageURL(res, {
+                width: this.props.previewWidth,
+                height: this.props.previewHeight
+            });
             if (this.state.fullImageURL !== fullImageURL) {
                 // load it
                 BlobManager.fetch(fullImageURL).then((blob) => {
@@ -236,3 +222,12 @@ module.exports = React.createClass({
         return this.triggerChangeEvent(res);
     },
 });
+
+function isJSONEncoded(url) {
+    return _.startsWith(url, 'json:');
+}
+
+function parseJSONEncodedURL(url) {
+    var json = url.substr(5);
+    return JSON.parse(json);
+}

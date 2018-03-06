@@ -302,7 +302,7 @@ function renderImage(token, key) {
     var href = token.href;
     var title = token.title;
     var text = token.text;
-    return <ResoureceView key={key} url={href} alt={text} title={title} />;
+    return <ResourceView key={key} url={href} alt={text} title={title} />;
 };
 
 /**
