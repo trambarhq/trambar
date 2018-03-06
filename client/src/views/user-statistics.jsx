@@ -66,7 +66,7 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        var diff = _.shallowDiff(this.props, nextProps);
+        var diff = _.shallowDiff(nextProps, this.props);
         if (diff.chartRange || diff.dailyActivities || diff.selectedDate || diff.today) {
             var nextState = _.clone(this.state);
             this.updateSeries(nextState, nextProps);
@@ -105,8 +105,9 @@ module.exports = React.createClass({
                 nextState.labels = getMonthLabels(nextState.dates, localeCode);
                 break;
         }
+        var additive =  (nextProps.chartType === 'bar') ? true : false;
         nextState.series = getActivitySeries(activities, nextState.dates);
-        nextState.upperRange = getUpperRange(nextState.series, true);
+        nextState.upperRange = getUpperRange(nextState.series, additive);
         nextState.indices = getActivityIndices(activities, nextState.dates);
         nextState.selectedDateIndex = _.indexOf(nextState.dates, date);
         if (nextProps.selectedDate) {
@@ -323,6 +324,19 @@ module.exports = React.createClass({
                     class: 'date-arrow',
                 });
                 cxt.group.append(arrow);
+                cxt.label = 'Hello';
+            }
+        } else if (cxt.type === 'grid' && cxt.axis.units.pos === 'y') {
+            if (cxt.index === cxt.axis.ticks.length - 1) {
+                // move label to the front
+                var label = cxt.group.querySelector('.date-label');
+                var arrow = cxt.group.querySelector('.date-arrow');
+                if (label) {
+                    cxt.group.append(label);
+                }
+                if (arrow) {
+                    cxt.group.append(arrow);
+                }
             }
         } else if (cxt.type === 'bar') {
             // add mouseover title
@@ -399,7 +413,8 @@ var getUpperRange = Memoize(function(series, additive) {
     var highest = 0;
     if (additive) {
         var sums = [];
-        _.each(series, (values) => {
+        _.each(series, (s) => {
+            var values = s.data;
             _.each(values, (value, index) => {
                 sums[index] = (sums[index]) ? sums[index] + value : value;
             });
@@ -408,13 +423,15 @@ var getUpperRange = Memoize(function(series, additive) {
             highest = _.max(sums);
         }
     } else {
-        _.each(series, (values) => {
+        _.each(series, (s) => {
+            var values = s.data;
             var max = _.max(values);
             if (max > highest) {
                 highest = max;
             }
         });
     }
+    // leave some room at the top
     if (highest <= 18) {
         return 20;
     } else if (highest <= 45) {
