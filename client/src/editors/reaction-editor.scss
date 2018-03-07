@@ -37,5 +37,11 @@
                 }
             }
         }
+
+        .autosize-text-area {
+            TEXTAREA {
+                max-height: 5em;
+            }
+        }
     }
 }
