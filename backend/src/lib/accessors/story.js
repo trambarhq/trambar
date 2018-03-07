@@ -344,6 +344,37 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
+     * Create associations between newly created or modified rows with
+     * rows in other tables
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise}
+     */
+     associate: function(db, schema, objects, originals, rows, credentials) {
+         return Promise.try(() => {
+             var deletedRows = _.filter(rows, { deleted: true });
+             if (!_.isEmpty(deletedRows)) {
+                 var Bookmark = require('accessors/bookmark');
+                 var Notification = require('accessors/notification');
+
+                 var deletedStoryIds = _.map(deletedRows, 'id');
+                 var criteria = { story_id: deletedStoryIds };
+                 var changes = { deleted: true };
+                 return Promise.all([
+                     Bookmark.updateMatching(db, schema, criteria, changes),
+                     Notification.updateMatching(db, schema, criteria, changes),
+                 ]);
+             }
+         });
+     },
+
+    /**
      * See if a database change event is relevant to a given user
      *
      * @param  {Object} event
