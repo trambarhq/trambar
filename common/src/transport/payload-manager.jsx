@@ -217,6 +217,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return the n
+     *
+     * @return {Object|null}
+     */
+    getUploadProgress: function() {
+        var bytes = 0;
+        var files = 0;
+        _.each(this.payloads, (payload) => {
+            files += payload.getRemainingFiles();
+            bytes += payload.getRemainingBytes();
+        });
+        return (files > 0) ? { files, bytes } : null;
+    },
+
+    /**
      * Create a task object for each payload
      *
      * @param  {String} schema

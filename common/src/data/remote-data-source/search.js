@@ -10,6 +10,7 @@ function Search(query) {
     this.remote = query.remote || false;
     this.dirty = false;
     this.updating = false;
+    this.background = false;
     this.lastRetrieved = 0;
 
     this.minimum = query.minimum;
@@ -39,7 +40,6 @@ function Search(query) {
     // filter out bad values
     this.criteria = removeUndefined(this.criteria);
     this.criteria = removeTemporaryIds(this.criteria);
-
 }
 
 Search.prototype = Object.create(Operation.prototype)

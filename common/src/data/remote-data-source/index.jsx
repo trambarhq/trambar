@@ -73,7 +73,6 @@ module.exports = React.createClass({
             recentStorageResults: [],
             recentRemovalResults: [],
             changeQueue: [],
-            activeSearches: [],
         };
         _.assign(this, lists);
         return lists;
@@ -444,19 +443,15 @@ module.exports = React.createClass({
                 if (!existingSearch.isFresh()) {
                     // search is perhaps out-of-date--indicate that the data
                     // is speculative and check with the server
-                    if (!existingSearch.updating) {
-                        if (this.props.hasConnection) {
-                            existingSearch.updating = true;
-                            this.searchRemoteDatabase(existingSearch).then((changed) => {
-                                existingSearch.updating = false;
-                                if (changed) {
-                                    // data returned earlier wasn't entirely correct
-                                    // trigger a new search through a onChange event
-                                    this.triggerChangeEvent();
-                                    return null;
-                                }
-                            });
-                        }
+                    if (this.props.hasConnection) {
+                        this.searchRemoteDatabase(existingSearch).then((changed) => {
+                            if (changed) {
+                                // data returned earlier wasn't entirely correct
+                                // trigger a new search through a onChange event
+                                this.triggerChangeEvent();
+                                return null;
+                            }
+                        });
                     }
                 }
             } else if (existingSearch.promise.isRejected()) {
@@ -1007,12 +1002,18 @@ module.exports = React.createClass({
         if (search.isLocal()) {
             return Promise.resolve(false);
         }
-        if (!background) {
-            this.updateList('activeSearches', (before) => {
-                return _.union(before, [ search ]);
-            });
+        var wasUpdating = search.updating;
+        search.updating = true;
+        search.background = background || false;
+        if (!this.searching) {
+            if (!background) {
+                this.searching = true;
+                this.triggerSearchEvent(true);
+            }
         }
-
+        if (wasUpdating) {
+            return Promise.resolve(false);
+        }
         var location = search.getLocation();
         var criteria = search.criteria;
         search.setStartTime();
@@ -1077,12 +1078,6 @@ module.exports = React.createClass({
             search.setFinishTime();
             search.dirty = false;
 
-            // update activeSearches unless search is done in the background
-            if (!background) {
-                this.updateList('activeSearches', (before) => {
-                    return _.without(this.state.activeSearches, search);
-                });
-            }
             // update recentSearchResults
             this.updateList('recentSearchResults', (before) => {
                 return _.slice(before);
@@ -1095,6 +1090,22 @@ module.exports = React.createClass({
             });
             this.updateCachedObjects(search);
             return !!newResults;
+        }).finally(() => {
+            search.updating = false;
+            search.background = false;
+
+            setTimeout(() => {
+                if (this.searching) {
+                    var stillActive = _.some(this.recentSearchResults, {
+                        updating: true,
+                        background: false,
+                    });
+                    if (!stillActive) {
+                        this.searching = false;
+                        this.triggerSearchEvent(false);
+                    }
+                }
+            }, 50);
         });
     },
 
@@ -1554,28 +1565,12 @@ module.exports = React.createClass({
     },
 
     /**
-     * Monitor changes to active searches and connectivity
+     * Monitor connectivity
      *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
+     * @param  {Object} nextProps
      */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (prevState.activeSearches !== this.state.activeSearches) {
-            // since a search can start immediately after another one has ended,
-            // use a timeout function to reduce the freqeuncy of events
-            if (this.searchingTimeout) {
-                clearTimeout(this.searchingTimeout);
-            }
-            this.searchingTimeout = setTimeout(() => {
-                var searchingNow = !_.isEmpty(this.state.activeSearches);
-                if (this.searching !== searchingNow) {
-                    this.searching = searchingNow;
-                    this.triggerSearchEvent(searchingNow);
-                }
-                this.searchingTimeout = null;
-            }, 50);
-        }
-        if (!prevProps.hasConnection && this.props.hasConnection) {
+    componentWillReceiveProps: function(nextProps) {
+        if (!this.props.hasConnection && nextProps.hasConnection) {
             // reconcile changes and invalidate all searches
             this.invalidate().then(() => {
                 // send pending changes

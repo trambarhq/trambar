@@ -347,6 +347,34 @@ Payload.prototype.getUploaded = function() {
 };
 
 /**
+ * Return the number of files that haven't been fully transferred
+ *
+ * @return {Number}
+ */
+Payload.prototype.getRemainingFiles = function() {
+    var remainingFiles = _.filter(this.parts, (part) => {
+        if (part.size > 0) {
+            if (part.uploaded < part.size) {
+                return true;
+            }
+        }
+    });
+    return remainingFiles.length;
+};
+
+/**
+ * Return the number of bytes remaining to be uploaded
+ *
+ * @return {Number}
+ */
+Payload.prototype.getRemainingBytes = function() {
+    var remainingBytes = _.map(this.parts, (part) => {
+        return (part.size > 0) ? part.size - part.uploaded : 0;
+    });
+    return _.sum(remainingBytes);
+};
+
+/**
  * Return URL for uploading the given payload
  *
  * @param  {String} name

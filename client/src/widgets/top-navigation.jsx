@@ -318,14 +318,13 @@ function ConnectionIndicator(props) {
         var title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
         return (
             <span className="connection" title={title}>
-                <i className="fa fa-refresh fa-spin"/>
-                <i className="fa fa-arrow-up" />
+                <i className="fa fa-cloud-upload"/>
             </span>
         );
     } else if (props.searching) {
         return (
             <span className="connection">
-                <i className="fa fa-refresh fa-spin"/>
+                <i className="fa fa-refresh"/>
             </span>
         );
     } else if (!props.hasConnection) {

@@ -6,7 +6,7 @@ module.exports = Payloads;
 function Payloads(payloadManager, destination) {
     this.payloadManager = payloadManager;
     this.destination = destination;
-    //this.uploading = this.payloadManager.getUploadProgress();
+    this.uploading = this.payloadManager.getUploadProgress();
 }
 
 
