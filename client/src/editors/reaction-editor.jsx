@@ -528,8 +528,7 @@ module.exports = React.createClass({
     handleAction: function(evt) {
         switch (evt.action) {
             case 'markdown-set':
-                var draft = _.decouple(this.state.draft, 'details');
-                draft.details.markdown = evt.value;
+                var draft = _.decoupleSet(this.state.draft, 'details.markdown', evt.value);
                 this.saveDraft(draft);
                 break;
             case 'photo-capture':

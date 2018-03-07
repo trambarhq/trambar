@@ -102,7 +102,7 @@ module.exports = React.createClass({
             highlighted: (counts.file > 0),
             onChange: this.handleFileSelect,
         };
-        var markdown = _.get(this.state.draft, 'details.markdown', false);
+        var markdown = _.get(this.props.reaction, 'details.markdown', false);
         var markdownProps = {
             tooltip: t('story-markdown'),
             icon: 'pencil-square',
