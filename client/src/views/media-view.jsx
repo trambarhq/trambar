@@ -255,14 +255,14 @@ module.exports = React.createClass({
      */
     renderAudio: function(res) {
         var className = 'audio';
-        var poster = this.renderImageElement(res);
-        if (!poster) {
+        var url = this.props.theme.getImageURL(res);
+        if (!url) {
             className += ' posterless';
         }
         var action = (!this.state.audioURL) ? 'play' : 'stop';
         return (
             <div className={className} onClick={this.handleAudioClick}>
-                {poster}
+                {this.renderImageElement(res)}
                 <div className="overlay">
                     <div className="icon">
                         <i className={`fa fa-${action}-circle`} />
@@ -305,7 +305,6 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     renderImageElement: function(res) {
-        // TODO: placeholder for pending images
         return <ResourceView resource={res} theme={this.props.theme} />;
     },
 
