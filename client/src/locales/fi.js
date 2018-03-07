@@ -275,6 +275,12 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} muokkaa kommenttia...`;
         },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} lähettää kommentin...`;
+        },
+        'reaction-$name-is-editing': (name) => {
+            return `${name} muokkaa kommenttia...`;
+        },
         'reaction-$name-is-writing': (name) => {
             return `${name} kirjoittaa kommentin...`;
         },

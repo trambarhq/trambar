@@ -44,6 +44,9 @@ function isActuallyPublished(reaction) {
     if (!reaction.ptime) {
         return false;
     }
+    if (reaction.ready === false) {
+        return false;
+    }
     return true;
 }
 

@@ -162,7 +162,7 @@ module.exports = React.createClass({
         var repo = this.props.repo;
         var name = p(_.get(this.props.respondent, 'details.name'));
         this.resourcesReferenced = {};
-        if (reaction.published) {
+        if (reaction.published && reaction.ready !== false) {
             switch (reaction.type) {
                 case 'like':
                     return (
@@ -296,10 +296,20 @@ module.exports = React.createClass({
 
             }
         } else {
-            var action = (reaction.ptime) ? 'editing' : 'writing';
+            var phrase;
+            if (!reaction.published) {
+                if (reaction.ptime) {
+                    // if it has a ptime, then it was published before
+                    phrase = 'reaction-$name-is-editing';
+                } else {
+                    phrase = 'reaction-$name-is-writing';
+                }
+            } else {
+                phrase = 'reaction-$name-is-sending';
+            }
             return (
                 <span className="in-progress">
-                    {t(`reaction-$name-is-${action}`, name)}
+                    {t(phrase, name)}
                 </span>
             );
         }

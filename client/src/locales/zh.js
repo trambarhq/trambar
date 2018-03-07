@@ -322,6 +322,9 @@ var traditionalPhrases = {
     'reaction-$name-is-editing': (name) => {
         return `${name}正在編輯一個回應⋯⋯`;
     },
+    'reaction-$name-is-sending': (name) => {
+        return `${name}正在發表一個回應⋯⋯`;
+    },
     'reaction-$name-is-writing': (name) => {
         return `${name}正在寫一個回應⋯⋯`;
     },
@@ -957,6 +960,9 @@ var simplifiedPhrases = {
     },
     'reaction-$name-is-editing': (name) => {
         return `${name}正在编辑一个回应⋯⋯`;
+    },
+    'reaction-$name-is-sending': (name) => {
+        return `${name}正在发表一个回应⋯⋯`;
     },
     'reaction-$name-is-writing': (name) => {
         return `${name}正在写一个回应⋯⋯`;

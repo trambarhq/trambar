@@ -338,6 +338,9 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} edytuje komentarz...`;
         },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} wysyła komentarz...`;
+        },
         'reaction-$name-is-writing': (name) => {
             return `${name} pisze komentarz...`;
         },

@@ -280,6 +280,9 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} is editing a comment...`;
         },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} is sending a comment...`;
+        },
         'reaction-$name-is-writing': (name) => {
             return `${name} is writing a comment...`;
         },
