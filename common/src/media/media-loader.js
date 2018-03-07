@@ -153,6 +153,12 @@ function getImageMetadata(blob) {
                 if (!height) {
                     height = viewBox.height;
                 }
+                if (!width) {
+                    width = 1000;
+                }
+                if (!height) {
+                    height = 1000;
+                }
                 return { width, height, format };
             });
         } else {

@@ -185,22 +185,33 @@ function applyFiltersToSVGDocument(path, filters) {
             applyOperators(params, svgOperators, filters);
 
             // get the dimensions first
-            var width = parseInt(svg.getAttribute('width')) || 0;
-            var height = parseInt(svg.getAttribute('height')) || 0;
+            var width = parseFloat(svg.getAttribute('width')) || 0;
+            var height = parseFloat(svg.getAttribute('height')) || 0;
             var viewBoxString = svg.getAttribute('viewBox');
             var viewBox;
             if (viewBoxString) {
                 viewBox = _.map(_.split(viewBoxString, /\s+/), (s) => {
                     return parseInt(s);
                 });
-            } else {
-                viewBox = [ 0, 0, width, height ];
             }
             if (!width) {
-                width = viewBox[2];
+                if (viewBox) {
+                    width = viewBox[2];
+                }
             }
             if (!height) {
-                height = viewBox[3];
+                if (viewBox) {
+                    height = viewBox[3];
+                }
+            }
+            if (!width) {
+                width = 1000;
+            }
+            if (!height) {
+                height = 1000;
+            }
+            if (!viewBox) {
+                viewBox = [ 0, 0, width, height ];
             }
 
             if (params.crop) {

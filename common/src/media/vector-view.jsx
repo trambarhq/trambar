@@ -118,6 +118,12 @@ module.exports = React.createClass({
                 if (!height) {
                     height = viewBox.height;
                 }
+                if (!width) {
+                    width = 1000;
+                }
+                if (!height) {
+                    height = 1000;
+                }
                 this.originX = viewBox.x;
                 this.originY = viewBox.y;
                 this.zoomX = (viewBox.width) ? viewBox.width / width : 1;
