@@ -167,9 +167,11 @@ module.exports = React.createClass({
             var height = decodeLength(params.height);
             if (this.state.devicePixelRatio !== 1) {
                 // request higher resolution image when pixel density is higher
-                width = Math.round(width * this.state.devicePixelRatio);
-                height = Math.round(height * this.state.devicePixelRatio);
+                width = width * this.state.devicePixelRatio;
+                height = height * this.state.devicePixelRatio;
             }
+            width = Math.round(width);
+            height = Math.round(height);
             var resizing = width || height;
             if (resizing) {
                 if (width && height) {
