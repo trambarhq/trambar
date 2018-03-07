@@ -4,12 +4,15 @@ module.exports = Removal;
 
 function Removal(location, objects) {
     Storage.call(this, location, objects, {});
-    this.objects = _.map(objects, (object) => {
-        return {
-            id: object.id,
-            deleted: true,
-        };
-    });
+    if (!this.isLocal()) {
+        // removal of remote objects is implemented as setting its deleted flag
+        this.objects = _.map(objects, (object) => {
+            return {
+                id: object.id,
+                deleted: true,
+            };
+        });
+    }
 }
 
 Removal.prototype = Object.create(Storage.prototype)
