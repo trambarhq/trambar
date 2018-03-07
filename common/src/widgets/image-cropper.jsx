@@ -53,15 +53,20 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.url !== nextProps.url || this.props.clippingRect !== nextProps.clippingRect) {
+        if (this.props.clippingRect !== nextProps.clippingRect) {
+            if (!this.zoomChangeTimeout) {
+                this.setState({ clippingRect: nextProps.clippingRect });
+            } else {
+                console.log('Ignoring incoming clipping rect');
+            }
+        }
+        if (this.props.url !== nextProps.url) {
             if (this.zoomChangeTimeout) {
                 // set the deferred zoom changes before we switch to a different image
                 clearTimeout(this.zoomChangeTimeout);
-                if (this.props.url !== nextProps.url) {
-                    this.triggerChangeEvent(this.state.clippingRect);
-                }
+                this.triggerChangeEvent(this.state.clippingRect);
+                this.zoomChangeTimeout = 0;
             }
-            this.setState({ clippingRect: nextProps.clippingRect });
         }
     },
 
