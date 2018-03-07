@@ -230,7 +230,7 @@ function canSendBookmarks(user, story, access) {
     if (user.type === 'guest') {
         return false;
     }
-    return canCreateBookmark(user, story);
+    return canCreateBookmark(user, story, access);
 }
 
 /**
