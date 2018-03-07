@@ -56,7 +56,7 @@ module.exports = React.createClass({
             selectedComponent: null,
             showingComponentDialog: false,
             renderingComponentDialog: false,
-            selectedResourceURL: null,
+            selectedResourceName: null,
             showingReferencedMediaDialog: false,
             renderingReferencedMediaDialog: false,
             audioURL: null,
@@ -170,7 +170,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderText: function() {
-        this.resourcesReferenced = {};
+        this.resourcesReferenced = [];
         switch (this.props.story.type) {
             case 'post':
                 return this.renderStoryText();
@@ -658,7 +658,7 @@ module.exports = React.createClass({
         var resources = _.get(this.props.story, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             // exclude the ones that are shown in Markdown
-            resources = _.difference(resources, _.values(this.resourcesReferenced));
+            resources = _.difference(resources, this.resourcesReferenced);
         }
         if (_.isEmpty(resources)) {
             return null;
@@ -680,9 +680,13 @@ module.exports = React.createClass({
         if (!this.state.renderingReferencedMediaDialog) {
             return null;
         }
-        var selectedResource = this.resourcesReferenced[this.state.selectedResourceURL];
+        var resources = this.props.story.details.resources;
+        var res = Markdown.findReferencedResource(resources, this.state.selectedResourceName);
+        if (!res) {
+            return null;
+        }
         var zoomableResources = getZoomableResources(this.resourcesReferenced);
-        var zoomableIndex = _.indexOf(zoomableResources, selectedResource);
+        var zoomableIndex = _.indexOf(zoomableResources, res);
         if (zoomableIndex === -1) {
             return null;
         }
@@ -806,11 +810,11 @@ module.exports = React.createClass({
             } else {
                 url = theme.getURL(res);
             }
-            // remember the resource and the url
-            this.resourcesReferenced[url] = res;
+            // remember that resource is referenced in Markdown
+            this.resourcesReferenced.push(res);
             return {
                 href: url,
-                title: undefined
+                title: evt.name
             };
         }
     },
@@ -821,33 +825,48 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
      handleMarkdownClick: function(evt) {
-        var target = evt.target;
-        if (target.tagName === 'IMG') {
-            var src = target.getAttribute('src');
-            var res = this.resourcesReferenced[src];
-            if (res) {
-                if (res.type === 'image' || res.type === 'video') {
-                    this.setState({
-                        selectedResourceURL: src,
-                        renderingReferencedMediaDialog: true,
-                        showingReferencedMediaDialog: true,
-                    });
-                } else if (res.type === 'website') {
-                    window.open(res.url);
-                } else if (res.type === 'audio') {
-                    var version = chooseAudioVersion(res);
-                    var audioURL = this.props.theme.getAudioURL(res, { version });
-                    this.setState({ audioURL });
-                }
-            } else {
-                var targetRect = target.getBoundingClientRect();
-                var width = target.naturalWidth + 50;
-                var height = target.naturalHeight + 50;
-                var left = targetRect.left + window.screenLeft;
-                var top = targetRect.top + window.screenTop;
-                window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
-            }
-        }
+         var target = evt.target;
+         if (target.viewportElement) {
+             target = target.viewportElement;
+         }
+         var name;
+         if (target.tagName === 'svg') {
+             var title = target.getElementsByTagName('title')[0];
+             if (title) {
+                 name = title.textContent;
+             }
+         } else {
+             name = evt.target.title;
+         }
+         if (name) {
+             var resources = this.props.story.details.resources;
+             var res = Markdown.findReferencedResource(resources, name);
+             if (res) {
+                 if (res.type === 'image' || res.type === 'video') {
+                     this.setState({
+                         selectedResourceName: name,
+                         renderingReferencedMediaDialog: true,
+                         showingReferencedMediaDialog: true,
+                     });
+                 } else if (res.type === 'website') {
+                     window.open(res.url, '_blank');
+                 } else if (res.type === 'audio') {
+                     var version = chooseAudioVersion(res);
+                     var audioURL = this.props.theme.getAudioURL(res, { version });
+                     this.setState({ audioURL });
+                 }
+             }
+         } else {
+             if (target.tagName === 'IMG') {
+                 var src = target.getAttribute('src');
+                 var targetRect = target.getBoundingClientRect();
+                 var width = target.naturalWidth + 50;
+                 var height = target.naturalHeight + 50;
+                 var left = targetRect.left + window.screenLeft;
+                 var top = targetRect.top + window.screenTop;
+                 window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
+             }
+         }
     },
 
     /**

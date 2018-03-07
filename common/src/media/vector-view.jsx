@@ -9,6 +9,7 @@ module.exports = React.createClass({
     propTypes: {
         url: PropTypes.string,
         clippingRect: PropTypes.object,
+        title: PropTypes.string,
         onLoad: PropTypes.func,
         onError: PropTypes.func,
     },
@@ -41,8 +42,11 @@ module.exports = React.createClass({
         if (this.props.url !== nextProps.url) {
             this.load(nextProps.url);
         }
-        if (this.clippingRect !== nextProps.clippingRect) {
+        if (this.props.clippingRect !== nextProps.clippingRect) {
             this.setViewBox(nextProps.clippingRect);
+        }
+        if (this.props.title !== nextProps.title) {
+            this.setTitle(nextProps.title);
         }
     },
 
@@ -53,7 +57,7 @@ module.exports = React.createClass({
      */
     render: function() {
         var setters = this.components.setters;
-        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
+        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect', 'title');
         return <svg ref={setters.svg} viewBox="0 0 4 4" width={4} height={4} {...props} />
     },
 
@@ -98,6 +102,8 @@ module.exports = React.createClass({
                 if (!svg) {
                     throw new Error('Invalid missing container');
                 }
+                this.clear();
+                this.addTitle(this.props.title);
                 var child;
                 while (child = svgNew.firstChild) {
                     svgNew.removeChild(child);
@@ -142,6 +148,38 @@ module.exports = React.createClass({
         var svg = this.components.svg;
         while (svg.firstChild) {
             svg.removeChild(svg.firstChild);
+        }
+    },
+
+    /**
+     * Add title to SVG element
+     *
+     * @param  {String} title
+     */
+    addTitle: function(title) {
+        var svg = this.components.svg;
+        if (title && svg) {
+            var child = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            child.textContent = title;
+            svg.appendChild(child);
+        }
+    },
+
+    /**
+     * Change title of SVG
+     *
+     * @param  {String} title
+     */
+    setTitle: function(title) {
+        var child = svg.getElementByTagName('title');
+        if (child) {
+            if (title) {
+                child.textContent = title;
+            } else {
+                svg.removeChild(child)
+            }
+        } else {
+            this.addTitle(title);
         }
     },
 

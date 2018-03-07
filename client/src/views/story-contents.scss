@@ -54,11 +54,16 @@
         }
 
         &.markdown {
-            IMG, CANVAS {
+            IMG, CANVAS, svg {
                 vertical-align: top;
                 height: 1.5em;
+                width: auto;
                 cursor: pointer;
                 vertical-align: middle;
+            }
+
+            svg {
+                width: 1.5em;
             }
         }
 

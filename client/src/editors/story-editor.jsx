@@ -83,7 +83,6 @@ module.exports = React.createClass({
             mainPopUp: CornerPopUp,
             previewPopUp: CornerPopUp,
         });
-        this.resourcesReferenced = {};
         var nextState = {
             options: defaultOptions,
             selectedResourceIndex: 0,
@@ -1212,11 +1211,9 @@ module.exports = React.createClass({
             } else {
                 url = theme.getURL(res);
             }
-            // remember the resource and the url
-            this.resourcesReferenced[url] = res;
             return {
                 href: url,
-                title: undefined
+                title: evt.name
             };
         }
     },
@@ -1228,12 +1225,23 @@ module.exports = React.createClass({
      */
     handleTextClick: function(evt) {
         var target = evt.target;
-        if (target.tagName === 'IMG') {
-            var src = target.getAttribute('src');
-            var res = this.resourcesReferenced[src];
+        if (target.viewportElement) {
+            target = target.viewportElement;
+        }
+        var name;
+        if (target.tagName === 'svg') {
+            var title = target.getElementsByTagName('title')[0];
+            if (title) {
+                name = title.textContent;
+            }
+        } else {
+            name = evt.target.title;
+        }
+        if (name) {
+            var resources = this.state.draft.details.resources;
+            var res = Markdown.findReferencedResource(resources, name);
             if (res) {
-                var resources = this.state.draft.details.resources;
-                var selectedResourceIndex = _.indexOf(resources, evt.resource);
+                var selectedResourceIndex = _.indexOf(resources, res);
                 var options = _.decoupleSet(this.state.options, 'preview', 'media');
                 this.setState({ selectedResourceIndex, options });
             }
