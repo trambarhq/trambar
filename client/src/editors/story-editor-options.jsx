@@ -92,7 +92,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var options = this.props.options;
         if (section === 'main') {
-            var access = this.props.access;
+            var access = 'read-write';
             var user = this.props.currentUser;
             var story = this.props.story;
             var repos = this.props.repos;

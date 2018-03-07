@@ -133,13 +133,17 @@ module.exports = React.createClass({
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
             this.updateDraft(nextState, nextProps);
+            this.updateOptions(nextState, nextProps);
+            this.updateResourceIndex(nextState, nextProps);
         }
         if (this.props.currentUser !== nextProps.currentUser) {
             this.updateLeadAuthor(nextState, nextProps);
         }
-        if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations || this.props.locale !== nextProps.locale) {
-            this.updateOptions(nextState, nextProps);
-            this.updateResourceIndex(nextState, nextProps);
+        if (this.props.locale !== nextProps.locale) {
+            this.updateLocaleCode(nextState, nextProps);
+        }
+        if (this.props.recommendations !== nextProps.recommendations) {
+            this.updateBookmarkRecipients(nextState, nextProps);
         }
         var changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
@@ -192,16 +196,39 @@ module.exports = React.createClass({
         if (!nextProps.story) {
             // reset options to default when a new story starts
             options = defaultOptions;
+        } else {
+            options = nextState.options = _.clone(options);
+            options.hidePost = !nextState.draft.public;
+            options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
+            if (!options.preview) {
+                options.preview = this.choosePreview(nextState.draft);
+            }
         }
-        options = nextState.options = _.clone(options);
-        options.hidePost = !nextState.draft.public;
-        options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
-        options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
-        if (!options.preview) {
-            options.preview = this.choosePreview(nextState.draft);
-        }
+    },
+
+    /**
+     * Update state.options.bookmarkRecipients based on props
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
+    updateBookmarkRecipients: function(nextState, nextProps) {
+        var targetUserIds = _.map(nextProps.recommendations, 'target_user_id');
+        nextState.options = _.clone(nextState.options);
+        nextState.options.bookmarkRecipients = targetUserIds;
+    },
+
+    /**
+     * Update state.options.localeCode based on props
+     *
+     * @param  {Object} nextState
+     * @param  {Object} nextProps
+     */
+    updateLocaleCode: function(nextState, nextProps) {
         if (!options.localeCode) {
-            options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
+            var localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
+            nextState.options = _.clone(nextState.options);
+            nextState.options.localeCode = localeCode;
         }
     },
 
