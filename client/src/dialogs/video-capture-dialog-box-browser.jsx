@@ -434,7 +434,7 @@ module.exports = React.createClass({
         var video = this.videoNode;
         return FrameGrabber.capture(video).then((blob) => {
             return {
-                file: blob,
+                blob: blob,
                 width: video.videoWidth,
                 height: video.videoHeight,
             };
@@ -621,7 +621,7 @@ module.exports = React.createClass({
         var capturedImage = this.state.capturedImage;
         var payload = this.props.payloads.add('video');
         payload.attachStream(capturedVideo.stream);
-        payload.attachFile(capturedImage.file, 'poster');
+        payload.attachFile(capturedImage.blob, 'poster');
         var res = {
             type: 'video',
             payload_token: payload.token,

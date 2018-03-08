@@ -214,11 +214,7 @@ module.exports = React.createClass({
      */
     renderCapturedImage: function() {
         var props = { src: this.state.capturedImage.url };
-        return (
-            <div className="container">
-                <img {...props} />
-            </div>
-        )
+        return <img {...props} />;
     },
 
     /**
@@ -422,7 +418,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleRetakeClick: function(evt) {
-        BlobManager.remove(this.state.capturedImage.url);
+        BlobManager.release(this.state.capturedImage.blob);
         this.setState({ capturedImage: null });
     },
 
