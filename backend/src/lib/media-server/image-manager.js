@@ -215,19 +215,22 @@ function applyFiltersToSVGDocument(path, filters) {
             }
 
             if (params.crop) {
-                width = Math.round(params.crop.width * (width / viewBox[2]));
-                height = Math.round(params.crop.height * (height / viewBox[3]));
-                viewBox[0] += params.crop.left;
-                viewBox[1] += params.crop.top;
-                viewBox[2] = params.crop.width;
-                viewBox[3] = params.crop.height;
+                var vbScaleX = viewBox[2] / width;
+                var vbScaleY = viewBox[3] / height;
+                var vbPrecision = Math.max(0, Math.round(3 - Math.log10(viewBox[2])));
+                width = params.crop.width;
+                height = params.crop.height;
+                viewBox[0] = _.round(params.crop.left * vbScaleX + viewBox[0], vbPrecision);
+                viewBox[1] = _.round(params.crop.top * vbScaleY + viewBox[1], vbPrecision);
+                viewBox[2] = _.round(params.crop.width * vbScaleX, vbPrecision);
+                viewBox[3] = _.round(params.crop.height * vbScaleY, vbPrecision);
             }
             if (params.width !== undefined || params.height !== undefined) {
                 if (params.width && params.height === undefined) {
-                    height = Math.round(height * (params.width / width));
+                    height = _.round(height * (params.width / width));
                     width = params.width;
                 } else if (params.height && params.width === undefined) {
-                    width = Math.round(width * (params.height / height));
+                    width = _.round(width * (params.height / height));
                     height = params.height;
                 } else {
                     width = params.width;
