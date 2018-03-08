@@ -733,7 +733,7 @@ module.exports = React.createClass({
             if (storage.matchLocation(location)) {
                 if (_.some(storage.results, { id })) {
                     var elapsed = storage.getTimeElapsed();
-                    if (elapsed < 1000) {
+                    if (elapsed < 1) {
                         return true;
                     }
                 }
@@ -1614,7 +1614,7 @@ module.exports = React.createClass({
                 if (!search.dirty) {
                     return false;
                 }
-                if (!search.prefetch) {
+                if (!search.prefetching) {
                     return false;
                 }
                 // don't prefetch a search if the same component has done a
