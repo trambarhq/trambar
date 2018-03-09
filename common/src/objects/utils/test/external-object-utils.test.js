@@ -728,4 +728,73 @@ describe('ExternalObjectUtils', function() {
             expect(repo).to.not.have.deep.property('details.resources');
         })
     })
+    describe('#findCommonServer()', function() {
+        it('should find server common to multiple objects', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'github',
+                        server_id: 2,
+                        project: { id: 8 },
+                    },
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                    },
+                ]
+            };
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'github',
+                        server_id: 14,
+                        project: { id: 8 },
+                        issue: { id: 12 }
+                    },
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    },
+                ]
+            };
+            var server = ExternalObjectUtils.findCommonServer(issue, repo);
+            expect(server).to.deep.equal({ id: 3, type: 'gitlab' });
+        })
+        it('should return null when objects are not connected to the same server', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'github',
+                        server_id: 2,
+                        project: { id: 8 },
+                    },
+                ]
+            };
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'github',
+                        server_id: 14,
+                        project: { id: 8 },
+                        issue: { id: 12 }
+                    },
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    },
+                ]
+            };
+            var server = ExternalObjectUtils.findCommonServer(issue, repo);
+            expect(server).to.be.null;
+        })
+    })
 })

@@ -2,9 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 var UserImporter = require('gitlab-adapter/user-importer');
 
@@ -31,23 +30,20 @@ module.exports = {
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var repoLink = ExternalObjectUtils.findLink(repo, server);
     return fetchIssue(server, repoLink.project.id, glEvent.target_id).then((glIssue) => {
         // the story is linked to both the issue and the repo
-        var issueLink = LinkUtils.extend(repoLink, {
-            issue: { id: glIssue.id }
-        });
-        // find existing issuerepoLink
         var criteria = {
-            external_object: issueLink,
+            external_object: ExternalObjectUtils.extendLink(server, repo, {
+                issue: { id: glIssue.id }
+            }),
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
-            var storyAfter = copyIssueProperties(story, author, glIssue, issueLink);
-            if (storyAfter) {
-                return Story.saveOne(db, schema, storyAfter);
-            } else {
+            var storyAfter = copyIssueProperties(story, server, repo, author, glIssue);
+            if (_.isEqual(storyAfter, story)) {
                 return story;
             }
+            return Story.saveOne(db, schema, storyAfter);
         }).then((story) => {
             return importAssignments(db, server, project, repo, story, glIssue).return(story);
         });
@@ -77,28 +73,24 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 
         // find existing story
         var schema = project.name;
-        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-        var issueLink = LinkUtils.extend(repoLink, {
-            issue: { id: glIssue.id }
-        });
         var criteria = {
-            external_object: issueLink,
+            external_object: ExternalObjectUtils.extendLink(server, repo, {
+                issue: { id: glIssue.id }
+            }),
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             if (!story) {
-                return null;
+                throw new Error('Story not found');
             }
-            var storyAfter = copyIssueProperties(story, author, glIssue, issueLink);
-            if (storyAfter) {
-                return Story.updateOne(db, schema, storyAfter);
-            } else {
+            var storyAfter = copyIssueProperties(story, server, repo, author, glIssue);
+            if (_.isEqual(storyAfter, story)) {
                 return story;
             }
+            return Story.updateOne(db, schema, storyAfter);
         }).then((story) => {
-            if (!story) {
-                return null;
-            }
             return importAssignments(db, server, project, repo, story, glIssue).return(story);
+        }).catch((err) => {
+            return null;
         });
     } else {
         return Promise.resolve(false);
@@ -119,21 +111,19 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  */
 function importAssignments(db, server, project, repo, story, glIssue) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var issueLink = LinkUtils.extend(repoLink, {
-        issue: { id: glIssue.id }
-    });
     // find existing assignments
     var criteria = {
         story_id: story.id,
         type: 'assignment',
-        external_object: issueLink,
+        external_object: ExternalObjectUtils.extendLink(server, repo, {
+            issue: { id: glIssue.id }
+        }),
     };
     return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
         return Promise.mapSeries(glIssue.assignees, (glUser) => {
             return UserImporter.findUser(db, server, glUser).then((assignee) => {
                 if (!_.some(reactions, { user_id: assignee.id })) {
-                    var reactionNew = copyAssignmentProperties(null, story, assignee, glIssue, issueLink);
+                    var reactionNew = copyAssignmentProperties(null, story, assignee, glIssue);
                     return Reaction.saveOne(db, schema, reactionNew);
                 }
             });
@@ -150,46 +140,86 @@ function importAssignments(db, server, project, repo, story, glIssue) {
  *   iid - is uniq only in scope of single project
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} glIssue
- * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyIssueProperties(story, author, glIssue, link) {
-    var storyAfter = _.cloneDeep(story) || {};
-    var issueLink = Import.join(storyAfter, link);
+function copyIssueProperties(story, server, repo, author, glIssue) {
     var descriptionTags = TagScanner.findTags(glIssue.description);
-    var labelTags = _.map(glIssue.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
-    issueLink.issue.number = glIssue.iid;
-    if (!storyAfter.type || storyAfter.type === 'issue') {
-        Import.set(storyAfter, 'type', 'issue');
-        Import.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
-        Import.set(storyAfter, 'user_ids', [ author.id ]);
-        Import.set(storyAfter, 'role_ids', author.role_ids);
-        Import.set(storyAfter, 'published', true);
-        Import.set(storyAfter, 'ptime', Moment(new Date(glIssue.created_at)).toISOString());
-        Import.set(storyAfter, 'public', !glIssue.confidential);
-        Import.set(storyAfter, 'details.labels', glIssue.labels);
-        Import.set(storyAfter, 'details.state', glIssue.state);
-        Import.set(storyAfter, 'details.milestone', _.get(glIssue, 'milestone.title'));
-        // title is imported only if issue isn't confidential
-        if (!glIssue.confidential) {
-            Import.set(storyAfter, 'details.title', glIssue.title);
+    var labelTags = _.map(glIssue.labels, (label) => {
+        return `#${_.replace(label, /\s+/g, '-')}`;
+    });
+    var tags = _.union(descriptionTags, labelTags);
+
+    var storyAfter = _.cloneDeep(story) || {};
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+        issue: {
+            id: glIssue.id,
+            number: glIssue.iid,
         }
-    } else {
-        // a post exported to issue tracker--keep only certain props
-        Import.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
-        Import.set(storyAfter, 'details.title', glIssue.title);
-        Import.set(storyAfter, 'details.labels', glIssue.labels);
-    }
+    });
+    var exported = ExternalObjectUtils.hasPreviousExport(storyAfter, server);
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: 'issue',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'tags', {
+        value: tags,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+        ignore: exported,
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+        ignore: exported,
+    });
+    // title is imported only if issue isn't confidential
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.title', {
+        value: (glIssue.confidential) ? undefined : glIssue.title,
+        overwrite: 'always',
+        ignore: exported && glIssue.confidential,
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.labels', {
+        value: glIssue.labels,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.state', {
+        value: glIssue.state,
+        overwrite: 'always',
+        ignore: exported,
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.milestone', {
+        value: _.get(glIssue, 'milestone.title'),
+        overwrite: 'always',
+        ignore: exported,
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+        ignore: exported,
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: !glIssue.confidential,
+        overwrite: 'always',
+        ignore: exported,
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(new Date(glIssue.created_at)).toISOString(),
+        overwrite: 'always',
+        ignore: exported,
+    });
     if (story) {
         if (story.details.state !== storyAfter.details.state) {
+            // bump the story when its state changes
             storyAfter.btime = new String('NOW()');
         }
-    }
-    if (_.isEqual(story, storyAfter)) {
-        return null;
     }
     return storyAfter;
 }
@@ -198,6 +228,7 @@ function copyIssueProperties(story, author, glIssue, link) {
  * Copy certain properties of the issue into the assignment reaction
  *
  * @param  {Reaction|null} reaction
+ * @param  {Server} server
  * @param  {Story} story
  * @param  {User} assignee
  * @param  {Object} glIssue
@@ -205,18 +236,32 @@ function copyIssueProperties(story, author, glIssue, link) {
  *
  * @return {Object|null}
  */
-function copyAssignmentProperties(reaction, story, assignee, glIssue, link) {
+function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
     var reactionAfter = _.cloneDeep(reaction) || {};
-    var assignmentLink = Import.join(reactionAfter, link);
-    assignmentLink.issue.number = glIssue.iid;
-    Import.set(reactionAfter, 'type', 'assignment');
-    Import.set(reactionAfter, 'story_id', story.id);
-    Import.set(reactionAfter, 'user_id', assignee.id);
-    Import.set(reactionAfter, 'published', true);
-    Import.set(reactionAfter, 'ptime', Moment(glIssue.updated_at).toISOString());
-    if (_.isEqual(reaction, reactionAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'type', {
+        value: 'assignment',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'story_id', {
+        value: story.id,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'user_id', {
+        value: assignee.id,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'ptime', {
+        value: Moment(glIssue.updated_at).toISOString(),
+        overwrite: 'always',
+    });
     return reactionAfter;
 }
 
@@ -258,7 +303,7 @@ function getIssueNumber(server, glProjectId, glIssueId) {
     return Transport.fetchEach(server, url, {}, (glIssue) => {
         var issueId = glIssue.id;
         var issueNumber = glIssue.iid;
-        Import.set(issueNumberCache, [ baseURL, glProjectId, issueId ], issueNumber);
+        _.set(issueNumberCache, [ baseURL, glProjectId, issueId ], issueNumber);
     }).then(() => {
         var issueNumber = _.get(issueNumberCache, [ baseURL, glProjectId, glIssueId ]);
         if (!issueNumber) {

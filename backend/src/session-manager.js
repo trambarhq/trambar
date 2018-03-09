@@ -13,11 +13,10 @@ var Async = require('async-do-while');
 var HTTPError = require('errors/http-error');
 var Database = require('database');
 var Shutdown = require('shutdown');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
-var LinkUtils = require('objects/utils/link-utils');
 
-var Import = require('external-services/import');
 var GitlabUserImporter = require('gitlab-adapter/user-importer');
 
 // accessors
@@ -695,11 +694,9 @@ function findMatchingUser(server, account) {
     return Database.open().then((db) => {
         var profile = account.profile;
         var criteria = {
-            external_object: {
-                type: server.type,
-                server_id: server.id,
+            external_object: ExternalObjectUtils.createLink(server, {
                 user: { id: getProfileId(profile) },
-            },
+            }),
             deleted: false,
         };
         return User.findOne(db, 'global', criteria, '*').then((user) => {
@@ -718,25 +715,24 @@ function findMatchingUser(server, account) {
                 return User.findOne(db, 'global', criteria, '*');
             }, null);
         }).then((user) => {
-            if (!user) {
+            if (user) {
+                // update profile in background
+                retrieveProfileImage(profile).then((image) => {
+                    var userAfter = copyUserProperties(user, server, image, profile);
+                    if(_.isEqual(userAfter, user)) {
+                        return user;
+                    }
+                    return User.updateOne(db, 'global', userAfter);
+                });
+                return user;
+            } else {
                 if (!acceptNewUser(server)) {
                     throw new HTTPError(403, {
                         reason: 'existing-users-only',
                     });
                 }
-            }
-            return retrieveProfileImage(profile).then((image) => {
-                var userLink = LinkUtils.create(server, {
-                    user: { id: getProfileId(profile) }
-                });
-                var userAfter = copyUserProperties(user, image, server, profile, userLink);
-                if(!userAfter) {
-                    // no change
-                    return user;
-                }
-                if (user) {
-                    return User.updateOne(db, 'global', userAfter);
-                } else {
+                return retrieveProfileImage(profile).then((image) => {
+                    var userAfter = copyUserProperties(null, server, image, profile);
                     if (userAfter.disabled) {
                         // don't create disabled user
                         throw new HTTPError(403, {
@@ -744,8 +740,8 @@ function findMatchingUser(server, account) {
                         });
                     }
                     return User.insertUnique(db, 'global', userAfter);
-                }
-            });
+                });
+            }
         });
     });
 }
@@ -862,53 +858,66 @@ function getProfileId(profile) {
  * Copy information from Passport profile object into user object
  *
  * @param  {User|null} user
- * @param  {Object} image
  * @param  {Server} server
+ * @param  {Object} image
  * @param  {Object} profile
- * @param  {Object} link
  *
  * @return {User|null}
  */
-function copyUserProperties(user, image, server, profile, link) {
+function copyUserProperties(user, server, image, profile) {
     var json = profile._json;
     if (server.type === 'gitlab') {
         // use GitlabAdapter's importer
-        return GitlabUserImporter.copyUserProperties(user, image, server, json, link);
+        return GitlabUserImporter.copyUserProperties(user, server, image, json);
     } else {
-        var userAfter = _.cloneDeep(user) || {
-            role_ids: _.get(server, 'settings.user.role_ids', []),
-            settings: UserSettings.default,
-        };
         var email = _.first(_.map(profile.emails, 'value'));
-        var name = profile.displayName;
         var username = profile.username || proposeUsername(profile);
-        _.set(userAfter, 'username', username);
-        _.set(userAfter, 'details.name', name);
-        _.set(userAfter, 'details.email', email);
-        Import.join(userAfter, link);
-        Import.attach(userAfter, 'image', image);
-
-        // set user type
-        if (server.type === 'facebook') {
-            _.set(userAfter, 'details.gender', json.gender);
-        }
         var userType = _.get(server, 'settings.user.type');
+        var overwriteUserType = 'never';
         if (user) {
-            // set it if it's more privileged
-            if (UserTypes.indexOf(userType) > UserTypes.indexOf(userAfter.type)) {
-                userAfter.type = userType;
-            }
-        } else {
-            if (userType) {
-                userAfter.type = userType;
-            } else {
-                userAfter.type = 'regular';
-                userAfter.disabled
+            // overwrite user type if new type has more privileges
+            if (UserTypes.indexOf(userType) > UserTypes.indexOf(user.type)) {
+                overwriteUserType = 'always';
             }
         }
 
-        if (_.isEqual(user, userAfter)) {
-            return null;
+        var userAfter = _.cloneDeep(user);
+        if (userAfter) {
+            userAfter = {
+                role_ids: _.get(server, 'settings.user.role_ids', []),
+                settings: UserSettings.default,
+            };
+        };
+        ExternalObjectUtils.addLink(userAfter, server, {
+            user: { id: getProfileId(profile) }
+        });
+        ExternalObjectUtils.importProperty(userAfter, server, 'type', {
+            value: userType,
+            overwrite: overwriteUserType,
+        });
+        ExternalObjectUtils.importProperty(userAfter, server, 'username', {
+            value: username,
+            overwrite: 'match-previous',
+        });
+        ExternalObjectUtils.importProperty(userAfter, server, 'details.name', {
+            value: profile.displayName,
+            overwrite: 'match-previous',
+        });
+        ExternalObjectUtils.importProperty(userAfter, server, 'details.email', {
+            value: email,
+            overwrite: 'match-previous',
+        });
+        ExternalObjectUtils.importProperty(userAfter, server, 'details.gender', {
+            value: json.gender,
+            overwrite: 'match-previous',
+        });
+        ExternalObjectUtils.importResource(userAfter, server, 'image', {
+            value: image,
+            replace: 'match-previous'
+        });
+        if (!userAfter.type) {
+            userAfter.type = 'regular';
+            userAfter.disabled = true;
         }
         return userAfter;
     }
@@ -962,7 +971,10 @@ function toSimpleLatin(s) {
 function retrieveProfileImage(profile) {
     var url = profile.avatarURL;
     if (!url) {
-        url = _.get(profile.photos, '0.value')
+        url = _.get(profile.photos, '0.value') || _.get(profile.avatarURL);
+    }
+    if (!url) {
+        url = profile.avatarUrl;
     }
     if (!url) {
         return Promise.resolve(null);
@@ -978,6 +990,7 @@ function retrieveProfileImage(profile) {
         Request.post(options, (err, resp, body) => {
             if (!err) {
                 var image = body;
+                image.type = 'image';
                 resolve(image);
             } else {
                 console.log('Unable to retrieve profile image: ' + url);

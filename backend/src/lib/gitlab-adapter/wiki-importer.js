@@ -1,9 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var LinkUtils = require('objects/utils/link-utils');
-
-var Import = require('external-services/import');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
 // accessors
 var Story = require('accessors/story');
@@ -28,13 +26,11 @@ module.exports = {
 function importHookEvent(db, server, repo, project, author, glHookEvent) {
     var schema = project.name;
     // see if there's story about this page recently
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var pageLink = LinkUtils.extend(repoLink, {
-        wiki: { id: glHookEvent.object_attributes.slug }
-    });
     var criteria = {
         newer_than: Moment().subtract(1, 'day').toISOString(),
-        external_object: pageLink,
+        external_object: ExternalObjectUtils.extendLink(server, repo, {
+            wiki: { id: glHookEvent.object_attributes.slug }
+        }),
     };
     return Story.findOne(db, schema, criteria, 'id').then((recentStory) => {
         if (recentStory) {
@@ -50,7 +46,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
                 return null;
             }
         } else {
-            var storyNew = copyEventProperties(null, author, glHookEvent, pageLink);
+            var storyNew = copyEventProperties(null, server, repo, author, glHookEvent);
             return Story.saveOne(db, schema, storyNew);
         }
     });
@@ -60,27 +56,57 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  * Copy properties of event into story
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} glHookEvent
- * @param  {Object} link
  *
  * @return {Object|null}
 */
-function copyEventProperties(story, author, glHookEvent, link) {
+function copyEventProperties(story, server, repo, author, glHookEvent) {
     var storyAfter = _.cloneDeep(story) || {};
-    Import.join(storyAfter, link);
-    Import.set(storyAfter, 'type', 'wiki');
-    Import.set(storyAfter, 'user_ids', [ author.id ]);
-    Import.set(storyAfter, 'role_ids', author.role_ids);
-    Import.set(storyAfter, 'published', true);
-    Import.set(storyAfter, 'ptime', Moment().toISOString());
-    Import.set(storyAfter, 'public', true);
-    Import.set(storyAfter, 'details.url', glHookEvent.object_attributes.url);
-    Import.set(storyAfter, 'details.title', glHookEvent.object_attributes.title);
-    Import.set(storyAfter, 'details.action', glHookEvent.object_attributes.action);
-    Import.set(storyAfter, 'details.slug', glHookEvent.object_attributes.slug);
-    if (_.isEqual(story, storyAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+        wiki: { id: glHookEvent.object_attributes.slug }
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: 'wiki',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.url', {
+        value: glHookEvent.object_attributes.url,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.title', {
+        value: glHookEvent.object_attributes.title,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.action', {
+        value: glHookEvent.object_attributes.action,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.slug', {
+        value: glHookEvent.object_attributes.slug,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(glMilestone.created_at).toISOString(),
+        overwrite: 'always',
+    });
     return storyAfter;
 }

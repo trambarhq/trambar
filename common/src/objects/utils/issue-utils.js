@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
 module.exports = {
     extract,
@@ -19,14 +19,9 @@ function extract(story, repos) {
     if (!story) {
         return null;
     }
-    var issueLink = LinkUtils.find(story, { relation: 'issue' });
-    if (!issueLink) {
-        // not linked to an issue in issue tracker
-        return null;
-    }
-    // find the repo in whose tracker the issue reside
+    // find the repo in whose tracker the issue resides
     var repo = _.find(repos, (repo) => {
-        return !!LinkUtils.find(story, { project: issueLink.project });
+        return ExternalObjectUtils.findLinkByRelative(story, repo, 'project');
     });
     if (!repo) {
         // either the repo has gone missing or it's not loaded yet
@@ -54,45 +49,38 @@ function attach(story, issue, user, repos) {
         if (issue) {
             // find the correct repo
             var repo = _.find(repos, { id: issue.repoId });
-            var repoLink = LinkUtils.find(repo, { relation: 'project' });
-            // find the user link that matches the repo's server
-            // (a user can definitely be linked to multiple servers)
-            var userLink = LinkUtils.find(user, { server_id: repoLink.server_id });
+            // find the server that hosts the repo and that the user has access to
+            var server = ExternalObjectUtils.findCommonServer(repo, user);
+            var userLink = ExternalObjectUtils.findLink(user, server);
             // find existing issue link (when modifying existing story)
-            var issueLink = LinkUtils.find(story, { relation: 'issue' });
-            if (issueLink) {
-                // make sure the existing link is pointing to the selected repo
-                if (_.isMatch(issueLink, repoLink)) {
-                    _.pull(story.external, issueLink);
-                    issueLink = null;
-                }
-            }
+            var issueLink = ExternalObjectUtils.findLinkByRelative(story, repo, 'project');
             if (!issueLink) {
-                // an incomplete issue link--server will add the issue id
-                issueLink = LinkUtils.extend(repoLink, {
-                    issue: { id: 0 }
+                // an incomplete issue link--server will add the issue id and number
+                // also add the user id, so we know who to post issue as
+                issueLink = ExternalObjectUtils.inheritLink(story, server, repo, {
+                    issue: {
+                        id: 0,
+                        number: 0
+                    },
+                    user: { id: userLink.user.id }
                 });
-                if (!story.external) {
-                    story.external = [];
-                }
-                story.external.push(issueLink);
+            } else {
+                // in case the issue is being modified by another user
+                issueLink.user.id = userLink.user.id;
             }
-            // link the user to the issue, so we know who to post issue as
-            issueLink.user = { id: userLink.user.id };
             story.details.title = issue.title;
             story.details.labels = issue.labels;
+
+            // remove other links
+            _.remove(story.external, (link) => {
+                return (link !== issueLink && link.issue);
+            });
             return true;
         } else {
             // remove any issue link
-            _.pullAllBy(story.external, (link) => {
-                return !!(link.project && link.issue);
-            });
-            if (story.details.hasOwnProperty('title')) {
-                delete story.details.title;
-            }
-            if (story.details.hasOwnProperty('labels')) {
-                delete story.details.labels;
-            }
+            delete story.external;
+            delete story.details.title;
+            delete story.details.labels;
             return false;
         }
     } catch (err) {

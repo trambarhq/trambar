@@ -3,9 +3,8 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Crypto = require('crypto');
 var ParseDiff = require('parse-diff');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 
 // accessors
@@ -28,23 +27,21 @@ module.exports = {
  */
 function importCommit(db, server, repo, glBranch, glCommitId) {
     // first, check if the commit was previously imported
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var commitLink = LinkUtils.extend(repoLink, {
-        commit: { id: glCommitId }
-    });
     var criteria = {
-        external_object: commitLink
+        external_object: ExternalObjectUtils.extendLink(server, repo, {
+            commit: { id: glCommitId }
+        })
     };
     return Commit.findOne(db, 'global', criteria, '*').then((commit) => {
         if (commit) {
             return commit;
         }
+        var repoLink = ExternalObjectUtils.findLink(repo, server);
+        var glProjectId = repoLink.project.id;
         console.log(`Retriving commit ${glCommitId}`);
-        return fetchCommit(server, repoLink.project.id, glCommitId).then((glCommit) => {
-            return fetchDiff(server, repoLink.project.id, glCommit.id).then((glDiff) => {
-                // add parent ids
-                commitLink.commit.parent_ids = glCommit.parent_ids;
-                var commitNew = copyCommitProperties(null, glCommit, glDiff, glBranch, commitLink);
+        return fetchCommit(server, glProjectId, glCommitId).then((glCommit) => {
+            return fetchDiff(server, glProjectId, glCommit.id).then((glDiff) => {
+                var commitNew = copyCommitProperties(null, server, repo, glBranch, glCommit, glDiff);
                 return Commit.insertOne(db, 'global', commitNew);
             });
         });
@@ -55,29 +52,60 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
  * Copy information about the commit,
  *
  * @param  {Commit|null} commit
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {String} glBranch
  * @param  {Object} glCommit
  * @param  {Object} glDiff
- * @param  {String} glBranch
- * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyCommitProperties(commit, glCommit, glDiff, glBranch, link) {
+function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) {
+    var lineChanges = {
+        added: glCommit.stats.additions,
+        deleted: glCommit.stats.deletions,
+    };
+    var fileChanges = countChanges(glDiff);
+
     var commitAfter = _.cloneDeep(commit) || {};
-    Import.join(commitAfter, link);
-    Import.set(commitAfter, 'initial_branch', glBranch);
-    Import.set(commitAfter, 'initial_branch', glBranch);
-    Import.set(commitAfter, 'title_hash', hash(glCommit.title));
-    Import.set(commitAfter, 'ptime', Moment(glCommit.committed_date).toISOString());
-    Import.set(commitAfter, 'details.status', glCommit.status);
-    Import.set(commitAfter, 'details.author_name', glCommit.author_name);
-    Import.set(commitAfter, 'details.author_email', glCommit.author_email);
-    Import.set(commitAfter, 'details.lines.added', glCommit.stats.additions);
-    Import.set(commitAfter, 'details.lines.deleted', glCommit.stats.deletions);
-    Import.set(commitAfter, 'details.files', countChanges(glDiff));
-    if (_.isEqual(commit, commitAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.inheritLink(commitAfter, server, repo, {
+        commit: {
+            id: glCommit.id,
+            parent_ids: glCommit.parent_ids,
+        }
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'initial_branch', {
+        value: glBranch,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'title_hash', {
+        value: hash(glCommit.title),
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'details.status', {
+        value: glCommit.status,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'details.author_name', {
+        value: glCommit.author_name,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'details.author_email', {
+        value: glCommit.author_email,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'details.lines', {
+        value: lineChanges,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'details.files', {
+        value: fileChanges,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(commitAfter, server, 'ptime', {
+        value: Moment(glCommit.committed_date).toISOString(),
+        overwrite: 'always',
+    });
     return commitAfter;
 }
 

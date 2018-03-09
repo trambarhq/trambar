@@ -1,10 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
-var LinkUtils = require('objects/utils/link-utils');
+var TaskLog = require('task-log');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var TaskLog = require('external-services/task-log');
-var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 var RepoAssociation = require('gitlab-adapter/repo-association');
 
@@ -97,7 +96,7 @@ function installProjectHook(host, server, repo, project) {
         return Promise.resolve();
     }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    var repoLink = LinkUtils.find(repo, { server });
+    var repoLink = ExternalObjectUtils.findLink(repo, server);
     return fetchHooks(server, repoLink.project.id).then((glHooks) => {
         var url = getHookEndpoint(host, server, repo, project);
         var hookProps = getHookProps(url);
@@ -139,7 +138,7 @@ function removeProjectHook(host, server, repo, project) {
         return Promise.resolve();
     }
     console.log(`Removing web-hook on repo for project: ${repo.name} -> ${project.name}`);
-    var repoLink = LinkUtils.find(repo, { server });
+    var repoLink = ExternalObjectUtils.findLink(repo, server);
     return fetchHooks(server, repoLink.project.id).each((glHook) => {
         var url = getHookEndpoint(host, server, repo, project);
         if (glHook.url === url) {

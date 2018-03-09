@@ -1,9 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
 var PushReconstructor = require('gitlab-adapter/push-reconstructor');
 var PushDecorator = require('gitlab-adapter/push-decorator');
 var UserImporter = require('gitlab-adapter/user-importer');
@@ -51,11 +50,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
     return PushReconstructor.reconstructPush(db, server, repo, branch, headId, tailId, count).then((push) => {
         // look for component descriptions
         return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
-            var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-            var commitLink = LinkUtils.extend(repoLink, {
-                commit: { ids: push.commitIds }
-            });
-            var storyNew = copyPushProperties(null, author, push, components, glEvent, commitLink);
+            var storyNew = copyPushProperties(null, server, repo, author, push, components, glEvent);
             return Story.insertOne(db, schema, storyNew);
         });
     });
@@ -65,17 +60,16 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of push
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} push
  * @param  {Array<Object>} components
  * @param  {Object} glEvent
- * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyPushProperties(story, author, push, components, glEvent, link) {
-    var storyAfter = _.cloneDeep(story) || {};
-    Import.join(storyAfter, link);
+function copyPushProperties(story, server, repo, author, push, components, glEvent) {
     var storyType;
     if (push.forkId) {
         storyType = 'branch';
@@ -84,23 +78,59 @@ function copyPushProperties(story, author, push, components, glEvent, link) {
     } else {
         storyType = 'push';
     }
-    Import.set(storyAfter, 'type', storyType);
-    Import.set(storyAfter, 'user_ids', [ author.id ]);
-    Import.set(storyAfter, 'role_ids', author.role_ids);
-    Import.set(storyAfter, 'published', true);
-    Import.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
-    Import.set(storyAfter, 'public', true);
-    Import.set(storyAfter, 'details.commit_before', push.tailId);
-    Import.set(storyAfter, 'details.commit_after', push.headId);
-    Import.set(storyAfter, 'details.lines', _.pickBy(push.lines));   // don't include 0's
-    Import.set(storyAfter, 'details.files', _.pickBy(_.mapValues(push.files, 'length')));
-    Import.set(storyAfter, 'details.components', components);
-    Import.set(storyAfter, 'details.branch', push.branch);
-    if (!_.isEmpty(push.fromBranches)) {
-        Import.set(storyAfter, 'details.from_branches', push.fromBranches);
-    }
-    if (_.isEqual(story, storyAfter)) {
-        return null;
-    }
+
+    var storyAfter = _.cloneDeep(story) || {};
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: storyType,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.commit_before', {
+        value: push.tailId,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.commit_after', {
+        value: push.headId,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.lines', {
+        value: _.pickBy(push.lines),    // don't include 0's
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.files', {
+        value: _.pickBy(_.mapValues(push.files, 'length')),
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.components', {
+        value: components,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.branch', {
+        value: push.branch,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.from_branches', {
+        value: !_.isEmpty(push.fromBranches) ? push.fromBranches : undefined,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(glEvent.created_at).toISOString(),
+        overwrite: 'always',
+    });
     return storyAfter;
 }

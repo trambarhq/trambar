@@ -1,10 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var LinkUtils = require('objects/utils/link-utils');
+var TaskLog = require('task-log');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
-var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
 var UserImporter = require('gitlab-adapter/user-importer');
 
@@ -32,9 +31,7 @@ module.exports = {
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var link = repoLink;
-    var storyNew = copyEventProperties(null, author, glEvent, link);
+    var storyNew = copyEventProperties(null, server, repo, author, glEvent);
     return Story.insertOne(db, schema, storyNew);
 }
 
@@ -42,25 +39,44 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of an event object
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} user
  * @param  {Object} glEvent
- * @param  {Object} link
  *
- * @return {Object|null}
+ * @return {Object}
  */
-function copyEventProperties(story, author, glEvent, link) {
+function copyEventProperties(story, server, repo, author, glEvent) {
     var storyAfter = _.cloneDeep(story) || {};
-    Import.join(storyAfter, link);
-    Import.set(storyAfter, 'type', 'repo');
-    Import.set(storyAfter, 'user_ids', [ author.id ]);
-    Import.set(storyAfter, 'role_ids', author.role_ids);
-    Import.set(storyAfter, 'published', true);
-    Import.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
-    Import.set(storyAfter, 'public', true);
-    Import.set(storyAfter, 'details.action', glEvent.action_name);
-    if (_.isEqual(story, storyAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo);
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: 'repo',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.action', {
+        value: glEvent.action_name,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(glEvent.created_at).toISOString(),
+        overwrite: 'always',
+    });
     return storyAfter;
 }
 
@@ -78,8 +94,9 @@ function importRepositories(db, server) {
         server: server.name,
     });
     // find existing repos connected with server (including deleted ones)
-    var serverLink = LinkUtils.create(server)
-    var criteria = { external_object: serverLink };
+    var criteria = {
+        external_object: ExternalObjectUtils.createLink(server)
+    };
     return Repo.find(db, 'global', criteria, '*').then((repos) => {
         var added = [];
         var deleted = [];
@@ -88,7 +105,7 @@ function importRepositories(db, server) {
         return fetchRepos(server).then((glRepos) => {
             // delete ones that no longer exists
             return Promise.each(repos, (repo) => {
-                var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+                var repoLink = ExternalObjectUtils.findLink(repo, server);
                 if (!_.some(glRepos, { id: repoLink.project.id })) {
                     deleted.push(repo.name);
                     return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
@@ -108,11 +125,8 @@ function importRepositories(db, server) {
                     }).filter(Boolean);
                 }).then((members) => {
                     return findExistingRepo(db, server, repos, glRepo).then((repo) => {
-                        var link = LinkUtils.create(server, {
-                            project: { id: glRepo.id }
-                        });
-                        var repoAfter = copyRepoDetails(repo, members, glRepo, glLabels, link);
-                        if (!repoAfter) {
+                        var repoAfter = copyRepoDetails(repo, server, members, glRepo, glLabels);
+                        if (_.isEqual(repoAfter, repo)) {
                             return repo;
                         }
                         if (repo) {
@@ -157,10 +171,9 @@ function importRepositories(db, server) {
  */
 function findExistingRepo(db, server, repos, glRepo) {
     var repo = _.find(repos, (repo) => {
-        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-        if (repoLink.project && repoLink.project.id === glRepo.id) {
-            return true;
-        }
+        return ExternalObjectUtils.findLink(repo, server, {
+            project: { id: glRepo.id }
+        });
     });
     if (repo) {
         if (repo.deleted) {
@@ -198,28 +211,54 @@ function addProjectMembers(db, repo, users) {
  * Copy details from Gitlab project object
  *
  * @param  {Repo|null} repo
+ * @param  {Server} server
  * @param  {Array<User>} members
  * @param  {Object} glRepo
  * @param  {Array<Object>} glLabels
- * @param  {Object} linkCriteria
  *
  * @return {Object|null}
  */
-function copyRepoDetails(repo, members, glRepo, glLabels, link) {
+function copyRepoDetails(repo, server, members, glRepo, glLabels) {
     var repoAfter = _.cloneDeep(repo) || {};
-    Import.join(repoAfter, link);
-    Import.set(repoAfter, 'type', 'gitlab');
-    Import.set(repoAfter, 'name', glRepo.name);
-    Import.set(repoAfter, 'user_ids', _.map(members, 'id'));
-    Import.set(repoAfter, 'details.web_url', glRepo.web_url);
-    Import.set(repoAfter, 'details.issues_enabled', glRepo.issues_enabled);
-    Import.set(repoAfter, 'details.archived', glRepo.archived);
-    Import.set(repoAfter, 'details.default_branch', glRepo.default_branch);
-    Import.set(repoAfter, 'details.labels', _.map(glLabels, 'name'));
-    Import.set(repoAfter, 'details.label_colors', _.map(glLabels, 'color'));
-    if (_.isEqual(repo, repoAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.addLink(repoAfter, server, {
+        project: { id: glRepo.id }
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'type', {
+        value: 'gitlab',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'name', {
+        value: glRepo.name,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'user_ids', {
+        value: _.map(members, 'id'),
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'details.web_url', {
+        value: glRepo.web_url,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'details.issues_enabled', {
+        value: glRepo.issues_enabled,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'details.archived', {
+        value: glRepo.archived,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'details.default_branch', {
+        value: glRepo.default_branch,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'details.labels', {
+        value: _.map(glLabels, 'name'),
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(repoAfter, server, 'details.label_colors', {
+        value: _.map(glLabels, 'color'),
+        overwrite: 'always',
+    });
     return repoAfter;
 }
 

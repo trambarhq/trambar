@@ -1,13 +1,11 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var LinkUtils = require('objects/utils/link-utils');
+var TaskLog = require('task-log');
+var MarkdownExporter = require('utils/markdown-exporter');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Export = require('external-services/export');
-var Import = require('external-services/import');
-var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
-var UserExporter = require('gitlab-adapter/user-exporter');
 
 // accessors
 var Reaction = require('accessors/reaction');
@@ -32,32 +30,58 @@ module.exports = {
 function exportStory(db, project, story) {
     var criteria = { deleted: false };
     return System.findOne(db, 'global', criteria, '*').then((system) => {
-        var issueLink = LinkUtils.find(story, { type: 'gitlab', relation: 'issue' });
-        var newIssue = !issueLink.issue.id;
+        var issueLink = ExternalObjectUtils.findLinkByServerType(story, 'gitlab');
+        if (!issueLink) {
+            return null;
+        }
+        var glProjectId = _.get(issueLink, 'project.id');
+        var glIssueNumber = _.get(issueLink, 'issue.number');
+        var glUserId = _.get(issueLink, 'user.id');
+        var newIssue = !glIssueNumber;
         var criteria = { id: issueLink.server_id, deleted: false };
         return Server.findOne(db, 'global', criteria, '*').then((server) => {
             if (!server) {
-                return null;
+                throw new Error('Server not found');
             }
-            var glIssue = copyIssueProperties(story, project, system, issueLink);
-            var glIssueNumber = issueLink.issue.number;
-            return saveIssue(server, issueLink.project.id, glIssueNumber, glIssue, issueLink.user.id).then((glIssue) => {
-                var storyAfter = _.cloneDeep(story);
-                var issueLinkAfter = LinkUtils.find(storyAfter, { type: 'gitlab', relation: 'issue' });
-                _.set(issueLinkAfter, 'issue.id', glIssue.id);
-                _.set(issueLinkAfter, 'issue.number', glIssue.iid);
-                if (_.isEqual(story, storyAfter)) {
-                    return story;
+            var criteria = {
+                external_object: ExternalObjectUtils.createLink(server, {
+                    user: { id: glUserId }
+                }),
+                deleted: false,
+            };
+            return User.findOne(db, 'global', criteria, '*').then((user) => {
+                if (!user) {
+                    throw new Error('User not found');
                 }
-                return Story.updateOne(db, project.name, storyAfter).then((story) => {
-                    if (!newIssue) {
-                        return story;
+                return fetchIssue(server, glProjectId, glIssueNumber).then((glIssue) => {
+                    var glIssueAfter = copyIssueProperties(glIssue, server, system, project, story);
+                    if (_.isEqual(glIssueAfter, glIssue)) {
+                        return null;
                     }
-                    return createTrackingReaction(db, project, story, issueLinkAfter).then((reaction) => {
-                        return story;
+                    return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
+                        var storyAfter = _.cloneDeep(story);
+                        var issueLinkAfter = ExternalObjectUtils.findLink(storyAfter, server);
+                        _.set(issueLinkAfter, 'issue.id', glIssue.id);
+                        _.set(issueLinkAfter, 'issue.number', glIssue.iid);
+                        if (_.isEqual(story, storyAfter)) {
+                            return story;
+                        }
+                        var schema = project.name;
+                        return Story.updateOne(db, schema, storyAfter).then((story) => {
+                            if (!newIssue) {
+                                return story;
+                            }
+                            var reaction = copyTrackingReactionProperties(null, server, project, story, user);
+                            return Reaction.insertOne(db, schema, reaction).then((reaction) => {
+                                return story;
+                            });
+                        });
                     });
                 });
             });
+        }).catch((err) => {
+            console.error(err);
+            return null;
         });
     });
 }
@@ -65,26 +89,42 @@ function exportStory(db, project, story) {
 /**
  * Create a Gitlab issue object from information in story
  *
+ * @param  {Object} glIssue
  * @param  {Story} story
  * @param  {Project} project
  * @param  {System} system
- * @param  {Object} link
  *
  * @return {Object}
  */
-function copyIssueProperties(story, project, system, link) {
-    var glIssue = {};
-    var lang = link.default_lang;
-    var resources = story.details.resources;
+function copyIssueProperties(glIssue, server, system, project, story) {
     var markdown = story.details.markdown;
-    var text = Export.text(story.details.text, lang);
-    var contents = Export.format(text, markdown, resources, system);
-    var title = Export.text(story.details.title, lang);
-    _.set(glIssue, 'title', title || 'Untitled');
-    _.set(glIssue, 'description', contents);
-    _.set(glIssue, 'confidential', !story.public);
-    _.set(glIssue, 'labels', _.join(story.details.labels, ','));
-    return glIssue;
+    var textVersions = _.filter(story.details.text);
+    var text = _.join(textVersions, '\n\n');
+    if (!markdown) {
+        text = MarkdownExporter.escape(text);
+    }
+    var address = _.get(system, 'settings.address');
+    var resources = story.details.resources;
+    var contents = MarkdownExporter.attachResources(text, resources, address);
+
+    var glIssueAfter = _.clone(glIssue) || {};
+    ExternalObjectUtils.exportProperty(story, server, 'title', glIssueAfter, {
+        value: story.details.title,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.exportProperty(story, server, 'description', glIssueAfter, {
+        value: contents,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.exportProperty(story, server, 'confidential', glIssueAfter, {
+        value: story.public,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.exportProperty(story, server, 'labels', glIssueAfter, {
+        value: _.join(story.details.labels, ','),
+        overwrite: 'match-previous',
+    });
+    return glIssueAfter;
 }
 
 /**
@@ -109,34 +149,60 @@ function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
 }
 
 /**
- * Add a "tracking" reaction
+ * Copy properties of tracking reaction
  *
- * @param  {Database} db
+ * @param  {Reaction} reaction
+ * @param  {Server} server
  * @param  {Project} project
  * @param  {Story} story
- * @param  {Object} link
+ * @param  {User} user
  *
  * @return {Reaction}
  */
-function createTrackingReaction(db, project, story, link) {
-    // find the user who filed the story
-    var userLink = LinkUtils.pick(link, 'user');
-    var criteria = { external_object: userLink, deleted: false };
-    return User.findOne(db, 'global', criteria, '*').then((user) => {
-        if (!user) {
-            return null;
-        }
-        var reaction = {
-            type: 'tracking',
-            story_id: story.id,
-            user_id: user.id,
-            public: story.public,
-            ready: true,
-            published: true,
-            ptime: new String('NOW()'),
-        };
-        var schema = project.name;
-        var issueLink = Import.join(reaction, link);
-        return Reaction.insertOne(db, schema, reaction);
+function copyTrackingReactionProperties(reaction, server, project, story, user) {
+    debugger;
+    var reactionAfter = _.clone(reaction) || {};
+    ExternalObjectUtils.inheritLink(reactionAfter, server, story);
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'type', {
+        value: 'tracking',
+        overwrite: 'always',
     });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'story_id', {
+        value: story.id,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'user_id', {
+        value: user.id,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'public', {
+        value: story.public,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'ptime', {
+        value: Moment().toISOString(),
+        overwrite: 'always',
+    });
+    return reactionAfter;
+}
+
+/**
+ * Retrieve issue from Gitlab
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glIssueNumber
+ *
+ * @return {Object}
+ */
+function fetchIssue(server, glProjectId, glIssueNumber) {
+    if (!glIssueNumber) {
+        return Promise.resolve(null);
+    }
+    var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
+    return Transport.fetch(server, url);
 }

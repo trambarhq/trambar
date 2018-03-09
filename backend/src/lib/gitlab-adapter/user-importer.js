@@ -2,13 +2,12 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var Request = require('request');
+var TaskLog = require('task-log');
 var HTTPError = require('errors/http-error');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
-var LinkUtils = require('objects/utils/link-utils');
 
-var Import = require('external-services/import');
-var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
 
 // accessors
@@ -39,11 +38,7 @@ module.exports = {
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var userLink = LinkUtils.extend(repoLink, {
-        user: { id: glEvent.author_id }
-    });
-    var storyNew = copyEventProperties(null, author, glEvent, userLink);
+    var storyNew = copyEventProperties(null, server, repo, author, glEvent);
     return Story.insertOne(db, schema, storyNew).then((story) => {
         if (glEvent.action_name === 'joined') {
             if (!_.includes(project.user_ids, author.id)) {
@@ -62,25 +57,46 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of event
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} glEvent
- * @param  {Object} link
  *
  * @return {Object}
  */
-function copyEventProperties(story, author, glEvent, link) {
+function copyEventProperties(story, server, repo, author, glEvent) {
     var storyAfter = _.cloneDeep(story) || {};
-    Import.join(storyAfter, link);
-    Import.set(storyAfter, 'type', 'member');
-    Import.set(storyAfter, 'user_ids', [ author.id ]);
-    Import.set(storyAfter, 'role_ids', author.role_ids);
-    Import.set(storyAfter, 'details.action', glEvent.action_name);
-    Import.set(storyAfter, 'published', true);
-    Import.set(storyAfter, 'public', true);
-    Import.set(storyAfter, 'ptime', Moment(glEvent.created_at).toISOString());
-    if (_.isEqual(story, storyAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+        user: { id: glEvent.author_id }
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: 'member',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.action', {
+        value: glEvent.action_name,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(glEvent.created_at).toISOString(),
+        overwrite: 'always',
+    });
     return storyAfter;
 }
 
@@ -97,33 +113,29 @@ function importUsers(db, server) {
         server_id: server.id,
         server: server.name,
     });
-    // find existing users connected with server (including deleted ones)
+    // find existing users connected with server (including disabled ones)
     var criteria = {
-        external_object: LinkUtils.create(server),
+        external_object: ExternalObjectUtils.createLink(server),
     };
     return User.find(db, 'global', criteria, '*').then((users) => {
         var added = [];
-        var deleted = [];
+        var disabled = [];
         var modified = [];
         // fetch list of users from Gitlab
         return fetchUsers(server).then((glUsers) => {
-            // delete ones that no longer exists
+            // disable ones that no longer exists
             return Promise.each(users, (user) => {
-                var userLink = LinkUtils.find(user, { server, relation: 'user' });
-                if (!_.some(glUsers, { id: userLink.user.id })) {
-                    // unless the user is connected to another server
-                    var otherLinks = _.filter(user.external, (link) => {
-                        if (link.server_id !== server.id) {
-                            return true;
-                        }
-                    });
-                    deleted.push(user.username);
-                    if (!_.isEmpty(otherLinks)) {
-                        // in which case we just remove the connection to this server
-                        return User.updateOne(db, 'global', { id: user.id, external: otherLinks });
-                    } else {
-                        return User.updateOne(db, 'global', { id: user.id, deleted: true });
+                var userLink = ExternalObjectUtils.findLink(user, server);
+                var glUserId = _.get(userLink, 'user.id');
+                if (!_.some(glUsers, { id: glUserId })) {
+                    var userAfter = _.cloneDeep(user);
+                    ExternalObjectUtils.removeLink(userAfter, server);
+                    // remove user unless he's associated with another server
+                    if (ExternalObjectUtils.countLinks(userAfter) === 0) {
+                        userAfter.disabled = true;
+                        disabled.push(userAfter.username);
                     }
+                    return User.updateOne(db, 'global', userAfter);
                 }
             }).return(glUsers);
         }).mapSeries((glUser, index, count) => {
@@ -131,11 +143,8 @@ function importUsers(db, server) {
             return importProfileImage(glUser).then((image) => {
                 // find existing user
                 return findExistingUser(db, server, users, glUser).then((user) => {
-                    var userLink = LinkUtils.create(server, {
-                        user: { id: glUser.id }
-                    });
-                    var userAfter = copyUserProperties(user, image, server, glUser, userLink);
-                    if (!userAfter) {
+                    var userAfter = copyUserProperties(user, server, image, glUser);
+                    if (_.isEqual(userAfter, user)) {
                         return user;
                     }
                     if (user) {
@@ -147,7 +156,7 @@ function importUsers(db, server) {
                     }
                 });
             }).tap(() => {
-                taskLog.report(index + 1, count, { added, deleted, modified });
+                taskLog.report(index + 1, count, { added, disabled, modified });
             });
         });
     }).tap(() => {
@@ -168,15 +177,17 @@ function importUsers(db, server) {
  */
 function findExistingUser(db, server, users, glUser) {
     var user = _.find(users, (user) => {
-        var userLink = LinkUtils.find(user, { server, relation: 'user', project: { id: glRepo.id } });
+        var userLink = ExternalObjectUtils.findLink(user, server, {
+            user: { id: glUser.id }
+        });
         if (userLink) {
             return true;
         }
     });
     if (user) {
-        if (user.deleted) {
+        if (user.disabled) {
             // restore it
-            return User.updateOne(db, 'global', { id: user.id, deleted: false });
+            return User.updateOne(db, 'global', { id: user.id, disabled: false });
         } else {
             return Promise.resolve(user);
         }
@@ -220,17 +231,20 @@ function findUser(db, server, glUser) {
     if (!glUser.id) {
         return findUserByName(db, server, glUser);
     }
-    var userLink = LinkUtils.create(server, {
-        user: { id: glUser.id }
-    });
-    var criteria = { external_object: userLink };
+    var criteria = {
+        external_object: ExternalObjectUtils.createLink(server, {
+            user: { id: glUser.id }
+        })
+    };
     return User.findOne(db, 'global', criteria, '*').then((user) => {
         if (user) {
             return user;
         }
         return importUsers(db, server).then((users) => {
             return _.find(users, (user) => {
-                var userLink = LinkUtils.find(user, { server, user: { id: glUser.id } });
+                var userLink = ExternalObjectUtils.findLink(user, server, {
+                    user: { id: glUser.id }
+                });
                 if (userLink) {
                     return true;
                 }
@@ -250,13 +264,13 @@ function findUser(db, server, glUser) {
  */
 function findUserByName(db, server, glUser) {
     // first, try to find an user imported with that name
-    var serverLink = LinkUtils.create(server);
-    var criteria = { external_object: serverLink };
+    var criteria = {
+        external_object: ExternalObjectUtils.createLink(server)
+    };
     return User.find(db, 'global', criteria, '*').then((users) => {
         var user = _.find(users, (user) => {
-            // TODO: username should be at top level of the link instead
-            var userLink = LinkUtils.find(user, { server, relation: 'user' });
-            var username = _.get(userLink, 'user.imported.username');
+            var userLink = ExternalObjectUtils.find(user,  server);
+            var username = _.get(userLink, 'user.username');
             if (username === glUser.username) {
                 return true;
             }
@@ -278,33 +292,13 @@ function findUserByName(db, server, glUser) {
  * Copy details from Gitlab user object
  *
  * @param  {User|null} user
- * @param  {Object} glUser
- * @param  {Object} image
  * @param  {Server} server
- * @param  {Object} link
+ * @param  {Object} image
+ * @param  {Object} glUser
  *
  * @return {Object|null}
  */
-function copyUserProperties(user, image, server, glUser, link) {
-    var userAfter = _.cloneDeep(user) || {
-        role_ids: _.get(server, 'settings.user.role_ids', []),
-        settings: UserSettings.default,
-    };
-    var userLink = Import.join(userAfter, link);
-    if (!userAfter.username || (userLink.user.username === userAfter.username)) {
-        Import.set(userAfter, 'username', glUser.username);
-    }
-    userLink.user.username = glUser.username;
-    Import.set(userAfter, 'disabled', glUser.state !== 'active');
-    Import.set(userAfter, 'details.name', glUser.name);
-    Import.set(userAfter, 'details.gitlab_url', glUser.web_url);
-    Import.set(userAfter, 'details.skype_username', glUser.skype || undefined);
-    Import.set(userAfter, 'details.twitter_username', glUser.twitter || undefined);
-    Import.set(userAfter, 'details.linkedin_username', glUser.linkedin_name || undefined);
-    Import.set(userAfter, 'details.email', glUser.email);
-    Import.attach(userAfter, 'image', image);
-
-    // set user type
+function copyUserProperties(user, server, image, glUser) {
     var mapping = _.get(server, 'settings.user.mapping', {});
     var userType;
     if (glUser.is_admin) {
@@ -314,26 +308,64 @@ function copyUserProperties(user, image, server, glUser, link) {
     } else {
         userType = mapping.user;
     }
+    var overwriteUserType = 'never';
     if (user) {
-        if (userType) {
-            // set it if it's more privileged
-            if (UserTypes.indexOf(userType) > UserTypes.indexOf(userAfter.type)) {
-                userAfter.type = userType;
-            }
-        }
-    } else {
-        // new user
-        if (userType) {
-            userAfter.type = userType;
-        } else {
-            // create as disabled if user import is disabled
-            userAfter.type = 'regular';
-            userAfter.disabled = true;
+        // overwrite user type if new type has more privileges
+        if (UserTypes.indexOf(userType) > UserTypes.indexOf(user.type)) {
+            overwriteUserType = 'always';
         }
     }
 
-    if (_.isEqual(user, userAfter)) {
-        return null;
+    var userAfter = _.cloneDeep(user);
+    if (!userAfter) {
+        userAfter = {
+            role_ids: _.get(server, 'settings.user.role_ids', []),
+            settings: UserSettings.default,
+        };
+    }
+    ExternalObjectUtils.addLink(userAfter, server, {
+        user: {
+            id: glUser.id,
+            username: glUser.username,
+        }
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'type', {
+        value: userType,
+        overwrite: overwriteUserType,
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'username', {
+        value: glUser.username,
+        overwrite: 'match-previous'
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'details.name', {
+        value: glUser.name,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'details.gitlab_url', {
+        value: glUser.web_url,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'details.skype_username', {
+        value: glUser.skype,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'details.twitter_username', {
+        value: glUser.twitter,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.importProperty(userAfter, server, 'details.linkedin_username', {
+        value: glUser.linkedin_name,
+        overwrite: 'match-previous',
+    });
+    ExternalObjectUtils.importResource(userAfter, server, {
+        type: 'image',
+        value: image,
+        replace: 'match-previous',
+    });
+    if (!userAfter.type) {
+        // create as disabled if user import is disabled
+        userAfter.type = 'regular';
+        userAfter.disabled = true;
     }
     return userAfter;
 }

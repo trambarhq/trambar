@@ -1,8 +1,8 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Async = require('async-do-while');
+var TaskLog = require('task-log');
 
-var TaskLog = require('external-services/task-log');
 var CommitImporter = require('gitlab-adapter/commit-importer');
 
 module.exports = {

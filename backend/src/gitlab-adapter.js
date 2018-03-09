@@ -8,7 +8,6 @@ var Shutdown = require('shutdown');
 var TaskQueue = require('utils/task-queue');
 var StoryTypes = require('objects/types/story-types');
 
-var Import = require('external-services/import');
 var RepoAssociation = require('gitlab-adapter/repo-association');
 var HookManager = require('gitlab-adapter/hook-manager');
 var EventImporter = require('gitlab-adapter/event-importer');

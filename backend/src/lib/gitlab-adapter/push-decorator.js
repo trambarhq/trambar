@@ -4,9 +4,8 @@ var Request = require('request');
 var Ignore = require('ignore');
 var HTTPError = require('errors/http-error');
 var Async = require('async-do-while');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 
 var languageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
@@ -269,20 +268,22 @@ function findMatchingComponents(folder, path) {
  * @return {Promise<Array<Object>>}
  */
 function scanFolder(server, repo, commitId, folderPath) {
-    console.log(`Scanning ${folderPath}`);
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var url = `projects/${repoLink.project.id}/repository/tree`;
-    var query = {
-        path: folderPath,
-        ref: commitId,
-    };
-    return Transport.fetchAll(server, url, query).catch((err) => {
-        if (err instanceof HTTPError) {
-            if (err.statusCode === 404) {
-                return [];
+    return Promise.try(() => {
+        console.log(`Scanning ${folderPath}`);
+        var repoLink = ExternalObjectUtils.findLink(repo, server);
+        var url = `projects/${repoLink.project.id}/repository/tree`;
+        var query = {
+            path: folderPath,
+            ref: commitId,
+        };
+        return Transport.fetchAll(server, url, query).catch((err) => {
+            if (err instanceof HTTPError) {
+                if (err.statusCode === 404) {
+                    return [];
+                }
             }
-        }
-        throw err;
+            throw err;
+        });
     });
 }
 
@@ -297,16 +298,18 @@ function scanFolder(server, repo, commitId, folderPath) {
  * @return {Promise<Object>}
  */
 function retrieveFile(server, repo, commitId, fileRecord) {
-    if (!fileRecord) {
-        return Promise.resolve(null);
-    }
-    console.log(`Retrieving file: ${fileRecord.path}`);
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var url = `/projects/${repoLink.project.id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
-    var query = {
-        ref: commitId,
-    };
-    return Transport.fetch(server, url, query);
+    return Promise.try(() => {
+        if (!fileRecord) {
+            return null;
+        }
+        console.log(`Retrieving file: ${fileRecord.path}`);
+        var repoLink = ExternalObjectUtils.findLink(repo, server);
+        var url = `/projects/${repoLink.project.id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
+        var query = {
+            ref: commitId,
+        };
+        return Transport.fetch(server, url, query);
+    });
 }
 
 /**

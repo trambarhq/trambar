@@ -3,8 +3,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 var UserUtils = require('objects/utils/user-utils');
-var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -212,7 +212,7 @@ module.exports = React.createClass({
                         switch (story.type) {
                             case 'push':
                             case 'merge':
-                                var link = LinkUtils.find(reaction, { relation: [ 'note', 'commit' ] });
+                                var link = ExternalObjectUtils.findLinkByRelations(reaction, 'note', 'commit');
                                 if (link) {
                                     var noteId = link.note.id;
                                     var commitId = link.commit.id;
@@ -221,7 +221,7 @@ module.exports = React.createClass({
                                 }
                                 break;
                             case 'issue':
-                                var link = LinkUtils.find(reaction, { relation: [ 'note', 'issue' ] });
+                                var link = ExternalObjectUtils.findLinkByRelations(reaction, 'note', 'issue');
                                 if (link) {
                                     var noteId = link.note.id;
                                     var issueNumber = link.issue.number;
@@ -230,7 +230,7 @@ module.exports = React.createClass({
                                 }
                                 break;
                             case 'merge-request':
-                                var link = LinkUtils.find(reaction, { relation: [ 'note', 'merge_request' ] });
+                                var link = ExternalObjectUtils.findLinkByRelations(reaction, 'note', 'merge_request');
                                 if (link) {
                                     var noteId = link.note.id;
                                     var mergeRequestNumber = link.merge_request.number;
@@ -250,7 +250,7 @@ module.exports = React.createClass({
                     if (story.type === 'issue' || story.type === 'post') {
                         var url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
-                            var link = LinkUtils.find(reaction, { relation: 'issue' });
+                            var link = ExternalObjectUtils.findLinkByRelations(reaction, 'issue');
                             if (link) {
                                 var issueNumber = link.issue.number;
                                 url = `${repo.details.web_url}/issues/${issueNumber}`;
@@ -265,7 +265,7 @@ module.exports = React.createClass({
                     } else if (story.type === 'merge-request') {
                         var url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
-                            var link = LinkUtils.find(reaction, { relation: 'merge_request' });
+                            var link = ExternalObjectUtils.findLinkByRelations(reaction, 'merge_request');
                             if (link) {
                                 var mergeRequestNumber = link.merge_request.number;
                                 url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}`;
@@ -281,7 +281,7 @@ module.exports = React.createClass({
                 case 'tracking':
                     var url, target;
                     if (UserUtils.canAccessRepo(user, repo)) {
-                        var link = LinkUtils.find(reaction, { relation: 'issue' });
+                        var link = ExternalObjectUtils.findLinkByRelations(reaction, 'issue');
                         if (link) {
                             var issueNumber = link.issue.number;
                             url = `${repo.details.web_url}/issues/${issueNumber}`;

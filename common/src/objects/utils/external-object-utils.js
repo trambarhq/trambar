@@ -17,6 +17,7 @@ module.exports = {
     exportProperty,
     hasPreviousImport,
     hasPreviousExport,
+    findCommonServer,
 };
 
 /**
@@ -149,7 +150,7 @@ function findLinkByServerType(object, serverType, props) {
  * Find a link by relations it has
  *
  * @param  {ExternalObject} object
- * @param  {Array<String>} ...relations
+ * @param  {String} ...relations
  *
  * @return {Object|null}
  */
@@ -166,7 +167,7 @@ function findLinkByRelations(object, ...relations) {
  * Find a link that also exists in another object
  *
  * @param  {ExternalObject} object
- * @param  {Array<String>} ...relations
+ * @param  {String} ...relations
  *
  * @return {Object|null}
  */
@@ -228,17 +229,28 @@ function importProperty(object, server, path, prop) {
     }
     var currentValue = _.get(object, path);
     if (prop.overwrite === 'always') {
-        _.set(object, path, prop.value);
+        if (prop.value !== undefined) {
+            _.set(object, path, prop.value);
+        } else {
+            _.unset(object, path);
+        }
     } else if (prop.overwrite === 'never') {
         if (currentValue === undefined) {
-            _.set(object, path, prop.value);
+            if (prop.value !== undefined) {
+                _.set(object, path, prop.value);
+            }
         }
     } else if (prop.overwrite === 'match-previous') {
         var previous = getPreviousImport(object, server);
         var previousValue = _.get(previous, path);
         if (_.isEqual(currentValue, previousValue)) {
-            _.set(object, path, prop.value);
-            _.set(previous, path, prop.value);
+            if (prop.value !== undefined) {
+                _.set(object, path, prop.value);
+                _.set(previous, path, prop.value);
+            } else {
+                _.unset(object, path);
+                _.unset(previous, path);
+            }
         }
     } else {
         throw new Error('Unknown option: ' + prop.overwrite);
@@ -320,13 +332,14 @@ function importResource(object, server, prop) {
  * @param  {ExternalObject} object
  * @param  {Server} server
  * @param  {String} path
+ * @param  {Object} dest
  * @param  {Object} prop
  */
-function exportProperty(object, server, dest, path, prop) {
+function exportProperty(object, server, path, dest, prop) {
     if (prop.ignore) {
         return;
     }
-    var currentValue = _.get(object, path);
+    var currentValue = _.get(dest, path);
     if (prop.overwrite === 'always') {
         _.set(dest, path, prop.value);
     } else if (prop.overwrite === 'never') {
@@ -399,4 +412,29 @@ function hasPreviousImport(object, server) {
  */
 function hasPreviousExport(object, server) {
     return !!getPreviousExport(object, server);
+}
+
+/**
+ * Return id and type of server common to specified objects
+ *
+ * @param  {ExternalObject} ...objects
+ *
+ * @return {Object|null}
+ */
+function findCommonServer(...objects) {
+    var first = _.first(objects);
+    var rest = _.slice(objects, 1);
+    var link = _.find(first.external, (link1) => {
+        var props = _.pick(link1, 'server_id', 'type');
+        return _.every(rest, (other) => {
+            return _.some(other.external, props);
+        });
+    });
+    if (!link) {
+        return null;
+    }
+    return {
+        id: link.server_id,
+        type: link.type,
+    };
 }

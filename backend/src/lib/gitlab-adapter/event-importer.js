@@ -1,10 +1,9 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var LinkUtils = require('objects/utils/link-utils');
+var TaskLog = require('task-log');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
-var TaskLog = require('external-services/task-log');
 var Transport = require('gitlab-adapter/transport');
 var IssueImporter = require('gitlab-adapter/issue-importer');
 var MergeRequestImporter = require('gitlab-adapter/merge-request-importer');
@@ -41,7 +40,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
     };
     return TaskLog.last('gitlab-event-import', options).then((lastTask) => {
         var lastEventTime = _.get(lastTask, 'details.last_event_time');
-        var repoLink = LinkUtils.find(repo, { server });
+        var repoLink = ExternalObjectUtils.findLink(repo, server);
         var url = `/projects/${repoLink.project.id}/events`;
         var params = { sort: 'asc' };
         if (lastEventTime) {

@@ -2,9 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 var UserImporter = require('gitlab-adapter/user-importer');
 
@@ -31,23 +30,20 @@ module.exports = {
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var repoLink = ExternalObjectUtils.findLink(repo, server);
     return fetchMergeRequest(server, repoLink.project.id, glEvent.target_id).then((glMergeRequest) => {
         // the story is linked to both the merge request and the repo
-        var mergeRequestLink = LinkUtils.extend(repoLink, {
-            merge_request: { id: glMergeRequest.id }
-        });
-        // find existing merge request
         var criteria = {
-            external_object: mergeRequestLink,
+            external_object: ExternalObjectUtils.extendLink(server, repo, {
+                merge_request: { id: glMergeRequest.id }
+            })
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
-            var storyAfter = copyMergeRequestProperties(story, author, glMergeRequest, mergeRequestLink);
-            if (storyAfter) {
-                return Story.saveOne(db, schema, storyAfter);
-            } else {
+            var storyAfter = copyMergeRequestProperties(story, server, repo, author, glMergeRequest);
+            if (_.isEqual(storyAfter, story)) {
                 return story;
             }
+            return Story.saveOne(db, schema, storyAfter);
         }).then((story) => {
             return importAssignment(db, server, project, repo, story, glMergeRequest).return(story);
         });
@@ -75,28 +71,25 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 
         // find existing story
         var schema = project.name;
-        var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-        var mergeRequestLink = LinkUtils.extend(repoLink, {
-            merge_request: { id: glMergeRequest.id }
-        });
         var criteria = {
-            external_object: mergeRequestLink,
+            external_object: ExternalObjectUtils.extendLink(server, repo, {
+                merge_request: { id: glMergeRequest.id }
+            }),
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             if (!story) {
-                return null;
+                throw new Error('Story not found')
             }
-            var storyAfter = copyMergeRequestProperties(story, author, glMergeRequest, mergeRequestLink);
-            if (storyAfter) {
-                return Story.updateOne(db, schema, storyAfter);
-            } else {
+            var storyAfter = copyMergeRequestProperties(story, server, repo, author, glMergeRequest);
+            if (_.isEqual(storyAfter, story)) {
                 return story;
             }
+            return Story.updateOne(db, schema, storyAfter);
         }).then((story) => {
-            if (!story) {
-                return null;
-            }
             return importAssignment(db, server, project, repo, story, glMergeRequest).return(story);
+        }).catch((err) => {
+            console.error(err);
+            return null;
         });
     } else {
         return Promise.resolve(false);
@@ -117,21 +110,17 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  */
 function importAssignment(db, server, project, repo, story, glMergeRequest) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
-    var mergeRequestLink = LinkUtils.extend(repoLink, {
-        merge_request: { id: glMergeRequest.id }
-    });
     // find existing assignments
     var criteria = {
         story_id: story.id,
         type: 'assignment',
-        external_object: mergeRequestLink,
+        external_object: ExternalObjectUtils.findLink(story, server),
     };
     return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
         var glUser = glMergeRequest.assignee;
         return UserImporter.findUser(db, server, glUser).then((assignee) => {
             if (!_.some(reactions, { user_id: assignee.id })) {
-                var reactionNew = copyAssignmentProperties(null, story, assignee, glMergeRequest, mergeRequestLink);
+                var reactionNew = copyAssignmentProperties(null, server, story, assignee, glMergeRequest);
                 return Reaction.saveOne(db, schema, reactionNew);
             }
         });
@@ -147,34 +136,75 @@ function importAssignment(db, server, project, repo, story, glMergeRequest) {
  *   iid - is uniq only in scope of single project
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} glMergeRequest
  * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyMergeRequestProperties(story, author, glMergeRequest, link) {
-    var storyAfter = _.cloneDeep(story) || {};
-    var mergeRequestLink = Import.join(storyAfter, link);
+function copyMergeRequestProperties(story, server, repo, author, glMergeRequest) {
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
     var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
-    mergeRequestLink.merge_request.number = glMergeRequest.iid;
-    Import.set(storyAfter, 'type', 'merge-request');
-    Import.set(storyAfter, 'tags', _.union(descriptionTags, labelTags));
-    Import.set(storyAfter, 'user_ids', [ author.id ]);
-    Import.set(storyAfter, 'role_ids', author.role_ids);
-    Import.set(storyAfter, 'published', true);
-    Import.set(storyAfter, 'ptime', Moment(new Date(glMergeRequest.created_at)).toISOString());
-    Import.set(storyAfter, 'public', !glMergeRequest.confidential);
-    Import.set(storyAfter, 'details.state', glMergeRequest.state);
-    Import.set(storyAfter, 'details.branch', glMergeRequest.target_branch);
-    Import.set(storyAfter, 'details.source_branch', glMergeRequest.source_branch);
-    Import.set(storyAfter, 'details.labels', glMergeRequest.labels);
-    Import.set(storyAfter, 'details.milestone', _.get(glMergeRequest, 'milestone.title'));
-    Import.set(storyAfter, 'details.title', glMergeRequest.title);
-    if (_.isEqual(story, storyAfter)) {
-        return null;
-    }
+    var tags = _.union(descriptionTags, labelTags);
+
+    var storyAfter = _.cloneDeep(story) || {};
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+        merge_request: { id: glMergeRequest.id }
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: 'merge-request',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'tags', {
+        value: tags,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.state', {
+        value: glMergeRequest.state,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.branch', {
+        value: glMergeRequest.target_branch,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.source_branch', {
+        value: glMergeRequest.source_branch,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.labels', {
+        value: glMergeRequest.labels,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.milestone', {
+        value: _.get(glMergeRequest, 'milestone.title'),
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.title', {
+        value: glMergeRequest.title,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: !glIssue.confidential,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(new Date(glIssue.created_at)).toISOString(),
+        overwrite: 'always',
+    });
     return storyAfter;
 }
 
@@ -182,24 +212,40 @@ function copyMergeRequestProperties(story, author, glMergeRequest, link) {
  * Copy certain properties of the merge request into the assignment reaction
  *
  * @param  {Reaction|null} reaction
+ * @param  {Server} server
  * @param  {Story} story
  * @param  {User} assignee
  * @param  {Object} glMergeRequest
- * @param  {Object} link
  *
  * @return {Object|null}
  */
-function copyAssignmentProperties(reaction, story, assignee, glMergeRequest, link) {
+function copyAssignmentProperties(reaction, server, story, assignee, glMergeRequest) {
     var reactionAfter = _.cloneDeep(reaction) || {};
-    Import.join(reactionAfter, link);
-    Import.set(reactionAfter, 'type', 'assignment');
-    Import.set(reactionAfter, 'story_id', story.id);
-    Import.set(reactionAfter, 'user_id', assignee.id);
-    Import.set(reactionAfter, 'published', true);
-    Import.set(reactionAfter, 'ptime', Moment(glMergeRequest.updated_at).toISOString());
-    if (_.isEqual(reaction, reactionAfter)) {
-        return null;
-    }
+    ExternalObjectUtils.inheritLink(reactionAfter, server, story);
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'type', {
+        value: 'assignment',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'story_id', {
+        value: story.id,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'user_id', {
+        value: assignee.id,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(reactionAfter, server, 'ptime', {
+        value: Moment(glMergeRequest.updated_at).toISOString(),
+        overwrite: 'always',
+    });
     return reactionAfter;
 }
 

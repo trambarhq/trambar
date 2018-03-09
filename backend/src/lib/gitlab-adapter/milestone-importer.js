@@ -2,9 +2,8 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TagScanner = require('utils/tag-scanner');
-var LinkUtils = require('objects/utils/link-utils');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
-var Import = require('external-services/import');
 var Transport = require('gitlab-adapter/transport');
 
 // accessors
@@ -28,13 +27,10 @@ module.exports = {
  */
 function importEvent(db, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var repoLink = LinkUtils.find(repo, { server, relation: 'project' });
+    var repoLink = ExternalObjectUtils.findLink(repo, server);
     return fetchMilestone(server, repoLink.project.id, glEvent.target_id).then((glMilestone) => {
         // the story is linked to both the issue and the repo
-        var milestoneLink = LinkUtils.extend(repoLink, {
-            milestone: { id: glMilestone.id }
-        });
-        var storyNew = copyMilestoneProperties(null, author, glMilestone, milestoneLink);
+        var storyNew = copyMilestoneProperties(null, server, repo, author, glMilestone);
         return Story.insertOne(db, schema, storyNew);
     });
 }
@@ -50,24 +46,56 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * @return {Object|null}
  */
 function copyMilestoneProperties(story, author, glMilestone, link) {
-    var storyAfter = _.cloneDeep(story) || {};
-    var milestoneLink = Import.join(storyAfter, link);
     var descriptionTags = TagScanner.findTags(glMilestone.description);
-    milestoneLink.milestone.number = glMilestone.iid;
-    Import.set(storyAfter, 'type', 'milestone');
-    Import.set(storyAfter, 'tags', descriptionTags);
-    Import.set(storyAfter, 'user_ids', [ author.id ]);
-    Import.set(storyAfter, 'role_ids', author.role_ids);
-    Import.set(storyAfter, 'public', true);
-    Import.set(storyAfter, 'published', true);
-    Import.set(storyAfter, 'ptime', Moment(glMilestone.created_at).toISOString());
-    Import.set(storyAfter, 'details.state', glMilestone.state);
-    Import.set(storyAfter, 'details.title', glMilestone.title);
-    Import.set(storyAfter, 'details.due_date', glMilestone.due_date);
-    Import.set(storyAfter, 'details.start_date', glMilestone.start_date);
-    if (_.isEqual(story, storyAfter)) {
-        return null;
-    }
+
+    var storyAfter = _.cloneDeep(story) || {};
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+        milestone: { id: glMilestone.id }
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+        value: 'milestone',
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'tags', {
+        value: descriptionTags,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: [ author.id ],
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: author.role_ids,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.state', {
+        value: glMilestone.state,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.title', {
+        value: glMilestone.title,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.due_date', {
+        value: glMilestone.due_date,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'details.start_date', {
+        value: glMilestone.start_date,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+        value: true,
+        overwrite: 'always',
+    });
+    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+        value: Moment(glMilestone.created_at).toISOString(),
+        overwrite: 'always',
+    });
     return storyAfter;
 }
 
