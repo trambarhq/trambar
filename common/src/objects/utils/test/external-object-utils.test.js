@@ -173,6 +173,169 @@ describe('ExternalObjectUtils', function() {
             expect(link).to.be.null;
         })
     })
+    describe('#findLinkByServerType()', function() {
+        it('should find a link by type', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByServerType(repo, 'gitlab');
+            expect(link).to.equal(repo.external[0]);
+        })
+        it('should return null when there is no link of specified type', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByServerType(repo, 'github');
+            expect(link).to.be.null;
+        })
+    })
+    describe('#findLinkByRelations()', function() {
+        it('should find a link by type', function() {
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByRelations(issue, 'project', 'issue');
+            expect(link).to.equal(issue.external[0]);
+        })
+        it('should return null when there is no link with specified relations', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByServerType(repo, 'project', 'issue');
+            expect(link).to.be.null;
+        })
+    })
+    describe('#findLinkByRelative()', function() {
+        it('should find a link that is from the same server as another object', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                    }
+                ]
+            };
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByRelative(issue, repo);
+            expect(link).to.equal(issue.external[0]);
+        })
+        it('should find a match when provided with additional relations', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                    }
+                ]
+            };
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByRelative(issue, repo, 'project');
+            expect(link).to.equal(issue.external[0]);
+        })
+        it('should not find a match when the objects are from different servers', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'github',
+                        server_id: 2,
+                        project: { id: 1 },
+                    }
+                ]
+            };
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByRelative(issue, repo);
+            expect(link).to.be.null;
+        })
+        it('should not find a match when the relations do not match', function() {
+            var repo = {
+                id: 4,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 3 },
+                    }
+                ]
+            };
+            var issue = {
+                id: 7,
+                external: [
+                    {
+                        type: 'gitlab',
+                        server_id: 3,
+                        project: { id: 1 },
+                        issue: { id: 12 }
+                    }
+                ]
+            };
+            var link = ExternalObjectUtils.findLinkByRelative(issue, repo, 'project');
+            expect(link).to.be.null;
+        })
+    })
     describe('#removeLink()', function() {
         it('should add link that inherits keys from another object', function() {
             var server = {

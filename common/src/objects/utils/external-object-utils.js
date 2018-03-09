@@ -7,6 +7,9 @@ module.exports = {
     inheritLink,
     attachLink,
     findLink,
+    findLinkByServerType,
+    findLinkByRelations,
+    findLinkByRelative,
     removeLink,
     countLinks,
     importProperty,
@@ -58,6 +61,8 @@ function extendLink(server, parent, props) {
  * @param {ExternalObject} object
  * @param {Server} server
  * @param {Object} props
+ *
+ * @return {Object}
  */
 function addLink(object, server, props) {
     var link = createLink(server, props);
@@ -70,6 +75,8 @@ function addLink(object, server, props) {
  * @param {ExternalObject} object
  * @param {Server} server
  * @param {Object|undefined} props
+ *
+ * @return {Object}
  */
 function inheritLink(object, server, parent, props) {
     var link = extendLink(server, parent, props);
@@ -117,6 +124,66 @@ function findLink(object, server, props) {
         }
     }
     return null;
+}
+
+/**
+ * Find a link by server type
+ *
+ * @param  {ExternalObject} object
+ * @param  {String} serverType
+ * @param  {Object|undefined} props
+ *
+ * @return {Object|null}
+ */
+function findLinkByServerType(object, serverType, props) {
+    var link = _.find(object.external, { type: serverType });
+    if (link) {
+        if (!props || _.isMatch(link, props)) {
+            return link;
+        }
+    }
+    return null;
+}
+
+/**
+ * Find a link by relations it has
+ *
+ * @param  {ExternalObject} object
+ * @param  {Array<String>} ...relations
+ *
+ * @return {Object|null}
+ */
+function findLinkByRelations(object, ...relations) {
+    var link = _.find(object.external, (link) => {
+        if (_.every(_.pick(link, relations))) {
+            return true;
+        }
+    });
+    return link || null;
+}
+
+/**
+ * Find a link that also exists in another object
+ *
+ * @param  {ExternalObject} object
+ * @param  {Array<String>} ...relations
+ *
+ * @return {Object|null}
+ */
+function findLinkByRelative(object, relative, ...relations) {
+    var link = _.find(object.external, (link1) => {
+        return _.find(relative.external, (link2) => {
+            if (link1.type === link2.type && link1.server_id === link2.server_id) {
+                if (_.isEmpty(relations)) {
+                    return true;
+                }
+                if (_.isEqual(_.pick(link1, relations), _.pick(link2, relations))) {
+                    return true;
+                }
+            }
+        });
+    });
+    return link || null;
 }
 
 /**
@@ -247,7 +314,35 @@ function importResource(object, server, prop) {
     }
 }
 
-function exportProperty(dest, object, server, path, prop) {
+/**
+ * Export a value to another object
+ *
+ * @param  {ExternalObject} object
+ * @param  {Server} server
+ * @param  {String} path
+ * @param  {Object} prop
+ */
+function exportProperty(object, server, dest, path, prop) {
+    if (prop.ignore) {
+        return;
+    }
+    var currentValue = _.get(object, path);
+    if (prop.overwrite === 'always') {
+        _.set(dest, path, prop.value);
+    } else if (prop.overwrite === 'never') {
+        if (currentValue === undefined) {
+            _.set(dest, path, prop.value);
+        }
+    } else if (prop.overwrite === 'match-previous') {
+        var previous = getPreviousExport(object, server);
+        var previousValue = _.get(previous, path);
+        if (_.isEqual(currentValue, previousValue)) {
+            _.set(dest, path, prop.value);
+            _.set(previous, path, prop.value);
+        }
+    } else {
+        throw new Error('Unknown option: ' + prop.overwrite);
+    }
 }
 
 /**
