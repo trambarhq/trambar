@@ -269,7 +269,7 @@ function findUserByName(db, server, glUser) {
     };
     return User.find(db, 'global', criteria, '*').then((users) => {
         var user = _.find(users, (user) => {
-            var userLink = ExternalObjectUtils.find(user,  server);
+            var userLink = ExternalObjectUtils.findLink(user, server);
             var username = _.get(userLink, 'user.username');
             if (username === glUser.username) {
                 return true;

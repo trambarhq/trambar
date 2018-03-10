@@ -75,7 +75,12 @@ function isTrackable(story) {
     if (!story) {
         return false;
     }
-    return _.includes(StoryTypes.trackable, story.type || 'post')
+    if (story.type === 'issue') {
+        if (story.details.exported) {
+            return true;
+        }
+    }
+    return _.includes(StoryTypes.trackable, story.type || 'post');
 }
 
 /**

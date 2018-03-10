@@ -170,8 +170,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderText: function() {
+        var story = this.props.story;
         this.resourcesReferenced = [];
-        switch (this.props.story.type) {
+        switch (story.type) {
             case 'post':
                 return this.renderStoryText();
             case 'task-list':
@@ -187,7 +188,11 @@ module.exports = React.createClass({
             case 'branch':
                 return this.renderPushText();
             case 'issue':
-                return this.renderIssueText();
+                if (story.details.exported) {
+                    return this.renderStoryText();
+                } else {
+                    return this.renderIssueText();
+                }
             case 'merge-request':
                 return this.renderMergeRequestText();
             case 'milestone':
@@ -211,7 +216,7 @@ module.exports = React.createClass({
         }
         var tags;
         if (story.details.labels) {
-            tags = this.renderTags();
+            tags = this.renderLabels();
         }
         if (story.details.markdown) {
             var contents = Markdown.parse(text, this.handleReference);
@@ -378,7 +383,7 @@ module.exports = React.createClass({
                     </a>
                 </p>
                 {this.renderStatus()}
-                {this.renderTags()}
+                {this.renderLabels()}
             </div>
         );
     },
@@ -453,7 +458,7 @@ module.exports = React.createClass({
                     </a>
                 </p>
                 {this.renderStatus()}
-                {this.renderTags()}
+                {this.renderLabels()}
             </div>
         );
     },
@@ -566,6 +571,9 @@ module.exports = React.createClass({
     renderStatus: function() {
         var t = this.props.locale.translate;
         var state = this.props.story.details.state;
+        if (!state) {
+            return null;
+        }
         return (
             <p className={`status-${state}`}>
                 <span>{t('story-issue-current-status')}</span>
@@ -576,11 +584,11 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render tags for issue and merge requests
+     * Render labels for issue and merge requests
      *
      * @return {ReactElement|null}
      */
-    renderTags: function() {
+    renderLabels: function() {
         var labels = this.props.story.details.labels;
         if (_.isEmpty(labels)) {
             return null;

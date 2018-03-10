@@ -63,6 +63,8 @@ function exportStory(db, project, story) {
                         var issueLinkAfter = ExternalObjectUtils.findLink(storyAfter, server);
                         _.set(issueLinkAfter, 'issue.id', glIssue.id);
                         _.set(issueLinkAfter, 'issue.number', glIssue.iid);
+                        _.set(storyAfter, 'type', 'issue');
+                        _.set(storyAfter, 'details.exported', true);
                         if (_.isEqual(story, storyAfter)) {
                             return story;
                         }
@@ -117,35 +119,14 @@ function copyIssueProperties(glIssue, server, system, project, story) {
         overwrite: 'match-previous',
     });
     ExternalObjectUtils.exportProperty(story, server, 'confidential', glIssueAfter, {
-        value: story.public,
+        value: !story.public,
         overwrite: 'match-previous',
     });
     ExternalObjectUtils.exportProperty(story, server, 'labels', glIssueAfter, {
-        value: _.join(story.details.labels, ','),
+        value: story.details.labels,
         overwrite: 'match-previous',
     });
     return glIssueAfter;
-}
-
-/**
- * Create or update an issue at Gitlab
- *
- * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {Number} glIssueNumber
- * @param  {Object} glIssue
- * @param  {Number} glUserId
- *
- * @return {Promise}
- */
-function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
-    var url = `/projects/${glProjectId}/issues`;
-    if (glIssueNumber) {
-        url += `/${glIssueNumber}`;
-        return Transport.put(server, url, glIssue, glUserId);
-    } else {
-        return Transport.post(server, url, glIssue, glUserId);
-    }
 }
 
 /**
@@ -205,4 +186,32 @@ function fetchIssue(server, glProjectId, glIssueNumber) {
     }
     var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
     return Transport.fetch(server, url);
+}
+
+/**
+ * Create or update an issue at Gitlab
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glIssueNumber
+ * @param  {Object} glIssue
+ * @param  {Number} glUserId
+ *
+ * @return {Promise}
+ */
+function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
+    var url = `/projects/${glProjectId}/issues`;
+    var props = {
+        title: glIssue.title,
+        description: glIssue.description,
+        state: glIssue.state,
+        labels: _.join(glIssue.labels, ','),
+        confidential: glIssue.confidential,
+    };
+    if (glIssueNumber) {
+        url += `/${glIssueNumber}`;
+        return Transport.put(server, url, props, glUserId);
+    } else {
+        return Transport.post(server, url, props, glUserId);
+    }
 }

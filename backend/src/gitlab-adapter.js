@@ -7,6 +7,7 @@ var Database = require('database');
 var Shutdown = require('shutdown');
 var TaskQueue = require('utils/task-queue');
 var StoryTypes = require('objects/types/story-types');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 
 var RepoAssociation = require('gitlab-adapter/repo-association');
 var HookManager = require('gitlab-adapter/hook-manager');
@@ -221,9 +222,9 @@ function connectRepositories(db, project, repoIds) {
             deleted: false
         };
         return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            var repoLinks = _.filter(repo.external, { type: 'gitlab' });
+            var repoLink = ExternalObjectUtils.findLinkByServerType(repo, 'gitlab');
             var criteria = {
-                id: _.map(repoLinks, 'server_id'),
+                id: repoLink.server_id,
                 deleted: false
             };
             return Server.find(db, 'global', criteria, '*').each((server) => {
@@ -262,9 +263,9 @@ function disconnectRepositories(db, project, repoIds) {
             deleted: false
         };
         return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            var repoLinks = _.filter(repo.external, { type: 'gitlab' });
+            var repoLink = ExternalObjectUtils.findLinkByServerType(repo, 'gitlab');
             var criteria = {
-                id: _.map(repoLinks, 'server_id'),
+                id: repoLink.server_id,
                 deleted: false
             };
             return Server.find(db, 'global', criteria, '*').each((server) => {
@@ -285,30 +286,21 @@ function disconnectRepositories(db, project, repoIds) {
  */
 function handleStoryChangeEvent(db, event) {
     var exporting = false;
-    if (_.includes(StoryTypes.trackable, event.current.type)) {
+    console.log('CHANGE: ', event.id, event.diff);
+    if (event.current.type === 'issue') {
+        if (event.diff.type) {
+            // this is just the event emitted immediately after
+            // the issue was successfully exported
+        } else {
+            if (event.diff.details) {
+                exporting = true;
+            }
+        }
+    } else if (_.includes(StoryTypes.trackable, event.current.type)) {
         if (event.current.published && event.current.ready) {
-            var issueLink = _.find(event.current.external, (link) => {
-                return !!link.issue;
-            });
+            var issueLink = ExternalObjectUtils.findLinkByServerType(event.current, 'gitlab');
             if (issueLink) {
-                if (!issueLink.id) {
-                    // there's no issue id yet
-                    exporting = true;
-                } else {
-                    var issueLinkBefore;
-                    if (event.previous.external) {
-                        issueLinkBefore = _.find(event.current.external, (link) => {
-                            return !!link.issue;
-                        });
-                    }
-                    if (issueLinkBefore && !issueLinkBefore.issue.id) {
-                        // this is just the event emitted immediately after
-                        // the issue was successfully exported and we
-                    } else if (event.diff.details) {
-                        // the issue might need to be updated
-                        exporting = true;
-                    }
-                }
+                exporting = true;
             }
         }
     }

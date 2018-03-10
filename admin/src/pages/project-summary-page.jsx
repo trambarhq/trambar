@@ -103,7 +103,7 @@ module.exports = Relaks.createClass({
         return db.start().then((currentUserId) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system;
-            })
+            });
         }).then(() => {
             if (params.project !== 'new') {
                 return ProjectFinder.findProject(db, params.project).then((project) => {

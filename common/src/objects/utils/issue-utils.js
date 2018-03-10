@@ -70,6 +70,9 @@ function attach(story, issue, user, repos) {
             }
             story.details.title = issue.title;
             story.details.labels = issue.labels;
+            story.tags = _.union(story.tags, _.map(issue.labels, (label) => {
+                return _.replace(label, /\s+/g, '-');
+            }));
 
             // remove other links
             _.remove(story.external, (link) => {

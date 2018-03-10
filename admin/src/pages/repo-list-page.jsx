@@ -4,11 +4,11 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var ExternalObjectUtils = require('objects/utils/external-object-utils');
 var ProjectFinder = require('objects/finders/project-finder');
 var RepoFinder = require('objects/finders/repo-finder');
 var ServerFinder = require('objects/finders/server-finder');
 var StatisticsFinder = require('objects/finders/statistics-finder');
-var LinkUtils = require('objects/utils/link-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -718,13 +718,10 @@ var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, di
 });
 
 var findServer = Memoize(function(servers, repo) {
-    if (repo) {
-        var link = LinkUtils.find(repo, { type: repo.type });
-        if (link) {
-            return _.find(servers, { id: link.server_id });
-        }
-    }
-    return null;
+    return _.find(servers, (server) => {
+        var link = ExternalObjectUtils.findLink(repo, server);
+        return !!link;
+    });
 });
 
 var findRepos = Memoize(function(repos, project) {

@@ -352,6 +352,9 @@ function exportProperty(object, server, path, dest, prop) {
         if (_.isEqual(currentValue, previousValue)) {
             _.set(dest, path, prop.value);
             _.set(previous, path, prop.value);
+        } else {
+            console.log('Expected: ', previousValue);
+            console.log('Actual: ', currentValue);
         }
     } else {
         throw new Error('Unknown option: ' + prop.overwrite);

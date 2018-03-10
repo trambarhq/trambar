@@ -760,13 +760,9 @@ module.exports = React.createClass({
                 }
             }
             if (!_.isEqual(options.issueDetails, before.issueDetails)) {
-                var columns = {
-                    id: story.id,
-                    details: _.cloneDeep(story.details),
-                    external: _.cloneDeep(story.external),
-                };
-                IssueUtils.attach(columns, options.issueDetails, this.props.currentUser, this.props.repos);
-                this.saveStory(columns);
+                var storyAfter = _.cloneDeep(story);
+                IssueUtils.attach(storyAfter, options.issueDetails, this.props.currentUser, this.props.repos);
+                this.saveStory(storyAfter);
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
                 if (StoryUtils.isSaved(story)) {
