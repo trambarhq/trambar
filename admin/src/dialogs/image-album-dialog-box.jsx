@@ -83,7 +83,7 @@ module.exports = Relaks.createClass({
         return db.start().then((userId) => {
             // load pictures for given purpose if we're showing the dialog box
             if (this.props.show || this.state.shown) {
-                return PictureFinder.findPictures(db).then((pictures) => {
+                return PictureFinder.findPictures(db, this.props.purpose).then((pictures) => {
                     props.pictures = pictures;
                 });
             }

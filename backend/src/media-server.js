@@ -332,6 +332,7 @@ function handleImageImport(req, res) {
         }
         return ImageManager.getImageMetadata(imagePath).then((metadata) => {
             var details = {
+                type: 'image',
                 url: getFileURL(imagePath),
                 format: metadata.format,
                 width: metadata.width,

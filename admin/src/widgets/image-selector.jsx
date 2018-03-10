@@ -161,6 +161,8 @@ module.exports = React.createClass({
         } else {
             if (this.props.desiredWidth && this.props.desiredHeight) {
                 width = Math.round(this.props.desiredWidth * height / this.props.desiredHeight);
+            } else {
+                width = 160;
             }
             return (
                 <div className="image">

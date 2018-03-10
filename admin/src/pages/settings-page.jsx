@@ -92,7 +92,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<SettingsPageSync {...props} />, 250);
         return db.start().then((userId) => {
             return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
+                props.system = _.isEmpty(system) ? null : system;
             });
         }).then(() => {
             return <SettingsPageSync {...props} />;

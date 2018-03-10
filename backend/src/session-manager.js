@@ -989,9 +989,7 @@ function retrieveProfileImage(profile) {
     return new Promise((resolve, reject) => {
         Request.post(options, (err, resp, body) => {
             if (!err) {
-                var image = body;
-                image.type = 'image';
-                resolve(image);
+                resolve(body);
             } else {
                 console.log('Unable to retrieve profile image: ' + url);
                 resolve(null);

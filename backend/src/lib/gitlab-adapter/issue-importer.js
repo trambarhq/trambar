@@ -123,7 +123,7 @@ function importAssignments(db, server, project, repo, story, glIssue) {
         return Promise.mapSeries(glIssue.assignees, (glUser) => {
             return UserImporter.findUser(db, server, glUser).then((assignee) => {
                 if (!_.some(reactions, { user_id: assignee.id })) {
-                    var reactionNew = copyAssignmentProperties(null, story, assignee, glIssue);
+                    var reactionNew = copyAssignmentProperties(null, server, story, assignee, glIssue);
                     return Reaction.saveOne(db, schema, reactionNew);
                 }
             });

@@ -69,12 +69,14 @@ module.exports = Relaks.createClass({
         };
         return db.start().then((currentUserId) => {
             return SystemFinder.findSystem(db).then((system) => {
-                return this.props.route.replace(require('pages/project-list-page'));
-            }).catch((err) => {
-                if (!this.redirectTimeout) {
-                    this.redirectTimeout = setTimeout(() => {
-                        this.props.route.replace(require('pages/settings-page'), { edit: true });
-                    }, 2500);
+                if (_.isEmpty(system)) {
+                    if (!this.redirectTimeout) {
+                        this.redirectTimeout = setTimeout(() => {
+                            this.props.route.replace(require('pages/settings-page'), { edit: true });
+                        }, 2500);
+                    }
+                } else {
+                    return this.props.route.replace(require('pages/project-list-page'));
                 }
             });
         }).then((system) => {
