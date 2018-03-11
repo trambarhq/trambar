@@ -427,7 +427,7 @@ function importProfileImage(glUser) {
                 err = new HTTPError(resp.statusCode);
             }
             if (!err) {
-                resolve(bdoy);
+                resolve(body);
             } else {
                 console.log('Unable to retrieve profile image: ' + url);
                 resolve(null);
