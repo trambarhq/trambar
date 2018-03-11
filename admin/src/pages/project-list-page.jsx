@@ -249,6 +249,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             var preselected;
+            var empty = _.isEmpty(this.props.projects);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -257,7 +258,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" disabled={empty} onClick={this.handleEditClick}>
                         {t('project-list-edit')}
                     </PushButton>
                 </div>

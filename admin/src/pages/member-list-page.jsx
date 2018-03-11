@@ -242,6 +242,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 return !_.includes(userIds, user.id);
             });
             var preselected = (membersPending) ? 'approve' : undefined;
+            var empty = _.isEmpty(this.props.users);
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>

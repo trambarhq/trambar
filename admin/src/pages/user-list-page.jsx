@@ -230,6 +230,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var empty = _.isEmpty(this.props.users);
             return (
                 <div className="buttons">
                     <ComboButton>
@@ -238,7 +239,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" disabled={empty} onClick={this.handleEditClick}>
                         {t('user-list-edit')}
                     </PushButton>
                 </div>

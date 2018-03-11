@@ -225,6 +225,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             var preselected = 'add';
+            var empty = _.isEmpty(this.props.roles);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -233,7 +234,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" disabled={empty} onClick={this.handleEditClick}>
                         {t('role-list-edit')}
                     </PushButton>
                 </div>

@@ -256,9 +256,10 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         } else {
+            var empty = _.isEmpty(this.props.repos);
             return (
                 <div className="buttons">
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" disabled={empty} onClick={this.handleEditClick}>
                         {t('repo-list-edit')}
                     </PushButton>
                 </div>

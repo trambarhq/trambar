@@ -226,6 +226,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             var preselected = 'add';
+            var empty = _.isEmpty(this.props.servers);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -234,7 +235,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton name="edit" className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton name="edit" className="emphasis" disabled={empty} onClick={this.handleEditClick}>
                         {t('server-list-edit')}
                     </PushButton>
                 </div>
