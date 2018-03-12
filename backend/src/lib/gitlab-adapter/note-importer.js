@@ -56,7 +56,7 @@ function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
 function importIssueNote(db, server, repo, project, author, glEvent) {
     var schema = project.name;
     var criteria = {
-        external_object: ExternalObjectUtils.extend(server, repo, {
+        external_object: ExternalObjectUtils.extendLink(server, repo, {
             issue: { id: glEvent.note.noteable_id }
         })
     };
@@ -87,7 +87,7 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
 function importMergeRequestNote(db, server, repo, project, author, glEvent) {
     var schema = project.name;
     var criteria = {
-        external_object: ExternalObjectUtils.extend(server, repo, {
+        external_object: ExternalObjectUtils.extendLink(server, repo, {
             merge_request: { id: glEvent.note.noteable_id }
         })
     };
