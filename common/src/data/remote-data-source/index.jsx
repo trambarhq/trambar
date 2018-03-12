@@ -1184,6 +1184,7 @@ module.exports = React.createClass({
         }).catch((err) => {
             // signal that the change was removed
             this.triggerChangeEvent();
+            throw err;
         });
     },
 

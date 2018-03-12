@@ -306,7 +306,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 // use id of newly created server
                 params.server = newServer.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(module.exports, params).then((replaced) => {
+                if (replaced) {
+                    this.setState({ problems: {} });
+                }
+            });
         }
     },
 
@@ -352,8 +356,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 newServer: null,
                 hasChanges: false,
             });
-        } else {
-            this.setState({ problems: {} });
         }
     },
 
@@ -1241,7 +1243,17 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleOAuthURLChange: function(evt) {
-        this.setServerProperty(`settings.oauth.base_url`, evt.target.value);
+        var url = evt.target.value;
+        this.setServerProperty(`settings.oauth.base_url`, url);
+
+        // make sure the URL isn't localhost, which points to the Docker container
+        var problems = _.clone(this.state)
+        if (/https?:\/\/localhost\b/.test(url)) {
+            problems.base_url = 'validation-localhost-is-wrong';
+        } else {
+            delete problems.base_url;
+        }
+        this.setState({ problems })
     },
 
     /**

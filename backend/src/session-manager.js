@@ -492,7 +492,11 @@ function authenticateThruPassport(req, res, system, server, params) {
             if (info && info.message) {
                 message = info.message;
             } else if (err && err.message) {
-                message = err.message;
+                if (err.oauthError) {
+                    message = err.oauthError.message;
+                } else {
+                    message = err.message;
+                }
             }
             reject(new HTTPError(403, { message, reason: 'access-denied' }));
         });

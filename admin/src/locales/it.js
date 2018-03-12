@@ -625,6 +625,7 @@ module.exports = function(localeCode) {
         'validation-duplicate-server-name': "Un server con quell'identificatore esiste già",
         'validation-duplicate-user-name': "Esiste già un utente con quel nome",
         'validation-illegal-project-name': "L'identificatore del progetto non può essere «global» o «admin»",
+        'validation-localhost-is-wrong': '"localhost" non è valido',
         'validation-password-for-admin-only': "Solo gli amministratori possono accedere utilizzando la password",
         'validation-required': "Necessario",
 

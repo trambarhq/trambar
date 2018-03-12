@@ -271,7 +271,11 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 // use id of newly created project
                 params.project = newProject.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(module.exports, params).then((replaced) => {
+                if (replaced) {
+                    this.setState({ problems: {} });
+                }
+            });
         }
     },
 
@@ -318,8 +322,6 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                     newProject: null,
                     hasChanges: false,
                 });
-            } else {
-                this.setState({ problems: {} });
             }
         }
     },

@@ -262,7 +262,11 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 // use id of newly created role
                 params.role = newRole.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(module.exports, params).then((replaced) => {
+                if (replaced) {
+                    this.setState({ problems: {} });
+                }
+            });
         }
     },
 
@@ -310,8 +314,6 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 addList: [],
                 removeList: [],
             });
-        } else {
-            this.setState({ problems: {} });
         }
     },
 

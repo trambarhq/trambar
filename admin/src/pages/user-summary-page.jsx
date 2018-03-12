@@ -314,7 +314,11 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 // use id of newly created user
                 params.user = newUser.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(module.exports, params).then((replaced) => {
+                if (replaced) {
+                    this.setState({ problems: {} });
+                }
+            });
         }
     },
 
@@ -366,8 +370,6 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     newUser: null,
                     hasChanges: false,
                 });
-            } else {
-                this.setState({ problems: {} });
             }
         }
     },

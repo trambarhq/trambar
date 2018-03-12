@@ -608,6 +608,7 @@ var traditionalPhrases = {
     'validation-duplicate-server-name': '具有該標識符的服務器已經存在',
     'validation-duplicate-user-name': '具有該用戶名的用戶已經存在',
     'validation-illegal-project-name': '項目標識符不能是《global》或《admin》',
+    'validation-localhost-is-wrong': '《localhost》是不正確的',
     'validation-password-for-admin-only': '只有管理員可以使用密碼登錄',
     'validation-required': '需要',
 
@@ -1192,6 +1193,7 @@ var simplifiedPhrases = {
     'validation-duplicate-server-name': '具有该标识符的服务器已经存在',
     'validation-duplicate-user-name': '具有该用户名的用户已经存在',
     'validation-illegal-project-name': '项目标识符不能是《global》或《admin》',
+    'validation-localhost-is-wrong': '《localhost》是不正确的',
     'validation-password-for-admin-only': '只有管理员可以使用密码登录',
     'validation-required': '需要',
 

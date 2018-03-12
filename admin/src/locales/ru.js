@@ -859,6 +859,7 @@ module.exports = function(localeCode) {
         'validation-duplicate-server-name': 'Сервер с этим идентификатором уже существует',
         'validation-duplicate-user-name': 'Пользователь с таким именем уже существует',
         'validation-illegal-project-name': 'Идентификатор проекта не может быть «global» или «admin»',
+        'validation-localhost-is-wrong': '«localhost» недействителен',
         'validation-password-for-admin-only': 'Только администраторы могут войти с помощью пароля',
         'validation-required': 'Необходимые',
 
