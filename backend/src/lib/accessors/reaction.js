@@ -25,6 +25,8 @@ module.exports = _.create(ExternalData, {
         ptime: String,
         public: Boolean,
         external: Array(Object),
+        itime: String,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -79,6 +81,8 @@ module.exports = _.create(ExternalData, {
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 external jsonb[] NOT NULL DEFAULT '{}',
+                itime timestamp,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} (story_id) WHERE deleted = false;
@@ -97,7 +101,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'published', 'ready', 'ptime', 'public', 'external' ];
+            var propNames = [ 'deleted', 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'published', 'ready', 'ptime', 'public', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // merge changes to details->resources to avoid race between
                 // client-side changes and server-side changes

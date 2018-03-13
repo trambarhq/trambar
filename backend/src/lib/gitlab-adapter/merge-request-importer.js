@@ -40,7 +40,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             var storyAfter = copyMergeRequestProperties(story, server, repo, author, glMergeRequest);
-            if (_.isEqual(storyAfter, story)) {
+            if (storyAfter === story) {
                 return story;
             }
             return Story.saveOne(db, schema, storyAfter);
@@ -81,7 +81,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
                 throw new Error('Story not found')
             }
             var storyAfter = copyMergeRequestProperties(story, server, repo, author, glMergeRequest);
-            if (_.isEqual(storyAfter, story)) {
+            if (storyAfter === story) {
                 return story;
             }
             return Story.updateOne(db, schema, storyAfter);
@@ -140,9 +140,8 @@ function importAssignment(db, server, project, repo, story, glMergeRequest) {
  * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} glMergeRequest
- * @param  {Object} link
  *
- * @return {Object|null}
+ * @return {Story}
  */
 function copyMergeRequestProperties(story, server, repo, author, glMergeRequest) {
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
@@ -198,13 +197,17 @@ function copyMergeRequestProperties(story, server, repo, author, glMergeRequest)
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'public', {
-        value: !glIssue.confidential,
+        value: !glMergeRequest.confidential,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
-        value: Moment(new Date(glIssue.created_at)).toISOString(),
+        value: Moment(new Date(glMergeRequest.created_at)).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(storyAfter, story)) {
+        return story;
+    }
+    storyAfter.itime = new String('NOW()');
     return storyAfter;
 }
 
@@ -217,7 +220,7 @@ function copyMergeRequestProperties(story, server, repo, author, glMergeRequest)
  * @param  {User} assignee
  * @param  {Object} glMergeRequest
  *
- * @return {Object|null}
+ * @return {Reaction}
  */
 function copyAssignmentProperties(reaction, server, story, assignee, glMergeRequest) {
     var reactionAfter = _.cloneDeep(reaction) || {};
@@ -246,6 +249,10 @@ function copyAssignmentProperties(reaction, server, story, assignee, glMergeRequ
         value: Moment(glMergeRequest.updated_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(reactionAfter, reaction)) {
+        return reaction;
+    }
+    reactionAfter.itime = new String('NOW()');
     return reactionAfter;
 }
 

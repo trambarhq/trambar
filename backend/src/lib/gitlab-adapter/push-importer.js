@@ -67,7 +67,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * @param  {Array<Object>} components
  * @param  {Object} glEvent
  *
- * @return {Object|null}
+ * @return {Story}
  */
 function copyPushProperties(story, server, repo, author, push, components, glEvent) {
     var storyType;
@@ -135,5 +135,9 @@ function copyPushProperties(story, server, repo, author, push, components, glEve
         value: Moment(glEvent.created_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(storyAfter, story)) {
+        return story;
+    }
+    storyAfter.itime = new String('NOW()');
     return storyAfter;
 }

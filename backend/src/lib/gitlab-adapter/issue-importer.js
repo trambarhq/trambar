@@ -40,7 +40,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             var storyAfter = copyIssueProperties(story, server, repo, author, glIssue);
-            if (_.isEqual(storyAfter, story)) {
+            if (storyAfter === story) {
                 return story;
             }
             return Story.saveOne(db, schema, storyAfter);
@@ -83,7 +83,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
                 throw new Error('Story not found');
             }
             var storyAfter = copyIssueProperties(story, server, repo, author, glIssue);
-            if (_.isEqual(storyAfter, story)) {
+            if (storyAfter === story) {
                 return story;
             }
             return Story.updateOne(db, schema, storyAfter);
@@ -145,7 +145,7 @@ function importAssignments(db, server, project, repo, story, glIssue) {
  * @param  {User} author
  * @param  {Object} glIssue
  *
- * @return {Object|null}
+ * @return {Story}
  */
 function copyIssueProperties(story, server, repo, author, glIssue) {
     var descriptionTags = TagScanner.findTags(glIssue.description);
@@ -161,7 +161,7 @@ function copyIssueProperties(story, server, repo, author, glIssue) {
             number: glIssue.iid,
         }
     });
-    var exported = ExternalDataUtils.hasPreviousExport(storyAfter, server);
+    var exported = !!storyAfter.etime;
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'issue',
         overwrite: 'always',
@@ -183,12 +183,12 @@ function copyIssueProperties(story, server, repo, author, glIssue) {
     // title is imported only if issue isn't confidential
     ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
         value: (glIssue.confidential) ? undefined : glIssue.title,
-        overwrite: 'always',
+        overwrite: 'match-previous',
         ignore: exported && glIssue.confidential,
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.labels', {
         value: glIssue.labels,
-        overwrite: 'always',
+        overwrite: 'match-previous',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
         value: glIssue.state,
@@ -215,12 +215,16 @@ function copyIssueProperties(story, server, repo, author, glIssue) {
         overwrite: 'always',
         ignore: exported,
     });
+    if (_.isEqual(storyAfter, story)) {
+        return story;
+    }
     if (story) {
         if (story.details.state !== storyAfter.details.state) {
             // bump the story when its state changes
-            storyAfter.btime = new String('NOW()');
+            storyAfter.btime = Moment().toISOString();
         }
     }
+    storyAfter.itime = new String('NOW()');
     return storyAfter;
 }
 
@@ -232,9 +236,8 @@ function copyIssueProperties(story, server, repo, author, glIssue) {
  * @param  {Story} story
  * @param  {User} assignee
  * @param  {Object} glIssue
- * @param  {Object} link
  *
- * @return {Object|null}
+ * @return {Reaction}
  */
 function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
     var reactionAfter = _.cloneDeep(reaction) || {};
@@ -262,6 +265,10 @@ function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
         value: Moment(glIssue.updated_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(reactionAfter, reaction)) {
+        return reaction;
+    }
+    reactionAfter.itime = new String('NOW()');
     return reactionAfter;
 }
 

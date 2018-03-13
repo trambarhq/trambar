@@ -16,6 +16,8 @@ module.exports = _.create(ExternalData, {
         name: String,
         user_ids: Array(Number),
         external: Array(Object),
+        itime: String,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -50,6 +52,8 @@ module.exports = _.create(ExternalData, {
                 name varchar(128) NOT NULL,
                 user_ids int[] NOT NULL DEFAULT '{}'::int[],
                 external jsonb[] NOT NULL DEFAULT '{}',
+                itime timestamp,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
         `;
@@ -83,7 +87,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'external' ];
+            var propNames = [ 'deleted', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
                 var Task = require('accessors/task');

@@ -44,7 +44,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * @param  {User} author
  * @param  {Object} glMilestone
  *
- * @return {Object|null}
+ * @return {Story}
  */
 function copyMilestoneProperties(story, server, repo, author, glMilestone) {
     var descriptionTags = TagScanner.findTags(glMilestone.description);
@@ -97,6 +97,10 @@ function copyMilestoneProperties(story, server, repo, author, glMilestone) {
         value: Moment(glMilestone.created_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(storyAfter, story)) {
+        return story;
+    }
+    storyAfter.itime = new String('NOW()');
     return storyAfter;
 }
 

@@ -20,6 +20,8 @@ module.exports = _.create(ExternalData, {
         disabled: Boolean,
         settings: Object,
         external: Array(Object),
+        itime: String,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -58,6 +60,8 @@ module.exports = _.create(ExternalData, {
                 disabled boolean NOT NULL DEFAULT false,
                 settings jsonb NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
+                itime timestamp,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
             CREATE UNIQUE INDEX ON ${table} (username) WHERE deleted = false;
@@ -96,7 +100,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'requested_project_ids', 'external' ];
+            var propNames = [ 'deleted', 'requested_project_ids', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
                     var Task = require('accessors/task');

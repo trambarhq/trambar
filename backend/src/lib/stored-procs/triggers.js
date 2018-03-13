@@ -1,6 +1,8 @@
 module.exports = {
     indicateDataChange,
+    indicateDataChangeEx,
     notifyDataChange,
+    notifyDataChangeEx,
     indicateLiveDataChange,
     notifyLiveDataChange,
     updateResource,
@@ -19,6 +21,31 @@ function indicateDataChange(OLD, NEW) {
 indicateDataChange.args = '';
 indicateDataChange.ret = 'trigger';
 
+function indicateDataChangeEx(OLD, NEW) {
+    var omit = [ 'id', 'gn', 'ctime', 'mtime', 'itime', 'etime' ];
+    var changes = findChanges(OLD, NEW, omit);
+    if (changes) {
+        var date = new Date;
+        NEW.gn += 1;
+        NEW.mtime = date;
+
+        // make sure export time and import time has the current time as
+        // reported by the database server
+        if (NEW.itime) {
+            if (!OLD.itime || NEW.itime > OLD.itime) {
+                NEW.itime = date
+            }
+        } else if (NEW.etime) {
+            if (!OLD.etime || NEW.etime > OLD.etime) {
+                NEW.etime = date
+            }
+        }
+    }
+    return NEW;
+}
+indicateDataChangeEx.args = '';
+indicateDataChangeEx.ret = 'trigger';
+
 function notifyDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
     var omit = [ 'id', 'gn', 'ctime', 'mtime' ];
     var changes = findChanges(OLD, NEW, omit);
@@ -28,6 +55,16 @@ function notifyDataChange(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_AR
 }
 notifyDataChange.args = '';
 notifyDataChange.ret = 'trigger';
+
+function notifyDataChangeEx(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
+    var omit = [ 'id', 'gn', 'ctime', 'mtime', 'itime', 'etime' ];
+    var changes = findChanges(OLD, NEW, omit);
+    if (changes) {
+        sendChangeNotification(TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, OLD, NEW, changes, TG_ARGV);
+    }
+}
+notifyDataChangeEx.args = '';
+notifyDataChangeEx.ret = 'trigger';
 
 function indicateLiveDataChange(OLD, NEW) {
     var omit = [ 'id', 'gn', 'ctime', 'mtime', 'dirty', 'ltime', 'atime' ];

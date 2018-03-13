@@ -44,7 +44,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * @param  {User} user
  * @param  {Object} glEvent
  *
- * @return {Object}
+ * @return {Story}
  */
 function copyEventProperties(story, server, repo, author, glEvent) {
     var storyAfter = _.cloneDeep(story) || {};
@@ -77,6 +77,10 @@ function copyEventProperties(story, server, repo, author, glEvent) {
         value: Moment(glEvent.created_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(storyAfter, story)) {
+        return story;
+    }
+    storyAfter.itime = new String('NOW()');
     return storyAfter;
 }
 
@@ -126,7 +130,7 @@ function importRepositories(db, server) {
                 }).then((members) => {
                     return findExistingRepo(db, server, repos, glRepo).then((repo) => {
                         var repoAfter = copyRepoDetails(repo, server, members, glRepo, glLabels);
-                        if (_.isEqual(repoAfter, repo)) {
+                        if (repoAfter === repo) {
                             return repo;
                         }
                         if (repo) {
@@ -216,7 +220,7 @@ function addProjectMembers(db, repo, users) {
  * @param  {Object} glRepo
  * @param  {Array<Object>} glLabels
  *
- * @return {Object|null}
+ * @return {Repo}
  */
 function copyRepoDetails(repo, server, members, glRepo, glLabels) {
     var repoAfter = _.cloneDeep(repo) || {};
@@ -259,6 +263,10 @@ function copyRepoDetails(repo, server, members, glRepo, glLabels) {
         value: _.map(glLabels, 'color'),
         overwrite: 'always',
     });
+    if (_.isEqual(repoAfter, repo)) {
+        return repo;
+    }
+    repoAfter.itime = new String('NOW()');
     return repoAfter;
 }
 

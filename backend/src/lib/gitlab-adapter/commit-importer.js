@@ -58,7 +58,7 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
  * @param  {Object} glCommit
  * @param  {Object} glDiff
  *
- * @return {Object|null}
+ * @return {Commit}
  */
 function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) {
     var lineChanges = {
@@ -106,6 +106,10 @@ function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) 
         value: Moment(glCommit.committed_date).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(commitAfter, commit)) {
+        return commit;
+    }
+    commitAfter.itime = new String('NOW()');
     return commitAfter;
 }
 

@@ -13,6 +13,8 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         external: Array(Object),
+        itime: String,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -42,6 +44,8 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
+                itime timestamp,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
         `;
@@ -118,4 +122,56 @@ module.exports = _.create(Data, {
         });
     },
 
+    /**
+     * Attach a trigger to the table that increment the gn (generation number)
+     * when a row is updated. Also add triggers that send notification messages.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    createChangeTrigger: function(db, schema) {
+        var table = this.getTableName(schema);
+        var sql = `
+            CREATE TRIGGER "indicateDataChangeOnUpdate"
+            BEFORE UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE PROCEDURE "indicateDataChangeEx"();
+        `;
+        return db.execute(sql).return(true);
+    },
+
+    /**
+     * Add triggers that send notification messages, bundled with values of
+     * the specified properties.
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<String>} propNames
+     *
+     * @return {Promise<Boolean>}
+     */
+    createNotificationTriggers: function(db, schema, propNames) {
+        var table = this.getTableName(schema);
+        var args = _.map(propNames, (propName) => {
+            // use quotes just in case the name is mixed case
+            return `"${propName}"`;
+        }).join(', ');
+        var sql = `
+            CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
+            AFTER INSERT ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyDataChangeEx"(${args});
+            CREATE CONSTRAINT TRIGGER "notifyDataChangeOnUpdate"
+            AFTER UPDATE ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyDataChangeEx"(${args});
+            CREATE CONSTRAINT TRIGGER "notifyDataChangeOnDelete"
+            AFTER DELETE ON ${table} INITIALLY DEFERRED
+            FOR EACH ROW
+            EXECUTE PROCEDURE "notifyDataChangeEx"(${args});
+        `;
+        return db.execute(sql).return(true);
+    },
 });

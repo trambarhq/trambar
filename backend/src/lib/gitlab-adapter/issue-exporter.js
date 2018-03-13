@@ -54,27 +54,19 @@ function exportStory(db, project, story) {
                     throw new Error('User not found');
                 }
                 return fetchIssue(server, glProjectId, glIssueNumber).then((glIssue) => {
-                    var glIssueAfter = copyIssueProperties(glIssue, server, system, project, story);
-                    if (_.isEqual(glIssueAfter, glIssue)) {
+                    var glIssueAfter = exportIssueProperties(glIssue, server, system, project, story);
+                    if (glIssueAfter === glIssue) {
                         return null;
                     }
                     return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
-                        var storyAfter = _.cloneDeep(story);
-                        var issueLinkAfter = ExternalDataUtils.findLink(storyAfter, server);
-                        _.set(issueLinkAfter, 'issue.id', glIssue.id);
-                        _.set(issueLinkAfter, 'issue.number', glIssue.iid);
-                        _.set(storyAfter, 'type', 'issue');
-                        _.set(storyAfter, 'details.exported', true);
-                        if (_.isEqual(story, storyAfter)) {
-                            return story;
-                        }
                         var schema = project.name;
+                        var storyAfter = copyIssueProperties(story, server, glIssue);
                         return Story.updateOne(db, schema, storyAfter).then((story) => {
                             if (!newIssue) {
                                 return story;
                             }
-                            var reaction = copyTrackingReactionProperties(null, server, project, story, user);
-                            return Reaction.insertOne(db, schema, reaction).then((reaction) => {
+                            var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
+                            return Reaction.insertOne(db, schema, reactionNew).then((reaction) => {
                                 return story;
                             });
                         });
@@ -89,7 +81,7 @@ function exportStory(db, project, story) {
 }
 
 /**
- * Create a Gitlab issue object from information in story
+ * Copy information in a story into a Gitlab issue object
  *
  * @param  {Object} glIssue
  * @param  {Story} story
@@ -98,7 +90,7 @@ function exportStory(db, project, story) {
  *
  * @return {Object}
  */
-function copyIssueProperties(glIssue, server, system, project, story) {
+function exportIssueProperties(glIssue, server, system, project, story) {
     var markdown = story.details.markdown;
     var textVersions = _.filter(story.details.text);
     var text = _.join(textVersions, '\n\n');
@@ -126,7 +118,37 @@ function copyIssueProperties(glIssue, server, system, project, story) {
         value: story.details.labels,
         overwrite: 'match-previous',
     });
+    if (_.isEqual(glIssueAfter, glIssue)) {
+        return glIssue;
+    }
     return glIssueAfter;
+}
+
+/**
+ * Add issue properties to exported story
+ *
+ * @param  {Story} story
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Object} glIssue
+ *
+ * @return {Story}
+ */
+function copyIssueProperties(story, server, glIssue) {
+    var storyAfter = _.cloneDeep(story);
+    var issueLink = ExternalDataUtils.findLink(storyAfter, server);
+    issueLink.issue.id = glIssue.id;
+    issueLink.issue.number = glIssue.iid;
+    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
+        value: 'issue',
+        overwrite: 'always'
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.exported', {
+        value: true,
+        overwrite: 'always'
+    });
+    storyAfter.etime = new String('NOW()');
+    return storyAfter;
 }
 
 /**
@@ -141,7 +163,6 @@ function copyIssueProperties(glIssue, server, system, project, story) {
  * @return {Reaction}
  */
 function copyTrackingReactionProperties(reaction, server, project, story, user) {
-    debugger;
     var reactionAfter = _.clone(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story);
     ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
@@ -168,6 +189,10 @@ function copyTrackingReactionProperties(reaction, server, project, story, user) 
         value: Moment().toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(reactionAfter, reaction)) {
+        return reaction;
+    }
+    reactionAfter.itime = new String('NOW()');
     return reactionAfter;
 }
 

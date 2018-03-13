@@ -27,6 +27,8 @@ module.exports = _.create(ExternalData, {
         btime: String,
         public: Boolean,
         external: Array(Object),
+        itime: String,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -90,6 +92,8 @@ module.exports = _.create(ExternalData, {
                 btime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 external jsonb[] NOT NULL DEFAULT '{}',
+                itime timestamp,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} USING gin(user_ids) WHERE deleted = false;
@@ -112,7 +116,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'tags', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'ptime', 'external' ];
+            var propNames = [ 'deleted', 'type', 'tags', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'ptime', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
                     var Task = require('accessors/task');

@@ -62,7 +62,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Object}
+ * @return {Story}
  */
 function copyEventProperties(story, server, repo, author, glEvent) {
     var storyAfter = _.cloneDeep(story) || {};
@@ -97,6 +97,10 @@ function copyEventProperties(story, server, repo, author, glEvent) {
         value: Moment(glEvent.created_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(storyAfter, story)) {
+        return story;
+    }
+    storyAfter.itime = new String('NOW()');
     return storyAfter;
 }
 
@@ -144,7 +148,7 @@ function importUsers(db, server) {
                 // find existing user
                 return findExistingUser(db, server, users, glUser).then((user) => {
                     var userAfter = copyUserProperties(user, server, image, glUser);
-                    if (_.isEqual(userAfter, user)) {
+                    if (userAfter === user) {
                         return user;
                     }
                     if (user) {
@@ -296,7 +300,7 @@ function findUserByName(db, server, glUser) {
  * @param  {Object} image
  * @param  {Object} glUser
  *
- * @return {Object|null}
+ * @return {User}
  */
 function copyUserProperties(user, server, image, glUser) {
     var mapping = _.get(server, 'settings.user.mapping', {});
@@ -367,6 +371,10 @@ function copyUserProperties(user, server, image, glUser) {
         userAfter.type = 'regular';
         userAfter.disabled = true;
     }
+    if (_.isEqual(userAfter, user)) {
+        return user;
+    }
+    userAfter.itime = new String('NOW()');
     return userAfter;
 }
 

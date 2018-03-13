@@ -15,6 +15,8 @@ module.exports = _.create(ExternalData, {
         initial_branch: String,
         title_hash: String,
         external: Array(Object),
+        itime: String,
+        etime: String,
     },
     criteria: {
         id: Number,
@@ -45,6 +47,8 @@ module.exports = _.create(ExternalData, {
                 initial_branch varchar(256) NOT NULL,
                 title_hash varchar(32) NOT NULL,
                 external jsonb[] NOT NULL DEFAULT '{}',
+                itime timestamp,
+                etime timestamp,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} USING gin(("externalIdStrings"(external, 'gitlab', '{commit}'))) WHERE deleted = false;
@@ -79,7 +83,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted' ];
+            var propNames = [ 'deleted', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },

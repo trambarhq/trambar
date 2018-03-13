@@ -15,8 +15,6 @@ module.exports = {
     importProperty,
     importResource,
     exportProperty,
-    hasPreviousImport,
-    hasPreviousExport,
     findCommonServer,
 };
 
@@ -95,11 +93,11 @@ function inheritLink(object, server, parent, props) {
 function attachLink(object, link) {
     var existingLink = _.find(object.external, { server_id: link.server_id });
     if (existingLink) {
-        if (_.isMatch(existingLink, link)) {
-            return existingLink;
-        } else {
-            throw new Error('Object is linked to server already');
+        if (!_.isMatch(existingLink, link)) {
+            // copy properties into existing link
+            _.assign(existingLink, link);
         }
+        return existingLink;
     }
     if (!object.external) {
         object.external = [];
@@ -241,7 +239,7 @@ function importProperty(object, server, path, prop) {
             }
         }
     } else if (prop.overwrite === 'match-previous') {
-        var previous = getPreviousImport(object, server);
+        var previous = getPreviousValues(object, server);
         var previousValue = _.get(previous, path);
         if (_.isEqual(currentValue, previousValue)) {
             if (prop.value !== undefined) {
@@ -291,7 +289,7 @@ function importResource(object, server, prop) {
             }
         }
     } else if (prop.replace === 'match-previous') {
-        var previous = getPreviousImport(object, server);
+        var previous = getPreviousValues(object, server);
         var previousResources = _.get(previous, path, []);
         var previousIndex = _.findIndex(previousResources, { type: prop.type });
         var previousValue = previousResources[previousIndex];
@@ -347,7 +345,7 @@ function exportProperty(object, server, path, dest, prop) {
             _.set(dest, path, prop.value);
         }
     } else if (prop.overwrite === 'match-previous') {
-        var previous = getPreviousExport(object, server);
+        var previous = getPreviousValues(object, server);
         var previousValue = _.get(previous, path);
         if (_.isEqual(currentValue, previousValue)) {
             _.set(dest, path, prop.value);
@@ -362,59 +360,19 @@ function exportProperty(object, server, path, dest, prop) {
 }
 
 /**
- * Get previously imported values stored in link object
+ * Get previously exchanged values stored in link object
  *
  * @param  {ExternalObject} object
  * @param  {Server} server
  *
  * @return {Object}
  */
-function getPreviousImport(object, server) {
+function getPreviousValues(object, server) {
     var link = findLink(object, server);
-    if (!link._import) {
-        link._import = {};
+    if (!link._previous) {
+        link._previous = {};
     }
-    return link._import;
-}
-
-/**
- * Get previously exported values stored in link object
- *
- * @param  {ExternalObject} object
- * @param  {Server} server
- *
- * @return {Object}
- */
-function getPreviousExport(object, server) {
-    var link = findLink(object, server);
-    if (!link._export) {
-        link._export = {};
-    }
-    return link._export;
-}
-
-/**
- * Return true if the object has a link containing previously imported values
- *
- * @param  {ExternalObject}  object
- * @param  {Server}  server
- *
- * @return {Boolean}
- */
-function hasPreviousImport(object, server) {
-    return !!getPreviousImport(object, server);
-}
-
-/**
- * Return true if the object has a link containing previously exported values
- *
- * @param  {ExternalObject}  object
- * @param  {Server}  server
- *
- * @return {Boolean}
- */
-function hasPreviousExport(object, server) {
-    return !!getPreviousExport(object, server);
+    return link._previous;
 }
 
 /**

@@ -196,7 +196,7 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
  * @param  {Object} glNote
  * @param  {Object} link
  *
- * @return {Reaction|null}
+ * @return {Reaction}
  */
 function copyEventProperties(reaction, server, story, author, glNote) {
     var reactionAfter = _.cloneDeep(reaction) || {};
@@ -230,6 +230,10 @@ function copyEventProperties(reaction, server, story, author, glNote) {
         value: Moment(glNote.created_at).toISOString(),
         overwrite: 'always',
     });
+    if (_.isEqual(reactionAfter, reaction)) {
+        return reaction;
+    }
+    reactionAfter.itime = new String('NOW()');
     return reactionAfter;
 }
 
