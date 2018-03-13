@@ -30,7 +30,9 @@ function installHooks(db, host) {
                 server_id: server.id,
                 server: server.name,
             });
-            var serverAssociations = _.filter(associations, { server });
+            var serverAssociations = _.filter(associations, (sa) => {
+                return (sa.server === server);
+            });
             var added = []
             return Promise.each(serverAssociations, (sa, index, count) => {
                 var { repo, project }  = sa;

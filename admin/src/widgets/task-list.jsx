@@ -108,6 +108,7 @@ var TaskListSync = module.exports.Sync = React.createClass({
                     } else if (modified) {
                         return t('task-updated-$count-repos', modified);
                     }
+                    break;
                 case 'gitlab-user-import':
                     var added = _.size(task.details.added);
                     var deleted = _.size(task.details.deleted);
@@ -119,6 +120,7 @@ var TaskListSync = module.exports.Sync = React.createClass({
                     } else if (modified) {
                         return t('task-updated-$count-users', modified);
                     }
+                    break;
                 case 'gitlab-hook-install':
                     var added = _.size(task.details.added);
                     return t('task-installed-$count-hooks', added);
@@ -146,8 +148,6 @@ var TaskListSync = module.exports.Sync = React.createClass({
                     var added = _.size(task.details.added);
                     var repo = task.options.repo;
                     return t('task-imported-$count-merge-request-comments-from-$repo', added, repo);
-                default:
-                    return '';
             }
         } else {
             switch (task.action) {
@@ -174,8 +174,6 @@ var TaskListSync = module.exports.Sync = React.createClass({
                 case 'gitlab-merge-request-comment-import':
                     var repo = task.options.repo;
                     return t('task-importing-merge-request-comments-from-$repo', repo);
-                default:
-                    return '';
             }
         }
     },
@@ -230,8 +228,18 @@ var TaskListSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render a task
+     *
+     * @param  {Task} task
+     *
+     * @return {ReactElement|null}
+     */
     renderTask: function(task) {
         var message = this.getMessage(task);
+        if (!message) {
+            return null;
+        }
         var className = 'task';
         if (task.failed) {
             className += ' failure';
