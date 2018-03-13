@@ -39,13 +39,14 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of milestone
  *
  * @param  {Story|null} story
+ * @param  {Server} server
+ * @param  {Repo} repo
  * @param  {User} author
  * @param  {Object} glMilestone
- * @param  {Object} link
-
+ *
  * @return {Object|null}
  */
-function copyMilestoneProperties(story, author, glMilestone, link) {
+function copyMilestoneProperties(story, server, repo, author, glMilestone) {
     var descriptionTags = TagScanner.findTags(glMilestone.description);
 
     var storyAfter = _.cloneDeep(story) || {};

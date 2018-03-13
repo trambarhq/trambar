@@ -80,6 +80,9 @@ function copyPushProperties(story, server, repo, author, push, components, glEve
     }
 
     var storyAfter = _.cloneDeep(story) || {};
+    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+        commit: { ids: push.commitIds }
+    });
     ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
         value: storyType,
         overwrite: 'always',
