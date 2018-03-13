@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Empty = require('data/empty');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 module.exports = {
     findServer,
@@ -50,7 +50,7 @@ function findAllServers(db) {
  */
 function findServersOfRepos(db, repos) {
     var ids = _.filter(_.map(repos, (repo) => {
-        var link = ExternalObjectUtils.findLinkByServerType(repo, repo.type);
+        var link = ExternalDataUtils.findLinkByServerType(repo, repo.type);
         if (link) {
             return link.server_id;
         }

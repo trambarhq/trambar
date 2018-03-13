@@ -7,7 +7,7 @@ var Database = require('database');
 var Shutdown = require('shutdown');
 var TaskQueue = require('utils/task-queue');
 var StoryTypes = require('objects/types/story-types');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var RepoAssociation = require('gitlab-adapter/repo-association');
 var HookManager = require('gitlab-adapter/hook-manager');
@@ -222,7 +222,7 @@ function connectRepositories(db, project, repoIds) {
             deleted: false
         };
         return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            var repoLink = ExternalObjectUtils.findLinkByServerType(repo, 'gitlab');
+            var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
             var criteria = {
                 id: repoLink.server_id,
                 deleted: false
@@ -263,7 +263,7 @@ function disconnectRepositories(db, project, repoIds) {
             deleted: false
         };
         return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            var repoLink = ExternalObjectUtils.findLinkByServerType(repo, 'gitlab');
+            var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
             var criteria = {
                 id: repoLink.server_id,
                 deleted: false
@@ -298,7 +298,7 @@ function handleStoryChangeEvent(db, event) {
         }
     } else if (_.includes(StoryTypes.trackable, event.current.type)) {
         if (event.current.published && event.current.ready) {
-            var issueLink = ExternalObjectUtils.findLinkByServerType(event.current, 'gitlab');
+            var issueLink = ExternalDataUtils.findLinkByServerType(event.current, 'gitlab');
             if (issueLink) {
                 exporting = true;
             }

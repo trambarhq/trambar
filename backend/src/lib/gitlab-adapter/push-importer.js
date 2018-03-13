@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var PushReconstructor = require('gitlab-adapter/push-reconstructor');
 var PushDecorator = require('gitlab-adapter/push-decorator');
@@ -80,58 +80,58 @@ function copyPushProperties(story, server, repo, author, push, components, glEve
     }
 
     var storyAfter = _.cloneDeep(story) || {};
-    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+    ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         commit: { ids: push.commitIds }
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: storyType,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
         value: [ author.id ],
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
         value: author.role_ids,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.commit_before', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_before', {
         value: push.tailId,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.commit_after', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_after', {
         value: push.headId,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.lines', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.lines', {
         value: _.pickBy(push.lines),    // don't include 0's
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.files', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.files', {
         value: _.pickBy(_.mapValues(push.files, 'length')),
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.components', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.components', {
         value: components,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.branch', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.branch', {
         value: push.branch,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.from_branches', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.from_branches', {
         value: !_.isEmpty(push.fromBranches) ? push.fromBranches : undefined,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
         value: Moment(glEvent.created_at).toISOString(),
         overwrite: 'always',
     });

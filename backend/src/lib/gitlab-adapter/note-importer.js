@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Crypto = require('crypto');
 var TaskLog = require('task-log');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
 var UserImporter = require('gitlab-adapter/user-importer');
@@ -56,7 +56,7 @@ function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
 function importIssueNote(db, server, repo, project, author, glEvent) {
     var schema = project.name;
     var criteria = {
-        external_object: ExternalObjectUtils.extendLink(server, repo, {
+        external_object: ExternalDataUtils.extendLink(server, repo, {
             issue: { id: glEvent.note.noteable_id }
         })
     };
@@ -87,7 +87,7 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
 function importMergeRequestNote(db, server, repo, project, author, glEvent) {
     var schema = project.name;
     var criteria = {
-        external_object: ExternalObjectUtils.extendLink(server, repo, {
+        external_object: ExternalDataUtils.extendLink(server, repo, {
             merge_request: { id: glEvent.note.noteable_id }
         })
     };
@@ -124,7 +124,7 @@ function importCommitNote(db, server, repo, project, author, glEvent, glHookEven
         }
         var schema = project.name;
         var criteria = {
-            external_object: ExternalObjectUtils.extendLink(server, repo, {
+            external_object: ExternalDataUtils.extendLink(server, repo, {
                 commit: { id: commitId }
             })
         };
@@ -164,14 +164,14 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
 
     var criteria = {
         title_hash: hash(glEvent.target_title),
-        external_object: ExternalObjectUtils.findLink(repo, server),
+        external_object: ExternalDataUtils.findLink(repo, server),
     };
     return Commit.find(db, 'global', criteria, '*').then((commits) => {
         return Promise.reduce(commits, (match, commit) => {
             if (match) {
                 return match;
             }
-            var commitLink = ExternalObjectUtils.findLink(commit, server);
+            var commitLink = ExternalDataUtils.findLink(commit, server);
             var commitId = commitLink.commit.id;
             var projectId = commitLink.project.id;
             return fetchCommitNotes(server, projectId, commitId).then((glNotes) => {
@@ -203,30 +203,30 @@ function copyEventProperties(reaction, server, story, author, glNote) {
     var noteLink = {
         id: glNote.id
     };
-    ExternalObjectUtils.inheritLink(reactionAfter, server, story, {
+    ExternalDataUtils.inheritLink(reactionAfter, server, story, {
         note: noteLink
     });
-    ExternalObjectUtils.importProperty(reactionAfter, server, 'type', {
+    ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
         value: 'note',
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(reactionAfter, server, 'story_id', {
+    ExternalDataUtils.importProperty(reactionAfter, server, 'story_id', {
         value: story.id,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(reactionAfter, server, 'user_id', {
+    ExternalDataUtils.importProperty(reactionAfter, server, 'user_id', {
         value: author.id,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(reactionAfter, server, 'public', {
+    ExternalDataUtils.importProperty(reactionAfter, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(reactionAfter, server, 'published', {
+    ExternalDataUtils.importProperty(reactionAfter, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(reactionAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
         value: Moment(glNote.created_at).toISOString(),
         overwrite: 'always',
     });

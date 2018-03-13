@@ -6,7 +6,7 @@ var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 var PlainText = require('utils/plain-text');
 var ComponentRefs = require('utils/component-refs');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 var UserUtils = require('objects/utils/user-utils');
 var Payload = require('transport/payload');
 
@@ -366,7 +366,7 @@ module.exports = React.createClass({
         var title = story.details.title;
         var repo = this.props.repo;
         var url, target;
-        var issueLink = ExternalObjectUtils.findLinkByRelations(this.props.story, 'issue');
+        var issueLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'issue');
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             if (issueLink) {
                 var issueNumber = issueLink.issue.number;
@@ -404,7 +404,7 @@ module.exports = React.createClass({
         var startDate = formatDate(story.details.start_date) || '-';
         var url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            var milestoneLink = ExternalObjectUtils.findLinkByRelations(this.props.story, 'milestone');
+            var milestoneLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'milestone');
             if (milestoneLink) {
                 url = `${repo.details.web_url}/milestones/${milestoneLink.milestone.id}`;
             }
@@ -445,7 +445,7 @@ module.exports = React.createClass({
         var branch2 = _.get(story, 'details.branch');
         var url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            var mergeRequestLink = ExternalObjectUtils.findLinkByRelations(this.props.story, 'merge_request');
+            var mergeRequestLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'merge_request');
             if (mergeRequestLink) {
                 url = `${repo.details.web_url}/merge_requests/${mergeRequestLink.merge_request.id}`;
             }

@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 // accessors
 var Project = require('accessors/project');
@@ -107,7 +107,7 @@ function findOne(db, criteria) {
         if (!_.includes(project.repo_ids, repo.id)) {
             throw new Error(`Repository "${repo.name}" (${repo.id}) is not associated with project "${project.name}"`);
         }
-        if (!ExternalObjectUtils.findLink(repo, server)) {
+        if (!ExternalDataUtils.findLink(repo, server)) {
             throw new Error(`Missing server link: ${repo.name}`);
         }
         return a;

@@ -13,7 +13,7 @@ var Async = require('async-do-while');
 var HTTPError = require('errors/http-error');
 var Database = require('database');
 var Shutdown = require('shutdown');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
 
@@ -698,7 +698,7 @@ function findMatchingUser(server, account) {
     return Database.open().then((db) => {
         var profile = account.profile;
         var criteria = {
-            external_object: ExternalObjectUtils.createLink(server, {
+            external_object: ExternalDataUtils.createLink(server, {
                 user: { id: getProfileId(profile) },
             }),
             deleted: false,
@@ -892,30 +892,30 @@ function copyUserProperties(user, server, image, profile) {
                 settings: UserSettings.default,
             };
         };
-        ExternalObjectUtils.addLink(userAfter, server, {
+        ExternalDataUtils.addLink(userAfter, server, {
             user: { id: getProfileId(profile) }
         });
-        ExternalObjectUtils.importProperty(userAfter, server, 'type', {
+        ExternalDataUtils.importProperty(userAfter, server, 'type', {
             value: userType,
             overwrite: overwriteUserType,
         });
-        ExternalObjectUtils.importProperty(userAfter, server, 'username', {
+        ExternalDataUtils.importProperty(userAfter, server, 'username', {
             value: username,
             overwrite: 'match-previous',
         });
-        ExternalObjectUtils.importProperty(userAfter, server, 'details.name', {
+        ExternalDataUtils.importProperty(userAfter, server, 'details.name', {
             value: profile.displayName,
             overwrite: 'match-previous',
         });
-        ExternalObjectUtils.importProperty(userAfter, server, 'details.email', {
+        ExternalDataUtils.importProperty(userAfter, server, 'details.email', {
             value: email,
             overwrite: 'match-previous',
         });
-        ExternalObjectUtils.importProperty(userAfter, server, 'details.gender', {
+        ExternalDataUtils.importProperty(userAfter, server, 'details.gender', {
             value: json.gender,
             overwrite: 'match-previous',
         });
-        ExternalObjectUtils.importResource(userAfter, server, 'image', {
+        ExternalDataUtils.importResource(userAfter, server, 'image', {
             value: image,
             replace: 'match-previous'
         });

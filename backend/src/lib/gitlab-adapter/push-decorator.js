@@ -4,7 +4,7 @@ var Request = require('request');
 var Ignore = require('ignore');
 var HTTPError = require('errors/http-error');
 var Async = require('async-do-while');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
 
@@ -270,7 +270,7 @@ function findMatchingComponents(folder, path) {
 function scanFolder(server, repo, commitId, folderPath) {
     return Promise.try(() => {
         console.log(`Scanning ${folderPath}`);
-        var repoLink = ExternalObjectUtils.findLink(repo, server);
+        var repoLink = ExternalDataUtils.findLink(repo, server);
         var url = `projects/${repoLink.project.id}/repository/tree`;
         var query = {
             path: folderPath,
@@ -303,7 +303,7 @@ function retrieveFile(server, repo, commitId, fileRecord) {
             return null;
         }
         console.log(`Retrieving file: ${fileRecord.path}`);
-        var repoLink = ExternalObjectUtils.findLink(repo, server);
+        var repoLink = ExternalDataUtils.findLink(repo, server);
         var url = `/projects/${repoLink.project.id}/repository/files/${encodeURIComponent(fileRecord.path)}`;
         var query = {
             ref: commitId,

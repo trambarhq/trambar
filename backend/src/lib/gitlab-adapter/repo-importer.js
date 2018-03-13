@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TaskLog = require('task-log');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
 var UserImporter = require('gitlab-adapter/user-importer');
@@ -48,32 +48,32 @@ function importEvent(db, server, repo, project, author, glEvent) {
  */
 function copyEventProperties(story, server, repo, author, glEvent) {
     var storyAfter = _.cloneDeep(story) || {};
-    ExternalObjectUtils.inheritLink(storyAfter, server, repo);
-    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+    ExternalDataUtils.inheritLink(storyAfter, server, repo);
+    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'repo',
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
         value: [ author.id ],
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
         value: author.role_ids,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.action', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.action', {
         value: glEvent.action_name,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
         value: Moment(glEvent.created_at).toISOString(),
         overwrite: 'always',
     });
@@ -95,7 +95,7 @@ function importRepositories(db, server) {
     });
     // find existing repos connected with server (including deleted ones)
     var criteria = {
-        external_object: ExternalObjectUtils.createLink(server)
+        external_object: ExternalDataUtils.createLink(server)
     };
     return Repo.find(db, 'global', criteria, '*').then((repos) => {
         var added = [];
@@ -105,7 +105,7 @@ function importRepositories(db, server) {
         return fetchRepos(server).then((glRepos) => {
             // delete ones that no longer exists
             return Promise.each(repos, (repo) => {
-                var repoLink = ExternalObjectUtils.findLink(repo, server);
+                var repoLink = ExternalDataUtils.findLink(repo, server);
                 if (!_.some(glRepos, { id: repoLink.project.id })) {
                     deleted.push(repo.name);
                     return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
@@ -171,7 +171,7 @@ function importRepositories(db, server) {
  */
 function findExistingRepo(db, server, repos, glRepo) {
     var repo = _.find(repos, (repo) => {
-        return ExternalObjectUtils.findLink(repo, server, {
+        return ExternalDataUtils.findLink(repo, server, {
             project: { id: glRepo.id }
         });
     });
@@ -220,42 +220,42 @@ function addProjectMembers(db, repo, users) {
  */
 function copyRepoDetails(repo, server, members, glRepo, glLabels) {
     var repoAfter = _.cloneDeep(repo) || {};
-    ExternalObjectUtils.addLink(repoAfter, server, {
+    ExternalDataUtils.addLink(repoAfter, server, {
         project: { id: glRepo.id }
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'type', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'type', {
         value: 'gitlab',
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'name', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'name', {
         value: glRepo.name,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'user_ids', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'user_ids', {
         value: _.map(members, 'id'),
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'details.web_url', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'details.web_url', {
         value: glRepo.web_url,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'details.issues_enabled', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'details.issues_enabled', {
         value: glRepo.issues_enabled,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'details.archived', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'details.archived', {
         value: glRepo.archived,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'details.default_branch', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'details.default_branch', {
         value: glRepo.default_branch,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'details.labels', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'details.labels', {
         value: _.map(glLabels, 'name'),
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(repoAfter, server, 'details.label_colors', {
+    ExternalDataUtils.importProperty(repoAfter, server, 'details.label_colors', {
         value: _.map(glLabels, 'color'),
         overwrite: 'always',
     });

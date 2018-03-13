@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TaskLog = require('task-log');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
 var IssueImporter = require('gitlab-adapter/issue-importer');
@@ -40,7 +40,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
     };
     return TaskLog.last('gitlab-event-import', options).then((lastTask) => {
         var lastEventTime = _.get(lastTask, 'details.last_event_time');
-        var repoLink = ExternalObjectUtils.findLink(repo, server);
+        var repoLink = ExternalDataUtils.findLink(repo, server);
         var url = `/projects/${repoLink.project.id}/events`;
         var params = { sort: 'asc' };
         if (lastEventTime) {

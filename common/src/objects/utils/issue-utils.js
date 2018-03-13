@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 module.exports = {
     extract,
@@ -21,7 +21,7 @@ function extract(story, repos) {
     }
     // find the repo in whose tracker the issue resides
     var repo = _.find(repos, (repo) => {
-        return ExternalObjectUtils.findLinkByRelative(story, repo, 'project');
+        return ExternalDataUtils.findLinkByRelative(story, repo, 'project');
     });
     if (!repo) {
         // either the repo has gone missing or it's not loaded yet
@@ -50,14 +50,14 @@ function attach(story, issue, user, repos) {
             // find the correct repo
             var repo = _.find(repos, { id: issue.repoId });
             // find the server that hosts the repo and that the user has access to
-            var server = ExternalObjectUtils.findCommonServer(repo, user);
-            var userLink = ExternalObjectUtils.findLink(user, server);
+            var server = ExternalDataUtils.findCommonServer(repo, user);
+            var userLink = ExternalDataUtils.findLink(user, server);
             // find existing issue link (when modifying existing story)
-            var issueLink = ExternalObjectUtils.findLinkByRelative(story, repo, 'project');
+            var issueLink = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
             if (!issueLink) {
                 // an incomplete issue link--server will add the issue id and number
                 // also add the user id, so we know who to post issue as
-                issueLink = ExternalObjectUtils.inheritLink(story, server, repo, {
+                issueLink = ExternalDataUtils.inheritLink(story, server, repo, {
                     issue: {
                         id: 0,
                         number: 0

@@ -2,7 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 var IssueUtils = require('objects/utils/issue-utils');
 var StoryUtils = require('objects/utils/story-utils');
 
@@ -891,7 +891,7 @@ var defaultOptions = {
 
 var findRepo = Memoize(function(repos, story) {
     return _.find(repos, (repo) => {
-        var link = ExternalObjectUtils.findLinkByRelative(story, repo, 'project');
+        var link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
         return !!link;
     });
 });

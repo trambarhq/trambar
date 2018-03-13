@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var ExternalObjectUtils = require('objects/utils/external-object-utils');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 // accessors
 var Story = require('accessors/story');
@@ -28,7 +28,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
     // see if there's story about this page recently
     var criteria = {
         newer_than: Moment().subtract(1, 'day').toISOString(),
-        external_object: ExternalObjectUtils.extendLink(server, repo, {
+        external_object: ExternalDataUtils.extendLink(server, repo, {
             wiki: { id: glHookEvent.object_attributes.slug }
         }),
     };
@@ -65,46 +65,46 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 */
 function copyEventProperties(story, server, repo, author, glHookEvent) {
     var storyAfter = _.cloneDeep(story) || {};
-    ExternalObjectUtils.inheritLink(storyAfter, server, repo, {
+    ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         wiki: { id: glHookEvent.object_attributes.slug }
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'type', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'wiki',
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'user_ids', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
         value: [ author.id ],
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'role_ids', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
         value: author.role_ids,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.url', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.url', {
         value: glHookEvent.object_attributes.url,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.title', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
         value: glHookEvent.object_attributes.title,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.action', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.action', {
         value: glHookEvent.object_attributes.action,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'details.slug', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.slug', {
         value: glHookEvent.object_attributes.slug,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'public', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'public', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'published', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'published', {
         value: true,
         overwrite: 'always',
     });
-    ExternalObjectUtils.importProperty(storyAfter, server, 'ptime', {
+    ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
         value: Moment(glMilestone.created_at).toISOString(),
         overwrite: 'always',
     });
