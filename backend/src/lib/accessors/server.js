@@ -152,6 +152,37 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Create associations between newly created or modified rows with
+     * rows in other tables
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Array<Object>} rows
+     * @param  {Object} credentials
+     *
+     * @return {Promise}
+     */
+     associate: function(db, schema, objects, originals, rows, credentials) {
+         return Promise.try(() => {
+             var deletedServers = _.filter(rows, (serverAfter, index) => {
+                 var serverBefore = originals[index];
+                 return serverAfter.deleted && !serverBefore.deleted;
+             });
+             var undeletedServers = _.filter(rows, (serverAfter, index) => {
+                 var serverBefore = originals[index];
+                 return !serverAfter.deleted && serverBefore.deleted;
+             });
+             var Repo = require('accessors/repo');
+             return Promise.all([
+                 Repo.deleteAssociated(db, schema, { server: deletedServers }),
+                 Repo.restoreAssociated(db, schema, { server: undeletedServers }),
+             ]);
+         });
+     },
+
+    /**
      * See if a database change event is relevant to a given user
      *
      * @param  {Object} event

@@ -272,17 +272,11 @@ module.exports = _.create(ExternalData, {
      */
      associate: function(db, schema, objects, originals, rows, credentials) {
          return Promise.try(() => {
-             var deletedRows = _.filter(rows, { deleted: true });
-             if (!_.isEmpty(deletedRows)) {
-                 var Notification = require('accessors/notification');
-
-                 var deletedReactionIds = _.map(deletedRows, 'id');
-                 var criteria = { reaction_id: deletedReactionIds };
-                 var changes = { deleted: true };
-                 return Promise.all([
-                     Notification.updateMatching(db, schema, criteria, changes),
-                 ]);
-             }
+             var deletedReactions = _.filter(rows, { deleted: true });
+             var Notification = require('accessors/notification');
+             return Promise.all([
+                 Notification.deleteAssociated(db, schema, { reaction: deletedReactions }),
+             ]);
          });
      },
 
@@ -349,19 +343,25 @@ module.exports = _.create(ExternalData, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Number>} userIds
+     * @param  {Object} associations
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, userIds) {
-        if (_.isEmpty(userIds)) {
-            return Promise.resolve();
-        }
-        var criteria = {
-            user_id: userIds,
-            deleted: false,
-        };
-        return this.updateMatching(db, schema, criteria, { deleted: true });
+    deleteAssociated: function(db, schema, associations) {
+        return promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'user') {
+                var userIds = _.map(objects, 'id');
+                var criteria = {
+                    user_id: userIds,
+                    deleted: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: true });
+            }
+        });
+        return Promise.props(promises);
     },
 
     /**
@@ -369,20 +369,26 @@ module.exports = _.create(ExternalData, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Number>} userIds
+     * @param  {Object} associations
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, userIds) {
-        if (_.isEmpty(userIds)) {
-            return Promise.resolve();
-        }
-        var criteria = {
-            user_id: userIds,
-            deleted: true,
-            // don't restore reactions that were manually deleted
-            suppressed: false,
-        };
-        return this.updateMatching(db, schema, criteria, { deleted: false });
+    restoreAssociated: function(db, schema, associations) {
+        return promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'user') {
+                var userIds = _.map(objects, 'id');
+                var criteria = {
+                    user_id: userIds,
+                    deleted: true,
+                    // don't restore reactions that were manually deleted
+                    suppressed: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: false });
+            }
+        });
+        return Promise.props(promises);
     },
 });

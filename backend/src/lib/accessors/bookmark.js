@@ -204,4 +204,30 @@ module.exports = _.create(Data, {
             }
         }
     },
+
+    /**
+     * Mark notifications associated with stories or reactions as deleted
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} associations
+     *
+     * @return {Promise}
+     */
+    deleteAssociated: function(db, schema, associations) {
+        return promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'story') {
+                var storyIds = _.map(objects, 'id');
+                var criteria = {
+                    story_id: storyIds,
+                    deleted: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: true });
+            }
+        });
+        return Promise.props(promises);
+    },
 });

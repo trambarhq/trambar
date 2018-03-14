@@ -5,6 +5,7 @@ var Empty = require('data/empty');
 module.exports = {
     findRepo,
     findAllRepos,
+    findExistingRepos,
     findProjectRepos,
 };
 
@@ -41,6 +42,23 @@ function findAllRepos(db) {
 }
 
 /**
+ * Find repo that haven't been deleted
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise<Array<Repo>>}
+ */
+function findExistingRepos(db) {
+    return db.find({
+        schema: 'global',
+        table: 'repo',
+        criteria: {
+            deleted: false
+        }
+    });
+}
+
+/**
  * Find repos connected with given project(s)
  *
  * @param  {Database} db
@@ -58,7 +76,10 @@ function findProjectRepos(db, projects) {
         return db.find({
             schema: 'global',
             table: 'repo',
-            criteria: { id: ids },
+            criteria: {
+                id: ids,
+                deleted: false
+            },
         });
     } else {
         var project = projects;
@@ -70,6 +91,7 @@ function findProjectRepos(db, projects) {
             table: 'repo',
             criteria: {
                 id: project.repo_ids,
+                deleted: false
             }
         });
     }

@@ -448,32 +448,33 @@ module.exports = _.create(ExternalData, {
      * @return {Promise}
      */
     updateContentDeletion: function(db, schema, usersBefore, usersAfter) {
-        var deletedUserIds = [];
-        var undeletedUserIds = [];
-        _.each(usersBefore, (userBefore, index) => {
-            if (userBefore) {
-                var userAfter = usersAfter[index];
-                if (!userBefore.deleted && userAfter.deleted) {
-                    deletedUserIds.push(userAfter.id);
-                } else if (userBefore.deleted && !userAfter.deleted) {
-                    undeletedUserIds.push(userAfter.id);
-                }
+        return Promise.try(() => {
+            var deletedUsers = _.filter(usersAfter, (userAfter, index) => {
+                var userBefore = usersAfter[index];
+                return userAfter.deleted && !userBefore.deleted;
+            });
+            var undeletedUsers = _.filter(usersAfter, (userAfter, index) => {
+                var userBefore = usersAfter[index];
+                return !userAfter.deleted && userBefore.deleted;
+            });
+            if (_.isEmpty(deletedUsers) && _.isEmpty(undeletedUsers)) {
+                return;
             }
-        });
-        if (!_.isEmpty(deletedUserIds) || !_.isEmpty(undeletedUserIds)) {
+
             var Project = require('accessors/project');
             var Story = require('accessors/story');
             var Reaction = require('accessors/reaction');
-            var criteriaP = { deleted: false };
-            return Project.find(db, schema, criteriaP, 'name').each((project) => {
+            // go through each project
+            var criteria = { deleted: false };
+            return Project.find(db, schema, criteria, 'name').each((project) => {
                 var contentSchema = project.name;
                 return Promise.all([
-                    Story.deleteAssociated(db, contentSchema, deletedUserIds),
-                    Story.restoreAssociated(db, contentSchema, undeletedUserIds),
-                    Reaction.deleteAssociated(db, contentSchema, deletedUserIds),
-                    Reaction.restoreAssociated(db, contentSchema, undeletedUserIds),
+                    Story.deleteAssociated(db, contentSchema, { user: deletedUsers }),
+                    Story.restoreAssociated(db, contentSchema, { user: undeletedUsers }),
+                    Reaction.deleteAssociated(db, contentSchema, { user: deletedUsers }),
+                    Reaction.restoreAssociated(db, contentSchema, { user: undeletedUsers }),
                 ]);
             });
-        }
+        });
     },
 });

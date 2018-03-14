@@ -101,7 +101,7 @@ module.exports = Relaks.createClass({
                 props.project = project;
             });
         }).then(() => {
-            return RepoFinder.findAllRepos(db).then((repos) => {
+            return RepoFinder.findExistingRepos(db).then((repos) => {
                 props.repos = repos;
             });
         }).then(() => {
@@ -455,7 +455,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderIssueTrackerColumn: function(repo) {
-        if (this.props.theme.isBelowMode('narrow')) {
+        if (this.props.theme.isBelowMode('ultra-wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -636,9 +636,11 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             }
             var db = this.props.database.use({ schema: 'global', by: this });
             return db.start().then((userId) => {
+                // remove ids of repo that no longer exist
+                var existingRepoIds = _.map(this.props.repos, 'id');
                 var project = {
                     id: this.props.project.id,
-                    repo_ids: this.state.selectedRepoIds
+                    repo_ids: _.intersection(this.state.selectedRepoIds, existingRepoIds)
                 };
                 return db.saveOne({ table: 'project' }, project).then((project) => {
                     this.setState({ hasChanges: false }, () => {

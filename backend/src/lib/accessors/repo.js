@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var ExternalData = require('accessors/external-data');
+var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 module.exports = _.create(ExternalData, {
     schema: 'global',
@@ -129,5 +130,59 @@ module.exports = _.create(ExternalData, {
      */
     sync: function(db, schema, criteria) {
         this.sendSyncNotification(db, schema, criteria);
+    },
+
+    /**
+     * Mark repos as deleted if they're associated with the provided server id
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} associations
+     *
+     * @return {Promise}
+     */
+    deleteAssociated: function(db, schema, associations) {
+        return promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'server') {
+                return Promise.each(objects, (server) => {
+                    var criteria = {
+                        external_object: ExternalDataUtils.createLink(server),
+                        deleted: false,
+                    };
+                    return this.updateMatching(db, schema, criteria, { deleted: true });
+                });
+            }
+        });
+        return Promise.props(promises);
+    },
+
+    /**
+     * Clear deleted flag of repos associated with to specified servers
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} associations
+     *
+     * @return {Promise}
+     */
+    restoreAssociated: function(db, schema, associations) {
+        return promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'server') {
+                return Promise.each(objects, (server) => {
+                    var criteria = {
+                        external_object: ExternalDataUtils.createLink(server),
+                        deleted: true,
+                    };
+                    return this.updateMatching(db, schema, criteria, { deleted: false });
+                });
+            }
+        });
+        return Promise.props(promises);
     },
 });

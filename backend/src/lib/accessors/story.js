@@ -362,19 +362,13 @@ module.exports = _.create(ExternalData, {
      */
      associate: function(db, schema, objects, originals, rows, credentials) {
          return Promise.try(() => {
-             var deletedRows = _.filter(rows, { deleted: true });
-             if (!_.isEmpty(deletedRows)) {
-                 var Bookmark = require('accessors/bookmark');
-                 var Notification = require('accessors/notification');
-
-                 var deletedStoryIds = _.map(deletedRows, 'id');
-                 var criteria = { story_id: deletedStoryIds };
-                 var changes = { deleted: true };
-                 return Promise.all([
-                     Bookmark.updateMatching(db, schema, criteria, changes),
-                     Notification.updateMatching(db, schema, criteria, changes),
-                 ]);
-             }
+             var deletedStories = _.filter(rows, { deleted: true });
+             var Bookmark = require('accessors/bookmark');
+             var Notification = require('accessors/notification');
+             return Promise.all([
+                 Bookmark.deleteAssociated(db, schema, { story: deletedStories }),
+                 Notification.deleteAssociated(db, schema, { story: deletedStories }),
+             ]);
          });
      },
 
@@ -505,19 +499,25 @@ module.exports = _.create(ExternalData, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Number>} userIds
+     * @param  {Object} associations
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, userIds) {
-        if (_.isEmpty(userIds)) {
-            return Promise.resolve();
-        }
-        var criteria = {
-            lead_author_id: userIds,
-            deleted: false,
-        };
-        return this.updateMatching(db, schema, criteria, { deleted: true });
+    deleteAssociated: function(db, schema, associations) {
+        var promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'user') {
+                var userIds = _.map(objects, 'id');
+                var criteria = {
+                    lead_author_id: userIds,
+                    deleted: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: true });
+            }
+        });
+        return Promise.props(promises);
     },
 
     /**
@@ -525,20 +525,26 @@ module.exports = _.create(ExternalData, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Number>} userIds
+     * @param  {Object} associations
      *
      * @return {Promise}
      */
     restoreAssociated: function(db, schema, userIds) {
-        if (_.isEmpty(userIds)) {
-            return Promise.resolve();
-        }
-        var criteria = {
-            lead_author_id: userIds,
-            deleted: true,
-            // don't restore stories that were manually deleted
-            suppressed: false,
-        };
-        return this.updateMatching(db, schema, criteria, { deleted: false });
+        var promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'user') {
+                var userIds = _.map(objects, 'id');
+                var criteria = {
+                    lead_author_id: userIds,
+                    deleted: true,
+                    // don't restore stories that were manually deleted
+                    suppressed: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: false });
+            }
+        });
+        return Promise.props(promises);
     },
 });
