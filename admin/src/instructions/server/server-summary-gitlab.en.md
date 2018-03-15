@@ -1,12 +1,15 @@
 **Server type** - GitLab
 
-**Name** -
+**Name** - There is no need to change this unless you're integrating multiple
+GitLab server.
 
-**Identifier** -
+**Identifier** - There is no need to change this unless you're integrating multiple
+GitLab server.
 
 **New users** -
 
-**Role assignment** -
+**Role assignment** - You can automatically assign roles to new users
+authenticated through this server. This is useful for story filtering.
 
 **Callback URL** -
 
@@ -16,4 +19,4 @@
 
 **Application secret** -
 
-**API access** - 
+**API access** -

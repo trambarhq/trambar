@@ -14,7 +14,7 @@ for a GitLab server operated by your organization. The second option might be
 appropriate for a third-party OAuth provider like Facebook.
 
 **Role assignment** - You can automatically assign roles to new users
-authenticated through this server.
+authenticated through this server. This is useful for story filtering.
 
 **Callback URL** - This URL is used by an OAuth provider to redirect a user
 back to your web site after he has been authenticated.
