@@ -1059,20 +1059,62 @@ describe('RemoteDataSource', function() {
                 expect(savedObject).to.have.property('prop4', 4);
             });
         })
+        it('should save objects to local schema', function() {
+
+        })
     })
     describe('#remove()', function() {
+        it('should remove an object', function() {
+
+        })
+        it('should mark an object as deleted when there is no connection', function() {
+
+        })
+        it('should send delete request once connection is restored', function() {
+
+        })
+        it('should remove an object from local schema', function() {
+
+        })
     })
     describe('#clear()', function() {
+        it('should remove recent searches at a given server', function() {
+
+        })
     })
     describe('#invalidate()', function() {
+        it('should flag searches as dirty based on change info', function() {
+
+        })
+        it('should flag all searches at a server as dirty when no change info is given', function() {
+
+        })
+        it('should flag all searches at all servers as dirty when a server is not specified', function() {
+
+        })
+        it('should trigger merging of conflicted objects', function() {
+
+        })
     })
     describe('#beginMobileSession()', function() {
+        it('should start a mobile session', function() {
+
+        })
     })
     describe('#acquireMobileSession()', function() {
+        it('should retrieve a mobile session', function() {
+
+        })
     })
     describe('#releaseMobileSession()', function() {
+        it('should finish mobile activation process', function() {
+
+        })
     })
     describe('#endMobileSession()', function() {
+        it('should delete a mobile session', function() {
+
+        })
     })
 })
 
