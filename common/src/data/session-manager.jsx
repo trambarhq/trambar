@@ -24,6 +24,7 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.removalQueue = [];
         return {
             loaded: [],
             removed: [],
@@ -39,6 +40,10 @@ module.exports = React.createClass({
      * @return {Promise<Object|null>}
      */
     loadFromCache: function(address) {
+        // don't load a session that's being removed
+        if (_.some(this.removalQueue, { address })) {
+            return Promise.resolve(null);
+        }
         var db = this.props.database.use({ schema: 'local', by: this });
         var criteria = { key: address };
         return db.findOne({ table: 'session', criteria }).then((record) => {
@@ -91,10 +96,15 @@ module.exports = React.createClass({
      * @return {Promise<Object>}
      */
     removeFromCache: function(session) {
-        // save the credentials
+        // add the session to the queue so we won't fetch it prior to its removal
+        this.removalQueue.push(session);
+
+        // remove the cached credentials
         var db = this.props.database.use({ schema: 'local', by: this });
         var record = { key: session.address };
         return db.removeOne({ table: 'session' }, record).then((record) => {
+            _.pull(this.removalQueue, session);
+
             this.setState({
                 removed: _.union(this.state.loaded, [ session.address ])
             });

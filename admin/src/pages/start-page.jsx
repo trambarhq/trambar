@@ -81,6 +81,8 @@ module.exports = Relaks.createClass({
             });
         }).then((system) => {
             return <StartPageSync {...props} />;
+        }).catch((err) => {
+            return null;
         });
     },
 });

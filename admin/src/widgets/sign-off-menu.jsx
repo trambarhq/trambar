@@ -23,8 +23,16 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
+    /**
+     * Render component asynchronously
+     *
+     * @param  {Meanwhile} meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
+        meanwhile.show(<div className="sign-off-menu" />, 100);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 var t = this.props.locale.translate;
@@ -47,6 +55,11 @@ module.exports = Relaks.createClass({
         });
     },
 
+    /**
+     * Called when user click on sign-off button
+     *
+     * @return {Event}
+     */
     handleSignOffClick: function() {
         var db = this.props.database.use({ by: this });
         db.endSession().then(() => {

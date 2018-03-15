@@ -64,6 +64,12 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             return <TaskAlertBarSync {...props} />;
+        }).catch((err) => {
+            if (err.statusCode === 401) {
+                // user is logging out, presumably
+            } else {
+                throw err;
+            }
         });
     },
 
@@ -230,6 +236,11 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render description of current task
+     *
+     * @return {ReactElement}
+     */
     renderMessage: function() {
         var message = this.getMessage(this.state.selectedTask);
         var url = this.getURL(this.state.selectedTask);
@@ -238,6 +249,11 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
         );
     },
 
+    /**
+     * Render progress bar for current task
+     *
+     * @return {ReactElement}
+     */
     renderProgressBar: function() {
         var task = this.state.selectedTask;
         var percent = task.completion + '%';
@@ -273,8 +289,18 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
                 //delay = 2000;
             }
             setTimeout(() => {
-                this.setState({ hidden: false });
+                if (this.mounted !== false) {
+                    this.setState({ hidden: false });
+                }
             }, delay);
         }
+    },
+
+    /**
+     * Remember that the component has been unmounted to avoid React warning
+     * concerning calling setState on unmounted component
+     */
+    componentWillUnmount: function() {
+        this.mounted = false;
     },
 });

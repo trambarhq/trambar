@@ -225,10 +225,15 @@ module.exports = React.createClass({
         return Promise.resolve(session.promise).then(() => {
             var url = `${address}/session/`;
             var options = { responseType: 'json', contentType: 'json' };
-            return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {
+            return HTTPRequest.fetch('DELETE', url, { handle }, options).catch((err) => {
+                // clean cached information anyway, given when we failed to
+                // remove the session in the backend
+                console.error(err);
+            }).then(() => {
                 destroySession(session);
                 this.clearRecentSearches(address);
                 this.clearCachedObjects(address);
+                this.triggerExpirationEvent(session);
                 return null;
             });
         });

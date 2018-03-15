@@ -86,6 +86,12 @@ module.exports = React.createClass({
                 // this.setState({ subscription: null });
                 return null;
             });
+        }).catch((err) => {
+            if (err.statusCode === 401) {
+                // not access to server
+            } else {
+                throw err;
+            }
         });
     },
 
