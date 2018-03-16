@@ -10,9 +10,13 @@ module.exports = React.createClass({
         upward: PropTypes.bool,
         leftward: PropTypes.bool,
         disabled: PropTypes.bool,
-        ignoreClicks: PropTypes.bool,
     },
 
+    /**
+     * Return initial state of component
+     *
+     * @return {Object}
+     */
     getInitialState: function() {
         this.components = ComponentRefs({
             container: HTMLElement,
@@ -23,6 +27,11 @@ module.exports = React.createClass({
         };
     },
 
+    /**
+     * Update state when props change
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps: function(nextProps) {
         var live = hasContents(nextProps);
         if (this.state.live !== live || this.props.disabled !== nextProps.disabled) {
@@ -31,6 +40,11 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
     render: function() {
         var setters = this.components.setters;
         var className = 'tooltip';
@@ -54,6 +68,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render label
+     *
+     * @return {ReactElement}
+     */
     renderLabel: function() {
         var inline = this.findElement('inline');
         return (
@@ -63,6 +82,11 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render pop-up
+     *
+     * @return {ReactElement|null}
+     */
     renderWindow: function() {
         if (!this.state.open) {
             return null;
@@ -77,49 +101,72 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Add/remove handlers depending on whether the tooltip is shown
+     */
     componentDidUpdate: function(prevProps, prevState) {
         if (prevState.open !== this.state.open) {
             if (this.state.open) {
                 document.addEventListener('mousedown', this.handleMouseDown);
+                document.addEventListener('keydown', this.handleKeyDown);
             } else {
                 document.removeEventListener('mousedown', this.handleMouseDown);
+                document.removeEventListener('keydown', this.handleKeyDown);
             }
         }
     },
 
+    /**
+     * Remove handlers on unmount
+     */
     componentWillUnmount: function() {
         if (this.state.open) {
             document.removeEventListener('mousedown', this.handleMouseDown);
+            document.removeEventListener('keydown', this.handleKeyDown);
         }
     },
 
+    /**
+     * Look for child by tag name
+     *
+     * @param  {String} tagName
+     *
+     * @return {ReactElement}
+     */
     findElement: function(tagName) {
         var children = React.Children.toArray(this.props.children);
         return _.find(children, { type: tagName });
     },
 
+    /**
+     * Called when a label is clicked
+     *
+     * @param  {Event} evt
+     */
     handleLabelClick: function(evt) {
         if (this.state.live && !this.props.disabled) {
             this.setState({ open: !this.state.open });
         }
     },
 
+    /**
+     * Called when a mouse button is pressed
+     *
+     * @param  {Event} evt
+     */
     handleMouseDown: function(evt) {
-        var inside = false;
-        var container = this.components.container;
-        for (var n = evt.target; n; n = n.parentNode) {
-            if (n === container) {
-                inside = true;
-                break;
-            }
-        }
-        if (!inside) {
+        if (!isInside(evt.target, this.components.container)) {
             this.setState({ open: false });
         }
     },
 
-    handleWindowClick: function(evt) {
-        if (!this.props.ignoreClicks) {
+    /**
+     * Called when a key is pressed
+     *
+     * @param  {Event} evt
+     */
+    handleKeyDown: function(evt) {
+        if (evt.keyCode === 27) {
             this.setState({ open: false });
         }
     }
@@ -130,6 +177,15 @@ function hasContents(props) {
     var window = _.find(children, { type: 'window' });
     if (window) {
         if (React.Children.count(window.props.children) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isInside(element, container) {
+    for (var n = element; n; n = n.parentNode) {
+        if (n === container) {
             return true;
         }
     }
