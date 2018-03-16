@@ -370,7 +370,7 @@ module.exports = React.createClass({
                 anchorOffset = Infinity;
             }
         }
-        if (anchorSlot) {
+        if (anchorSlot && anchorSlot.node) {
             if (anchorOffset !== undefined) {
                 var containerOffsetTop = this.scrollContainer.offsetTop;
                 var containerScrollTop = this.scrollContainer.scrollTop;
