@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
+var FocusManager = require('utils/focus-manager');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 var IssueUtils = require('objects/utils/issue-utils');
 var StoryUtils = require('objects/utils/story-utils');
@@ -864,9 +865,12 @@ module.exports = React.createClass({
                         public: this.props.story.public,
                     };
                     this.saveReaction(comment);
-                } else {
-                    this.components.reactionList.focus();
                 }
+                FocusManager.focus({
+                    type: 'ReactionEditor',
+                    story_id: this.props.story.id,
+                    user_id: this.props.currentUser.id,
+                });
                 break;
             case 'reaction-expand':
                 this.setState({

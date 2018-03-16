@@ -4,6 +4,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
+var FocusManager = require('utils/focus-manager');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
@@ -144,6 +145,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
             payloads: this.props.payloads.override({ schema: 'global' }),
             onChange: this.handleChange,
+            onCaptureEnd: this.handleCaptureEnd,
         };
         return <MediaImporter {...props} />
     },
@@ -214,7 +216,11 @@ module.exports = React.createClass({
      */
     handleFileChange: function(evt) {
         var files = evt.target.files;
-        this.components.importer.importFiles(files);
+        this.components.importer.importFiles(files).then((count) => {
+            if (count > 0) {
+                FocusManager.focus({ type: 'ImageEditor' });
+            }
+        });
     },
 
     /**
@@ -245,4 +251,15 @@ module.exports = React.createClass({
         this.setUserProperty('details.resources', evt.resources);
         return Promise.resolve();
     },
+
+    /**
+     * Called when image capturing has ended
+     *
+     * @param  {Object} evt
+     */
+    handleCaptureEnd: function(evt) {
+        if (evt.resource) {
+            FocusManager.focus({ type: 'ImageEditor' });
+        }
+    }
 });

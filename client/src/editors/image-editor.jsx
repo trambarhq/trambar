@@ -4,6 +4,8 @@ var React = require('react'), PropTypes = React.PropTypes;
 var BlobManager = require('transport/blob-manager');
 var Payload = require('transport/payload');
 var ImageCropping = require('media/image-cropping');
+var FocusManager = require('utils/focus-manager');
+var ComponentRefs = require('utils/component-refs');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -46,6 +48,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            imageCropper: ImageCropper,
+        });
         return {
             fullImageURL: null,
             previewImageURL: null,
@@ -151,8 +156,10 @@ module.exports = React.createClass({
         if (!this.state.fullImageURL || this.state.previewImageURL) {
             return null;
         }
+        var setters = this.components.setters;
         var res = this.props.resource;
         var props = {
+            ref: setters.imageCropper,
             url: this.state.fullImageURL,
             clippingRect: res.clip || ImageCropping.default(res.width, res.height),
             vector: (res.format === 'svg'),
@@ -197,6 +204,32 @@ module.exports = React.createClass({
                 <div className="message">{message}</div>
             </div>
         );
+    },
+
+    /**
+     * Register component with FocusManager so focus can be set by other
+     */
+    componentDidMount: function() {
+        FocusManager.register(this, {
+            type: 'ImageEditor',
+        });
+    },
+
+    /**
+     * Unregister component
+     */
+    componentWillUnmount: function() {
+        FocusManager.unregister(this);
+    },
+
+    /**
+     * Focus image cropper
+     */
+    focus: function() {
+        var imageCropper = this.components.imageCropper;
+        if (imageCropper) {
+            imageCropper.focus();
+        }
     },
 
     triggerChangeEvent: function(res) {

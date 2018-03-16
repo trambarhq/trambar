@@ -6,6 +6,7 @@ var ListParser = require('utils/list-parser');
 var Markdown = require('utils/markdown');
 var PlainText = require('utils/plain-text');
 var TagScanner = require('utils/tag-scanner');
+var FocusManager = require('utils/focus-manager');
 var ComponentRefs = require('utils/component-refs');
 var StoryUtils = require('objects/utils/story-utils');
 var IssueUtils = require('objects/utils/issue-utils');
@@ -1137,8 +1138,17 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handlePaste: function(evt) {
-        this.components.mediaImporter.importFiles(evt.clipboardData.files);
-        this.components.mediaImporter.importDataItems(evt.clipboardData.items);
+        Promise.all([
+            this.components.mediaImporter.importFiles(evt.clipboardData.files),
+            this.components.mediaImporter.importDataItems(evt.clipboardData.items)
+        ]).then((counts) => {
+            if (_.some(counts)) {
+                FocusManager.focus({ type: 'ImageEditor' });
+            }
+        });
+        if (evt.clipboardData.files.length > 0) {
+            evt.preventDefault();
+        }
     },
 
     /**
@@ -1367,9 +1377,14 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleDrop: function(evt) {
-        this.components.mediaImporter.importFiles(evt.files);
-        this.components.mediaImporter.importDataItems(evt.items);
-        return null;
+        Promise.all([
+            this.components.mediaImporter.importFiles(evt.files),
+            this.components.mediaImporter.importDataItems(evt.items),
+        ]).then((counts) => {
+            if (_.some(counts)) {
+                FocusManager.focus({ type: 'ImageEditor' });
+            }
+        });
     },
 
     /**
@@ -1388,6 +1403,9 @@ module.exports = React.createClass({
      */
     handleCaptureEnd: function(evt) {
         this.setState({ capturing: null });
+        if (evt.resource) {
+            FocusManager.focus({ type: 'ImageEditor' });
+        }
     },
 
     /**
@@ -1432,7 +1450,11 @@ module.exports = React.createClass({
                 this.components.mediaImporter.capture('audio');
                 break;
             case 'file-import':
-                this.components.mediaImporter.importFiles(evt.files);
+                this.components.mediaImporter.importFiles(evt.files).then((count) => {
+                    if (count > 0) {
+                        FocusManager.focus({ type: 'ImageEditor' });
+                    }
+                });
                 break;
         }
     }

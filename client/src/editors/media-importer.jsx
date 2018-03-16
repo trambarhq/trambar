@@ -83,13 +83,7 @@ module.exports = React.createClass({
      */
     capture: function(type) {
         this.setState({ capturing: type });
-        if (this.props.onCaptureStart) {
-            this.props.onCaptureStart({
-                type: 'capturestart',
-                target: this,
-                mediaType: type,
-            });
-        }
+        this.triggerCaptureStartEvent();
     },
 
     /**
@@ -278,7 +272,7 @@ module.exports = React.createClass({
      *
      * @param  {Array<DataTransferItem>} items
      *
-     * @return {Promise}
+     * @return {Promise<Number>}
      */
     importDataItems: function(items) {
         var stringItems = _.filter(items, (item) => {
@@ -328,6 +322,8 @@ module.exports = React.createClass({
         }).then((res) => {
             if (res) {
                 return this.addResources([ res ]);
+            } else {
+                return 0;
             }
         });
     },
@@ -397,13 +393,7 @@ module.exports = React.createClass({
 
     componentWillUnmount: function() {
         if (this.state.capturing) {
-            if (this.props.onCaptureEnd) {
-                this.props.onCaptureEnd({
-                    type: 'captureend',
-                    target: this,
-                    mediaType: this.state.capturing,
-                });
-            }
+            this.triggerCaptureEndEvent();
         }
     },
 
@@ -412,11 +402,11 @@ module.exports = React.createClass({
      *
      * @param  {Array<Object>} newResources
      *
-     * @return {Promise<Number|undefined>}
+     * @return {Promise<Number>}
      */
     addResources: function(newResources) {
         if (_.isEmpty(newResources)) {
-            return Promise.resolve();
+            return Promise.resolve(0);
         }
         var path = 'details.resources'
         var resourcesBefore = this.props.resources || [];
@@ -432,7 +422,9 @@ module.exports = React.createClass({
             resources = _.concat(resourcesBefore, newResources);
         }
         var firstIndex = resourcesBefore.length;
-        return this.triggerChangeEvent(resources, firstIndex);
+        return this.triggerChangeEvent(resources, firstIndex).then(() => {
+            return newResources.length;
+        });
     },
 
     /**
@@ -453,6 +445,35 @@ module.exports = React.createClass({
     },
 
     /**
+     * Call onCaptureStart handler
+     */
+    triggerCaptureStartEvent: function() {
+        if (this.props.onCaptureStart) {
+            this.props.onCaptureStart({
+                type: 'capturestart',
+                target: this,
+                mediaType: this.state.capturing,
+            });
+        }
+    },
+
+    /**
+     * Call onCaptureEnd handler
+     *
+     * @param  {Object|undefined} res
+     */
+    triggerCaptureEndEvent: function(res) {
+        if (this.props.onCaptureEnd) {
+            this.props.onCaptureEnd({
+                type: 'captureend',
+                target: this,
+                mediaType: this.state.capturing,
+                resource: res,
+            });
+        }
+    },
+
+    /**
      * Called after user has taken a photo, video, or audio
      *
      * @param  {Object} evt
@@ -464,8 +485,10 @@ module.exports = React.createClass({
         } else {
             res.filename = getFilenameFromTime('.' + res.format) ;
         }
-        this.addResources([ res ]);
-        this.handleCaptureCancel(evt);
+        this.addResources([ res ]).then(() => {
+            this.setState({ capturing: null });
+            this.triggerCaptureEndEvent(res);
+        });
     },
 
     /**
@@ -475,13 +498,7 @@ module.exports = React.createClass({
      */
     handleCaptureCancel: function(evt) {
         this.setState({ capturing: null });
-        if (this.props.onCaptureEnd) {
-            this.props.onCaptureEnd({
-                type: 'captureend',
-                target: this,
-                mediaType: this.state.capturing,
-            });
-        }
+        this.triggerCaptureEndEvent();
     },
 });
 
