@@ -101,7 +101,7 @@ module.exports = React.createClass({
         var sHeight = shadow.scrollHeight;
         var cHeight = shadow.clientHeight;
         var aHeight = actual.offsetHeight;
-        var requiredHeight = sHeight + (oHeight - cHeight);
+        var requiredHeight = sHeight + (oHeight - cHeight) + 1;
         if (this.state.height !== requiredHeight) {
             if (aHeight > requiredHeight && aHeight > this.state.requiredHeight) {
                 // don't apply the new height if it's the textarea is taller than
