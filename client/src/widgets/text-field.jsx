@@ -13,7 +13,6 @@ module.exports = React.createClass({
     displayName: 'TextField',
     propTypes: {
         locale: PropTypes.instanceOf(Locale).isRequired,
-        autofocus: PropTypes.bool,
     },
 
     /**
@@ -72,13 +71,9 @@ module.exports = React.createClass({
     },
 
     /**
-     * [description]
-     *
-     * @return {[type]}
+     * Place focus on the text field
      */
-    componentDidMount: function() {
-        if (this.props.autofocus) {
-            this.components.input.focus();
-        }
+    focus: function() {
+        this.components.input.focus();
     },
 });

@@ -2,7 +2,6 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
 var Merger = require('data/merger');
 
 var Database = require('data/database');
@@ -49,9 +48,6 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
-        this.components = ComponentRefs({
-            editor: ReactionEditor,
-        });
         return {
             hiddenReactionIds: [],
         };
@@ -133,7 +129,6 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     handleReactionRender: function(evt) {
-        var setters = this.components.setters;
         var reaction = evt.item;
         var isUserDraft = false;
         var isNewComment = false;
@@ -169,7 +164,7 @@ module.exports = React.createClass({
                 theme: this.props.theme,
                 onFinish: this.props.onFinish,
             };
-            return <ReactionEditor ref={setters.editor} key={key} {...props} />
+            return <ReactionEditor key={key} {...props} />
         } else {
             var respondent = findRespondent(this.props.respondents, reaction);
             var props = {
@@ -215,16 +210,6 @@ module.exports = React.createClass({
         var hiddenReactionIds = _.map(evt.items, 'id');
         this.setState({ hiddenReactionIds });
     },
-
-    /**
-     * Set focus on editor
-     */
-    focus: function() {
-        var editor = this.components.editor;
-        if (editor) {
-            editor.focus();
-        }
-    }
 });
 
 var sortReactions = Memoize(function(reactions, currentUser) {

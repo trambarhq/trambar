@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var ComponentRefs = require('utils/component-refs');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -38,6 +39,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            textField: TextField
+        });
         return {
             issue: null,
         };
@@ -152,11 +156,12 @@ module.exports = React.createClass({
      */
     renderTitleInput: function() {
         var t = this.props.locale.translate;
+        var setters = this.components.setters;
         var props = {
             id: 'title',
+            ref: setters.textField,
             value: this.getIssueProperty('title'),
             locale: this.props.locale,
-            autofocus: true,
             onChange: this.handleTitleChange,
         };
         return <TextField {...props}>{t('issue-title')}</TextField>;
@@ -271,6 +276,16 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
+    },
+
+    /**
+     * Focus text field on mount
+     */
+    componentDidMount: function() {
+        // only if the title is currently empty
+        if (!this.getIssueProperty('title')) {
+            this.components.textField.focus();
+        }
     },
 
     /**

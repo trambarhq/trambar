@@ -105,6 +105,13 @@ module.exports = React.createClass({
     },
 
     /**
+     * Set focus
+     */
+    focus: function() {
+        this.components.container.focus();
+    },
+
+    /**
      * Add Hammer.js touch handling to container div
      */
     activateTouchHandling: function() {

@@ -6,6 +6,7 @@ var DeviceManager = require('media/device-manager');
 var ComponentRefs = require('utils/component-refs');
 var TagScanner = require('utils/tag-scanner');
 var Markdown = require('utils/markdown');
+var FocusManager = require('utils/focus-manager');
 var ReactionUtils = require('objects/utils/reaction-utils');
 
 var Database = require('data/database');
@@ -177,7 +178,6 @@ module.exports = React.createClass({
             ref: this.components.setters.textArea,
             value: langText,
             lang: this.props.locale.localeCode,
-            autofocus: true,
             onChange: this.handleTextChange,
             onKeyPress: this.handleKeyPress,
             onPaste: this.handlePaste,
@@ -273,6 +273,24 @@ module.exports = React.createClass({
     },
 
     /**
+     * Register the component at FocusManager so others can bring focus to it
+     */
+    componentDidMount: function() {
+        FocusManager.register(this, {
+            type: 'ReactionEditor',
+            story_id: this.props.story.id,
+            user_id: this.props.currentUser.id,
+        });
+    },
+
+    /**
+     * Unregister on unmount
+     */
+    componentWillUnmount: function() {
+        FocusManager.unregister(this);
+    },
+
+    /**
      * Set current draft
      *
      * @param  {Reaction} draft
@@ -363,6 +381,16 @@ module.exports = React.createClass({
                 type: 'finish',
                 target: this,
             });
+        }
+    },
+
+    /**
+     * Focus text area
+     */
+    focus: function() {
+        var textArea = this.components.textArea;
+        if (textArea) {
+            textArea.focus();
         }
     },
 
