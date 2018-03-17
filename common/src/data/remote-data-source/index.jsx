@@ -499,16 +499,22 @@ module.exports = React.createClass({
                 if (search.remote) {
                     // remote only search always block
                     blocking = true;
+                } else if (blocking === undefined) {
+                    // if blocking is not specified, then we don't block
+                    // when there're certain number of cached records
+                    // (i.e. the minimum is met--see constructor of Search)
+                    blocking = !newSearch.isSufficientlyCached();
                 }
 
-                // if there're enough cached records, return them immediately,
-                // without waiting for the remote search to finish
-                //
-                // if the remote search yield new data, an onChange event will
-                // trigger a new search
-                if (blocking === false || newSearch.isSufficientlyCached()) {
+                if (!blocking) {
+                    // return cached results immediately, without waiting for
+                    // the remote search to finish
+                    //
+                    // if the remote search yield new data, an onChange event will
+                    // trigger a new search
                     return newSearch.results;
                 } else {
+                    // wait for remote search to finish
                     return remoteSearchPromise.then(() => {
                         return newSearch.results;
                     });
@@ -597,17 +603,29 @@ module.exports = React.createClass({
     /**
      * Remove recent searches on schema
      *
-     * @param  {String} address
-     * @param  {String} schema
+     * @param  {String|undefined} address
+     * @param  {String|undefined} schema
      */
     clear: function(address, schema) {
         this.updateList('recentSearchResults', (before) => {
-            var after = _.filter(before, (search) => {
-                if (_.isMatch(search, { address, schema })) {
-                    return false;
-                }
-                return true;
-            });
+            var after;
+            if (address && schema) {
+                after = _.filter(before, (search) => {
+                    if (_.isMatch(search, { address, schema })) {
+                        return false;
+                    }
+                    return true;
+                });
+            } else if (address) {
+                after = _.filter(before, (search) => {
+                    if (_.isMatch(search, { address })) {
+                        return false;
+                    }
+                    return true;
+                });
+            } else {
+                after = [];
+            }
             return after;
         });
     },
@@ -756,6 +774,12 @@ module.exports = React.createClass({
      */
     reconcileChanges: function(address, changes) {
         return Promise.each(this.state.changeQueue, (change) => {
+            if (change.onConflict === false) {
+                // don't need to reconcile object removal
+                // we still want it deleted even if it has changed
+                return;
+            }
+
             var affectedIds;
             if (!changes) {
                 if (!address || change.location.address === address) {

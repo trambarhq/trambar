@@ -321,6 +321,13 @@ module.exports = React.createClass({
     },
 
     /**
+     * Clear objects cached in memory
+     */
+    reset: function() {
+        this.tables = {};
+    },
+
+    /**
      * Return name of object store
      *
      * @param  {String} schema
