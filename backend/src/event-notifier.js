@@ -108,12 +108,16 @@ function handleDatabaseChanges(events) {
                     var accessor = _.find(accessors, { table: event.table });
                     if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
                         var table = `${event.schema}.${event.table}`;
-                        var idList = changes[table];
-                        if (!idList) {
-                            idList = changes[table] = [ event.id ];
+                        var lists = changes[table];
+                        if (!lists) {
+                            lists = changes[table] = {
+                                ids: [ event.id ],
+                                gns: [ event.gn ]
+                            };
                         } else {
-                            if (!_.includes(idList, event.id)) {
-                                idList.push(event.id);
+                            if (!_.includes(lists.ids, event.id)) {
+                                lists.ids.push(event.id);
+                                lists.gns.push(event.gn);
                             }
                         }
                     }

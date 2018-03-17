@@ -1260,7 +1260,12 @@ describe('RemoteDataSource', function() {
                 expect(retrieval).to.equal(1);
             }).then(() => {
                 objects = [ { id: 1, gn: 3, name: 'cheese' } ];
-                var changes = { 'global.project': [ 1 ] };
+                var changes = {
+                    'global.project': {
+                        ids: [ 1 ],
+                        gns: [ 3 ],
+                    }
+                };
                 return dataSource.invalidate(location.address, changes);
             }).then(() => {
                 var onChangePromise = new ManualPromise;
@@ -1384,7 +1389,12 @@ describe('RemoteDataSource', function() {
             return Promise.try(() => {
                 // simulate a change by someone else in the meantime
                 objects = [ { id: 7, gn: 2, name: 'cat' } ];
-                var changes = { 'global.project': [ 7 ] };
+                var changes = {
+                    'global.project': {
+                        ids: [ 7 ],
+                        gns: [ 2 ],
+                    }
+                };
                 return dataSource.invalidate(location.address, changes);
             }).then(() => {
                 // wait for save() to finish
@@ -1426,7 +1436,12 @@ describe('RemoteDataSource', function() {
             return Promise.try(() => {
                 // simulate a change by someone else in the meantime
                 objects = [ { id: 7, gn: 2, name: 'cat' } ];
-                var changes = { 'global.project': [ 7 ] };
+                var changes = {
+                    'global.project': {
+                        ids: [ 7 ],
+                        gns: [ 2 ],
+                    }
+                };
                 return dataSource.invalidate(location.address, changes);
             }).then(() => {
                 // wait for save() to finish
@@ -1471,7 +1486,12 @@ describe('RemoteDataSource', function() {
             return Promise.try(() => {
                 // simulate a change by someone else in the meantime
                 objects = [ { id: 7, gn: 2, name: 'cat' } ];
-                var changes = { 'global.project': [ 7 ] };
+                var changes = {
+                    'global.project': {
+                        ids: [ 7 ],
+                        gns: [ 2 ],
+                    }
+                };
                 return dataSource.invalidate(location.address, changes);
             }).then(() => {
                 // wait for save() to finish

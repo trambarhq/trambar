@@ -642,19 +642,20 @@ module.exports = React.createClass({
         return this.reconcileChanges(address, changes).then(() => {
             var changed = false;
             if (changes) {
-                _.forIn(changes, (idList, name) => {
+                _.forIn(changes, (changedObjects, name) => {
                     var parts = _.split(name, '.');
                     var location = {
                         address: address,
                         schema: parts[0],
                         table: parts[1]
                     };
-                    var ids = _.filter(idList, (id) => {
+                    var ids = _.filter(changedObjects.ids, (id, index) => {
+                        var gn = changedObjects.gns[index];
                         if (this.isBeingSaved(location, id)) {
                             // change notification has arrived even before the
                             // save request has finished
                             return false;
-                        } else if (this.isRecentlySaved(location, id)) {
+                        } else if (this.isRecentlySaved(location, id, gn)) {
                             // change notification arrived shortly after save
                             // operation finishes
                             return false;
@@ -748,17 +749,15 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Number} id
+     * @param  {Number} gn
      *
      * @return {Boolean}
      */
-    isRecentlySaved: function(location, id) {
+    isRecentlySaved: function(location, id, gn) {
         return _.some(this.recentStorageResults, (storage) => {
             if (storage.matchLocation(location)) {
-                if (_.some(storage.results, { id })) {
-                    var elapsed = storage.getTimeElapsed();
-                    if (elapsed < 1) {
-                        return true;
-                    }
+                if (_.some(storage.results, { id, gn })) {
+                    return true;
                 }
             }
         });
@@ -792,10 +791,10 @@ module.exports = React.createClass({
                 if (change.location.address === address) {
                     if (!change.dispatched) {
                         var name = `${change.location.schema}.${change.location.table}`;
-                        var idList = changes[name];
-                        if (idList) {
+                        var changedObjects = changes[name];
+                        if (changedObjects) {
                             // look for changed objects that were changed remotely
-                            affectedIds = _.filter(idList, (id, index) => {
+                            affectedIds = _.filter(changedObjects.ids, (id, index) => {
                                 var index = _.findIndex(change.objects, { id });
                                 if (index !== -1) {
                                     if (!change.removed[index]) {
