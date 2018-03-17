@@ -57,6 +57,8 @@ function start() {
         .get(handleOAuthTestRequest)
         .get(handleOAuthActivationRequest)
         .get(handleOAuthRequest);
+    app.route('/privacy/?')
+        .get(handlePrivacyRequest);
     server = app.listen(80);
 
     cleanUpInterval = setInterval(deleteExpiredSessions, 60 * 60 * 1000);
@@ -388,6 +390,21 @@ function handleOAuthActivationRequest(req, res, done) {
         sendHTML(res, html);
     }).catch((err) => {
         sendErrorHTML(res, err);
+    });
+}
+
+/**
+ * Handle privacy policy
+ *
+ * @param  {Request}   req
+ * @param  {Response}  res
+ */
+function handlePrivacyRequest(req, res) {
+    var path = `${__dirname}/templates/privacy.ejs`;
+    FS.readFileAsync(path, 'utf-8').then((text) => {
+        var fn = _.template(text);
+        var html = fn({});
+        res.type('html').send(html);
     });
 }
 
