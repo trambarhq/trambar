@@ -802,7 +802,7 @@ describe('RemoteDataSource', function() {
             dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt }
             });
-            var location = { address: 'level1.misty-mountain.me', schema: 'global', table: 'project' };
+            var location = { address: 'http://level1.misty-mountain.me', schema: 'global', table: 'project' };
             var newObject = { name: 'anduril' };
             var storage = 0, id = 1;
             HTTPRequest.fetch = (method, url, payload, options) => {
@@ -835,7 +835,7 @@ describe('RemoteDataSource', function() {
             dataSourceWrapper.setProps({
                 onChange: (evt) => { event = evt }
             });
-            var location = { address: 'level2.misty-mountain.me', schema: 'global', table: 'project' };
+            var location = { address: 'http://level2.misty-mountain.me', schema: 'global', table: 'project' };
             var objects = [
                 { id: 3, name: 'smeagol' }
             ];
@@ -893,7 +893,7 @@ describe('RemoteDataSource', function() {
                     }
                 }
             });
-            var location = { address: 'level3.misty-mountain.me', schema: 'global', table: 'project' };
+            var location = { address: 'http://level3.misty-mountain.me', schema: 'global', table: 'project' };
             var newObject = { name: 'anduril' };
             var storage = 0, id = 1;
             var discovery = 0;
@@ -944,7 +944,7 @@ describe('RemoteDataSource', function() {
                     include_uncommitted: true
                 },
             });
-            var location = { address: 'level4.misty-mountain.me', schema: 'global', table: 'project' };
+            var location = { address: 'http://level4.misty-mountain.me', schema: 'global', table: 'project' };
             var newObject = { name: 'anduril' };
             var storage = 0, id = 1;
             var discovery = 0;
@@ -1009,7 +1009,7 @@ describe('RemoteDataSource', function() {
                     }
                 }
             });
-            var location = { address: 'level5.misty-mountain.me', schema: 'global', table: 'project' };
+            var location = { address: 'http://level5.misty-mountain.me', schema: 'global', table: 'project' };
             var newObject = { name: 'anduril' };
             var storage = 0, id = 1;
             var discovery = 0;
@@ -1060,60 +1060,428 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should save objects to local schema', function() {
-
+            var location = {
+                schema: 'local',
+                table: 'bob'
+            };
+            var newObject = {
+                key: 'old',
+                details: {
+                    age: 87
+                }
+            };
+            return dataSource.save(location, [ newObject ]).then(() => {
+                cache.reset();
+                return dataSource.find(location).then((objects) => {
+                    expect(objects[0]).to.deep.equal(newObject);
+                });
+            });
         })
     })
     describe('#remove()', function() {
-        it('should remove an object', function() {
-
+        it('should try to remove an object', function() {
+            var event = null;
+            dataSourceWrapper.setProps({
+                onChange: (evt) => { event = evt }
+            });
+            var location = { address: 'http://level1.lonely-mountain.me', schema: 'global', table: 'project' };
+            var existingObject = { id: 1, name: 'smaug' };
+            var storage = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/storage/.test(url)) {
+                            storage++;
+                            expect(method).to.match(/post/i);
+                            expect(payload).to.have.property('objects').that.is.an.array;
+                            return _.map(payload.objects, (object) => {
+                                expect(object.deleted).to.be.true;
+                                return _.clone(object);
+                            });
+                        }
+                    });
+                });
+            };
+            return dataSource.remove(location, [ existingObject ]).each((object) => {
+                expect(event).to.have.property('type', 'change');
+                expect(storage).to.equal(1);
+            });
         })
-        it('should mark an object as deleted when there is no connection', function() {
+        it('should keep a delete request in the change queue when there is no connection and send it when connection is restored', function() {
+            var event = null;
+            dataSourceWrapper.setProps({
+                discoveryFlags: {
+                    include_uncommitted: true
+                },
+                onChange: (evt) => { event = evt },
+            });
 
-        })
-        it('should send delete request once connection is restored', function() {
+            var location = { address: 'http://level2.lonely-mountain.me', schema: 'global', table: 'project' };
+            var objects = [ { id: 1, gn: 2, name: 'smaug' } ];
+            var storage = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/storage/.test(url)) {
+                            storage++;
+                            return _.map(payload.objects, (object) => {
+                                return _.clone(object);
+                            });
+                        } else if (/discovery/.test(url)) {
+                            return {
+                                ids: _.map(objects, 'id'),
+                                gns: _.map(objects, 'gn'),
+                            };
+                        } else if (/retrieval/.test(url)) {
+                            return objects;
+                        }
+                    });
+                });
+            };
+            // create a search first
+            var query = _.extend(location, { criteria: {} });
+            return dataSource.find(query).then((found) => {
+                expect(found).to.have.lengthOf(1);
 
+                // disable connection
+                dataSourceWrapper.setProps({ hasConnection: false });
+            }).then(() => {
+                // this call will stall
+                return dataSource.remove(location, [ objects[0] ]).timeout(100);
+            }).catch((err) => {
+                return err;
+            }).then((res) => {
+                expect(res).to.be.instanceOf(Promise.TimeoutError);
+                expect(storage).to.equal(0);
+                return dataSource.find(query).then((found) => {
+                    // merging uncommitted delete into result
+                    expect(found).to.have.lengthOf(0);
+                });
+            }).then(() => {
+                // restore connection
+                dataSourceWrapper.setProps({ hasConnection: true });
+                return null;
+            }).delay(200).then(() => {
+                expect(storage).to.equal(1);
+            });
         })
         it('should remove an object from local schema', function() {
-
+            var location = {
+                schema: 'local',
+                table: 'bob'
+            };
+            var newObject = {
+                key: 'old',
+                details: {
+                    age: 87
+                }
+            };
+            return dataSource.save(location, [ newObject ]).then(() => {
+                return dataSource.remove(location, [ newObject ]).then(() => {
+                    cache.reset();
+                    return dataSource.find(location).then((objects) => {
+                        expect(objects).to.have.lengthOf(0);
+                    });
+                });
+            });
         })
     })
     describe('#clear()', function() {
         it('should remove recent searches at a given server', function() {
+            var location = { address: 'http://toilet.helms-deep.me', schema: 'global', table: 'project' };
+            var objects = [ { id: 1, gn: 2, name: 'fart' } ];
+            var discovery = 0, retrieval = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/discovery/.test(url)) {
+                            discovery++;
+                            return {
+                                ids: _.map(objects, 'id'),
+                                gns: _.map(objects, 'gn'),
+                            };
+                        } else if (/retrieval/.test(url)) {
+                            retrieval++;
+                            return objects;
+                        }
+                    });
+                });
+            };
+            var query = _.extend(location, { blocking: true, criteria: {} });
+            return dataSource.find(query).then((found) => {
+                expect(found).to.have.lengthOf(1);
+                expect(discovery).to.equal(1);
+                expect(retrieval).to.equal(1);
 
+                // wait for cache write to complete
+                return Promise.delay(500).then(() => {
+                    return cache.find(query).then((found) => {
+                        expect(found).to.have.lengthOf(1);
+                    });
+                });
+            }).then(() => {
+                dataSource.clear(location.address, location.schema);
+            }).then(() => {
+                return dataSource.find(query).then((found) => {
+                    expect(found).to.have.lengthOf(1);
+                    // a discovery will occur again, since the criteria is open-ended
+                    // as the gn hasn't changed, the no retrieval will occur
+                    expect(discovery).to.equal(2);
+                    expect(retrieval).to.equal(1);
+                });
+            });
         })
     })
     describe('#invalidate()', function() {
         it('should flag searches as dirty based on change info', function() {
+            var location = { address: 'http://kitchen.helms-deep.me', schema: 'global', table: 'project' };
+            var objects = [ { id: 1, gn: 2, name: 'milk' } ];
+            var discovery = 0, retrieval = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/discovery/.test(url)) {
+                            discovery++;
+                            return {
+                                ids: _.map(objects, 'id'),
+                                gns: _.map(objects, 'gn'),
+                            };
+                        } else if (/retrieval/.test(url)) {
+                            retrieval++;
+                            return objects;
+                        }
+                    });
+                });
+            };
+            var query = _.extend(location, { criteria: {} });
+            return dataSource.find(query).then((found) => {
+                expect(found).to.have.lengthOf(1);
+                expect(discovery).to.equal(1);
+                expect(retrieval).to.equal(1);
+            }).then(() => {
+                objects = [ { id: 1, gn: 3, name: 'cheese' } ];
+                var changes = { 'global.project': [ 1 ] };
+                return dataSource.invalidate(location.address, changes);
+            }).then(() => {
+                var onChangePromise = new ManualPromise;
+                dataSourceWrapper.setProps({
+                    onChange: onChangePromise.resolve
+                });
 
+                return dataSource.find(query).then((found) => {
+                    // the initial call to find() will return what we got before
+                    return onChangePromise;
+                }).then(() => {
+                    // a subsequent call triggered by onChange will actually find
+                    // the updated results
+                    return dataSource.find(query).then((found) => {
+                        expect(found[0]).to.have.property('gn', 3);
+                        expect(discovery).to.equal(2);
+                        expect(retrieval).to.equal(2);
+                    });
+                });
+            });
         })
         it('should flag all searches at a server as dirty when no change info is given', function() {
-
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.try(() => {
+                    if (/discovery/.test(url)) {
+                        return { ids: [], gns: [] };
+                    } else if (/retrieval/.test(url)) {
+                        return [];
+                    }
+                });
+            };
+            dataSource.clear();
+            var queries = [
+                { address: 'http://mirkwood.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
+                { address: 'http://mirkwood.me', schema: 'global', table: 'user', criteria: {}, blocking: true },
+                { address: 'http://mirkwood.me', schema: 'global', table: 'smerf', criteria: {}, blocking: true },
+                { address: 'http://rivendell.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
+            ];
+            return Promise.each(queries, (query) => {
+                return dataSource.find(query);
+            }).then(() => {
+                return dataSource.invalidate('http://mirkwood.me');
+            }).then(() => {
+                var searches = dataSource.recentSearchResults;
+                _.each(searches, (search) => {
+                    if (search.address === 'http://mirkwood.me') {
+                        expect(search.dirty).to.be.true;
+                    } else if (search.address === 'http://rivendell.me') {
+                        expect(search.dirty).to.be.false;
+                    }
+                });
+            });
         })
         it('should flag all searches at all servers as dirty when a server is not specified', function() {
-
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.try(() => {
+                    if (/discovery/.test(url)) {
+                        return { ids: [], gns: [] };
+                    } else if (/retrieval/.test(url)) {
+                        return [];
+                    }
+                });
+            };
+            dataSource.clear();
+            var queries = [
+                { address: 'http://mirkwood.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
+                { address: 'http://mirkwood.me', schema: 'global', table: 'user', criteria: {}, blocking: true },
+                { address: 'http://mirkwood.me', schema: 'global', table: 'smerf', criteria: {}, blocking: true },
+                { address: 'http://rivendell.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
+            ];
+            return Promise.each(queries, (query) => {
+                return dataSource.find(query);
+            }).then(() => {
+                return dataSource.invalidate();
+            }).then(() => {
+                var searches = dataSource.recentSearchResults;
+                _.each(searches, (search) => {
+                    expect(search.dirty).to.be.true;
+                });
+            });
         })
-        it('should trigger merging of conflicted objects', function() {
-
+        it('should trigger merging of remote changes', function() {
+            var location = { address: 'http://arnor.me', schema: 'global', table: 'project' };
+            var objects = [ { id: 7, gn: 1, name: 'piglet' } ];
+            var changedObject = { id: 7, gn: 1, name: 'lizard' };
+            var onConflictCalled = false;
+            var onConflict = function(evt) {
+                onConflictCalled = true;
+                expect(evt).to.have.property('type', 'conflict');
+                expect(evt).to.have.property('local');
+                expect(evt).to.have.property('remote').that.has.property('gn', 2);
+                // pretend we've performed a merge
+                evt.local.name = 'merged'
+                // default reaction is to drop the change
+                evt.preventDefault();
+            };
+            var discovery = 0, retrieval = 0, storage = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/discovery/.test(url)) {
+                            discovery++;
+                            return {
+                                ids: _.map(objects, 'id'),
+                                gns: _.map(objects, 'gn'),
+                            };
+                        } else if (/retrieval/.test(url)) {
+                            retrieval++;
+                            return objects;
+                        } else if (/storage/.test(url)) {
+                            storage++;
+                            expect(payload.objects[0]).to.have.property('name', 'merged');
+                            return payload.objects;
+                        }
+                    });
+                });
+            };
+            // initiate a deferred save
+            var options = { delay: 500, onConflict };
+            var savePromise = dataSource.save(location, [ changedObject ], options);
+            return Promise.try(() => {
+                // simulate a change by someone else in the meantime
+                objects = [ { id: 7, gn: 2, name: 'cat' } ];
+                var changes = { 'global.project': [ 7 ] };
+                return dataSource.invalidate(location.address, changes);
+            }).then(() => {
+                // wait for save() to finish
+                return savePromise;
+            }).then((results) => {
+                expect(results).to.have.lengthOf(1);
+                expect(onConflictCalled).to.be.true;
+                expect(retrieval).to.equal(1);
+                expect(storage).to.equal(1);
+            });
         })
-    })
-    describe('#beginMobileSession()', function() {
-        it('should start a mobile session', function() {
-
+        it('should force the abandonment of a change when onConflict is not set', function() {
+            var location = { address: 'http://esgaroth.me', schema: 'global', table: 'project' };
+            var objects = [ { id: 7, gn: 1, name: 'piglet' } ];
+            var changedObject = { id: 7, gn: 1, name: 'lizard' };
+            var discovery = 0, retrieval = 0, storage = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/discovery/.test(url)) {
+                            discovery++;
+                            return {
+                                ids: _.map(objects, 'id'),
+                                gns: _.map(objects, 'gn'),
+                            };
+                        } else if (/retrieval/.test(url)) {
+                            retrieval++;
+                            return objects;
+                        } else if (/storage/.test(url)) {
+                            storage++;
+                            return payload.objects;
+                        }
+                    });
+                });
+            };
+            // initiate a deferred save
+            var options = { delay: 500 };
+            var savePromise = dataSource.save(location, [ changedObject ], options);
+            return Promise.try(() => {
+                // simulate a change by someone else in the meantime
+                objects = [ { id: 7, gn: 2, name: 'cat' } ];
+                var changes = { 'global.project': [ 7 ] };
+                return dataSource.invalidate(location.address, changes);
+            }).then(() => {
+                // wait for save() to finish
+                return savePromise;
+            }).then((results) => {
+                expect(results).to.have.lengthOf(0);
+                expect(retrieval).to.equal(0);
+                expect(storage).to.equal(0);
+            });
         })
-    })
-    describe('#acquireMobileSession()', function() {
-        it('should retrieve a mobile session', function() {
-
-        })
-    })
-    describe('#releaseMobileSession()', function() {
-        it('should finish mobile activation process', function() {
-
-        })
-    })
-    describe('#endMobileSession()', function() {
-        it('should delete a mobile session', function() {
-
+        it('should force the abandonment of a change when onConflict does not call preventDefault', function() {
+            var location = { address: 'http://fangorn.me', schema: 'global', table: 'project' };
+            var objects = [ { id: 7, gn: 1, name: 'piglet' } ];
+            var changedObject = { id: 7, gn: 1, name: 'lizard' };
+            var onConflictCalled = false;
+            var onConflict = function(evt) {
+                onConflictCalled = true;
+            };
+            var discovery = 0, retrieval = 0, storage = 0;
+            HTTPRequest.fetch = (method, url, payload, options) => {
+                return Promise.delay(50).then(() => {
+                    return Promise.try(() => {
+                        if (/discovery/.test(url)) {
+                            discovery++;
+                            return {
+                                ids: _.map(objects, 'id'),
+                                gns: _.map(objects, 'gn'),
+                            };
+                        } else if (/retrieval/.test(url)) {
+                            retrieval++;
+                            return objects;
+                        } else if (/storage/.test(url)) {
+                            storage++;
+                            return payload.objects;
+                        }
+                    });
+                });
+            };
+            // initiate a deferred save
+            var options = { delay: 500, onConflict };
+            var savePromise = dataSource.save(location, [ changedObject ], options);
+            return Promise.try(() => {
+                // simulate a change by someone else in the meantime
+                objects = [ { id: 7, gn: 2, name: 'cat' } ];
+                var changes = { 'global.project': [ 7 ] };
+                return dataSource.invalidate(location.address, changes);
+            }).then(() => {
+                // wait for save() to finish
+                return savePromise;
+            }).then((results) => {
+                expect(results).to.have.lengthOf(0);
+                expect(onConflictCalled).to.be.true;
+                expect(retrieval).to.equal(1);
+                expect(storage).to.equal(0);
+            });
         })
     })
 })
