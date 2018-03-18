@@ -263,7 +263,7 @@ function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
-        value: Moment(glIssue.updated_at).toISOString(),
+        value: Moment(new Date(glIssue.updated_at)).toISOString(),
         overwrite: 'always',
     });
     if (_.isEqual(reactionAfter, reaction)) {
