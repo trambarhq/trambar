@@ -241,6 +241,7 @@ function copyIssueProperties(story, server, repo, author, glIssue) {
  */
 function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
     var reactionAfter = _.cloneDeep(reaction) || {};
+    ExternalDataUtils.inheritLink(reactionAfter, server, story);
     ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
         value: 'assignment',
         overwrite: 'always',

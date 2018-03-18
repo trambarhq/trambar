@@ -52,7 +52,7 @@ function start() {
         }).then(() => {
             // install hooks--after a short delay during development to keep
             // hooks from getting zapped while nodemon restarts
-            var delay = (process.env.NODE_ENV === 'production') ? 0 : 1000;
+            var delay = (process.env.NODE_ENV === 'production') ? 0 : 2000;
             return getServerAddress(db).delay(delay).then((host) => {
                 return HookManager.installHooks(db, host);
             });
