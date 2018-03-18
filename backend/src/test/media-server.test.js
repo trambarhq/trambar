@@ -17,14 +17,14 @@ describe('MediaServer', function() {
         return MediaServer.start();
     })
     it('should accept an image upload', function() {
-        var url = `http://localhost/media/images/upload/`;
+        var url = `http://localhost/srv/media/images/upload/`;
         var path = `${__dirname}/images/pultusk.jpg`;
         return uploadFiles([ path ], url, 'images', 'image/jpeg').then((resp) => {
             expect(resp).to.have.property('statusCode', 200);
         });
     })
     it('should accept multiple images', function() {
-        var url = `http://localhost/media/images/upload/`;
+        var url = `http://localhost/srv/media/images/upload/`;
         var path1 = `${__dirname}/images/pultusk.jpg`;
         var path2 = `${__dirname}/images/krzeszowice.jpg`;
         return uploadFiles([ path1, path2 ], url, 'images', 'image/jpeg').then((resp) => {
@@ -33,7 +33,7 @@ describe('MediaServer', function() {
         });
     })
     it('should serve an image that was sent earlier', function() {
-        var url = `http://localhost/media/images/upload/`;
+        var url = `http://localhost/srv/media/images/upload/`;
         var path = `${__dirname}/images/pultusk.jpg`;
         return uploadFiles([ path ], url, 'images', 'image/jpeg').then((resp) => {
             var results = JSON.parse(resp.body);
@@ -46,7 +46,7 @@ describe('MediaServer', function() {
         });
     })
     it('should serve a resized version of an image', function() {
-        var url = `http://localhost/media/images/upload/`;
+        var url = `http://localhost/srv/media/images/upload/`;
         var path = `${__dirname}/images/pultusk.jpg`;
         return uploadFiles([ path ], url, 'images', 'image/jpeg').then((resp) => {
             var results = JSON.parse(resp.body);
@@ -67,7 +67,7 @@ describe('MediaServer', function() {
         });
     })
     it('should serve PNG version of an image', function() {
-        var url = `http://localhost/media/images/upload/`;
+        var url = `http://localhost/srv/media/images/upload/`;
         var path = `${__dirname}/images/pultusk.jpg`;
         return uploadFiles([ path ], url, 'images', 'image/jpeg').then((resp) => {
             var results = JSON.parse(resp.body);
@@ -85,7 +85,7 @@ describe('MediaServer', function() {
         });
     })
     it('should generate a screenshot of a website', function() {
-        var url = `http://localhost/media/html/screenshot/`;
+        var url = `http://localhost/srv/media/html/screenshot/`;
         var payload = {
             url: 'http://www.google.com/'
         };

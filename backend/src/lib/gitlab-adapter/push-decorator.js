@@ -340,7 +340,7 @@ function importImage(file) {
         var buffer = getFileContents(file);
         var options = {
             json: true,
-            url: 'http://media_server/internal/import',
+            url: 'http://media_server/srv/internal/import',
             formData: {
                 file: {
                     value: buffer,

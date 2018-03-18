@@ -19,7 +19,7 @@ function importPhotos() {
             return Promise.map(purposes, (purpose) => {
                 var folder = Path.resolve(`../media/${purpose}`);
                 return FS.readdirAsync(folder).each((file) => {
-                    var url = `/media/images/${file}`;
+                    var url = `/srv/media/images/${file}`;
                     var criteria = { purpose, url };
                     return Picture.findOne(db, 'global', criteria, 'id').then((picture) => {
                         if (picture) {

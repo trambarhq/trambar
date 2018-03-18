@@ -206,5 +206,5 @@ function getHookProps(url) {
 }
 
 function getHookEndpoint(host, server, repo, project) {
-    return `${host}/gitlab/hook/${server.id}/${repo.id}/${project.id}`;
+    return `${host}/srv/gitlab/hook/${server.id}/${repo.id}/${project.id}`;
 }

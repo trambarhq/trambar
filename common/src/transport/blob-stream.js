@@ -242,7 +242,7 @@ BlobStream.prototype.start = function() {
                     // get the next unsent part and send it
                     return this.waitForConnectivity().then(() => {
                         return this.pull().then((blob) => {
-                            var url = `${this.address}/media/stream/?id=${this.id}`;
+                            var url = `${this.address}/srv/media/stream/?id=${this.id}`;
                             var formData = new FormData;
                             if (blob) {
                                 formData.append('file', blob);

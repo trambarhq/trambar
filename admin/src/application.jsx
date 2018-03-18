@@ -221,7 +221,7 @@ module.exports = React.createClass({
         var serverAddress = (route) ? route.parameters.address : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
-            basePath: '/admin',
+            basePath: '/srv/admin-data',
             retrievalFlags: {
                 include_ctime: true,
                 include_mtime: true,

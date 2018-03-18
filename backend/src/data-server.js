@@ -50,9 +50,13 @@ function start() {
             app.use(BodyParser.json());
             app.use(CORS());
             app.set('json spaces', 2);
-            app.route('/data/discovery/:schema/:table/').post(handleDiscovery).get(handleDiscovery);
-            app.route('/data/retrieval/:schema/:table/:id?').post(handleRetrieval).get(handleRetrieval);
-            app.route('/data/storage/:schema/:table/').post(handleStorage);
+            app.route('/srv/data/discovery/:schema/:table/')
+                .post(handleDiscovery)
+                .get(handleDiscovery);
+            app.route('/srv/data/retrieval/:schema/:table/:id?')
+                .post(handleRetrieval
+                ).get(handleRetrieval);
+            app.route('/srv/data/storage/:schema/:table/').post(handleStorage);
             return new Promise((resolve, reject) => {
                 server = app.listen(80, () => {
                     resolve();

@@ -472,7 +472,7 @@ describe('ExternalDataUtils', function() {
             };
             var res = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
@@ -493,13 +493,13 @@ describe('ExternalDataUtils', function() {
             };
             var res1 = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
             var res2 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
@@ -526,13 +526,13 @@ describe('ExternalDataUtils', function() {
             };
             var res1 = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
             var res2 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
@@ -559,13 +559,13 @@ describe('ExternalDataUtils', function() {
             };
             var res1 = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
             var res2 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
@@ -592,19 +592,19 @@ describe('ExternalDataUtils', function() {
             };
             var res1 = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
             var res2 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
             var res3 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 100,
                 height: 200,
             };
@@ -637,25 +637,25 @@ describe('ExternalDataUtils', function() {
             };
             var res1 = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
             var res2 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
             var res3 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 100,
                 height: 200,
             };
             var resX = {
                 type: 'image',
-                url: '/media/images/zxcvbn',
+                url: '/srv/media/images/zxcvbn',
                 width: 30,
                 height: 30,
             };
@@ -689,19 +689,19 @@ describe('ExternalDataUtils', function() {
             };
             var res1 = {
                 type: 'image',
-                url: '/media/images/abcdefg',
+                url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
             var res2 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
             var res3 = {
                 type: 'image',
-                url: '/media/images/qwerty',
+                url: '/srv/media/images/qwerty',
                 width: 100,
                 height: 200,
             };

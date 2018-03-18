@@ -49,7 +49,7 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            basePath: '',
+            basePath: '/srv/data',
             discoveryFlags: {},
             retrievalFlags: {},
             hasConnection: true,
@@ -115,7 +115,7 @@ module.exports = React.createClass({
         var address = location.address;
         var session = getSession(address);
         if (!session.promise) {
-            var url = `${address}/session/`;
+            var url = `${address}/srv/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
                 _.assign(session, res.session);
@@ -155,7 +155,7 @@ module.exports = React.createClass({
         if (!handle) {
             return Promise.resolve(false);
         }
-        var url = `${address}/session/`;
+        var url = `${address}/srv/session/`;
         var options = { responseType: 'json' };
         return HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
             _.assign(session, res.session);
@@ -191,7 +191,7 @@ module.exports = React.createClass({
         if (!handle) {
             return Promise.resolve(false);
         }
-        var url = `${address}/session/htpasswd/`;
+        var url = `${address}/srv/session/htpasswd/`;
         var payload = { handle, username, password };
         var options = { responseType: 'json', contentType: 'json' };
         return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
@@ -223,7 +223,7 @@ module.exports = React.createClass({
             return Promise.resolve(null);
         }
         return Promise.resolve(session.promise).then(() => {
-            var url = `${address}/session/`;
+            var url = `${address}/srv/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             return HTTPRequest.fetch('DELETE', url, { handle }, options).catch((err) => {
                 // clean cached information anyway, given when we failed to
@@ -253,7 +253,7 @@ module.exports = React.createClass({
         if (!session.promise) {
             var parentSession = getSession(address);
             var handle = parentSession.handle;
-            var url = `${address}/session/`;
+            var url = `${address}/srv/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('POST', url, { area, handle }, options).then((res) => {
                 _.assign(session, res.session);
@@ -282,7 +282,7 @@ module.exports = React.createClass({
         var address = location.address;
         var session = getSession(address);
         if (!session.promise) {
-            var url = `${address}/session/`;
+            var url = `${address}/srv/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
                 session.handle = handle;
@@ -331,7 +331,7 @@ module.exports = React.createClass({
      */
     endMobileSession: function(location, handle) {
         var address = location.address;
-        var url = `${address}/session/`;
+        var url = `${address}/srv/session/`;
         var options = { responseType: 'json', contentType: 'json' };
         return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {
             return null;
@@ -360,7 +360,7 @@ module.exports = React.createClass({
         } else if (type === 'test') {
             query += '&test=1';
         }
-        var url = `${address}/session/${oauthServer.type}/?${query}`;
+        var url = `${address}/srv/session/${oauthServer.type}/?${query}`;
         return url;
     },
 
@@ -1316,7 +1316,7 @@ module.exports = React.createClass({
      */
     performRemoteAction: function(location, action, payload) {
         var address = location.address;
-        var prefix = this.props.basePath;
+        var basePath = this.props.basePath;
         var schema = location.schema;
         var table = location.table;
         if (!schema) {
@@ -1331,7 +1331,7 @@ module.exports = React.createClass({
         } else if (action === 'discovery') {
             flags = _.omit(this.props.discoveryFlags, 'include_uncommitted');
         }
-        var url = `${address}${prefix}/data/${action}/${schema}/${table}/`;
+        var url = `${address}${basePath}/${action}/${schema}/${table}/`;
         var session = getSession(address);
         var req = _.assign({}, payload, flags, { auth_token: session.token });
         var options = {

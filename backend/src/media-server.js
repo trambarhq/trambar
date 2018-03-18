@@ -43,19 +43,19 @@ function start() {
         app.use(CORS());
         app.use(BodyParser.json());
         app.set('json spaces', 2);
-        app.get('/media/images/:hash/:filename', handleImageFiltersRequest);
-        app.get('/media/images/:filename', handleImageOriginalRequest);
-        app.get('/media/videos/:filename', handleVideoRequest);
-        app.get('/media/audios/:filename', handleAudioRequest);
-        app.get('/media/cliparts/:filename', handleClipartRequest);
-        app.post('/media/html/poster/:schema/', upload.array(), handleWebsitePoster);
-        app.post('/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
-        app.post('/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
-        app.post('/media/videos/poster/:schema/', upload.single('file'), handleVideoPoster);
-        app.post('/media/audios/upload/:schema/', upload.single('file'), handleAudioUpload);
-        app.post('/media/audios/poster/:schema/', upload.single('file'), handleAudioPoster);
-        app.post('/media/stream/', upload.single('file'), handleStream);
-        app.post('/internal/import', upload.single('file'), handleImageImport);
+        app.get('/srv/media/images/:hash/:filename', handleImageFiltersRequest);
+        app.get('/srv/media/images/:filename', handleImageOriginalRequest);
+        app.get('/srv/media/videos/:filename', handleVideoRequest);
+        app.get('/srv/media/audios/:filename', handleAudioRequest);
+        app.get('/srv/media/cliparts/:filename', handleClipartRequest);
+        app.post('/srv/media/html/poster/:schema/', upload.array(), handleWebsitePoster);
+        app.post('/srv/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
+        app.post('/srv/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
+        app.post('/srv/media/videos/poster/:schema/', upload.single('file'), handleVideoPoster);
+        app.post('/srv/media/audios/upload/:schema/', upload.single('file'), handleAudioUpload);
+        app.post('/srv/media/audios/poster/:schema/', upload.single('file'), handleAudioPoster);
+        app.post('/srv/media/stream/', upload.single('file'), handleStream);
+        app.post('/srv/internal/import', upload.single('file'), handleImageImport);
 
         CacheFolders.create();
         StockPhotoImporter.importPhotos();
@@ -127,7 +127,7 @@ function sendStaticFile(res, path, cc, filename) {
             } else {
                 // ask Nginx to server the file
                 var relPath = path.substr(CacheFolders.root.length + 1);
-                var uri = `/static_media/${relPath}`;
+                var uri = `/srv/static_media/${relPath}`;
                 res.set('X-Accel-Redirect', uri).end();
             }
         });
@@ -689,7 +689,7 @@ function getFileType(path) {
  * @return {String}
  */
 function getFileURL(path) {
-    return `/media/${Path.relative(CacheFolders.root, path)}`
+    return `/srv/media/${Path.relative(CacheFolders.root, path)}`
 }
 
 if (process.argv[1] === __filename) {

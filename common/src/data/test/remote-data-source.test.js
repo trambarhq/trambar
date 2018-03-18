@@ -349,9 +349,9 @@ describe('RemoteDataSource', function() {
                 var url1 = dataSource.getOAuthURL(location, servers[0]);
                 var url2 = dataSource.getOAuthURL(location, servers[0], 'test');
                 var url3 = dataSource.getOAuthURL(location, servers[0], 'activation');
-                expect(url1).to.equal('http://helms-deep.me/session/gitlab/?sid=1&handle=abcdefg');
-                expect(url2).to.equal('http://helms-deep.me/session/gitlab/?sid=1&handle=abcdefg&test=1');
-                expect(url3).to.equal('http://helms-deep.me/session/gitlab/?sid=1&handle=abcdefg&activation=1');
+                expect(url1).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg');
+                expect(url2).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg&test=1');
+                expect(url3).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg&activation=1');
             });
         })
     })

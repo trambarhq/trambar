@@ -110,7 +110,7 @@ function getImageURL(res, address, purpose) {
             break;
         case 'audio':
             // using PNG as SVG can be problematic in cross-site situation
-            return `${address}/media/cliparts/speaker-${purpose}.png`;
+            return `${address}/srv/media/cliparts/speaker-${purpose}.png`;
     }
     if (!url) {
         return '';

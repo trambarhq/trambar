@@ -451,11 +451,15 @@ module.exports = _.create(ExternalData, {
         return Promise.try(() => {
             var deletedUsers = _.filter(usersAfter, (userAfter, index) => {
                 var userBefore = usersAfter[index];
-                return userAfter.deleted && !userBefore.deleted;
+                if (userBefore) {
+                    return userAfter.deleted && !userBefore.deleted;
+                }
             });
             var undeletedUsers = _.filter(usersAfter, (userAfter, index) => {
                 var userBefore = usersAfter[index];
-                return !userAfter.deleted && userBefore.deleted;
+                if (userBefore) {
+                    return !userAfter.deleted && userBefore.deleted;
+                }
             });
             if (_.isEmpty(deletedUsers) && _.isEmpty(undeletedUsers)) {
                 return;

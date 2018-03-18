@@ -40,7 +40,7 @@ function listen() {
         app.use(BodyParser.json());
         app.set('json spaces', 2);
 
-        app.post('/push/signature', handleSignatureValidation);
+        app.post('/srv/push/signature', handleSignatureValidation);
 
         // set up SockJS server
         var sockJS = SockJS.createServer({
@@ -60,7 +60,7 @@ function listen() {
         });
 
         server = HTTP.createServer(app);
-        sockJS.installHandlers(server, { prefix:'/socket' });
+        sockJS.installHandlers(server, { prefix: '/srv/socket' });
         server.listen(80, '0.0.0.0');
     });
 }

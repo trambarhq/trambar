@@ -295,9 +295,11 @@ function endTranscodingJob(job) {
         }
     } else {
         // close the streams that aren't used
-        var inputStream;
-        while (inputStream = job.posterQueue.shift()) {
-            inputStream.close();
+        if (job.posterQueue) {
+            var inputStream;
+            while (inputStream = job.posterQueue.shift()) {
+                inputStream.close();
+            }
         }
     }
 }

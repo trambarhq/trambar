@@ -424,7 +424,7 @@ function importProfileImage(glUser) {
     console.log(`Retrieving profile image: ${url}`);
     var options = {
         json: true,
-        url: 'http://media_server/internal/import',
+        url: 'http://media_server/srv/internal/import',
         body: {
             external_url: url
         },

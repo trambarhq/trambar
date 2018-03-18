@@ -44,7 +44,7 @@ function start() {
                 var app = Express();
                 app.use(BodyParser.json());
                 app.set('json spaces', 2);
-                app.post('/gitlab/hook/:serverId/:repoId/:projectId', handleHookCallback);
+                app.post('/srv/gitlab/hook/:serverId/:repoId/:projectId', handleHookCallback);
                 server = app.listen(80, () => {
                     resolve();
                 });

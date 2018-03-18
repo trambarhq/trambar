@@ -100,7 +100,7 @@ Listen to this: ![audio-1]
 Listen to this: [![audio-1-icon]][audio-1]
 
 [audio-1]: https://example.net/audios/0
-[audio-1-icon]: https://example.net/media/cliparts/speaker-icon.png`;
+[audio-1-icon]: https://example.net/srv/media/cliparts/speaker-icon.png`;
             expect(result).to.equal(expected);
         })
     })

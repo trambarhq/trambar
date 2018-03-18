@@ -14,6 +14,7 @@ module.exports = React.createClass({
     displayName: 'WebsocketNotifier',
     propTypes: {
         serverAddress: PropTypes.string,
+        basePath: PropTypes.string,
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         defaultProfileImage: PropTypes.string,
@@ -40,6 +41,7 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
+            basePath: '/srv/socket',
             hasConnection: true,
             initialReconnectionDelay: 500,
             maximumReconnectionDelay: 30000,
@@ -257,9 +259,10 @@ module.exports = React.createClass({
      * @return {Promise<SockJS>}
      */
     createSocket: function(serverAddress) {
+        var basePath = this.props.basePath;
         return this.waitForConnectivity().then(() => {
             return new Promise((resolve, reject) => {
-                var url = `${serverAddress}/socket`;
+                var url = `${serverAddress}${basePath}`;
                 var socket = new SockJS(url);
                 var isFulfilled = false;
                 socket.onopen = (evt) => {

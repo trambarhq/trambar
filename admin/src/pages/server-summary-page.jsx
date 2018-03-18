@@ -771,7 +771,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 break;
             default:
                 if (serverType) {
-                    url = `${address}/session/${serverType}/callback/`;
+                    url = `${address}/srv/session/${serverType}/callback/`;
                 }
         }
         var props = {

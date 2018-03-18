@@ -168,11 +168,15 @@ module.exports = _.create(Data, {
          return Promise.try(() => {
              var deletedServers = _.filter(rows, (serverAfter, index) => {
                  var serverBefore = originals[index];
-                 return serverAfter.deleted && !serverBefore.deleted;
+                     return serverAfter.deleted && !serverBefore.deleted;
+                     if (serverBefore) {
+                 }
              });
              var undeletedServers = _.filter(rows, (serverAfter, index) => {
                  var serverBefore = originals[index];
-                 return !serverAfter.deleted && serverBefore.deleted;
+                 if (serverBefore) {
+                     return !serverAfter.deleted && serverBefore.deleted;
+                 }
              });
              var Repo = require('accessors/repo');
              return Promise.all([

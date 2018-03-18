@@ -386,26 +386,26 @@ Payload.prototype.getDestinationURL = function(name) {
     switch (this.type) {
         case 'image':
             if (name === 'main') {
-                uri = `/media/images/upload/${this.schema}/`;
+                uri = `/srv/media/images/upload/${this.schema}/`;
             }
             break;
         case 'video':
             if (name === 'main') {
-                uri = `/media/videos/upload/${this.schema}/`;
+                uri = `/srv/media/videos/upload/${this.schema}/`;
             } else if (name === 'poster') {
-                uri = `/media/videos/poster/${this.schema}/`;
+                uri = `/srv/media/videos/poster/${this.schema}/`;
             }
             break;
         case 'audio':
             if (name === 'main') {
-                uri = `/media/audios/upload/${this.schema}/`;
+                uri = `/srv/media/audios/upload/${this.schema}/`;
             } else if (name === 'poster') {
-                uri = `/media/audios/poster/${this.schema}/`;
+                uri = `/srv/media/audios/poster/${this.schema}/`;
             }
             break;
         case 'website':
             if (name === 'poster') {
-                uri = `/media/html/poster/${this.schema}/`;
+                uri = `/srv/media/html/poster/${this.schema}/`;
             }
             break;
     }

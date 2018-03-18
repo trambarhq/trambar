@@ -47,17 +47,17 @@ function start() {
     app.use(BodyParser.json());
     app.use(Passport.initialize());
 
-    app.route('/session/?')
+    app.route('/srv/session/?')
         .post(handleSessionStart)
         .get(handleSessionRetrieval)
         .delete(handleSessionTermination);
-    app.route('/session/htpasswd/?')
+    app.route('/srv/session/htpasswd/?')
         .post(handleHTPasswdRequest);
-    app.route('/session/:provider/:callback?/?')
+    app.route('/srv/session/:provider/:callback?/?')
         .get(handleOAuthTestRequest)
         .get(handleOAuthActivationRequest)
         .get(handleOAuthRequest);
-    app.route('/privacy/?')
+    app.route('/srv/privacy/?')
         .get(handlePrivacyRequest);
     server = app.listen(80);
 
@@ -485,7 +485,7 @@ function authenticateThruPassport(req, res, system, server, params) {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
             baseURL: server.settings.oauth.base_url,
-            callbackURL: `${address}/session/${provider}/callback/`,
+            callbackURL: `${address}/srv/session/${provider}/callback/`,
         });
         var options = addServerSpecificOptions(server, params, {
             session: false,
@@ -1002,7 +1002,7 @@ function retrieveProfileImage(profile) {
     }
     var options = {
         json: true,
-        url: 'http://media_server/internal/import',
+        url: 'http://media_server/srv/internal/import',
         body: {
             external_url: url
         },
