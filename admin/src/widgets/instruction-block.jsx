@@ -179,6 +179,8 @@ function loadImages(element, folder) {
                 }
                 return element;
             });
+        } else {
+            return React.cloneElement(element, { target: '_blank' });
         }
     } else if (element.props && !_.isEmpty(element.props.children)) {
         return Promise.map(element.props.children, (element) => {

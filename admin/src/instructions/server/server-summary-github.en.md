@@ -15,10 +15,15 @@ used to sign up for GitHub.
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 
-**Callback URL** -
+**Callback URL** - You will need this URL when you create an OAuth app in the
+[GitHub Developer Settings](https://github.com/settings/developers/) page. First,
+press the *New OAuth App* button. Enter an application name (e.g. _Rick's
+Trambar_), then the site's URL, followed by this URL in the box labeled
+*Authorization callback URL*. Press the *Register Application* button.
 
-**Client ID** -
+**Client ID** - Copy the client ID from GitHub Developer Settings.
 
-**Client secret** -
+**Client secret** - Copy the client secret from GitHub Developer Settings.
 
-**API access** - Not applicable
+For the app icon, you may use your company's logo or choose Trambar's
+[default icon](github-icons.zip). The backgrond color for the latter is #f29d25.

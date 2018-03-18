@@ -819,7 +819,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     renderPrivacyPolicyURL: function() {
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
-        var needed = [ 'facebook', 'github', 'google', 'windows' ];
+        var needed = [ 'facebook', 'google', 'windows' ];
         if (!_.includes(needed, serverType)) {
             return null;
         }
