@@ -38,7 +38,7 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merges`;
         },
-        'activity-tooltip-$count-merge': (count) => {
+        'activity-tooltip-$count-merge-request': (count) => {
             return (count === 1) ? `1 merge requests` : `${count} merge requests`;
         },
         'activity-tooltip-$count-milestone': (count) => {
@@ -333,6 +333,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-redirect-uri': 'Uudelleenohjaus-URI',
         'server-summary-oauth-redirect-url': 'Uudelleenohjaus-URL',
         'server-summary-oauth-site-url': 'Sivuston URL-osoite',
+        'server-summary-privacy-policy-url': 'Tietosuojakäytännön URL',
         'server-summary-reactivate': 'Reaktivoi palvelin',
         'server-summary-return': 'Palaa palvelinluetteloon',
         'server-summary-role-none': 'Älä anna rooleja uusille käyttäjille',

@@ -472,6 +472,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderUserOptions()}
                 {this.renderRoleSelector()}
                 {this.renderOAuthCallbackURL()}
+                {this.renderPrivacyPolicyURL()}
                 {this.renderGitlabURLInput()}
                 {this.renderOAuthClientIdInput()}
                 {this.renderOAuthClientSecretInput()}
@@ -805,6 +806,39 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <TextField {...props}>
                 {t(phrase)}
+                <InputError type="warning">{warning}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render read-only input for OAuth callback URL
+     *
+     * @return {[type]}
+     */
+    renderPrivacyPolicyURL: function() {
+        var t = this.props.locale.translate;
+        var serverType = this.getServerProperty('type');
+        if (serverType === 'gitlab') {
+            return null;
+        }
+        var warning;
+        var address = _.get(this.props.system, 'settings.address');
+        var warning;
+        if (!address) {
+            warning = t('server-summary-system-address-missing');
+            address = window.location.origin;
+        }
+        var url = `${address}/srv/session/privacy/`;
+        var props = {
+            id: 'oauth_privacy',
+            value: url,
+            locale: this.props.locale,
+            readOnly: true,
+        };
+        return (
+            <TextField {...props}>
+                {t('server-summary-privacy-policy-url')}
                 <InputError type="warning">{warning}</InputError>
             </TextField>
         );

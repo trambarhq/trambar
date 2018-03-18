@@ -337,6 +337,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-redirect-uri': 'Redirect URI',
         'server-summary-oauth-redirect-url': 'Redirect URL',
         'server-summary-oauth-site-url': 'Site URL',
+        'server-summary-privacy-policy-url': 'Privacy policy URL',
         'server-summary-reactivate': 'Reactivate server',
         'server-summary-return': 'Return to server list',
         'server-summary-role-none': 'Do not assign any roles to new users',

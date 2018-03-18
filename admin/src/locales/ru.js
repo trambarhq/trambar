@@ -12,8 +12,8 @@ module.exports = function(localeCode) {
 
         'activity-chart-legend-branch': 'Ветки',
         'activity-chart-legend-issue': 'Отчёты об ошибке',
-        'activity-chart-legend-merge': 'Слияния',
         'activity-chart-legend-member': 'Изменения членства',
+        'activity-chart-legend-merge': 'Слияния',
         'activity-chart-legend-merge-request': 'Запросы слияния',
         'activity-chart-legend-milestone': 'Вехи',
         'activity-chart-legend-post': 'Сообщения',
@@ -478,6 +478,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-redirect-uri': 'Перенаправление URI',
         'server-summary-oauth-redirect-url': 'Перенаправление URL',
         'server-summary-oauth-site-url': 'URL сайта',
+        'server-summary-privacy-policy-url': 'URL политики конфиденциальности',
         'server-summary-reactivate': 'Реактивировать сервер',
         'server-summary-return': 'Вернуться в список серверов',
         'server-summary-role-none': 'Не назначать роли новым пользователям',

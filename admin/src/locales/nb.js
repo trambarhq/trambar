@@ -38,7 +38,7 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-merge': (count) => {
             return (count === 1) ? `1 merge` : `${count} merger`;
         },
-        'user-statistics-tooltip-$count-merge-request': (count) => {
+        'activity-tooltip-$count-merge-request': (count) => {
             return (count === 1) ? `1 merge-request` : `${count} merge-requester`;
         },
         'activity-tooltip-$count-milestone': (count) => {
@@ -321,10 +321,19 @@ module.exports = function(localeCode) {
         'server-summary-name': 'Identifier',
         'server-summary-new-user': 'Ny bruker',
         'server-summary-new-users': 'Nye brukere',
-        'server-summary-oauth-callback': 'OAuth callback URL',
-        'server-summary-oauth-id': 'OAuth klient-ID',
-        'server-summary-oauth-secret': 'OAuth klienthemmelighet',
-        'server-summary-oauth-url': 'OAuth URL',
+        'server-summary-oauth-app-id': 'App-ID',
+        'server-summary-oauth-app-key': 'App-nøkkel',
+        'server-summary-oauth-app-secret': 'App-hemmelighet',
+        'server-summary-oauth-application-id': 'Applikasjon-ID',
+        'server-summary-oauth-application-secret': 'Applikasjon-hemmelighet',
+        'server-summary-oauth-callback-url': 'Callback URL',
+        'server-summary-oauth-client-id': 'Klient-ID',
+        'server-summary-oauth-client-secret': 'Klienthemmelighet',
+        'server-summary-oauth-gitlab-url': 'GitLab URL',
+        'server-summary-oauth-redirect-uri': 'Redirect URI',
+        'server-summary-oauth-redirect-url': 'Redirect URL',
+        'server-summary-oauth-site-url': 'Nettstedets URL',
+        'server-summary-privacy-policy-url': 'Privacy policy URL',
         'server-summary-reactivate': 'Reaktiver serveren',
         'server-summary-return': 'Gå tilbake til serverlisten',
         'server-summary-role-none': 'Ikke tilordne noen roller til nye brukere',

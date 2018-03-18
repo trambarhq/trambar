@@ -51,14 +51,14 @@ function start() {
         .post(handleSessionStart)
         .get(handleSessionRetrieval)
         .delete(handleSessionTermination);
+    app.route('/srv/session/privacy/?')
+        .get(handlePrivacyRequest);
     app.route('/srv/session/htpasswd/?')
         .post(handleHTPasswdRequest);
     app.route('/srv/session/:provider/:callback?/?')
         .get(handleOAuthTestRequest)
         .get(handleOAuthActivationRequest)
         .get(handleOAuthRequest);
-    app.route('/srv/privacy/?')
-        .get(handlePrivacyRequest);
     server = app.listen(80);
 
     cleanUpInterval = setInterval(deleteExpiredSessions, 60 * 60 * 1000);
