@@ -162,6 +162,24 @@ function loadImages(element, folder) {
         } else {
             return element;
         }
+    } else if (element.type === 'a') {
+        var url = element.props.href;
+        if (url && !/^\w+:/.test(url)) {
+            return import(`instructions/${folder}/${url}`).then((url) => {
+                var props = { href: url };
+                if (/\.html$/.test(url)) {
+                    props.target = '_blank';
+                } else {
+                    props.download = url;
+                }
+                return React.cloneElement(element, props);
+            }).catch((err) => {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log(`Unable to find link: ${url}`);
+                }
+                return element;
+            });
+        }
     } else if (element.props && !_.isEmpty(element.props.children)) {
         return Promise.map(element.props.children, (element) => {
             return loadImages(element, folder);

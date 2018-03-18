@@ -819,7 +819,8 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     renderPrivacyPolicyURL: function() {
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
-        if (serverType === 'gitlab') {
+        var needed = [ 'facebook', 'github', 'google', 'windows' ];
+        if (!_.includes(needed, serverType)) {
             return null;
         }
         var warning;
@@ -1016,9 +1017,12 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     /**
      * Render task history
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderTaskList: function() {
+        if (!this.props.server) {
+            return null;
+        }
         var t = this.props.locale.translate;
         var params = this.props.route.parameters;
         var historyProps = {

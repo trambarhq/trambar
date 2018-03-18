@@ -523,10 +523,14 @@ module.exports = React.createClass({
         }
         if (target) {
             var url = target.getAttribute('href');
-            if (url && url.indexOf(':') === -1) {
-                // relative links are handled by RouteManager
-                this.state.route.change(url);
-                evt.preventDefault();
+            var download = target.getAttribute('download');
+            var targetWindow = target.getAttribute('target');
+            if (!download && !targetWindow) {
+                if (url && url.indexOf(':') === -1) {
+                    // relative links are handled by RouteManager
+                    this.state.route.change(url);
+                    evt.preventDefault();
+                }
             }
         }
     },

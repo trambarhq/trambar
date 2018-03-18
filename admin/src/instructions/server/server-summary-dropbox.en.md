@@ -32,6 +32,6 @@ After you've saved this server, click the *Test OAuth integration* button to
 verify that the configuration is correct.
 
 You will need to change the status of the app from _Development_ to _Production_
-in the Dropbox App Console once you're ready to deploy your site.
-
-**API access** - Not applicable
+in the Dropbox App Console once you're ready to deploy your site. Prior to doing
+so, you will need to entering branding information. You may use your company's
+logo as the application or choose Trambar's [default icons](dropbox-icons.zip).
