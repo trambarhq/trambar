@@ -311,12 +311,30 @@ function handleStoryChangeEvent(db, event) {
     if (!exporting) {
         return;
     }
-    return Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
+    var promise = Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
         return Project.findOne(db, 'global', { name: event.schema }, '*').then((project) => {
             console.log(`Exporting story ${story.id}`);
             return IssueExporter.exportStory(db, project, story);
         });
+    }).catch((err) => {
+        console.error(err);
+        return null;
+    }).finally(() => {
+        _.pull(exportPromises, promise);
     });
+    exportPromises.push(promise);
+    return promise;
+}
+
+var exportPromises = [];
+
+/**
+ * Wait for any ongoing export operations to complete
+ *
+ * @return {Promise}
+ */
+function waitForExports() {
+    return Promise.all(exportPromises);
 }
 
 /**
@@ -416,13 +434,15 @@ function handleHookCallback(req, res) {
     };
     return RepoAssociation.findOne(db, criteria).then((a) => {
         var { server, repo, project } = a;
-        return EventImporter.importHookEvent(db, server, repo, project, glHookEvent).then((story) => {
-            if (story === false) {
-                // hook event wasn't handled--scan activity log
-                return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                    return EventImporter.importEvents(db, server, repo, project, glHookEvent);
-                });
-            }
+        return waitForExports().then(() => {
+            return EventImporter.importHookEvent(db, server, repo, project, glHookEvent).then((story) => {
+                if (story === false) {
+                    // hook event wasn't handled--scan activity log
+                    return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
+                        return EventImporter.importEvents(db, server, repo, project, glHookEvent);
+                    });
+                }
+            });
         });
     }).catch((err) => {
         console.error(err);
