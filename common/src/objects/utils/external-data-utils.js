@@ -278,6 +278,7 @@ function importResource(object, server, prop) {
         return;
     }
     var path = 'details.resources';
+    var exchangeKey = 'resources';
     var resources = _.get(object, path, []);
     var index = _.findIndex(resources, { type: prop.type });
     var currentValue = resources[index];
@@ -302,7 +303,7 @@ function importResource(object, server, prop) {
         }
     } else if (replace === 'match-previous') {
         var previous = getPreviousValues(object, server);
-        var previousResources = _.get(previous, path, []);
+        var previousResources = _.get(previous, exchangeKey, []);
         var previousIndex = _.findIndex(previousResources, { type: prop.type });
         var previousValue = previousResources[previousIndex];
         if (_.isEqual(currentValue, previousValue)) {
@@ -326,9 +327,9 @@ function importResource(object, server, prop) {
             console.log('Actual: ', currentValue);
         }
         if (_.isEmpty(previousResources)) {
-            _.unset(previous, path);
+            _.unset(previous, exchangeKey);
         } else {
-            _.set(previous, path, previousResources);
+            _.set(previous, exchangeKey, previousResources);
         }
     } else {
         throw new Error('Unknown option: ' + replace);
@@ -384,7 +385,7 @@ function exportProperty(object, server, path, dest, prop) {
 }
 
 /**
- * Get previously exchanged values stored in link object
+ * Get previously exchanged values
  *
  * @param  {ExternalObject} object
  * @param  {Server} server
@@ -392,11 +393,19 @@ function exportProperty(object, server, path, dest, prop) {
  * @return {Object}
  */
 function getPreviousValues(object, server) {
-    var link = findLink(object, server);
-    if (!link._previous) {
-        link._previous = {};
+    var entry = _.find(object.exchange, { server_id: server.id });
+    if (!entry) {
+        entry = {
+            type: server.type,
+            server_id: server.id,
+            previous: {}
+        };
+        if (!object.exchange) {
+            object.exchange = [];
+        }
+        object.exchange.push(entry);
     }
-    return link._previous;
+    return entry.previous;
 }
 
 /**

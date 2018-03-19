@@ -25,6 +25,7 @@ module.exports = _.create(ExternalData, {
         ptime: String,
         public: Boolean,
         external: Array(Object),
+        exchange: Array(Object),
         itime: String,
         etime: String,
     },
@@ -81,6 +82,7 @@ module.exports = _.create(ExternalData, {
                 ptime timestamp,
                 public boolean NOT NULL DEFAULT false,
                 external jsonb[] NOT NULL DEFAULT '{}',
+                exchange jsonb[] NOT NULL DEFAULT '{}',
                 itime timestamp,
                 etime timestamp,
                 PRIMARY KEY (id)

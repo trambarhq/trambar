@@ -13,6 +13,7 @@ module.exports = _.create(Data, {
         mtime: String,
         details: Object,
         external: Array(Object),
+        exchange: Array(Object),
         itime: String,
         etime: String,
     },
@@ -44,6 +45,7 @@ module.exports = _.create(Data, {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 external jsonb[] NOT NULL DEFAULT '{}',
+                exchange jsonb[] NOT NULL DEFAULT '{}',
                 itime timestamp,
                 etime timestamp,
                 PRIMARY KEY (id)
@@ -88,48 +90,6 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Import objects sent by client-side code, applying access control
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
-     * @param  {Object} credentials
-     * @param  {Object} options
-     *
-     * @return {Promise<Array>}
-     */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var objectBefore = originals[index];
-                if (objectBefore) {
-                    if (object.external) {
-                        // stick hidden info back into links
-                        object.external = _.map(object.external, (link) => {
-                            var linkBefore = _.find(objectBefore.external, {
-                                server_id: link.server_id,
-                                type: link.type,
-                            });
-                            if (!linkBefore) {
-                                return link;
-                            }
-                            link = _.clone(link);
-                            _.forIn(linkBefore, (value, name) => {
-                                if (name.charAt(0) === '_') {
-                                    link[name] = value;
-                                }
-                            });
-                            return link;
-                        });
-                    }
-                }
-            });
-            return objects;
-        });
-    },
-
-    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *
@@ -146,12 +106,7 @@ module.exports = _.create(Data, {
             _.each(objects, (object, index) => {
                 var row = rows[index];
                 if (row.external.length > 0) {
-                    object.external = _.map(row.external, (link) => {
-                        return _.pickBy(link, (value, name) => {
-                            // don't send property with _ prefix
-                            return (name.charAt(0) !== '_');
-                        });
-                    });
+                    object.external = row.external;
                 }
             });
             return objects;
