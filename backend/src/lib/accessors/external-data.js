@@ -105,15 +105,9 @@ module.exports = _.create(Data, {
                 var row = rows[index];
                 if (row.external.length > 0) {
                     object.external = _.map(row.external, (link) => {
-                        return _.mapValues(link, (value, name) => {
-                            if (typeof(value) === 'object') {
-                                return _.pickBy(value, (value, name) => {
-                                    // don't send property with _ prefix
-                                    return (name.charAt(0) !== '_');
-                                });
-                            } else {
-                                return value;
-                            }
+                        return _.pickBy(link, (value, name) => {
+                            // don't send property with _ prefix
+                            return (name.charAt(0) !== '_');
                         });
                     });
                 }
