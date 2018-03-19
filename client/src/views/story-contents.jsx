@@ -609,7 +609,7 @@ module.exports = React.createClass({
         for (var i = 1; i < tags.length; i += 2) {
             tags.splice(i, 0, ' ');
         }
-        return <p>{tags}</p>;
+        return <p className="tags">{tags}</p>;
     },
 
     /**
