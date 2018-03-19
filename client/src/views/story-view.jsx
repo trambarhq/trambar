@@ -425,6 +425,9 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderReactions: function() {
+        if (_.isEmpty(this.props.reactions)) {
+            return null;
+        }
         if (this.props.theme.mode === 'single-col') {
             if (!this.state.commentsExpanded) {
                 return null;
