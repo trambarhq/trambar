@@ -339,11 +339,11 @@ function copyUserProperties(user, server, image, glUser) {
     });
     ExternalDataUtils.importProperty(userAfter, server, 'username', {
         value: glUser.username,
-        overwrite: 'match-previous'
+        overwrite: 'match-previous:username'
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.name', {
         value: glUser.name,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:name',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.gitlab_url', {
         value: glUser.web_url,
@@ -351,15 +351,15 @@ function copyUserProperties(user, server, image, glUser) {
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.skype_username', {
         value: glUser.skype,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:skype_username',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.twitter_username', {
         value: glUser.twitter,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:twitter_username',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.linkedin_username', {
         value: glUser.linkedin_name,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:linkedin_username',
     });
     ExternalDataUtils.importResource(userAfter, server, {
         type: 'image',

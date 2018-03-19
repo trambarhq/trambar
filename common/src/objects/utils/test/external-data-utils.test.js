@@ -414,7 +414,7 @@ describe('ExternalDataUtils', function() {
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
-                overwrite: 'match-previous'
+                overwrite: 'match-previous:_name'
             });
             expect(repo).to.have.property('name').that.equal('good');
         })
@@ -428,17 +428,17 @@ describe('ExternalDataUtils', function() {
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
-                overwrite: 'match-previous'
+                overwrite: 'match-previous:_name'
             });
             expect(repo).to.have.property('name').that.equal('good');
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'bad',
-                overwrite: 'match-previous'
+                overwrite: 'match-previous:_name'
             });
             expect(repo).to.have.property('name').that.equal('bad');
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'ugly',
-                overwrite: 'match-previous'
+                overwrite: 'match-previous:_name'
             });
             expect(repo).to.have.property('name').that.equal('ugly');
         })
@@ -452,13 +452,13 @@ describe('ExternalDataUtils', function() {
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
-                overwrite: 'match-previous'
+                overwrite: 'match-previous:_name'
             });
             expect(repo).to.have.property('name').that.equal('good');
             repo.name = 'sad';
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'bad',
-                overwrite: 'match-previous'
+                overwrite: 'match-previous:_name'
             });
             expect(repo).to.have.property('name').that.equal('sad');
         })

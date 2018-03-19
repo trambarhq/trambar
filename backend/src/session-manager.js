@@ -918,21 +918,22 @@ function copyUserProperties(user, server, image, profile) {
         });
         ExternalDataUtils.importProperty(userAfter, server, 'username', {
             value: username,
-            overwrite: 'match-previous',
+            overwrite: 'match-previous:username',
         });
         ExternalDataUtils.importProperty(userAfter, server, 'details.name', {
             value: profile.displayName,
-            overwrite: 'match-previous',
+            overwrite: 'match-previous:name',
         });
         ExternalDataUtils.importProperty(userAfter, server, 'details.email', {
             value: email,
-            overwrite: 'match-previous',
+            overwrite: 'match-previous:email',
         });
         ExternalDataUtils.importProperty(userAfter, server, 'details.gender', {
             value: json.gender,
-            overwrite: 'match-previous',
+            overwrite: 'match-previous:gender',
         });
-        ExternalDataUtils.importResource(userAfter, server, 'image', {
+        ExternalDataUtils.importResource(userAfter, server, {
+            type: 'image',
             value: image,
             replace: 'match-previous'
         });

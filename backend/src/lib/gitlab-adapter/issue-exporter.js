@@ -104,19 +104,19 @@ function exportIssueProperties(glIssue, server, system, project, story) {
     var glIssueAfter = _.clone(glIssue) || {};
     ExternalDataUtils.exportProperty(story, server, 'title', glIssueAfter, {
         value: story.details.title,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:title',
     });
     ExternalDataUtils.exportProperty(story, server, 'description', glIssueAfter, {
         value: contents,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:description',
     });
     ExternalDataUtils.exportProperty(story, server, 'confidential', glIssueAfter, {
         value: !story.public,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:confidential',
     });
     ExternalDataUtils.exportProperty(story, server, 'labels', glIssueAfter, {
         value: story.details.labels,
-        overwrite: 'match-previous',
+        overwrite: 'match-previous:labels',
     });
     if (_.isEqual(glIssueAfter, glIssue)) {
         return glIssue;

@@ -88,6 +88,48 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Import objects sent by client-side code, applying access control
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Array<Object>} objects
+     * @param  {Array<Object>} originals
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    import: function(db, schema, objects, originals, credentials, options) {
+        return Data.import.call(this, db, schema, objects, originals, credentials, options).then((objects) => {
+            _.each(objects, (object, index) => {
+                var objectBefore = originals[index];
+                if (objectBefore) {
+                    if (object.external) {
+                        // stick hidden info back into links
+                        object.external = _.map(object.external, (link) => {
+                            var linkBefore = _.find(objectBefore.external, {
+                                server_id: link.server_id,
+                                type: link.type,
+                            });
+                            if (!linkBefore) {
+                                return link;
+                            }
+                            link = _.clone(link);
+                            _.forIn(linkBefore, (value, name) => {
+                                if (name.charAt(0) === '_') {
+                                    link[name] = value;
+                                }
+                            });
+                            return link;
+                        });
+                    }
+                }
+            });
+            return objects;
+        });
+    },
+
+    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *
