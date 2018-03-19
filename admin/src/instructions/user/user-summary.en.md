@@ -28,7 +28,7 @@ _Regular users_ are people who are part of your organization or those whom
 you can trust with non-public information.
 
 _Moderators_ have the same privileges as regular users plus they can delete
-posts and comments of other users.
+posts and comments of other users or make them non-public.
 
 _Administrators_ can manage the web site using the Administrative Console as
 well as moderate posts and comments.
