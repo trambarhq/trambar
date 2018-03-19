@@ -188,6 +188,9 @@ module.exports = React.createClass({
             _.set(settings, 'navigation.bottom', false);
         }
         var className = `application ${this.state.theme.mode}`;
+        if (this.state.theme.keyboard) {
+            className += ` keyboard`;
+        }
         return (
             <div className={className} id="application">
                 <TopNavigation {...topNavProps} />

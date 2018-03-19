@@ -6,6 +6,7 @@ function Theme(themeManager) {
     this.themeManager = themeManager;
     this.mode = this.themeManager.getMode();
     this.modes = this.themeManager.getModes();
+    this.keyboard = this.themeManager.hasKeyboard();
     this.details = this.themeManager.getDetails();
 }
 

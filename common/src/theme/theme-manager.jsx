@@ -24,6 +24,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             mode: this.selectMode(),
+            onscreenKeyboard: this.detectOnscreenKeyboard(),
             devicePixelRatio: window.devicePixelRatio,
             webpSupport: isWebpSupported(),
             details: null,
@@ -67,6 +68,15 @@ module.exports = React.createClass({
      */
     getDetails: function() {
         return this.state.details;
+    },
+
+    /**
+     * Return true if onscreen keyboard is present
+     *
+     * @return {Boolean}
+     */
+    hasKeyboard: function() {
+        return this.state.onscreenKeyboard;
     },
 
     /**
@@ -414,6 +424,23 @@ module.exports = React.createClass({
     },
 
     /**
+     * Check if on-screen keyboard is open
+     *
+     * @return {Boolean}
+     */
+    detectOnscreenKeyboard: function() {
+        // this is known to work in Chrome only
+        var viewPortHeight = document.body.offsetHeight;
+        var screenHeight = screen.height;
+        var offLimit = screenHeight - viewPortHeight;
+        if (offLimit > 200) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    /**
      * Change certain details about the UI (not used currently)
      *
      * @param  {Object} details
@@ -505,6 +532,11 @@ module.exports = React.createClass({
         if (this.state.mode !== mode) {
             nextState.mode = mode;
         }
+        var onscreenKeyboard = this.detectOnscreenKeyboard();
+        if (this.state.onscreenKeyboard !== onscreenKeyboard) {
+            nextState.onscreenKeyboard = onscreenKeyboard;
+        }
+
         if (this.state.devicePixelRatio !== window.devicePixelRatio) {
             nextState.devicePixelRatio = window.devicePixelRatio;
         }
