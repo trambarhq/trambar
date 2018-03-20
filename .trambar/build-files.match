@@ -1,0 +1,4 @@
+.gitignore
+package.json
+webpack.config.js
+locale-check
