@@ -79,7 +79,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render input for issue title
+     * Render input for entering address
      *
      * @return {ReactElement}
      */
@@ -96,7 +96,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render input for issue title
+     * Render input for activation code
      *
      * @return {ReactElement}
      */
@@ -113,7 +113,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render input for issue title
+     * Render input for schema
      *
      * @return {ReactElement}
      */
