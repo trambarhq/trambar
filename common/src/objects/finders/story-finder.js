@@ -153,8 +153,10 @@ function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
     return db.find({
         table: 'story',
         criteria: {
-            lang: locale.languageCode,
-            text: text,
+            search: {
+                lang: locale.languageCode,
+                text: text,
+            },
             published: true,
             ready: true,
             public: publicOnly(currentUser),
@@ -260,8 +262,10 @@ function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
         table: 'story',
         criteria: {
             user_ids: [ user.id ],
-            lang: locale.languageCode,
-            text: text,
+            search: {
+                lang: locale.languageCode,
+                text: text,
+            },
             published: true,
             ready: true,
             public: publicOnly(currentUser),

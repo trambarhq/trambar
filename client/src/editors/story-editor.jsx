@@ -95,7 +95,9 @@ module.exports = React.createClass({
         };
         this.updateDraft(nextState, this.props);
         this.updateOptions(nextState, this.props);
+        this.updateLocaleCode(nextState, this.props);
         this.updateLeadAuthor(nextState, this.props);
+        this.updateBookmarkRecipients(nextState, this.props);
         this.updateResourceIndex(nextState, this.props);
         return nextState;
     },
@@ -135,6 +137,7 @@ module.exports = React.createClass({
         if (this.props.story !== nextProps.story) {
             this.updateDraft(nextState, nextProps);
             this.updateOptions(nextState, nextProps);
+            this.updateLocaleCode(nextState, nextProps);
             this.updateResourceIndex(nextState, nextProps);
         }
         if (this.props.currentUser !== nextProps.currentUser) {
@@ -226,11 +229,8 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     updateLocaleCode: function(nextState, nextProps) {
-        if (!options.localeCode) {
-            var localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
-            nextState.options = _.clone(nextState.options);
-            nextState.options.localeCode = localeCode;
-        }
+        nextState.options = _.clone(nextState.options);
+        nextState.options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
     },
 
     /**
@@ -279,21 +279,26 @@ module.exports = React.createClass({
         var localeCode;
         var text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
+            // the country code may affect which dictionary is chosen
+            // try to add it to the language code
             var languageCode = _.first(_.keys(text));
             if (languageCode === locale.languageCode) {
-                localeCode = locale.languageCode;
+                // great, the current user speaks the language
+                localeCode = locale.localeCode;
             } else {
+                // use the first country on the list if the language is in
+                // the directory
                 var entry = _.find(locale.directory, { code: languageCode });
                 if (entry) {
-                    // use the first country
-                    var countryCode = _.keys(entry.countries);
+                    var countryCode = entry.defaultCountry;
                     localeCode = `${languageCode}-${countryCode}`;
                 } else {
+                    // shouldn't really happen
                     localeCode = languageCode;
                 }
             }
         } else {
-            localeCode = locale.languageCode;
+            localeCode = locale.localeCode;
         }
         return localeCode;
     },

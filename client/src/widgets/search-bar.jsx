@@ -45,7 +45,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<SearchBarSync {...props} />, 1000);
         return db.start().then((userId) => {
             var params = _.assign({ user_id: userId }, this.props.settings.statistics);
-            return StatisticsFinder.fetch(db, params);
+            return StatisticsFinder.find(db, params);
         }).then((statistics) => {
             props.dailyActivities = statistics;
             return <SearchBarSync {...props} />;

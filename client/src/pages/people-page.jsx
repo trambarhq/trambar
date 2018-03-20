@@ -284,7 +284,7 @@ module.exports = Relaks.createClass({
                             props.visibleUsers = findUsersWithStories(props.members, stories);
                         });
                     } else {
-                        return StoryFinder.findStoriesWithMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
+                        return StoryFinder.findStoriesMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
                             // now that we have the stories, we can see whom should be shown
                             props.stories = stories;
                             props.visibleUsers = findUsersWithStories(props.members, stories);

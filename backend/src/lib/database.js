@@ -430,7 +430,7 @@ Database.prototype.createDictionaries = function(languageCode) {
         });
     } else {
         // use snowball dictionary if there's one
-        var stem = stemDirctionaries
+        var stem = stemDirctionaries[languageCode];
         var list = (stem) ? [ stem, 'simple' ] : [ 'simple' ]
         return Promise.resolve(list);
     };

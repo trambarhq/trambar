@@ -7,6 +7,7 @@ var UserFinder = require('objects/finders/user-finder');
 var ProjectFinder = require('objects/finders/project-finder');
 var StoryFinder = require('objects/finders/story-finder');
 var ProjectSettings = require('objects/settings/project-settings');
+var TagScanner = require('utils/tag-scanner');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -123,6 +124,10 @@ module.exports = Relaks.createClass({
         var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
+        var tags;
+        if (params.search && !TagScanner.removeTags(params.search)) {
+            tags = TagScanner.findTags(params.search);
+        }
         var props = {
             stories: null,
             draftStories: null,
@@ -149,8 +154,12 @@ module.exports = Relaks.createClass({
             });
         }).then((project) => {
             meanwhile.show(<NewsPageSync {...props} />);
-            if (params.search) {
-                return StoryFinder.findStoriesWithMatchingText(db, params.search, props.locale, props.currentUser).then((stories) => {
+            if (tags) {
+                return StoryFinder.findStoriesWithTags(db, tags, props.currentUser).then((stories) => {
+                    props.stories = stories;
+                });
+            } else if (params.search) {
+                return StoryFinder.findStoriesMatchingText(db, params.search, props.locale, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
             } else if (params.date) {
