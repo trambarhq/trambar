@@ -52,20 +52,23 @@ body {
         align-items: center;
         -webkit-overflow-scrolling: touch;
 
-        &::-webkit-scrollbar-track {
-            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-            background-color: transparent;
-        }
+        // use custom color only on desktop
+        @media only screen and (min-device-width : 800px) {
+            &::-webkit-scrollbar-track {
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+                background-color: transparent;
+            }
 
-        &::-webkit-scrollbar {
-            width: 14px;
-            background-color: transparent;
-        }
+            &::-webkit-scrollbar {
+                width: 14px;
+                background-color: transparent;
+            }
 
-        &::-webkit-scrollbar-thumb {
-            border-radius: 2px;
-            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-            background-color: rgba(0,0,0,.2);
+            &::-webkit-scrollbar-thumb {
+                border-radius: 2px;
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+                background-color: rgba(0,0,0,.2);
+            }
         }
     }
 
