@@ -64,8 +64,8 @@ module.exports = React.createClass({
         }
         return (
             <div key={story.id} className="activity">
+                <Time time={story.ptime} locale={this.props.locale} compact={true} />
                 <Link className={linkClass} url={url}>{text}</Link>
-                <Time time={story.ptime} locale={this.props.locale}/>
             </div>
         );
     },

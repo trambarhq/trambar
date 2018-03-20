@@ -5,6 +5,29 @@
         margin-bottom: 0.15em;
         overflow: hidden;
 
+        A {
+            display: block;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            color: #999999;
+            cursor: pointer;
+
+            &:link, &:visited {
+                color: #999999;
+                text-decoration: none;
+            }
+
+            &.recent {
+                color: #cccccc;
+            }
+
+            &:hover {
+                color: #eeeeee;
+            }
+        }
+
         .time {
             float: right;
             color: #666666;
@@ -14,24 +37,6 @@
             &.today, &.yesterday {
                 color: #cccccc;
             }
-        }
-    }
-
-    A {
-        color: #999999;
-        cursor: pointer;
-
-        &:link, &:visited {
-            color: #999999;
-            text-decoration: none;
-        }
-
-        &.recent {
-            color: #cccccc;
-        }
-
-        &:hover {
-            color: #eeeeee;
         }
     }
 }
