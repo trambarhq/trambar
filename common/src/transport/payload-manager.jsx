@@ -300,6 +300,9 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Query remote database for progress information
+     */
     updateBackendProgress: function() {
         var params = this.props.route.parameters;
         var schema = params.schema || 'global';
