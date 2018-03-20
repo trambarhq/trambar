@@ -8,7 +8,7 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': 'Skontaktuj się przez Skype',
         'action-contact-by-slack': 'Skontaktuj się przez Slack',
         'action-contact-by-twitter': 'Skontaktuj się przez Twitter',
-        'action-view-github-page': 'Wyświetl profil na Githubie',
+        'action-view-github-page': 'Wyświetl profil na GitHubie',
         'action-view-gitlab-page': 'Wyświetl profil na GitLabie',
         'action-view-linkedin-page': 'Wyświetl profil na LinkedInie',
         'action-view-stackoverflow-page': 'Wyświetl profil na StackOverflowie',
@@ -115,6 +115,8 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Jesteś odłączony od sieci',
 
+        'image-editor-page-rendering-in-progress': 'Renderowanie podglądu strony internetowej...',
+        'image-editor-poster-extraction-in-progress': 'Wyodrębnianie podglądu z wideo...',
         'image-editor-upload-in-progress': 'Przesyłanie w toku...',
 
         'issue-cancel': 'Anuluj',
@@ -257,6 +259,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Pokaź dołączone pliki medialne',
         'option-show-text-preview': 'Pokaź podgląd tekstu',
+        'option-statistics-biweekly': 'Pokaż działania z ostatnich 14 dni',
+        'option-statistics-monthly': 'Pokaż działania miesięczne',
+        'option-statistics-to-date': 'Pokaż działania do tej pory',
 
         'people-no-stories-found': 'Nie znaleziono pasujących wiadomości',
         'people-no-stories-on-date': 'Żadnych działań w tym dniu',
@@ -333,13 +338,16 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} edytuje komentarz...`;
         },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} wysyła komentarz...`;
+        },
         'reaction-$name-is-writing': (name) => {
             return `${name} pisze komentarz...`;
         },
         'reaction-$name-likes-this': (name) => {
             return `${name} lubi to`;
         },
-        'reaction-status-storage-pending': 'W oczekiwaniu',
+        'reaction-status-storage-pending': 'W toku',
         'reaction-status-transcoding': 'Transkodowanie',
         'reaction-status-uploading': 'Przesyłanie',
 
@@ -417,13 +425,13 @@ module.exports = function(localeCode) {
         'statistics-line': 'Liniowy',
         'statistics-pie': 'Kołowy',
 
-        'story-$count-user-reacted-to-story': (count) => {
+        'story-$count-reactions': (count) => {
             if (singular(count)) {
-                return `1 osoba zareagowała na wiadomość`;
+                return `1 reakcja`;
             } else if (plural(count)) {
-                return `${count} osoby zareagowały na wiadomość`;
+                return `${count} reakcje`;
             } else {
-                return `${count} osób zareagowało na wiadomość`;
+                return `${count} reakcji`;
             }
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
@@ -712,6 +720,7 @@ module.exports = function(localeCode) {
             return `Wysłał${e} ${links} do ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
+            var pictures;
             if (singular(count)) {
                 pictures = 'zdjęcie';
             } else if (plural(count)) {
@@ -723,16 +732,16 @@ module.exports = function(localeCode) {
             return `Wysłał${e} ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var wideos;
+            var videos;
             if (singular(count)) {
-                wideos = 'klip wideo';
+                videos = 'klip wideo';
             } else if (plural(count)) {
-                wideos = `${count} klipy wideo`;
+                videos = `${count} klipy wideo`;
             } else {
-                wideos = `${count} klipów wideo`;
+                videos = `${count} klipów wideo`;
             }
             var e = pastTenseEnding(name, 3);
-            return `Wysłał${e} ${wideos}`;
+            return `Wysłał${e} ${videos}`;
         },
         'user-activity-$name-pushed-code': (name) => {
             var e = pastTenseEnding(name, 3);
@@ -750,7 +759,8 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Napisał${e} post`;
         },
-        'user-activity-more': 'Więcej...',
+        'user-activity-back': 'Powrót',
+        'user-activity-more': 'Więcej',
 
         'user-image-remove': 'Usuń',
         'user-image-select': 'Wybierz',

@@ -277,7 +277,7 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} sta modificando un commento...`;
         },
-        'reaction-$name-is-editing': (name) => {
+        'reaction-$name-is-sending': (name) => {
             return `${name} sta inviando un commento...`;
         },
         'reaction-$name-is-writing': (name) => {
@@ -364,12 +364,8 @@ module.exports = function(localeCode) {
         'statistics-line': "Linee",
         'statistics-pie': "Torta",
 
-        'story-$count-user-reacted-to-story': (count) => {
-            if (count === 1) {
-                return `1 utente ha reagito a questa`;
-            } else {
-                return `${count} utenti hanno reagito a questa`;
-            }
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reazione` : `${count} reazioni`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Ha creato il branch «${branch}» nel repository «${repo}»`;

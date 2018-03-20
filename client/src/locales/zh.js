@@ -409,9 +409,9 @@ var traditionalPhrases = {
     'statistics-line': '線圖',
     'statistics-pie': '餅圖',
 
-    'story-$count-user-reacted-to-story': (count) => {
+    'story-$count-reactions': (count) => {
         var num = cardinalT(count);
-        return `${num}個人有反應`;
+        return `${num}個反應`;
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》數據庫中創建了《${branch}》分支`;
@@ -1048,9 +1048,9 @@ var simplifiedPhrases = {
     'statistics-line': '线图',
     'statistics-pie': '饼图',
 
-    'story-$count-user-reacted-to-story': (count) => {
+    'story-$count-reactions': (count) => {
         var num = cardinalS(count);
-        return `${num}个人有反应`;
+        return `${num}个反应`;
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》数据库中创建了《${branch}》分支`;

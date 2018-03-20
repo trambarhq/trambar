@@ -121,6 +121,8 @@ var traditionalPhrases = {
 
     'empty-currently-offline': '你目前離線',
 
+    'image-editor-page-rendering-in-progress': '正在制作網站預覽⋯⋯',
+    'image-editor-poster-extraction-in-progress': '正在從影片中提取預覽⋯⋯',
     'image-editor-upload-in-progress': '正在上傳⋯⋯',
 
     'issue-cancel': '取消',
@@ -254,6 +256,9 @@ var traditionalPhrases = {
     },
     'option-show-media-preview': '顯示附件媒體',
     'option-show-text-preview': '顯示課文預覽',
+    'option-statistics-biweekly': '顯示過去十四天的活動',
+    'option-statistics-monthly': '顯示月度活動',
+    'option-statistics-to-date': '顯示迄今的活動',
 
     'people-no-stories-found': '沒有找到匹配的故事',
     'people-no-stories-on-date': '那天沒有活動',
@@ -317,6 +322,9 @@ var traditionalPhrases = {
     'reaction-$name-is-editing': (name) => {
         return `${name}正在編輯一個回應⋯⋯`;
     },
+    'reaction-$name-is-sending': (name) => {
+        return `${name}正在發表一個回應⋯⋯`;
+    },
     'reaction-$name-is-writing': (name) => {
         return `${name}正在寫一個回應⋯⋯`;
     },
@@ -354,7 +362,7 @@ var traditionalPhrases = {
     'settings-web-alert': '瀏覽器警報',
 
     'social-network-github': 'GitHub個人資料網址',
-    'social-network-gitlab': 'Gitlab個人資料網址',
+    'social-network-gitlab': 'GitLab個人資料網址',
     'social-network-ichat': 'iChat用戶名',
     'social-network-linkedin': 'LinkedIn個人資料網址',
     'social-network-skype': 'Skype用戶名',
@@ -401,9 +409,9 @@ var traditionalPhrases = {
     'statistics-line': '線圖',
     'statistics-pie': '餅圖',
 
-    'story-$count-user-reacted-to-story': (count) => {
+    'story-$count-reactions': (count) => {
         var num = cardinalT(count);
-        return `${num}個人有反應`;
+        return `${num}個反應`;
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》數據庫中創建了《${branch}》分支`;
@@ -595,7 +603,8 @@ var traditionalPhrases = {
     'user-activity-$name-started-survey': '發布了一個調查',
     'user-activity-$name-started-task-list': '發布了一個任務列表',
     'user-activity-$name-wrote-post': '寫了一個貼文',
-    'user-activity-more': '更多⋯⋯',
+    'user-activity-back': '返回',
+    'user-activity-more': '更多',
 
     'user-image-remove': '刪除',
     'user-image-select': '選擇',
@@ -751,6 +760,8 @@ var simplifiedPhrases = {
 
     'empty-currently-offline': '你目前离线',
 
+    'image-editor-page-rendering-in-progress': '正在制作网站预览⋯⋯',
+    'image-editor-poster-extraction-in-progress': '正在从影片中提取预览⋯⋯',
     'image-editor-upload-in-progress': '正在上传⋯⋯',
 
     'issue-cancel': '取消',
@@ -884,6 +895,9 @@ var simplifiedPhrases = {
     },
     'option-show-media-preview': '显示附件媒体',
     'option-show-text-preview': '显示课文预览',
+    'option-statistics-biweekly': '显示过去十四天的活动',
+    'option-statistics-monthly': '显示月度活动',
+    'option-statistics-to-date': '显示迄今的活动',
 
     'people-no-stories-found': '没有找到匹配的故事',
     'people-no-stories-on-date': '那天没有活动',
@@ -947,6 +961,9 @@ var simplifiedPhrases = {
     'reaction-$name-is-editing': (name) => {
         return `${name}正在编辑一个回应⋯⋯`;
     },
+    'reaction-$name-is-sending': (name) => {
+        return `${name}正在发表一个回应⋯⋯`;
+    },
     'reaction-$name-is-writing': (name) => {
         return `${name}正在写一个回应⋯⋯`;
     },
@@ -984,7 +1001,7 @@ var simplifiedPhrases = {
     'settings-web-alert': '浏览器警报',
 
     'social-network-github': 'GitHub个人资料网址',
-    'social-network-gitlab': 'Gitlab个人资料网址',
+    'social-network-gitlab': 'GitLab个人资料网址',
     'social-network-ichat': 'iChat用户名',
     'social-network-linkedin': 'LinkedIn个人资料网址',
     'social-network-skype': 'Skype用户名',
@@ -1031,9 +1048,9 @@ var simplifiedPhrases = {
     'statistics-line': '线图',
     'statistics-pie': '饼图',
 
-    'story-$count-user-reacted-to-story': (count) => {
+    'story-$count-reactions': (count) => {
         var num = cardinalS(count);
-        return `${num}个人有反应`;
+        return `${num}个反应`;
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》数据库中创建了《${branch}》分支`;
@@ -1225,7 +1242,8 @@ var simplifiedPhrases = {
     'user-activity-$name-started-survey': '发布了一个调查',
     'user-activity-$name-started-task-list': '发布了一个任务列表',
     'user-activity-$name-wrote-post': '写了一个贴文',
-    'user-activity-more': '更多⋯⋯',
+    'user-activity-back': '返回',
+    'user-activity-more': '更多',
 
     'user-image-remove': '删除',
     'user-image-select': '选择',
@@ -1411,6 +1429,9 @@ var cantonesePhrases = {
         var num = cardinalT(count);
         return `發送書籤俾${num}個人`;
     },
+    'option-statistics-biweekly': '顯示前十四日嘅活動',
+    'option-statistics-monthly': '顯示呢個月嘅活動',
+    'option-statistics-to-date': '顯示直到今日嘅活動',
 
     'people-no-stories-found': '搵唔到配合嘅故事',
     'people-no-stories-on-date': '嗰日冇活動',

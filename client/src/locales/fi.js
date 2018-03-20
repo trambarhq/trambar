@@ -365,9 +365,8 @@ module.exports = function(localeCode) {
         'statistics-line': 'Viiva',
         'statistics-pie': 'Ympyrä',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var users = (count === 1) ? `${count} ihminen` : `${count} ihmistä`;
-            return `${users} reagoi tähän`;
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reaktio` : `${count} reaktiota`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Loi branchin “${branch}” projektissa “${repo}”`;

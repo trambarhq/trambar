@@ -356,14 +356,14 @@ module.exports = React.createClass({
         if (this.state.commentsExpanded) {
             return null;
         }
-        var count = countRespondents(this.props.reactions);
+        var count = _.size(this.props.reactions);
         if (count === 0) {
             return null;
         }
         var t = this.props.locale.translate;
         return (
             <span className="reaction-link" onClick={this.handleExpansionClick}>
-                {t('story-$count-user-reacted-to-story', count)}
+                {t('story-$count-reactions', count)}
             </span>
         );
     },

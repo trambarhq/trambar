@@ -12,8 +12,8 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': 'Contact by Skype',
         'action-contact-by-slack': 'Contact by Slack',
         'action-contact-by-twitter': 'Contact by Twitter',
-        'action-view-github-page': 'View Github page',
-        'action-view-gitlab-page': 'View Gitlab page',
+        'action-view-github-page': 'View GitHub page',
+        'action-view-gitlab-page': 'View GitLab page',
         'action-view-linkedin-page': 'View LinkedIn page',
         'action-view-stackoverflow-page': 'View Stack Overflow Page',
 
@@ -83,6 +83,8 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'You are currently offline',
 
+        'image-editor-page-rendering-in-progress': 'Rendering web-site preview...',
+        'image-editor-poster-extraction-in-progress': 'Extracting preview from video...',
         'image-editor-upload-in-progress': 'Upload in progress...',
 
         'issue-cancel': 'Cancel',
@@ -212,6 +214,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Show attached media',
         'option-show-text-preview': 'Show text preview',
+        'option-statistics-biweekly': 'Show activities of last 14 days',
+        'option-statistics-monthly': 'Show monthly activities',
+        'option-statistics-to-date': 'Show activities to date',
 
         'people-no-stories-found': 'No matching stories found',
         'people-no-stories-on-date': 'No activities on that date',
@@ -275,6 +280,9 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} is editing a comment...`;
         },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} is sending a comment...`;
+        },
         'reaction-$name-is-writing': (name) => {
             return `${name} is writing a comment...`;
         },
@@ -312,7 +320,7 @@ module.exports = function(localeCode) {
         'settings-web-alert': 'Web Alert',
 
         'social-network-github': 'GitHub profile URL',
-        'social-network-gitlab': 'Gitlab profile URL',
+        'social-network-gitlab': 'GitLab profile URL',
         'social-network-ichat': 'iChat user name',
         'social-network-linkedin': 'Linkedin profile URL',
         'social-network-skype': 'Skype user name',
@@ -359,9 +367,8 @@ module.exports = function(localeCode) {
         'statistics-line': 'Line',
         'statistics-pie': 'Pie',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var users = (count === 1) ? `${count} user` : `${count} users`;
-            return `${users} reacted to this`;
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reaction` : `${count} reactions`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Created branch “${branch}” in project “${repo}”`;
@@ -552,7 +559,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': 'Started a survey',
         'user-activity-$name-started-task-list': 'Started a task list',
         'user-activity-$name-wrote-post': 'Wrote a post',
-        'user-activity-more': 'More...',
+        'user-activity-back': 'Back',
+        'user-activity-more': 'More',
 
         'user-image-remove': 'Remove',
         'user-image-select': 'Select',

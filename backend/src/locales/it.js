@@ -8,8 +8,8 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': "Contatto con Skype",
         'action-contact-by-slack': "Contatto con Slack",
         'action-contact-by-twitter': "Contatto con Twitter",
-        'action-view-github-page': "Visualizza la pagina Github",
-        'action-view-gitlab-page': "Visualizza la pagina Gitlab",
+        'action-view-github-page': "Visualizza la pagina GitHub",
+        'action-view-gitlab-page': "Visualizza la pagina GitLab",
         'action-view-linkedin-page': "Visualizza la pagina LinkedIn",
         'action-view-stackoverflow-page': "Visualizza la pagina Stack Overflow",
 
@@ -79,6 +79,8 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': "Al momento sei offline",
 
+        'image-editor-page-rendering-in-progress': "Creazione dell'anteprima del sito...",
+        'image-editor-poster-extraction-in-progress': "Estrazione dell'anteprima dal video...",
         'image-editor-upload-in-progress': "Carica in corso...",
 
         'issue-cancel': "Annulla",
@@ -209,6 +211,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': "Mostra media allegati",
         'option-show-text-preview': "Mostra anteprima di testo",
+        'option-statistics-biweekly': 'Mostra le attività degli ultimi 14 giorni',
+        'option-statistics-monthly': 'Mostra attività mensili',
+        'option-statistics-to-date': 'Mostra le attività fino ad oggi',
 
         'people-no-stories-found': "Nessuna storia corrispondente trovata",
         'people-no-stories-on-date': "Nessuna attività in quella data",
@@ -271,6 +276,9 @@ module.exports = function(localeCode) {
         },
         'reaction-$name-is-editing': (name) => {
             return `${name} sta modificando un commento...`;
+        },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} sta inviando un commento...`;
         },
         'reaction-$name-is-writing': (name) => {
             return `${name} sta scrivendo un commento...`;
@@ -356,12 +364,8 @@ module.exports = function(localeCode) {
         'statistics-line': "Linee",
         'statistics-pie': "Torta",
 
-        'story-$count-user-reacted-to-story': (count) => {
-            if (count === 1) {
-                return `1 utente ha reagito a questa`;
-            } else {
-                return `${count} utenti hanno reagito a questa`;
-            }
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reazione` : `${count} reazioni`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Ha creato il branch «${branch}» nel repository «${repo}»`;
@@ -575,7 +579,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': "Ha iniziato un sondaggio",
         'user-activity-$name-started-task-list': "Ha iniziato un elenco di attività",
         'user-activity-$name-wrote-post': "Ha scritto un post",
-        'user-activity-more': "Altre...",
+        'user-activity-back': 'Indietro',
+        'user-activity-more': "Altre",
 
         'user-image-remove': "Rimuovi",
         'user-image-select': "Seleziona",

@@ -111,6 +111,8 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Вы не подключены к Интернету',
 
+        'image-editor-page-rendering-in-progress': 'Создание предварительного просмотра веб-сайта...',
+        'image-editor-poster-extraction-in-progress': 'Извлечение предварительного просмотра из видео...',
         'image-editor-upload-in-progress': 'Загрузка выполняется...',
 
         'issue-cancel': 'Отмена',
@@ -250,6 +252,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Показать прикрепленные носители',
         'option-show-text-preview': 'Показать предварительный просмотр текста',
+        'option-statistics-biweekly': 'Показать действия за последние 14 дней',
+        'option-statistics-monthly': 'Показать ежемесячные мероприятия',
+        'option-statistics-to-date': 'Показывать действия на сегодняшний день',
 
         'people-no-stories-found': 'Не найдено совпадающих рассказов',
         'people-no-stories-on-date': 'Никаких действий на эту дату',
@@ -322,6 +327,9 @@ module.exports = function(localeCode) {
         },
         'reaction-$name-is-editing': (name) => {
             return `${name} редактирует комментарий...`;
+        },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} отправляет комментарий...`;
         },
         'reaction-$name-is-writing': (name) => {
             return `${name} пишет комментарий...`;
@@ -407,19 +415,14 @@ module.exports = function(localeCode) {
         'statistics-line': 'Линейная',
         'statistics-pie': 'Круговая',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var e = '';
-            var users;
+        'story-$count-reactions': (count) => {
             if (singularN(count)) {
-                users = `${count} пользователь`;
+                return `${count} реакция`;
             } else if (singularG(count)) {
-                e = 'и';
-                users = `${count} пользователя`;
+                return `${count} реакции`;
             } else {
-                e = 'и';
-                users = `${count} пользователей`;
+                return `${count} реакций`;
             }
-            return `${users} ответил${e} на это`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name);
@@ -759,7 +762,8 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Написал${e} сообщение`;
         },
-        'user-activity-more': 'Более...',
+        'user-activity-back': 'Назад',
+        'user-activity-more': 'Более',
 
         'user-image-remove': 'Удалить',
         'user-image-select': 'Выбрать',

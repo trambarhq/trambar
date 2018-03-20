@@ -425,13 +425,13 @@ module.exports = function(localeCode) {
         'statistics-line': 'Liniowy',
         'statistics-pie': 'Kołowy',
 
-        'story-$count-user-reacted-to-story': (count) => {
+        'story-$count-reactions': (count) => {
             if (singular(count)) {
-                return `1 osoba zareagowała na wiadomość`;
+                return `1 reakcja`;
             } else if (plural(count)) {
-                return `${count} osoby zareagowały na wiadomość`;
+                return `${count} reakcje`;
             } else {
-                return `${count} osób zareagowało na wiadomość`;
+                return `${count} reakcji`;
             }
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {

@@ -79,6 +79,8 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Olet offline-tilassa',
 
+        'image-editor-page-rendering-in-progress': 'Sivuston esikatselun luominen...',
+        'image-editor-poster-extraction-in-progress': 'Esikatselun poistaminen videosta...',
         'image-editor-upload-in-progress': 'Lataus käynnissä...',
 
         'issue-cancel': 'Peruutta',
@@ -207,6 +209,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Näytä liitetiedostot',
         'option-show-text-preview': 'Näytä tekstin esikatselu',
+        'option-statistics-biweekly': 'Show activities of last 14 days',
+        'option-statistics-monthly': 'Show monthly activities',
+        'option-statistics-to-date': 'Show activities to date',
 
         'people-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
         'people-no-stories-on-date': 'Ei toimintaa kyseisenä päivänä',
@@ -266,6 +271,12 @@ module.exports = function(localeCode) {
         },
         'reaction-$name-is-assigned-to-merge-request': (name) => {
             return `${name} oli määrätty tähän merge-request`;
+        },
+        'reaction-$name-is-editing': (name) => {
+            return `${name} muokkaa kommenttia...`;
+        },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} lähettää kommentin...`;
         },
         'reaction-$name-is-editing': (name) => {
             return `${name} muokkaa kommenttia...`;
@@ -354,9 +365,8 @@ module.exports = function(localeCode) {
         'statistics-line': 'Viiva',
         'statistics-pie': 'Ympyrä',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var users = (count === 1) ? `${count} ihminen` : `${count} ihmistä`;
-            return `${users} reagoi tähän`;
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reaktio` : `${count} reaktiota`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Loi branchin “${branch}” projektissa “${repo}”`;
@@ -546,7 +556,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': 'Aloitti kyselyn',
         'user-activity-$name-started-task-list': 'Aloitti tehtäväluettelon',
         'user-activity-$name-wrote-post': 'Kirjoitti viestin',
-        'user-activity-more': 'Lisää...',
+        'user-activity-back': 'Palataa',
+        'user-activity-more': 'Lisää',
 
         'user-image-remove': 'Poista',
         'user-image-select': 'Select',

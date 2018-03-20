@@ -73,24 +73,10 @@ module.exports = React.createClass({
             highlighted: !_.isEmpty(this.getCurrentUserComments()) || this.props.addingComment,
             onClick: this.handleCommentClick,
         };
-        var showButtonProps = {
-            className: 'show-btn',
-            hidden: true,
-            label: t('story-$count-user-reacted-to-story', _.size(this.props.respondents)),
-            onClick: this.handleShowClick,
-        };
-        if (this.props.theme.mode === 'columns-1') {
-            if (!this.state.commentsExpanded) {
-                if (!_.isEmpty(this.props.reactions)) {
-                    showButtonProps.hidden = false;
-                }
-            }
-        }
         return (
             <div className="reaction-toolbar">
                 <HeaderButton {...likeButtonProps} />
                 <HeaderButton {...commentButtonProps} />
-                <HeaderButton {...showButtonProps} />
             </div>
         );
     },

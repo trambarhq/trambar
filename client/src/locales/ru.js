@@ -415,19 +415,14 @@ module.exports = function(localeCode) {
         'statistics-line': 'Линейная',
         'statistics-pie': 'Круговая',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var e = '';
-            var users;
+        'story-$count-reactions': (count) => {
             if (singularN(count)) {
-                users = `${count} пользователь`;
+                return `${count} реакция`;
             } else if (singularG(count)) {
-                e = 'и';
-                users = `${count} пользователя`;
+                return `${count} реакции`;
             } else {
-                e = 'и';
-                users = `${count} пользователей`;
+                return `${count} реакций`;
             }
-            return `${users} ответил${e} на это`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name);

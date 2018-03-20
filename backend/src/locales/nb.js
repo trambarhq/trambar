@@ -8,8 +8,8 @@ module.exports = function(localeCode) {
         'action-contact-by-skype': 'Kontakt via Skype',
         'action-contact-by-slack': 'Kontakt via Slack',
         'action-contact-by-twitter': 'Kontakt via Twitter',
-        'action-view-github-page': 'Se Github-siden',
-        'action-view-gitlab-page': 'Se Gitlab-siden',
+        'action-view-github-page': 'Se GitHub-siden',
+        'action-view-gitlab-page': 'Se GitLab-siden',
         'action-view-linkedin-page': 'Se LinkedIn-siden',
         'action-view-stackoverflow-page': 'Se Stack-Overflow-siden',
 
@@ -79,6 +79,8 @@ module.exports = function(localeCode) {
 
         'empty-currently-offline': 'Du er frakoblet',
 
+        'image-editor-page-rendering-in-progress': 'Gjengir forhåndsvisning av nettsiden...',
+        'image-editor-poster-extraction-in-progress': 'Extracting forhåndsvisning fra video...',
         'image-editor-upload-in-progress': 'Opplasting pågår...',
 
         'issue-cancel': 'Avbryt',
@@ -209,6 +211,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': 'Vis vedlagte medier',
         'option-show-text-preview': 'Vis tekstforhåndsvisning',
+        'option-statistics-biweekly': 'Vis aktiviteter de siste 14 dagene',
+        'option-statistics-monthly': 'Vis månedlige aktiviteter',
+        'option-statistics-to-date': 'Vis aktivitet til dags dato',
 
         'people-no-stories-found': 'Ingen matchende historier funnet',
         'people-no-stories-on-date': 'Ingen aktiviteter på den datoen',
@@ -272,6 +277,9 @@ module.exports = function(localeCode) {
         'reaction-$name-is-editing': (name) => {
             return `${name} redigerer en kommentar...`;
         },
+        'reaction-$name-is-sending': (name) => {
+            return `${name} sender en kommentar...`;
+        },
         'reaction-$name-is-writing': (name) => {
             return `${name} skriver en kommentar...`;
         },
@@ -309,7 +317,7 @@ module.exports = function(localeCode) {
         'settings-web-alert': 'Webvarsel',
 
         'social-network-github': 'GitHub profil URL',
-        'social-network-gitlab': 'Gitlab profil URL',
+        'social-network-gitlab': 'GitLab profil URL',
         'social-network-ichat': 'iChat brukernavn',
         'social-network-linkedin': 'Linkedin profil URL',
         'social-network-skype': 'Skype brukernavn',
@@ -356,9 +364,8 @@ module.exports = function(localeCode) {
         'statistics-line': 'Linje',
         'statistics-pie': 'Kake',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var users = (count === 1) ? `${count} bruker` : `${count} brukere`;
-            return `${users} reagerte på dette`;
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reaksjon` : `${count} reaksjoner`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Skapte branchen “${branch}” i prosjektet “${repo}”`;
@@ -545,7 +552,8 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-survey': 'Startet en undersøkelse',
         'user-activity-$name-started-task-list': 'Startet en oppgaveliste',
         'user-activity-$name-wrote-post': 'Skrev et innlegg',
-        'user-activity-more': 'Flere...',
+        'user-activity-back': 'Tilbake',
+        'user-activity-more': 'Flere',
 
         'user-image-remove': 'Fjerne',
         'user-image-select': 'Velge',

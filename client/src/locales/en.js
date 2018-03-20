@@ -367,9 +367,8 @@ module.exports = function(localeCode) {
         'statistics-line': 'Line',
         'statistics-pie': 'Pie',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var users = (count === 1) ? `${count} user` : `${count} users`;
-            return `${users} reacted to this`;
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reaction` : `${count} reactions`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Created branch “${branch}” in project “${repo}”`;

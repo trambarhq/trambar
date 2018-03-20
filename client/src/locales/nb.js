@@ -364,9 +364,8 @@ module.exports = function(localeCode) {
         'statistics-line': 'Linje',
         'statistics-pie': 'Kake',
 
-        'story-$count-user-reacted-to-story': (count) => {
-            var users = (count === 1) ? `${count} bruker` : `${count} brukere`;
-            return `${users} reagerte på dette`;
+        'story-$count-reactions': (count) => {
+            return (count === 1) ? `1 reaksjon` : `${count} reaksjoner`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             return `Skapte branchen “${branch}” i prosjektet “${repo}”`;
