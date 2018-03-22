@@ -234,7 +234,7 @@ module.exports = React.createClass({
             var hashIndex = fullURL.indexOf('#');
             if (hashIndex !== -1) {
                 var newURL = fullURL.substr(0, hashIndex);
-                window.history.replaceState({}, '', newURL);
+                this.change(newURL, true);
             }
         }
     },

@@ -59,6 +59,7 @@ module.exports = Relaks.createClass({
                     roles: Route.parseIdList(query.roles),
                     story: Route.parseId(hash, /S(\d+)/i),
                     reaction: Route.parseId(hash, /R(\d+)/i),
+                    previousUser: Route.parseId(hash, /U(\d+)/i),
                 };
             });
         },
@@ -89,6 +90,9 @@ module.exports = Relaks.createClass({
                 if (params.reaction) {
                     hash += `R${params.reaction}`;
                 }
+            }
+            if (params.previousUser) {
+                hash = `U${params.previousUser}`;
             }
             return { path, query, hash };
         },
@@ -409,6 +413,15 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Remember the previously selected user
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.selectedUser && !nextProps.selectedUser) {
+            this.previouslySelectedUser = this.props.selectedUser;
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -429,6 +442,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderUserList: function() {
+        var params = this.props.route.parameters;
         var listProps = {
             refreshList: this.props.freshRoute,
             users: this.props.visibleUsers,
@@ -438,12 +452,15 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             currentUser: this.props.currentUser,
             selectedDate: this.props.selectedDate,
             today: this.props.today,
+            selectedUserId: params.previousUser,
             link: (this.props.selectedUser) ? 'team' : 'user',
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onSelectionClear: this.handleSelectionClear,
         };
         return <UserList {...listProps} />
     },
@@ -515,6 +532,13 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
+    },
+
+    /**
+     * Called when user has scrolled away from selected user
+     */
+    handleSelectionClear: function() {
+        this.props.route.loosen();
     },
 });
 

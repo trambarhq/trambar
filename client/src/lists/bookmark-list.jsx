@@ -272,10 +272,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                 }
             }
             if (story.id === this.props.selectedStoryId) {
-                // don't set select again if we had scrolled away
-                if (!this.props.route.loosened) {
-                    selected = true;
-                }
+                selected = true;
             }
         }
         if (editing || evt.needed) {

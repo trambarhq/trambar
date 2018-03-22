@@ -31,6 +31,7 @@ module.exports = React.createClass({
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
+        selectedUserId: PropTypes.number,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
         link: PropTypes.oneOf([ 'user', 'team' ]),
@@ -40,6 +41,8 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         loading: PropTypes.bool,
+
+        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -60,14 +63,18 @@ module.exports = React.createClass({
      */
     render: function() {
         var users = sortUsers(this.props.users, this.props.locale);
+        var anchorId = this.props.selectedUserId;
         var smartListProps = {
             items: users,
+            offset: 16,
             behind: 4,
             ahead: 8,
+            anchor: (anchorId) ? `user-${anchorId}` : undefined,
             fresh: this.props.refreshList,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,
+            onAnchorChange: this.handleUserAnchorChange,
         };
         return (
             <div className="user-list">
@@ -76,6 +83,13 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Return identifier for item
+     *
+     * @param  {Object} evt
+     *
+     * @return {String}
+     */
     handleUserIdentity: function(evt) {
         return `user-${evt.item.id}`;
     },
@@ -123,6 +137,23 @@ module.exports = React.createClass({
         } else {
             var height = evt.previousHeight || evt.estimatedHeight || 100;
             return <div className="user-view" style={{ height }} />;
+        }
+    },
+
+    /**
+     * Called when a different user is positioned at the top of the viewport
+     *
+     * @param  {Object} evt
+     */
+    handleUserAnchorChange: function(evt) {
+        var storyId = _.get(evt.item, 'id');
+        if (this.props.selectedUserId && storyId !== this.props.selectedUserId) {
+            if (this.props.onSelectionClear) {
+                this.props.onSelectionClear({
+                    type: 'selectionclear',
+                    target: this,
+                });
+            }
         }
     },
 

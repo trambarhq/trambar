@@ -328,6 +328,7 @@ module.exports = React.createClass({
             params.user = this.props.user.id;
             label = t('user-activity-more');
         } else if (this.props.link === 'team') {
+            params.previousUser = this.props.user.id;
             label = t('user-activity-back');
         } else {
             return null;
