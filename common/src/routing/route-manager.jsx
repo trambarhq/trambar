@@ -228,7 +228,7 @@ module.exports = React.createClass({
     /**
      * Remove hash from current URL
      */
-    loosen: function() {
+    unanchor: function() {
         if (process.env.PLATFORM === 'browser') {
             var fullURL = window.location.href;
             var hashIndex = fullURL.indexOf('#');

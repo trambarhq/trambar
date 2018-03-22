@@ -1403,7 +1403,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * Called when user has scrolled away from selected task
      */
     handleTaskSelectionClear: function() {
-        this.props.route.loosen();
+        this.props.route.unanchor();
     },
 });
 

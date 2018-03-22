@@ -77,8 +77,8 @@ Route.prototype.replace = function(component, parameters) {
 /**
  * Remove hash from current URL
  */
-Route.prototype.loosen = function() {
-    this.routeManager.loosen();
+Route.prototype.unanchor = function() {
+    this.routeManager.unanchor();
 };
 
 /**

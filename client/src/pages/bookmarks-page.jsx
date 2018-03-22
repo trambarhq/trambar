@@ -213,6 +213,6 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
      * Called when user has scrolled away from selected story
      */
     handleSelectionClear: function() {
-        this.props.route.loosen();
+        this.props.route.unanchor();
     },
 });
