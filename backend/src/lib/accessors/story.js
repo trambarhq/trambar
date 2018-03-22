@@ -325,6 +325,8 @@ module.exports = _.create(ExternalData, {
                             updates.user_ids = storyReceived.user_ids;
                             updates.role_ids  = storyReceived.role_ids;
                             updates.public = storyReceived.public;
+                            updates.tags = storyReceived.tags;
+                            updates.language_codes = storyReceived.language_codes;
 
                             // stick contents of the original row into the temp copy
                             // so we can retrieve them later potentially
@@ -333,6 +335,8 @@ module.exports = _.create(ExternalData, {
                             storyReceived.user_ids = storyPublished.user_ids;
                             storyReceived.role_ids  = storyPublished.role_ids;
                             storyReceived.public = storyPublished.public;
+                            storyReceived.tags = storyPublished.tags;
+                            storyReceived.language_codes = storyPublished.language_codes;
                             storyReceived.deleted = true;
 
                             // check permission again (just in case)
