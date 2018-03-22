@@ -16,6 +16,7 @@ body {
     overflow: hidden;
     margin: 0;
     user-select: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 .application {
@@ -50,7 +51,6 @@ body {
         display: flex;
         flex-direction: column;
         align-items: center;
-        -webkit-overflow-scrolling: touch;
 
         // use custom color only on desktop
         @media only screen and (min-device-width : 800px) {
@@ -108,4 +108,8 @@ INPUT[type=number]
     border: 1px solid #444444;
     padding: 2px 2px 2px 4px;
     font-size: 1em;
+}
+
+TEXTAREA {
+    -webkit-overflow-scrolling: auto !important;
 }
