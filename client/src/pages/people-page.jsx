@@ -247,24 +247,53 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<PeoplePageSync {...props} />);
+            if (params.search) {
+                if (tags) {
+                    return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
+                        // now that we have the stories, we can see whom should be shown
+                        props.stories = stories;
+                        props.visibleUsers = findUsersWithStories(props.members, stories);
+                    });
+                } else {
+                    return StoryFinder.findStoriesMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
+                        // now that we have the stories, we can see whom should be shown
+                        props.stories = stories;
+                        props.visibleUsers = findUsersWithStories(props.members, stories);
+                    });
+                }
+            } else if (params.date) {
+                return StoryFinder.findStoriesOnDate(db, params.date, 5).then((stories) => {
+                    // do this for date search as well, even through
+                    // we use stats to narrow down the list earlier, just in
+                    // case we got an incomplete list due to out-of-date stats
+                    props.stories = stories;
+                    props.visibleUsers = findUsersWithStories(props.members, stories);
+                })
+            } else {
+                return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5).then((stories) => {
+                    props.stories = stories;
+                });
+            }
+        }).then(() => {
             if (props.selectedUser) {
+                // load stories of selected user
                 if (params.search) {
                     if (tags) {
                         return StoryFinder.findStoriesByUserWithTags(db, props.selectedUser, tags).then((stories) => {
-                            props.stories = stories;
+                            props.selectedUserStories = stories;
                         });
                     } else {
                         return StoryFinder.findStoriesByUserMatchingText(db, props.selectedUser, params.search, this.props.locale).then((stories) => {
-                            props.stories = stories;
+                            props.selectedUserStories = stories;
                         });
                     }
                 } else if (params.date) {
                     return StoryFinder.findStoriesByUserOnDate(db, props.selectedUser, params.date).then((stories) => {
-                        props.stories = stories;
+                        props.selectedUserStories = stories;
                     });
                 } else {
                     return StoryFinder.findStoriesByUserInListing(db, 'news', props.selectedUser, props.currentUser).then((stories) => {
-                        props.stories = stories;
+                        props.selectedUserStories = stories;
                         // when a user is selected, the URL can point to a specific
                         // story; we need to make sure the story is there
                         if (params.story && !_.find(stories, { id: params.story })) {
@@ -276,36 +305,6 @@ module.exports = Relaks.createClass({
                     });
                 }
             } else {
-                if (params.search) {
-                    if (tags) {
-                        return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
-                            // now that we have the stories, we can see whom should be shown
-                            props.stories = stories;
-                            props.visibleUsers = findUsersWithStories(props.members, stories);
-                        });
-                    } else {
-                        return StoryFinder.findStoriesMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
-                            // now that we have the stories, we can see whom should be shown
-                            props.stories = stories;
-                            props.visibleUsers = findUsersWithStories(props.members, stories);
-                        });
-                    }
-                } else if (params.date) {
-                    return StoryFinder.findStoriesOnDate(db, params.date, 5).then((stories) => {
-                        // do this for date search as well, even through
-                        // we use stats to narrow down the list earlier, just in
-                        // case we got an incomplete list due to out-of-date stats
-                        props.stories = stories;
-                        props.visibleUsers = findUsersWithStories(props.members, stories);
-                    })
-                } else {
-                    return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5).then((stories) => {
-                        props.stories = stories;
-                    });
-                }
-            }
-        }).then(() => {
-            if (!props.selectedUser) {
                 // deal with situation where we're showing stories by someone
                 // who're not on the team
                 var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
@@ -377,6 +376,7 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         dailyActivities: PropTypes.object,
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
+        selectedUserStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
@@ -454,14 +454,14 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderSelectedUserStoryList: function() {
-        if (!this.props.selectedUser || !this.props.stories) {
+        if (!this.props.selectedUser || !this.props.selectedUserStories) {
             return null;
         }
         var params = this.props.route.parameters;
         var listProps = {
             refreshList: this.props.freshRoute,
             access: this.getAccessLevel(),
-            stories: this.props.stories,
+            stories: this.props.selectedUserStories,
             currentUser: this.props.currentUser,
             project: this.props.project,
             selectedStoryId: params.story,
@@ -485,10 +485,10 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      */
     renderEmptyMessage: function() {
         var list;
-        if (!this.props.selectedUser) {
-            list = this.props.visibleUsers;
+        if (this.props.selectedUser) {
+            list = this.props.selectedUserStories;
         } else {
-            list = this.props.stories;
+            list = this.props.visibleUsers;
         }
         if (!_.isEmpty(list)) {
             return null;
