@@ -2,10 +2,14 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ComponentRefs = require('utils/component-refs');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 require('./autosize-text-area.scss');
 
 module.exports = React.createClass({
     displayName: 'AutosizeTextArea',
+    mixins: [ UpdateCheck ],
 
     /**
      * Return initial state of component
