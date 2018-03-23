@@ -11,7 +11,6 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var UserSection = require('widgets/user-section');
 var ProfileImage = require('widgets/profile-image');
 var Time = require('widgets/time');
 var Link = require('widgets/link');
