@@ -13,7 +13,7 @@
     "test:docker:stop": "docker-compose -p test -f test.yml down"
   },
   "dependencies": {
-    "async-do-while": "^0.0.3",
+    "async-do-while": "^0.0.5",
     "bcrypt": "^1.0.2",
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.2",
@@ -26,6 +26,7 @@
     "jsDAV": "^0.3.4",
     "jsdav-promise": "0.0.2",
     "lodash": "^4.17.4",
+    "mark-gor": "0.0.6",
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.13",
     "multer": "^1.3.0",

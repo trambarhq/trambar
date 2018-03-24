@@ -189,7 +189,7 @@ Database.prototype.need = function(schema, wait) {
     var startTime;
     var lastError;
     if (wait == undefined) {
-        wait = 10000;
+        wait = 30000;
     }
     Async.begin(() => {
         found = false;

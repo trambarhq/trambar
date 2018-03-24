@@ -9,6 +9,7 @@ var UserImporter = require('gitlab-adapter/user-importer');
 
 // accessors
 var Story = require('accessors/story');
+var System = require('accessors/system');
 
 module.exports = {
     importEvent,
@@ -49,9 +50,11 @@ function importEvent(db, server, repo, project, author, glEvent) {
     // retrieve all commits in the push
     return PushReconstructor.reconstructPush(db, server, repo, branch, headId, tailId, count).then((push) => {
         // look for component descriptions
-        return PushDecorator.retrieveDescriptions(server, repo, push).then((components) => {
-            var storyNew = copyPushProperties(null, server, repo, author, push, components, glEvent);
-            return Story.insertOne(db, schema, storyNew);
+        return getDefaultLanguage(db).then((languageCode) => {
+            return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
+                var storyNew = copyPushProperties(null, server, repo, author, push, components, glEvent);
+                return Story.insertOne(db, schema, storyNew);
+            });
         });
     });
 }
@@ -140,4 +143,21 @@ function copyPushProperties(story, server, repo, author, push, components, glEve
     }
     storyAfter.itime = new String('NOW()');
     return storyAfter;
+}
+
+/**
+ * Get the system's default language
+ *
+ * @param  {Database} db
+ *
+ * @return {Promise<String>}
+ */
+function getDefaultLanguage(db) {
+    return System.findOne(db, 'global', { deleted: false }, 'settings').then((system) => {
+        var languageCode = _.get(system, 'settings.input_languages.0');
+        if (!languageCode) {
+            languageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
+        }
+        return languageCode;
+    });
 }
