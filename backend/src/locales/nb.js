@@ -74,6 +74,15 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Avbryt',
         'confirmation-confirm': 'Bekrefte',
 
+        'device-selector-camera-back': 'Bakre',
+        'device-selector-camera-front': 'Front',
+        'device-selector-camera-$number': (number) => {
+            return `Kamera ${number}`;
+        },
+        'device-selector-mic-$number': (number) => {
+            return `Mic ${number}`;
+        },
+
         'diagnostics-show': 'Vis diagnostikk',
         'diagnostics-show-panel': 'Vis dette panelet',
 

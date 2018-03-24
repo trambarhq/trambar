@@ -11,6 +11,7 @@ var Locale = require('locale/locale');
 // widgets
 var Overlay = require('widgets/overlay');
 var PushButton = require('widgets/push-button');
+var DeviceSelector = require('widgets/device-selector');
 var DevicePlaceholder = require('widgets/device-placeholder');
 var DurationIndicator = require('widgets/duration-indicator');
 
@@ -155,6 +156,7 @@ module.exports = React.createClass({
         this.videoNode = node;
         if (this.videoNode) {
             this.videoNode.srcObject = this.state.liveVideoStream;
+            this.videoNode.play();
         }
     },
 
@@ -220,7 +222,6 @@ module.exports = React.createClass({
     renderLiveVideo: function() {
         var videoProps = {
             ref: this.setLiveVideoNode,
-            autoPlay: true,
             muted: true,
         };
         return <video {...videoProps} />;
@@ -252,25 +253,14 @@ module.exports = React.createClass({
         if (this.state.mediaRecorder) {
             return null;
         }
-        if (this.state.videoDevices.length < 2) {
-            return null;
-        }
-        var options = _.map(this.state.videoDevices, (device, index) => {
-            var label = device.label;
-            label = _.replace(device.label, /\(\w{4}:\w{4}\)/g, '');
-            return <option key={index} value={device.deviceId}>{label}</option>;
-        });
-        var selectProps = {
-            value: this.state.selectedDeviceId || '',
-            onChange: this.handleDeviceSelect,
-        }
-        return (
-            <div className="device-selector">
-                <select {...selectProps}>
-                    {options}
-                </select>
-            </div>
-        );
+        var props = {
+            type: 'video',
+            devices: this.state.videoDevices,
+            selectedDeviceId: this.state.selectedDeviceId,
+            locale: this.props.locale,
+            onSelect: this.handleDeviceSelect,
+        };
+        return <DeviceSelector {...props} />;
     },
 
     /**
@@ -364,6 +354,7 @@ module.exports = React.createClass({
         if (this.videoNode) {
             if (prevState.liveVideoStream !== this.state.liveVideoStream) {
                 this.videoNode.srcObject = this.state.liveVideoStream;
+                this.videoNode.play();
             }
         }
     },

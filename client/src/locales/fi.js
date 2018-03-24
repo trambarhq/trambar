@@ -74,6 +74,15 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Peruutta',
         'confirmation-confirm': 'Vahvista',
 
+        'device-selector-camera-back': 'Takakamera',
+        'device-selector-camera-front': 'Etukamera',
+        'device-selector-camera-$number': (number) => {
+            return `Kamera ${number}`;
+        },
+        'device-selector-mic-$number': (number) => {
+            return `Mic ${number}`;
+        },
+
         'diagnostics-show': 'Näytä diagnostiikka',
         'diagnostics-show-panel': 'Näytä tämä paneeli',
 

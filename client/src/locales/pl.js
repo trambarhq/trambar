@@ -110,6 +110,15 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Anuluj',
         'confirmation-confirm': 'Potwierdź',
 
+        'device-selector-camera-back': 'Tylna',
+        'device-selector-camera-front': 'Przednia',
+        'device-selector-camera-$number': (number) => {
+            return `Kamera ${number}`;
+        },
+        'device-selector-mic-$number': (number) => {
+            return `Mic ${number}`;
+        },
+
         'diagnostics-show': 'Pokaż diagnostykę',
         'diagnostics-show-panel': 'Wyświetl ten panel',
 

@@ -116,6 +116,15 @@ var traditionalPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'device-selector-camera-back': '後置',
+    'device-selector-camera-front': '前置',
+    'device-selector-camera-$number': (number) => {
+        return `攝影機${number}`;
+    },
+    'device-selector-mic-$number': (number) => {
+        return `麥克風${number}`;
+    },
+
     'diagnostics-show': '顯示診斷',
     'diagnostics-show-panel': '顯示此面板',
 
@@ -754,6 +763,15 @@ var simplifiedPhrases = {
 
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
+
+    'device-selector-camera-back': '后置',
+    'device-selector-camera-front': '前置',
+    'device-selector-camera-$number': (number) => {
+        return `摄影机${number}`;
+    },
+    'device-selector-mic-$number': (number) => {
+        return `麦克风${number}`;
+    },
 
     'diagnostics-show': '显示诊断',
     'diagnostics-show-panel': '显示此面板',

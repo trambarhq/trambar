@@ -1,0 +1,17 @@
+.device-selector {
+    float: left;
+
+    SELECT {
+        color: #666666;
+        background-color: #4d3936;
+        font-size: 0.9em;
+        padding: 0.4em 1em 0.4em 1em;
+        border: 2px solid #4d3936;
+
+        &:hover, &:focus {
+            color: #eeeeee;
+            background-color: #806666;
+            border-color: #806666;
+        }
+    }
+}

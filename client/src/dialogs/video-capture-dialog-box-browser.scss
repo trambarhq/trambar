@@ -30,19 +30,6 @@
 
         .device-selector {
             float: left;
-            margin-right: 2em;
-
-            SELECT {
-                color: #666666;
-                background-color: #4d3936;
-                border: 0;
-                padding: 0.3em;
-
-                &:hover, &:focus {
-                    color: #eeeeee;
-                    background-color: #806666;
-                }
-            }
         }
 
         .buttons {

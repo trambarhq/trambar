@@ -74,6 +74,15 @@ module.exports = function(localeCode) {
         'confirmation-cancel': "Annulla",
         'confirmation-confirm': "Conferma",
 
+        'device-selector-camera-back': 'Posteriore',
+        'device-selector-camera-front': 'Frontale',
+        'device-selector-camera-$number': (number) => {
+            return `Camera ${number}`;
+        },
+        'device-selector-mic-$number': (number) => {
+            return `Mic ${number}`;
+        },
+
         'diagnostics-show': "Mostra diagnostica",
         'diagnostics-show-panel': "Mostra questo pannello",
 

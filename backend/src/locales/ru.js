@@ -106,6 +106,15 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Отмена',
         'confirmation-confirm': 'Подтвердить',
 
+        'device-selector-camera-back': 'Задняя',
+        'device-selector-camera-front': 'Передняя',
+        'device-selector-camera-$number': (number) => {
+            return `Камера ${number}`;
+        },
+        'device-selector-mic-$number': (number) => {
+            return `Микрофон ${number}`;
+        },
+
         'diagnostics-show': 'Показать диагностику',
         'diagnostics-show-panel': 'Показать эту панель',
 
