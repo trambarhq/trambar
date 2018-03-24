@@ -12,7 +12,7 @@ function DeviceSelector(props) {
         return null;
     }
     var frontBack = (devices.length === 2) && _.every(devices, (device) => {
-        if (/front|back/.test(device.label)) {
+        if (/front|back/i.test(device.label)) {
             return true;
         }
     });
@@ -20,7 +20,7 @@ function DeviceSelector(props) {
         var label;
         if (props.type === 'video') {
             if (frontBack) {
-                if (/front/.test(device.label)) {
+                if (/front/i.test(device.label)) {
                     label = t('device-selector-camera-front');
                 } else {
                     label = t('device-selector-camera-back');

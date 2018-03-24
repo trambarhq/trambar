@@ -309,9 +309,7 @@ module.exports = React.createClass({
             if (this.state.selectedDeviceId) {
                 constraints = {
                     video: {
-                        mandatory: {
-                            sourceId: this.state.selectedDeviceId
-                        }
+                        deviceId: this.state.selectedDeviceId,
                     }
                 };
             } else {
