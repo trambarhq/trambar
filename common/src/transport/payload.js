@@ -230,9 +230,9 @@ Payload.prototype.sendBlob = function(part) {
     var url = this.getDestinationURL(part.name);
     var blob = part.blob;
     var formData = new FormData;
-    formData.set('file', blob);
+    formData.append('file', blob);
     _.each(part.options, (value, name) => {
-        formData.set(name, value);
+        formData.append(name, value);
     });
     var options = {
         responseType: 'json',

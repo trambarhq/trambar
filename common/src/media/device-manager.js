@@ -53,5 +53,8 @@ function scan() {
 }
 
 scan().then(() => {
-    navigator.mediaDevices.addEventListener('devicechange', scan);
+    // Safari doesn't support events
+    if (navigator.mediaDevices.addEventListener) {
+        navigator.mediaDevices.addEventListener('devicechange', scan);
+    }
 });
