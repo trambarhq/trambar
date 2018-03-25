@@ -124,6 +124,7 @@ function applyFiltersToImage(image, filters, format) {
             quality: 90,
             lossless: false,
         };
+        image.rotate();
         applyOperators(image, sharpOperators, filters);
         var quality = image.settings.quality;
         var lossless = image.settings.lossless;

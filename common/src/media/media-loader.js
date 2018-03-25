@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var BlobManager = require('transport/blob-manager');
 var BlobReader = require('transport/blob-reader');
+var JPEGAnalyser = require('media/jpeg-analyser');
 var FrameGrabber = require('media/frame-grabber');
 
 module.exports = {
@@ -159,6 +160,21 @@ function getImageMetadata(blob) {
                 if (!height) {
                     height = 1000;
                 }
+                return { width, height, format };
+            });
+        } else if (format === 'jpeg') {
+            return BlobReader.loadUint8Array(blob).then((bytes) => {
+                var dimensions = JPEGAnalyser.getDimensions(bytes);
+                var orientation = JPEGAnalyser.getOrientation(bytes);
+                var width, height;
+                if (orientation < 5) {
+                    width = dimensions.width;
+                    height = dimensions.height;
+                } else {
+                    width = dimensions.height;
+                    height = dimensions.width;
+                }
+                console.log({ width, height, format });
                 return { width, height, format };
             });
         } else {
