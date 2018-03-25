@@ -73,6 +73,20 @@ function FileButton(props) {
             multiple: props.multiple,
             onChange: props.onChange,
         };
+        if (edgeBug) {
+            // deal with bug in Edge:
+            // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8282613/
+            inputProps.id = `file-input-${edgeInputId++}`;
+            return (
+                <span className={buttonClasses(props)}>
+                    <label htmlFor={inputProps.id}>
+                        <i className={iconClasses(props)}/>
+                        <span className="label">{props.label}</span>
+                    </label>
+                    <input {...inputProps} />
+                </span>
+            );
+        }
         return (
             <label className={buttonClasses(props)}>
                 <i className={iconClasses(props)}/>
@@ -82,6 +96,9 @@ function FileButton(props) {
         );
     }
 }
+
+var edgeBug = /Edge/.test(navigator.userAgent);
+var edgeInputId = 1;
 
 FileButton.propTypes = {
     label: PropTypes.string,
