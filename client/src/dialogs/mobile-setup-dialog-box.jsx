@@ -148,6 +148,7 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
             var urlParts = StartPage.getURL({ activationCode, schema });
             url = UniversalLink.form(address, urlParts.path, urlParts.query);
         }
+        console.log(url);
         return (
             <div className="contents">
                 <QRCode text={url} scale={6} />

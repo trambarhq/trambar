@@ -16,6 +16,7 @@ module.exports = React.createClass({
     displayName: 'LinkManager',
     mixins: [ UpdateCheck ],
     propTypes: {
+        hasAccess: PropTypes.bool,
         database: PropTypes.instanceOf(Database),
         route: PropTypes.instanceOf(Route),
     },
@@ -84,9 +85,11 @@ module.exports = React.createClass({
             var prevSchema = _.get(prevProps.route, 'parameters.schema');
             var currAddress = _.get(this.props.route, 'parameters.address');
             var currSchema = _.get(this.props.route, 'parameters.schema');
-            if (prevAddress !== currAddress || prevSchema !== currSchema) {
-                if (currAddress && currSchema) {
-                    this.saveLocation(currAddress, currSchema);
+            if (prevAddress !== currAddress || prevSchema !== currSchema || prevProps.hasAccess !== this.props.hasAccess) {
+                if (this.props.hasAccess) {
+                    if (currAddress && currSchema) {
+                        this.saveLocation(currAddress, currSchema);
+                    }
                 }
             }
         }

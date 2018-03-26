@@ -151,19 +151,7 @@ var StartPage = module.exports = Relaks.createClass({
             if (process.env.PLATFORM === 'cordova') {
                 if (params.address && params.activationCode) {
                     meanwhile.show(<StartPageSync {...props} />);
-                    return db.acquireMobileSession(params.activationCode).catch((err) => {
-                        props.error = err;
-                        // start over after a few seconds
-                        setTimeout(() => {
-                            var params = {
-                                cors: false,
-                                address: null,
-                                schema: null,
-                                activationCode: null
-                            };
-                            this.props.route.replace(StartPage, params);
-                        }, 5000);
-                    }).then((userId) => {
+                    return db.acquireMobileSession(params.activationCode).then((userId) => {
                         // create entry in device table
                         var device = {
                             type: getDeviceType(),
@@ -175,8 +163,21 @@ var StartPage = module.exports = Relaks.createClass({
                         return db.saveOne({ table: 'device' }, device);
                     }).then((device) => {
                         // if no error was encounted, an onAuthorization event
-                        // should have caused rendering at this point
+                        // should have caused rerendering at this point
                         // with props.canAccessServer = true
+                        return <StartPageSync {...props} />;
+                    }).catch((err) => {
+                        props.serverError = err;
+                        // start over after a few seconds
+                        setTimeout(() => {
+                            var params = {
+                                cors: false,
+                                address: null,
+                                schema: null,
+                                activationCode: null
+                            };
+                            this.props.route.replace(StartPage, params);
+                        }, 10000);
                         return <StartPageSync {...props} />;
                     });
                 } else {
@@ -224,7 +225,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         projectLinks: PropTypes.arrayOf(PropTypes.object),
         canAccessServer: PropTypes.bool,
         canAccessSchema: PropTypes.bool,
-        error: PropTypes.instanceOf(Error),
+        serverError: PropTypes.instanceOf(Error),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -359,6 +360,12 @@ var StartPageSync = module.exports.Sync = React.createClass({
                      }
                  }
              }
+        }
+        if (this.state.receivedCorrectQRCode && nextProps.serverError) {
+            this.setState({
+                receivedCorrectQRCode: false,
+                receivedInvalidQRCode: false,
+            });
         }
     },
 
@@ -1095,6 +1102,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             show: this.state.scanningQRCode,
             found: this.state.receivedCorrectQRCode,
             invalid: this.state.receivedInvalidQRCode,
+            serverError: this.props.serverError,
             locale: this.props.locale,
             onCancel: this.handleCancelScan,
             onResult: this.handleScanResult,

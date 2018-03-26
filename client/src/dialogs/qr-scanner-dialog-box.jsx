@@ -21,6 +21,7 @@ module.exports = React.createClass({
         show: PropTypes.bool,
         invalid: PropTypes.bool,
         found: PropTypes.bool,
+        serverError: PropTypes.instanceOf(Error),
         locale: PropTypes.instanceOf(Locale),
         onCancel: PropTypes.func,
         onResult: PropTypes.func,
@@ -121,6 +122,24 @@ module.exports = React.createClass({
                     this.cameraPlaceholderNode.className = 'camera-placeholder';
                     this.cameraPlaceholderNode.style.backgroundImage = `url(${imageURL})`;
                     document.body.appendChild(this.cameraPlaceholderNode);
+
+                    var input = document.createElement('INPUT');
+                    input.type = 'text';
+                    input.value = localStorage.testActivationURL || '';
+                    input.addEventListener('keydown', (evt) => {
+                        if (evt.keyCode === 0x0d) {
+                            var url = evt.target.value;
+                            localStorage.testActivationURL = url;
+                            if (this.props.onResult) {
+                                this.props.onResult({
+                                    type: 'result',
+                                    target: this,
+                                    result: url,
+                                });
+                            }
+                        }
+                    });
+                    this.cameraPlaceholderNode.appendChild(input);
                 }
             }
             this.overlayNode = document.createElement('DIV');
@@ -133,10 +152,16 @@ module.exports = React.createClass({
             onClick: this.handleCancelClick
         };
         var message;
-        if (this.props.found) {
-            message = <span className="success">{t('qr-scanner-qr-code-found')}</span>;
-        } else if (this.props.invalid) {
-            message = <span className="error">{t('qr-scanner-invalid-qr-code')}</span>;
+        var err = this.props.serverError;
+        if (err) {
+            var text = `${err.statusCode} - ${err.message}`;
+            message = <span className="error">{text}</span>;
+        } else {
+            if (this.props.found) {
+                message = <span className="success">{t('qr-scanner-qr-code-found')}</span>;
+            } else if (this.props.invalid) {
+                message = <span className="error">{t('qr-scanner-invalid-qr-code')}</span>;
+            }
         }
         var element = (
             <CameraOverlay>

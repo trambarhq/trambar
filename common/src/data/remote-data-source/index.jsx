@@ -281,11 +281,14 @@ module.exports = React.createClass({
     acquireMobileSession: function(location, handle) {
         var address = location.address;
         var session = getSession(address);
+        if (session.handle !== handle) {
+            session.promise = null;
+            session.handle = handle;
+        }
         if (!session.promise) {
             var url = `${address}/srv/session/`;
             var options = { responseType: 'json', contentType: 'json' };
             session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
-                session.handle = handle;
                 _.assign(session, res.session);
                 if (session.token) {
                     this.triggerAuthorizationEvent(session);
@@ -294,7 +297,10 @@ module.exports = React.createClass({
                     throw new HTTPError(session.error);
                 }
             }).catch((err) => {
-                session.promise = null;
+                setTimeout(() => {
+                    session.promise = null;
+                    session.handle = null;
+                }, 5000);
                 throw err;
             });
         }

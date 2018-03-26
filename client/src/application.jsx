@@ -365,6 +365,7 @@ module.exports = React.createClass({
         };
         var linkManagerProps = {
             ref: setters.linkManager,
+            hasAccess: this.state.canAccessServer || this.state.canAccessSchema,
             database: this.state.database,
             route: this.state.route,
         };

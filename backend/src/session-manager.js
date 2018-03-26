@@ -111,6 +111,9 @@ function sendJSON(res, object) {
  * @param  {Error} err
  */
 function sendErrorJSON(res, err) {
+    if (!err.statusCode || err.statusCode >= 500) {
+        console.error(err);
+    }
     err = sanitizeError(err);
     res.status(err.statusCode).json(_.omit(err, 'statusCode'));
 }
@@ -233,22 +236,22 @@ function handleHTPasswdRequest(req, res) {
 function handleSessionRetrieval(req, res) {
     var handle = _.toLower(req.query.handle);
     return findSession(handle).then((session) => {
-        if (!session.activated) {
-            if (session.token) {
-                session.activated = true;
-                return saveSession(session).then((session) => {
-                    return {
-                        session: _.pick(session, 'token', 'user_id', 'etime')
-                    };
-                });
-            } else {
-                var error = session.details.error;
-                if (error) {
-                    throw new HTTPError(error);
-                }
+        if (session.activated) {
+            throw new HTTPError(410);
+        }
+        if (session.token) {
+            session.activated = true;
+            return saveSession(session).then((session) => {
+                return {
+                    session: _.pick(session, 'token', 'user_id', 'etime')
+                };
+            });
+        } else {
+            var error = session.details.error;
+            if (error) {
+                throw new HTTPError(error);
             }
         }
-        return {};
     }).then((info) => {
         sendJSON(res, info);
     }).catch((err) => {

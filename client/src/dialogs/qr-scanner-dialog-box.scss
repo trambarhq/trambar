@@ -4,6 +4,7 @@
     top: 0;
     right: 0;
     bottom: 0;
+    pointer-events: none;
 
     .top {
         position: absolute;
@@ -158,6 +159,9 @@
 
 .camera-placeholder {
     position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 
     left: 0;
     right: 0;
@@ -168,4 +172,10 @@
     background-position: center center;
     background-attachment: fixed;
     background-size: cover;
+
+    INPUT[type="text"] {
+        width: 100%;
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+    }
 }
