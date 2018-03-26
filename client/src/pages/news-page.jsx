@@ -121,9 +121,11 @@ module.exports = Relaks.createClass({
      */
     renderAsync: function(meanwhile) {
         // don't wait for remote data unless the route changes
-        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
+        // or if we're focusing on a specific story
+        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
+        var blocking = freshRoute || !!params.story;
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: params.schema, by: this, blocking });
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
@@ -173,12 +175,6 @@ module.exports = Relaks.createClass({
             } else {
                 return StoryFinder.findStoriesInListing(db, 'news', props.currentUser).then((stories) => {
                     props.stories = stories;
-                    if (params.story && !_.find(stories, { id: params.story })) {
-                        return StoryFinder.findStory(db, params.story).then((story) => {
-                            return this.redirectToStory(story);
-                        }).catch((err) => {
-                        });
-                    }
                 }).then(() => {
                     meanwhile.show(<NewsPageSync {...props} />);
                     return StoryFinder.findDraftStories(db, props.currentUser).then((stories) => {
@@ -191,6 +187,17 @@ module.exports = Relaks.createClass({
                 });
             }
         }).then(() => {
+            // when we're focusing on one story, we need to make sure the
+            // story is actually there
+            if (params.story && !params.date) {
+                var allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
+                if (!_.find(allStories, { id: params.story })) {
+                    return StoryFinder.findStory(db, params.story).then((story) => {
+                        return this.redirectToStory(params.schema, story);
+                    }).catch((err) => {
+                    });
+                }
+            }
             return <NewsPageSync {...props} />;
         });
     },
@@ -198,11 +205,12 @@ module.exports = Relaks.createClass({
     /**
      * Redirect to page showing stories on the date of a story
      *
+     * @param  {String} schema
      * @param  {Story} story
      *
      * @return {Promise|undefined}
      */
-    redirectToStory: function(story) {
+    redirectToStory: function(schema, story) {
         var redirect = true;
         if (story.ptime && story.published && story.ready !== false) {
             // don't redirect if the story is very recent
@@ -213,6 +221,7 @@ module.exports = Relaks.createClass({
         }
         if (redirect) {
             return this.props.route.replace(require('pages/news-page'), {
+                schema: schema,
                 date: Moment(story.ptime).format('YYYY-MM-DD'),
                 story: story.id,
             });

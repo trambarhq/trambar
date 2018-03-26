@@ -132,6 +132,21 @@ Route.prototype.free = function(callback) {
     _.pull(this.callbacks, callback);
 };
 
+Route.prototype.isFresh = function(prevRoute) {
+    if (this !== prevRoute) {
+        if (!prevRoute) {
+            return true;
+        } else if (this.component !== prevRoute.component) {
+            return true;
+        } else if (this.path !== prevRoute.path) {
+            return true;
+        } else if (!_.isEqual(this.query, prevRoute.query)) {
+            return true;
+        }
+    }
+    return false;
+};
+
 Route.prototype.toString = function() {
     return this.url;
 };
