@@ -166,6 +166,9 @@ function getImageMetadata(blob) {
             return BlobReader.loadUint8Array(blob).then((bytes) => {
                 var dimensions = JPEGAnalyser.getDimensions(bytes);
                 var orientation = JPEGAnalyser.getOrientation(bytes);
+                if (!dimensions) {
+                    throw new Error('Invalid JPEG file');
+                }
                 var width, height;
                 if (orientation < 5) {
                     width = dimensions.width;
@@ -174,7 +177,6 @@ function getImageMetadata(blob) {
                     width = dimensions.height;
                     height = dimensions.width;
                 }
-                console.log({ width, height, format });
                 return { width, height, format };
             });
         } else {

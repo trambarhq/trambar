@@ -39,8 +39,8 @@ function loadArrayBuffer(blob) {
     }
     if (process.env.PLATFORM === 'cordova') {
         if (blob instanceof CordovaFile) {
-            return blob.getFileEntry((fileEntry) => {
-                return loadArrayBuffer(fileEntry);
+            return blob.getFile().then((file) => {
+                return loadArrayBuffer(file);
             });
         }
     }
