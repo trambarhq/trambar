@@ -15,6 +15,7 @@
         color: #cccccc;
         padding: 0.5em 0.5em 0.5em 0.5em;
         line-height: 125%;
+        pointer-events: auto;
 
         .ui {
             display: inline-block;
@@ -33,6 +34,7 @@
         left: 0;
         right: 0;
         padding: 0.5em 0.5em 0.5em 0.5em;
+        pointer-events: auto;
 
         .buttons {
             float: right;

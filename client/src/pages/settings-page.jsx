@@ -201,7 +201,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.currentUser !== nextProps.currentUser) {
             var state = { user: null };
-            if (!nextProps.currentUser.uncommitted) {
+            if (nextProps.currentUser && !nextProps.currentUser.uncommitted) {
                 state.original = nextProps.currentUser;
             }
             this.setState({ user: null });

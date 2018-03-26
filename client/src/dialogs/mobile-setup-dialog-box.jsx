@@ -58,7 +58,7 @@ module.exports = Relaks.createClass({
                 props.activationCode = code;
             });
         }).then(() => {
-            return DeviceFinder.findUserDevices(db, props.user).then((devices) => {
+            return DeviceFinder.findUserDevices(db, props.currentUser).then((devices) => {
                 props.devices = devices;
             });
         }).then(() => {
@@ -147,8 +147,8 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
             var StartPage = require('pages/start-page');
             var urlParts = StartPage.getURL({ activationCode, schema });
             url = UniversalLink.form(address, urlParts.path, urlParts.query);
+            console.log(url);
         }
-        console.log(url);
         return (
             <div className="contents">
                 <QRCode text={url} scale={6} />

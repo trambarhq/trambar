@@ -51,7 +51,6 @@ module.exports = React.createClass({
      */
     render: function() {
         var t = this.props.locale.translate;
-
         return (
             <SettingsPanel className="mobile-alert">
                 <header>

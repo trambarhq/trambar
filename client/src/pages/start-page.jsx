@@ -152,6 +152,7 @@ var StartPage = module.exports = Relaks.createClass({
                 if (params.address && params.activationCode) {
                     meanwhile.show(<StartPageSync {...props} />);
                     return db.acquireMobileSession(params.activationCode).then((userId) => {
+                        console.log('acquired');
                         // create entry in device table
                         var device = {
                             type: getDeviceType(),
@@ -187,14 +188,19 @@ var StartPage = module.exports = Relaks.createClass({
         } else {
             // handle things normally after we've gained authorization
             //
-            // keep showing what was there before until we've retrieved
-            // (delay = undefined)
-            meanwhile.show(<StartPageSync {...props} />);
+            // in cordova version, render immediately so user knows the code
+            // has been accepted
+            //
+            // in browser version, keep showing what was there before until
+            // everything has been retrieved
+            var delay = (process.env.PLATFORM === 'cordova') ? 0 : undefined;
+            meanwhile.show(<StartPageSync {...props} />, delay);
             return db.start().then((currentUserId) => {
                 return UserFinder.findUser(db, currentUserId).then((user) => {
                     props.currentUser = user;
                 });
             }).then(() => {
+                meanwhile.show(<StartPageSync {...props} />);
                 return SystemFinder.findSystem(db).then((system) => {
                     props.system = system;
                 });
@@ -534,7 +540,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
         var n = this.props.locale.name;
-        var name;
+        var name = '\u00a0';
         var user = this.props.currentUser;
         if (user) {
             name = n(user.details.name, user.details.gender);
