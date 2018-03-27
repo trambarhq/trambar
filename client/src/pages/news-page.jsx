@@ -121,11 +121,9 @@ module.exports = Relaks.createClass({
      */
     renderAsync: function(meanwhile) {
         // don't wait for remote data unless the route changes
-        // or if we're focusing on a specific story
         var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
-        var blocking = freshRoute || !!params.story;
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this, blocking });
+        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
