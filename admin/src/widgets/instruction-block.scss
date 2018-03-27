@@ -26,6 +26,7 @@
 
         &.collapsing {
             transition: height 1s linear 0.5s;
+            pointer-events: none;
         }
     }
 
