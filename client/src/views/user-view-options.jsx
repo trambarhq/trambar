@@ -286,7 +286,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleBiweeklyActivitiesClick: function(evt) {
-        this.triggerChangeEvent({ chartRange: 'biweekly' });
+        var chartRange = 'biweekly';
+        var chartType = this.props.options.chartType || 'bar';
+        this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
     },
 
@@ -296,7 +298,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleMonthlyActivitiesClick: function(evt) {
-        this.triggerChangeEvent({ chartRange: 'monthly' });
+        var chartRange = 'monthly';
+        var chartType = this.props.options.chartType || 'bar';
+        this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
     },
 
@@ -306,7 +310,9 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleActivitiesToDateClick: function(evt) {
-        this.triggerChangeEvent({ chartRange: 'full' });
+        var chartRange = 'full';
+        var chartType = this.props.options.chartType || 'bar';
+        this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
     },
 
