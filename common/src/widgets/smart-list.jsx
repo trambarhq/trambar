@@ -118,99 +118,75 @@ module.exports = React.createClass({
         // trigger onBeforeAnchor on them
         var now = new Date;
         var elapsed = now - nextState.startTime;
-        var slotHash = _.transform(nextState.slots, (hash, slot) => {
+        var useTransition = (elapsed < this.props.loadDuration) ? false : true;
+        var slots = nextState.slots = _.slice(nextState.slots);
+        var slotHash = _.transform(slots, (hash, slot) => {
             hash[slot.id] = slot;
         }, {});
-        if (elapsed < this.props.loadDuration || true) {
-            // items simply appear when they first arrive
-            var hasExistingSlots = !_.isEmpty(nextState.slots);
-            nextState.slots = _.map(items, (item, index) => {
-                var id = identity(item, index);
-                var slot;
-                if (hasExistingSlots) {
-                    slot = slotHash[id];
-                    if (!slot) {
-                        // maybe item was rendered under a different id
-                        var prevId = identity(item, index, true);
-                        if (prevId) {
-                            slot = slotHash[prevId];
-                            if (slot) {
-                                // use new id from now on
-                                slot.id = id;
-                            }
-                        }
+        // find existing slots and get a list of new slots
+        var isPresent = {};
+        var newSlots = [];
+        _.each(items, (item, index) => {
+            var id = identity(item, index);
+            var slot = slotHash[id];
+            if (!slot) {
+                // maybe item was rendered under a different id
+                var prevId = identity(item, index, true);
+                if (prevId) {
+                    slot = slotHash[prevId];
+                    if (slot) {
+                        // use new id from now on
+                        slot.id = id;
                     }
                 }
-                if (slot) {
-                    slot.item = item;
-                } else {
-                    slot = this.createSlot(id, item, index, 'present', now);
-                }
-                return slot;
-            });
-        } else {
-            var slots = nextState.slots = _.slice(nextState.slots);
-            // find existing slots and get a list of new slots
-            var isPresent = {};
-            var newSlots = [];
-            _.each(items, (item, index) => {
-                var id = identity(item, index);
-                var slot = slotHash[id];
-                if (!slot) {
-                    // maybe item was rendered under a different id
-                    var prevId = identity(item, index, true);
-                    if (prevId) {
-                        slot = slotHash[prevId];
-                        if (slot) {
-                            // use new id from now on
-                            slot.id = id;
-                        }
-                    }
-                }
-                if (slot) {
-                    slot.item = item;
-                    slot.index = index;
-                    if (slot.state === 'disappearing') {
-                        slot.state = 'present';
-                        slot.removed = null;
-                    }
-                } else {
-                    // parent component might choose to not transition in item
-                    var state = transition(item, index) ? 'appearing' : 'present';
-                    slot = this.createSlot(id, item, index, state, now);
-                    newSlots.push(slot);
-                }
-                isPresent[id] = true;
-            });
-
-            // see which slots are disappearing
-            var oldSlots = [];
-            _.each(slots, (slot) => {
-                if (!isPresent[slot.id]) {
-                    if (this.isSlotVisible(slot)) {
-                        // use transition animation
-                        slot.state = 'disappearing';
-                        slot.removed = now;
-                    } else {
-                        // don't bother
-                        oldSlots.push(slot);
-                    }
-                }
-            });
-            _.pullAll(slots, oldSlots);
-
-            if (_.some(oldSlots, { unseen: true })) {
-                // items were deleted before the user has a chance to see them
-                var unseenSlots = _.filter(slots, { unseen: true });
-                this.triggerBeforeAnchorEvent(unseenSlots);
             }
+            if (slot) {
+                slot.item = item;
+                slot.index = index;
+                if (slot.state === 'disappearing') {
+                    slot.state = 'present';
+                    slot.removed = null;
+                }
+            } else {
+                // parent component might choose to not transition in item
+                var state = 'present'
+                if (useTransition && transition(item, index)) {
+                    state = 'appearing';
+                }
+                slot = this.createSlot(id, item, index, state, now);
+                newSlots.push(slot);
+            }
+            isPresent[id] = true;
+        });
 
-            // add new slots
-            _.each(newSlots, (slot) => {
-                var index = _.sortedIndexBy(slots, slot, 'index');
-                slots.splice(index, 0, slot);
-            });
+        // see which slots are disappearing
+        var oldSlots = [];
+        _.each(slots, (slot) => {
+            if (!isPresent[slot.id]) {
+                if (useTransition && this.isSlotVisible(slot)) {
+                    // use transition animation
+                    slot.state = 'disappearing';
+                    slot.removed = now;
+                } else {
+                    // don't bother
+                    oldSlots.push(slot);
+                }
+            }
+        });
+        _.pullAll(slots, oldSlots);
+
+        if (_.some(oldSlots, { unseen: true })) {
+            // items were deleted before the user has a chance to see them
+            var unseenSlots = _.filter(slots, { unseen: true });
+            this.triggerBeforeAnchorEvent(unseenSlots);
         }
+
+        // add new slots
+        _.each(newSlots, (slot) => {
+            var index = _.sortedIndexBy(slots, slot, 'index');
+            slots.splice(index, 0, slot);
+        });
+
         if (nextProps.fresh) {
             // reset the anchor
             nextState.currentAnchor = nextProps.anchor;
