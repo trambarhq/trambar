@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var Moment = require('moment');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var FocusManager = require('utils/focus-manager');
@@ -53,6 +54,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onBump: PropTypes.func,
     },
 
     /**
@@ -732,29 +735,30 @@ module.exports = React.createClass({
                     this.saveStory(tempCopy);
                 } else {
                     // story hasn't been saved yet--edit it directly
-                    var columns = {
-                        id: story.id,
-                        published: false
-                    };
-                    this.saveStory(columns);
+                    var storyAfter = _.clone(story);
+                    storyAfter.published = false;
+                    this.saveStory(storyAfter);
                 }
             }
             if (options.removeStory && !before.removeStory) {
                 this.removeStory(story);
             }
             if (options.bumpStory && !before.bumpStory) {
-                var columns = {
-                    id: story.id,
-                    bump: true
-                };
-                this.saveStory(columns);
+                var storyAfter = _.clone(story);
+                storyAfter.bump = true;
+                storyAfter.btime = Moment().toISOString();
+                this.saveStory(storyAfter);
+                if (this.props.onBump) {
+                    this.props.onBump({
+                        type: 'bump',
+                        target: this,
+                    });
+                }
             }
             if (options.hideStory !== before.hideStory) {
-                var columns = {
-                    id: story.id,
-                    public: !options.hideStory
-                };
-                this.saveStory(columns);
+                var storyAfter = _.clone(story);
+                storyAfter.public = !options.hideStory;
+                this.saveStory(storyAfter);
             }
             if (options.keepBookmark !== before.keepBookmark) {
                 if (this.props.bookmark && !options.keepBookmark) {

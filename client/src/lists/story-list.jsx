@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var ComponentRefs = require('utils/component-refs');
 var UserFinder = require('objects/finders/user-finder');
 var RepoFinder = require('objects/finders/repo-finder');
 var BookmarkFinder = require('objects/finders/bookmark-finder');
@@ -173,6 +174,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            list: SmartList
+        });
         return {
             hiddenStoryIds: [],
             selectedStoryId: null,
@@ -196,12 +200,14 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
+        var setters = this.components.setters;
         var stories = sortStories(this.props.stories, this.props.pendingStories);
         if (this.props.acceptNewStory) {
             stories = attachDrafts(stories, this.props.draftStories, this.props.currentUser);
         }
         var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
         var smartListProps = {
+            ref: setters.list,
             items: stories,
             offset: 20,
             behind: 4,
@@ -355,6 +361,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     route: this.props.route,
                     locale: this.props.locale,
                     theme: this.props.theme,
+                    onBump: this.handleStoryBump,
                 };
                 return <StoryView {...storyProps} />
             } else {
@@ -402,6 +409,15 @@ var StoryListSync = module.exports.Sync = React.createClass({
             selectedStoryId: _.first(this.state.hiddenStoryIds),
         });
     },
+
+    /**
+     * Scroll back to the top when a story is bumped
+     *
+     * @param  {Object} evt
+     */
+    handleStoryBump: function(evt) {
+        this.components.list.releaseAnchor();
+    }
 });
 
 var array = Memoize(function(object) {
@@ -418,8 +434,6 @@ var sortStories = Memoize(function(stories, pendingStories) {
         });
     }
     return _.orderBy(stories, [ getStoryTime, 'id' ], [ 'desc', 'desc' ]);
-
-    return stories;
 });
 
 var attachDrafts = Memoize(function(stories, drafts, currentUser) {

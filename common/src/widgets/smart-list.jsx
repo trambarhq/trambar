@@ -52,6 +52,13 @@ module.exports = React.createClass({
     },
 
     /**
+     * Reset scroll position
+     */
+    releaseAnchor: function() {
+        this.setState({ currentAnchor: null });
+    },
+
+    /**
      * Change state.currentAnchor when props.anchor changes
      *
      * @param  {Object} nextProps
@@ -119,14 +126,13 @@ module.exports = React.createClass({
         var now = new Date;
         var elapsed = now - nextState.startTime;
         var useTransition = (elapsed < this.props.loadDuration) ? false : true;
-        var slots = nextState.slots = _.slice(nextState.slots);
+        var slots = _.slice(nextState.slots);
         var slotHash = _.transform(slots, (hash, slot) => {
             hash[slot.id] = slot;
         }, {});
-        // find existing slots and get a list of new slots
         var isPresent = {};
-        var newSlots = [];
         _.each(items, (item, index) => {
+            // look for existing slot
             var id = identity(item, index);
             var slot = slotHash[id];
             if (!slot) {
@@ -154,7 +160,7 @@ module.exports = React.createClass({
                     state = 'appearing';
                 }
                 slot = this.createSlot(id, item, index, state, now);
-                newSlots.push(slot);
+                slots.push(slot);
             }
             isPresent[id] = true;
         });
@@ -181,11 +187,7 @@ module.exports = React.createClass({
             this.triggerBeforeAnchorEvent(unseenSlots);
         }
 
-        // add new slots
-        _.each(newSlots, (slot) => {
-            var index = _.sortedIndexBy(slots, slot, 'index');
-            slots.splice(index, 0, slot);
-        });
+        nextState.slots = _.sortBy(slots, 'index');
 
         if (nextProps.fresh) {
             // reset the anchor
