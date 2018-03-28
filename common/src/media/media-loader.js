@@ -3,6 +3,9 @@ var BlobManager = require('transport/blob-manager');
 var BlobReader = require('transport/blob-reader');
 var JPEGAnalyser = require('media/jpeg-analyser');
 var FrameGrabber = require('media/frame-grabber');
+if (process.env.PLATFORM === 'cordova') {
+    var CordovaFile = require('transport/cordova-file');
+}
 
 module.exports = {
     loadImage,
@@ -28,6 +31,14 @@ function loadImage(blob) {
     if (typeof(blob) === 'string') {
         url = blob;
     } else {
+        if (process.env.PLATFORM === 'cordova') {
+            if (blob instanceof CordovaFile) {
+                return blob.getArrayBuffer().then((arrayBuffer) => {
+                    var newBlob = new Blob([ arrayBuffer ], { type: blob.type });
+                    return loadImage(newBlob);
+                });
+            }
+        }
         url = BlobManager.manage(blob);
     }
     return new Promise((resolve, reject) => {

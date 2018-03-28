@@ -39,9 +39,7 @@ function loadArrayBuffer(blob) {
     }
     if (process.env.PLATFORM === 'cordova') {
         if (blob instanceof CordovaFile) {
-            return blob.getFile().then((file) => {
-                return loadArrayBuffer(file);
-            });
+            return blob.getArrayBuffer();
         }
     }
     return new Promise((resolve, reject) => {
@@ -79,10 +77,10 @@ function loadText(blob) {
     }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();
-        reader.onload = function(evt) {
+        reader.onload = (evt) => {
             resolve(reader.result);
         };
-        reader.onerror = function(evt) {
+        reader.onerror = (evt) => {
             reject(new Error(`Unable to load text`));
         };
         reader.readAsText(blob);

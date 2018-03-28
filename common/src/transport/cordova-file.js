@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var Promise = require('promise');
+var Promise = require('bluebird');
 var FileError = require('errors/file-error');
 
 module.exports = CordovaFile;
@@ -17,6 +17,10 @@ function CordovaFile(fullPath, type, size) {
     this.name = name;
     this.type = type;
     this.size = size;
+
+    this.fileEntry = null;
+    this.file = null;
+    this.arrayBuffer = null;
 }
 
 /**
@@ -50,6 +54,25 @@ CordovaFile.prototype.getFile = function() {
             }, (err) => {
                 reject(new FileError(err));
             });
+        });
+    });
+};
+
+CordovaFile.prototype.getArrayBuffer = function() {
+    if (this.arrayBuffer) {
+        return Promise.resolve(this.arrayBuffer);
+    }
+    return this.getFile().then((file) => {
+        return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+            reader.onload = (evt) => {
+                this.arrayBuffer = reader.result;
+                resolve(reader.result);
+            };
+            reader.onerror = (evt) => {
+                reject(new Error(`Unable to load file`));
+            };
+            reader.readAsArrayBuffer(file);
         });
     });
 };
