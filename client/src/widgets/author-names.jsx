@@ -45,7 +45,7 @@ function AuthorNames(props) {
             var others = <MultipleUserNames key={3} {...props} />
             contents = t('story-author-$name1-and-$name2', name1, others);
     }
-    return <span className="author-names">{contents}</span>;
+    return <span className="author-names selectable">{contents}</span>;
 }
 
 AuthorNames.propTypes = {
