@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var HTTPError = require('errors/http-error');
+var TemporaryId = require('data/remote-data-source/temporary-id');
 
 module.exports = Database;
 
@@ -35,6 +36,17 @@ Database.prototype.findOne = function(query) {
     return this.find(query).then((objects) => {
         return objects[0] || null;
     });
+};
+
+/**
+ * Assign a temporary id to an object
+ *
+ * @param  {Object} object
+ */
+Database.prototype.track = function(object) {
+    if (object && !object.id) {
+        object.id = TemporaryId.allocate();
+    }
 };
 
 /**

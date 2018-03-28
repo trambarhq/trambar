@@ -864,6 +864,10 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     saveDraft: function(draft, immediate, resourceIndex) {
+        // assign a temporary id to a new draft immediately so we don't create
+        // a duplicate copy if a second input event shows up prior the draft
+        // arriving through props
+        this.props.database.track(draft);
         draft.public = !this.state.options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
             this.saveStory(story, immediate);

@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 
 var LocalSearch = require('data/local-search');
+var TemporaryId = require('data/remote-data-source/temporary-id');
 
 module.exports = Change;
 
@@ -12,7 +13,7 @@ function Change(location, objects, options) {
             object = _.clone(object);
             if (!object.id) {
                 // assign a temporary id so we can find the object again
-                object.id = getTemporaryId();
+                object.id = TemporaryId.allocate();
             }
             object.uncommitted = true;
         }
@@ -231,16 +232,3 @@ Change.prototype.noop = function() {
 Change.prototype.matchLocation = function(location) {
     return _.isEqual(this.location, location);
 }
-
-/**
- * Return a temporary id that can be used to identify an uncommitted object
- *
- * @return {Number}
- */
-function getTemporaryId() {
-    var newTemporaryId = lastTemporaryId + 0.000000001;
-    lastTemporaryId = newTemporaryId;
-    return newTemporaryId;
-}
-
-var lastTemporaryId = 0;
