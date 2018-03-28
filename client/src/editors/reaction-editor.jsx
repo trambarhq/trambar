@@ -97,6 +97,7 @@ module.exports = React.createClass({
     updateDraft: function(nextState, nextProps) {
         if (nextProps.reaction) {
             nextState.draft = nextProps.reaction;
+            console.log('draft', nextState.draft);
             if (!nextProps.reaction.uncommitted) {
                 nextState.original = nextProps.reaction;
             }

@@ -91,9 +91,6 @@ module.exports = React.createClass({
      * @return {String|undefined}
      */
     handleReactionIdentity: function(evt) {
-        if (this.props.story.id === 779) {
-            console.log('identity: ' + evt.item.id + ' (' + evt.alternative + ')');
-        }
         if (evt.alternative) {
             var params = this.props.route.parameters;
             var location = { schema: params.schema, table: 'reaction' };

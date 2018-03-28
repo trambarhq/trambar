@@ -118,17 +118,38 @@ module.exports = React.createClass({
         // trigger onBeforeAnchor on them
         var now = new Date;
         var elapsed = now - nextState.startTime;
-        if (elapsed < this.props.loadDuration) {
+        var slotHash = _.transform(nextState.slots, (hash, slot) => {
+            hash[slot.id] = slot;
+        }, {});
+        if (elapsed < this.props.loadDuration || true) {
             // items simply appear when they first arrive
+            var hasExistingSlots = !_.isEmpty(nextState.slots);
             nextState.slots = _.map(items, (item, index) => {
                 var id = identity(item, index);
-                return this.createSlot(id, item, index, 'present', now);
+                var slot;
+                if (hasExistingSlots) {
+                    slot = slotHash[id];
+                    if (!slot) {
+                        // maybe item was rendered under a different id
+                        var prevId = identity(item, index, true);
+                        if (prevId) {
+                            slot = slotHash[prevId];
+                            if (slot) {
+                                // use new id from now on
+                                slot.id = id;
+                            }
+                        }
+                    }
+                }
+                if (slot) {
+                    slot.item = item;
+                } else {
+                    slot = this.createSlot(id, item, index, 'present', now);
+                }
+                return slot;
             });
         } else {
             var slots = nextState.slots = _.slice(nextState.slots);
-            var slotHash = _.transform(slots, (hash, slot) => {
-                hash[slot.id] = slot;
-            }, {});
             // find existing slots and get a list of new slots
             var isPresent = {};
             var newSlots = [];
