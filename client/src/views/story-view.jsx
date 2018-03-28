@@ -143,12 +143,10 @@ module.exports = React.createClass({
         if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations) {
             this.updateOptions(nextState, nextProps);
         }
-        if (this.props.reactions !== nextProps.reactions) {
+        if (this.props.reactions !== nextProps.reactions || this.props.respondents !== nextProps.respondents) {
             nextState.commentsExpanded = this.shouldExpandComments(nextProps);
         }
-        var changes = _.pickBy(nextState, (value, name) => {
-            return this.state[name] !== value;
-        });
+        var changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
