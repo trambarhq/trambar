@@ -196,16 +196,15 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     updateOptions: function(nextState, nextProps) {
-        var options = nextState.options;
         if (!nextProps.story) {
             // reset options to default when a new story starts
-            options = defaultOptions;
+            nextState.options = defaultOptions;
         } else {
-            options = nextState.options = _.clone(options);
-            options.hidePost = !nextState.draft.public;
-            options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
-            if (!options.preview) {
-                options.preview = this.choosePreview(nextState.draft);
+            nextState.options = _.clone(nextState.options);
+            nextState.options.hidePost = !nextState.draft.public;
+            nextState.options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
+            if (!nextState.options.preview) {
+                nextState.options.preview = this.choosePreview(nextState.draft);
             }
         }
     },
@@ -219,7 +218,7 @@ module.exports = React.createClass({
     updateBookmarkRecipients: function(nextState, nextProps) {
         var targetUserIds = _.map(nextProps.recommendations, 'target_user_id');
         nextState.options = _.clone(nextState.options);
-        nextState.options.bookmarkRecipients = targetUserIds;
+        nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIds);
     },
 
     /**
@@ -865,6 +864,7 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     saveDraft: function(draft, immediate, resourceIndex) {
+        draft.public = !this.state.options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
             this.saveStory(story, immediate);
             return story;
@@ -1031,7 +1031,6 @@ module.exports = React.createClass({
             });
             draft.tags = _.union(draft.tags, issueTags);
         }
-        draft.public = !options.hidePost;
         draft.published = true;
 
         return this.saveDraft(draft, true).then((story) => {
