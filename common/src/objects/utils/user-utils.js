@@ -211,9 +211,6 @@ function canCreateBookmark(user, story, access) {
     if (!user) {
         return false;
     }
-    if (access !== 'read-write') {
-        return false;
-    }
     return true;
 }
 
@@ -228,6 +225,9 @@ function canCreateBookmark(user, story, access) {
  */
 function canSendBookmarks(user, story, access) {
     if (user.type === 'guest') {
+        return false;
+    }
+    if (access !== 'read-write') {
         return false;
     }
     return canCreateBookmark(user, story, access);
