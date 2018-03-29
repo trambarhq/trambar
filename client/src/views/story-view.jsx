@@ -195,6 +195,15 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderSingleColumn: function() {
+        var reactionToolbar = this.renderReactionToolbar();
+        var reactionLink = this.renderReactionLink();
+        var needPadding = false;
+        if (reactionToolbar || reactionLink) {
+            needPadding = true;
+            if (!reactionToolbar) {
+                reactionToolbar = '\u00a0';
+            }
+        }
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -212,9 +221,9 @@ module.exports = React.createClass({
                     </div>
                 </div>
                 <div className="header">
-                    <div className="column-2 padded">
-                        {this.renderReactionToolbar()}
-                        {this.renderReactionLink()}
+                    <div className={'column-2' + (needPadding ? ' padded' : '')}>
+                        {reactionToolbar}
+                        {reactionLink}
                     </div>
                 </div>
                 <div className="body">
@@ -340,8 +349,12 @@ module.exports = React.createClass({
         if (!StoryUtils.isSaved(this.props.story)) {
             return null;
         }
+        var access = this.props.access;
+        if (access !== 'read-comment' && access !== 'read-write') {
+            return null;
+        }
         var props = {
-            access: this.props.access,
+            access: access,
             currentUser: this.props.currentUser,
             reactions: this.props.reactions,
             respondents: this.props.respondents,
@@ -359,7 +372,7 @@ module.exports = React.createClass({
      */
     renderReactionLink: function() {
         if (this.state.commentsExpanded) {
-            return null;
+            return '\u00a0';
         }
         var count = _.size(this.props.reactions);
         if (count === 0) {
