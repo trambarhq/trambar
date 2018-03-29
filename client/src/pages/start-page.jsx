@@ -8,6 +8,7 @@ var UniversalLink = require('routing/universal-link');
 var ProjectFinder = require('objects/finders/project-finder');
 var SystemFinder = require('objects/finders/system-finder');
 var UserFinder = require('objects/finders/user-finder');
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -266,58 +267,6 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 lastError: null,
             };
         }
-    },
-
-    /**
-     * Return true if current user is a member of the project
-     *
-     * @param  {Project} project
-     *
-     * @return {Boolean}
-     */
-    isMember: function(project) {
-        var currentUser = this.props.currentUser;
-        if (currentUser) {
-            return _.includes(project.user_ids, currentUser.id);
-        } else {
-            return false;
-        }
-    },
-
-    /**
-     * Return true if current user has requested project membership
-     *
-     * @param  {Project} project
-     *
-     * @return {Boolean}
-     */
-    isPendingMember: function(project) {
-        var currentUser = this.props.currentUser;
-        if (currentUser) {
-            return _.includes(currentUser.requested_project_ids, project.id);
-        } else {
-            return false;
-        }
-    },
-
-    /**
-     * Return true if current user has read access to project
-     *
-     * @param  {Project} project
-     *
-     * @return {Boolean}
-     */
-    hasReadAccess: function(project) {
-        if (this.isMember(project)) {
-            return true;
-        } else {
-            if (this.props.currentUser.type === 'admin') {
-                return true;
-            } else {
-                return _.get(project, 'settings.access_control.grant_view_access');
-            }
-        }
-        return false;
     },
 
     /**
@@ -834,10 +783,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
 
         // add badge to indicate membership status
         var badge;
-        if (this.isMember(project)) {
+        if (UserUtils.isMember(this.props.currentUser, project)) {
             // is member
             badge = <i className="fa fa-user-circle-o badge" />;
-        } else if (this.isPendingMember(project)) {
+        } else if (UserUtils.isPendingMember(this.props.currentUser, project)) {
             // pending
             badge = <i className="fa fa-clock-o badge" />;
         }
@@ -846,7 +795,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             'data-project-id': project.id,
             className: 'project-button'
         };
-        if (this.hasReadAccess(project)) {
+        if (UserUtils.isMember(this.props.currentUser, project)) {
             // link to the project's news page
             props.href = this.props.route.find(this.getTargetPage(), { schema: project.name });
         } else {
@@ -891,13 +840,14 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (!selectedProject) {
             return null;
         }
+        var currentUser = this.props.currentUser;
         var dialogProps = {
             show: this.state.showingProjectDialog,
-            currentUser: this.props.currentUser,
+            currentUser: currentUser,
             project: selectedProject,
-            member: this.isMember(selectedProject),
-            pendingMember: this.isPendingMember(selectedProject),
-            readAccess: this.hasReadAccess(selectedProject),
+            member: UserUtils.isMember(currentUser, selectedProject),
+            pendingMember: UserUtils.isPendingMember(currentUser, selectedProject),
+            readAccess: UserUtils.canViewProject(currentUser, selectedProject),
 
             database: this.props.database,
             route: this.props.route,

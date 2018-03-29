@@ -5,8 +5,11 @@ var ReactionUtils = require('objects/utils/reaction-utils');
 var NotificationTypes = require('objects/types/notification-types');
 
 module.exports = {
+    isMember,
+    isPendingMember,
     isAuthor,
     isRespondent,
+    canViewProject,
     canModerate,
     canEditStory,
     canHideStory,
@@ -22,6 +25,57 @@ module.exports = {
     canReceiveNotification,
     mergeRemoteChanges: StoryUtils.mergeRemoteChanges,
 };
+
+/**
+ * Return true if user is a member of the project
+ *
+ * @param  {User} user
+ * @param  {Project} project
+ *
+ * @return {Boolean}
+ */
+function isMember(user, project) {
+    if (!user || !project) {
+        return false;
+    }
+    return _.includes(project.user_ids, user.id);
+}
+
+/**
+ * Return true if user has requested project membership
+ *
+ * @param  {User} user
+ * @param  {Project} project
+ *
+ * @return {Boolean}
+ */
+function isPendingMember(user, project) {
+    if (!user || !project) {
+        return false;
+    }
+    return _.includes(user.requested_project_ids, project.id);
+}
+
+/**
+ * Return true if current user has read access to project
+ *
+ * @param  {User} user
+ * @param  {Project} project
+ *
+ * @return {Boolean}
+ */
+function canViewProject(user, project) {
+    if (isMember(user, project)) {
+        return true;
+    } else {
+        if (user.type === 'admin') {
+            return true;
+        } else {
+            return _.get(project, 'settings.access_control.grant_view_access', false);
+        }
+    }
+    return false;
+}
 
 function isAuthor(user, story) {
     if (!user || !story) {
