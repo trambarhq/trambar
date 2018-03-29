@@ -318,9 +318,12 @@ module.exports = React.createClass({
     /**
      * Render option button
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderOptionButton: function() {
+        if (!this.props.reaction.published) {
+            return null;
+        }
         var props = {
             access: this.props.access,
             currentUser: this.props.currentUser,
@@ -337,9 +340,12 @@ module.exports = React.createClass({
     /**
      * Render the publication time
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderProgress: function() {
+        if (!this.props.reaction.published) {
+            return null;
+        }
         var props = {
             reaction: this.props.reaction,
             locale: this.props.locale,
