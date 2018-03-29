@@ -1028,10 +1028,11 @@ module.exports = React.createClass({
      * Perform a search on the server sude
      *
      * @param  {Search} search
+     * @param  {Boolean} background
      *
      * @return {Promise<Boolean>}
      */
-    searchRemoteDatabase: function(search) {
+    searchRemoteDatabase: function(search, background) {
         if (search.isLocal()) {
             return Promise.resolve(false);
         }
@@ -1663,7 +1664,7 @@ module.exports = React.createClass({
                     return false;
                 }
                 console.log('Prefetching', search.getQuery());
-                return this.searchRemoteDatabase(search).then(() => {
+                return this.searchRemoteDatabase(search, true).then(() => {
                     _.each(search.by, (component) => {
                         fetched.push({ component, shape });
                     });
