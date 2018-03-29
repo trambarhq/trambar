@@ -181,12 +181,12 @@ function getImageMetadata(blob) {
                     throw new Error('Invalid JPEG file');
                 }
                 var width, height;
-                if (orientation < 5) {
-                    width = dimensions.width;
-                    height = dimensions.height;
-                } else {
+                if (orientation >= 5) {
                     width = dimensions.height;
                     height = dimensions.width;
+                } else {
+                    width = dimensions.width;
+                    height = dimensions.height;
                 }
                 return { width, height, format };
             });
