@@ -147,7 +147,11 @@ module.exports = React.createClass({
             this.updateOptions(nextState, nextProps);
         }
         if (this.props.reactions !== nextProps.reactions || this.props.respondents !== nextProps.respondents) {
-            nextState.commentsExpanded = this.shouldExpandComments(nextProps);
+            if (nextState.commentsExpanded !== true) {
+                if (this.shouldExpandComments(nextProps)) {
+                    nextState.commentsExpanded = true;
+                }
+            }
         }
         var changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
