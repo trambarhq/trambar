@@ -21,8 +21,9 @@ var Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (fi
 var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
     if (/\.js$/.test(filename)) {
         var module = require(`story-raters/${filename}`);
-        // retrieval time rating cannot be applied until the listing is being retrieved
-        if (module.type !== 'by-retrieval-time') {
+        // certain ratings cannot be applied until the listing is being retrieved
+        // (e.g. by retrieval time)
+        if (module.calculation !== 'deferred') {
             return module;
         }
     }
@@ -48,7 +49,9 @@ function start() {
         }).then(() => {
             // capture event for tables that the story raters are monitoring
             // (for the purpose of cache invalidation)
-            var tables = _.filter(_.uniq(_.flatten(_.map(StoryRaters, 'monitoring'))));
+            var raterTables = _.uniq(_.flatten(_.map(StoryRaters, 'monitoring')));
+            // listen for changes to stories so we can invalidate cache
+            var tables = _.filter(_.union([ 'story' ], raterTables));
             return db.listen(tables, 'change', handleDatabaseChanges, 0);
         });
     });
@@ -105,6 +108,17 @@ function handleDatabaseChanges(events) {
             }
         });
     });
+    // invalidate story cache
+    var publishedStoryEvents = _.filter(events, (evt) => {
+        if (evt.table === 'story') {
+            if (evt.current.published && evt.current.ready && !evt.current.deleted) {
+                return true;
+            }
+        }
+    });
+    if (!_.isEmpty(publishedStoryEvents)) {
+        Story.clearCache(publishedStoryEvents);
+    }
 }
 
 /**
@@ -340,7 +354,7 @@ function processNextInListingQueue() {
 }
 
 /**
- * Update a statistics row, identified by id
+ * Update a listing, identified by id
  *
  * @param  {String} schema
  * @param  {Number} id
@@ -357,45 +371,43 @@ function updateListing(schema, id) {
             if (!listing) {
                 return null;
             }
-            var oldStories = _.get(listing.details, 'stories', []);
-            var newStories = _.get(listing.details, 'candidates', []);
-            var earliest = _.reduce(oldStories, (earliest, story) => {
-                if (!earliest || story.btime < earliest) {
-                    earliest = story.btime;
-                }
-                return earliest;
-            }, undefined);
-            // look for new stories matching filters that aren't in the listing yet
+            var retrievedStories = _.get(listing.details, 'stories', []);
+            var lastRetrievedStory = _.maxBy(retrievedStories, 'rtime');
+            var lastRetrievalTime = (lastRetrievedStory) ? lastRetrievedStory.rtime : null;
+
             var filterCriteria = _.pick(listing.filters, _.keys(Story.criteria));
             var criteria = _.extend({}, filterCriteria, {
                 published: true,
                 ready: true,
+                deleted: false,
                 published_version_id: null,
-                exclude: _.map(_.concat(oldStories, newStories), 'id'),
-                bumped_after: earliest,
                 order: 'btime DESC',
                 limit: maxCandidateCount,
             });
             var columns = _.flatten(_.map(StoryRaters, 'columns'));
             columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
             columns = _.uniq(columns);
-            return Story.find(db, schema, criteria, columns.join(', ')).then((rows) => {
-                // insert into list, order by btime
-                var candidates = _.slice(newStories);
-                _.each(rows, (row) => {
-                    var index = _.sortedIndexBy(candidates, row, 'btime');
-                    candidates.splice(index, 0, row);
-                });
-                if (candidates.length > maxCandidateCount) {
-                    // remove older ones
-                    candidates.splice(0, candidates.length - maxCandidateCount);
+            return Story.findCached(db, schema, criteria, columns.join(', ')).filter((row) => {
+                // include only if it's newer (or recently bumped) than those
+                // already retrieved
+                if (lastRetrievalTime) {
+                    return (row.btime > lastRetrievalTime);
+                } else {
+                    return true;
                 }
-
+            }).then((rows) => {
                 // asynchronously retrieve data needed to rate the candidates
-                return prepareStoryRaterContexts(db, schema, candidates, listing).then((contexts) => {
+                return prepareStoryRaterContexts(db, schema, rows, listing).then((contexts) => {
+                    var candidates = [];
                     // calculate the rating of each candidate story
-                    _.each(candidates, (candidate) => {
-                        candidate.rating = calculateStoryRating(contexts, candidate);
+                    _.each(rows, (row) => {
+                        var candidate = {
+                            id: row.id,
+                            btime: row.btime,
+                            rating: calculateStoryRating(contexts, row),
+                        };
+                        var index = _.sortedIndexBy(candidates, candidate, 'btime');
+                        candidates.splice(index, 0, candidate);
                     });
 
                     // save the new candidate list

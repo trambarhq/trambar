@@ -274,11 +274,6 @@ function chooseStories(row) {
     var newStories = _.get(row.details, 'candidates', []);
     var oldStories = _.get(row.details, 'stories', []);
 
-    // remove stories that are still candidates (they were added during data prefetch)
-    oldStories = _.filter(oldStories, (story) => {
-        return !_.some(newStories, { id: story.id });
-    });
-
     // we want to show as many new stories as possible
     var newStoryCount = newStories.length;
     // at the same time, we want to preserve as many old stories as we can
@@ -326,7 +321,7 @@ function chooseStories(row) {
         if (newStoryCount !== newStories.length) {
             // apply retrieval time rating adjustments
             var context = ByRetrievalTime.createContext(newStories, row);
-            _.each(newStories, (story) => {
+            _.eachRight(newStories, (story) => {
                 story.rating += ByRetrievalTime.calculateRating(context, story);
             });
 

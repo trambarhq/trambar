@@ -5,6 +5,7 @@ var Role = require('accessors/role');
 
 module.exports = {
     type: 'by-role',
+    calculation: 'immediate',
     columns: [ 'role_ids' ],
     monitoring: [ 'role' ],
     roleCache: [],

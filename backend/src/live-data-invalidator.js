@@ -182,13 +182,13 @@ function loadObjectsForFilters(db, schema, table, filteredColumns, fixedFilters,
                 // only need to do this for the first event
                 _.each(fixedFilters, (value, column) => {
                     if (!current.hasOwnProperty(column)) {
-                        throw new Error(`Missing column: ${column}`);
+                        throw new Error(`Missing column in event object for ${table}: ${column}`);
                     }
                 });
                 _.each(filteredColumns, (column) => {
                     if (column !== 'id') {
                         if (!current.hasOwnProperty(column)) {
-                            throw new Error(`Missing column: ${column}`);
+                            throw new Error(`Missing column in event object for ${table}: ${column}`);
                         }
                     }
                 });

@@ -7,6 +7,7 @@ var ReactionTypeRatings = require('story-raters/ratings/reaction-type-ratings');
 
 module.exports = {
     type: 'by-popularity',
+    calculation: 'immediate',
     columns: [ 'id' ],
     monitoring: [ 'statistics' ],
     statisticsCache: [],

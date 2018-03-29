@@ -5,6 +5,7 @@ var StoryTypeRatings = require('story-raters/ratings/story-type-ratings');
 
 module.exports = {
     type: 'by-type',
+    calculation: 'immediate',
     columns: [ 'type' ],
     monitoring: [],
 

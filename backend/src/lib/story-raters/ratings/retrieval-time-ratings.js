@@ -1,6 +1,8 @@
 module.exports = {
-    'recent': 40,
-    'today': 30,
-    'yesterday': 20,
-    'week': 10,
+    'recent': 50,
+    'today': 40,
+    'yesterday': 30,
+    'week': 20,
+    'month': 10,
+    'year': 5,
 };
