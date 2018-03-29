@@ -163,7 +163,7 @@ module.exports = _.create(LiveData, {
             if (!row.finalized) {
                 if (credentials.user.id === row.target_user_id) {
                     // add new stories from list of candidates
-                    this.finalize(db, schema, row, options.backgroundRetrieval);
+                    this.finalize(db, schema, row);
                 }
             }
         });
@@ -221,10 +221,9 @@ module.exports = _.create(LiveData, {
      * @param  {Database} db
      * @param  {String} schema
      * @param  {Object} row
-     * @param  {Boolean} backgroundRetrieval
      */
-    finalize: function(db, schema, row, backgroundRetrieval) {
-        if (chooseStories(row, backgroundRetrieval)) {
+    finalize: function(db, schema, row) {
+        if (chooseStories(row)) {
             // save the results
             setTimeout(() => {
                 Database.open().then((db) => {
@@ -267,11 +266,10 @@ module.exports = _.create(LiveData, {
  * object passed directly
  *
  * @param  {Story} row
- * @param  {Boolean} backgroundRetrieval
  *
  * @return {Boolean}
  */
-function chooseStories(row, backgroundRetrieval) {
+function chooseStories(row) {
     var now = new Date;
     var limit = _.get(row.filters, 'limit', 100);
     var retention = _.get(row.filters, 'retention', 24 * HOUR);
@@ -350,10 +348,7 @@ function chooseStories(row, backgroundRetrieval) {
             };
         });
         row.details.stories = _.concat(oldStories, newStories);
-        if (!backgroundRetrieval) {
-            // clear candidate list, unless the object is being prefetched
-            row.details.candidates = [];
-        }
+        row.details.candidates = [];
         // the object is going to be sent prior to being saved
         // bump up the generation number manually
         row.gn += 1;
