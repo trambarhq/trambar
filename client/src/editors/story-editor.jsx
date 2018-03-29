@@ -10,6 +10,7 @@ var FocusManager = require('utils/focus-manager');
 var ComponentRefs = require('utils/component-refs');
 var StoryUtils = require('objects/utils/story-utils');
 var IssueUtils = require('objects/utils/issue-utils');
+var TemporaryId = require('data/remote-data-source/temporary-id');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -864,10 +865,6 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     saveDraft: function(draft, immediate, resourceIndex) {
-        // assign a temporary id to a new draft immediately so we don't create
-        // a duplicate copy if a second input event shows up prior the draft
-        // arriving through props
-        this.props.database.track(draft);
         draft.public = !this.state.options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
             this.saveStory(story, immediate);
@@ -1484,7 +1481,9 @@ var defaultOptions = {
  * @return {Story}
  */
 var createBlankStory = Memoize(function(currentUser) {
+    // assign a temporary id immediately to ensure proper merging
     return {
+        id: TemporaryId.allocate(),
         user_ids: [ currentUser.id ],
         details: {},
         public: true,

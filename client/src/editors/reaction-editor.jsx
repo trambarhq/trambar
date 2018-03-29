@@ -320,8 +320,6 @@ module.exports = React.createClass({
      * @return {Promise<Reaction>}
      */
     saveDraft: function(draft, immediate, resourceIndex) {
-        // see comment for same method in StoryEditor
-        this.props.database.track(draft);
         return this.changeDraft(draft, resourceIndex).then((reaction) => {
             this.saveReaction(reaction, immediate);
             return reaction;
