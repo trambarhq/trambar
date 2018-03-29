@@ -371,12 +371,12 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderReactionLink: function() {
-        if (this.state.commentsExpanded) {
-            return '\u00a0';
-        }
         var count = _.size(this.props.reactions);
         if (count === 0) {
             return null;
+        }
+        if (this.state.commentsExpanded) {
+            return '\u00a0';
         }
         var t = this.props.locale.translate;
         return (
