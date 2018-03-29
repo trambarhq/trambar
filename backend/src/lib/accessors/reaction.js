@@ -247,7 +247,7 @@ module.exports = _.create(ExternalData, {
                 if (row.ready === false) {
                     object.ready = false;
                 }
-                if (!object.published || !object.ready) {
+                if (!row.published || !row.ready) {
                     // don't send text when object isn't published and
                     // there the user isn't the owner
                     if (object.user_id !== credentials.user.id) {
