@@ -106,11 +106,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Отмена',
         'confirmation-confirm': 'Подтвердить',
 
-        'device-selector-camera-back': 'Задняя',
-        'device-selector-camera-front': 'Передняя',
         'device-selector-camera-$number': (number) => {
             return `Камера ${number}`;
         },
+        'device-selector-camera-back': 'Задняя',
+        'device-selector-camera-front': 'Передняя',
         'device-selector-mic-$number': (number) => {
             return `Микрофон ${number}`;
         },
@@ -142,12 +142,15 @@ module.exports = function(localeCode) {
         'media-next': 'Cледующая',
         'media-previous': 'Предыдущая',
 
+        'membership-request-$you-are-member': 'Вы являетесь участником этого проекта',
         'membership-request-$you-are-now-member': 'Вы теперь являетесь участником этого проекта',
         'membership-request-$you-have-requested-membership': 'Вы запросили членство в этом проекте',
+        'membership-request-browse': 'Просматривать',
         'membership-request-cancel': 'Отмена',
         'membership-request-join': 'Присоединиться',
         'membership-request-ok': 'OK',
         'membership-request-proceed': 'Проследовать',
+        'membership-request-withdraw': 'Отзывать',
 
         'mobile-device-revoke': 'отмени',
         'mobile-device-revoke-are-you-sure': 'Вы действительно хотите отменить авторизацию этого устройства?',

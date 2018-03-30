@@ -255,6 +255,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 transition: null,
                 selectedProjectId: 0,
                 oauthErrors: {},
+                renderingProjectDialog: false,
+                showingProjectDialog: false,
             };
         }
         if (process.env.PLATFORM === 'cordova') {
@@ -315,6 +317,17 @@ var StartPageSync = module.exports.Sync = React.createClass({
                      }
                  }
              }
+        }
+        if (this.props.projects !== nextProps.projects) {
+            if (this.state.renderingProjectDialog) {
+                if (_.some(nextProps.projects, { id: this.state.selectedProjectId })) {
+                    this.setState({
+                        renderingProjectDialog: false,
+                        showingProjectDialog: false,
+                        selectedProjectId: 0
+                    });
+                }
+            }
         }
         if (this.state.receivedCorrectQRCode && nextProps.serverError) {
             this.setState({
@@ -791,23 +804,30 @@ var StartPageSync = module.exports.Sync = React.createClass({
             badge = <i className="fa fa-clock-o badge" />;
         }
 
-        var props = {
+        var linkProps = {
             'data-project-id': project.id,
             className: 'project-button'
         };
-        if (UserUtils.isMember(this.props.currentUser, project)) {
-            // link to the project's news page
-            props.href = this.props.route.find(this.getTargetPage(), { schema: project.name });
+        var skipDialog = false;
+        var params = this.props.route.parameters;
+        if (!params.add) {
+            skipDialog = _.some(this.props.projectLinks, {
+                address: params.address,
+                schema: project.name,
+            });
+        }
+        if (skipDialog) {
+            // link to the project's news or settings page
+            linkProps.href = this.props.route.find(this.getTargetPage(), {
+                schema: project.name
+            });
         } else {
-            // add handler for requesting access
-            // (or just show the project info if user has joined already)
-            //
-            // the backend won't send projects that the user can't join
-            props.onClick = this.handleProjectButtonClick;
+            // add handler for bringing up dialog box
+            linkProps.onClick = this.handleProjectButtonClick;
         }
 
         return (
-            <a key={project.id} {...props}>
+            <a key={project.id} {...linkProps}>
                 <div className="icon">{icon}</div>
                 <div className="text">
                     {badge}
@@ -845,9 +865,6 @@ var StartPageSync = module.exports.Sync = React.createClass({
             show: this.state.showingProjectDialog,
             currentUser: currentUser,
             project: selectedProject,
-            member: UserUtils.isMember(currentUser, selectedProject),
-            pendingMember: UserUtils.isPendingMember(currentUser, selectedProject),
-            readAccess: UserUtils.canViewProject(currentUser, selectedProject),
 
             database: this.props.database,
             route: this.props.route,
@@ -855,6 +872,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
 
             onConfirm: this.handleMembershipRequestConfirm,
+            onRevoke: this.handleMembershipRequestRevoke,
             onClose: this.handleMembershipRequestClose,
             onProceed: this.handleMembershipRequestProceed,
         };
@@ -873,7 +891,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (prevProps.projects !== this.props.projects
          || prevProps.currentUser !== this.props.currentUser) {
             var accessible = _.filter(this.props.projects, (project) => {
-                return this.hasReadAccess(project)
+                return UserUtils.canViewProject(this.props.currentUser, project);
             });
             if (!_.isEmpty(accessible)) {
                 if (this.props.onAvailableSchemas) {
@@ -1004,21 +1022,31 @@ var StartPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when user clicks the confirm button in the project dialog box
+     * Called when user chooses to join a project
      *
      * @param  {Event} evt
      */
     handleMembershipRequestConfirm: function(evt) {
         var projectId = this.state.selectedProjectId;
         var project = _.find(this.props.projects, { id: projectId });
-        var projectIds = this.props.currentUser.requested_project_ids;
-        var newUserProps = {
-            id: this.props.currentUser.id,
-            requested_project_ids: _.union(projectIds, [ projectId ])
-        };
-        var route = this.props.route;
-        var db = this.props.database.use({ by: this });
-        return db.saveOne({ schema: 'global', table: 'user' }, newUserProps);
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var userAfter = _.clone(this.props.currentUser);
+        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ projectId ]);
+        return db.saveOne({ table: 'user' }, userAfter);
+    },
+
+    /**
+     * Called when user chooses to cancel a join request
+     *
+     * @param  {Event} evt
+     */
+    handleMembershipRequestRevoke: function(evt) {
+        var projectId = this.state.selectedProjectId;
+        var project = _.find(this.props.projects, { id: projectId });
+        var db = this.props.database.use({ schema: 'global', by: this });
+        var userAfter = _.clone(this.props.currentUser);
+        userAfter.requested_project_ids = _.difference(userAfter.requested_project_ids, [ projectId ]);
+        return db.saveOne({ table: 'user' }, userAfter);
     },
 
     /**

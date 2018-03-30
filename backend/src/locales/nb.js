@@ -74,11 +74,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Avbryt',
         'confirmation-confirm': 'Bekrefte',
 
-        'device-selector-camera-back': 'Bakre',
-        'device-selector-camera-front': 'Front',
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
+        'device-selector-camera-back': 'Bakre',
+        'device-selector-camera-front': 'Front',
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
@@ -110,12 +110,15 @@ module.exports = function(localeCode) {
         'media-next': 'Neste',
         'media-previous': 'Tidligere',
 
-        'membership-request-$you-are-now-member': 'Du er nå medlem i dette prosjektet',
+        'membership-request-$you-are-member': 'Du er medlem av dette prosjektet',
+        'membership-request-$you-are-now-member': 'Du er nå medlem av dette prosjektet',
         'membership-request-$you-have-requested-membership': 'Du har bedt om medlemskap i dette prosjektet',
+        'membership-request-browse': 'Bla',
         'membership-request-cancel': 'Avbryt',
         'membership-request-join': 'Bli med',
         'membership-request-ok': 'OK',
         'membership-request-proceed': 'Fortsett',
+        'membership-request-withdraw': 'Opphev',
 
         'mobile-device-revoke': 'tilbakekalle',
         'mobile-device-revoke-are-you-sure': 'Er du sikker på at du vil tilbakekalle autorisasjon til denne enheten?',

@@ -74,11 +74,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Peruutta',
         'confirmation-confirm': 'Vahvista',
 
-        'device-selector-camera-back': 'Takakamera',
-        'device-selector-camera-front': 'Etukamera',
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
+        'device-selector-camera-back': 'Takakamera',
+        'device-selector-camera-front': 'Etukamera',
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
@@ -110,12 +110,15 @@ module.exports = function(localeCode) {
         'media-next': 'Seuraava',
         'media-previous': 'Edellinen',
 
+        'membership-request-$you-are-member': 'Olet jäsenenä tässä hankkeessa',
         'membership-request-$you-are-now-member': 'Olet nyt jäsenenä tässä hankkeessa',
         'membership-request-$you-have-requested-membership': 'Olet pyytänyt jäsenyyttä tässä projektissa',
+        'membership-request-browse': 'Selailla',
         'membership-request-cancel': 'Peruutta',
         'membership-request-join': 'Yhdistää',
         'membership-request-ok': 'OK',
         'membership-request-proceed': 'Etene',
+        'membership-request-withdraw': 'Kumoa',
 
         'mobile-device-revoke': 'peruutta',
         'mobile-device-revoke-are-you-sure': 'Haluatko varmasti peruuttaa valtuutuksen tähän laitteeseen?',

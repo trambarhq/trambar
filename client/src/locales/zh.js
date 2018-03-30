@@ -116,11 +116,11 @@ var traditionalPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
-    'device-selector-camera-back': '後置',
-    'device-selector-camera-front': '前置',
     'device-selector-camera-$number': (number) => {
         return `攝影機${number}`;
     },
+    'device-selector-camera-back': '後置',
+    'device-selector-camera-front': '前置',
     'device-selector-mic-$number': (number) => {
         return `麥克風${number}`;
     },
@@ -153,12 +153,15 @@ var traditionalPhrases = {
     'media-next': '下一個',
     'media-previous': '上一個',
 
-    'membership-request-$you-are-now-member': '你現在是這個項目的成員',
+    'membership-request-$you-are-member': '你是這個項目的成員',
+    'membership-request-$you-are-now-member': '你成為了這個項目的成員',
     'membership-request-$you-have-requested-membership': '你要求成為這個項目的成員',
+    'membership-request-browse': '瀏覽',
     'membership-request-cancel': '取消',
     'membership-request-join': '加入',
     'membership-request-ok': '完成',
     'membership-request-proceed': '繼續',
+    'membership-request-withdraw': '退出',
 
     'mobile-device-revoke': '吊銷',
     'mobile-device-revoke-are-you-sure': '你確定要吊銷此裝置的授權嗎？',
@@ -764,11 +767,11 @@ var simplifiedPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
-    'device-selector-camera-back': '后置',
-    'device-selector-camera-front': '前置',
     'device-selector-camera-$number': (number) => {
         return `摄影机${number}`;
     },
+    'device-selector-camera-back': '后置',
+    'device-selector-camera-front': '前置',
     'device-selector-mic-$number': (number) => {
         return `麦克风${number}`;
     },
@@ -801,12 +804,15 @@ var simplifiedPhrases = {
     'media-next': '下一个',
     'media-previous': '上一个',
 
-    'membership-request-$you-are-now-member': '你现在是这个项目的成员',
+    'membership-request-$you-are-member': '你是这个项目的成员',
+    'membership-request-$you-are-now-member': '你成为了这个项目的成员',
     'membership-request-$you-have-requested-membership': '你要求成为这个项目的成员',
+    'membership-request-browse': '浏览',
     'membership-request-cancel': '取消',
     'membership-request-join': '加入',
     'membership-request-ok': '完成',
     'membership-request-proceed': '继续',
+    'membership-request-withdraw': '退出',
 
     'mobile-device-revoke': '吊销',
     'mobile-device-revoke-are-you-sure': '你确定要吊销此装置的授权吗？',
@@ -1361,6 +1367,7 @@ var cantonesePhrases = {
 
     'bottom-nav-people': '仆街',
 
+    'membership-request-$you-are-member': '你係呢個項目嘅成員',
     'membership-request-$you-are-now-member': '你而家係呢個項目嘅成員',
     'membership-request-$you-have-requested-membership': '你要求成為呢個項目嘅成員',
 

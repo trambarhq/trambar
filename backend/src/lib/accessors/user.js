@@ -401,8 +401,11 @@ module.exports = _.create(ExternalData, {
                 return this.canJoin(user, project) && this.canJoinAutomatically(user, project);
             });
             var newUserIds = _.map(newProjectMembers, 'id');
-            project.user_ids = _.union(project.user_ids, newUserIds);
-            return Project.update(db, schema, project);
+            var projectAfter = {
+                id: project.id,
+                user_ids: _.union(project.user_ids, newUserIds),
+            };
+            return Project.updateOne(db, schema, projectAfter);
         });
     },
 

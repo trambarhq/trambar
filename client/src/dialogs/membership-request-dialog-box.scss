@@ -49,6 +49,9 @@
 
     .collapsible-container {
         transition-duration: 1s;
+        margin-bottom: 0.25em;
+        margin-top: -0.25em;
+        clear: both;
     }
 
     .message {
@@ -61,7 +64,7 @@
             background-color: #66cc66;
         }
 
-        &.requested {
+        &.requested, &.read-only {
             background-color: #dddd66;
         }
     }

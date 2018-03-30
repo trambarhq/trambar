@@ -74,11 +74,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': "Annulla",
         'confirmation-confirm': "Conferma",
 
-        'device-selector-camera-back': 'Posteriore',
-        'device-selector-camera-front': 'Frontale',
         'device-selector-camera-$number': (number) => {
             return `Camera ${number}`;
         },
+        'device-selector-camera-back': 'Posteriore',
+        'device-selector-camera-front': 'Frontale',
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
@@ -110,12 +110,15 @@ module.exports = function(localeCode) {
         'media-next': "Prossimo",
         'media-previous': "Seguente",
 
+        'membership-request-$you-are-member': "Sei un membro di questo progetto",
         'membership-request-$you-are-now-member': "Ora sei un membro di questo progetto",
         'membership-request-$you-have-requested-membership': "Hai richiesto l'iscrizione a questo progetto",
+        'membership-request-browse': 'Sfoglia',
         'membership-request-cancel': "Annulla",
         'membership-request-join': "Partecipa",
         'membership-request-ok': "OK",
         'membership-request-proceed': "Procedi",
+        'membership-request-withdraw': 'Ritira',
 
         'mobile-device-revoke': "revoca",
         'mobile-device-revoke-are-you-sure': "Sei sicuro di voler revocare l'autorizzazione a questo dispositivo?",

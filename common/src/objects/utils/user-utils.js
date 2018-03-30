@@ -9,6 +9,7 @@ module.exports = {
     isPendingMember,
     isAuthor,
     isRespondent,
+    canJoinProject,
     canViewProject,
     canModerate,
     canEditStory,
@@ -57,7 +58,7 @@ function isPendingMember(user, project) {
 }
 
 /**
- * Return true if current user has read access to project
+ * Return true if user has read access to project
  *
  * @param  {User} user
  * @param  {Project} project
@@ -68,6 +69,9 @@ function canViewProject(user, project) {
     if (isMember(user, project)) {
         return true;
     } else {
+        if (!user || !project) {
+            return false;
+        }
         if (user.type === 'admin') {
             return true;
         } else {
@@ -77,6 +81,29 @@ function canViewProject(user, project) {
     return false;
 }
 
+/**
+ * Return true if user can join a project
+ *
+ * @param  {User} user
+ * @param  {Project} project
+ *
+ * @return {Boolean}
+ */
+function canJoinProject(user, project) {
+    if (!user || !project) {
+        return false;
+    }
+    return _.get(project, 'settings.membership.allow_user_request', false);
+}
+
+/**
+ * Return true if user is the author of a story
+ *
+ * @param  {User} user
+ * @param  {Story} story
+ *
+ * @return {Boolean}
+ */
 function isAuthor(user, story) {
     if (!user || !story) {
         return false;
@@ -87,6 +114,13 @@ function isAuthor(user, story) {
     return false;
 }
 
+/**
+ * Return true if user can moderate a project
+ *
+ * @param  {User} user
+ *
+ * @return {Boolean}
+ */
 function canModerate(user) {
     if (!user) {
         return false;

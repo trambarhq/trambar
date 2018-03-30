@@ -110,11 +110,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Anuluj',
         'confirmation-confirm': 'Potwierdź',
 
-        'device-selector-camera-back': 'Tylna',
-        'device-selector-camera-front': 'Przednia',
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
+        'device-selector-camera-back': 'Tylna',
+        'device-selector-camera-front': 'Przednia',
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
@@ -146,18 +146,25 @@ module.exports = function(localeCode) {
         'media-next': 'Następne',
         'media-previous': 'Poprzednie',
 
-        'membership-request-$you-are-now-member': (you) => {
+        'membership-request-$you-are-member': (you) => {
             var member = (gender(you) === 'female') ? `członkinią` : `członkiem`;
             return `Jesteś ${member} tego projektu`;
+        },
+        'membership-request-$you-are-now-member': (you) => {
+            var e = pastTenseEnding(you, 2);
+            var member = (gender(you) === 'female') ? `członkinią` : `członkiem`;
+            return `Został${e} ${member} tego projektu`;
         },
         'membership-request-$you-have-requested-membership': (you) => {
             var e = pastTenseEnding(you, 2);
             return `Zgłosił${e} się o członkostwo w tym projekcie`;
         },
+        'membership-request-browse': 'Przeglądaj',
         'membership-request-cancel': 'Anuluj',
         'membership-request-join': 'Dołącz',
         'membership-request-ok': 'OK',
         'membership-request-proceed': 'Przystąp',
+        'membership-request-withdraw': 'Wycofaj',
 
         'mobile-device-revoke': 'wyłącz',
         'mobile-device-revoke-are-you-sure': 'Czy na pewno chcesz cofnąć autoryzację tego urządzenia?',

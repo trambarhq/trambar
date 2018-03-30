@@ -145,7 +145,7 @@ module.exports = _.create(Data, {
                 if (credentials.unrestricted) {
                     object.settings = row.settings;
                 } else {
-                    object.settings = _.pick(row.settings, 'access_control');
+                    object.settings = _.pick(row.settings, 'membership', 'access_control');
                 }
                 if (row.archived) {
                     object.archived = row.archived;
