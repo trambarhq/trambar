@@ -37,7 +37,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        selected: PropTypes.bool,
+        highlighting: PropTypes.bool,
         story: PropTypes.object.isRequired,
         bookmark: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -85,8 +85,8 @@ module.exports = React.createClass({
      */
     getClassName: function() {
         var className = 'story-view';
-        if (this.props.selected) {
-            className += ' selected';
+        if (this.props.highlighting) {
+            className += ' highlighting';
         }
         return className;
     },
@@ -127,7 +127,7 @@ module.exports = React.createClass({
             return true;
         }
 
-        // expand if the reaction is selected
+        // expand if a reaction is selected
         if (props.selectedReactionId) {
             if (_.some(props.reactions, { id: props.selectedReactionId })) {
                 return true;

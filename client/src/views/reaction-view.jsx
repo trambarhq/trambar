@@ -29,7 +29,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        selected: PropTypes.bool,
+        highlighting: PropTypes.bool,
         reaction: PropTypes.object.isRequired,
         respondent: PropTypes.object,
         story: PropTypes.object.isRequired,
@@ -68,8 +68,8 @@ module.exports = React.createClass({
      */
     getClassName: function() {
         var className = 'reaction-view';
-        if (this.props.selected) {
-            className += ' selected';
+        if (this.props.highlighting) {
+            className += ' highlighting';
         }
         return className;
     },

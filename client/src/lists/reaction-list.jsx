@@ -129,7 +129,7 @@ module.exports = React.createClass({
         var reaction = evt.item;
         var isUserDraft = false;
         var isNewComment = false;
-        var selected = false;
+        var highlighting = false;
         if (!reaction) {
             isUserDraft = true;
             isNewComment = true;
@@ -142,7 +142,15 @@ module.exports = React.createClass({
                     }
                 }
             }
-            selected = (reaction.id === this.props.selectedReactionId);
+            if (reaction.id === this.props.selectedReactionId) {
+                // highlight it only once
+                if (reaction.id !== this.highlightedReactionId) {
+                    highlighting = true;
+                    setTimeout(() => {
+                        this.highlightedReactionId = reaction.id;
+                    }, 5000);
+                }
+            }
         }
         if (isUserDraft) {
             // always use 0 as the key for new comment by current user, so
@@ -150,7 +158,6 @@ module.exports = React.createClass({
             // (and the comment gains an id)
             var key = (isNewComment) ? 0 : reaction.id;
             var props = {
-                selected,
                 reaction,
                 story: this.props.story,
                 currentUser: this.props.currentUser,
@@ -166,7 +173,7 @@ module.exports = React.createClass({
             var respondent = findRespondent(this.props.respondents, reaction);
             var props = {
                 access: this.props.access,
-                selected,
+                highlighting,
                 reaction,
                 respondent,
                 story: this.props.story,

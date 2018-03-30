@@ -229,11 +229,13 @@ module.exports = React.createClass({
      * Remove hash from current URL
      */
     unanchor: function() {
-        var currentURL = this.state.url;
-        var hashIndex = currentURL.indexOf('#');
-        if (hashIndex !== -1) {
-            var newURL = currentURL.substr(0, hashIndex);
-            this.change(newURL, true);
+        if (process.env.PLATFORM === 'browser') {
+            var currentURL = window.location.href;
+            var hashIndex = currentURL.indexOf('#');
+            if (hashIndex !== -1) {
+                var newURL = currentURL.substr(0, hashIndex);
+                window.history.replaceState({}, '', newURL);
+            }
         }
     },
 

@@ -71,7 +71,7 @@
         }
     }
 
-    &.selected {
+    &.highlighting {
         animation: flash normal 5s 1 ease-in-out;
         animation-delay: 1.5s;
 

@@ -172,7 +172,20 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             hiddenStoryIds: [],
+            selectedStoryId: this.props.selectedStoryId || 0,
         };
+    },
+
+    /**
+     * Update state on prop changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.selectedStoryId !== nextProps.selectedStoryId) {
+            this.setState({ selectedStoryId: nextProps.selectedStoryId });
+            this.selectionCleared = false;
+        }
     },
 
     /**
@@ -182,12 +195,15 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var bookmarks = sortBookmark(this.props.bookmarks);
-        var anchorId = this.props.selectedStoryId;
+        var anchor;
+        if (this.state.selectedStoryId) {
+            anchor = `story-${this.state.selectedStoryId}`;
+        }
         var smartListProps = {
             items: bookmarks,
             behind: 4,
             ahead: 8,
-            anchor: (anchorId) ? `story-${anchorId}` : undefined,
+            anchor: anchor,
             offset: 20,
             fresh: this.props.refreshList,
 
@@ -257,7 +273,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
 
         // see if it's being editted
         var editing = false;
-        var selected = false;
+        var highlighting = false;
         if (story) {
             if (this.props.access === 'read-write') {
                 if (!story.published) {
@@ -271,14 +287,19 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                     }
                 }
             }
-            if (story.id === this.props.selectedStoryId) {
-                selected = true;
+            if (story.id === this.state.selectedStoryId) {
+                if (story.id !== this.highlightedStoryId) {
+                    highlighting = true;
+                    setTimeout(() => {
+                        this.highlightedStoryId = story.id;
+                    }, 5000);
+                }
             }
         }
         if (editing || evt.needed) {
             var senders = findSenders(this.props.senders, bookmark);
             var bookmarkProps = {
-                selected,
+                highlighting,
                 bookmark,
                 senders,
                 currentUser: this.props.currentUser,
@@ -358,11 +379,14 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     handleBookmarkAnchorChange: function(evt) {
         var storyId = _.get(evt.item, 'story_id');
         if (this.props.selectedStoryId && storyId !== this.props.selectedStoryId) {
-            if (this.props.onSelectionClear) {
-                this.props.onSelectionClear({
-                    type: 'selectionclear',
-                    target: this,
-                });
+            if (!this.selectionClear) {
+                if (this.props.onSelectionClear) {
+                    this.props.onSelectionClear({
+                        type: 'selectionclear',
+                        target: this,
+                    });
+                }
+                this.selectionClear = false;
             }
         }
     },
@@ -383,9 +407,10 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNewBookmarkAlertClick: function(evt) {
+        var firstStoryId = _.first(this.state.hiddenStoryIds);
         this.setState({
             hiddenStoryIds: [],
-            selectedStoryId: _.first(this.state.hiddenStoryIds),
+            selectedStoryId: firstStoryId,
         });
     },
 });

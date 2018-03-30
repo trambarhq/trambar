@@ -53,7 +53,20 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             viewOptions,
+            selectedUserId: this.props.selectedUserId || 0,
         };
+    },
+
+    /**
+     * Update state on prop changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.selectedUserId !== nextProps.selectedUserId) {
+            this.setState({ selectedUserId: nextProps.selectedUserId });
+            this.selectionCleared = false;
+        }
     },
 
     /**
@@ -63,13 +76,16 @@ module.exports = React.createClass({
      */
     render: function() {
         var users = sortUsers(this.props.users, this.props.locale);
-        var anchorId = this.props.selectedUserId;
+        var anchor;
+        if (this.state.selectedUserId) {
+            anchor = `user-${this.state.selectedUserId}`;
+        }
         var smartListProps = {
             items: users,
             offset: 16,
             behind: 4,
             ahead: 8,
-            anchor: (anchorId) ? `user-${anchorId}` : undefined,
+            anchor: anchor,
             fresh: this.props.refreshList,
 
             onIdentity: this.handleUserIdentity,
@@ -148,11 +164,14 @@ module.exports = React.createClass({
     handleUserAnchorChange: function(evt) {
         var storyId = _.get(evt.item, 'id');
         if (this.props.selectedUserId && storyId !== this.props.selectedUserId) {
-            if (this.props.onSelectionClear) {
-                this.props.onSelectionClear({
-                    type: 'selectionclear',
-                    target: this,
-                });
+            if (!this.selectionCleared) {
+                if (this.props.onSelectionClear) {
+                    this.props.onSelectionClear({
+                        type: 'selectionclear',
+                        target: this,
+                    });
+                }
+                this.selectionCleared = true;
             }
         }
     },

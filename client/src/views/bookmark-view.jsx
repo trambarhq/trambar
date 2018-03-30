@@ -14,7 +14,7 @@ require('./bookmark-view.scss');
 module.exports = React.createClass({
     displayName: 'BookmarkView',
     propTypes: {
-        selected: PropTypes.bool,
+        highlighting: PropTypes.bool,
         bookmark: PropTypes.object,
         senders: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
@@ -32,8 +32,8 @@ module.exports = React.createClass({
      */
     render: function() {
         var className = 'bookmark-view';
-        if (this.props.selected) {
-            className += ' selected';
+        if (this.props.highlighting) {
+            className += ' highlighting';
         }
         return (
             <div className={className}>

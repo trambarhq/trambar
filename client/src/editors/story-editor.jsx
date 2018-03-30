@@ -47,7 +47,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         isStationary: PropTypes.bool,
-        selected: PropTypes.bool,
+        highlighting: PropTypes.bool,
         story: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
         recommendations: PropTypes.arrayOf(PropTypes.object),
@@ -110,8 +110,8 @@ module.exports = React.createClass({
      */
     getClassName: function() {
         var className = 'story-editor';
-        if (this.props.selected) {
-            className += ' selected';
+        if (this.props.highlighting) {
+            className += ' highlighting';
         }
         return className;
     },

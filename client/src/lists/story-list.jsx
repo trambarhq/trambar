@@ -179,7 +179,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         });
         return {
             hiddenStoryIds: [],
-            selectedStoryId: null,
+            selectedStoryId: this.props.selectedStoryId || 0,
         };
     },
 
@@ -189,8 +189,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.route !== nextProps.route) {
-            this.setState({ selectedStoryId: null });
+        if (this.props.selectedStoryId !== nextProps.selectedStoryId) {
+            this.setState({ selectedStoryId: nextProps.selectedStoryId });
+            this.selectionCleared = false;
         }
     },
 
@@ -205,14 +206,17 @@ var StoryListSync = module.exports.Sync = React.createClass({
         if (this.props.acceptNewStory) {
             stories = attachDrafts(stories, this.props.draftStories, this.props.currentUser);
         }
-        var anchorId = this.state.selectedStoryId || this.props.selectedStoryId;
+        var anchor;
+        if (this.state.selectedStoryId) {
+            anchor = `story-${this.state.selectedStoryId}`;
+        }
         var smartListProps = {
             ref: setters.list,
             items: stories,
             offset: 20,
             behind: 4,
             ahead: 8,
-            anchor: (anchorId) ? `story-${anchorId}` : undefined,
+            anchor: anchor,
             fresh: this.props.refreshList,
 
             onIdentity: this.handleStoryIdentity,
@@ -294,7 +298,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         var story = evt.item;
         // see if it's being editted
         var isDraft = false;
-        var selected = false;
+        var highlighting = false;
         if (story) {
             if (this.props.access === 'read-write') {
                 if (!story.published) {
@@ -308,8 +312,13 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     }
                 }
             }
-            if (story.id === this.props.selectedStoryId) {
-                selected = true;
+            if (story.id === this.state.selectedStoryId) {
+                if (story.id !== this.highlightedStoryId) {
+                    highlighting = true;
+                    setTimeout(() => {
+                        this.highlightedStoryId = story.id;
+                    }, 5000);
+                }
             }
         } else {
             isDraft = true;
@@ -322,7 +331,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 authors = array(this.props.currentUser);
             }
             var editorProps = {
-                selected,
+                highlighting,
                 story,
                 authors,
                 recommendations,
@@ -345,7 +354,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 var recommendations = findRecommendations(this.props.recommendations, story);
                 var recipients = findRecipients(this.props.recipients, recommendations);
                 var storyProps = {
-                    selected,
+                    highlighting,
                     access: this.props.access,
                     story,
                     reactions,
@@ -353,7 +362,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     respondents,
                     recommendations,
                     recipients,
-                    selectedReactionId: (selected) ? this.props.selectedReactionId : undefined,
+                    selectedReactionId: (highlighting) ? this.props.selectedReactionId : undefined,
                     repos: this.props.repos,
                     currentUser: this.props.currentUser,
                     database: this.props.database,
@@ -378,12 +387,15 @@ var StoryListSync = module.exports.Sync = React.createClass({
      */
     handleStoryAnchorChange: function(evt) {
         var storyId = _.get(evt.item, 'id');
-        if (this.props.selectedStoryId && storyId !== this.props.selectedStoryId) {
-            if (this.props.onSelectionClear) {
-                this.props.onSelectionClear({
-                    type: 'selectionclear',
-                    target: this,
-                });
+        if (this.props.selectedStoryId && storyId !== this.state.selectedStoryId) {
+            if (!this.selectionCleared) {
+                if (this.props.onSelectionClear) {
+                    this.props.onSelectionClear({
+                        type: 'selectionclear',
+                        target: this,
+                    });
+                }
+                this.selectionCleared = true;
             }
         }
     },
@@ -404,9 +416,10 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNewStoryAlertClick: function(evt) {
+        var firstStoryId = _.first(this.state.hiddenStoryIds);
         this.setState({
             hiddenStoryIds: [],
-            selectedStoryId: _.first(this.state.hiddenStoryIds),
+            selectedStoryId: firstStoryId,
         });
     },
 
