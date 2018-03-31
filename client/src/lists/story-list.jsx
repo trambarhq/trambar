@@ -353,8 +353,10 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 var respondents = findRespondents(this.props.respondents, reactions);
                 var recommendations = findRecommendations(this.props.recommendations, story);
                 var recipients = findRecipients(this.props.recipients, recommendations);
+                var pending = !_.includes(this.props.stories, story);
                 var storyProps = {
                     highlighting,
+                    pending,
                     access: this.props.access,
                     story,
                     reactions,

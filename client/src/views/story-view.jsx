@@ -38,6 +38,7 @@ module.exports = React.createClass({
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         highlighting: PropTypes.bool,
+        pending: PropTypes.bool,
         story: PropTypes.object.isRequired,
         bookmark: PropTypes.object,
         authors: PropTypes.arrayOf(PropTypes.object),
@@ -397,6 +398,7 @@ module.exports = React.createClass({
         var props = {
             status: uploadStatus,
             story: this.props.story,
+            pending: this.props.pending,
             locale: this.props.locale,
         };
         return <StoryProgress {...props} />;

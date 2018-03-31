@@ -13,7 +13,7 @@ require('./story-progress.scss');
 function StoryProgress(props) {
     var t = props.locale.translate;
     var contents;
-    if (!StoryUtils.isActuallyPublished(props.story)) {
+    if (props.pending || !StoryUtils.isActuallyPublished(props.story)) {
         // not saved yet
         contents = t('story-status-storage-pending');
     } else {
