@@ -119,17 +119,19 @@ Database.prototype.execute = function(sql, parameters) {
     }
     // convert promise to Bluebird variety
     return Promise.resolve(this.client.query(sql, parameters)).catch((err) => {
-        var errorClass = err.code.substr(0, 2);
-        var programmingError = programmingErrors[errorClass];
-        if (programmingError) {
-            // syntax error
-            console.log(programmingError);
-            console.log('SQL statement:');
-            console.log(sql);
-            console.log('----------------------------------------');
-            console.log('Parameters:');
-            console.log(parameters);
-            console.log('----------------------------------------');
+        if (err.code) {
+            var errorClass = err.code.substr(0, 2);
+            var programmingError = programmingErrors[errorClass];
+            if (programmingError) {
+                // syntax error
+                console.log(programmingError);
+                console.log('SQL statement:');
+                console.log(sql);
+                console.log('----------------------------------------');
+                console.log('Parameters:');
+                console.log(parameters);
+                console.log('----------------------------------------');
+            }
         }
         throw err;
     });
