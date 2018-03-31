@@ -96,12 +96,15 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        // don't wait for remote data unless the route changes
+        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var props = {
             currentUser: null,
             notifications: null,
 
+            freshRoute: freshRoute,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -113,9 +116,15 @@ module.exports = Relaks.createClass({
                 props.currentUser = user;
             });
         }).then(() => {
-            return NotificationFinder.findNotificationsForUser(db, props.currentUser).then((notifications) => {
-                props.notifications = notifications;
-            });
+            if (params.date) {
+                return NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, params.date).then((notifications) => {
+                    props.notifications = notifications;
+                });
+            } else {
+                return NotificationFinder.findNotificationsForUser(db, props.currentUser).then((notifications) => {
+                    props.notifications = notifications;
+                });
+            }
         }).then(() => {
             return <NotificationsPageSync {...props} />;
         });
@@ -125,6 +134,7 @@ module.exports = Relaks.createClass({
 var NotificationsPageSync = module.exports.Sync = React.createClass({
     displayName: 'NotificationsPage.Sync',
     propTypes: {
+        freshRoute: PropTypes.bool,
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
@@ -155,6 +165,7 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
      */
     renderList: function() {
         var listProps = {
+            refreshList: this.props.freshRoute,
             notifications: this.props.notifications,
             currentUser: this.props.currentUser,
 

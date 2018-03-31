@@ -179,7 +179,7 @@ var NotificationListSync = module.exports.Sync = React.createClass({
                     }
                 });
                 if (!_.isEmpty(unread)) {
-                    var delay = Math.min(10, unread.length * 2);
+                    var delay = Math.min(5, unread.length * 1);
                     clearTimeout(this.markAsSeenTimeout);
                     this.markAsSeenTimeout = setTimeout(() => {
                         this.markAsSeen(unread);
