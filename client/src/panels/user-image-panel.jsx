@@ -5,6 +5,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var ComponentRefs = require('utils/component-refs');
 var FocusManager = require('utils/focus-manager');
+var DeviceManager = require('media/device-manager');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
@@ -41,7 +42,9 @@ module.exports = React.createClass({
         this.components = ComponentRefs({
             importer: MediaImporter
         })
-        return {};
+        return {
+            hasCamera: DeviceManager.hasDevice('videoinput'),
+        };
     },
 
     /**
@@ -166,6 +169,7 @@ module.exports = React.createClass({
         };
         var takeProps = {
             label: t('user-image-snap'),
+            hidden: !this.state.hasCamera,
             onClick: this.handleTakeClick,
         };
         var selectProps = {
@@ -185,6 +189,20 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
+    },
+
+    /**
+     * Add event listener on mount
+     */
+    componentDidMount: function() {
+        DeviceManager.addEventListener('change', this.handleDeviceChange);
+    },
+
+    /**
+     * Remove handlers on unmount
+     */
+    componentWillUnmount: function() {
+        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     },
 
     /**
@@ -261,5 +279,16 @@ module.exports = React.createClass({
         if (evt.resource) {
             FocusManager.focus({ type: 'ImageEditor' });
         }
-    }
+    },
+
+    /**
+     * Called when the list of media devices changes
+     *
+     * @param  {Object} evt
+     */
+    handleDeviceChange: function(evt) {
+        this.setState({
+            hasCamera: DeviceManager.hasDevice('videoinput'),
+        });
+    },
 });
