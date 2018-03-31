@@ -175,6 +175,9 @@ module.exports = _.create(LiveData, {
                 object.filters = row.filters;
                 object.story_ids = _.map(row.details.stories, 'id');
                 object.details = undefined;
+                if (row.dirty) {
+                    object.dirty = true;
+                }
 
                 if (credentials.user.id !== row.target_user_id) {
                     throw new HTTPError(403);

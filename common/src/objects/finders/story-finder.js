@@ -118,6 +118,9 @@ function findUnlistedStories(db, user, listedStories) {
     if (!user) {
         return Promise.resolve(Empty.array);
     }
+    if (!listedStories) {
+        return Promise.resolve(Empty.array);
+    }
     var recentStories = _.filter(listedStories, (story) => {
         if (_.includes(story.user_ids, user.id)) {
             if (story.ptime > DateTracker.yesterdayISO) {
@@ -226,7 +229,7 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit) {
  * @param  {String} type
  * @param  {User} currentUser
  *
- * @return {[type]}
+ * @return {Promise<Array<Story>|null>}
  */
 function findStoriesInListing(db, type, currentUser) {
     if (!currentUser) {
@@ -242,7 +245,16 @@ function findStoriesInListing(db, type, currentUser) {
             },
         }
     }).then((listing) => {
-        return findViewableStories(db, listing ? listing.story_ids : null, currentUser);
+        // if the listing has just been created, return null instead of an
+        // empty array to indicate that the list is not ready (as opposed to
+        // actually being empty)
+        if (!listing) {
+            return null;
+        }
+        if (_.isEmpty(listing.story_ids) && listing.dirty) {
+            return null;
+        }
+        return findViewableStories(db, listing.story_ids, currentUser);
     });
 }
 
@@ -335,7 +347,7 @@ function findStoriesByUserOnDate(db, user, date, currentUser) {
  * @param  {User} user
  * @param  {User} currentUser
  *
- * @return {Promise<Array<Story>>}
+ * @return {Promise<Array<Story>|null>}
  */
 function findStoriesByUserInListing(db, type, user, currentUser) {
     if (!currentUser) {
@@ -352,7 +364,13 @@ function findStoriesByUserInListing(db, type, user, currentUser) {
             },
         }
     }).then((listing) => {
-        return findViewableStories(db, listing ? listing.story_ids : null, currentUser);
+        if (!listing) {
+            return null;
+        }
+        if (_.isEmpty(listing.story_ids) && listing.dirty) {
+            return null;
+        }
+        return findViewableStories(db, listing.story_ids, currentUser);
     });
 }
 
@@ -365,7 +383,7 @@ function findStoriesByUserInListing(db, type, user, currentUser) {
  * @param  {User} currentUser
  * @param  {Number} perUserLimit
  *
- * @return {Promise<Array<Story>>}
+ * @return {Promise<Array<Story>|null>}
  */
 function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit) {
     return db.find({
@@ -384,6 +402,11 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
         var storyIds = _.flatten(_.map(listings, (listing) => {
             return _.slice(listing.story_ids, - perUserLimit);
         }));
+        if (_.isEmpty(storyIds)) {
+            if (_.some(listings, { dirty: true })) {
+                return null;
+            }
+        }
         return findViewableStories(db, storyIds, currentUser);
     });
 }
@@ -396,7 +419,7 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
  * @param  {Array<Number>} roleIds
  * @param  {User} currentUser
  *
- * @return {Promise<Array<Story>>}
+ * @return {Promise<Array<Story>|null>}
  */
 function findStoriesWithRolesInListing(db, type, roleIds, currentUser) {
     if (!currentUser) {
@@ -413,7 +436,13 @@ function findStoriesWithRolesInListing(db, type, roleIds, currentUser) {
             },
         }
     }).then((listing) => {
-        return findViewableStories(db, listing ? listing.story_ids : null, currentUser);
+        if (!listing) {
+            return null;
+        }
+        if (_.isEmpty(listing.story_ids) && listing.dirty) {
+            return null;
+        }
+        return findViewableStories(db, listing.story_ids, currentUser);
     });
 }
 
