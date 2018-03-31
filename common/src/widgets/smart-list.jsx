@@ -90,6 +90,13 @@ module.exports = React.createClass({
     updateAnchor: function(nextProps, nextState) {
         nextState.currentAnchor = nextProps.anchor;
         this.anchorOffset = nextProps.offset;
+        if (this.state) {
+            if (this.state.currentAnchor && !nextState.currentAnchor) {
+                if (this.scrollContainer) {
+                    this.scrollContainer.scrollTop = 0;
+                }
+            }
+        }
     },
 
     /**
