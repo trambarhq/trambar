@@ -16,6 +16,7 @@ body {
     overflow: hidden;
     margin: 0;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -85,10 +86,12 @@ body {
 }
 
 SELECT {
-    -webkit-appearance: none;
     border-radius: 0;
     background-color: #eeeeee;
     border: 1px solid #444444;
+    user-select: auto;
+    -webkit-user-select: auto;
+    -webkit-appearance: none;
 
     OPTION {
         padding: 2px 2px 2px 4px;
@@ -102,12 +105,14 @@ INPUT[type=email],
 input[type=password],
 INPUT[type=number]
  {
-    -webkit-appearance: none;
     border-radius: 0;
     background-color: #eeeeee;
     border: 1px solid #444444;
     padding: 2px 2px 2px 4px;
     font-size: 1em;
+    user-select: auto;
+    -webkit-user-select: auto;
+    -webkit-appearance: none;
 }
 
 TEXTAREA {
