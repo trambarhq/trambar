@@ -522,6 +522,12 @@ module.exports = React.createClass({
                 } else {
                     // wait for remote search to finish
                     return remoteSearchPromise.then(() => {
+                        if (required && query.expected) {
+                            if (newSearch.results.length < query.expected) {
+                                this.triggerStupefactionEvent(query, newSearch.results);
+                                throw new HTTPError(404);
+                            }
+                        }
                         return newSearch.results;
                     });
                 }
@@ -529,12 +535,6 @@ module.exports = React.createClass({
             search = newSearch;
         }
         return search.promise.then((results) => {
-            if (required && query.expected) {
-                if (results.length < query.expected) {
-                    this.triggerStupefactionEvent(query, results);
-                    throw new HTTPError(404);
-                }
-            }
             var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
             if (includeUncommitted && committed !== true) {
                 // apply changes that haven't been saved yet
