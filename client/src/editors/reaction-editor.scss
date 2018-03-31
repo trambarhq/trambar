@@ -40,7 +40,12 @@
 
         .autosize-text-area {
             TEXTAREA {
+                min-height: 2.7em;
                 max-height: 5em;
+
+                .single-col & {
+                    min-height: 1.2em;
+                }
             }
         }
     }

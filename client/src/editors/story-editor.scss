@@ -33,6 +33,10 @@
                 font-size: 1em;
                 min-height: 5em;
                 max-height: 50vh;
+
+                .single-col & {
+                    min-height: 1.2em;
+                }
             }
         }
 
@@ -52,16 +56,6 @@
 
     .selectable {
         user-select: text;
-    }
-
-    .single-col & {
-        .body {
-            .autosize-text-area {
-                TEXTAREA {
-                    min-height: 1.2em;
-                }
-            }
-        }
     }
 
     .double-col &,
