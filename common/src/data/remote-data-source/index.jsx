@@ -1183,7 +1183,7 @@ module.exports = React.createClass({
         if (change.noop()) {
             storage.setFinishTime();
             storage.results = storage.objects;
-            return Promise.resolve();
+            return Promise.resolve([]);
         }
         change.onDispatch = (change) => {
             var objects = change.deliverables();

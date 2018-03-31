@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 
 var LocalSearch = require('data/local-search');
-var TemporaryId = require('data/remote-data-source/temporary-id');
+var TemporaryID = require('data/remote-data-source/temporary-id');
 
 module.exports = Change;
 
@@ -13,7 +13,7 @@ function Change(location, objects, options) {
             object = _.clone(object);
             if (!object.id) {
                 // assign a temporary id so we can find the object again
-                object.id = TemporaryId.allocate();
+                object.id = TemporaryID.allocate();
             }
             object.uncommitted = true;
         }
@@ -31,6 +31,9 @@ function Change(location, objects, options) {
         this.resolvePromise = resolve;
         this.rejectPromise = reject;
     });
+    this.dependencies = [];
+    this.delivered = null;
+    this.received = null;
 
     if (options) {
         if (options.delay) {
@@ -62,14 +65,17 @@ Change.prototype.dispatch = function() {
         return;
     }
     this.dispatched = true;
-    this.onDispatch(this).then((objects) => {
-        this.committed = true;
-        if (!this.canceled) {
-            this.resolvePromise(objects);
-        } else {
-            // ignore the results
-            this.resolvePromise([]);
-        }
+    this.resolveDependencies().then(() => {
+        return this.onDispatch(this).then((objects) => {
+            this.committed = true;
+            this.received = objects;
+            if (!this.canceled) {
+                this.resolvePromise(objects);
+            } else {
+                // ignore the results
+                this.resolvePromise([]);
+            }
+        });
     }).catch((err) => {
         if (!this.canceled) {
             this.rejectPromise(err);
@@ -113,6 +119,7 @@ Change.prototype.merge = function(earlierOp) {
     if (!_.isEqual(earlierOp.location, this.location)) {
         return;
     }
+    var dependent = false;
     _.each(this.objects, (object, i) => {
         var index = _.findIndex(earlierOp.objects, { id: object.id });
         if (index !== -1 && !earlierOp.removed[index]) {
@@ -125,11 +132,64 @@ Change.prototype.merge = function(earlierOp) {
             });
             // indicate that the object has been superceded
             earlierOp.removed[index] = true;
+
+            if (earlierOp.dispatched) {
+                // the prior operation has already been sent; if it's going
+                // to yield a permanent database id, then this operation
+                // needs to wait for it to resolve first
+                if (object.id < 1) {
+                    dependent = true;
+                }
+            }
         }
     });
+    if (dependent) {
+        this.dependencies.push(earlierOp);
+    }
     // cancel the earlier op if everything was removed from it
     if (_.every(earlierOp.removed)) {
         earlierOp.cancel();
+    }
+};
+
+/**
+ * Wait for dependent operations to finish, then resolve temporary ids
+ *
+ * @return {Promise}
+ */
+Change.prototype.resolveDependencies = function() {
+    return Promise.each(this.dependencies, (earlierOp) => {
+        return earlierOp.promise.catch((err) => {});
+    }).then(() => {
+        _.each(this.objects, (object) => {
+            if (object.id < 1) {
+                _.each(this.dependencies, (earlierOp) => {
+                    var id = earlierOp.findPermanentID(object.id);
+                    if (id) {
+                        object.id = id;
+                    }
+                });
+            }
+        });
+    });
+};
+
+/**
+ * Look for a permanent id that was assigned by remote server
+ *
+ * @param  {Number} temporaryID
+ *
+ * @return {Number|undefined}
+ */
+Change.prototype.findPermanentID = function(temporaryID) {
+    var index = _.findIndex(this.delivered, { id: temporaryID });
+    if (index !== -1) {
+        if (this.received) {
+            var object = this.received[index];
+            if (object) {
+                return object.id;
+            }
+        }
     }
 };
 
@@ -193,10 +253,10 @@ Change.prototype.apply = function(search, includeDeleted) {
  * @return {Array<Object>}
  */
 Change.prototype.deliverables = function() {
-    var remaining = _.filter(this.objects, (object, index) => {
+    this.delivered = _.filter(this.objects, (object, index) => {
         return !this.removed[index];
     });
-    return _.map(remaining, (object) => {
+    return _.map(this.delivered, (object) => {
         // strip out special properties
         if (object.id < 1) {
             return _.omit(object, 'id', 'uncommitted');
