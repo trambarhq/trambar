@@ -279,6 +279,7 @@ module.exports = Relaks.createClass({
                 });
             }
         }).then(() => {
+            meanwhile.show(<PeoplePageSync {...props} />);
             if (props.selectedUser) {
                 // load stories of selected user
                 if (params.search) {
