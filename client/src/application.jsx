@@ -794,6 +794,10 @@ module.exports = React.createClass({
      */
     handleDisconnection: function(evt) {
         this.setState({ connection: null });
+
+        // invalidate search results when connection is lost
+        var dataSource = this.components.remoteDataSource;
+        dataSource.invalidate();
     },
 
     /**
