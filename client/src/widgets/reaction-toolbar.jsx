@@ -17,6 +17,7 @@ module.exports = React.createClass({
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
         addingComment: PropTypes.bool,
+        disabled: PropTypes.bool,
         locale: PropTypes.instanceOf(Locale),
         theme: PropTypes.instanceOf(Theme),
         onAction: PropTypes.func,
@@ -64,6 +65,7 @@ module.exports = React.createClass({
             label: t('story-like'),
             hidden: !canComment,
             highlighted: !!this.getCurrentUserLike(),
+            disabled: this.props.disabled,
             onClick: this.handleLikeClick,
         };
         var commentButtonProps = {
@@ -71,6 +73,7 @@ module.exports = React.createClass({
             label: t('story-comment'),
             hidden: !canComment,
             highlighted: !_.isEmpty(this.getCurrentUserComments()) || this.props.addingComment,
+            disabled: this.props.disabled,
             onClick: this.handleCommentClick,
         };
         return (

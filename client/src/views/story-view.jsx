@@ -346,9 +346,6 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderReactionToolbar: function() {
-        if (!StoryUtils.isSaved(this.props.story)) {
-            return null;
-        }
         var access = this.props.access;
         if (access !== 'read-comment' && access !== 'read-write') {
             return null;
@@ -360,6 +357,7 @@ module.exports = React.createClass({
             respondents: this.props.respondents,
             locale: this.props.locale,
             theme: this.props.theme,
+            disabled: !StoryUtils.isSaved(this.props.story),
             onAction: this.handleAction,
         };
         return <ReactionToolbar {...props} />;
