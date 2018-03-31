@@ -58,4 +58,17 @@ function initialize(evt) {
         var appElement = React.createElement(Application);
         ReactDOM.render(appElement, appContainer);
     });
+
+    // install Safari specific shim
+    var bodyStyle = getComputedStyle(document.body);
+    if (bodyStyle.WebkitOverflowScrolling !== undefined) {
+        // need to disable momentum scrolling when textarea has focus
+        // to prevent rendering glitch
+        window.addEventListener('focusin', (evt) => {
+            document.body.style.WebkitOverflowScrolling = 'auto';
+        });
+        window.addEventListener('focusout', (evt) => {
+            document.body.style.WebkitOverflowScrolling = '';
+        });
+    }
 }
