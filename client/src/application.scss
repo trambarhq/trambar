@@ -18,6 +18,7 @@ body {
     user-select: none;
     -webkit-user-select: none;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .application {
