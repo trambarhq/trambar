@@ -1035,12 +1035,7 @@ module.exports = React.createClass({
         draft.published = true;
 
         return this.saveDraft(draft, true).then((story) => {
-            return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                if (this.props.isStationary) {
-                    var blank = createBlankStory(this.props.currentUser);
-                    return this.changeDraft(blank);
-                }
-            });
+            return this.sendBookmarks(story, options.bookmarkRecipients);
         });
     },
 
@@ -1480,7 +1475,7 @@ var defaultOptions = {
  *
  * @return {Story}
  */
-var createBlankStory = Memoize(function(currentUser) {
+function createBlankStory(currentUser) {
     // assign a temporary id immediately to ensure proper merging
     return {
         id: TemporaryId.allocate(),
@@ -1489,7 +1484,7 @@ var createBlankStory = Memoize(function(currentUser) {
         public: true,
         published: false,
     };
-});
+}
 
 function hasUnsentFiles(resources) {
     return _.some(resources, (res) => {
