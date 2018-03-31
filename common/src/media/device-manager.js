@@ -39,6 +39,9 @@ function removeEventListener(eventType, f) {
 
 function scan() {
     return Promise.try(() => {
+        if (!navigator.mediaDevices) {
+            return [];
+        }
         return navigator.mediaDevices.enumerateDevices();
     }).then((devices) => {
         availableDevices = devices;
@@ -54,7 +57,7 @@ function scan() {
 
 scan().then(() => {
     // Safari doesn't support events
-    if (navigator.mediaDevices.addEventListener) {
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
         navigator.mediaDevices.addEventListener('devicechange', scan);
     }
 });
