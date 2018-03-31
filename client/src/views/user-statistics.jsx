@@ -432,12 +432,16 @@ var getUpperRange = Memoize(function(series, additive) {
         });
     }
     // leave some room at the top
-    if (highest <= 18) {
+    if (highest <= 17) {
         return 20;
-    } else if (highest <= 45) {
+    } else if (highest <= 42) {
         return 50;
     } else {
-        return Math.ceil(highest / 100) * 100;
+        var upper = Math.ceil(highest / 100) * 100;
+        while ((highest / upper) > 0.85) {
+            upper += 100;
+        }
+        return upper;
     }
 });
 
