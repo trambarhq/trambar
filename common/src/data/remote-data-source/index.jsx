@@ -1458,13 +1458,14 @@ module.exports = React.createClass({
      */
     clearCachedObjects: function(address) {
         var cache = this.props.cache;
-        if (!cache) {
+        if (!cache || this.cleaningCache) {
             return Promise.resolve(0);
         }
         this.cleaningCache = true;
-        return cache.clean({ address }).then(() => {
+        return cache.clean({ address }).then((count) => {
             this.cleaningCache = false;
-            console.log('Cache entries removed');
+            console.log(`Cache entries removed: ${count}`);
+            return count;
         });
     },
 
