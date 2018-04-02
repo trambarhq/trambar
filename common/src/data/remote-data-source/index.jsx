@@ -1345,14 +1345,15 @@ module.exports = React.createClass({
         return HTTPRequest.fetch('POST', url, req, options).then((result) => {
             return result;
         }).catch((err) => {
-            this.clearRecentSearches(address);
-            this.clearCachedObjects(address);
-            if (err.statusCode === 401) {
-                destroySession(session);
-                this.triggerExpirationEvent(session);
-                this.triggerChangeEvent();
-            } else if (err.statusCode == 403) {
-                this.triggerViolationEvent(address, schema);
+            if (err.statusCode === 401 || err.statusCode == 403) {
+                this.clearRecentSearches(address);
+                this.clearCachedObjects(address);
+                if (err.statusCode === 401) {
+                    destroySession(session);
+                    this.triggerExpirationEvent(session);
+                } else if (err.statusCode == 403) {
+                    this.triggerViolationEvent(address, schema);
+                }
                 this.triggerChangeEvent();
             }
             throw err;
