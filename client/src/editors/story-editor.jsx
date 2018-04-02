@@ -42,6 +42,9 @@ require('./story-editor.scss');
 
 const AUTOSAVE_DURATION = 2000;
 
+const RETURN = '\r'.charCodeAt(0);
+const CLOSE_BRACKET = ']'.charCodeAt(0);
+
 module.exports = React.createClass({
     displayName: 'StoryEditor',
     mixins: [ UpdateCheck ],
@@ -496,6 +499,7 @@ module.exports = React.createClass({
             lang: loc,
             onChange: this.handleTextChange,
             onKeyPress: this.handleKeyPress,
+            onKeyUp: this.handleKeyUp,
             onPaste: this.handlePaste,
         };
         return <AutosizeTextArea ref={setters.textArea} {...props} />;
@@ -1097,7 +1101,7 @@ module.exports = React.createClass({
     handleKeyPress: function(evt) {
         // look for carriage return
         var target = evt.target;
-        if (evt.charCode == 0x0D) {
+        if (evt.charCode == RETURN) {
             var storyType = this.state.draft.type;
             if (storyType === 'survey' || storyType === 'task-list') {
                 // see if there's survey or task-list item on the line where
@@ -1115,12 +1119,18 @@ module.exports = React.createClass({
                         // the item is not empty--start the next item automatically
                         addition = '\n* [ ] ';
                     } else {
+                        if (this.keyDown) {
+                            // ignore repeated events (Windows Phone bug)
+                            evt.preventDefault();
+                            return;
+                        }
+
                         // it's empty--move the selection back to remove it
                         target.selectionStart = selStart - lineInFront.length;
                         addition = '\n';
                     }
-                    document.execCommand("insertText", false, addition);
                     evt.preventDefault();
+                    document.execCommand("insertText", false, addition);
                 }
             } else {
                 if (this.props.theme.mode === 'single-col') {
@@ -1129,7 +1139,28 @@ module.exports = React.createClass({
                     target.blur();
                 }
             }
+        } else if (evt.charCode === CLOSE_BRACKET) {
+            var value = target.value;
+            var selStart = target.selectionStart;
+            var textInFront = value.substr(0, selStart);
+            var lineFeedIndex = _.lastIndexOf(textInFront, '\n');
+            var lineInFront = textInFront.substr(lineFeedIndex + 1);
+            if (/^\s*\*\[/.test(lineInFront)) {
+                target.selectionStart = selStart - 2;
+                document.execCommand("insertText", false, '* [ ] ');
+                evt.preventDefault();
+            }
         }
+        this.keyDown = true;
+    },
+
+    /**
+     * Called when user release a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyUp: function(evt) {
+        this.keyDown = false;
     },
 
     /**
