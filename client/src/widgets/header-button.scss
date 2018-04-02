@@ -2,6 +2,7 @@
     display: inline-block;
     color: #666666;
     margin-right: 0.5em;
+    touch-action: manipulation;
     cursor: pointer;
 
     &:hover {

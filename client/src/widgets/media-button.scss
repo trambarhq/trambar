@@ -5,6 +5,7 @@
     margin-left: 0.2em;
     margin-right: 0.1em;
     cursor: pointer;
+    touch-action: manipulation;
 
     &:hover {
         color: #eeeeee;
@@ -33,6 +34,7 @@
         padding: 0.1em 0.5em 0.1em 0.5em;
         cursor: pointer;
         vertical-align: middle;
+        touch-action: manipulation;
     }
 
     .position {

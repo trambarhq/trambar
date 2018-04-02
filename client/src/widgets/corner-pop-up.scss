@@ -3,6 +3,7 @@
 
     .button {
         color: #eeeeee;
+        touch-action: manipulation;
 
         &:hover {
             color: #666666;

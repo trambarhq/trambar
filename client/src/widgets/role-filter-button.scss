@@ -3,6 +3,7 @@
     margin-right: 0.5em;
     vertical-align: top;
     cursor: pointer;
+    touch-action: manipulation;
 
     .contents {
         position: relative;

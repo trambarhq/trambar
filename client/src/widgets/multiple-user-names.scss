@@ -3,6 +3,7 @@
 
     .label {
         cursor: pointer;
+        touch-action: manipulation;
     }
 
     .popup-container {

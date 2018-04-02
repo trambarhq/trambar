@@ -42,6 +42,7 @@
 
             A {
                 display: block;
+                touch-action: manipulation;
                 
                 &:link, &:visited {
                     text-decoration: none;

@@ -22,6 +22,7 @@
         padding: 8px 0 8px 0;
         cursor: pointer;
         color: #888888;
+        touch-action: manipulation;
 
         &:link, &:visited {
             color: #888888;

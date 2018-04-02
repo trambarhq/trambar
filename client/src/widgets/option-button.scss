@@ -4,6 +4,7 @@
     color: #666666;
     margin-bottom: 0.35em;
     cursor: pointer;
+    touch-action: manipulation;
 
     &:link, &:visited {
         text-decoration: none;
