@@ -78,8 +78,8 @@ module.exports = {
     entry: './bootstrap',
     output: {
         path: folders.www,
-        filename: '[name].js?[hash]',
-        chunkFilename: '[name].js?[chunkhash]',
+        filename: (platform === 'browser') ? '[name].js?[hash]' : '[name].js',
+        chunkFilename: (platform === 'browser') ? '[name].js?[chunkhash]' : '[name].js',
     },
     resolve: {
         extensions: [ '.js', '.jsx' ],
