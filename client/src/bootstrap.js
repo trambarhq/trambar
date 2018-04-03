@@ -65,10 +65,24 @@ function initialize(evt) {
         // need to disable momentum scrolling when textarea has focus
         // to prevent rendering glitch
         window.addEventListener('focusin', (evt) => {
-            document.body.style.WebkitOverflowScrolling = 'auto';
+            if (evt.target.tagName === 'TEXTAREA') {
+                document.body.style.WebkitOverflowScrolling = 'auto';
+            }
         });
         window.addEventListener('focusout', (evt) => {
-            document.body.style.WebkitOverflowScrolling = '';
+            if (evt.target.tagName === 'TEXTAREA') {
+                document.body.style.WebkitOverflowScrolling = '';
+            }
+        });
+        window.addEventListener('mousedown', (evt) => {
+            if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'LABEL') {
+                document.body.style.WebkitOverflowScrolling = 'auto';
+            }
+        });
+        window.addEventListener('mouseup', (evt) => {
+            if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'LABEL') {
+                document.body.style.WebkitOverflowScrolling = '';
+            }
         });
     }
 }
