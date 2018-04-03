@@ -23,6 +23,7 @@ module.exports = React.createClass({
     propTypes: {
         user: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),
+        storyCountEstimate: PropTypes.number,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
@@ -34,12 +35,21 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var stories = sortStories(this.props.stories);
-        return (
-            <div className="user-activity-list">
-                {_.map(stories, this.renderActivity)}
-            </div>
-        );
+        if (this.props.stories) {
+            var stories = sortStories(this.props.stories);
+            return (
+                <div className="user-activity-list">
+                    {_.map(stories, this.renderActivity)}
+                </div>
+            );
+        } else {
+            var indices = _.range(0, this.props.storyCountEstimate);
+            return (
+                <div className="user-activity-list">
+                    {_.map(indices, this.renderActivityPlaceholder)}
+                </div>
+            );
+        }
     },
 
     /**
@@ -67,6 +77,17 @@ module.exports = React.createClass({
                 <Link className={linkClass} url={url}>{text}</Link>
             </div>
         );
+    },
+
+    /**
+     * Render a placeholder
+     *
+     * @param  {Number} index
+     *
+     * @return {ReactElement}
+     */
+    renderActivityPlaceholder: function(index) {
+        return <div key={index} className="activity">{'\u00a0'}</div>;
     },
 
     /**

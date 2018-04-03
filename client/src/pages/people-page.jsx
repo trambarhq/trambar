@@ -162,6 +162,9 @@ module.exports = Relaks.createClass({
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
+            if (_.isEmpty(tags)) {
+                tags = null;
+            }
         }
         var props = {
             project: null,
@@ -568,11 +571,13 @@ var findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
 var findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
     return _.filter(users, (user) => {
         var userStats = statistics[user.id];
-        return _.some(userStats.daily, (counts, date) => {
-            return _.some(tags, (tag) => {
-                return !!counts[tag];
+        if (userStats) {
+            return _.some(userStats.daily, (counts, date) => {
+                return _.some(tags, (tag) => {
+                    return !!counts[tag];
+                });
             });
-        });
+        }
     });
 });
 

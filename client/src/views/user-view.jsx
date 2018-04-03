@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ComponentRefs = require('utils/component-refs');
+var TagScanner = require('utils/tag-scanner');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -84,6 +85,52 @@ module.exports = React.createClass({
             chartRange = 'biweekly';
         }
         return chartRange;
+    },
+
+    /**
+     * Return the number of stories that'll appear in the activity list based
+     * on daily stats
+     *
+     * @return {Number|undefined}
+     */
+    getStoryCountEstimate: function() {
+        if (!this.props.dailyActivities) {
+            return;
+        }
+        var params = this.props.route.parameters;
+        var tags;
+        if (params.search) {
+            if (!TagScanner.removeTags(params.search)) {
+                tags = TagScanner.findTags(params.search);
+                if (_.isEmpty(tags)) {
+                    tags = null;
+                }
+            } else {
+                // we don't generate stats for text search
+                return;
+            }
+        }
+        var total = 0;
+        var list;
+        if (this.props.selectedDate) {
+            // check just the selected date
+            var stats = this.props.dailyActivities.daily[this.props.selectedDate];
+            list = (stats) ? [ stats ] : [];
+        } else {
+            // go through all dates
+            list = _.values(this.props.dailyActivities.daily);
+        }
+        _.each(list, (stats) => {
+            _.each(stats, (count, type) => {
+                if (!tags || _.includes(tags, type))  {
+                    total += count;
+                }
+            });
+            if (total > 5) {
+                return false;
+            }
+        });
+        return Math.min(5, total);
     },
 
     /**
@@ -301,8 +348,10 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderRecentActivities: function() {
+        var estimate = this.getStoryCountEstimate();
         var props = {
             stories: this.props.stories,
+            storyCountEstimate: estimate,
             user: this.props.user,
             route: this.props.route,
             locale: this.props.locale,
@@ -317,16 +366,25 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderLink: function() {
-        if (_.isEmpty(this.props.stories)) {
-            return null;
-        }
         var t = this.props.locale.translate;
         var route = this.props.route;
         var params = _.pick(route.parameters, 'schema', 'date', 'search');
         var label;
         if (this.props.link === 'user') {
             params.user = this.props.user.id;
-            label = t('user-activity-more');
+            if (!_.isEmpty(this.props.stories)) {
+                label = t('user-activity-more');
+            } else if (!this.props.stories) {
+                // stories have not been loaded yet
+                if (this.getStoryCountEstimate() > 0) {
+                    // reserve space for link
+                    label = '\u00a0';
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
         } else if (this.props.link === 'team') {
             params.previousUser = this.props.user.id;
             label = t('user-activity-back');
