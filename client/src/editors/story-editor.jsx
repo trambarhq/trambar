@@ -733,6 +733,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
+            cameraDirection: 'back',
             onCaptureStart: this.handleCaptureStart,
             onCaptureEnd: this.handleCaptureEnd,
             onChange: this.handleResourcesChange,

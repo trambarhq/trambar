@@ -52,6 +52,8 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        var devices = DeviceManager.getDevices('videoinput');
+        var preferredDevice = DeviceSelector.choose(devices, this.props.cameraDirection);
         return {
             liveVideoStream: null,
             liveVideoError : null,
@@ -59,8 +61,8 @@ module.exports = React.createClass({
             capturedVideo: null,
             capturedImage: null,
             previewURL: null,
-            videoDevices: DeviceManager.getDevices('videoinput'),
-            selectedDeviceId: null,
+            videoDevices: devices,
+            selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
             startTime: null,
             duration: 0,
         };

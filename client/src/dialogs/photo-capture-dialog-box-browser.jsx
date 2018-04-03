@@ -20,6 +20,7 @@ module.exports = React.createClass({
     displayName: 'PhotoCaptureDialogBox',
     propTypes: {
         show: PropTypes.bool,
+        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
 
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -53,12 +54,14 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        var devices = DeviceManager.getDevices('videoinput');
+        var preferredDevice = DeviceSelector.choose(devices, this.props.cameraDirection);
         return {
             liveVideoStream: null,
             liveVideoError : null,
             capturedImage: null,
-            videoDevices: DeviceManager.getDevices('videoinput'),
-            selectedDeviceId: null,
+            videoDevices: devices,
+            selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
         };
     },
 

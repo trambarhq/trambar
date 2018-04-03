@@ -31,6 +31,7 @@ module.exports = React.createClass({
     propTypes: {
         resources: PropTypes.arrayOf(PropTypes.object),
         types: PropTypes.arrayOf(PropTypes.oneOf(ResourceTypes)),
+        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
         limit: PropTypes.number,
 
         locale: PropTypes.instanceOf(Locale).isRequired,
@@ -351,6 +352,7 @@ module.exports = React.createClass({
     renderPhotoDialog: function() {
         var props = {
             show: (this.state.capturing === 'image'),
+            cameraDirection: this.props.cameraDirection,
             payloads: this.props.payloads,
             locale: this.props.locale,
             onCapture: this.handleCapture,
@@ -367,6 +369,7 @@ module.exports = React.createClass({
     renderVideoDialog: function() {
         var props = {
             show: (this.state.capturing === 'video'),
+            cameraDirection: this.props.cameraDirection,
             payloads: this.props.payloads,
             locale: this.props.locale,
             onCapture: this.handleCapture,

@@ -147,6 +147,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads.override({ schema: 'global' }),
+            cameraDirection: 'front',
             onChange: this.handleChange,
             onCaptureEnd: this.handleCaptureEnd,
         };

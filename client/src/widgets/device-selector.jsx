@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 
 module.exports = DeviceSelector;
+module.exports.choose = choose;
 
 require('./device-selector.scss');
 
@@ -44,4 +45,14 @@ function DeviceSelector(props) {
             </select>
         </div>
     );
+}
+
+function choose(devices, direction) {
+    return _.find(devices, (device) => {
+        if (direction === 'front') {
+            return /front/i.test(device.label);
+        } else if (direction === 'back') {
+            return /back/i.test(device.label);
+        }
+    })
 }

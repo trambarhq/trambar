@@ -11,6 +11,7 @@ module.exports = React.createClass({
     displayName: 'PhotoCaptureDialogBox',
     propTypes: {
         show: PropTypes.bool,
+        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
 
         locale: PropTypes.instanceOf(Locale).isRequired,
 
@@ -38,12 +39,19 @@ module.exports = React.createClass({
         if (!this.props.show && nextProps.show) {
             var camera = navigator.camera;
             if (camera) {
+                var direction;
+                if (this.props.cameraDirection === 'front') {
+                    direction = Camera.Direction.FRONT;
+                } else if (this.props.cameraDirection === 'back') {
+                    direction = Camera.Direction.BACK;
+                }
                 var options = {
                     quality: 50,
                     destinationType: Camera.DestinationType.FILE_URI,
                     sourceType: Camera.PictureSourceType.CAMERA,
                     encodingType: Camera.EncodingType.JPEG,
                     mediaType: Camera.MediaType.PICTURE,
+                    cameraDirection: direction,
                     allowEdit: false,
                 };
                 camera.getPicture(this.handleCaptureSuccess, this.handleCaptureFailure, options);
