@@ -42,8 +42,8 @@ require('./story-editor.scss');
 
 const AUTOSAVE_DURATION = 2000;
 
-const RETURN = '\r'.charCodeAt(0);
-const CLOSE_BRACKET = ']'.charCodeAt(0);
+const RETURN = 13;
+const CLOSE_BRACKET = 221;
 
 module.exports = React.createClass({
     displayName: 'StoryEditor',
@@ -1100,9 +1100,28 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleKeyPress: function(evt) {
+        var target = evt.target;
+        if (evt.charCode === RETURN) {
+            var storyType = this.state.draft.type;
+            if (storyType !== 'survey' && storyType !== 'task-list') {
+                if (this.props.theme.mode === 'single-col') {
+                    evt.preventDefault();
+                    this.handlePublishClick(evt);
+                    target.blur();
+                }
+            }
+        }
+    },
+
+    /**
+     * Called when user releases a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyUp: function(evt) {
         // look for carriage return
         var target = evt.target;
-        if (evt.charCode == RETURN) {
+        if (evt.keyCode === RETURN) {
             var storyType = this.state.draft.type;
             if (storyType === 'survey' || storyType === 'task-list') {
                 // see if there's survey or task-list item on the line where
@@ -1110,58 +1129,33 @@ module.exports = React.createClass({
                 var value = target.value;
                 var selStart = target.selectionStart;
                 var textInFront = value.substr(0, selStart);
-                var lineFeedIndex = _.lastIndexOf(textInFront, '\n');
+                var lineFeedIndex = _.lastIndexOf(textInFront.substr(0, textInFront.length - 1), '\n');
                 var lineInFront = textInFront.substr(lineFeedIndex + 1);
                 var tokens = ListParser.extract(lineInFront);
                 var item = _.get(tokens, [ 0, 0 ]);
                 if (item instanceof Object) {
-                    var addition;
                     if (item.label) {
                         // the item is not empty--start the next item automatically
-                        addition = '\n* [ ] ';
+                        document.execCommand("insertText", false, '* [ ] ');
                     } else {
-                        if (this.keyDown) {
-                            // ignore repeated events (Windows Phone bug)
-                            evt.preventDefault();
-                            return;
-                        }
-
                         // it's empty--move the selection back to remove it
-                        target.selectionStart = selStart - lineInFront.length;
-                        addition = '\n';
+                        target.selectionStart = lineFeedIndex + 1;
+                        document.execCommand("insertText", false, '\n');
                     }
-                    evt.preventDefault();
-                    document.execCommand("insertText", false, addition);
-                }
-            } else {
-                if (this.props.theme.mode === 'single-col') {
-                    evt.preventDefault();
-                    this.handlePublishClick(evt);
-                    target.blur();
                 }
             }
-        } else if (evt.charCode === CLOSE_BRACKET) {
+        } else if (evt.keyCode === CLOSE_BRACKET) {
             var value = target.value;
             var selStart = target.selectionStart;
             var textInFront = value.substr(0, selStart);
             var lineFeedIndex = _.lastIndexOf(textInFront, '\n');
             var lineInFront = textInFront.substr(lineFeedIndex + 1);
-            if (/^\s*\*\[/.test(lineInFront)) {
-                target.selectionStart = selStart - 2;
-                document.execCommand("insertText", false, '* [ ] ');
-                evt.preventDefault();
+            console.log(lineInFront)
+            if (/^\s*\*\[\]/.test(lineInFront)) {
+                target.selectionStart = selStart - 3;
+                document.execCommand("insertText", false, '* [ ]');
             }
         }
-        this.keyDown = true;
-    },
-
-    /**
-     * Called when user release a key
-     *
-     * @param  {Event} evt
-     */
-    handleKeyUp: function(evt) {
-        this.keyDown = false;
     },
 
     /**
