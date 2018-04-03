@@ -550,7 +550,7 @@ module.exports = function(localeCode) {
             return `${min} min fa`;
         },
         'time-$minutes-ago': (minutes) => {
-            return (minutes === 1) ? `Un minuto fa` : `${minutes} 5 minuti fa`;
+            return (minutes === 1) ? `Un minuto fa` : `${minutes} minuti fa`;
         },
         'time-just-now': "Proprio ora",
         'time-yesterday': "Ieri",
