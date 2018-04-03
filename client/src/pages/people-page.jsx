@@ -259,13 +259,17 @@ module.exports = Relaks.createClass({
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
                         // now that we have the stories, we can see whom should be shown
                         props.stories = stories;
-                        props.visibleUsers = findUsersWithStories(props.members, stories);
+                        if (!props.visibleUsers) {
+                            props.visibleUsers = findUsersWithStories(props.members, stories);
+                        }
                     });
                 } else {
                     return StoryFinder.findStoriesMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
                         // now that we have the stories, we can see whom should be shown
                         props.stories = stories;
-                        props.visibleUsers = findUsersWithStories(props.members, stories);
+                        if (!props.visibleUsers) {
+                            props.visibleUsers = findUsersWithStories(props.members, stories);
+                        }
                     });
                 }
             } else if (params.date) {
@@ -274,7 +278,9 @@ module.exports = Relaks.createClass({
                     // we use stats to narrow down the list earlier, just in
                     // case we got an incomplete list due to out-of-date stats
                     props.stories = stories;
-                    props.visibleUsers = findUsersWithStories(props.members, stories);
+                    if (!props.visibleUsers) {
+                        props.visibleUsers = findUsersWithStories(props.members, stories);
+                    }
                 })
             } else {
                 return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5).then((stories) => {
