@@ -257,28 +257,28 @@ module.exports = Relaks.createClass({
             if (params.search) {
                 if (tags) {
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
-                        // now that we have the stories, we can see whom should be shown
                         props.stories = stories;
-                        if (!props.visibleUsers) {
+                        if (!props.selectedUser) {
+                            // now that we have the stories, we can see whom should be shown
                             props.visibleUsers = findUsersWithStories(props.members, stories);
                         }
                     });
                 } else {
                     return StoryFinder.findStoriesMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
-                        // now that we have the stories, we can see whom should be shown
                         props.stories = stories;
-                        if (!props.visibleUsers) {
+                        if (!props.selectedUser) {
+                            // now that we have the stories, we can see whom should be shown
                             props.visibleUsers = findUsersWithStories(props.members, stories);
                         }
                     });
                 }
             } else if (params.date) {
                 return StoryFinder.findStoriesOnDate(db, params.date, 5).then((stories) => {
-                    // do this for date search as well, even through
-                    // we use stats to narrow down the list earlier, just in
-                    // case we got an incomplete list due to out-of-date stats
                     props.stories = stories;
-                    if (!props.visibleUsers) {
+                    if (!props.selectedUser) {
+                        // do this for date search as well, even through
+                        // we use stats to narrow down the list earlier, just in
+                        // case we got an incomplete list due to out-of-date stats
                         props.visibleUsers = findUsersWithStories(props.members, stories);
                     }
                 })
