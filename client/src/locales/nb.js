@@ -171,6 +171,12 @@ module.exports = function(localeCode) {
             }
             return `${name} nevnte deg ${story}`;
         },
+        'notification-$name-opened-an-issue': (name) => {
+            return `${name} åpnet et problem`;
+        },
+        'notification-$name-posted-a-survey': (name) => {
+            return `${name} skrev en undersøkelse`;
+        },
         'notification-$name-requested-to-join': (name) => {
             return `${name} ba om å bli med i dette prosjektet`;
         },

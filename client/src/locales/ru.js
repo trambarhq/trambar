@@ -206,6 +206,14 @@ module.exports = function(localeCode) {
             }
             return `${name} упомянул вас ${story}`;
         },
+        'notification-$name-opened-an-issue': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} открыл${e} выпуск`;
+        },
+        'notification-$name-posted-a-survey': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} опубликовал${e} опрос`;
+        },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name);
             return `${name} попросил${e} присоединиться к проекту`;

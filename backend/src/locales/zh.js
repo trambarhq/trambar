@@ -217,6 +217,12 @@ var traditionalPhrases = {
         }
         return `${name}在${story}提到你`;
     },
+    'notification-$name-opened-an-issue': (name) => {
+        return `${name}開了一個問題`;
+    },
+    'notification-$name-posted-a-survey': (name) => {
+        return `${name}發布了一個調查`;
+    },
     'notification-$name-requested-to-join': (name) => {
         return `${name}要求加入這個項目`;
     },
@@ -868,6 +874,12 @@ var simplifiedPhrases = {
         }
         return `${name}在${story}提到你`;
     },
+    'notification-$name-opened-an-issue': (name) => {
+        return `${name}开了一个问题`;
+    },
+    'notification-$name-posted-a-survey': (name) => {
+        return `${name}发布了一个调查`;
+    },
     'notification-$name-requested-to-join': (name) => {
         return `${name}要求加入这个项目`;
     },
@@ -1422,6 +1434,12 @@ var cantonesePhrases = {
             default: story = '一個故事中';
         }
         return `${name}喺${story}提到你`;
+    },
+    'notification-$name-opened-an-issue': (name) => {
+        return `${name}開咗一個問題`;
+    },
+    'notification-$name-posted-a-survey': (name) => {
+        return `${name}發布咗一個調查`;
     },
     'notification-$name-requested-to-join': (name) => {
         return `${name}要求加入呢個項目`;

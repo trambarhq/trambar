@@ -171,6 +171,12 @@ module.exports = function(localeCode) {
             }
             return `${name} mainitsi sinut ${story}`;
         },
+        'notification-$name-opened-an-issue': (name) => {
+            return `${name} avasi asian`;
+        },
+        'notification-$name-posted-a-survey': (name) => {
+            return `${name} lähetti kyselyn`;
+        },
         'notification-$name-requested-to-join': (name) => {
             return `${name} pyysi liittymään tähän projektiin`;
         },
