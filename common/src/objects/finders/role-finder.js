@@ -73,7 +73,7 @@ function findRolesOfUsers(db, users) {
     if (_.isEmpty(roleIds)) {
         return Promise.resolve(Empty.array);
     }
-    roleIds = _.uniq(roleIds).sort();
+    roleIds = _.sortBy(_.uniq(roleIds));
     return db.find({
         schema: 'global',
         table: 'role',

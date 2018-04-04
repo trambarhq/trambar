@@ -184,7 +184,7 @@ module.exports = _.create(LiveData, {
  */
 function hash(filters) {
     var values = {};
-    var keys = _.keys(filters).sort();
+    var keys = _.sortBy(_.keys(filters));
     _.each(keys, (key) => {
         values[key] = filters[key];
     });

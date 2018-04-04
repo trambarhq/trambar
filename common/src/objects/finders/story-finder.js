@@ -51,7 +51,7 @@ function findStories(db, ids) {
     if (_.isEmpty(ids)) {
         return Promise.resolve(Empty.array);
     }
-    ids = _.uniq(ids).sort();
+    ids = _.sortBy(_.uniq(ids));
     return db.find({
         table: 'story',
         criteria: { id: ids },
@@ -71,7 +71,7 @@ function findViewableStories(db, ids, currentUser) {
     if (_.isEmpty(ids) || !currentUser) {
         return Promise.resolve(Empty.array);
     }
-    ids = _.uniq(ids).sort();
+    ids = _.sortBy(_.uniq(ids));
     return db.find({
         table: 'story',
         criteria: {

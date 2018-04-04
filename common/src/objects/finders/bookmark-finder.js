@@ -17,7 +17,8 @@ module.exports = {
  * @return {Promise<Array<Bookmark>>}
  */
 function findBookmarksByUser(db, user, stories) {
-    var storyIds = _.uniq(_.map(stories, 'id')).sort();
+    var storyIds = _.map(stories, 'id');
+    storyIds = _.sortBy(_.uniq(storyIds));
     if (_.isEmpty(storyIds) || !user) {
         return Promise.resolve(Empty.array);
     }

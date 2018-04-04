@@ -58,7 +58,7 @@ function findServersOfRepos(db, repos) {
     if (_.isEmpty(ids)) {
         return Promise.resolve(Empty.array);
     }
-    ids = _.uniq(ids).sort();
+    ids = _.sortBy(_.uniq(ids));
     return db.find({
         schema: 'global',
         table: 'server',

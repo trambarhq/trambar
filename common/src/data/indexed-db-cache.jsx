@@ -64,7 +64,7 @@ module.exports = React.createClass({
             if (_.isEqual(_.keys(criteria), [ keyName ])) {
                 var keys = criteria[keyName];
                 if (keys instanceof Array) {
-                    keys = _.slice(keys).sort();
+                    keys = _.sortBy(_.slice(keys));
                 } else {
                     keys = [ keys ];
                 }
