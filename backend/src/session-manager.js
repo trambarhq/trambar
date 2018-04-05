@@ -906,7 +906,7 @@ function copyUserProperties(user, server, image, profile) {
         }
 
         var userAfter = _.cloneDeep(user);
-        if (userAfter) {
+        if (!userAfter) {
             userAfter = {
                 role_ids: _.get(server, 'settings.user.role_ids', []),
                 settings: UserSettings.default,
