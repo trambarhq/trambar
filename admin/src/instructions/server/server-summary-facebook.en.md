@@ -22,6 +22,10 @@ a contact e-mail address then press *Create App ID*. Add *Facebook Login* to
 the app. Select *WWW* as the platform. Copy this URL into the box under
 *Site URL* and press *Save*. Skip the remaining steps.
 
+**Redirect URL** - In the left navigation bar, choose *Facebook Login*, then
+*Settings*. Copy and paste this URL into the box labeled *Valid OAuth Redirect
+URIs*.
+
 **Privacy policy URL** - Facebook requires a privacy policy URL. You may
 link to your company's own policy page or use this boilerplate. It is entered
 in *Settings* > *Basic*.

@@ -15,6 +15,10 @@ used to sign up for GitHub.
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 
+**Site URL** - The URL of the Trambar website. It's set in the Settings page.
+It's used to form the callback URL. You may use it as the OAuth app's
+homepage URL.
+
 **Callback URL** - You will need this URL when you create an OAuth app in the
 [GitHub Developer Settings](https://github.com/settings/developers/) page. First,
 press the *New OAuth App* button. Enter an application name (e.g. _Rick's

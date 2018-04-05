@@ -107,7 +107,7 @@ module.exports = Relaks.createClass({
         meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
         return db.start().then((userId) => {
             return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
+                props.system = system || undefined;
             });
         }).then(() => {
             if (params.server !== 'new') {
@@ -471,6 +471,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderNameInput()}
                 {this.renderUserOptions()}
                 {this.renderRoleSelector()}
+                {this.renderSiteURL()}
                 {this.renderOAuthCallbackURL()}
                 {this.renderPrivacyPolicyURL()}
                 {this.renderGitlabURLInput()}
@@ -752,29 +753,47 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Render read-only input for site URL
+     *
+     * @return {ReactElement}
+     */
+    renderSiteURL: function() {
+        var t = this.props.locale.translate;
+        var address = _.get(this.props.system, 'settings.address');
+        var warning;
+        if (!address) {
+            if (this.props.system === undefined) {
+                warning = t('server-summary-system-address-missing');
+            }
+            address = window.location.origin;
+        }
+        var props = {
+            id: 'oauth_callback',
+            value: address,
+            locale: this.props.locale,
+            readOnly: true,
+        };
+        return (
+            <TextField {...props}>
+                {t('server-summary-oauth-site-url')}
+                <InputError type="warning">{warning}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
      * Render read-only input for OAuth callback URL
      *
-     * @return {[type]}
+     * @return {ReactElement|null}
      */
     renderOAuthCallbackURL: function() {
         var t = this.props.locale.translate;
         var serverType = this.getServerProperty('type');
-        var url, warning;
         var address = _.get(this.props.system, 'settings.address');
-        var warning;
         if (!address) {
-            warning = t('server-summary-system-address-missing');
             address = window.location.origin;
         }
-        switch (serverType) {
-            case 'facebook':
-                url = address;
-                break;
-            default:
-                if (serverType) {
-                    url = `${address}/srv/session/${serverType}/callback/`;
-                }
-        }
+        var url = `${address}/srv/session/${serverType || '...'}/callback/`;
         var props = {
             id: 'oauth_callback',
             value: url,
@@ -783,12 +802,12 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         };
         var problems = this.state.problems;
         var phrase = 'server-summary-oauth-callback-url';
-        switch (this.getServerProperty('type')) {
+        switch (serverType) {
             case 'dropbox':
                 phrase = 'server-summary-oauth-redirect-uri';
                 break;
             case 'facebook':
-                phrase = 'server-summary-oauth-site-url';
+                phrase = 'server-summary-oauth-redirect-uri';
                 break;
             case 'github':
                 phrase = 'server-summary-oauth-callback-url';
@@ -806,7 +825,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <TextField {...props}>
                 {t(phrase)}
-                <InputError type="warning">{warning}</InputError>
             </TextField>
         );
     },

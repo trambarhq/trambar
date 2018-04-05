@@ -15,6 +15,9 @@ used to sign up for Windows.
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 
+**Site URL** - The URL of the Trambar website. It's set in the Settings page.
+It's used to form the redirect URL. 
+
 **Redirect URL** - You will need this URL when you create an app at the
 [Windows Live application management site](https://apps.dev.microsoft.com/).
 First, press the *Add an app* button in the *Live SDK applications* section.

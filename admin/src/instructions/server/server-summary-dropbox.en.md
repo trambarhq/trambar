@@ -15,6 +15,9 @@ used to sign up for Dropbox.
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 
+**Site URL** - The URL of the Trambar website. It's set in the Settings page.
+It's used to form the callback URL.
+
 **Callback URL** - You will need this URL when you create an app in the [Dropbox
 App Console](https://www.dropbox.com/developers/apps). First, press the *Create
 app* button to start a new app. Choose *Dropbox API* and *App folder* access.

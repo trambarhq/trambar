@@ -16,6 +16,9 @@ created by others.
 authenticated through this server. For instance, you may choose to assign a
 "Developer" role to all users coming from GitLab.
 
+**Site URL** - The URL of the Trambar website. It's set in the Settings page.
+It's used to form the redirect URL.
+
 **Redirect URI** - You will need this URL when you create an app in GitLab.
 First, log into GitLab as an administrator. Go to the *Applications* page in
 the admin area (the wrench icon). Press the *New Application* button. Enter

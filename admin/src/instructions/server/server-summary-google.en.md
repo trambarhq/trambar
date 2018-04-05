@@ -15,6 +15,10 @@ used to sign up for Google+.
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 
+**Site URL** - The URL of the Trambar website. It's set in the Settings page.
+It's used to form the redirect URI. You may use it as the OAuth app's
+homepage URL.
+
 **Redirect URI** - You will need this URL when you create a project in the
 [Google Developer Console](https://console.developers.google.com/cloud-resource-manager).
 First, press the *Create Project* button. Enter a project name (e.g. _Rick's
