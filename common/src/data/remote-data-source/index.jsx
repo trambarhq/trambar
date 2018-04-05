@@ -158,7 +158,9 @@ module.exports = React.createClass({
         var url = `${address}/srv/session/`;
         var options = { responseType: 'json' };
         return HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
-            _.assign(session, res.session);
+            if (res && res.session) {
+                _.assign(session, res.session);
+            }
             if (session.token) {
                 this.triggerAuthorizationEvent(session);
                 return true;
