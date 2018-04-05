@@ -1150,7 +1150,6 @@ module.exports = React.createClass({
             var textInFront = value.substr(0, selStart);
             var lineFeedIndex = _.lastIndexOf(textInFront, '\n');
             var lineInFront = textInFront.substr(lineFeedIndex + 1);
-            console.log(lineInFront)
             if (/^\s*\*\[\]/.test(lineInFront)) {
                 target.selectionStart = selStart - 3;
                 document.execCommand("insertText", false, '* [ ]');
@@ -1453,16 +1452,18 @@ module.exports = React.createClass({
                 if (draft.type === 'task-list' || draft.type === 'survey') {
                     var textArea = this.components.textArea.getElement();
                     textArea.focus();
-                    setTimeout(() => {
-                        var addition = '* [ ] ';
-                        var value = textArea.value;
-                        var selStart = textArea.selectionStart;
-                        var textInFront = value.substr(0, selStart);
-                        if (/[^\n]$/.test(textInFront)) {
-                            addition = '\n' + addition;
-                        }
-                        document.execCommand("insertText", false, addition);
-                    }, 10);
+                    if (!ListParser.detect(textArea.value)) {
+                        setTimeout(() => {
+                            var value = textArea.value;
+                            var addition = '* [ ] ';
+                            var selStart = textArea.selectionStart;
+                            var textInFront = value.substr(0, selStart);
+                            if (/[^\n]$/.test(textInFront)) {
+                                addition = '\n' + addition;
+                            }
+                            document.execCommand("insertText", false, addition);
+                        }, 10);
+                    }
                 }
                 this.saveDraft(draft);
                 break;
