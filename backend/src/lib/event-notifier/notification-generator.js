@@ -75,6 +75,10 @@ var notificationGeneratingFunctions = [
  */
 function generateCoauthoringNotifications(db, event) {
     return Promise.try(() => {
+        // don't notify when we're just creating the editable copy
+        if (event.diff.published_version_id) {
+            return [];
+        }
         var newCoauthorIds = getNewCoauthorIds(event);
         if (_.isEmpty(newCoauthorIds)) {
             return [];
