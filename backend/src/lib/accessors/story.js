@@ -26,6 +26,7 @@ module.exports = _.create(ExternalData, {
         ptime: String,
         btime: String,
         public: Boolean,
+        unfinished_tasks: Number,
         external: Array(Object),
         exchange: Array(Object),
         itime: String,
@@ -55,6 +56,7 @@ module.exports = _.create(ExternalData, {
         bumped_after: String,
         url: String,
         has_tags: Boolean,
+        has_unfinished_tasks: Boolean,
         search: Object,
         per_user_limit: Number,
     },
@@ -92,6 +94,7 @@ module.exports = _.create(ExternalData, {
                 ptime timestamp,
                 btime timestamp,
                 public boolean NOT NULL DEFAULT false,
+                unfinished_tasks int,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 exchange jsonb[] NOT NULL DEFAULT '{}',
                 itime timestamp,
@@ -103,6 +106,7 @@ module.exports = _.create(ExternalData, {
             CREATE INDEX ON ${table} USING gin(("lowerCase"(tags))) WHERE deleted = false AND cardinality(tags) <> 0;
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
+            CREATE INDEX ON ${table} (id) WHERE unfinished_tasks > 0 AND published = true AND deleted = false;
         `;
         //
         return db.execute(sql);
@@ -118,7 +122,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'tags', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'ptime', 'external', 'mtime', 'itime', 'etime' ];
+            var propNames = [ 'deleted', 'type', 'tags', 'unfinished_tasks', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'ptime', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'published' ]).then(() => {
                     var Task = require('accessors/task');
@@ -164,6 +168,7 @@ module.exports = _.create(ExternalData, {
             'bumped_after',
             'url',
             'has_tags',
+            'has_unfinished_tasks',
             'search',
             'per_user_limit',
         ];
@@ -199,6 +204,13 @@ module.exports = _.create(ExternalData, {
                 conds.push(`CARDINALITY(tags) <> 0`);
             } else {
                 conds.push(`CARDINALITY(tags) = 0`);
+            }
+        }
+        if (criteria.has_unfinished_tasks !== undefined) {
+            if (criteria.has_unfinished_tasks) {
+                conds.push(`unfinished_tasks > 0`);
+            } else {
+                conds.push(`unfinished_tasks = 0`);
             }
         }
         var promise;
@@ -250,6 +262,9 @@ module.exports = _.create(ExternalData, {
                 object.public = row.public;
                 object.published = row.published;
                 object.tags = row.tags;
+                if (row.type === 'task-list') {
+                    object.unfinished_tasks = row.unfinished_tasks;
+                }
                 if (row.published_version_id) {
                     object.published_version_id = row.published_version_id;
                 }
@@ -309,6 +324,13 @@ module.exports = _.create(ExternalData, {
             // mark story as having been manually deleted
             if (storyReceived.deleted) {
                 storyReceived.suppressed = true;
+            }
+
+            // set unfinished_tasks to null when story type is no longer 'task-list'
+            if (storyReceived.hasOwnProperty('type')) {
+                if (storyReceived.type !== 'task-list') {
+                    storyReceived.unfinished_tasks = null;
+                }
             }
 
             if (storyReceived.published_version_id) {

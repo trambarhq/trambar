@@ -1082,6 +1082,17 @@ module.exports = React.createClass({
             }
         }
 
+        if (draft.type === 'task-list') {
+            // update unfinished_tasks
+            var counts = [];
+            _.each(draft.details.text, (langText) => {
+                var tokens = ListParser.extract(langText);
+                var unfinished = ListParser.count(tokens, false);
+                counts.push(unfinished);
+            });
+            draft.unfinished_tasks = _.max(counts);
+        }
+
         // automatically enable Markdown formatting
         if (draft.details.markdown === undefined) {
             if (Markdown.detect(langText)) {
@@ -1323,11 +1334,15 @@ module.exports = React.createClass({
         var selected = target.checked;
         var draft = _.decouple(this.state.draft, 'details');
         if (draft.type === 'task-list') {
+            var counts = [];
             draft.details.text = _.mapValues(draft.details.text, (langText) => {
                 var tokens = ListParser.extract(langText);
                 ListParser.set(tokens, list, item, selected);
+                var unfinished = ListParser.count(tokens, false);
+                counts.push(unfinished);
                 return ListParser.join(tokens);
             });
+            draft.unfinished_tasks = _.max(counts);
         } else if (draft.type === 'survey') {
             draft.details.text = _.mapValues(draft.details.text, (langText) => {
                 var tokens = ListParser.extract(langText);

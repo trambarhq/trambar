@@ -898,11 +898,15 @@ module.exports = React.createClass({
 
         // update the text of the story
         var story = _.cloneDeep(this.props.story);
+        var counts = [];
         story.details.text = _.mapValues(story.details.text, (langText) => {
             var tokens = ListParser.extract(langText);
             ListParser.set(tokens, list, item, selected);
+            var unfinished = ListParser.count(tokens, false);
+            counts.push(unfinished);
             return ListParser.join(tokens);
         });
+        story.unfinished_tasks = _.max(counts);
         this.triggerChangeEvent(story);
     },
 
