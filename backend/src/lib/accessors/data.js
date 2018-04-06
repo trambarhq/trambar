@@ -362,6 +362,8 @@ module.exports = {
                         if (value instanceof String) {
                             // a boxed string--just insert it into the query
                             assignments.push(`${name} = ${value.valueOf()}`);
+                        } else if (value === null) {
+                            assignments.push(`${name} = NULL`);
                         } else {
                             assignments.push(`${name} = $${parameters.push(value)}`);
                         }
@@ -478,6 +480,8 @@ module.exports = {
                     if (value instanceof String) {
                         // a boxed string--just insert it into the query
                         values.push(value.valueOf());
+                    } else if (value === null) {
+                        values.push('NULL');
                     } else {
                         values.push(`$${parameters.push(value)}`);
                     }
