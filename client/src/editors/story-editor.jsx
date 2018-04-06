@@ -1318,14 +1318,23 @@ module.exports = React.createClass({
     handleItemChange: function(evt) {
         // update the text of the story to reflect the selection
         var target = evt.currentTarget;
-        var list = target.name;
-        var item = target.value;
+        var list = parseInt(target.name);
+        var item = parseInt(target.value);
         var selected = target.checked;
         var draft = _.decouple(this.state.draft, 'details');
-        var clearOthers = (draft.type === 'survey');
-        draft.details.text = _.mapValues(draft.details.text, (langText) => {
-            return ListParser.update(langText, list, item, selected, clearOthers);
-        });
+        if (draft.type === 'task-list') {
+            draft.details.text = _.mapValues(draft.details.text, (langText) => {
+                var tokens = ListParser.extract(langText);
+                ListParser.set(tokens, list, item, selected);
+                return ListParser.join(tokens);
+            });
+        } else if (draft.type === 'survey') {
+            draft.details.text = _.mapValues(draft.details.text, (langText) => {
+                var tokens = ListParser.extract(langText);
+                ListParser.set(tokens, list, item, selected, true);
+                return ListParser.join(tokens);
+            });
+        }
         this.saveDraft(draft);
     },
 

@@ -249,15 +249,17 @@ module.exports = React.createClass({
             return null;
         }
         var answers = this.state.userAnswers;
+        var onChange = this.isCurrentUserAuthor() ? this.handleTaskListItemChange : null;
+        var onReference = this.handleReference;
         if (story.details.markdown) {
-            var list = Markdown.parseTaskList(text, answers, this.handleTaskListItemChange, this.handleReference);
+            var list = Markdown.parseTaskList(text, answers, onChange, onReference);
             return (
                 <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
                     {list}
                 </div>
             );
         } else {
-            var list = PlainText.parseTaskList(text, answers, this.handleTaskListItemChange);
+            var list = PlainText.parseTaskList(text, answers, onChange);
             return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
     },
@@ -274,23 +276,25 @@ module.exports = React.createClass({
         if (!text) {
             return null;
         }
+        var onChange = this.handleTaskListItemChange;
+        var onReference = this.handleReference;
         if (!this.hasUserVoted()) {
             var answers = this.state.userAnswers;
             if (story.details.markdown) {
-                var survey = Markdown.parseSurvey(text, answers, this.handleSurveyItemChange, this.handleReference);
+                var survey = Markdown.parseSurvey(text, answers, onChange, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {survey}
                     </div>
                 );
             } else {
-                var survey = PlainText.parseSurvey(text, answers, this.handleSurveyItemChange);
+                var survey = PlainText.parseSurvey(text, answers, onChange);
                 return <div className="text survey plain-text"><p>{survey}</p></div>;
             }
         } else {
             var voteCounts = countVotes(this.props.reactions);
             if (story.details.markdown) {
-                var results = Markdown.parseSurveyResults(text, voteCounts, this.handleReference);
+                var results = Markdown.parseSurveyResults(text, voteCounts, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {results}
@@ -884,25 +888,21 @@ module.exports = React.createClass({
      */
     handleTaskListItemChange: function(evt) {
         var target = evt.currentTarget;
-        var list = target.name;
-        var item = target.value;
+        var list = parseInt(target.name);
+        var item = parseInt(target.value);
         var selected = target.checked;
-
-        if (!this.isCurrentUserAuthor()) {
-            return false;
-        }
 
         // save the answer in state for immediately UI response
         var userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
         this.setState({ userAnswers });
 
         // update the text of the story
-        var story = this.props.story;
-        var newText = _.mapValues(story.details.text, (langText) => {
-            return ListParser.update(langText, list, item, selected, false);
+        var story = _.cloneDeep(this.props.story);
+        story.details.text = _.mapValues(story.details.text, (langText) => {
+            var tokens = ListParser.extract(langText);
+            ListParser.set(tokens, list, item, selected);
+            return ListParser.join(tokens);
         });
-        story = _.decoupleSet(story, 'details.text', newText);
-
         this.triggerChangeEvent(story);
     },
 

@@ -83,8 +83,8 @@ Pick an item:
             expect(tokens[0]).to.be.a('string').that.equals(text);
         })
     })
-    describe('#update()', function() {
-        it('should not alter whitespace within the text', function() {
+    describe('#join', function() {
+        it('should reproduce the original text', function() {
             var text = `
                 Pick an item:
 
@@ -97,10 +97,71 @@ Pick an item:
                 * [ ] item 4
                 * [ ] item 5
             `
-            var output = ListParser.update(text, 1, 1, false);
-            output = ListParser.update(output, 2, 4, false);
+            var tokens = ListParser.extract(text);
+            var output = ListParser.join(tokens);
             expect(output).to.be.a('string').that.equals(text);
         })
+    })
+    describe('#find', function() {
+        it('should find an item', function() {
+            var text = `
+                Pick an item:
+
+                * [ ] item 1
+                * [ ] item 2
+                * [ ] item 3
+
+                Pick another item:
+
+                * [ ] item 4
+                * [ ] item 5
+            `
+            var tokens = ListParser.extract(text);
+            var item2 = ListParser.find(tokens, 1, 2);
+            var item5 = ListParser.find(tokens, 2, 5);
+            expect(item2).to.have.property('label', 'item 2');
+            expect(item5).to.have.property('label', 'item 5');
+        })
+    })
+    describe('#count', function() {
+        it('should count the number of items', function() {
+            var text = `
+                Pick an item:
+
+                * [x] item 1
+                * [x] item 2
+                * [ ] item 3
+
+                Pick another item:
+
+                * [x] item 4
+                * [ ] item 5
+            `
+            var tokens = ListParser.extract(text);
+            var count = ListParser.count(tokens);
+            expect(count).to.equal(5);
+        })
+        it('should count the number of checked/unchecked items', function() {
+            var text = `
+                Pick an item:
+
+                * [x] item 1
+                * [x] item 2
+                * [ ] item 3
+
+                Pick another item:
+
+                * [x] item 4
+                * [ ] item 5
+            `
+            var tokens = ListParser.extract(text);
+            var count1 = ListParser.count(tokens, true);
+            var count2 = ListParser.count(tokens, false);
+            expect(count1).to.equal(3);
+            expect(count2).to.equal(2);
+        })
+    })
+    describe('#set()', function() {
         it('should correctly set items', function() {
             var text = `
                 Pick an item:
@@ -114,16 +175,15 @@ Pick an item:
                 * [ ] item 4
                 * [ ] item 5
             `
-            var output = ListParser.update(text, 1, 1, true);
-            output = ListParser.update(output, 2, 4, true);
-            var tokens = ListParser.extract(output);
-            tokens = _.flattenDeep(tokens);
-            var item1 = _.find(tokens, { key: 1 });
-            var item2 = _.find(tokens, { key: 2 });
-            var item4 = _.find(tokens, { key: 4 });
-            expect(item1).to.have.property('checked').that.equals(true);
-            expect(item2).to.have.property('checked').that.equals(false);
-            expect(item4).to.have.property('checked').that.equals(true);
+            var tokens = ListParser.extract(text);
+            ListParser.set(tokens, 1, 1, true);
+            ListParser.set(tokens, 2, 4, true);
+            var item1 = ListParser.find(tokens, 1, 1);
+            var item2 = ListParser.find(tokens, 1, 2);
+            var item4 = ListParser.find(tokens, 2, 4);
+            expect(item1).to.have.property('checked', true);
+            expect(item2).to.have.property('checked', false);
+            expect(item4).to.have.property('checked', true);
         })
         it('should correctly unset items', function() {
             var text = `
@@ -138,16 +198,53 @@ Pick an item:
                 * [X] item 4
                 * [ ] item 5
             `
-            var output = ListParser.update(text, 1, 1, false);
-            output = ListParser.update(output, 2, 4, false);
-            var tokens = ListParser.extract(output);
-            tokens = _.flattenDeep(tokens);
-            var item1 = _.find(tokens, { key: 1 });
-            var item2 = _.find(tokens, { key: 2 });
-            var item4 = _.find(tokens, { key: 4 });
-            expect(item1).to.have.property('checked').that.equals(false);
-            expect(item2).to.have.property('checked').that.equals(true);
-            expect(item4).to.have.property('checked').that.equals(false);
+            var tokens = ListParser.extract(text);
+            ListParser.set(tokens, 1, 1, false);
+            ListParser.set(tokens, 2, 4, false);
+            var item1 = ListParser.find(tokens, 1, 1);
+            var item2 = ListParser.find(tokens, 1, 2);
+            var item4 = ListParser.find(tokens, 2, 4);
+            expect(item1).to.have.property('checked', false);
+            expect(item2).to.have.property('checked', true);
+            expect(item4).to.have.property('checked', false);
+        })
+        it('should clear other items when an item is set', function() {
+            var text = `
+                Pick an item:
+
+                * [ ] item 1
+                * [x] item 2
+                * [ ] item 3
+
+                Pick another item:
+
+                * [X] item 4
+                * [ ] item 5
+            `
+            var tokens = ListParser.extract(text);
+            ListParser.set(tokens, 1, 1, true, true);
+            ListParser.set(tokens, 2, 5, true, true);
+            var item1 = ListParser.find(tokens, 1, 1);
+            var item2 = ListParser.find(tokens, 1, 2);
+            var item4 = ListParser.find(tokens, 2, 4);
+            var item5 = ListParser.find(tokens, 2, 5);
+            expect(item1).to.have.property('checked', true);
+            expect(item2).to.have.property('checked', false);
+            expect(item4).to.have.property('checked', false);
+            expect(item5).to.have.property('checked', true);
+        })
+        it('should use Cyrillic x (ch) when label is in Cyrillic', function() {
+            var text = `
+                Выберите пункт:
+
+                * [ ] пункт 1
+                * [ ] пункт 2
+                * [ ] пункт 3
+            `;
+            var tokens = ListParser.extract(text);
+            ListParser.set(tokens, 1, 1, true);
+            var item1 = ListParser.find(tokens, 1, 1);
+            expect(item1).to.have.property('answer', '\u0445');
         })
     })
 })

@@ -3,7 +3,10 @@ var _ = require('lodash');
 module.exports = {
     extract,
     detect,
-    update,
+    set,
+    find,
+    count,
+    join,
 };
 
 // look for in Latin x, Cyrillic х, and Greek χ
@@ -87,38 +90,88 @@ function detect(text) {
 /**
  * Check or uncheck item
  *
- * @param  {String} text
+ * @param  {Array} tokens
  * @param  {Number|String} list
  * @param  {Number|String} key
  * @param  {Boolean} checked
  * @param  {Boolean} clearOthers
+ */
+function set(tokens, list, key, checked, clearOthers) {
+    _.each(tokens, (token) => {
+        if (token instanceof Array) {
+            _.each(token, (item) => {
+                if (item.list == list) {
+                    // update .checked then .answer of item
+                    if (item.key == key) {
+                        item.checked = checked;
+                        updateAnswerText(item);
+                    } else {
+                        if (checked && clearOthers) {
+                            item.checked = false;
+                            updateAnswerText(item);
+                        }
+                    }
+                }
+            });
+        }
+    });
+}
+
+/**
+ * Find an item
+ *
+ * @param  {Array} tokens
+ * @param  {Number|String} list
+ * @param  {Number|String} key
+ *
+ * @return {Object|null}
+ */
+function find(tokens, list, key) {
+    return _.reduce(tokens, (result, token) => {
+        if (!result) {
+            if (token instanceof Array) {
+                result = _.find(token, (item) => {
+                    if (item.list == list && item.key == key) {
+                        return true;
+                    }
+                });
+            }
+        }
+        return result;
+    }, null);
+}
+
+/**
+ * Count the number of items--of a particular state or any
+ *
+ * @param  {Array} tokens
+ * @param  {Boolean|undefined} checked
+ *
+ * @return {Number}
+ */
+function count(tokens, checked) {
+    return _.reduce(tokens, (total, token) => {
+        if (token instanceof Array) {
+            _.each(token, (item) => {
+                if (checked === undefined || item.checked === checked) {
+                    total++;
+                }
+            });
+        }
+        return total;
+    }, 0);
+}
+
+/**
+ * Convert list of tokens into text again
+ *
+ * @param  {Array} tokens
  *
  * @return {String}
  */
-function update(text, list, key, checked, clearOthers) {
-    // find the items on the list
-    if (typeof(list) !== 'number') {
-        list = Number(list);
-    }
-    if (typeof(key) !== 'number') {
-        key = Number(key);
-    }
-    var tokens = extract(text);
-    tokens = _.flattenDeep(tokens);
-    var items = _.filter(tokens, { list });
-    // update .checked then .answer of items
-    _.each(items, (item) => {
-        if (item.key === key) {
-            item.checked = checked;
-            updateAnswerText(item, text);
-        } else {
-            if (checked && clearOthers) {
-                item.checked = false;
-                updateAnswerText(item, text);
-            }
-        }
-    });
+function join(tokens) {
     // concatenate tokens into a string again
+    tokens = _.flattenDeep(tokens);
     return _.reduce(tokens, (result, token) => {
         if (token instanceof Object) {
             return result + token.before + '* [' + token.answer + ']' + token.between + token.label + token.after;
@@ -128,12 +181,12 @@ function update(text, list, key, checked, clearOthers) {
     }, '');
 }
 
-function updateAnswerText(item, text) {
+function updateAnswerText(item) {
     if (item.checked) {
         var x;
-        if (/[\u0x0400-\u0x04ff]/.test(text)) {
+        if (/[\u0x0400-\u0x04ff]/.test(item.label)) {
             x = 'х';
-        } else if (/[\u0x0370-\u0x03ff]/.test(text)) {
+        } else if (/[\u0x0370-\u0x03ff]/.test(item.label)) {
             x = 'χ';
         } else {
             x = 'x';
