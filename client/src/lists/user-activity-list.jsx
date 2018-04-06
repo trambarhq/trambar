@@ -110,7 +110,21 @@ module.exports = React.createClass({
             case 'branch':
                 return t(`user-activity-$name-created-branch`, name);
             case 'issue':
-                return t(`user-activity-$name-opened-issue`, name);
+                if (story.details.exported) {
+                    if (story.details.exporter === user.id) {
+                        return t(`user-activity-$name-opened-issue`, name);
+                    } else if (story.user_ids[0] === user.id) {
+                        return t(`user-activity-$name-reported-issue`, name);
+                    } else {
+                        return t(`user-activity-$name-was-assigned-issue`, name);
+                    }
+                } else {
+                    if (story.user_ids[0] === user.id) {
+                        return t(`user-activity-$name-opened-issue`, name);
+                    } else {
+                        return t(`user-activity-$name-was-assigned-issue`, name);
+                    }
+                }
             case 'milestone':
                 return t(`user-activity-$name-created-milestone`, name);
             case 'merge-request':

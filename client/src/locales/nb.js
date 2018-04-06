@@ -567,8 +567,10 @@ module.exports = function(localeCode) {
             return `Skrevet ${videos}`;
         },
         'user-activity-$name-pushed-code': 'La kod til repoen',
+        'user-activity-$name-reported-issue': 'Rapporterte et problem',
         'user-activity-$name-started-survey': 'Startet en undersøkelse',
         'user-activity-$name-started-task-list': 'Startet en oppgaveliste',
+        'user-activity-$name-was-assigned-issue': 'Ble tildelt et problem',
         'user-activity-$name-wrote-post': 'Skrev et innlegg',
         'user-activity-back': 'Tilbake',
         'user-activity-more': 'Flere',

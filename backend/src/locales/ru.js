@@ -208,7 +208,7 @@ module.exports = function(localeCode) {
         },
         'notification-$name-opened-an-issue': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} открыл${e} выпуск`;
+            return `${name} написал${e} отчёт об ошибке`;
         },
         'notification-$name-posted-a-survey': (name) => {
             var e = pastTenseEnding(name);
@@ -236,7 +236,7 @@ module.exports = function(localeCode) {
         'notification-option-bookmark': 'Когда кто-то отправляет вам закладку',
         'notification-option-coauthor': 'Когда кто-то приглашает вас совместно редактировать сообщение',
         'notification-option-comment': 'Когда кто-то комментирует ваш рассказ',
-        'notification-option-issue': 'Когда кто-то открывает отчёт об ошибке',
+        'notification-option-issue': 'Когда кто-то пишет отчёт об ошибке',
         'notification-option-join-request': 'Когда кто-то хочет присоединиться к проекту',
         'notification-option-like': 'Когда кому-то нравится ваш рассказ',
         'notification-option-mention': 'Когда кто-то упоминает вас в истории или комментарии',
@@ -338,8 +338,9 @@ module.exports = function(localeCode) {
             return `${name} выполнил задачу`;
         },
         'reaction-$name-is-assigned-to-issue': (name) => {
-            var e = pastTenseEnding(name);
-            return `${name} был назначен на этот отчёт об ошибке`;
+            var ve = pastTenseEnding(name);
+            var ae = ve;
+            return `${name} был${ve} назначен${ae} на этот отчёт об ошибке`;
         },
         'reaction-$name-is-assigned-to-merge-request': (name) => {
             var e = pastTenseEnding(name);
@@ -507,7 +508,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
             var e = pastTenseEnding(name);
-            var text = `Открыл${e} выпуск ${number}`;
+            var text = `Написал${e} отчёт ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
@@ -716,7 +717,7 @@ module.exports = function(localeCode) {
         },
         'user-activity-$name-opened-issue': (name) => {
             var e = pastTenseEnding(name);
-            return `Открыл${e} отчёт об ошибке`;
+            return `Написал${e} отчёт об ошибке`;
         },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
@@ -770,6 +771,9 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Отправил${e} код в репозиторий`;
         },
+        'user-activity-$name-reported-issue': (name ) => {
+            return `Сообщил${e} о проблеме`;
+        },
         'user-activity-$name-started-survey': (name) => {
             var e = pastTenseEnding(name);
             return `Начал${e} опрос`;
@@ -777,6 +781,11 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-task-list': (name) => {
             var e = pastTenseEnding(name);
             return `Начал${e} список задач`;
+        },
+        'user-activity-$name-was-assigned-issue': (name) => {
+            var ve = pastTenseEnding(name);
+            var ae = ve;
+            return `Был${ve} назначен${ae} на отчёт об ошибке`;
         },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name);
@@ -821,11 +830,11 @@ module.exports = function(localeCode) {
         },
         'user-statistics-tooltip-$count-issue': (count) => {
             if (singularN(count)) {
-                return `${count} выпуск`;
+                return `${count} отчёт`;
             } else if (singularG(count)) {
-                return `${count} выпуска`;
+                return `${count} отчёта`;
             } else {
-                return `${count} выпусков`;
+                return `${count} отчётов`;
             }
         },
         'user-statistics-tooltip-$count-member': (count) => {

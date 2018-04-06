@@ -571,8 +571,10 @@ module.exports = function(localeCode) {
             return `Lähetti ${videos}`;
         },
         'user-activity-$name-pushed-code': 'Siirretty koodi arkistolle',
+        'user-activity-$name-reported-issue': 'Ilmoitti asiasta',
         'user-activity-$name-started-survey': 'Aloitti kyselyn',
         'user-activity-$name-started-task-list': 'Aloitti tehtäväluettelon',
+        'user-activity-$name-was-assigned-issue': 'Oli määrätty asiaan',
         'user-activity-$name-wrote-post': 'Kirjoitti viestin',
         'user-activity-back': 'Palataa',
         'user-activity-more': 'Lisää',

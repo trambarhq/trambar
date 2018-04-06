@@ -60,7 +60,7 @@ function exportStory(db, project, story) {
                     }
                     return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
                         var schema = project.name;
-                        var storyAfter = copyIssueProperties(story, server, glIssue);
+                        var storyAfter = copyIssueProperties(story, server, user, glIssue);
                         return Story.updateOne(db, schema, storyAfter).then((story) => {
                             if (!newIssue) {
                                 return story;
@@ -129,22 +129,41 @@ function exportIssueProperties(glIssue, server, system, project, story) {
  *
  * @param  {Story} story
  * @param  {Server} server
- * @param  {Repo} repo
+ * @param  {User} user
  * @param  {Object} glIssue
  *
  * @return {Story}
  */
-function copyIssueProperties(story, server, glIssue) {
+function copyIssueProperties(story, server, user, glIssue) {
     var storyAfter = _.cloneDeep(story);
     var issueLink = ExternalDataUtils.findLink(storyAfter, server);
+    var userIds = _.union(story.user_ids, [ user.id ]);
+    var roleIds = _.union(story.role_ids, user.role_ids);
+
     issueLink.issue.id = glIssue.id;
     issueLink.issue.number = glIssue.iid;
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'issue',
         overwrite: 'always'
     });
+    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
+        value: 'issue',
+        overwrite: 'always'
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: userIds,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: roleIds,
+        overwrite: 'always',
+    });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.exported', {
         value: true,
+        overwrite: 'always'
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.exporter', {
+        value: user.id,
         overwrite: 'always'
     });
     storyAfter.etime = new String('NOW()');

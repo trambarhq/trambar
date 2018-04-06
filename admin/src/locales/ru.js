@@ -43,11 +43,11 @@ module.exports = function(localeCode) {
         },
         'activity-tooltip-$count-issue': (count) => {
             if (singularN(count)) {
-                return `${count} выпуск`;
+                return `${count} отчёт`;
             } else if (singularG(count)) {
-                return `${count} выпуска`;
+                return `${count} отчёта`;
             } else {
-                return `${count} выпусков`;
+                return `${count} отчётов`;
             }
         },
         'activity-tooltip-$count-member': (count) => {

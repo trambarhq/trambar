@@ -618,8 +618,10 @@ var traditionalPhrases = {
         return `新增了${num}張影片`;
     },
     'user-activity-$name-pushed-code': '將代碼推送到數據庫',
+    'user-activity-$name-reported-issue': '報告了一個問題',
     'user-activity-$name-started-survey': '發布了一個調查',
     'user-activity-$name-started-task-list': '發布了一個任務列表',
+    'user-activity-$name-was-assigned-issue': '被分配到一個問題',
     'user-activity-$name-wrote-post': '寫了一個貼文',
     'user-activity-back': '返回',
     'user-activity-more': '更多',
@@ -1275,8 +1277,10 @@ var simplifiedPhrases = {
         return `新增了${num}张影片`;
     },
     'user-activity-$name-pushed-code': '将代码推送到数据库',
+    'user-activity-$name-reported-issue': '报告了一个问题',
     'user-activity-$name-started-survey': '发布了一个调查',
     'user-activity-$name-started-task-list': '发布了一个任务列表',
+    'user-activity-$name-was-assigned-issue': '被分配到一个问题',
     'user-activity-$name-wrote-post': '写了一个贴文',
     'user-activity-back': '返回',
     'user-activity-more': '更多',
@@ -1684,6 +1688,7 @@ var cantonesePhrases = {
         var num = cardinalT(count);
         return `新增咗${num}張影片`;
     },
+    'user-activity-$name-reported-issue': '報告咗一個問題',
     'user-activity-$name-started-survey': '發布咗一個調查',
     'user-activity-$name-started-task-list': '發布咗一個任務列表',
     'user-activity-$name-wrote-post': '寫咗一個帖子',

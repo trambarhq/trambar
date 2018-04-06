@@ -39,13 +39,17 @@ function importEvent(db, server, repo, project, author, glEvent) {
             }),
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
-            var storyAfter = copyIssueProperties(story, server, repo, author, glIssue);
-            if (storyAfter === story) {
-                return story;
-            }
-            return Story.saveOne(db, schema, storyAfter);
-        }).then((story) => {
-            return importAssignments(db, server, project, repo, story, glIssue).return(story);
+            return findAssignees(db, server, glIssue).then((assignees) => {
+                var storyAfter = copyIssueProperties(story, server, repo, author, assignees, glIssue);
+                if (storyAfter === story) {
+                    return story;
+                }
+                return Story.saveOne(db, schema, storyAfter).then((story) => {
+                    return importAssignments(db, server, project, repo, story, assignees, glIssue);
+                }).then((reactions) => {
+                    return story;
+                });
+            });
         });
     });
 }
@@ -82,13 +86,17 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
             if (!story) {
                 throw new Error('Story not found');
             }
-            var storyAfter = copyIssueProperties(story, server, repo, author, glIssue);
-            if (storyAfter === story) {
-                return story;
-            }
-            return Story.updateOne(db, schema, storyAfter);
-        }).then((story) => {
-            return importAssignments(db, server, project, repo, story, glIssue).return(story);
+            return findAssignees(db, server, glIssue).then((assignees) => {
+                var storyAfter = copyIssueProperties(story, server, repo, author, assignees, glIssue);
+                if (storyAfter === story) {
+                    return story;
+                }
+                return Story.updateOne(db, schema, storyAfter).then((story) => {
+                    return importAssignments(db, server, project, repo, story, assignees, glIssue);
+                }).then((reactions) => {
+                    return story;
+                });
+            });
         }).catch((err) => {
             return null;
         });
@@ -98,18 +106,19 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
 }
 
 /**
- * Add assignment reactions to story
+- * Add assignment reactions to story
  *
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Project} project
  * @param  {Repo} repo
  * @param  {Story} story
+ * @param  {Array<User>} assignees
  * @param  {Object} glIssue
  *
  * @return {Promise<Array<Reaction>>}
  */
-function importAssignments(db, server, project, repo, story, glIssue) {
+function importAssignments(db, server, project, repo, story, assignees, glIssue) {
     var schema = project.name;
     // find existing assignments
     var criteria = {
@@ -120,15 +129,30 @@ function importAssignments(db, server, project, repo, story, glIssue) {
         }),
     };
     return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
-        return Promise.mapSeries(glIssue.assignees, (glUser) => {
-            return UserImporter.findUser(db, server, glUser).then((assignee) => {
-                if (!_.some(reactions, { user_id: assignee.id })) {
-                    var reactionNew = copyAssignmentProperties(null, server, story, assignee, glIssue);
-                    return Reaction.saveOne(db, schema, reactionNew);
-                }
-            });
-        }).filter(Boolean);
+        var reactions = [];
+        _.each(assignees, (assignee) => {
+            if (!_.some(reactions, { user_id: assignee.id })) {
+                var reactionNew = copyAssignmentProperties(null, server, story, assignee, glIssue);
+                reactions.push(reactionNew);
+            }
+        });
+        return Reaction.save(db, schema, reactions);
     });
+}
+
+/**
+ * Find user accounts of assignees to an issue
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {Object} glIssue
+ *
+ * @return {Promise<Array<User>>}
+ */
+function findAssignees(db, server, glIssue) {
+    return Promise.mapSeries(glIssue.assignees, (glUser) => {
+        return UserImporter.findUser(db, server, glUser);
+    }).filter(Boolean);
 }
 
 /**
@@ -143,16 +167,21 @@ function importAssignments(db, server, project, repo, story, glIssue) {
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
+ * @param  {Array<User>} assignees
  * @param  {Object} glIssue
  *
  * @return {Story}
  */
-function copyIssueProperties(story, server, repo, author, glIssue) {
+function copyIssueProperties(story, server, repo, author, assignees, glIssue) {
     var descriptionTags = TagScanner.findTags(glIssue.description);
     var labelTags = _.map(glIssue.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
     var tags = _.union(descriptionTags, labelTags);
+    var assigneeIds = _.map(assignees, 'id');
+    var assigneeRoleIds = _.flatten(_.map(assignees, 'role_ids'));
+    var userIds = _.union((story) ? story.user_ids : [], [ author.id ], assigneeIds);
+    var roleIds = _.union((story) ? story.role_ids : [], author.role_ids, assigneeRoleIds);
 
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
@@ -171,14 +200,12 @@ function copyIssueProperties(story, server, repo, author, glIssue) {
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
-        value: [ author.id ],
+        value: userIds,
         overwrite: 'always',
-        ignore: exported,
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
-        value: author.role_ids,
+        value: roleIds,
         overwrite: 'always',
-        ignore: exported,
     });
     // title is imported only if issue isn't confidential
     ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {

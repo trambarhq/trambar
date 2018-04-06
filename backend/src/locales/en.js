@@ -574,8 +574,10 @@ module.exports = function(localeCode) {
             return `Posted ${videos}`;
         },
         'user-activity-$name-pushed-code': 'Pushed code to repo',
+        'user-activity-$name-reported-issue': 'Reported an issue',
         'user-activity-$name-started-survey': 'Started a survey',
         'user-activity-$name-started-task-list': 'Started a task list',
+        'user-activity-$name-was-assigned-issue': 'Was assigned to an issue',
         'user-activity-$name-wrote-post': 'Wrote a post',
         'user-activity-back': 'Back',
         'user-activity-more': 'More',

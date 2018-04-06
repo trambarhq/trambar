@@ -593,9 +593,11 @@ module.exports = function(localeCode) {
             var videos = (count === 1) ? `un videoclip` : `${count} videoclip`;
             return `Ha pubblicato ${videos}`;
         },
-        'user-activity-$name-pushed-code': "ha inviato il codice nel repository",
+        'user-activity-$name-pushed-code': "Ha inviato il codice nel repository",
+        'user-activity-$name-reported-issue': 'Ha segnalato un problema',
         'user-activity-$name-started-survey': "Ha iniziato un sondaggio",
         'user-activity-$name-started-task-list': "Ha iniziato un elenco di attività",
+        'user-activity-$name-was-assigned-issue': 'È stato assegnato a un problema',
         'user-activity-$name-wrote-post': "Ha scritto un post",
         'user-activity-back': 'Indietro',
         'user-activity-more': "Altre",

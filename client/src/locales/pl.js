@@ -771,6 +771,10 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Przesłał${e} kod do repozytorium`;
         },
+        'user-activity-$name-reported-issue': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `Zgłosił${e} problem`;
+        },
         'user-activity-$name-started-survey': (name) => {
             var e = pastTenseEnding(name, 3);
             return `Stworzył${e} ankietę`;
@@ -778,6 +782,11 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-task-list': (name) => {
             var e = pastTenseEnding(name, 3);
             return `Stworzył${e} listę zadań`;
+        },
+        'user-activity-$name-was-assigned-issue': (name) => {
+            var ve = pastTenseEnding(name, 3);
+            var ae = (ve === 'a') ? 'a' : 'y';
+            return `Został${ve} przydzielon${ae} do problemu`;
         },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name, 3);
