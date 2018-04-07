@@ -908,6 +908,32 @@ module.exports = React.createClass({
         });
         story.unfinished_tasks = _.max(counts);
         this.triggerChangeEvent(story);
+
+        // add or remove reaction
+        var task = { list, item };
+        if (selected) {
+            var reaction = {
+                type: 'task-completion',
+                story_id: story.id,
+                user_id: this.props.currentUser.id,
+                published: true,
+                details: { task },
+            };
+            this.triggerReactionEvent(reaction);
+        } else {
+            var reaction = _.find(this.props.reactions, (r) => {
+                if (r.type === 'task-completion') {
+                    if (r.user_id === this.props.currentUser.id) {
+                        return _.isEqual(r.details.task, task);
+                    }
+                }
+            });
+            if (reaction) {
+                reaction = _.clone(reaction);
+                reaction.deleted = true;
+                this.triggerReactionEvent(reaction);
+            }
+        }
     },
 
     /**

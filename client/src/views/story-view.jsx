@@ -813,7 +813,11 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleStoryReaction: function(evt) {
-        this.saveReaction(evt.reaction);
+        if (evt.reaction.deleted) {
+            this.removeReaction(evt.reaction);
+        } else {
+            this.saveReaction(evt.reaction);
+        }
     },
 
     /**

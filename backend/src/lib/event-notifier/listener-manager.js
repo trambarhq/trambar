@@ -172,8 +172,8 @@ function filterWebsocketMessages(messages) {
         }
         if (message.body.alert) {
             var user = message.listener.user;
-            var alertType = message.body.alert.type;
-            var receiving = _.get(user.settings, [ 'web_alert', alertType ], false);
+            var name = _.snakeCase(message.body.alert.type);
+            var receiving = _.get(user, `settings.web_alert.${name}`, false);
             if (!receiving) {
                 return false;
             }
@@ -278,8 +278,8 @@ function filterPushMessages(messages) {
         }
         if (message.body.alert) {
             var user = message.listener.user;
-            var alertType = message.body.alert.type;
-            var receiving = _.get(user.settings, [ 'mobile_alert', alertType ], false);
+            var name = _.snakeCase(message.body.alert.type);
+            var receiving = _.get(user, `settings.mobile_alert.${name}`, false);
             if (!receiving) {
                 return false;
             }
@@ -291,7 +291,7 @@ function filterPushMessages(messages) {
                 }
             });
             if (hasWebSession) {
-                var sendToBoth = _.get(user.settings, [ 'mobile_alert', 'web_session' ], false);
+                var sendToBoth = _.get(user, `settings.mobile_alert.web_session`, false);
                 if (!sendToBoth) {
                     console.log(`Suppressed mobile alert: user_id = ${user.id}`);
                     return false;
