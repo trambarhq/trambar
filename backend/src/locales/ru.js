@@ -257,7 +257,7 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `${name} ответил${e} на ваш опрос`;
         },
-        'notification-option-assignment': 'Когда вам назначается отчёт об ошибке',
+        'notification-option-assignment': 'Когда кто-то назначен на вашу проблему',
         'notification-option-bookmark': 'Когда кто-то отправляет вам закладку',
         'notification-option-coauthor': 'Когда кто-то приглашает вас совместно редактировать сообщение',
         'notification-option-comment': 'Когда кто-то комментирует ваш рассказ',

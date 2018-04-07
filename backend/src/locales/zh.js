@@ -258,7 +258,7 @@ var traditionalPhrases = {
     'notification-$name-voted-in-your-survey': (name) => {
         return `${name}回答了你的調查`;
     },
-    'notification-option-assignment': '當你被分配到一個問題',
+    'notification-option-assignment': '當有人被分配到你的問題',
     'notification-option-bookmark': '當你收到某人的書籤',
     'notification-option-coauthor': '當你收到共同編輯貼文的邀請',
     'notification-option-comment': '當有人回應你的貼文',
@@ -937,7 +937,7 @@ var simplifiedPhrases = {
     'notification-$name-voted-in-your-survey': (name) => {
         return `${name}回答了你的调查`;
     },
-    'notification-option-assignment': '当你被分配到一个问题',
+    'notification-option-assignment': '当有人被分配到你的问题',
     'notification-option-bookmark': '当你收到某人的书签',
     'notification-option-coauthor': '当你收到共同编辑贴文的邀请',
     'notification-option-comment': '当有人回应你的贴文',
@@ -1511,7 +1511,7 @@ var cantonesePhrases = {
     'notification-$name-voted-in-your-survey': (name) => {
         return `${name}回答咗你嘅調查`;
     },
-    'notification-option-assignment': '當你被分配到一個問題',
+    'notification-option-assignment': '當有人被分配到你嘅問題',
     'notification-option-bookmark': '當你收到人哋嘅書籤',
     'notification-option-coauthor': '當有人想同你一齊寫帖子',
     'notification-option-comment': '當有人回應你嘅帖子',

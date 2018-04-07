@@ -212,7 +212,7 @@ module.exports = function(localeCode) {
         'notification-$name-voted-in-your-survey': (name) => {
             return `${name} ha risposto al tuo sondaggio`;
         },
-        'notification-option-assignment': "Quando sei assegnato a un problema",
+        'notification-option-assignment': "Quando qualcuno è assegnato al tuo problema",
         'notification-option-bookmark': "Quando qualcuno ti manda un segnalibro",
         'notification-option-coauthor': "Quando qualcuno ti invita a modificare in comune un post",
         'notification-option-comment': "Quando qualcuno commenta la tua storia",

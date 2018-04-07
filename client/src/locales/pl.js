@@ -273,7 +273,7 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `${name} odpowiedział${e} na Twoją ankietę`;
         },
-        'notification-option-assignment': 'Po przypisaniu do zgłoszenia błędu',
+        'notification-option-assignment': 'Po przydzieleniu do Twojego zgłoszenia błędu',
         'notification-option-bookmark': 'Po otrzymaniu zakładki',
         'notification-option-coauthor': 'Po zaproszeniu do wspólnej edycji posta',
         'notification-option-comment': 'Po komentowaniu Twojego wiadomości',

@@ -216,7 +216,7 @@ module.exports = function(localeCode) {
         'notification-$name-voted-in-your-survey': (name) => {
             return `${name} answered your survey`;
         },
-        'notification-option-assignment': 'When you are assigned to an issue',
+        'notification-option-assignment': 'When someone is assigned to your issue',
         'notification-option-bookmark': 'When someone sends you a bookmark',
         'notification-option-coauthor': 'When someone invites you to jointly edit a post',
         'notification-option-comment': 'When someone comments on your story',

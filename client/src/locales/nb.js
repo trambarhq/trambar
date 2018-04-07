@@ -212,7 +212,7 @@ module.exports = function(localeCode) {
         'notification-$name-voted-in-your-survey': (name) => {
             return `${name} svarte på undersøkelsen din`;
         },
-        'notification-option-assignment': 'Når du er tildelt et problem',
+        'notification-option-assignment': 'Når noen er tildelt problemet ditt',
         'notification-option-bookmark': 'Når noen sender deg et bokmerke',
         'notification-option-coauthor': 'Når noen inviterer deg til å redigere et innlegg',
         'notification-option-comment': 'Når noen kommenterer innlegget ditt',
@@ -539,7 +539,7 @@ module.exports = function(localeCode) {
         'telephone-dialog-close': 'Lukk',
 
         'time-$hours-ago': (hours) => {
-            return (minutes === 1) ? `En time siden` : `${minutes} timer siden`;
+            return (hours === 1) ? `En time siden` : `${hours} timer siden`;
         },
         'time-$hr-ago': (hr) => {
             return `${hr} t. sitten`;

@@ -212,7 +212,7 @@ module.exports = function(localeCode) {
         'notification-$name-voted-in-your-survey': (name) => {
             return `${name} vastasi kyselyynne`;
         },
-        'notification-option-assignment': 'Kun olet määrittänyt ongelman',
+        'notification-option-assignment': 'Kun joku on määritetty asiasi',
         'notification-option-bookmark': 'Kun joku lähettää sinulle kirjanmerkin',
         'notification-option-coauthor': 'Kun joku kutsuu sinut muokkaamaan viestiä yhdessä',
         'notification-option-comment': 'Kun joku kommentoi tarinaasi',
@@ -544,7 +544,7 @@ module.exports = function(localeCode) {
         'telephone-dialog-close': 'Sulje',
 
         'time-$hours-ago': (hours) => {
-            return (minutes === 1) ? `Tunti sitten` : `${minutes} tuntia sitten`;
+            return (hours === 1) ? `Tunti sitten` : `${hours} tuntia sitten`;
         },
         'time-$hr-ago': (hr) => {
             return `${hr} t. sitten`;
