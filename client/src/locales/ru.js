@@ -168,6 +168,10 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `${name} предложил${e} вам совместно редактировать сообщение`;
         },
+        'notification-$name-added-your-post-to-issue-tracker': (name) => {
+            var e = pastTenseEnding(name);
+            return `${name} добавил${e} ваше сообщение в баг трекер`;
+        },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'ваш опрос'; break;
@@ -181,6 +185,11 @@ module.exports = function(localeCode) {
         'notification-$name-completed-task': (name) => {
             var e = pastTenseEnding(name);
             return `${name} выполнил задачу в вашем списке`;
+        },
+        'notification-$name-is-assigned-to-your-issue': (name) => {
+            var ve = pastTenseEnding(name);
+            var ae = ve;
+            return `${name} был${ve} назначен${ae} на ваш отчёт об ошибке`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
@@ -206,13 +215,29 @@ module.exports = function(localeCode) {
             }
             return `${name} упомянул вас ${story}`;
         },
+        'notification-$name-merged-code-to-$branch': (name, branch) => {
+            var e = pastTenseEnding(name);
+            return `${name} слил${e} изменения в ветку «${branch}»`;
+        },
         'notification-$name-opened-an-issue': (name) => {
             var e = pastTenseEnding(name);
             return `${name} написал${e} отчёт об ошибке`;
         },
+        'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+            var e = pastTenseEnding(name);
+            switch (story) {
+                case 'push': story = 'ваш коммит'; break;
+                case 'issue': story = 'ваш отчёт об ошибке'; break;
+                case 'merge-request': story = 'ваш слияния'; break;
+            }
+            return `${name} прокомментировал${e} ${story}`;
+        },
         'notification-$name-posted-a-survey': (name) => {
             var e = pastTenseEnding(name);
             return `${name} опубликовал${e} опрос`;
+        },
+        'notification-$name-pushed-code-to-$branch': (name, branch) => {
+            return `${name} отправил${e} изменения в ветку «${branch}»`;
         },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name);

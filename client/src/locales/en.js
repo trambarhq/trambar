@@ -139,6 +139,9 @@ module.exports = function(localeCode) {
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} invited you to jointly edit a post`;
         },
+        'notification-$name-added-your-post-to-issue-tracker': (name) => {
+            return `${name} added your post to issue tracker`;
+        },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'survey'; break;
@@ -150,6 +153,9 @@ module.exports = function(localeCode) {
         },
         'notification-$name-completed-task': (name) => {
             return `${name} completed a task on your list`;
+        },
+        'notification-$name-is-assigned-to-your-issue': (name) => {
+            return `${name} is assigned to your issue`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
@@ -175,11 +181,25 @@ module.exports = function(localeCode) {
             }
             return `${name} mentioned you in ${story}`;
         },
+        'notification-$name-merged-code-to-$branch': (name, branch) => {
+            return `${name} merge changes into “${branch}”`;
+        },
         'notification-$name-opened-an-issue': (name) => {
             return `${name} opened an issue`;
         },
+        'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+            switch (story) {
+                case 'push': story = 'commit'; break;
+                case 'issue': story = 'issue'; break;
+                case 'merge-request': story = 'merge request'; break;
+            }
+            return `${name} posted a note about your ${story}`;
+        },
         'notification-$name-posted-a-survey': (name) => {
             return `${name} posted a survey`;
+        },
+        'notification-$name-pushed-code-to-$branch': (name, branch) => {
+            return `${name} pushed changes to branch “${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
             return `${name} requested to join this project`;

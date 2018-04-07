@@ -135,6 +135,9 @@ module.exports = function(localeCode) {
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} inviterte deg til å redigere et innlegg`;
         },
+        'notification-$name-added-your-post-to-issue-tracker': (name) => {
+            return `${name} la til innlegget ditt til feilrapporteringssystemet`;
+        },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'undersøkelsen din'; break;
@@ -146,6 +149,9 @@ module.exports = function(localeCode) {
         },
         'notification-$name-completed-task': (name) => {
             return `${name} fullførte en oppgave på listen din`;
+        },
+        'notification-$name-is-assigned-to-your-issue': (name) => {
+            return `${name} ble tildelt problemet ditt`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
@@ -171,11 +177,25 @@ module.exports = function(localeCode) {
             }
             return `${name} nevnte deg ${story}`;
         },
+        'notification-$name-merged-code-to-$branch': (name, branch) => {
+            return `${name} merget kode inn i branchen “${branch}”`;
+        },
         'notification-$name-opened-an-issue': (name) => {
             return `${name} åpnet et problem`;
         },
+        'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+            switch (story) {
+                case 'push': story = 'commiten din'; break;
+                case 'issue': story = 'problemet ditt'; break;
+                case 'merge-request': story = 'merge-requesten din'; break;
+            }
+            return `${name} kommenterte ${story}`;
+        },
         'notification-$name-posted-a-survey': (name) => {
             return `${name} skrev en undersøkelse`;
+        },
+        'notification-$name-pushed-code-to-$branch': (name, branch) => {
+            return `${name} pushet forandringer til branchen “${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
             return `${name} ba om å bli med i dette prosjektet`;

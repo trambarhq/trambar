@@ -182,6 +182,10 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `${name} zaprosił${e} Cię do wspólnej edycji posta`;
         },
+        'notification-$name-added-your-post-to-issue-tracker': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} dodał${e} twojego posta do issue-trackera`;
+        },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'Twoją ankietę'; break;
@@ -195,6 +199,11 @@ module.exports = function(localeCode) {
         'notification-$name-completed-task': (name) => {
             var e = pastTenseEnding(name, 3);
             return `${name} wykonał${e} zadanie z Twojej listy`;
+        },
+        'notification-$name-is-assigned-to-your-issue': (name) => {
+            var ve = pastTenseEnding(name, 3);
+            var ae = (ve === 'a') ? 'a' : 'y';
+            return `${name} został${ve} przydzielon${ae} do twojego problemu`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
@@ -220,13 +229,31 @@ module.exports = function(localeCode) {
             }
             return `${name} wspomniał o Tobie ${story}`;
         },
+        'notification-$name-merged-code-to-$branch': (name, branch) => {
+            var e = pastTenseEnding(name, 3);
+            return `${name} scalił${e} zmiany do gałęzi „${branch}”`;
+        },
         'notification-$name-opened-an-issue': (name) => {
             var e = pastTenseEnding(name, 3);
             return `${name} napisał${e} zgłoszenie błędu`;
         },
+        'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+            var e = pastTenseEnding(name, 3);
+            switch (story) {
+                case 'push': story = 'twoją rewizję'; break;
+                case 'issue': story = 'twoje zgłoszenie'; break;
+                case 'merge-request': story = 'twoją prośbę o połączenie'; break;
+            }
+            return `${name} skomentował${e} ${story}`;
+        },
         'notification-$name-posted-a-survey': (name) => {
             var e = pastTenseEnding(name, 3);
             return `${name} opublikował${e} ankietę`;
+        },
+        'notification-$name-pushed-code-to-$branch': (name, branch) => {
+            var e = pastTenseEnding(name, 3);
+            var a = (e === 'a') ? 'ę' : 'ą';
+            return `Wypchn${a}ł${e} zmiany gałęzi „${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name, 3);
@@ -266,7 +293,7 @@ module.exports = function(localeCode) {
         'notifications-no-notifications-yet': 'Żadnych powiadomień',
 
         'option-add-bookmark': 'Dodaj zakładkę',
-        'option-add-issue': 'Dodaj zgłoszenie do issue-trackera',
+        'option-add-issue': 'Dodaj posta do issue-trackera',
         'option-bump-story': 'Podnieś pozycję wiadomości',
         'option-edit-comment': 'Edytuj komentarz',
         'option-edit-post': 'Edytuj wiadomość',
@@ -352,7 +379,6 @@ module.exports = function(localeCode) {
             var ve = pastTenseEnding(name, 3);
             var ae = (ve === 'a') ? 'a' : 'y';
             return `${name} został${ve} przydzielon${ae} do tego problemu`;
-
         },
         'reaction-$name-is-assigned-to-merge-request': (name) => {
             var ve = pastTenseEnding(name, 3);
@@ -521,11 +547,12 @@ module.exports = function(localeCode) {
             }
             return text;
         },
-        // TODO
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `Pushed changes to branch „${branch}”`;
+            var e = pastTenseEnding(name, 3);
+            var a = (e === 'a') ? 'ę' : 'ą';
+            var text = `Wypchn${a}ł${e} zmiany gałęzi „${branch}”`;
             if (repo) {
-                text += ` of project „${repo}”`;
+                text += ` projektu „${repo}”`;
             }
             return text;
         },

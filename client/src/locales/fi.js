@@ -135,6 +135,9 @@ module.exports = function(localeCode) {
         'notification-$name-added-you-as-coauthor': (name) => {
             return `${name} kutsui sinut muokkaamaan viestiä yhdessä`;
         },
+        'notification-$name-added-your-post-to-issue-tracker': (name) => {
+            return `${name} lisäsi viestisi raportointityökaluun`;
+        },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
                 case 'survey': story = 'kyselysi'; break;
@@ -146,6 +149,9 @@ module.exports = function(localeCode) {
         },
         'notification-$name-completed-task': (name) => {
             return `${name} täytti tehtävänsä luettelossasi`;
+        },
+        'notification-$name-is-assigned-to-your-issue': (name) => {
+            return `${name} oli määrätty asiallenne`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
             switch (story) {
@@ -165,17 +171,31 @@ module.exports = function(localeCode) {
                 case 'survey': story = 'kyselyssä'; break;
                 case 'task-list': story = 'tehtäväluettelossa'; break;
                 case 'post': story = 'viestissä'; break;
-                case 'issue': story = 'kysymyksessä'; break;
-                case 'merge-request': story = 'in a merge request'; break;
+                case 'issue': story = 'asiassä'; break;
+                case 'merge-request': story = 'merge-requestissa'; break;
                 default: story = 'tarinassa';
             }
             return `${name} mainitsi sinut ${story}`;
         },
+        'notification-$name-merged-code-to-$branch': (name, branch) => {
+            return `${name} yhdisti koodin branchien “${branch}”`;
+        },
         'notification-$name-opened-an-issue': (name) => {
             return `${name} avasi asian`;
         },
+        'notification-$name-posted-a-note-about-your-$story': (name, story) => {
+            switch (story) {
+                case 'push': story = 'commitiasi'; break;
+                case 'issue': story = 'asiaasi'; break;
+                case 'merge-request': story = 'merge-requestiasi'; break;
+            }
+            return `${name} kommentoi ${story}`;
+        },
         'notification-$name-posted-a-survey': (name) => {
             return `${name} lähetti kyselyn`;
+        },
+        'notification-$name-pushed-code-to-$branch': (name, branch) => {
+            return `${name} painoi muutoksia branchien “${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
             return `${name} pyysi liittymään tähän projektiin`;
