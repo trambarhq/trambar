@@ -73,6 +73,25 @@ module.exports = React.createClass({
         });
     },
 
+    removeDefunctLocations: function(address) {
+        var db = this.props.database.use({ by: this });
+        var criteria = {};
+        return db.find({ schema: 'global', table: 'project', criteria }).then((projects) => {
+            return db.find({ schema: 'local', table: 'project_link', criteria }).then((links) => {
+                var defunct = _.filter(links, (link) => {
+                    if (link.address === address) {
+                        if (!_.some(projects, { name: link.schema })) {
+                            return true;
+                        }
+                    }
+                });
+                return db.remove({ schema: 'local', table: 'project_link' }, defunct);
+            });
+        }).catch((err) => {
+            // ignore error
+        });
+    },
+
     /**
      * Save project location if route is different
      *
@@ -88,9 +107,11 @@ module.exports = React.createClass({
                 var currSchema = _.get(this.props.route, 'parameters.schema');
                 if (prevAddress !== currAddress || prevSchema !== currSchema || !prevProps.hasAccess) {
                     if (currAddress && currSchema) {
-                        console.log('Saving location:', currAddress, currSchema)
                         this.saveLocation(currAddress, currSchema);
                     }
+                }
+                if (prevAddress !== currAddress) {
+                    this.removeDefunctLocations(currAddress);
                 }
             }
         }
