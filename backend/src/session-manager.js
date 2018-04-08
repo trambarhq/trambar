@@ -898,22 +898,26 @@ function copyUserProperties(user, server, image, profile) {
         var username = profile.username || proposeUsername(profile);
         var userType = _.get(server, 'settings.user.type');
         var overwriteUserType = 'never';
+        var userAfter;
         if (user) {
+            userAfter = _.cloneDeep(user);
+
             // overwrite user type if new type has more privileges
             if (UserTypes.indexOf(userType) > UserTypes.indexOf(user.type)) {
                 overwriteUserType = 'always';
             }
-        }
-
-        var userAfter = _.cloneDeep(user);
-        if (!userAfter) {
+        } else {
             userAfter = {
                 role_ids: _.get(server, 'settings.user.role_ids', []),
                 settings: UserSettings.default,
             };
-        };
+        }
+
         ExternalDataUtils.addLink(userAfter, server, {
-            user: { id: getProfileId(profile) }
+            user: {
+                id: getProfileId(profile),
+                username: profile.username,
+            }
         });
         ExternalDataUtils.importProperty(userAfter, server, 'type', {
             value: userType,
@@ -940,6 +944,12 @@ function copyUserProperties(user, server, image, profile) {
             value: image,
             replace: 'match-previous'
         });
+        if (server.type === 'github') {
+            ExternalDataUtils.importProperty(userAfter, server, 'details.github_url', {
+                value: profile.profileUrl,
+                overwrite: 'match-previous:github_url',
+            });
+        }
         if (!userAfter.type) {
             userAfter.type = 'regular';
             userAfter.disabled = true;
