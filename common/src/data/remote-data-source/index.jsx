@@ -233,7 +233,7 @@ module.exports = React.createClass({
                 console.error(err);
             }).then(() => {
                 destroySession(session);
-                this.clearRecentSearches(address);
+                this.clearRecentOperations(address);
                 this.clearCachedObjects(address);
                 this.triggerExpirationEvent(session);
                 return null;
@@ -1348,7 +1348,7 @@ module.exports = React.createClass({
             return result;
         }).catch((err) => {
             if (err.statusCode === 401 || err.statusCode == 403) {
-                this.clearRecentSearches(address);
+                this.clearRecentOperations(address);
                 this.clearCachedObjects(address);
                 if (err.statusCode === 401) {
                     destroySession(session);
@@ -1559,15 +1559,22 @@ module.exports = React.createClass({
      *
      * @param  {String} address
      */
-    clearRecentSearches: function(address) {
-        this.updateList('recentSearchResults', (before) => {
-            var after = _.filter(before, (search) => {
-                if (search.address === address) {
-                    return false;
-                }
-                return true;
+    clearRecentOperations: function(address) {
+        var listNames = [
+            'recentSearchResults',
+            'recentStorageResults',
+            'recentRemovalResults'
+        ];
+        _.each(listNames, (listName) => {
+            this.updateList(listName, (before) => {
+                var after = _.filter(before, (op) => {
+                    if (op.address === address) {
+                        return false;
+                    }
+                    return true;
+                });
+                return after;
             });
-            return after;
         });
     },
 
