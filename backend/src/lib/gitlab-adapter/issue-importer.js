@@ -290,7 +290,9 @@ function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
-        value: Moment(new Date(glIssue.updated_at)).toISOString(),
+        // TODO: this isn't right when importing old issues;
+        // need to retrieve past assignment (along with the time) from GitLab
+        value: Moment(new Date(reaction ? glIssue.updated_at : glIssue.created_at)).toISOString(),
         overwrite: 'always',
     });
     if (_.isEqual(reactionAfter, reaction)) {
