@@ -627,7 +627,7 @@ module.exports = React.createClass({
             text = Markdown.parse(text, this.handleReference);
             className += ' markdown';
         } else {
-            text = <p>{text}</p>;
+            text = <p>{PlainText.parseEmoji(text)}</p>;
             className += ' plain-text';
         }
         return (

@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react');
 var MarkGor = require('mark-gor/react');
 var ListParser = require('utils/list-parser');
+var PlainText = require('utils/plain-text');
 
 var Theme = require('theme/theme');
 
@@ -282,12 +283,12 @@ function createParser(onReference) {
 }
 
 /**
- * Create a Markdown renderer
+ * Create a Markdown renderer, overriding certain functions
  *
  * @return {Renderer}
  */
 function createRenderer() {
-    return new MarkGor.Renderer({ renderImage });
+    return new MarkGor.Renderer({ renderImage, renderText });
 }
 
 /**
@@ -304,6 +305,18 @@ function renderImage(token, key) {
     var text = token.text;
     return <ResourceView key={key} url={href} alt={text} title={title} />;
 };
+
+/**
+ * Render text with emoji
+ *
+ * @param  {Object} token
+ * @param  {Number} key
+ *
+ * @return {Array<String|ReactElement>}
+ */
+function renderText(token, key) {
+    return PlainText.parseEmoji(token.text, { key });
+}
 
 /**
  * Override Mark-Gor's default ref-link lookup mechanism

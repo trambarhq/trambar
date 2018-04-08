@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var Markdown = require('utils/markdown');
+var PlainText = require('utils/plain-text');
 var Memoize = require('utils/memoize');
 var ComponentRefs = require('utils/component-refs');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
@@ -188,7 +189,7 @@ module.exports = React.createClass({
                     } else {
                         return (
                             <span className="comment">
-                                {name}: {p(text)}
+                                {name}: {PlainText.parseEmoji(p(text))}
                             </span>
                         );
                     }

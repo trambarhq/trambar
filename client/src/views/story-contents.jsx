@@ -219,17 +219,16 @@ module.exports = React.createClass({
             tags = this.renderLabels();
         }
         if (story.details.markdown) {
-            var contents = Markdown.parse(text, this.handleReference);
             return (
                 <div className="text story markdown" onClick={this.handleMarkdownClick}>
-                    {contents}
+                    {Markdown.parse(text, this.handleReference)}
                     {tags}
                 </div>
             );
         } else {
             return (
                 <div className="text story plain-text">
-                    <p>{text}</p>
+                    <p>{PlainText.parseEmoji(text)}</p>
                     {tags}
                 </div>
             );
@@ -276,7 +275,7 @@ module.exports = React.createClass({
         if (!text) {
             return null;
         }
-        var onChange = this.handleTaskListItemChange;
+        var onChange = this.handleSurveyItemChange;
         var onReference = this.handleReference;
         if (!this.hasUserVoted()) {
             var answers = this.state.userAnswers;
