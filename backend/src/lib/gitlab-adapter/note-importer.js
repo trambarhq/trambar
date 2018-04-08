@@ -200,11 +200,8 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
  */
 function copyEventProperties(reaction, server, story, author, glNote) {
     var reactionAfter = _.cloneDeep(reaction) || {};
-    var noteLink = {
-        id: glNote.id
-    };
     ExternalDataUtils.inheritLink(reactionAfter, server, story, {
-        note: noteLink
+        note: { id: _.get(glNote, 'note.id') }
     });
     ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
         value: 'note',
