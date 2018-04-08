@@ -120,10 +120,13 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        if (this.props.route.isFresh(meanwhile.prior.props.route)) {
+            this.freshRoute = true;
+        }
         // don't wait for remote data unless the route changes
-        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
+        var blocking = this.freshRoute;
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: params.schema, by: this, blocking });
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
@@ -136,7 +139,7 @@ module.exports = Relaks.createClass({
             currentUser: null,
 
             acceptNewStory: (!params.date && _.isEmpty(params.roles) && !params.search),
-            freshRoute: freshRoute,
+            freshRoute: this.freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
@@ -196,6 +199,7 @@ module.exports = Relaks.createClass({
                     });
                 }
             }
+            this.freshRoute = false;
             return <NewsPageSync {...props} />;
         });
     },
@@ -274,9 +278,13 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     /**
      * Render list of stories
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderList: function() {
+        // don't render when we haven't done loading
+        if (!this.props.stories) {
+            return null;
+        }
         var access = this.getAccessLevel();
         var params = this.props.route.parameters;
         var listProps = {

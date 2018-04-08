@@ -155,10 +155,13 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
+        if (this.props.route.isFresh(meanwhile.prior.props.route)) {
+            this.freshRoute = true;
+        }
         // don't wait for remote data unless the route changes
-        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
+        var blocking = this.freshRoute;
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: params.schema, by: this, blocking });
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
@@ -176,7 +179,7 @@ module.exports = Relaks.createClass({
 
             selectedDate: params.date,
             today: this.state.today,
-            freshRoute: freshRoute,
+            freshRoute: this.freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
@@ -340,6 +343,7 @@ module.exports = Relaks.createClass({
                     });
                 }
             }
+            this.freshRoute = true;
             return <PeoplePageSync {...props} />;
         });
     },
