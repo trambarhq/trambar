@@ -128,10 +128,10 @@ function importAssignments(db, server, project, repo, story, assignees, glIssue)
             issue: { id: glIssue.id }
         }),
     };
-    return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
+    return Reaction.find(db, schema, criteria, 'user_id').then((existingReactions) => {
         var reactions = [];
         _.each(assignees, (assignee) => {
-            if (!_.some(reactions, { user_id: assignee.id })) {
+            if (!_.some(existingReactions, { user_id: assignee.id })) {
                 var reactionNew = copyAssignmentProperties(null, server, story, assignee, glIssue);
                 reactions.push(reactionNew);
             }
