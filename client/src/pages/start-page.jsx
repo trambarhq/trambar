@@ -320,7 +320,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
         }
         if (this.props.projects !== nextProps.projects) {
             if (this.state.renderingProjectDialog) {
-                if (_.some(nextProps.projects, { id: this.state.selectedProjectId })) {
+                // close the dialog box if the project has disappeared
+                if (!_.some(nextProps.projects, { id: this.state.selectedProjectId })) {
                     this.setState({
                         renderingProjectDialog: false,
                         showingProjectDialog: false,
