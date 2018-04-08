@@ -327,6 +327,7 @@ function copyUserProperties(user, server, image, glUser) {
             settings: UserSettings.default,
         };
     }
+    console.log(glUser);
     ExternalDataUtils.addLink(userAfter, server, {
         user: {
             id: glUser.id,
@@ -344,6 +345,10 @@ function copyUserProperties(user, server, image, glUser) {
     ExternalDataUtils.importProperty(userAfter, server, 'details.name', {
         value: glUser.name,
         overwrite: 'match-previous:name',
+    });
+    ExternalDataUtils.importProperty(userAfter, server, 'details.email', {
+        value: glUser.email,
+        overwrite: 'match-previous:email',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.gitlab_url', {
         value: glUser.web_url,
