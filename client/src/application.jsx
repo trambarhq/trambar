@@ -748,9 +748,9 @@ module.exports = React.createClass({
     handleClick: function(evt) {
         if (evt.button === 0) {
             // trap clicks on hyperlinks
-            var target = getAnchor(evt.target);
-            if (target) {
-                var url = target.getAttribute('href') || target.getAttribute('data-url');
+            var anchor = getAnchor(evt.target);
+            if (anchor && !anchor.target && !anchor.download) {
+                var url = anchor.getAttribute('href') || anchor.getAttribute('data-url');
                 if (url && url.indexOf(':') === -1) {
                     // relative links are handled by RouteManager
                     this.state.route.change(url).then(() => {
@@ -762,7 +762,7 @@ module.exports = React.createClass({
                     });
                     evt.preventDefault();
                     // clear focus on change
-                    target.blur();
+                    anchor.blur();
                 }
             }
         }

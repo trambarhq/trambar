@@ -152,7 +152,7 @@ module.exports = Relaks.createClass({
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 props.project = project;
             });
-        }).then((project) => {
+        }).then(() => {
             meanwhile.show(<NewsPageSync {...props} />);
             if (tags) {
                 return StoryFinder.findStoriesWithTags(db, tags, props.currentUser).then((stories) => {

@@ -68,7 +68,7 @@ function getNotificationText(user, notification, lang) {
             } else {
                 break;
             }
-        case 'join_request':
+        case 'join-request':
             return t('notification-$name-requested-to-join', name);
     }
 }

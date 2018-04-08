@@ -168,7 +168,7 @@ module.exports = React.createClass({
                 } else {
                     break;
                 }
-            case 'join_request':
+            case 'join-request':
                 return t('notification-$name-requested-to-join', name);
         }
     },
@@ -194,7 +194,7 @@ module.exports = React.createClass({
             case 'survey': return 'list-url';
             case 'bookmark': return 'bookmark';
             case 'mention': return 'at';
-            case 'join_request': return 'user-circle';
+            case 'join-request': return 'user-circle';
         }
     },
 
@@ -239,15 +239,15 @@ function getNotificationURL(notification, route) {
         case 'bookmark':
             params.story = notification.story_id;
             return route.find(require('pages/bookmarks-page'), params);
-        case 'join_request':
-            // TODO
-            return `/admin`;
+        case 'join-request':
+            var projectId = _.get(notification, 'details.project_id');
+            return `/admin/projects/${projectId}/members/`;
     }
 }
 
 function getNotificationTarget(notification) {
     switch (notification.type) {
-        case 'join_request':
+        case 'join-request':
             return 'admin';
     }
     return '';

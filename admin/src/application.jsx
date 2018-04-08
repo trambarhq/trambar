@@ -516,23 +516,21 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleClick: function(evt) {
-        // trap clicks on hyperlinks
-        var target = evt.target;
-        while (target && target.tagName !== 'A') {
-            target = target.parentNode;
-        }
-        if (target) {
-            var url = target.getAttribute('href');
-            var download = target.getAttribute('download');
-            var targetWindow = target.getAttribute('target');
-            if (!download && !targetWindow) {
+        if (evt.button === 0) {
+            // trap clicks on hyperlinks
+            var anchor = getAnchor(evt.target);
+            if (anchor && !anchor.target && !anchor.download) {
+                var url = anchor.getAttribute('href') || anchor.getAttribute('data-url');
                 if (url && url.indexOf(':') === -1) {
                     // relative links are handled by RouteManager
                     this.state.route.change(url);
                     evt.preventDefault();
+                    // clear focus on change
+                    anchor.blur();
                 }
             }
         }
+
     },
 
     /**
@@ -610,3 +608,10 @@ module.exports = React.createClass({
         }
     }
 });
+
+function getAnchor(element) {
+    while (element && element.tagName !== 'A') {
+        element = element.parentNode;
+    }
+    return element;
+}

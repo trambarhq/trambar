@@ -43,11 +43,19 @@ function generate(db, events) {
                 return f(db, event);
             }).then((lists) => {
                 // filter out notifications that user doesn't want to receive
-                var notifications = _.filter(_.flatten(lists), (notification) => {
+                var entries = _.filter(_.flatten(lists), (entry) => {
+                    var notification = entry.notification;
                     var user = _.find(users, { id: notification.target_user_id });
                     return checkUserPreference(user, notification);
                 });
-                return Notification.save(db, event.schema, notifications);
+                var schemas = _.uniq(_.map(entries, 'schema'));
+                return Promise.mapSeries(schemas, (schema) => {
+                    var entriesForSchema = _.filter(entries, { schema });
+                    var notifications = _.map(entries, 'notification');
+                    return Notification.save(db, schema, notifications);
+                }).then((lists) => {
+                    return _.flatten(lists);
+                });
             });
         }).then((lists) => {
             return _.flatten(lists);
@@ -89,10 +97,13 @@ function generateCoauthoringNotifications(db, event) {
         var leadAuthorId = event.current.user_ids[0];
         return _.map(newCoauthorIds, (coauthorId) => {
             return {
-                type: notificationType,
-                story_id: storyId,
-                user_id: leadAuthorId,
-                target_user_id: coauthorId,
+                notification: {
+                    type: notificationType,
+                    story_id: storyId,
+                    user_id: leadAuthorId,
+                    target_user_id: coauthorId,
+                },
+                schema,
             };
         });
     });
@@ -122,11 +133,14 @@ function generateStoryPublicationNotifications(db, event) {
             return getStoryPublicationDetails(db, schema, storyId, notificationType).then((details) => {
                 return _.map(users, (user) => {
                     return {
-                        type: notificationType,
-                        story_id: storyId,
-                        user_id: leadAuthorId,
-                        target_user_id: user.id,
-                        details
+                        notification: {
+                            type: notificationType,
+                            story_id: storyId,
+                            user_id: leadAuthorId,
+                            target_user_id: user.id,
+                            details
+                        },
+                        schema,
                     };
                 });
             });
@@ -195,12 +209,15 @@ function generateReactionPublicationNotifications(db, event) {
             }
             return _.map(story.user_ids, (authorId) => {
                 return {
-                    type: notificationType,
-                    story_id: storyId,
-                    reaction_id: reactionId,
-                    user_id: respondentId,
-                    target_user_id: authorId,
-                    details
+                    notification: {
+                        type: notificationType,
+                        story_id: storyId,
+                        reaction_id: reactionId,
+                        user_id: respondentId,
+                        target_user_id: authorId,
+                        details
+                    },
+                    schema,
                 };
             });
         });
@@ -235,11 +252,14 @@ function generateBookmarkNotifications(db, event) {
             };
             return _.map(senderIds, (senderId) => {
                 return {
-                    type: notificationType,
-                    story_id: storyId,
-                    user_id: senderId,
-                    target_user_id: targetUserId,
-                    details,
+                    notification: {
+                        type: notificationType,
+                        story_id: storyId,
+                        user_id: senderId,
+                        target_user_id: targetUserId,
+                        details,
+                    },
+                    schema,
                 };
             });
         });
@@ -288,12 +308,15 @@ function generateUserMentionNotifications(db, event) {
             });
             return _.map(mentionedUsers, (user) => {
                 return {
-                    type: notificationType,
-                    story_id: storyId,
-                    reaction_id: reactionId,
-                    user_id: authorId,
-                    target_user_id: user.id,
-                    details,
+                    notification: {
+                        type: notificationType,
+                        story_id: storyId,
+                        reaction_id: reactionId,
+                        user_id: authorId,
+                        target_user_id: user.id,
+                        details,
+                    },
+                    schema,
                 };
             });
         });
@@ -315,22 +338,27 @@ function generateJoinRequestNotifications(db, event) {
         if (_.isEmpty(newProjectIds)) {
             return [];
         }
-        var schema = event.schema;
         var notificationType = 'join-request';
         var userId = event.id;
         var criteria = { id: newProjectIds, deleted: false };
-        return Project.find(db, 'global', criteria, 'name').then((projects) => {
+        return Project.find(db, 'global', criteria, 'id, name').then((projects) => {
+            var criteria = {};
             return User.findCached(db, 'global', criteria, '*').then((users) => {
                 var admins = _.filter(users, { type: 'admin' });
-                var notificationLists = _.map(projects, (projects) => {
+                var notificationLists = _.map(projects, (project) => {
                     var details = {
                         project_name: project.name,
+                        project_id: project.id,
                     };
                     return _.map(admins, (admin) => {
                         return {
-                            type: 'join-request',
-                            user_id: userId,
-                            details
+                            notification: {
+                                type: 'join-request',
+                                user_id: userId,
+                                target_user_id: admin.id,
+                                details
+                            },
+                            schema: project.name,
                         };
                     });
                 });
