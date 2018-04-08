@@ -37,6 +37,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
     var options = {
         server_id: server.id,
         repo_id: repo.id,
+        project_id: project.id,
     };
     return TaskLog.last('gitlab-event-import', options).then((lastTask) => {
         var lastEventTime = _.get(lastTask, 'details.last_event_time');
@@ -54,6 +55,8 @@ function importEvents(db, server, repo, project, glHookEvent) {
             server: server.name,
             repo_id: repo.id,
             repo: repo.name,
+            project_id: project.id,
+            project: project.name,
         });
         var added = [];
         var firstEventAge;

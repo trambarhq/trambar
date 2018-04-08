@@ -62,7 +62,6 @@ module.exports = _.create(Data, {
                 completion int NOT NULL DEFAULT 0,
                 failed boolean NOT NULL DEFAULT false,
                 user_id int,
-                server_id int,
                 etime timestamp,
                 PRIMARY KEY (id)
             );
