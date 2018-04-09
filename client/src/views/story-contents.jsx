@@ -30,6 +30,7 @@ module.exports = React.createClass({
     displayName: 'StoryContents',
     mixins: [ UpdateCheck ],
     propTypes: {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
         authors: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
@@ -144,6 +145,15 @@ module.exports = React.createClass({
         }
         var vote = getUserVote(this.props.reactions, this.props.currentUser);
         return !!vote;
+    },
+
+    /**
+     * Return true of the current user can vote
+     *
+     * @return {Boolean}
+     */
+    canUserVote: function() {
+        return (this.props.access === 'read-write');
     },
 
     /**
@@ -277,7 +287,7 @@ module.exports = React.createClass({
         }
         var onChange = this.handleSurveyItemChange;
         var onReference = this.handleReference;
-        if (!this.hasUserVoted()) {
+        if (this.canUserVote() && !this.hasUserVoted()) {
             var answers = this.state.userAnswers;
             if (story.details.markdown) {
                 var survey = Markdown.renderSurvey(text, answers, onChange, onReference);
@@ -291,7 +301,7 @@ module.exports = React.createClass({
                 return <div className="text survey plain-text"><p>{survey}</p></div>;
             }
         } else {
-            var voteCounts = countVotes(this.props.reactions);
+            var voteCounts = countVotes(this.props.reactions) || {};
             if (story.details.markdown) {
                 var results = Markdown.renderSurveyResults(text, voteCounts, onReference);
                 return (
@@ -624,6 +634,9 @@ module.exports = React.createClass({
         if (this.props.story.type !== 'survey') {
             return null;
         }
+        if (!this.canUserVote()) {
+            return null;
+        }
         if (this.hasUserVoted() !== false) {
             return null;
         }
@@ -916,6 +929,7 @@ module.exports = React.createClass({
                 story_id: story.id,
                 user_id: this.props.currentUser.id,
                 published: true,
+                public: true,
                 details: { task },
             };
             this.triggerReactionEvent(reaction);
@@ -960,6 +974,7 @@ module.exports = React.createClass({
             story_id: story.id,
             user_id: this.props.currentUser.id,
             published: true,
+            public: true,
             details: {
                 answers: this.state.userAnswers
             }

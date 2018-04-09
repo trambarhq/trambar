@@ -423,6 +423,7 @@ module.exports = React.createClass({
      */
     renderContents: function() {
         var props = {
+            access: this.props.access,
             story: this.props.story,
             authors: this.props.authors,
             currentUser: this.props.currentUser,
