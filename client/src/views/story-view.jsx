@@ -870,7 +870,7 @@ module.exports = React.createClass({
                     story_id: this.props.story.id,
                     user_id: this.props.currentUser.id,
                     published: true,
-                    public: this.props.story.public,
+                    public: true,
                 };
                 this.saveReaction(like);
                 break;
@@ -878,6 +878,11 @@ module.exports = React.createClass({
                 this.removeReaction(evt.like);
                 break;
             case 'reaction-add':
+                if (!this.state.commentsExpanded) {
+                    this.setState({
+                        commentsExpanded: true
+                    });
+                }
                 var existing = _.some(this.props.reactions, {
                     user_id: this.props.currentUser.id,
                     published: false,
@@ -889,7 +894,7 @@ module.exports = React.createClass({
                         user_id: this.props.currentUser.id,
                         details: {},
                         published: false,
-                        public: this.props.story.public,
+                        public: true,
                     };
                     this.saveReaction(comment);
                 }
