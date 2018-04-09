@@ -459,8 +459,8 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (!system) {
             return null;
         }
-        var title = p(system.details.title) || t('start-system-title-default');
-        var description = p(system.details.description);
+        var title = p(_.get(system, 'details.title')) || t('start-system-title-default');
+        var description = p(_.get(system, 'details.description'));
         return (
             <div className="section description">
                 <h2>{title}</h2>
