@@ -1402,12 +1402,130 @@ module.exports = React.createClass({
             // and if the cache is currently being cleaned
             return Promise.resolve(true);
         }
-        return cache.find(search.getQuery()).then((objects) => {
-            search.results = objects;
-            return true;
-        }).catch((err) => {
-            console.error(err);
-            return false;
+        var query = search.getQuery();
+        return this.validateCache(query.address, query.schema).then(() => {
+            return cache.find(query).then((objects) => {
+                search.results = objects;
+                return true;
+            }).catch((err) => {
+                console.error(err);
+                return false;
+            });
+        });
+    },
+
+    /**
+     * Initiate validation of all cached schemas at given address
+     *
+     * @param  {String} address
+     */
+    validateCaches: function(address) {
+        var cache = this.props.cache;
+        var query = {
+            schema: 'local',
+            table: 'remote_schema',
+        };
+        cache.find(query).then((results) => {
+            _.each(results, (s) => {
+                var prefix = `${address}/`;
+                if (_.startsWith(s.key, prefix)) {
+                    var schema = s.key.substr(prefix.length);
+                    this.validateCache(address, schema);
+                }
+            });
+            return null;
+        });
+    },
+
+    /**
+     * Compare signature stored previous with current signature; if they do
+     * not match, clean the cache
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise}
+     */
+    validateCache: function(address, schema) {
+        var cache = this.props.cache;
+        var path = [ address, schema ];
+        var promise = _.get(this.cacheValidation, path);
+        if (!promise) {
+            promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
+                return this.getCacheSignature(address, schema).then((cacheSignature) => {
+                    if (cacheSignature) {
+                        if (cacheSignature !== remoteSignature) {
+                            return this.clearCachedObjects(address, schema).then(() => {
+                                return this.setCacheSignature(address, schema, remoteSignature);
+                            });
+                        }
+                    } else {
+                        return this.setCacheSignature(address, schema, signature.remote);
+                    }
+                });
+            });
+            _.set(this.cacheValidation, path, promise);
+        }
+        return promise;
+    },
+
+    /**
+     * Load signature of cached schema
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<String>}
+     */
+    getCacheSignature: function(address, schema) {
+        var cache = this.props.cache;
+        var query = {
+            schema: 'local',
+            table: 'remote_schema',
+            key: `${address}/${schema}`
+        };
+        return cache.find(query).get(0).then((result) => {
+            return _.get(result, 'signature');
+        });
+    },
+
+    /**
+     * Save signature of cached schema
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     * @param  {String} signature
+     *
+     * @return {Promise}
+     */
+    setCacheSignature: function(address, schema, signature) {
+        var cache = this.props.cache;
+        var location = {
+            schema: 'local',
+            table: 'remote_schema',
+        };
+        var entry = {
+            key: `${address}/${schema}`,
+            signature
+        };
+        return cache.save(location, [ entry ]);
+    },
+
+    /**
+     * Fetch signature of schema
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<String>}
+     */
+    getRemoteSignature: function(address, schema) {
+        var url = `${address}${this.props.basePath}/signature/${schema}`;
+        var options = {
+            contentType: 'json'
+        };
+        return HTTPRequest.fetch('GET', url, null, options).then((result) => {
+            return _.get(result, 'signature');
         });
     },
 
