@@ -318,7 +318,10 @@ module.exports = _.create(ExternalData, {
         if (reactionBefore) {
             if (reactionBefore.user_id !== credentials.user.id) {
                 // can't modify an object that doesn't belong to the user
-                throw new HTTPError(400);
+                // unless user is an admin or a moderator
+                if (credentials.user.type !== 'admin' && credentials.user.type !== 'moderator') {
+                    throw new HTTPError(400);
+                }
             }
             if (reactionReceived.hasOwnProperty('user_id')) {
                 if (reactionReceived.user_id !== reactionBefore.user_id) {
