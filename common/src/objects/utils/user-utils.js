@@ -416,6 +416,10 @@ function canRemoveReaction(user, story, reaction, access) {
  * @return {Boolean}
  */
 function canHideReaction(user, story, reaction, access) {
+    if (reaction.type === 'vote') {
+        // votes can't be hidden since it affects the count
+        return false;
+    }
     if (canModerate(user)) {
         if (access === 'read-write') {
             return true;
