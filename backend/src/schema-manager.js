@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var Crypto = Promise.promisifyAll(require('crypto'));
 var Database = require('database');
 var Shutdown = require('shutdown');
 
@@ -388,17 +389,22 @@ function getSchemaVersion(db, schema) {
  * @return {Promise<Boolean>}
  */
 function addSchemaVersion(db, schema, version) {
+    var roleNames = _.map(roles, 'name');
     var table = `"${schema}"."meta"`;
-    var deployment = process.env.DEPLOYMENT;
     var sql = `
         CREATE TABLE ${table} (
             version int,
-            deployment varchar(64)
+            signature varchar(64)
         );
+        GRANT SELECT ON ${table} TO ${roleNames.join(', ')};
     `;
     return db.execute(sql).then(() => {
-        var sql = `INSERT INTO ${table} (version, deployment) VALUES ($1, $2)`;
-        return db.execute(sql, [ version, deployment ]);
+        return Crypto.randomBytesAsync(16).then((buffer) => {
+            return buffer.toString('hex');
+        });
+    }).then((signature) => {
+        var sql = `INSERT INTO ${table} (version, signature) VALUES ($1, $2)`;
+        return db.execute(sql, [ version, signature ]);
     }).then(() => {
         return true;
     });
@@ -415,9 +421,8 @@ function addSchemaVersion(db, schema, version) {
  */
 function setSchemaVersion(db, schema, version) {
     var table = `"${schema}"."meta"`;
-    var deployment = process.env.DEPLOYMENT;
-    var sql = `UPDATE ${table} SET version = $1, deployment = $2`;
-    return db.execute(sql, [ version, deployment ]).then((result) => {
+    var sql = `UPDATE ${table} SET version = $1`;
+    return db.execute(sql, [ version ]).then((result) => {
         return result.rowCount > 0;
     });
 }
