@@ -93,7 +93,11 @@ function canJoinProject(user, project) {
     if (!user || !project) {
         return false;
     }
-    return _.get(project, 'settings.membership.allow_user_request', false);
+    if (user.type === 'guest') {
+        return _.get(project, 'settings.membership.allow_guest_request', false);
+    } else {
+        return _.get(project, 'settings.membership.allow_user_request', false);
+    }
 }
 
 /**
