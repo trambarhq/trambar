@@ -624,10 +624,10 @@ module.exports = React.createClass({
         var draft = this.state.draft;
         var text = p(draft.details.text);
         if (draft.details.markdown) {
-            text = Markdown.parse(text, this.handleReference);
+            text = Markdown.render(text, this.handleReference);
             className += ' markdown';
         } else {
-            text = <p>{PlainText.parseEmoji(text)}</p>;
+            text = <p>{PlainText.renderEmoji(text)}</p>;
             className += ' plain-text';
         }
         return (
@@ -650,11 +650,11 @@ module.exports = React.createClass({
         var list;
         if (draft.details.markdown) {
             // answers are written to the text itself, so there's no need to
-            // provide user answers to Markdown.parseTaskList()
-            list = Markdown.parseTaskList(text, null, this.handleItemChange, this.handleReference);
+            // provide user answers to Markdown.renderTaskList()
+            list = Markdown.renderTaskList(text, null, this.handleItemChange, this.handleReference);
             className += ' markdown';
         } else {
-            list = PlainText.parseTaskList(text, null, this.handleItemChange);
+            list = PlainText.renderTaskList(text, null, this.handleItemChange);
             list = <p>{list}</p>;
             className += ' plain-text';
         }
@@ -677,10 +677,10 @@ module.exports = React.createClass({
         var text = p(draft.details.text);
         var survey;
         if (draft.details.markdown) {
-            survey = Markdown.parseSurvey(text, null, this.handleItemChange, this.handleReference);
+            survey = Markdown.renderSurvey(text, null, this.handleItemChange, this.handleReference);
             className += ' markdown';
         } else {
-            survey = PlainText.parseSurvey(text, null, this.handleItemChange);
+            survey = PlainText.renderSurvey(text, null, this.handleItemChange);
             survey = <p>{survey}</p>;
             className += ' plain-text';
         }

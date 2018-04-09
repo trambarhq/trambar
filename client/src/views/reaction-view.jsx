@@ -176,7 +176,7 @@ module.exports = React.createClass({
                     var markdown = _.get(reaction, 'details.markdown', false);
                     if (markdown) {
                         // parse the Markdown text
-                        var paragraphs = Markdown.parse(p(text), this.handleReference);
+                        var paragraphs = Markdown.render(p(text), this.handleReference);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0] && paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
@@ -189,7 +189,7 @@ module.exports = React.createClass({
                     } else {
                         return (
                             <span className="comment">
-                                {name}: {PlainText.parseEmoji(p(text))}
+                                {name}: {PlainText.renderEmoji(p(text))}
                             </span>
                         );
                     }

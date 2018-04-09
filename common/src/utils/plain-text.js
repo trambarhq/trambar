@@ -4,10 +4,10 @@ var ReactEasyEmoji = require('react-easy-emoji');
 var ListParser = require('utils/list-parser');
 
 module.exports = {
-    parseSurvey,
-    parseSurveyResults,
-    parseTaskList,
-    parseEmoji,
+    renderSurvey,
+    renderSurveyResults,
+    renderTaskList,
+    renderEmoji,
     hasEmojiSupport,
 };
 
@@ -20,7 +20,7 @@ module.exports = {
  *
  * @return {Array<String|ReactElement>}
  */
-function parseSurvey(text, answers, onChange) {
+function renderSurvey(text, answers, onChange) {
     var listTokens = ListParser.extract(text);
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
@@ -40,7 +40,7 @@ function parseSurvey(text, answers, onChange) {
                         <label>
                             <input type="radio" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
                             {item.between}
-                            {parseEmoji(item.label)}
+                            {renderEmoji(item.label)}
                         </label>
                         {item.after}
                     </span>
@@ -61,7 +61,7 @@ function parseSurvey(text, answers, onChange) {
  *
  * @return {Array<String|ReactElement>}
  */
-function parseSurveyResults(text, voteCounts) {
+function renderSurveyResults(text, voteCounts) {
     var listTokens = ListParser.extract(text);
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
@@ -75,7 +75,7 @@ function parseSurveyResults(text, voteCounts) {
                     <span>
                         {item.before}
                         <span className="vote-count">
-                            <span className="label">{parseEmoji(item.label)}</span>
+                            <span className="label">{renderEmoji(item.label)}</span>
                             <span className="bar">
                                 <span className={`filled ${color}`} style={{ width: percent }} />
                                 <span className="percent">{percent}</span>
@@ -102,7 +102,7 @@ function parseSurveyResults(text, voteCounts) {
  *
  * @return {Array<String|ReactElement>}
  */
-function parseTaskList(text, answers, onChange) {
+function renderTaskList(text, answers, onChange) {
     var listTokens = ListParser.extract(text);
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
@@ -125,7 +125,7 @@ function parseTaskList(text, answers, onChange) {
                         <label>
                             <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
                             {item.between}
-                            {parseEmoji(item.label)}
+                            {renderEmoji(item.label)}
                         </label>
                         {item.after}
                     </span>
@@ -148,7 +148,7 @@ var needEmojiHandling = !hasEmojiSupport();
  *
  * @return {Array<String|ReactElement>}
  */
-function parseEmoji(text, options) {
+function renderEmoji(text, options) {
     if (!needEmojiHandling) {
         return [ text ];
     }

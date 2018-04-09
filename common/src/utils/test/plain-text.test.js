@@ -10,10 +10,10 @@ describe('PlainText', function() {
             expect(result).to.be.a('boolean');
         })
     })
-    describe('#parseEmoji', function() {
+    describe('#renderEmoji', function() {
         it ('should return a list containing strings and ReactElement', function() {
             var text = 'Hello 😀😃😉😍😚 🤩😑😣😁😄😊😘☺ 🤔😶😥😂😅😋😗🙂 🤨🙄😮 🤣😆😎😙 🤗😐😏 🤐🍔🍕🍿🍳 🥖🥪🍖 🥟🍘 🥓🍞 🧀🌮🍗 🥠🍙🍚 🥡🥩🌯 🥗🥐🥚🌭 🥞🥨🥙🥫🍠🍱🍛🚛🛵🚄🚝💓💘 world';
-            var result = PlainText.parseEmoji(text);
+            var result = PlainText.renderEmoji(text);
             var stringCount = _.size(_.filter(result, (t) => {
                 if (typeof(t) === 'string') {
                     return true;

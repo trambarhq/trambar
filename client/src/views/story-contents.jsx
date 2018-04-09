@@ -221,14 +221,14 @@ module.exports = React.createClass({
         if (story.details.markdown) {
             return (
                 <div className="text story markdown" onClick={this.handleMarkdownClick}>
-                    {Markdown.parse(text, this.handleReference)}
+                    {Markdown.render(text, this.handleReference)}
                     {tags}
                 </div>
             );
         } else {
             return (
                 <div className="text story plain-text">
-                    <p>{PlainText.parseEmoji(text)}</p>
+                    <p>{PlainText.renderEmoji(text)}</p>
                     {tags}
                 </div>
             );
@@ -251,14 +251,14 @@ module.exports = React.createClass({
         var onChange = this.isCurrentUserAuthor() ? this.handleTaskListItemChange : null;
         var onReference = this.handleReference;
         if (story.details.markdown) {
-            var list = Markdown.parseTaskList(text, answers, onChange, onReference);
+            var list = Markdown.renderTaskList(text, answers, onChange, onReference);
             return (
                 <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
                     {list}
                 </div>
             );
         } else {
-            var list = PlainText.parseTaskList(text, answers, onChange);
+            var list = PlainText.renderTaskList(text, answers, onChange);
             return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
     },
@@ -280,27 +280,27 @@ module.exports = React.createClass({
         if (!this.hasUserVoted()) {
             var answers = this.state.userAnswers;
             if (story.details.markdown) {
-                var survey = Markdown.parseSurvey(text, answers, onChange, onReference);
+                var survey = Markdown.renderSurvey(text, answers, onChange, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {survey}
                     </div>
                 );
             } else {
-                var survey = PlainText.parseSurvey(text, answers, onChange);
+                var survey = PlainText.renderSurvey(text, answers, onChange);
                 return <div className="text survey plain-text"><p>{survey}</p></div>;
             }
         } else {
             var voteCounts = countVotes(this.props.reactions);
             if (story.details.markdown) {
-                var results = Markdown.parseSurveyResults(text, voteCounts, onReference);
+                var results = Markdown.renderSurveyResults(text, voteCounts, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {results}
                     </div>
                 );
             } else {
-                var results = PlainText.parseSurveyResults(text, voteCounts);
+                var results = PlainText.renderSurveyResults(text, voteCounts);
                 return <div className="text survey plain-text"><p>{results}</p></div>;
             }
         }
