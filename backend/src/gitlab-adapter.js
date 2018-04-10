@@ -44,7 +44,8 @@ function start() {
                 var app = Express();
                 app.use(BodyParser.json());
                 app.set('json spaces', 2);
-                app.post('/srv/gitlab/hook/:serverId/:repoId/:projectId', handleHookCallback);
+                app.post('/srv/gitlab/hook/:serverId', handleSystemHookCallback);
+                app.post('/srv/gitlab/hook/:serverId/:repoId/:projectId', handleProjectHookCallback);
                 server = app.listen(80, () => {
                     resolve();
                 });
@@ -367,12 +368,26 @@ function handleSystemChangeEvent(db, event) {
 }
 
 /**
- * Called when Gitlab sends a notification
+ * Called when Gitlab sends a notification about change to system
  *
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleHookCallback(req, res) {
+function handleSystemHookCallback(res, res) {
+    var glHookEvent = req.body;
+    var db = database;
+    var serverId = parseInt(req.params.serverId);
+    console.log(glHookEvent);
+    res.end();
+}
+
+/**
+ * Called when Gitlab sends a notification about change to repo
+ *
+ * @param  {Request} req
+ * @param  {Response} res
+ */
+function handleProjectHookCallback(req, res) {
     var glHookEvent = req.body;
     var db = database;
     var criteria = {

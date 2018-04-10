@@ -37,10 +37,12 @@ function find(db, criteria) {
             deleted: false,
         };
         return Repo.find(db, 'global', criteria, '*').then((repos) => {
-            var serverIds = _.uniq(_.map(repos, (repo) => {
+            var serverIds = _.uniq(_.filter(_.map(repos, (repo) => {
                 var repoLink = _.find(repo.external, { type: 'gitlab' });
-                return repoLink.server_id;
-            }));
+                if (repoLink) {
+                    return repoLink.server_id;
+                }
+            })));
             // load server record
             var criteria = {
                 id: serverIds,
