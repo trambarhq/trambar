@@ -135,7 +135,7 @@ var traditionalPhrases = {
     'image-editor-upload-in-progress': '正在上傳⋯⋯',
 
     'issue-cancel': '取消',
-    'issue-clear': '清除',
+    'issue-delete': '刪除',
     'issue-ok': '完成',
     'issue-repo': '數據庫',
     'issue-title': '標題',
@@ -317,6 +317,7 @@ var traditionalPhrases = {
     'project-management-add': '添加',
     'project-management-cancel': '取消',
     'project-management-description': '項目介紹',
+    'project-management-join-project': '加入項目',
     'project-management-manage': '管理列表',
     'project-management-mobile-set-up': '手機設置',
     'project-management-remove': '刪除',
@@ -814,7 +815,7 @@ var simplifiedPhrases = {
     'image-editor-upload-in-progress': '正在上传⋯⋯',
 
     'issue-cancel': '取消',
-    'issue-clear': '清除',
+    'issue-delete': '删除',
     'issue-ok': '完成',
     'issue-repo': '数据库',
     'issue-title': '标题',
@@ -996,6 +997,7 @@ var simplifiedPhrases = {
     'project-management-add': '添加',
     'project-management-cancel': '取消',
     'project-management-description': '项目介绍',
+    'project-management-join-project': '加入项目',
     'project-management-manage': '管理列表',
     'project-management-mobile-set-up': '手机设置',
     'project-management-remove': '删除',

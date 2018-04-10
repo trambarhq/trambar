@@ -93,7 +93,7 @@ module.exports = function(localeCode) {
         'image-editor-upload-in-progress': 'Opplasting pågår...',
 
         'issue-cancel': 'Avbryt',
-        'issue-clear': 'Slett',
+        'issue-delete': 'Slett',
         'issue-ok': 'OK',
         'issue-repo': 'Prosjekt',
         'issue-title': 'Tittel',
@@ -272,6 +272,7 @@ module.exports = function(localeCode) {
         'project-management-add': 'Legg til',
         'project-management-cancel': 'Avbryt',
         'project-management-description': 'prosjektbeskrivelse',
+        'project-management-join-project': 'bli med i prosjektet',
         'project-management-manage': 'Administrer liste',
         'project-management-mobile-set-up': 'mobil oppsett',
         'project-management-remove': 'Fjerne',

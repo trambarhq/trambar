@@ -275,6 +275,7 @@ module.exports = function(localeCode) {
         'project-management-add': 'Add',
         'project-management-cancel': 'Cancel',
         'project-management-description': 'project description',
+        'project-management-join-project': 'join project',
         'project-management-manage': 'Manage list',
         'project-management-mobile-set-up': 'mobile set up',
         'project-management-remove': 'Remove',

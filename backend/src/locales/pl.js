@@ -129,7 +129,7 @@ module.exports = function(localeCode) {
         'image-editor-upload-in-progress': 'Przesyłanie w toku...',
 
         'issue-cancel': 'Anuluj',
-        'issue-clear': 'Wyczyść',
+        'issue-delete': 'Usuń',
         'issue-ok': 'OK',
         'issue-repo': 'Repozytorium',
         'issue-title': 'Tytul',
@@ -333,6 +333,7 @@ module.exports = function(localeCode) {
         'project-management-add': 'Dodaj',
         'project-management-cancel': 'Anuluj',
         'project-management-description': 'opis projektu',
+        'project-management-join-project': 'dołącz do projektu',
         'project-management-manage': 'Zarządzaj listą',
         'project-management-mobile-set-up': 'konfiguracja mobilna',
         'project-management-remove': 'Usuń',
