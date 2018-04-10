@@ -323,6 +323,7 @@ var traditionalPhrases = {
     'project-management-remove': '刪除',
     'project-management-sign-out': '註銷',
     'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
+    'project-management-withdraw-request': '取消會員資格申請',
 
     'qr-scanner-cancel': '取消',
     'qr-scanner-invalid-qr-code': '不正確的ＱＲ碼',
@@ -1003,6 +1004,7 @@ var simplifiedPhrases = {
     'project-management-remove': '删除',
     'project-management-sign-out': '注销',
     'project-management-sign-out-are-you-sure': '你确定你想从该服务器注销？',
+    'project-management-withdraw-request': '取消会员资格申请',
 
     'qr-scanner-cancel': '取消',
     'qr-scanner-invalid-qr-code': '不正确的ＱＲ码',

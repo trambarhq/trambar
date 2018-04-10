@@ -276,6 +276,7 @@ module.exports = function(localeCode) {
         'project-management-remove': 'Poista',
         'project-management-sign-out': 'kirjaudu ulos',
         'project-management-sign-out-are-you-sure': 'Haluatko varmasti kirjautua ulos tästä palvelimesta?',
+        'project-management-withdraw-request': 'kumoaa jäsenpyyntö',
 
         'qr-scanner-cancel': 'Peruutta',
         'qr-scanner-invalid-qr-code': 'Virheellinen QR-koodi',

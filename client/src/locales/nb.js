@@ -278,6 +278,7 @@ module.exports = function(localeCode) {
         'project-management-remove': 'Fjerne',
         'project-management-sign-out': 'Logg ut',
         'project-management-sign-out-are-you-sure': 'Er du sikker på at du vil logge deg ut fra denne serveren?',
+        'project-management-withdraw-request': 'opphev medlemskapsforespørselen',
 
         'qr-scanner-cancel': 'Avbryt',
         'qr-scanner-invalid-qr-code': 'Ugyldig QR-kode',

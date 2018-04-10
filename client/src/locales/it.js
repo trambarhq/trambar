@@ -278,6 +278,7 @@ module.exports = function(localeCode) {
         'project-management-remove': "Rimuovi",
         'project-management-sign-out': "disconnettersi",
         'project-management-sign-out-are-you-sure': "Sei sicuro di voler uscire da questo server?",
+        'project-management-withdraw-request': 'ritira la richiesta di adesione',
 
         'qr-scanner-cancel': "Annulla",
         'qr-scanner-invalid-qr-code': "Codice QR non valido",
