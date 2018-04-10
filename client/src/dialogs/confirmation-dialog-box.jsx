@@ -60,10 +60,12 @@ module.exports = React.createClass({
         var cancelProps = {
             label: t('confirmation-cancel'),
             onClick: this.props.onClose,
+            hidden: !this.props.onClose,
         };
         var confirmProps = {
             label: t('confirmation-confirm'),
             onClick: this.props.onConfirm,
+            hidden: !this.props.onConfirm,
             emphasized: true,
         };
         return (

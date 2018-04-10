@@ -299,12 +299,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     renderProjectPanel: function() {
         var panelProps = {
             system: this.props.system,
+            currentUser: this.getUser(),
             currentProject: this.props.currentProject,
             projectLinks: this.props.projectLinks,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+            onChange: this.handleChange,
         };
         return <ProjectPanel {...panelProps} />;
     },

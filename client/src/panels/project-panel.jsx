@@ -26,6 +26,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         system: PropTypes.object,
+        currentUser: PropTypes.object,
         currentProject: PropTypes.object,
         projectLinks: PropTypes.arrayOf(PropTypes.object),
 
@@ -33,6 +34,8 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
     },
 
     /**
@@ -45,6 +48,30 @@ module.exports = React.createClass({
             renderingDialog: null,
             showingDialog: false,
         };
+    },
+
+    /**
+     * Check if current user has gained membership and if so, bring up a
+     * dialog box with a message
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.currentProject !== nextProps.currentProject) {
+            if (this.props.currentProject && nextProps.currentProject) {
+                var userId = _.get(this.props.currentUser, 'id');
+                var isMemberBefore = _.includes(this.props.currentProject.user_ids, userId);
+                var isMemberAfter = _.includes(nextProps.currentProject.user_ids, userId);
+                if (!isMemberBefore && isMemberAfter) {
+                    if (!this.state.renderingDialog) {
+                        this.setState({
+                            renderingDialog: 'membership',
+                            showingDialog: true,
+                        });
+                    }
+                }
+            }
+        }
     },
 
     /**
@@ -92,6 +119,18 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var params = this.props.route.parameters;
         if (link.schema === params.schema && link.address == params.address) {
+            var isMember = true;
+            var isApplying = false;
+            var project = this.props.currentProject;
+            var user = this.props.currentUser;
+            if (project && user) {
+                if (!_.includes(project.user_ids, user.id)) {
+                    isMember = false;
+                    if (_.includes(user.requested_project_ids, project.id)) {
+                        isApplying = true;
+                    }
+                }
+            }
             var serverProps = {
                 icon: 'home',
                 label: link.address,
@@ -108,6 +147,12 @@ module.exports = React.createClass({
                 hidden: (process.env.PLATFORM === 'cordova'),
                 onClick: this.handleMobileSetupClick,
             };
+            var membershipProps = {
+                icon: isApplying ? 'clock-o' : 'user-circle-o',
+                label: t(`project-management-${isApplying ? 'withdraw-request' : 'join-project'}`),
+                hidden: isMember,
+                onClick: isApplying ? this.handleCancelJoinClick : this.handleJoinClick,
+            };
             var signOutProps = {
                 icon: 'sign-out',
                 label: t('project-management-sign-out'),
@@ -122,6 +167,7 @@ module.exports = React.createClass({
                             <SupplementalProjectOption {...serverProps} />
                             <SupplementalProjectOption {...descriptionProps} />
                             <SupplementalProjectOption {...mobileProps} />
+                            <SupplementalProjectOption {...membershipProps} />
                             <SupplementalProjectOption {...signOutProps} />
                         </div>
                     </div>
@@ -179,6 +225,7 @@ module.exports = React.createClass({
                 {this.renderMobileSetupDialogBox()}
                 {this.renderSignOutDialogBox()}
                 {this.renderProjectManagementDialogBox()}
+                {this.renderMembershipDialogBox()}
             </div>
         );
     },
@@ -260,6 +307,31 @@ module.exports = React.createClass({
         return (
             <ConfirmationDialogBox {...props}>
                 {t('project-management-sign-out-are-you-sure')}
+            </ConfirmationDialogBox>
+        );
+    },
+
+    /**
+     * Render message when user joins project
+     *
+     * @return {ReactElement|null}
+     */
+    renderMembershipDialogBox: function() {
+        if (this.state.renderingDialog !== 'membership') {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        var n = this.props.locale.name;
+        var user = this.props.currentUser;
+        var name = n(_.get(user, 'details.name'), _.get(user, 'details.gender'));
+        var props = {
+            show: this.state.showingDialog,
+            locale: this.props.locale,
+            onConfirm: this.handleDialogClose,
+        };
+        return (
+            <ConfirmationDialogBox {...props}>
+                {t('membership-request-$you-are-now-member', name)}
             </ConfirmationDialogBox>
         );
     },
@@ -352,6 +424,41 @@ module.exports = React.createClass({
             renderingDialog: 'mobile-setup',
             showingDialog: true,
         });
+    },
+
+    /**
+     * Called when user clicks withdraw-request button
+     *
+     * @param  {Event} evt
+     */
+    handleJoinClick: function(evt) {
+        var userAfter = _.cloneDeep(this.props.currentUser);
+        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ this.props.currentProject.id ]);
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
+                target: this,
+                user: userAfter
+            });
+        }
+    },
+
+    /**
+     * Called when user clicks join-project button
+     *
+     * @param  {Event} evt
+     */
+    handleCancelJoinClick: function(evt) {
+        console.log('cancel')
+        var userAfter = _.cloneDeep(this.props.currentUser);
+        _.remove(userAfter.requested_project_ids, this.props.currentProject.id);
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
+                target: this,
+                user: userAfter
+            });
+        }
     },
 
     /**
