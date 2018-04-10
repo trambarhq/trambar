@@ -117,7 +117,7 @@ function removeServerHooks(db, host, server) {
                 var { repo, project } = sa;
                 return removeProjectHook(host, server, repo, project).then(() => {
                     deleted.push(repo.name);
-                    taskLog.report(deleted.length, HookCount, { deleted });
+                    taskLog.report(deleted.length, hookCount, { deleted });
                 });
             });
         }).tap(() => {
@@ -149,7 +149,7 @@ function installSystemHook(host, server) {
                 }
                 if (remove) {
                     console.log(`Removing existing hook: ${installed.url}`);
-                    destroySystemHook(server, link.project.id, glHook);
+                    destroySystemHook(server, glHook);
                 }
             }
         });
@@ -217,7 +217,7 @@ function removeSystemHook(host, server) {
     }
     console.log(`Removing web-hook on server: ${server.name}`);
     return fetchSystemHooks(server).each((glHook) => {
-        var url = getSystemHookEndpoint(host, server, repo, project);
+        var url = getSystemHookEndpoint(host, server);
         if (glHook.url === url) {
             return destroySystemHook(server, glHook);
         }
@@ -279,7 +279,7 @@ function fetchProjectHooks(server, glProjectId) {
  * @param  {Server} server
  * @param  {Object} glHook
  *
- * @return {Promise}
+ * @return {Promise<Object>}
  */
 function createSystemHook(server, glHook) {
     var url = `/hooks`;
@@ -293,7 +293,7 @@ function createSystemHook(server, glHook) {
  * @param  {Number} glProjectId
  * @param  {Object} glHook
  *
- * @return {Promise}
+ * @return {Promise<Object>}
  */
 function createProjectHook(server, glProjectId, glHook) {
     var url = `/projects/${glProjectId}/hooks`;

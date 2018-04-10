@@ -373,12 +373,33 @@ function handleSystemChangeEvent(db, event) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleSystemHookCallback(res, res) {
+function handleSystemHookCallback(req, res) {
     var glHookEvent = req.body;
     var db = database;
     var serverId = parseInt(req.params.serverId);
-    console.log(glHookEvent);
-    res.end();
+    return Server.findOne(db, 'global', { id: serverId, deleted: false }, '*').then((server) => {
+        switch (glHookEvent.event_name) {
+            case 'project_create':
+            case 'project_destroy':
+            case 'project_rename':
+            case 'project_transfer':
+            case 'project_update':
+            case 'user_add_to_team':
+            case 'user_remove_from_team':
+                return taskQueue.schedule(`import_system_events:${server.id}`, () => {
+                    return RepoImporter.importRepositories(db, server);
+                });
+            case 'user_create':
+            case 'user_destroy':
+                return taskQueue.schedule(`import_system_events:${server.id}`, () => {
+                    return UserImporter.importUsers(db, server);
+                });
+        }
+    }).catch((err) => {
+        console.error(err);
+    }).finally(() => {
+        res.end();
+    });
 }
 
 /**
