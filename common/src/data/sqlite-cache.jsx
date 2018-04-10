@@ -132,9 +132,9 @@ module.exports = React.createClass({
                 paramSets.push([ address, schema, table, object.id, json, rtime ]);
             }
         });
-        return this.execute(statements, paramSets).then(() => {
+        return this.execute(statements, paramSets).then((affectedCount) => {
             var writeCount = this.state.writeCount;
-            writeCount += objects.length;
+            writeCount += affectedCount;
             this.setState({ writeCount });
             this.updateTableEntry(address, schema, table, objects, false);
             this.updateRecordCount(schema, 500);
@@ -154,28 +154,28 @@ module.exports = React.createClass({
         var address = location.address || '';
         var schema = location.schema;
         var table = location.table;
-        return Promise.mapSeries(objects, (object) => {
-            var sql, params;
+        var statements = [], paramSets = [];
+        _.each(objects, (object) => {
             if (schema === 'local') {
-                sql = `
+                statements.push(`
                     DELETE FROM local_data
                     WHERE table_name = ? AND key = ?
-                `;
-                params = [ table, object.key ];
+                `);
+                paramSets.push([ table, object.key ]);
             } else {
-                sql = `
+                statements.push(`
                     DELETE FROM remote_data
                     WHERE address = ?
                     AND schema_name = ?
                     AND table_name = ?
                     AND id = ?
-                `;
-                params = [ address, schema, table, object.id ];
+                `);
+                paramSets.push([ address, schema, table, object.id ]);
             }
-            return this.execute(sql, params);
-        }).then(() => {
+        });
+        return this.execute(statements, paramSets).then((affectedCount) => {
             var deleteCount = this.state.deleteCount;
-            deleteCount += objects.length;
+            deleteCount += affectedCount;
             this.setState({ deleteCount });
             this.updateTableEntry(address, schema, table, objects, true);
 
@@ -200,11 +200,20 @@ module.exports = React.createClass({
     clean: function(criteria) {
         var sql, params;
         if (criteria.address !== undefined) {
-            sql = `
-                DELETE FROM remote_data
-                WHERE address = ?
-            `;
-            params = [ criteria.address || '' ];
+            if (!criteria.schema || criteria.schema === '*') {
+                sql = `
+                    DELETE FROM remote_data
+                    WHERE address = ?
+                `;
+                params = [ criteria.address || '' ];
+            } else {
+                sql = `
+                    DELETE FROM remote_data
+                    WHERE address = ? AND schema_name = ?
+                `;
+                params = [ criteria.address || '', criteria.schema ];
+                console.log(sql);
+            }
         } else if (criteria.count !== undefined) {
             sql = `
                 DELETE FROM remote_data
@@ -226,10 +235,10 @@ module.exports = React.createClass({
             }
             return Promise.resolve(0);
         }
-        return this.execute(sql, params).then((count) => {
-            if (count > 0) {
+        return this.execute(sql, params).then((affectedCount) => {
+            if (affectedCount > 0) {
                 var deleteCount = this.state.deleteCount;
-                deleteCount += count;
+                deleteCount += affectedCount;
                 this.setState({ deleteCount });
                 this.updateRecordCount('remote_data');
                 this.tables['remote'] = {};
@@ -274,10 +283,12 @@ module.exports = React.createClass({
     execute: function(sql, params) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
+                var affected = 0;
                 var rejectT = (err) => { reject(new Error(err.message)) };
                 var resolveT = () => { resolve(affected) };
-                var affected = 0;
-                var callback = (tx, rs) => { affected += rs.rowsAffected };
+                var callback = (tx, rs) => {
+                    affected += rs.rowsAffected ;
+                };
                 db.transaction((tx) => {
                     if (sql instanceof Array) {
                         for (var i = 0; i < sql.length; i++) {

@@ -134,6 +134,8 @@ function handleSignature(req, res) {
                 throw new HTTPError(404);
             }
             return rows[0].signature;
+        }).catch((err) => {
+            throw new HTTPError(404);
         });
     }).then((signature) => {
         sendResponse(res, { signature });

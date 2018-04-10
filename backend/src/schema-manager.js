@@ -322,8 +322,8 @@ function createSchema(db, schema) {
             return accessor.watch(db, schema);
         });
     }).then(() => {
-        var latestVersion = _.max(_.map(accessors), 'version');
-        return addSchemaVersion(db, schema);
+        var latestVersion = _.max(_.map(accessors, 'version')) || 0;
+        return addSchemaVersion(db, schema, latestVersion);
     }).then(() => {
         return db.commit().return(true);
     }).catch((err) => {

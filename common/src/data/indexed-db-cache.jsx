@@ -201,14 +201,23 @@ module.exports = React.createClass({
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
                 if (criteria.address !== undefined) {
+                    var prefix = null;
+                    if (criteria.schema) {
+                        if (criteria.schema !== '*') {
+                            prefix = `${criteria.address}/${criteria.schema}/`;
+                        }
+                    }
                     var index = objectStore.index('address');
                     var req = index.openCursor(criteria.address || '');
                     var records = [];
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
-                            records.push(cursor.value);
-                            cursor.delete();
+                            var record = cursor.value;
+                            if (!prefix || _.startsWith(record.location, prefix)) {
+                                records.push(record);
+                                cursor.delete();
+                            }
                             cursor.continue();
                         } else {
                             resolve(records);
@@ -221,7 +230,8 @@ module.exports = React.createClass({
                     req.onsuccess = (evt) => {
                         var cursor = evt.target.result;
                         if(cursor) {
-                            records.push(cursor.value);
+                            var record = cursor.value;
+                            records.push(record);
                             cursor.delete();
                             if (records.length < criteria.count) {
                                 cursor.continue();

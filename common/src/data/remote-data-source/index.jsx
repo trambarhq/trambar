@@ -68,6 +68,8 @@ module.exports = React.createClass({
     getInitialState: function() {
         this.searching = false;
         this.idMappings = {};
+        this.cacheValidation = {};
+        this.cacheClearing = {};
         var lists = {
             recentSearchResults: [],
             recentStorageResults: [],
@@ -234,7 +236,7 @@ module.exports = React.createClass({
             }).then(() => {
                 destroySession(session);
                 this.clearRecentOperations(address);
-                this.clearCachedObjects(address);
+                this.clearCachedSchemas(address);
                 this.triggerExpirationEvent(session);
                 return null;
             });
@@ -1349,7 +1351,7 @@ module.exports = React.createClass({
         }).catch((err) => {
             if (err.statusCode === 401 || err.statusCode == 403) {
                 this.clearRecentOperations(address);
-                this.clearCachedObjects(address);
+                this.clearCachedSchemas(address);
                 if (err.statusCode === 401) {
                     destroySession(session);
                     this.triggerExpirationEvent(session);
@@ -1397,9 +1399,8 @@ module.exports = React.createClass({
         if (!cache) {
             return Promise.resolve(false);
         }
-        if (search.remote || this.cleaningCache) {
+        if (search.remote) {
             // don't scan cache if query is designed as remote
-            // and if the cache is currently being cleaned
             return Promise.resolve(true);
         }
         var query = search.getQuery();
@@ -1415,29 +1416,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Initiate validation of all cached schemas at given address
-     *
-     * @param  {String} address
-     */
-    validateCaches: function(address) {
-        var cache = this.props.cache;
-        var query = {
-            schema: 'local',
-            table: 'remote_schema',
-        };
-        cache.find(query).then((results) => {
-            _.each(results, (s) => {
-                var prefix = `${address}/`;
-                if (_.startsWith(s.key, prefix)) {
-                    var schema = s.key.substr(prefix.length);
-                    this.validateCache(address, schema);
-                }
-            });
-            return null;
-        });
-    },
-
-    /**
      * Compare signature stored previous with current signature; if they do
      * not match, clean the cache
      *
@@ -1447,26 +1425,87 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     validateCache: function(address, schema) {
+        if (schema === 'local') {
+            return Promise.resolve();
+        }
+        if (!this.props.hasConnection) {
+            return Promise.resolve();
+        }
         var cache = this.props.cache;
         var path = [ address, schema ];
         var promise = _.get(this.cacheValidation, path);
         if (!promise) {
             promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
+                console.log('Validating cache of ' + schema);
                 return this.getCacheSignature(address, schema).then((cacheSignature) => {
+                    console.log('Remote signature = ' + remoteSignature);
+                    console.log('Cache signature = ' + cacheSignature);
                     if (cacheSignature) {
                         if (cacheSignature !== remoteSignature) {
+                            console.log('Clearing cache ' + schema);
                             return this.clearCachedObjects(address, schema).then(() => {
                                 return this.setCacheSignature(address, schema, remoteSignature);
                             });
                         }
                     } else {
-                        return this.setCacheSignature(address, schema, signature.remote);
+                        // wait for any cache clearing operation to complete
+                        return this.waitForCacheClearing(address, schema).then(() => {
+                            return this.setCacheSignature(address, schema, remoteSignature);
+                        });
                     }
                 });
+            }).catch((err) => {
+                console.error(err);
+                _.unset(this.cacheValidation, path);
             });
             _.set(this.cacheValidation, path, promise);
         }
         return promise;
+    },
+
+    /**
+     * Clear cached schema at given address
+     *
+     * @param  {String} address
+     *
+     * @return {Promise}
+     */
+    clearCachedSchemas: function(address) {
+        // remove all validation results for address
+        _.unset(this.cacheValidation, [ address ]);
+        // remove the signatures
+        var cache = this.props.cache;
+        var location = {
+            schema: 'local',
+            table: 'remote_schema',
+        };
+        var prefix = `${address}/`;
+        return cache.find(location).filter((row) => {
+            return _.startsWith(row.key, prefix);
+        }).then((rows) => {
+            return cache.remove(location, rows);
+        }).then(() => {
+            // clear the objects
+            return this.clearCachedObjects(address, '*');
+        });
+    },
+
+    /**
+     * Fetch signature of schema
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<String>}
+     */
+    getRemoteSignature: function(address, schema) {
+        var url = `${address}${this.props.basePath}/signature/${schema}`;
+        var options = {
+            responseType: 'json'
+        };
+        return HTTPRequest.fetch('GET', url, null, options).then((result) => {
+            return _.get(result, 'signature');
+        });
     },
 
     /**
@@ -1482,9 +1521,12 @@ module.exports = React.createClass({
         var query = {
             schema: 'local',
             table: 'remote_schema',
-            key: `${address}/${schema}`
+            criteria: {
+                key: `${address}/${schema}`
+            }
         };
         return cache.find(query).get(0).then((result) => {
+            console.log('getCacheSignature', result);
             return _.get(result, 'signature');
         });
     },
@@ -1509,24 +1551,6 @@ module.exports = React.createClass({
             signature
         };
         return cache.save(location, [ entry ]);
-    },
-
-    /**
-     * Fetch signature of schema
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     *
-     * @return {Promise<String>}
-     */
-    getRemoteSignature: function(address, schema) {
-        var url = `${address}${this.props.basePath}/signature/${schema}`;
-        var options = {
-            contentType: 'json'
-        };
-        return HTTPRequest.fetch('GET', url, null, options).then((result) => {
-            return _.get(result, 'signature');
-        });
     },
 
     /**
@@ -1573,20 +1597,53 @@ module.exports = React.createClass({
      * Deleted all cached objects originating from given server
      *
      * @param  {String} address
+     * @param  {String} schema
      *
      * @return {Promise<Number>}
      */
-    clearCachedObjects: function(address) {
+    clearCachedObjects: function(address, schema) {
         var cache = this.props.cache;
-        if (!cache || this.cleaningCache) {
+        if (!cache) {
+            return Promise.resolve(false);
+        }
+        // see if we're in the middle of clearing everything from address
+        var path = [ address, '*' ];
+        var promise = _.get(this.cacheClearing, path);
+        if (!promise) {
+            if (schema !== '*') {
+                path = [ address, schema ];
+                promise = _.get(this.cacheClearing, path);
+            }
+        }
+        if (!promise) {
+            promise = cache.clean({ address, schema }).then((count) => {
+                _.unset(this.cacheClearing, path);
+                console.log(`Cache entries removed: ${count}`);
+                return count;
+            });
+            _.set(this.cacheClearing, path, promise);
+        }
+        return promise;
+    },
+
+    /**
+     * If a schema is in the middle of being cleared, return the promise from
+     * that operation
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<Number>}
+     */
+    waitForCacheClearing: function(address, schema) {
+        var promise = _.get(this.cacheClearing, [ address, '*' ]);
+        if (!promise) {
+            promise = _.get(this.cacheClearing, [ address, schema ]);
+        }
+        if (!promise) {
             return Promise.resolve(0);
         }
-        this.cleaningCache = true;
-        return cache.clean({ address }).then((count) => {
-            this.cleaningCache = false;
-            console.log(`Cache entries removed: ${count}`);
-            return count;
-        });
+        return promise;
     },
 
     /**
