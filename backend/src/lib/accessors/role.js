@@ -128,15 +128,4 @@ module.exports = _.create(ExternalData, {
             return this.ensureUniqueName(db, schema, roleBefore, roleReceived);
         });
     },
-
-    /**
-     * Synchronize table with data sources
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sync: function(db, schema, criteria) {
-        this.sendSyncNotification(db, schema, criteria);
-    },
 });

@@ -736,32 +736,6 @@ module.exports = {
     },
 
     /**
-     * Synchronize table with data sources
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sync: function(db, schema, criteria) {
-    },
-
-    /**
-     * Notify other processes of the need to synchronize data
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sendSyncNotification: function(db, schema, criteria) {
-        var table = this.table;
-        var info = { schema, table, criteria };
-        var channel = table + '_sync';
-        var msg = JSON.stringify(info);
-        var sql = `NOTIFY ${channel}, '${msg.replace(/'/g, "''")}'`;
-        db.execute(sql);
-    },
-
-    /**
      * Delete rows that are marked deleted for long enough time (as indicated
      * by their mtime)
      *

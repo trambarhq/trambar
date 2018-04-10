@@ -65,15 +65,7 @@ function start() {
                 'story',
                 'system',
             ];
-            return db.listen(tables, 'change', handleDatabaseChanges, 100).then(() => {
-                var tables = [
-                    'project',
-                    'repo',
-                    'user',
-                    'role',
-                ];
-                return db.listen(tables, 'sync', handleDatabaseSyncRequests, 0);
-            });
+            return db.listen(tables, 'change', handleDatabaseChanges, 100);
         }).then(() => {
             // update repo lists, in case they were added while Trambar is down
             var criteria = {
@@ -364,58 +356,6 @@ function handleSystemChangeEvent(db, event) {
             return HookManager.installHooks(db, hostAfter);
         });
     }
-}
-
-/**
- * Called when another process posts synchronization requests
- *
- * @param  {Array<Object>} events
- */
-function handleDatabaseSyncRequests(events) {
-    var db = database;
-    Promise.each(events, (event) => {
-        switch (event.table) {
-            case 'project': return handleProjectSyncEvent(db, event);
-            case 'repo': return handleRepoSyncEvent(db, event);
-            case 'user': return handleUserSyncEvent(db, event);
-        }
-    });
-}
-
-/**
- * Make sure member lists are in sync
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise}
- */
-function handleProjectSyncEvent(db, event) {
-    // TODO
-}
-
-/**
- * Make sure information about repos is in sync
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise}
- */
-function handleRepoSyncEvent(db, event) {
-    // TODO
-}
-
-/**
- * Make sure information about imported users are in sync
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise}
- */
-function handleUserSyncEvent(db, event) {
-    // TODO
 }
 
 /**

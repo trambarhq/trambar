@@ -209,10 +209,6 @@ function handleDiscovery(req, res) {
                         gns: _.map(rows, 'gn'),
                     }
                 });
-            }).then((results) => {
-                // see if data needed to be synchronize with an external source
-                accessor.sync(db, schema, criteria);
-                return results;
             });
         }).finally(() => {
             return db.close();

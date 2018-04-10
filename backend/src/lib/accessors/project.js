@@ -273,17 +273,6 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Synchronize table with data sources
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sync: function(db, schema, criteria) {
-        this.sendSyncNotification(db, schema, criteria);
-    },
-
-    /**
      * Add members to a project atomically
      *
      * @param  {Database} db

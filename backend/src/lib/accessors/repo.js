@@ -124,17 +124,6 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
-     * Synchronize table with data sources
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sync: function(db, schema, criteria) {
-        this.sendSyncNotification(db, schema, criteria);
-    },
-
-    /**
      * Mark repos as deleted if they're associated with the provided server id
      *
      * @param  {Database} db

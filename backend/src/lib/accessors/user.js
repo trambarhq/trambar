@@ -333,17 +333,6 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
-     * Synchronize table with data sources
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Object} criteria
-     */
-    sync: function(db, schema, criteria) {
-        this.sendSyncNotification(db, schema, criteria);
-    },
-
-    /**
      * Create associations between newly created or modified rows with
      * rows in other tables
      *
