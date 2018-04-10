@@ -285,10 +285,16 @@ function handleStoryChangeEvent(db, event) {
         // change is caused by an import
         return;
     }
+    if (event.current.deleted) {
+        return;
+    }
     var exporting = false;
     if (event.current.type === 'issue') {
         if (event.diff.details) {
             // title or labels might have changed
+            exporting = true;
+        } else if (event.diff.external) {
+            // issue might have been moved or deleted
             exporting = true;
         }
     } else if (_.includes(StoryTypes.trackable, event.current.type)) {
@@ -305,8 +311,10 @@ function handleStoryChangeEvent(db, event) {
     }
     var promise = Story.findOne(db, event.schema, { id: event.id }, '*').then((story) => {
         return Project.findOne(db, 'global', { name: event.schema }, '*').then((project) => {
-            console.log(`Exporting story ${story.id}`);
-            return IssueExporter.exportStory(db, project, story);
+            return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+                console.log(`Exporting story ${story.id}`);
+                return IssueExporter.exportStory(db, system, project, story);
+            });
         });
     }).catch((err) => {
         console.error(err);

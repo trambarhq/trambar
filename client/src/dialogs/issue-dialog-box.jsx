@@ -21,7 +21,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         show: PropTypes.bool,
-        allowClearing: PropTypes.bool.isRequired,
+        allowDeletion: PropTypes.bool.isRequired,
         currentUser: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
         issue: PropTypes.object,
@@ -248,11 +248,11 @@ module.exports = React.createClass({
                 changed = false;
             }
         }
-        var clearProps = {
-            label: t('issue-clear'),
+        var deleteProps = {
+            label: t('issue-delete'),
             emphasized: false,
-            hidden: !this.props.allowClearing,
-            onClick: this.handleClearClick,
+            hidden: !this.props.allowDeletion,
+            onClick: this.handleDeleteClick,
         };
         var cancelProps = {
             label: t('issue-cancel'),
@@ -268,7 +268,7 @@ module.exports = React.createClass({
         return (
             <div className="buttons">
                 <div className="left">
-                    <PushButton {...clearProps} />
+                    <PushButton {...deleteProps} />
                 </div>
                 <div className="right">
                     <PushButton {...cancelProps} />
@@ -289,11 +289,11 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks the cancel button
+     * Called when user clicks the delete button
      *
      * @param  {Event} evt
      */
-    handleClearClick: function(evt) {
+    handleDeleteClick: function(evt) {
         if (this.props.onConfirm) {
             this.props.onConfirm({
                 type: 'confirm',

@@ -529,6 +529,7 @@ module.exports = React.createClass({
             section,
             access: this.props.access,
             story: this.props.story,
+            reactions: this.props.reactions,
             repos: this.props.repos,
             currentUser: this.props.currentUser,
             options: this.state.options,

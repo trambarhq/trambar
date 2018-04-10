@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
+var TagScanner = require('utils/tag-scanner');
 
 module.exports = {
     extract,
@@ -21,7 +22,12 @@ function extract(story, repos) {
     }
     // find the repo in whose tracker the issue resides
     var repo = _.find(repos, (repo) => {
-        return ExternalDataUtils.findLinkByRelative(story, repo, 'project');
+        var link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
+        if (link && link.issue) {
+            if (!link.issue.deleted) {
+                return true;
+            }
+        }
     });
     if (!repo) {
         // either the repo has gone missing or it's not loaded yet
@@ -74,16 +80,31 @@ function attach(story, issue, user, repos) {
                 return '#' + _.replace(label, /\s+/g, '-');
             }));
 
-            // remove other links
-            _.remove(story.external, (link) => {
-                return (link !== issueLink && link.issue);
+            // mark other links as deleted
+            // this happens when we change the repo to which the issue belongs
+            _.each(story.external, (link) => {
+                if (link !== issueLink && link.issue) {
+                    link.issue.deleted = true;
+                }
             });
             return true;
         } else {
-            // remove any issue link
-            delete story.external;
+            // delete the issue
+            _.remove(story.external, (link) => {
+                if (link.issue) {
+                    if (link.issue.id) {
+                        // the issue has already been created
+                        link.issue.deleted = true;
+                        return false;
+                    } else {
+                        // the issue hasn't been created yet--simply remove it
+                        return true;
+                    }
+                }
+            });
             delete story.details.title;
             delete story.details.labels;
+            story.tags = TagScanner.findTags(story.details.text);
             return false;
         }
     } catch (err) {

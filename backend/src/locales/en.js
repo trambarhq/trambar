@@ -97,7 +97,7 @@ module.exports = function(localeCode) {
         'image-editor-upload-in-progress': 'Upload in progress...',
 
         'issue-cancel': 'Cancel',
-        'issue-clear': 'Clear',
+        'issue-delete': 'Delete',
         'issue-ok': 'OK',
         'issue-repo': 'Repository',
         'issue-title': 'Title',

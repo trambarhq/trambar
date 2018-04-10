@@ -20,6 +20,7 @@ module.exports = React.createClass({
         section: PropTypes.oneOf([ 'main', 'both' ]),
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         story: PropTypes.object.isRequired,
+        reactions: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
@@ -192,9 +193,10 @@ module.exports = React.createClass({
         if (!this.state.renderingIssueDialogBox) {
             return null;
         }
+        // don't allow issue to be deleted once someone has been assigned to it
         var props = {
             show: this.state.enteringIssueDetails,
-            allowClearing: false,
+            allowDeletion: !_.some(this.props.reactions, { type: 'assignment '}),
             issue: this.props.options.issueDetails,
             repos: this.props.repos,
 
