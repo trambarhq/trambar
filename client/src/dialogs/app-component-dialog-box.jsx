@@ -62,10 +62,10 @@ module.exports = React.createClass({
             );
         } else {
             var icon = component.icon || {};
-            var iconClassName = icon['class'] || 'fa-cubes';
+            var iconClassName = icon.class || 'fa-cubes';
             var style = {
-                color: icon['color'],
-                backgroundColor: icon['background-color'],
+                color: icon.color,
+                backgroundColor: icon.backgroundColor,
             };
             return (
                 <div className="picture">
