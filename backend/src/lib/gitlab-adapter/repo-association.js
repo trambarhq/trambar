@@ -35,6 +35,7 @@ function find(db, criteria) {
             id: repoIds,
             type: 'gitlab',
             deleted: false,
+            archived: false,
         };
         return Repo.find(db, 'global', criteria, '*').then((repos) => {
             var serverIds = _.uniq(_.filter(_.map(repos, (repo) => {
@@ -47,6 +48,7 @@ function find(db, criteria) {
             var criteria = {
                 id: serverIds,
                 deleted: false,
+                disabled: false,
             };
             return Server.find(db, 'global', criteria, '*').then((servers) => {
                 var list = [];
@@ -83,7 +85,8 @@ function findOne(db, criteria) {
     var props = {
         server: Server.findOne(db, 'global', {
             id: criteria.server_id,
-            deleted: false
+            deleted: false,
+            disabled: false,
         }, '*'),
         repo: Repo.findOne(db, 'global', {
             id: criteria.repo_id,
@@ -91,7 +94,8 @@ function findOne(db, criteria) {
         }, '*'),
         project: Project.findOne(db, 'global', {
             id: criteria.project_id,
-            deleted: false
+            deleted: false,
+            archived: false,
         }, '*')
     };
     return Promise.props(props).then((a) => {

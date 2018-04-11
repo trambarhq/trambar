@@ -138,20 +138,29 @@ function handleDatabaseChanges(events) {
  * @return {Promise|undefined}
  */
 function handleServerChangeEvent(db, event) {
-    if (event.diff.settings) {
-        var criteria = {
-            id: event.id,
-            type: 'gitlab',
-            deleted: false,
-        };
-        return Server.findOne(db, 'global', criteria, '*').then((server) => {
+    var criteria = {
+        id: event.id,
+        type: 'gitlab',
+        deleted: false,
+    };
+    return Server.findOne(db, 'global', criteria, '*').then((server) => {
+        if (event.diff.settings) {
             if (hasAccessToken(server)) {
                 return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
                     return RepoImporter.importRepositories(db, server);
                 });
             }
-        });
-    }
+        }
+        if (event.diff.deleted || event.diff.disabled) {
+            return getServerAddress(db).then((host) => {
+                if (!event.current.deleted && !event.current.disabled) {
+                    return HookManager.installServerHooks(db, host, server);
+                } else {
+                    return HookManager.removeServerHooks(db, host, server);
+                }
+            });
+        }
+    });
 }
 
 /**

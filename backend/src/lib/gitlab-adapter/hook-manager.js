@@ -31,6 +31,7 @@ function installHooks(db, host) {
     var criteria = {
         type: 'gitlab',
         deleted: false,
+        disabled: false,
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
         return installServerHooks(db, host, server);
@@ -85,6 +86,7 @@ function removeHooks(db, host) {
     var criteria = {
         type: 'gitlab',
         deleted: false,
+        disabled: false,
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
         return removeServerHooks(db, host, server);
