@@ -228,6 +228,7 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit) {
  * @param  {Database} db
  * @param  {String} type
  * @param  {User} currentUser
+ * @param  {Number|undefined} recursion
  *
  * @return {Promise<Array<Story>|null>}
  */
@@ -235,7 +236,7 @@ function findStoriesInListing(db, type, currentUser) {
     if (!currentUser) {
         return Promise.resolve(Empty.array);
     }
-    return db.findOne({
+    var query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -244,15 +245,17 @@ function findStoriesInListing(db, type, currentUser) {
                 public: publicOnly(currentUser)
             },
         }
-    }).then((listing) => {
-        // if the listing has just been created, return null instead of an
-        // empty array to indicate that the list is not ready (as opposed to
-        // actually being empty)
+    };
+    return db.findOne(query).then((listing) => {
         if (!listing) {
+            // shouldn't happen, since listings are created on demand
             return null;
         }
         if (_.isEmpty(listing.story_ids) && listing.dirty) {
-            return null;
+            // wait for the listing to become populated then try again
+            return db.await({ table: 'listing' }, listing.id, 5000).then((changed) => {
+                return findStoriesInListing(db, type, currentUser);
+            });
         }
         return findViewableStories(db, listing.story_ids, currentUser);
     });

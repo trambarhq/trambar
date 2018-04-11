@@ -96,18 +96,15 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        if (this.props.route.isFresh(meanwhile.prior.props.route)) {
-            this.freshRoute = true;
-        }
         // don't wait for remote data unless the route changes
-        var blocking = this.freshRoute;
+        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this, blocking });
+        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
         var props = {
             currentUser: null,
             notifications: null,
 
-            freshRoute: this.freshRoute,
+            freshRoute: freshRoute,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -129,7 +126,6 @@ module.exports = Relaks.createClass({
                 });
             }
         }).then(() => {
-            this.freshRoute = false;
             return <NotificationsPageSync {...props} />;
         });
     }

@@ -115,6 +115,20 @@ Database.prototype.removeOne = function(location, object) {
 };
 
 /**
+ * Wait for an object to change
+ *
+ * @param  {Object} location
+ * @param  {Number} id
+ * @param  {Number} timeout
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.await = function(location, id, timeout) {
+    location = merge(this.context, location);
+    return this.remoteDataSource.await(location, id, timeout);
+};
+
+/**
  * Create a new Database object with contextual variables (e.g. server, schema)
  * that are automatically added to every query or storage operation
  *

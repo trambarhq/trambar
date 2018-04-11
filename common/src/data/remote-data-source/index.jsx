@@ -70,6 +70,7 @@ module.exports = React.createClass({
         this.idMappings = {};
         this.cacheValidation = {};
         this.cacheClearing = {};
+        this.changeMonitors = [];
         var lists = {
             recentSearchResults: [],
             recentStorageResults: [],
@@ -611,6 +612,36 @@ module.exports = React.createClass({
     },
 
     /**
+     * Wait for an object to change
+     *
+     * @param  {Object} location
+     * @param  {Number} id
+     * @param  {Number} timeout
+     *
+     * @return {Promise<Boolean>}
+     */
+    await: function(location, id, timeout) {
+        var monitor = {
+            location: _.pick(location, 'address', 'schema', 'table'),
+            id,
+            promise: null,
+            resolve: null,
+        };
+        var promise = new Promise((resolve) => {
+            monitor.resolve = resolve;
+        });
+        monitor.promise = promise.timeout(timeout).then(() => {
+            return true;
+        }).catch((err) => {
+            return false;
+        }).finally(() => {
+            _.pull(this.changeMonitors, monitor);
+        });
+        this.changeMonitors.push(monitor);
+        return monitor.promise;
+    },
+
+    /**
      * Remove recent searches on schema
      *
      * @param  {String|undefined} address
@@ -659,6 +690,7 @@ module.exports = React.createClass({
                         schema: parts[0],
                         table: parts[1]
                     };
+                    this.triggerChangeMonitors(location, changedObjects.ids);
                     var ids = _.filter(changedObjects.ids, (id, index) => {
                         var gn = changedObjects.gns[index];
                         if (this.isBeingSaved(location, id)) {
@@ -731,6 +763,22 @@ module.exports = React.createClass({
                 }
             }
             return changed;
+        });
+    },
+
+    /**
+     * Trigger promise created by await()
+     *
+     * @param  {Object} location
+     * @param  {Array<Number>} ids
+     */
+    triggerChangeMonitors: function(location, ids) {
+        _.each(this.changeMonitors, (monitor) => {
+            if (_.isEqual(location, monitor.location)) {
+                if (_.includes(ids, monitor.id)) {
+                    monitor.resolve();
+                }
+            }
         });
     },
 
