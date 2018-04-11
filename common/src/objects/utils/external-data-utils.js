@@ -93,11 +93,11 @@ function inheritLink(object, server, parent, props) {
 function attachLink(object, link) {
     var existingLink = _.find(object.external, { server_id: link.server_id });
     if (existingLink) {
-        if (!_.isMatch(existingLink, link)) {
-            // copy properties into existing link
-            _.assign(existingLink, link);
+        // return the existing link only if it matches the one we're
+        // trying to create
+        if (_.isMatch(existingLink, link)) {
+            return existingLink;
         }
-        return existingLink;
     }
     if (!object.external) {
         object.external = [];

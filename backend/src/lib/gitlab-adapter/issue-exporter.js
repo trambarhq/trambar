@@ -126,10 +126,10 @@ function exportStoryRemove(db, system, project, story, issueLink) {
                     deleted: false,
                 };
                 return Reaction.find(db, schema, criteria, 'id').then((reactions) => {
-                    _.each(reactions, (reaction) => {
-                        reaction.deleted = true;
+                    var reactionsAfter = _.map(reactions, (reaction) => {
+                        return { id: reaction.id, deleted: true };
                     });
-                    return Reaction.save(db, schema, reactions);
+                    return Reaction.save(db, schema, reactionsAfter);
                 }).then((reactions) => {
                     return story;
                 });
@@ -167,7 +167,29 @@ function exportStoryMove(db, system, project, story, srcIssueLink, dstIssueLink)
                 return moveIssue(server, glSrcProjectId, glSrcIssueNumber, glDstProjectId, glUserId).then((glIssue) => {
                     var schema = project.name;
                     var storyAfter = adjustIssueProperties(story, server, user, srcIssueLink, dstIssueLink, glIssue);
-                    return Story.updateOne(db, schema, storyAfter);
+                    return Story.updateOne(db, schema, storyAfter).then((story) => {
+                        // update tracking, note, and assignment reactions
+                        var criteria = {
+                            story_id: story.id,
+                            type: [ 'tracking', 'note', 'assignment' ],
+                            deleted: false,
+                        };
+                        return Reaction.find(db, schema, criteria, 'id, external').then((reactions) => {
+                            var reactionsAfter = _.map(reactions, (reaction) => {
+                                return adjustTrackingReactionProperties(reaction, server, srcIssueLink, dstIssueLink, glIssue);
+                            });
+                            // if the different user is moving the issue, add
+                            // a tracking reaction for him as well
+                            if (!_.some(reactionsAfter, { user_id: user.id })) {
+                                var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
+                                reactionsAfter.push(reactionNew);
+                            }
+                            return Reaction.save(db, schema, reactionsAfter);
+                        }).then((reactions) => {
+                            return story;
+                        });
+
+                    });
                 });
             });
         }).catch((err) => {
@@ -279,22 +301,44 @@ function copyIssueProperties(story, server, user, issueLink, glIssue) {
     var storyAfter = _.cloneDeep(story);
     var issueLinkAfter = _.find(storyAfter.external, issueLink);
 
+    var authorIds = _.get(story, 'details.authors', story.user_ids);
+    var authorRoleIds = _.get(story, 'details.author_roles', story.role_ids);
+    var exporterIds = _.get(story, 'details.exporters');
+    var assigneeIds = _.get(story, 'details.assignees');
+    var roleIds = _.get(story, 'role_ids');
+
+    // add ids of exporter
+    exporterIds = _.union(exporterIds, [ user.id ]);
+    roleIds = _.union(roleIds, user.role_ids);
+
     issueLinkAfter.issue.id = glIssue.id;
     issueLinkAfter.issue.number = glIssue.iid;
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'issue',
         overwrite: 'always'
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'type', {
-        value: 'issue',
+    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+        value: _.union(authorIds, exporterIds, assigneeIds),
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+        value: roleIds,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.authors', {
+        value: authorIds,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.author_roles', {
+        value: authorRoleIds,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.exporters', {
+        value: exporterIds,
         overwrite: 'always'
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.exported', {
         value: true,
-        overwrite: 'always'
-    });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.exporter', {
-        value: user.id,
         overwrite: 'always'
     });
     storyAfter.etime = new String('NOW()');
@@ -313,6 +357,17 @@ function deleteIssueProperties(story, issueLink) {
     var storyAfter = _.cloneDeep(story);
     storyAfter.type = 'post';
     storyAfter.etime = null;
+    if (storyAfter.details.authors) {
+        storyAfter.user_ids = storyAfter.details.authors;
+    }
+    if (storyAfter.details.author_roles) {
+        storyAfter.role_ids = storyAfter.details.author_roles;
+    }
+    delete storyAfter.details.authors;
+    delete storyAfter.details.author_roles;
+    delete storyAfter.details.exporters;
+    delete storyAfter.details.assignees;
+    delete storyAfter.details.exported;
     _.remove(storyAfter.external, issueLink);
     return storyAfter;
 }
@@ -377,6 +432,33 @@ function copyTrackingReactionProperties(reaction, server, project, story, user) 
         return reaction;
     }
     reactionAfter.itime = new String('NOW()');
+    return reactionAfter;
+}
+
+/**
+ * Update a reaction object with new issue number and id
+ *
+ * @param  {Reaction} reaction
+ * @param  {Server} server
+ * @param  {Object} srcIssueLink
+ * @param  {Object} dstIssueLink
+ * @param  {Object} glIssue
+ *
+ * @return {Object}
+ */
+function adjustTrackingReactionProperties(reaction, server, srcIssueLink, dstIssueLink, glIssue) {
+    var reactionAfter = _.cloneDeep(reaction);
+    var issueLinkAfter = _.find(reactionAfter.external, (link) => {
+        if (link.server_id === server.id) {
+            if (link.issue.id === srcIssueLink.issue.id) {
+                return true;
+            }
+        }
+    });
+    if (issueLinkAfter) {
+        issueLinkAfter.issue.id = glIssue.id;
+        issueLinkAfter.issue.number = glIssue.iid;
+    }
     return reactionAfter;
 }
 
