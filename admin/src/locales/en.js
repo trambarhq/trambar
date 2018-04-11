@@ -463,12 +463,12 @@ module.exports = function(localeCode) {
         'task-importing-repos': 'Importing repositories',
         'task-importing-users': 'Importing users',
         'task-installed-$count-hooks': (count) => {
-            var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
+            var hooks = (count === 1) ? `1 hook` : `${count} hooks`;
             return `Installed ${hooks}`;
         },
         'task-installing-hooks': 'Installing hooks',
         'task-removed-$count-hooks': (count) => {
-            var hooks = (count === 1) ? `1 project hook` : `${count} project hooks`;
+            var hooks = (count === 1) ? `1 hook` : `${count} hooks`;
             return `Removed ${hooks}`;
         },
         'task-removed-$count-repos': (count) => {

@@ -661,23 +661,23 @@ module.exports = function(localeCode) {
         'task-installed-$count-hooks': (count) => {
             var hooks;
             if (singular(count)) {
-                hooks = `1 hak projektu`;
+                hooks = `1 hak`;
             } else if (plural(count)) {
-                hooks = `${count} haki projektu`;
+                hooks = `${count} haki`;
             } else {
-                hooks = `${count} haków projektu`;
+                hooks = `${count} haków`;
             }
             return `Zainstalowano ${hooks}`;
         },
-        'task-installing-hooks': 'Instalowanie hooks',
+        'task-installing-hooks': 'Instalowanie haków',
         'task-removed-$count-hooks': (count) => {
             var hooks;
             if (singular(count)) {
-                hooks = `1 hak projektu`;
+                hooks = `1 hak`;
             } else if (plural(count)) {
-                hooks = `${count} haki projektu`;
+                hooks = `${count} haki`;
             } else {
-                hooks = `${count} haków projektu`;
+                hooks = `${count} haków`;
             }
             return `Usunięto ${hooks}`;
         },

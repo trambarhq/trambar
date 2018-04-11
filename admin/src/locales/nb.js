@@ -459,12 +459,12 @@ module.exports = function(localeCode) {
         'task-importing-repos': 'Importerer repoer',
         'task-importing-users': 'Importerer brukere',
         'task-installed-$count-hooks': (count) => {
-            var hooks = (count === 1) ? `1 prosjektkrok` : `${count} prosjektkroker`;
+            var hooks = (count === 1) ? `1 krok` : `${count} kroker`;
             return `Installert ${hooks}`;
         },
         'task-installing-hooks': 'Installere kroker',
         'task-removed-$count-hooks': (count) => {
-            var hooks = (count === 1) ? `1 prosjektkrok` : `${count} prosjektkroker`;
+            var hooks = (count === 1) ? `1 krok` : `${count} kroker`;
             return `Fjernet ${hooks}`;
         },
         'task-removed-$count-repos': (count) => {

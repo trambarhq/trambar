@@ -483,11 +483,11 @@ var traditionalPhrases = {
     'task-importing-repos': '導入數據庫',
     'task-importing-users': '導入用戶',
     'task-installed-$count-hooks': (count) => {
-        return `安裝了${count}個項目鉤`;
+        return `安裝了${count}個鉤`;
     },
-    'task-installing-hooks': '安裝項目鉤',
+    'task-installing-hooks': '安裝掛鉤',
     'task-removed-$count-hooks': (count) => {
-        return `卸載了${count}個項目鉤`;
+        return `卸載了${count}個掛鉤`;
     },
     'task-removed-$count-repos': (count) => {
         return `刪除了${count}個數據庫`;
@@ -495,7 +495,7 @@ var traditionalPhrases = {
     'task-removed-$count-users': (count) => {
         return `刪除了${count}個用戶`;
     },
-    'task-removing-hooks': 'Uninstalling hooks',
+    'task-removing-hooks': '卸載掛鉤',
     'task-updated-$count-repos': (count) => {
         return `改性了${count}個數據庫`;
     },
@@ -1069,11 +1069,11 @@ var simplifiedPhrases = {
     'task-importing-repos': '导入数据库',
     'task-importing-users': '导入用户',
     'task-installed-$count-hooks': (count) => {
-        return `安装了${count}个项目钩`;
+        return `安装了${count}个挂钩`;
     },
-    'task-installing-hooks': '安装项目钩',
+    'task-installing-hooks': '安装挂钩',
     'task-removed-$count-hooks': (count) => {
-        return `卸载了${count}个项目钩`;
+        return `卸载了${count}个挂钩`;
     },
     'task-removed-$count-repos': (count) => {
         return `删除了${count}个数据库`;
@@ -1081,7 +1081,7 @@ var simplifiedPhrases = {
     'task-removed-$count-users': (count) => {
         return `删除了${count}个用户`;
     },
-    'task-removing-hooks': 'Uninstalling hooks',
+    'task-removing-hooks': '卸载挂钩',
     'task-updated-$count-repos': (count) => {
         return `改性了${count}个数据库`;
     },
