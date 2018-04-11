@@ -60,7 +60,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Set a propert of the issue object
+     * Set a property of the issue object
      *
      * @param  {String} path
      * @param  {*} value
@@ -68,6 +68,9 @@ module.exports = React.createClass({
     setIssueProperty: function(path, value) {
         var issue = this.state.issue || this.props.issue || {};
         issue = _.decoupleSet(issue, path, value);
+        if (path === 'repoId') {
+            lastSelectedRepoId = value;
+        }
         this.setState({ issue });
     },
 
@@ -81,6 +84,16 @@ module.exports = React.createClass({
         var repos = this.getAvailableRepos();
         var repo = _.find(this.props.repos, { id: repoId });
         if (!repo) {
+            repo = _.find(this.props.repos, { id: lastSelectedRepoId });
+        }
+        if (!repo) {
+            // find one with labels--if a repo has not labels, then its
+            // issue tracker probably isn't being used
+            repo = _.find(this.props.repos, (repo) => {
+                return !_.isEmpty(repo.details.labels);
+            });
+        }
+        if (!repo) {
             repo = _.first(repos);
         }
         return repo || null;
@@ -92,9 +105,15 @@ module.exports = React.createClass({
      * @return {Array<Object>}
      */
     getAvailableRepos: function() {
-        return _.filter(this.props.repos, (repo) => {
+        var p = this.props.locale.pick;
+        var repos = this.props.repos;
+        repos = _.filter(repos, (repo) => {
             return repo.details.issues_enabled;
         });
+        repos = _.sortBy(repos, (repo) => {
+            return _.toLower(p(repo.details.title) || repo.name);
+        });
+        return repos;
     },
 
     /**
@@ -179,11 +198,7 @@ module.exports = React.createClass({
         if (repos.length <= 1) {
             return null;
         }
-        var repoId = this.getIssueProperty('repoId') || lastSelectedRepoId;
-
-        repos = _.sortBy(repos, (repo) => {
-            return p(repo.details.title) || repo.name;
-        });
+        var repo = this.getSelectedRepo();
         var options = _.map(repos, (repo, index) => {
             var title = p(repo.details.title) || repo.name;
             return <option key={index} value={repo.id}>{title}</option>;
@@ -191,7 +206,7 @@ module.exports = React.createClass({
         return (
             <div className="select-field">
                 <label>{t('issue-repo')}</label>
-                <select value={repoId} onChange={this.handleRepoChange}>
+                <select value={repo.id} onChange={this.handleRepoChange}>
                     {options}
                 </select>
             </div>
@@ -354,7 +369,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleRepoChange: function(evt) {
-        var repoId = lastSelectedRepoId = parseInt(evt.target.value);
+        var repoId = parseInt(evt.target.value);
         this.setIssueProperty('repoId', repoId);
     },
 
