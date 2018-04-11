@@ -61,7 +61,15 @@ function isEditable(story) {
     if (!story) {
         return false;
     }
-    return _.includes(StoryTypes.editable, story.type);
+    if (_.includes(StoryTypes.editable, story.type)) {
+        return true;
+    }
+    if (story.type === 'issue') {
+        if (story.details.exported) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
