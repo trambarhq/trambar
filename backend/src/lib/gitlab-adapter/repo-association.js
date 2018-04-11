@@ -101,10 +101,10 @@ function findOne(db, criteria) {
             throw new Error(`Missing server: ${criteria.server_id}`);
         }
         if (!repo) {
-            throw new Error(`Missing project: ${criteria.repo_id}`);
+            throw new Error(`Missing repository: ${criteria.repo_id}`);
         }
         if (!project) {
-            throw new Error(`Missing repository: ${criteria.project_id}`);
+            throw new Error(`Missing project: ${criteria.project_id}`);
         }
         if (!_.includes(project.repo_ids, repo.id)) {
             throw new Error(`Repository "${repo.name}" (${repo.id}) is not associated with project "${project.name}"`);

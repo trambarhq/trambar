@@ -54,7 +54,7 @@ function installServerHooks(db, host, server) {
         });
         return installSystemHook(host, server).then(() => {
             var serverAssociations = _.filter(associations, (sa) => {
-                return (sa.server === server);
+                return (sa.server.id === server.id);
             });
             var hookCount = serverAssociations.length + 1;
             var added = [ 'system' ];
