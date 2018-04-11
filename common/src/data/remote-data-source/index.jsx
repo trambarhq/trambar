@@ -615,15 +615,15 @@ module.exports = React.createClass({
      * Wait for an object to change
      *
      * @param  {Object} location
-     * @param  {Number} id
+     * @param  {Object} object
      * @param  {Number} timeout
      *
      * @return {Promise<Boolean>}
      */
-    await: function(location, id, timeout) {
+    await: function(location, object, timeout) {
         var monitor = {
             location: _.pick(location, 'address', 'schema', 'table'),
-            id,
+            id: object.id,
             promise: null,
             resolve: null,
         };
@@ -639,6 +639,30 @@ module.exports = React.createClass({
         });
         this.changeMonitors.push(monitor);
         return monitor.promise;
+    },
+
+    /**
+     * Override cache mechansim and ensure that the remote searches are
+     * perform on given object
+     *
+     * @param  {Object} location
+     * @param  {Object} object
+     *
+     * @return {Promise<Boolean>}
+     */
+    refresh: function(location, object) {
+        var relevantSearches = this.getRelevantRecentSearches(location);
+        _.each(relevantSearches, (search) => {
+            var dirty = false;
+            var index = _.sortedIndexBy(search.results, object, 'id');
+            var target = search.results[index];
+            if (target && target.id === object.id) {
+                dirty = true;
+            }
+            if (dirty) {
+                search.dirty = true;
+            }
+        });
     },
 
     /**

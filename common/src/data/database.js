@@ -118,14 +118,27 @@ Database.prototype.removeOne = function(location, object) {
  * Wait for an object to change
  *
  * @param  {Object} location
- * @param  {Number} id
+ * @param  {Object} object
  * @param  {Number} timeout
  *
  * @return {Promise<Boolean>}
  */
-Database.prototype.await = function(location, id, timeout) {
+Database.prototype.await = function(location, object, timeout) {
     location = merge(this.context, location);
-    return this.remoteDataSource.await(location, id, timeout);
+    return this.remoteDataSource.await(location, object, timeout);
+};
+
+/**
+ * Force server check on one object
+ *
+ * @param  {Object} location
+ * @param  {Object} object
+ *
+ * @return {Promise<Boolean>}
+ */
+Database.prototype.refresh = function(location, object) {
+    location = merge(this.context, location);
+    return this.remoteDataSource.refresh(location, object);
 };
 
 /**

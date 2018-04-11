@@ -253,7 +253,11 @@ function findStoriesInListing(db, type, currentUser) {
         }
         if (_.isEmpty(listing.story_ids) && listing.dirty) {
             // wait for the listing to become populated then try again
-            return db.await({ table: 'listing' }, listing.id, 5000).then((changed) => {
+            return db.await({ table: 'listing' }, listing, 5000).then((changed) => {
+                if (!changed) {
+                    // force remote check
+                    db.refresh({ table: 'listing' }, listing);
+                }
                 return findStoriesInListing(db, type, currentUser);
             });
         }
@@ -371,7 +375,14 @@ function findStoriesByUserInListing(db, type, user, currentUser) {
             return null;
         }
         if (_.isEmpty(listing.story_ids) && listing.dirty) {
-            return null;
+            // wait for the listing to become populated then try again
+            return db.await({ table: 'listing' }, listing, 5000).then((changed) => {
+                if (!changed) {
+                    // force remote check
+                    db.refresh({ table: 'listing' }, listing);
+                }
+                return findStoriesByUserInListing(db, type, user, currentUser);
+            });
         }
         return findViewableStories(db, listing.story_ids, currentUser);
     });

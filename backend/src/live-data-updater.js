@@ -412,7 +412,18 @@ function updateListing(schema, id) {
 
                     // save the new candidate list
                     var details = _.assign({}, listing.details, { candidates });
-                    var finalized = _.isEmpty(candidates);
+                    var finalized;
+                    if (!_.isEmpty(candidates)) {
+                        // there're story candidates--listing needs to be
+                        // finalized when the user retrieves it
+                        finalized = false;
+                    } else if (_.isEmpty(listing.details)) {
+                        // initializing a listing--finalized needs to be set
+                        // to false as notification won't be send otherwise
+                        finalized = false;
+                    } else {
+                        finalized = true;
+                    }
                     return Listing.unlock(db, schema, id, { details, finalized }, 'gn');
                 });
             }).catch((err) => {
