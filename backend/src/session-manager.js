@@ -735,9 +735,26 @@ function findMatchingUser(server, account) {
                 if (!email) {
                     return null;
                 }
-                var criteria = { email, deleted: false, order: 'id' };
+                var criteria = {
+                    email: email,
+                    deleted: false,
+                    order: 'id'
+                };
                 return User.findOne(db, 'global', criteria, '*');
             }, null);
+        }).then((user) => {
+            if (user) {
+                return user;
+            }
+            if (server.type === 'gitlab' && profile.username === 'root') {
+                var criteria = {
+                    username: profile.username,
+                    deleted: false,
+                };
+                return User.findOne(db, 'global', criteria, '*');
+            } else {
+                return null;
+            }
         }).then((user) => {
             if (user) {
                 // update profile in background

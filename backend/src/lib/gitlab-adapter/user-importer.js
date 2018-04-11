@@ -196,8 +196,8 @@ function findExistingUser(db, server, users, glUser) {
             return Promise.resolve(user);
         }
     }
-    // match by email or username ("root" only)
-    var strategies = [ 'email', 'username' ];
+    // match by username ("root" only) or email
+    var strategies = [ 'username', 'email' ];
     return Promise.reduce(strategies, (matching, strategy) => {
         if (matching) {
             return matching;
