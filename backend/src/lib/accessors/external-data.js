@@ -72,7 +72,7 @@ module.exports = _.create(Data, {
             var external = [ criteria.external_object ];
             var serverType = criteria.external_object.type || '';
             var objectNames = _.transform(criteria.external_object, (names, object, name) => {
-                if (object.id || object.ids instanceof Array) {
+                if (typeof(object.id) === 'number' || object.ids instanceof Array) {
                     names.push(name);
                 }
             }, []);

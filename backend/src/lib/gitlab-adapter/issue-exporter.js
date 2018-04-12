@@ -93,9 +93,6 @@ function exportStoryCreate(db, system, project, story, issueLink) {
                 });
             });
         });
-    }).catch((err) => {
-        console.error(err);
-        return null;
     });
 }
 
