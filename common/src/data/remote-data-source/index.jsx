@@ -1508,13 +1508,9 @@ module.exports = React.createClass({
         var promise = _.get(this.cacheValidation, path);
         if (!promise) {
             promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
-                console.log('Validating cache of ' + schema);
                 return this.getCacheSignature(address, schema).then((cacheSignature) => {
-                    console.log('Remote signature = ' + remoteSignature);
-                    console.log('Cache signature = ' + cacheSignature);
                     if (cacheSignature) {
                         if (cacheSignature !== remoteSignature) {
-                            console.log('Clearing cache ' + schema);
                             return this.clearCachedObjects(address, schema).then(() => {
                                 return this.setCacheSignature(address, schema, remoteSignature);
                             });
@@ -1598,7 +1594,6 @@ module.exports = React.createClass({
             }
         };
         return cache.find(query).get(0).then((result) => {
-            console.log('getCacheSignature', result);
             return _.get(result, 'signature');
         });
     },

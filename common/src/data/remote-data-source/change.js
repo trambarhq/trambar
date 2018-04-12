@@ -31,7 +31,7 @@ function Change(location, objects, options) {
         this.resolvePromise = resolve;
         this.rejectPromise = reject;
     });
-    this.dependencies = [];
+    this.dependentPromises = [];
     this.delivered = null;
     this.received = null;
 
@@ -65,7 +65,7 @@ Change.prototype.dispatch = function() {
         return;
     }
     this.dispatched = true;
-    this.resolveDependencies().then(() => {
+    Promise.all(this.dependentPromises).then(() => {
         return this.onDispatch(this).then((objects) => {
             this.committed = true;
             this.received = objects;
@@ -94,13 +94,13 @@ Change.prototype.cancel = function() {
         // already canceled
         return;
     }
-    this.canceled = true;
-    if (this.timeout) {
-        clearTimeout(this.timeout);
-    }
     if (this.dispatched) {
         // the change was already sent
         return;
+    }
+    this.canceled = true;
+    if (this.timeout) {
+        clearTimeout(this.timeout);
     }
     this.onCancel(this).then(() => {
         // return empty array
@@ -123,17 +123,17 @@ Change.prototype.merge = function(earlierOp) {
     _.each(this.objects, (object, i) => {
         var index = _.findIndex(earlierOp.objects, { id: object.id });
         if (index !== -1 && !earlierOp.removed[index]) {
-            var earlierObject = earlierOp.objects[index];
-            // merge in missing properties from earlier op
-            _.forIn(earlierObject, (value, key) => {
-                if (object[key] === undefined) {
-                    object[key] = value;
-                }
-            });
-            // indicate that the object has been superceded
-            earlierOp.removed[index] = true;
-
-            if (earlierOp.dispatched) {
+            if (!earlierOp.dispatched) {
+                var earlierObject = earlierOp.objects[index];
+                // merge in missing properties from earlier op
+                _.forIn(earlierObject, (value, key) => {
+                    if (object[key] === undefined) {
+                        object[key] = value;
+                    }
+                });
+                // indicate that the object has been superceded
+                earlierOp.removed[index] = true;
+            } else {
                 // the prior operation has already been sent; if it's going
                 // to yield a permanent database id, then this operation
                 // needs to wait for it to resolve first
@@ -144,34 +144,28 @@ Change.prototype.merge = function(earlierOp) {
         }
     });
     if (dependent) {
-        this.dependencies.push(earlierOp);
-    }
-    // cancel the earlier op if everything was removed from it
-    if (_.every(earlierOp.removed)) {
-        earlierOp.cancel();
-    }
-};
-
-/**
- * Wait for dependent operations to finish, then resolve temporary ids
- *
- * @return {Promise}
- */
-Change.prototype.resolveDependencies = function() {
-    return Promise.each(this.dependencies, (earlierOp) => {
-        return earlierOp.promise.catch((err) => {});
-    }).then(() => {
-        _.each(this.objects, (object) => {
-            if (object.id < 1) {
-                _.each(this.dependencies, (earlierOp) => {
+        // we need to replace the temporary ID with a permanent one before
+        // this change is dispatch; otherwise multiple objects would be created
+        var dependentPromise = earlierOp.promise.then(() => {
+            _.each(this.objects, (object) => {
+                if (object.id < 1) {
                     var id = earlierOp.findPermanentID(object.id);
                     if (id) {
                         object.id = id;
                     }
-                });
-            }
+                }
+            });
+        }).catch((err) => {
+            // if earlierOp failed, then presumably no new database row was
+            // created; we could proceed as if the operation didn't happen
         });
-    });
+        this.dependentPromises.push(dependentPromise);
+    } else {
+        // cancel the earlier op if everything was removed from it
+        if (_.every(earlierOp.removed)) {
+            earlierOp.cancel();
+        }
+    }
 };
 
 /**
