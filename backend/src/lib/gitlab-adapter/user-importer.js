@@ -21,6 +21,8 @@ module.exports = {
     importEvent,
     importUsers,
     findUser,
+    findUserByName,
+    findUsersByName,
     copyUserProperties,
 };
 
@@ -233,7 +235,7 @@ function findExistingUser(db, server, users, glUser) {
  */
 function findUser(db, server, glUser) {
     if (!glUser.id) {
-        return findUserByName(db, server, glUser);
+        return findUserByName(db, server, glUser.username);
     }
     var criteria = {
         external_object: ExternalDataUtils.createLink(server, {
@@ -262,33 +264,51 @@ function findUser(db, server, glUser) {
  *
  * @param  {Database} db
  * @param  {Server} server
- * @param  {Object} glUser
+ * @param  {String} glUserName
  *
- * @return {Promise<User|null>}
+ * @return {Promise<Array<User|null>>}
  */
-function findUserByName(db, server, glUser) {
-    // first, try to find an user imported with that name
+function findUsersByName(db, server, glUsernames) {
+    // first, load all users from server
     var criteria = {
         external_object: ExternalDataUtils.createLink(server)
     };
     return User.find(db, 'global', criteria, '*').then((users) => {
-        var user = _.find(users, (user) => {
-            var userLink = ExternalDataUtils.findLink(user, server);
-            var username = _.get(userLink, 'user.username');
-            if (username === glUser.username) {
-                return true;
+        return Promise.mapSeries(glUsernames, (glUsername) => {
+            // try to find an user imported with that name
+            var user = _.find(users, (user) => {
+                var userLink = ExternalDataUtils.findLink(user, server);
+                var username = _.get(userLink, 'user.username');
+                if (username === glUsername) {
+                    return true;
+                }
+            });
+            if (user) {
+                return user;
+            } else {
+                return fetchUserByName(server, glUsername).then((glUser) => {
+                    if (!glUser) {
+                        return null;
+                    }
+                    return findUser(db, server, glUser);
+                });
             }
         });
-        if (user) {
-            return user;
-        } else {
-            return fetchUserByName(server, glUser.username).then((glUser) => {
-                if (!glUser) {
-                    return null;
-                }
-                return findUser(db, server, glUser);
-            });
-        }
+    });
+}
+
+/**
+ * Look for a user when Gitlab doesn't give us only the username and not the id.
+ *
+ * @param  {Database} db
+ * @param  {Server} server
+ * @param  {String} glUsername
+ *
+ * @return {Promise<User|null>}
+ */
+function findUserByName(db, server, glUsername) {
+    return findUsersByName(db, server, [ glUsername ]).then((users) => {
+        return users[0];
     });
 }
 
@@ -327,7 +347,6 @@ function copyUserProperties(user, server, image, glUser) {
             settings: UserSettings.default,
         };
     }
-    console.log(glUser);
     ExternalDataUtils.addLink(userAfter, server, {
         user: {
             id: glUser.id,
@@ -399,6 +418,7 @@ function fetchUsers(server) {
  * Retrieve user record from Gitlab by name
  *
  * @param  {Server} server
+ * @param  {String} username
  *
  * @return {Promise<Object>}
  */

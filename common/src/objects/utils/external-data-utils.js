@@ -60,12 +60,13 @@ function extendLink(server, parent, props) {
  * @param {ExternalObject} object
  * @param {Server} server
  * @param {Object} props
+ * @param {Object|undefined} options
  *
  * @return {Object}
  */
-function addLink(object, server, props) {
+function addLink(object, server, props, options) {
     var link = createLink(server, props);
-    return attachLink(object, link);
+    return attachLink(object, link, options);
 }
 
 /**
@@ -74,12 +75,13 @@ function addLink(object, server, props) {
  * @param {ExternalObject} object
  * @param {Server} server
  * @param {Object|undefined} props
+ * @param {Object|undefined} options
  *
  * @return {Object}
  */
-function inheritLink(object, server, parent, props) {
+function inheritLink(object, server, parent, props, options) {
     var link = extendLink(server, parent, props);
-    return attachLink(object, link);
+    return attachLink(object, link, options);
 }
 
 /**
@@ -87,19 +89,30 @@ function inheritLink(object, server, parent, props) {
  *
  * @param  {ExternalObject} object
  * @param  {Object} link
+ * @param {Object|undefined} options
  *
  * @return {Object}
  */
-function attachLink(object, link) {
-    var existingLink = _.find(object.external, { server_id: link.server_id });
-    if (existingLink) {
-        // return the existing link only if it matches the one we're
-        // trying to create
-        if (_.isMatch(existingLink, link)) {
-            return existingLink;
-        }
+function attachLink(object, link, options) {
+    var identicalLink = _.find(object.external, link);
+    if (identicalLink) {
+        return identicalLink;
     }
-    if (!object.external) {
+    if (object.external) {
+        var existingLink = _.find(object.external, { server_id: link.server_id });
+        if (existingLink) {
+            var duplicate = _.get(options, 'duplicate', 'overwrite');
+            if (duplicate === 'overwrite') {
+                // normally, an object would link to only one external object
+                // on a given server
+                _.assign(existingLink, link);
+                return existingLink;
+            } else if (duplicate === 'ignore') {
+                // when we want to move an external object, then two links
+                // pointing to the same server might exists simultaneously
+            }
+        }
+    } else {
         object.external = [];
     }
     object.external.push(link);

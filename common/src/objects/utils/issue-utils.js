@@ -69,6 +69,8 @@ function attach(story, issue, user, repos) {
                         number: 0
                     },
                     user: { id: userLink.user.id }
+                }, {
+                    duplicate: 'ignore'
                 });
             } else {
                 // in case the issue is being modified by another user

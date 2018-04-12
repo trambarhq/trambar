@@ -5,10 +5,9 @@ var TagScanner = require('utils/tag-scanner');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
-var UserImporter = require('gitlab-adapter/user-importer');
+var AssignmentImporter = require('gitlab-adapter/assignment-importer');
 
 // accessors
-var Reaction = require('accessors/reaction');
 var Story = require('accessors/story');
 
 module.exports = {
@@ -39,13 +38,13 @@ function importEvent(db, server, repo, project, author, glEvent) {
             }),
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
-            return findAssignees(db, server, glIssue).then((assignees) => {
-                var storyAfter = copyIssueProperties(story, server, repo, author, assignees, glIssue);
+            return AssignmentImporter.findIssueAssignments(db, server, glIssue).then((assignments) => {
+                var storyAfter = copyIssueProperties(story, server, repo, author, assignments, glIssue);
                 if (storyAfter === story) {
                     return story;
                 }
                 return Story.saveOne(db, schema, storyAfter).then((story) => {
-                    return importAssignments(db, server, project, repo, story, assignees, glIssue);
+                    return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
                 }).then((reactions) => {
                     return story;
                 });
@@ -69,11 +68,14 @@ function importEvent(db, server, repo, project, author, glEvent) {
 function importHookEvent(db, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action === 'update') {
         // construct a glIssue object from data in hook event
+        var repoLink = ExternalDataUtils.findLink(repo, server);
         var glIssue = _.omit(glHookEvent.object_attributes, 'action');
+        glIssue.project_id = repoLink.project.id;
         glIssue.labels = _.map(glHookEvent.labels, 'title');
-        glIssue.assignees = _.map(glHookEvent.object_attributes.assignee_ids, (id) => {
-            return { id };
-        });
+        if (glHookEvent.assignee) {
+            glIssue.assignee = _.clone(glHookEvent.assignee);
+            glIssue.assignee.id = glHookEvent.object_attributes.assignee_id;
+        }
 
         // find existing story
         var schema = project.name;
@@ -86,13 +88,13 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
             if (!story) {
                 throw new Error('Story not found');
             }
-            return findAssignees(db, server, glIssue).then((assignees) => {
-                var storyAfter = copyIssueProperties(story, server, repo, author, assignees, glIssue);
+            return AssignmentImporter.findIssueAssignments(db, server, glIssue).then((assignments) => {
+                var storyAfter = copyIssueProperties(story, server, repo, author, assignments, glIssue);
                 if (storyAfter === story) {
                     return story;
                 }
                 return Story.updateOne(db, schema, storyAfter).then((story) => {
-                    return importAssignments(db, server, project, repo, story, assignees, glIssue);
+                    return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
                 }).then((reactions) => {
                     return story;
                 });
@@ -103,56 +105,6 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
     } else {
         return Promise.resolve(false);
     }
-}
-
-/**
-- * Add assignment reactions to story
- *
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Project} project
- * @param  {Repo} repo
- * @param  {Story} story
- * @param  {Array<User>} assignees
- * @param  {Object} glIssue
- *
- * @return {Promise<Array<Reaction>>}
- */
-function importAssignments(db, server, project, repo, story, assignees, glIssue) {
-    var schema = project.name;
-    // find existing assignments
-    var criteria = {
-        story_id: story.id,
-        type: 'assignment',
-        external_object: ExternalDataUtils.extendLink(server, repo, {
-            issue: { id: glIssue.id }
-        }),
-    };
-    return Reaction.find(db, schema, criteria, 'user_id').then((existingReactions) => {
-        var reactions = [];
-        _.each(assignees, (assignee) => {
-            if (!_.some(existingReactions, { user_id: assignee.id })) {
-                var reactionNew = copyAssignmentProperties(null, server, story, assignee, glIssue);
-                reactions.push(reactionNew);
-            }
-        });
-        return Reaction.save(db, schema, reactions);
-    });
-}
-
-/**
- * Find user accounts of assignees to an issue
- *
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Object} glIssue
- *
- * @return {Promise<Array<User>>}
- */
-function findAssignees(db, server, glIssue) {
-    return Promise.mapSeries(glIssue.assignees, (glUser) => {
-        return UserImporter.findUser(db, server, glUser);
-    }).filter(Boolean);
 }
 
 /**
@@ -167,31 +119,29 @@ function findAssignees(db, server, glIssue) {
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
- * @param  {Array<User>} assignees
+ * @param  {Array<Object>} assignments
  * @param  {Object} glIssue
  *
  * @return {Story}
  */
-function copyIssueProperties(story, server, repo, author, assignees, glIssue) {
+function copyIssueProperties(story, server, repo, author, assignments, glIssue) {
     var descriptionTags = TagScanner.findTags(glIssue.description);
     var labelTags = _.map(glIssue.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
     var tags = _.union(descriptionTags, labelTags);
-    var assigneeIds = _.map(assignees, 'id');
-    var assigneeRoleIds = _.flatten(_.map(assignees, 'role_ids'));
 
     // author is either the person who wrote the issue or the one who wrote
     // the post that was exported to issue-tracker
     var authorIds = _.get(story, 'details.authors', [ author.id ]);
     var exporterIds = _.get(story, 'details.exporters');
-    var assigneeIds = _.get(story, 'details.assignees');
+    var assigneeIds = [];
     var roleIds = _.get(story, 'role_ids', author.role_ids);
 
-    // add ids of new assignees
-    _.each(assignees, (assignee) => {
-        assigneeIds = _.union(assigneeIds, [ assignee.id ]);
-        roleIds = _.union(roleIds, assignee.role_ids);
+    // add ids of any new assignees
+    _.each(assignments, (assignment) => {
+        assigneeIds = _.union(assigneeIds, [ assignment.user.id ]);
+        roleIds = _.union(roleIds, assignment.user.role_ids);
     });
 
     var storyAfter = _.cloneDeep(story) || {};
@@ -271,53 +221,6 @@ function copyIssueProperties(story, server, repo, author, assignees, glIssue) {
 }
 
 /**
- * Copy certain properties of the issue into the assignment reaction
- *
- * @param  {Reaction|null} reaction
- * @param  {Server} server
- * @param  {Story} story
- * @param  {User} assignee
- * @param  {Object} glIssue
- *
- * @return {Reaction}
- */
-function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
-    var reactionAfter = _.cloneDeep(reaction) || {};
-    ExternalDataUtils.inheritLink(reactionAfter, server, story);
-    ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
-        value: 'assignment',
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'story_id', {
-        value: story.id,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'user_id', {
-        value: assignee.id,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'public', {
-        value: true,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'published', {
-        value: true,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
-        // TODO: this isn't right when importing old issues;
-        // need to retrieve past assignment (along with the time) from GitLab
-        value: Moment(new Date(reaction ? glIssue.updated_at : glIssue.created_at)).toISOString(),
-        overwrite: 'always',
-    });
-    if (_.isEqual(reactionAfter, reaction)) {
-        return reaction;
-    }
-    reactionAfter.itime = new String('NOW()');
-    return reactionAfter;
-}
-
-/**
  * Retrieve issue from Gitlab
  *
  * @param  {Server} server
@@ -327,7 +230,7 @@ function copyAssignmentProperties(reaction, server, story, assignee, glIssue) {
  * @return {Object}
  */
 function fetchIssue(server, glProjectId, glIssueId) {
-    // Gitlab wants the issue IID or issue number, which unfortunately isn't
+    // Gitlab wants the issue IID (i.e. issue number), which unfortunately isn't
     // included in the activity log entry
     return getIssueNumber(server, glProjectId, glIssueId).then((glIssueNumber) => {
         var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;

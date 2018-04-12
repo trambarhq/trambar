@@ -215,27 +215,27 @@ module.exports = React.createClass({
                             case 'merge':
                                 var link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'commit');
                                 if (link) {
-                                    var noteId = link.note.id;
                                     var commitId = link.commit.id;
-                                    url = `${repo.details.web_url}/commit/${commitId}#note_${noteId}`;
+                                    var hash = getNoteHash(link);
+                                    url = `${repo.details.web_url}/commit/${commitId}${hash}`;
                                     target = link.type;
                                 }
                                 break;
                             case 'issue':
                                 var link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'issue');
                                 if (link) {
-                                    var noteId = link.note.id;
                                     var issueNumber = link.issue.number;
-                                    url = `${repo.details.web_url}/issues/${issueNumber}#note_${noteId}`;
+                                    var hash = getNoteHash(link);
+                                    url = `${repo.details.web_url}/issues/${issueNumber}${hash}`;
                                     target = link.type;
                                 }
                                 break;
                             case 'merge-request':
                                 var link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'merge_request');
                                 if (link) {
-                                    var noteId = link.note.id;
                                     var mergeRequestNumber = link.merge_request.number;
-                                    url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}#note_${noteId}`;
+                                    var hash = getNoteHash(link);
+                                    url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}${hash}`;
                                     target = link.type;
                                 }
                                 break;
@@ -253,8 +253,9 @@ module.exports = React.createClass({
                         if (UserUtils.canAccessRepo(user, repo)) {
                             var link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
                             if (link) {
-                                var issueNumber = link.issue.number;
-                                url = `${repo.details.web_url}/issues/${issueNumber}`;
+                                var issueNumber = _.get(link, 'issue.number');
+                                var hash = getNoteHash(link);
+                                url = `${repo.details.web_url}/issues/${issueNumber}${hash}`;
                                 target = link.type;
                             }
                         }
@@ -269,7 +270,8 @@ module.exports = React.createClass({
                             var link = ExternalDataUtils.findLinkByRelations(reaction, 'merge_request');
                             if (link) {
                                 var mergeRequestNumber = link.merge_request.number;
-                                url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}`;
+                                var hash = getNoteHash(link);
+                                url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}${hash}`;
                                 target = link.type;
                             }
                         }
@@ -599,4 +601,9 @@ var getZoomableResources = Memoize(function(resources) {
  */
 function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
+}
+
+function getNoteHash(link) {
+    var noteId = _.get(link, 'note.id');
+    return (noteId) ? `#note_${noteId}` : '';
 }

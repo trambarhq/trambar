@@ -132,6 +132,10 @@ module.exports = React.createClass({
         var user = this.props.currentUser;
         var project = this.props.project;
         if (UserUtils.isMember(user, project)) {
+            var cancelButtonProps = {
+                label: t('membership-request-cancel'),
+                onClick: this.handleCloseClick,
+            };
             var proceedButtonProps = {
                 label: t('membership-request-proceed'),
                 onClick: this.handleProceedClick,
@@ -139,6 +143,7 @@ module.exports = React.createClass({
             };
             return (
                 <div className="buttons">
+                    <PushButton {...cancelButtonProps} />
                     <PushButton {...proceedButtonProps} />
                 </div>
             );

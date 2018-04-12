@@ -5,7 +5,7 @@ var TagScanner = require('utils/tag-scanner');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
-var UserImporter = require('gitlab-adapter/user-importer');
+var AssignmentImporter = require('gitlab-adapter/assignment-importer');
 
 // accessors
 var Reaction = require('accessors/reaction');
@@ -39,13 +39,17 @@ function importEvent(db, server, repo, project, author, glEvent) {
             })
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
-            var storyAfter = copyMergeRequestProperties(story, server, repo, author, glMergeRequest);
-            if (storyAfter === story) {
-                return story;
-            }
-            return Story.saveOne(db, schema, storyAfter);
-        }).then((story) => {
-            return importAssignment(db, server, project, repo, story, glMergeRequest).return(story);
+            return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
+                var storyAfter = copyMergeRequestProperties(story, server, repo, author, assignments, glMergeRequest);
+                if (storyAfter === story) {
+                    return story;
+                }
+                return Story.saveOne(db, schema, storyAfter).then((story) => {
+                    return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+                }).then((reactions) => {
+                    return story;
+                });
+            });
         });
     });
 }
@@ -65,9 +69,14 @@ function importEvent(db, server, repo, project, author, glEvent) {
 function importHookEvent(db, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action === 'update') {
         // construct a glMergeRequest object from data in hook event
+        var repoLink = ExternalDataUtils.findLink(repo, server);
         var glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
+        glMergeRequest.project_id = repoLink.project.id;
         glMergeRequest.labels = _.map(glHookEvent.labels, 'title');
-        glMergeRequest.assignee = { id: glHookEvent.object_attributes.assignee_id };
+        if (glHookEvent.assignee) {
+            glMergeRequest.assignee = _.clone(glHookEvent.assignee);
+            glMergeRequest.assignee.id = glHookEvent.object_attributes.assignee_id;
+        }
 
         // find existing story
         var schema = project.name;
@@ -80,51 +89,23 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
             if (!story) {
                 throw new Error('Story not found')
             }
-            var storyAfter = copyMergeRequestProperties(story, server, repo, author, glMergeRequest);
-            if (storyAfter === story) {
-                return story;
-            }
-            return Story.updateOne(db, schema, storyAfter);
-        }).then((story) => {
-            return importAssignment(db, server, project, repo, story, glMergeRequest).return(story);
+            return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
+                var storyAfter = copyMergeRequestProperties(story, server, repo, author, assignments, glMergeRequest);
+                if (storyAfter === story) {
+                    return story;
+                }
+                return Story.updateOne(db, schema, storyAfter).then((story) => {
+                    return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+                }).then((reactions) => {
+                    return story;
+                });
+            });
         }).catch((err) => {
-            console.error(err);
             return null;
         });
     } else {
         return Promise.resolve(false);
     }
-}
-
-/**
- * Add assignment reactions to story
- *
- * @param  {Database} db
- * @param  {Server} server
- * @param  {Project} project
- * @param  {Repo} repo
- * @param  {Story} story
- * @param  {Object} glMergeRequest
- *
- * @return {Promise<Reaction>}
- */
-function importAssignment(db, server, project, repo, story, glMergeRequest) {
-    var schema = project.name;
-    // find existing assignments
-    var criteria = {
-        story_id: story.id,
-        type: 'assignment',
-        external_object: ExternalDataUtils.findLink(story, server),
-    };
-    return Reaction.find(db, schema, criteria, 'user_id').then((reactions) => {
-        var glUser = glMergeRequest.assignee;
-        return UserImporter.findUser(db, server, glUser).then((assignee) => {
-            if (!_.some(reactions, { user_id: assignee.id })) {
-                var reactionNew = copyAssignmentProperties(null, server, story, assignee, glMergeRequest);
-                return Reaction.saveOne(db, schema, reactionNew);
-            }
-        });
-    });
 }
 
 /**
@@ -139,18 +120,34 @@ function importAssignment(db, server, project, repo, story, glMergeRequest) {
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
+ * @param  {Array<Object>} assignments
  * @param  {Object} glMergeRequest
  *
  * @return {Story}
  */
-function copyMergeRequestProperties(story, server, repo, author, glMergeRequest) {
+function copyMergeRequestProperties(story, server, repo, author, assignments, glMergeRequest) {
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
-    var labelTags = _.map(glMergeRequest.labels, (label) => { return `#${_.replace(label, /\s+/g, '-')}`; });
+    var labelTags = _.map(glMergeRequest.labels, (label) => {
+        return `#${_.replace(label, /\s+/g, '-')}`;
+    });
     var tags = _.union(descriptionTags, labelTags);
+
+    var authorIds = [ author.id ];
+    var assigneeIds = [];
+    var roleIds = author.role_ids;
+
+    // add ids of any new assignees
+    _.each(assignments, (assignment) => {
+        assigneeIds = _.union(assigneeIds, [ assignment.user.id ]);
+        roleIds = _.union(roleIds, assignment.user.role_ids);
+    });
 
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
-        merge_request: { id: glMergeRequest.id }
+        merge_request: {
+            id: glMergeRequest.id,
+            number: glMergeRequest.iid,
+        }
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'merge-request',
@@ -161,11 +158,15 @@ function copyMergeRequestProperties(story, server, repo, author, glMergeRequest)
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
-        value: [ author.id ],
+        value: _.union(authorIds, assigneeIds),
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
-        value: author.role_ids,
+        value: roleIds,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'details.assignees', {
+        value: assigneeIds,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
@@ -212,60 +213,15 @@ function copyMergeRequestProperties(story, server, repo, author, glMergeRequest)
 }
 
 /**
- * Copy certain properties of the merge request into the assignment reaction
- *
- * @param  {Reaction|null} reaction
- * @param  {Server} server
- * @param  {Story} story
- * @param  {User} assignee
- * @param  {Object} glMergeRequest
- *
- * @return {Reaction}
- */
-function copyAssignmentProperties(reaction, server, story, assignee, glMergeRequest) {
-    var reactionAfter = _.cloneDeep(reaction) || {};
-    ExternalDataUtils.inheritLink(reactionAfter, server, story);
-    ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
-        value: 'assignment',
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'story_id', {
-        value: story.id,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'user_id', {
-        value: assignee.id,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'public', {
-        value: true,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'published', {
-        value: true,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(reactionAfter, server, 'ptime', {
-        value: Moment(glMergeRequest.updated_at).toISOString(),
-        overwrite: 'always',
-    });
-    if (_.isEqual(reactionAfter, reaction)) {
-        return reaction;
-    }
-    reactionAfter.itime = new String('NOW()');
-    return reactionAfter;
-}
-
-/**
  * Retrieve merge request from Gitlab
  *
  * @param  {Server} server
  * @param  {Number} glProjectId
- * @param  {Number} glMergeRequestId
+ * @param  {Number} glMergeRequestNumber
  *
  * @return {Object}
  */
-function fetchMergeRequest(server, glProjectId, glMergeRequestId) {
-    var url = `/projects/${glProjectId}/merge_requests/${glMergeRequestId}`;
+function fetchMergeRequest(server, glProjectId, glMergeRequestNumber) {
+    var url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}`;
     return Transport.fetch(server, url);
 }
