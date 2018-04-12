@@ -48,6 +48,16 @@ function importEvent(db, server, repo, project, author, glEvent) {
                 }).then((reactions) => {
                     return story;
                 });
+            }).catch(AssignmentImporter.ObjectMovedError, (err) => {
+                // the issue has been moved to a different repo--delete the
+                // story if it was imported
+                if (!story) {
+                    return null;
+                }
+                var storyAfter = { id: story.id, deleted: true };
+                return Story.saveOne(db, schema, storyAfter).then((story) => {
+                    return null;
+                });
             });
         });
     });
@@ -97,6 +107,17 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
                     return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
                 }).then((reactions) => {
                     return story;
+                });
+            }).catch(AssignmentImporter.ObjectMovedError, (err) => {
+                // the issue has been moved to a different repo--delete the
+                // story if it was imported
+                if (!story) {
+                    return null;
+                }
+                console.log('Deleting ', story);
+                var storyAfter = { id: story.id, deleted: true };
+                return Story.saveOne(db, schema, storyAfter).then((story) => {
+                    return null;
                 });
             });
         }).catch((err) => {

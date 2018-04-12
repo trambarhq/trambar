@@ -13,6 +13,8 @@ module.exports = {
     findIssueAssignments,
     findMergeRequestAssignments,
     importAssignments,
+
+    ObjectMovedError,
 };
 
 /**
@@ -114,6 +116,12 @@ function findAssignmentsFromNotes(db, server, glObject, glNotes) {
                     user: null,
                     ctime: new Date(glNote.created_at).toISOString()
                 });
+            }
+
+            if (/^moved to/.test(glNote.body)) {
+                // the issue has been moved to a different repo
+                // it shouldn't be imported
+                throw new ObjectMovedError;
             }
         }
     });
@@ -226,3 +234,9 @@ function fetchMergeRequestNotes(server, glProjectId, glMergeRequestNumber) {
     var url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}/notes`;
     return Transport.fetch(server, url);
 }
+
+function ObjectMovedError() {
+    this.message = 'Object moved';
+};
+
+ObjectMovedError.prototype = Object.create(Error.prototype)

@@ -174,13 +174,13 @@ function exportStoryMove(db, system, project, story, srcIssueLink, dstIssueLink)
                             type: [ 'tracking', 'note', 'assignment' ],
                             deleted: false,
                         };
-                        return Reaction.find(db, schema, criteria, 'id, external').then((reactions) => {
+                        return Reaction.find(db, schema, criteria, 'id, type, user_id, external').then((reactions) => {
                             var reactionsAfter = _.map(reactions, (reaction) => {
                                 return adjustTrackingReactionProperties(reaction, server, srcIssueLink, dstIssueLink, glIssue);
                             });
                             // if the different user is moving the issue, add
                             // a tracking reaction for him as well
-                            if (!_.some(reactionsAfter, { user_id: user.id })) {
+                            if (!_.some(reactionsAfter, { type: 'tracking', user_id: user.id })) {
                                 var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
                                 reactionsAfter.push(reactionNew);
                             }
