@@ -25,6 +25,8 @@ var Story = require('accessors/story');
 var System = require('accessors/system');
 var User = require('accessors/user');
 
+const USER_SCAN_INTERVAL = 10;
+
 module.exports = {
     start,
     stop,
@@ -89,6 +91,8 @@ function start() {
                     return EventImporter.importEvents(db, server, repo, project);
                 });
             });
+        }).then(() => {
+            startPeriodicUserScan();
         });
     });
 }
@@ -96,6 +100,7 @@ function start() {
 function stop() {
     return Shutdown.close(server).then(() => {
         if (database) {
+            stopPeriodicUserScan();
             return getServerAddress(database).then((host) => {
                 return HookManager.removeHooks(database, host);
             }).finally(() => {
@@ -441,6 +446,34 @@ function handleProjectHookCallback(req, res) {
         console.error(err);
     }).finally(() => {
         res.end();
+    });
+}
+
+var userScanInterval;
+
+function startPeriodicUserScan() {
+    userScanInterval = setInterval(reimportUsers, USER_SCAN_INTERVAL * 60 * 1000);
+}
+
+function stopPeriodicUserScan() {
+    userScanInterval = clearInterval(userScanInterval);
+}
+
+/**
+ * Reimport users from all GitLab servers
+ */
+function reimportUsers() {
+    var db = database;
+    var criteria = {
+        type: 'gitlab',
+        deleted: false,
+        disabled: false,
+    };
+    return Server.find(db, 'global', criteria, '*').each((server) => {
+        return taskQueue.schedule(`reimport_user:${server.id}`, () => {
+            console.log(`Reimporting users from server: ${server.name}`);
+            return UserImporter.importUsers(db, server);
+        });
     });
 }
 
