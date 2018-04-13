@@ -159,13 +159,15 @@ function handleServerChangeEvent(db, event) {
             }
         }
         if (event.diff.deleted || event.diff.disabled) {
-            return getServerAddress(db).then((host) => {
-                if (!event.current.deleted && !event.current.disabled) {
-                    return HookManager.installServerHooks(db, host, server);
-                } else {
-                    return HookManager.removeServerHooks(db, host, server);
-                }
-            });
+            if (hasAccessToken(server)) {
+                return getServerAddress(db).then((host) => {
+                    if (!event.current.deleted && !event.current.disabled) {
+                        return HookManager.installServerHooks(db, host, server);
+                    } else {
+                        return HookManager.removeServerHooks(db, host, server);
+                    }
+                });
+            }
         }
     });
 }
