@@ -482,7 +482,7 @@ function authenticateThruPassport(req, res, system, server, params) {
         }, '');
         var address = _.get(system, 'settings.address');
         if (!address) {
-            throw new HTTPError(400);
+            throw new HTTPError(400, { message: 'Missing site address' });
         }
         var settings = addServerSpecificSettings(server, {
             clientID: server.settings.oauth.client_id,

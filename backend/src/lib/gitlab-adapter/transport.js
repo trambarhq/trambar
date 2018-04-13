@@ -245,7 +245,9 @@ function refresh(server) {
         method: 'post',
     };
     return attempt(options).then((response) => {
-        return updateAccessTokens(server, response);
+        if (response) {
+            return updateAccessTokens(server, response);
+        }
     }).catch((err) => {
         if (err instanceof HTTPError) {
             if (err.statusCode === 401) {
