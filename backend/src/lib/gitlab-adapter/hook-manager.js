@@ -34,7 +34,9 @@ function installHooks(db, host) {
         disabled: false,
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
-        return installServerHooks(db, host, server);
+        if (hasAccessToken(server)) {
+            return installServerHooks(db, host, server);
+        }
     });
 }
 
@@ -89,7 +91,9 @@ function removeHooks(db, host) {
         disabled: false,
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
-        return removeServerHooks(db, host, server);
+        if (hasAccessToken(server)) {
+            return removeServerHooks(db, host, server);
+        }
     });
 }
 
@@ -388,4 +392,17 @@ function getSystemHookEndpoint(host, server) {
  */
 function getProjectHookEndpoint(host, server, repo, project) {
     return `${host}/srv/gitlab/hook/${server.id}/${repo.id}/${project.id}`;
+}
+
+/**
+ * Return true if the server object contains an access token
+ *
+ * @param  {Server}  server
+ *
+ * @return {Boolean}
+ */
+function hasAccessToken(server) {
+    var accessToken = _.get(server, 'settings.api.access_token');
+    var oauthBaseURL = _.get(server, 'settings.oauth.base_url');
+    return (accessToken && oauthBaseURL);
 }
