@@ -52,7 +52,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            viewOptions,
+            viewOptions: {},
             selectedUserId: this.props.selectedUserId || 0,
         };
     },
@@ -184,13 +184,11 @@ module.exports = React.createClass({
     handleOptionChange: function(evt) {
         // storing chart selection at this level to avoid loss of state
         // due to on-demand rendering
-        viewOptions = _.clone(this.state.viewOptions);
+        var viewOptions = _.clone(this.state.viewOptions);
         viewOptions[evt.user.id] = evt.options;
         this.setState({ viewOptions });
     },
 });
-
-var viewOptions = {};
 
 var sortUsers = Memoize(function(users, locale) {
     var p = locale.pick;
