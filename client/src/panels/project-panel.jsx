@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -57,11 +58,13 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.currentProject !== nextProps.currentProject) {
-            if (this.props.currentProject && nextProps.currentProject) {
-                var userId = _.get(this.props.currentUser, 'id');
-                var isMemberBefore = _.includes(this.props.currentProject.user_ids, userId);
-                var isMemberAfter = _.includes(nextProps.currentProject.user_ids, userId);
+        var projectBefore = this.props.currentProject;
+        var projectAfter = nextProps.currentProject;
+        var user = this.props.currentUser;
+        if (projectBefore !== projectAfter) {
+            if (projectBefore && projectAfter && projectBefore.id === projectAfter.id) {
+                var isMemberBefore = UserUtils.isMember(user, projectBefore);
+                var isMemberAfter = UserUtils.isMember(user, projectAfter);
                 if (!isMemberBefore && isMemberAfter) {
                     if (!this.state.renderingDialog) {
                         this.setState({
