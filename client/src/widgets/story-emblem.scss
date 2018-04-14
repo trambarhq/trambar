@@ -10,6 +10,7 @@
 
     &.die-hard {
         position: relative;
+        pointer-events: none;
 
         IMG {
             position: absolute;
