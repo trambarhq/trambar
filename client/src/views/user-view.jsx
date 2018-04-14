@@ -468,7 +468,15 @@ module.exports = React.createClass({
         switch (evt.action) {
             case 'chart-type-set':
                 var options = _.clone(this.props.options);
-                options.chartType = evt.value;
+                if (this.props.theme.mode === 'single-col') {
+                    if (options.chartType === evt.value) {
+                        options.chartType = null;
+                    } else {
+                        options.chartType = evt.value;
+                    }
+                } else {
+                    options.chartType = evt.value;
+                }
                 if (this.props.onOptionChange) {
                     this.props.onOptionChange({
                         type: 'optionchange',
