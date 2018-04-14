@@ -73,6 +73,11 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Remove links that to projects that no longer exist
+     *
+     * @param  {String} address
+     */
     removeDefunctLocations: function(address) {
         var db = this.props.database.use({ by: this });
         var criteria = {};
