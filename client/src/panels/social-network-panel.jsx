@@ -69,8 +69,6 @@ module.exports = React.createClass({
                 </header>
                 <body>
                     {this.renderSkypeNameInput()}
-                    {this.renderSlackTeamInput()}
-                    {this.renderSlackIdInput()}
                     {this.renderIChatInput()}
                     {this.renderTwitterInput()}
                     {this.renderGithubURLInput()}
@@ -96,38 +94,6 @@ module.exports = React.createClass({
             onChange: this.handleSkypeUsernameChange,
         };
         return <TextField {...props}>{t('social-network-skype')}</TextField>;
-    },
-
-    /**
-     * Render input for Slack team name
-     *
-     * @return {ReactElement}
-     */
-    renderSlackTeamInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
-            id: 'slack-team',
-            value: this.getUserProperty('details.slack_team_id'),
-            locale: this.props.locale,
-            onChange: this.handleSlackTeamIDChange,
-        };
-        return <TextField {...props}>{t('social-network-slack-team')}</TextField>;
-    },
-
-    /**
-     * Render input for Slack userid
-     *
-     * @return {ReactElement}
-     */
-    renderSlackIdInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
-            id: 'slack-user',
-            value: this.getUserProperty('details.slack_user_id'),
-            locale: this.props.locale,
-            onChange: this.handleSlackUserIDChange,
-        };
-        return <TextField {...props}>{t('social-network-slack')}</TextField>;
     },
 
     /**
@@ -234,26 +200,6 @@ module.exports = React.createClass({
     handleSkypeUsernameChange: function(evt) {
         var username = _.trim(evt.target.value);
         this.setUserProperty(`details.skype_username`, username);
-    },
-
-    /**
-     * Called when user changes Slack user id
-     *
-     * @param  {Event} evt
-     */
-    handleSlackUserIDChange: function(evt) {
-        var username = _.trim(evt.target.value);
-        this.setUserProperty(`details.slack_user_id`, username);
-    },
-
-    /**
-     * Called when user changes Slack team id
-     *
-     * @param  {Event} evt
-     */
-    handleSlackTeamIDChange: function(evt) {
-        var username = _.trim(evt.target.value);
-        this.setUserProperty(`details.slack_team_id`, username);
     },
 
     /**
