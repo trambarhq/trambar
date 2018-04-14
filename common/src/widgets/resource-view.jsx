@@ -88,7 +88,9 @@ module.exports = React.createClass({
         var width = props.width;
         var height = props.height;
         if (props.resource) {
-            var dims = props.theme.getImageDimensions(props.resource);
+            var dims = props.theme.getImageDimensions(props.resource, {
+                original: !this.props.clip
+            });
             if (width) {
                 height = Math.round(width * dims.height / dims.width);
             } else if (height) {

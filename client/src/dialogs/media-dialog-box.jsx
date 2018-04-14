@@ -198,6 +198,10 @@ module.exports = React.createClass({
      */
     renderImage: function(res, maxWidth, maxHeight) {
         var props = {
+            // prevent image element from being reused, so when changing from
+            // one image to the next the current image doesn't momentarily
+            // appears with the dimensions of the next image
+            key: this.getSelectedResourceIndex(),
             resource: res,
             width: res.width,
             height: res.height,
