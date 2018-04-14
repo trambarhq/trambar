@@ -440,113 +440,119 @@ module.exports = React.createClass({
      * @return {Promise<Array<Object>>}
      */
     find: function(query) {
-        var byComponent = _.get(query, 'by.constructor.displayName');
-        var required = query.required;
-        var committed = query.committed;
-        var blocking = query.blocking;
-        var search;
         var newSearch = new Search(query);
-        var existingSearch = this.findExistingSearch(newSearch);
-        if (existingSearch) {
-            if (byComponent) {
-                // add the component to the "by" array so we can figure out
-                // who requested the data
-                if (!_.includes(existingSearch.by, byComponent)) {
-                    existingSearch.by.push(byComponent);
-                }
-            }
-            if (existingSearch.promise.isFulfilled()) {
-                if (!existingSearch.isFresh()) {
-                    // search is perhaps out-of-date--indicate that the data
-                    // is speculative and check with the server
-                    if (this.props.hasConnection) {
-                        this.searchRemoteDatabase(existingSearch).then((changed) => {
-                            if (changed) {
-                                // data returned earlier wasn't entirely correct
-                                // trigger a new search through a onChange event
-                                this.triggerChangeEvent();
-                                return null;
-                            }
-                        });
-                    }
-                }
-            } else if (existingSearch.promise.isRejected()) {
-                // search didn't succeed--try again
-                existingSearch.promise = this.searchRemoteDatabase(existingSearch).then((changed) => {
-                    if (changed) {
-                        this.triggerChangeEvent();
-                        return null;
-                    }
-                    return existingSearch.results;
-                });
-            }
-            search = existingSearch;
+        if (newSearch.isLocal()) {
+            return this.searchLocalCache(newSearch).then(() => {
+                return newSearch.results;
+            });
         } else {
-            newSearch = this.addSearch(newSearch);
-
-            // look for records in cache first
-            newSearch.promise = this.searchLocalCache(newSearch).then(() => {
-                // if we have the right number of objects and they were
-                // retrieved recently, then don't perform server check
-                if (newSearch.isMeetingExpectation()) {
-                    if (newSearch.isSufficientlyRecent(this.props.refreshInterval)) {
-                        return newSearch.results;
+            var byComponent = _.get(query, 'by.constructor.displayName');
+            var required = query.required;
+            var committed = query.committed;
+            var blocking = query.blocking;
+            var search;
+            var existingSearch = this.findExistingSearch(newSearch);
+            if (existingSearch) {
+                if (byComponent) {
+                    // add the component to the "by" array so we can figure out
+                    // who requested the data
+                    if (!_.includes(existingSearch.by, byComponent)) {
+                        existingSearch.by.push(byComponent);
                     }
                 }
-
-                // don't search remotely when there's no connection
-                if (!this.props.hasConnection) {
-                    return newSearch.results;
-                }
-
-                // perform search on remote server
-                var remoteSearchPromise = this.searchRemoteDatabase(newSearch).then((changed) => {
-                    if (changed) {
-                        this.triggerChangeEvent();
-                        return null;
-                    }
-                });
-
-                if (search.remote) {
-                    // remote only search always block
-                    blocking = true;
-                } else if (blocking === undefined) {
-                    // if blocking is not specified, then we don't block
-                    // when there're certain number of cached records
-                    // (i.e. the minimum is met--see constructor of Search)
-                    blocking = !newSearch.isSufficientlyCached();
-                }
-
-                if (!blocking) {
-                    // return cached results immediately, without waiting for
-                    // the remote search to finish
-                    //
-                    // if the remote search yield new data, an onChange event will
-                    // trigger a new search
-                    return newSearch.results;
-                } else {
-                    // wait for remote search to finish
-                    return remoteSearchPromise.then(() => {
-                        if (required && query.expected) {
-                            if (newSearch.results.length < query.expected) {
-                                this.triggerStupefactionEvent(query, newSearch.results);
-                                throw new HTTPError(404);
-                            }
+                if (existingSearch.promise.isFulfilled()) {
+                    if (!existingSearch.isFresh()) {
+                        // search is perhaps out-of-date--indicate that the data
+                        // is speculative and check with the server
+                        if (this.props.hasConnection) {
+                            this.searchRemoteDatabase(existingSearch).then((changed) => {
+                                if (changed) {
+                                    // data returned earlier wasn't entirely correct
+                                    // trigger a new search through a onChange event
+                                    this.triggerChangeEvent();
+                                    return null;
+                                }
+                            });
                         }
-                        return newSearch.results;
+                    }
+                } else if (existingSearch.promise.isRejected()) {
+                    // search didn't succeed--try again
+                    existingSearch.promise = this.searchRemoteDatabase(existingSearch).then((changed) => {
+                        if (changed) {
+                            this.triggerChangeEvent();
+                            return null;
+                        }
+                        return existingSearch.results;
                     });
                 }
-            });
-            search = newSearch;
-        }
-        return search.promise.then((results) => {
-            var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
-            if (includeUncommitted && committed !== true) {
-                // apply changes that haven't been saved yet
-                search = this.applyUncommittedChanges(search);
+                search = existingSearch;
+            } else {
+                newSearch = this.addSearch(newSearch);
+
+                // look for records in cache first
+                newSearch.promise = this.searchLocalCache(newSearch).then(() => {
+                    // if we have the right number of objects and they were
+                    // retrieved recently, then don't perform server check
+                    if (newSearch.isMeetingExpectation()) {
+                        if (newSearch.isSufficientlyRecent(this.props.refreshInterval)) {
+                            return newSearch.results;
+                        }
+                    }
+
+                    // don't search remotely when there's no connection
+                    if (!this.props.hasConnection) {
+                        return newSearch.results;
+                    }
+
+                    // perform search on remote server
+                    var remoteSearchPromise = this.searchRemoteDatabase(newSearch).then((changed) => {
+                        if (changed) {
+                            this.triggerChangeEvent();
+                            return null;
+                        }
+                    });
+
+                    if (search.remote) {
+                        // remote only search always block
+                        blocking = true;
+                    } else if (blocking === undefined) {
+                        // if blocking is not specified, then we don't block
+                        // when there're certain number of cached records
+                        // (i.e. the minimum is met--see constructor of Search)
+                        blocking = !newSearch.isSufficientlyCached();
+                    }
+
+                    if (!blocking) {
+                        // return cached results immediately, without waiting for
+                        // the remote search to finish
+                        //
+                        // if the remote search yield new data, an onChange event will
+                        // trigger a new search
+                        return newSearch.results;
+                    } else {
+                        // wait for remote search to finish
+                        return remoteSearchPromise.then(() => {
+                            if (required && query.expected) {
+                                if (newSearch.results.length < query.expected) {
+                                    this.triggerStupefactionEvent(query, newSearch.results);
+                                    throw new HTTPError(404);
+                                }
+                            }
+                            return newSearch.results;
+                        });
+                    }
+                });
+                search = newSearch;
             }
-            return search.results;
-        });
+            return search.promise.then((results) => {
+                var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
+                if (includeUncommitted && committed !== true) {
+                    // apply changes that haven't been saved yet
+                    search = this.applyUncommittedChanges(search);
+                }
+                return search.results;
+            });
+        }
     },
 
     /**
