@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var Hammer = require('hammerjs');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -82,6 +83,10 @@ module.exports = React.createClass({
     addListeners: function() {
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('mousewheel', this.handleMouseWheel);
+
+        this.hammer = new Hammer(document.body);
+        this.hammer.on('swipeleft', this.handleSwipeLeft);
+        this.hammer.on('swiperight', this.handleSwipeRight);
     },
 
     /**
@@ -90,6 +95,14 @@ module.exports = React.createClass({
     removeListeners: function() {
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('mousewheel', this.handleMouseWheel);
+
+        if (this.hammer) {
+            this.hammer.off('swipeleft', this.handleSwipeLeft);
+            this.hammer.off('swiperight', this.handleSwipeRight);
+            this.hammer.element.style.touchAction = '';
+            this.hammer.destroy();
+            this.hammer = null;
+        }
     },
 
     /**
@@ -408,14 +421,34 @@ module.exports = React.createClass({
      */
     handleMouseWheel: function(evt) {
         var diff = 0;
-        if (evt.deltaY > 0) {
+        var delta;
+        if (Math.abs(evt.deltaX) >= Math.abs(evt.deltaY)) {
+            delta = evt.deltaX;
+        } else {
+            delta = evt.deltaY;
+        }
+        if (delta > 0) {
             diff = +1;
-        } else if (evt.deltaY < 0) {
+        } else if (delta < 0) {
             diff = -1;
         } else {
             return;
         }
         this.changeSelection(diff);
         evt.preventDefault();
-    }
+    },
+
+    /**
+     * Called when user swipe left
+     */
+    handleSwipeLeft: function(evt) {
+        this.changeSelection(-1);
+    },
+
+    /**
+     * Called when user swipe right
+     */
+    handleSwipeRight: function(evt) {
+        this.changeSelection(+1);
+    },
 });
