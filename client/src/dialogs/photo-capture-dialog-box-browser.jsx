@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var FrameGrabber = require('media/frame-grabber');
 var DeviceManager = require('media/device-manager');
+var MediaStreamUtils = require('media/media-stream-utils');
 var BlobManager = require('transport/blob-manager');
 
 var Payloads = require('transport/payloads');
@@ -36,7 +37,7 @@ module.exports = React.createClass({
          * @return {Boolean}
          */
         isAvailable: function() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (!MediaStreamUtils.hasSupport()) {
                 return false;
             }
             if (typeof(HTMLCanvasElement.prototype.toBlob) !== 'function') {
@@ -59,6 +60,8 @@ module.exports = React.createClass({
         return {
             liveVideoStream: null,
             liveVideoError : null,
+            liveVideoWidth: 640,
+            liveVideoHeight: 480,
             capturedImage: null,
             videoDevices: devices,
             selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
@@ -99,11 +102,15 @@ module.exports = React.createClass({
      */
     initializeCamera: function() {
         this.createLiveVideoStream().then((stream) => {
+            var dim = MediaStreamUtils.getVideoDimensions(stream);
             this.setState({
                 liveVideoStream: stream,
                 liveVideoError: null,
+                liveVideoWidth: dim.width,
+                liveVideoHeight: dim.height,
             });
         }).catch((err) => {
+            console.error(err);
             this.setState({
                 liveVideoStream: null,
                 liveVideoError: err,
@@ -142,6 +149,16 @@ module.exports = React.createClass({
         if (this.videoNode) {
             this.videoNode.srcObject = this.state.liveVideoStream;
             this.videoNode.play();
+
+            // fix the video dimensions if they're wrong
+            MediaStreamUtils.getActualVideoDimensions(node, (dim) => {
+                if (this.state.liveVideoWidth !== dim.width || this.state.liveVideoHeight !== dim.height) {
+                    this.setState({
+                        liveVideoWidth: dim.width,
+                        liveVideoHeight: dim.height,
+                    });
+                }
+            });
         }
     },
 
@@ -206,9 +223,29 @@ module.exports = React.createClass({
     renderLiveVideo: function() {
         var videoProps = {
             ref: this.setLiveVideoNode,
+            className: 'live-video',
             muted: true,
         };
-        return <video {...videoProps} />
+        return (
+            <div>
+                {this.renderSpacer()}
+                <video {...videoProps} />
+            </div>
+        );
+    },
+
+    /**
+     * Render a spacer element
+     *
+     * @return {ReactElement}
+     */
+    renderSpacer: function() {
+        var spacerProps = {
+            className: 'spacer',
+            width: this.state.liveVideoWidth,
+            height: this.state.liveVideoHeight,
+        };
+        return <canvas {...spacerProps} />;
     },
 
     /**
@@ -217,8 +254,16 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderCapturedImage: function() {
-        var props = { src: this.state.capturedImage.url };
-        return <img {...props} />;
+        var imageProps = {
+            className: 'preview',
+            src: this.state.capturedImage.url
+        };
+        return (
+            <div>
+                {this.renderSpacer()}
+                <img {...imageProps} />
+            </div>
+        );
     },
 
     /**
@@ -227,6 +272,9 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderDeviceSelector: function() {
+        if (this.state.capturedImage) {
+            return null;
+        }
         var props = {
             type: 'video',
             devices: this.state.videoDevices,
@@ -286,8 +334,7 @@ module.exports = React.createClass({
     componentDidUpdate: function(prevProps, prevState) {
         if (this.videoNode) {
             if (prevState.liveVideoStream !== this.state.liveVideoStream) {
-                this.videoNode.srcObject = this.state.liveVideoStream;
-                this.videoNode.play();
+                this.setLiveVideoNode(this.videoNode);
             }
         }
     },
@@ -306,25 +353,10 @@ module.exports = React.createClass({
      * @return {Promise<MediaStream>}
      */
     createLiveVideoStream: function() {
-        var promise = this.videoStreamPromise;
-        if (!promise) {
-            var constraints;
-            if (this.state.selectedDeviceId) {
-                constraints = {
-                    video: {
-                        deviceId: this.state.selectedDeviceId,
-                    }
-                };
-            } else {
-                constraints = {
-                    video: true,
-                };
-            }
-            promise = navigator.mediaDevices.getUserMedia(constraints);
-            this.videoStreamPromise = promise;
+        if (!this.videoStreamPromise) {
+            this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(this.state.selectedDeviceId);
         }
-        // return Bluebird promise
-        return Promise.resolve(promise);
+        return this.videoStreamPromise;
     },
 
     /**
@@ -333,15 +365,13 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     destroyLiveVideoStream: function() {
+        if (!this.videoStreamPromise) {
+            return Promise.resolve();
+        }
         var promise = this.videoStreamPromise;
         this.videoStreamPromise = null;
-        return Promise.resolve(promise).then((stream) => {
-            if (stream) {
-                var tracks = stream.getTracks();
-                _.each(tracks, (track) => {
-                    track.stop();
-                });
-            }
+        return promise.then((stream) => {
+            MediaStreamUtils.stopAllTracks(stream);
         });
     },
 

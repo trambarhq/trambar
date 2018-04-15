@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
+var MediaStreamUtils = require('media/media-stream-utils');
 
 var Payloads = require('transport/payloads');
 var Locale = require('locale/locale');
@@ -36,7 +37,7 @@ module.exports = React.createClass({
          * @return {Boolean}
          */
         isAvailable: function() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (!MediaStreamUtils.hasSupport()) {
                 return false;
             }
             if (typeof(MediaRecorder) !== 'function') {
@@ -394,14 +395,10 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     createLiveAudioStream: function() {
-        var promise = this.audioStreamPromise;
-        if (!promise) {
-            var constraints = { audio: true };
-            promise = navigator.mediaDevices.getUserMedia(constraints);
-            this.audioStreamPromise = promise;
+        if (!this.audioStreamPromise) {
+            this.audioStreamPromise = MediaStreamUtils.getAudioStream();
         }
-        // return Bluebird promise instead of native promise
-        return Promise.resolve(promise);
+        return this.audioStreamPromise;
     },
 
     /**
@@ -410,15 +407,13 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     destroyLiveAudioStream: function() {
+        if (!this.audioStreamPromise) {
+            return Promise.resolve();
+        }
         var promise = this.audioStreamPromise;
         this.audioStreamPromise = null;
-        return Promise.resolve(promise).then((stream) => {
-            if (stream) {
-                var tracks = stream.getTracks();
-                _.each(tracks, (track) => {
-                    track.stop();
-                });
-            }
+        return promise.then((stream) => {
+            MediaStreamUtils.stopAllTracks(stream);
         });
     },
 
@@ -436,12 +431,17 @@ module.exports = React.createClass({
             };
             var recorder = new MediaRecorder(this.state.liveAudioStream, options);
             var stream = this.props.payloads.stream();
+            recorder.promise = new Promise((resolve, reject) => {
+                recorder.resolve = resolve;
+                recorder.reject = reject;
+            });
             recorder.outputStream = stream;
             recorder.addEventListener('dataavailable', function(evt) {
                 this.outputStream.push(evt.data)
             });
             recorder.addEventListener('stop', function(evt) {
                 this.outputStream.close();
+                recorder.resolve();
             });
             recorder.start(segmentDuration);
             // start uploading immediately upon receiving data from MediaRecorder
@@ -488,6 +488,9 @@ module.exports = React.createClass({
             var recorder = this.state.mediaRecorder;
             if (recorder) {
                 recorder.stop();
+
+                // wait till all data is encoded
+                return recorder.promise;
             }
         });
     },

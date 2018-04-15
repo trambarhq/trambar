@@ -13,11 +13,20 @@
     .container {
         flex: 1 1 auto;
         overflow: hidden;
-        padding-bottom: 0.2em;
+        margin-bottom: 0.2em;
+        position: relative;
 
-        VIDEO, IMG {
-            object-fit: contain;
+        .live-video, .preview {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            right: 0;
             display: block;
+        }
+
+        .spacer {
+            display: block;
+            visibility: hidden;
 
             .single-col & {
                 width: 100%;

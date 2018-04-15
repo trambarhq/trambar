@@ -89,6 +89,14 @@ body {
     }
 }
 
+.single-col {
+    .overlay {
+        .foreground {
+            height: 100%;
+        }
+    }
+}
+
 SELECT {
     border-radius: 0;
     background-color: #eeeeee;
