@@ -76,9 +76,28 @@ module.exports = React.createClass({
         });
     },
 
+    /**
+     * Add event listeners
+     */
+    addListeners: function() {
+        document.addEventListener('keydown', this.handleKeyDown);
+        document.addEventListener('mousewheel', this.handleMouseWheel);
+    },
+
+    /**
+     * Remove event listeners
+     */
+    removeListeners: function() {
+        document.removeEventListener('keydown', this.handleKeyDown);
+        document.removeEventListener('mousewheel', this.handleMouseWheel);
+    },
+
+    /**
+     * Add listeners on mount
+     */
     componentWillMount: function() {
         if (this.props.show) {
-            document.body.addEventListener('keydown', this.handleKeyDown);
+            this.addListeners();
         }
     },
 
@@ -93,13 +112,13 @@ module.exports = React.createClass({
                 this.setState({
                     selectedIndex: nextProps.selectedIndex,
                 });
-                document.body.addEventListener('keydown', this.handleKeyDown);
+                this.addListeners();
             } else {
                 var video = this.refs.video;
                 if (video) {
                     video.pause();
                 }
-                document.body.removeEventListener('keydown', this.handleKeyDown);
+                this.removeListeners();
             }
         }
     },
@@ -310,7 +329,7 @@ module.exports = React.createClass({
      * Remove event handler on unmount
      */
     componentWillUnmount: function() {
-        document.body.removeEventListener('keydown', this.handleKeyDown);
+        this.removeListeners();
     },
 
     /**
@@ -347,6 +366,24 @@ module.exports = React.createClass({
     },
 
     /**
+     * Change the selection index
+     *
+     * @param  {Number} diff
+     */
+    changeSelection: function(diff) {
+        if (diff) {
+            var count = this.getResourceCount();
+            var index = this.getSelectedResourceIndex() + diff;
+            if (index >= count) {
+                index = 0;
+            } else if (index < 0){
+                index = count - 1;
+            }
+            this.selectResource(index);
+        }
+    },
+
+    /**
      * Called when user presses a key
      *
      * @param  {Event} evt
@@ -357,17 +394,28 @@ module.exports = React.createClass({
             diff = +1;
         } else if (evt.keyCode == 37) {     // left arrow
             diff = -1;
+        } else {
+            return;
         }
-        if (diff) {
-            var count = this.getResourceCount();
-            var index = this.getSelectedResourceIndex() + diff;
-            if (index >= count) {
-                index = 0;
-            } else if (index < 0){
-                index = count - 1;
-            }
-            this.selectResource(index);
-            evt.preventDefault();
-        }
+        this.changeSelection(diff);
+        evt.preventDefault();
     },
+
+    /**
+     * Called when user turns the mouse wheel
+     *
+     * @param  {Event} evt
+     */
+    handleMouseWheel: function(evt) {
+        var diff = 0;
+        if (evt.deltaY > 0) {
+            diff = +1;
+        } else if (evt.deltaY < 0) {
+            diff = -1;
+        } else {
+            return;
+        }
+        this.changeSelection(diff);
+        evt.preventDefault();
+    }
 });
