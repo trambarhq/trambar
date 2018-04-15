@@ -57,6 +57,7 @@ module.exports = React.createClass({
             <Overlay {...overlayProps}>
                 <div className={classNames.join(' ')}>
                     {this.renderText()}
+                    {this.renderMessage()}
                     {this.renderButtons()}
                 </div>
             </Overlay>
@@ -81,7 +82,6 @@ module.exports = React.createClass({
                     </div>
                     {p(project.details.description)}
                 </div>
-                {this.renderMessage()}
             </Scrollable>
         );
     },

@@ -31,16 +31,15 @@
 
     .description {
         margin-top: 0.5em;
-        margin-bottom: 0.5em;
         white-space: pre-line;
         user-select: text;
 
         .image {
             float: right;
             margin-left: 0.5em;
-            margin-bottom: 0.3em;
 
             IMG, CANVAS, svg {
+                display: block;
                 width: 10em;
                 height: auto;
             }
@@ -50,7 +49,7 @@
     .collapsible-container {
         transition-duration: 1s;
         margin-bottom: 0.25em;
-        margin-top: -0.25em;
+        margin-top: 0.25em;
         clear: both;
     }
 
