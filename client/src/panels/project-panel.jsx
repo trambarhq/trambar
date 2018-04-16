@@ -364,9 +364,11 @@ module.exports = React.createClass({
         var link = _.find(this.props.projectLinks, { key });
         if (link) {
             // redirect to settings page with new schema, possibly new address
+            var siteAddress = window.location.origin;
             var params = {
                 address: link.address,
                 schema: link.schema,
+                cors: (siteAddress !== link.address),
             };
             this.props.route.replace(require('pages/settings-page'), params);
         }
