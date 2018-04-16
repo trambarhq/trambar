@@ -42,9 +42,6 @@ require('./story-editor.scss');
 
 const AUTOSAVE_DURATION = 2000;
 
-const RETURN = 13;
-const CLOSE_BRACKET = 221;
-
 module.exports = React.createClass({
     displayName: 'StoryEditor',
     mixins: [ UpdateCheck ],
@@ -498,7 +495,7 @@ module.exports = React.createClass({
             value: langText,
             lang: loc,
             onChange: this.handleTextChange,
-            onKeyPress: this.handleKeyPress,
+            onBeforeInput: this.handleBeforeInput,
             onKeyUp: this.handleKeyUp,
             onPaste: this.handlePaste,
         };
@@ -1110,18 +1107,20 @@ module.exports = React.createClass({
      *
      * @param  {Event} evt
      */
-    handleKeyPress: function(evt) {
+    handleBeforeInput: function(evt) {
         var target = evt.target;
-        if (evt.charCode === RETURN) {
+        if (evt.data === '\n') {
             var storyType = this.state.draft.type;
             if (storyType !== 'survey' && storyType !== 'task-list') {
                 if (this.props.theme.mode === 'single-col') {
                     evt.preventDefault();
                     this.handlePublishClick(evt);
                     target.blur();
+                    return;
                 }
             }
         }
+        this.lastInput = evt.data;
     },
 
     /**
@@ -1130,9 +1129,8 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleKeyUp: function(evt) {
-        // look for carriage return
         var target = evt.target;
-        if (evt.keyCode === RETURN) {
+        if (this.lastInput === '\n') {
             var storyType = this.state.draft.type;
             if (storyType === 'survey' || storyType === 'task-list') {
                 // see if there's survey or task-list item on the line where
@@ -1155,7 +1153,7 @@ module.exports = React.createClass({
                     }
                 }
             }
-        } else if (evt.keyCode === CLOSE_BRACKET) {
+        } else if (this.lastInput === ']') {
             var value = target.value;
             var selStart = target.selectionStart;
             var textInFront = value.substr(0, selStart);
