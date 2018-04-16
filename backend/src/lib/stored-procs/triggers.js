@@ -136,55 +136,49 @@ updateResource.flags = 'SECURITY DEFINER';
  * doesn't get overridden by stale data
  */
 function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_ARGV) {
-    var oldResources = (OLD) ? OLD.details.resources : undefined;
-    var newResources = NEW.details.resources;
-    if (!oldResources && !newResources) {
+    var resources = NEW.details.resources;
+    if (!resources) {
+        // a single resource is stored in the details column
         if (NEW.details.payload_token) {
-            oldResources = (OLD) ? [ OLD.details ] : undefined;
-            newResources = [ NEW.details ];
-        }
-    }
-    if (newResources && oldResources) {
-        for (var i = 0; i < newResources.length; i++) {
-            var newRes = newResources[i];
-            if (newRes.payload_token) {
-                for (var j = 0; j < oldResources.length; j++) {
-                    var oldRes = oldResources[j];
-                    if (newRes.payload_token === oldRes.payload_token) {
-                        transferProps(oldRes, newRes);
-                        break;
-                    }
-                }
-            }
+            resources = [ NEW.details ];
         }
     }
 
-    // remove ready and payload_token from resources once they're all ready
-    // and the object itself is published
-    var readyColumn = TG_ARGV[0];
-    var publishedColumn = TG_ARGV[1];
     var allReady = true;
-    if (newResources) {
-        for (var i = 0; i < newResources.length; i++) {
-            var newRes = newResources[i];
-            if (newRes.payload_token) {
-                if (newRes.ready !== true) {
-                    allReady = false;
-                    break;
+    if (resources instanceof Array) {
+        var tokens = resources.map((res) => { return res.payload_token }).filter(Boolean);
+        if (tokens.length > 0) {
+            // load tasks
+            var params = [];
+            var sql = `
+                SELECT * FROM "${TG_TABLE_SCHEMA}"."task"
+                WHERE token = ANY($${params.push(tokens)})
+                AND deleted = false
+            `;
+            var rows = plv8.execute(sql, params);
+
+            resources.forEach((res) => {
+                if (res.payload_token) {
+                    var row = rows.find((row) => {
+                        return row.token === res.payload_token;
+                    });
+                    if (row) {
+                        transferProps(row.details, res);
+                        if (row.completion === 100 && row.etime !== null) {
+                            delete res.payload_token;
+                        }
+                    }
                 }
-            }
+            });
         }
-        if (allReady) {
-            if (!publishedColumn || NEW[publishedColumn]) {
-                for (var i = 0; i < newResources.length; i++) {
-                    var newRes = newResources[i];
-                    delete newRes.ready;
-                    delete newRes.payload_token;
-                }
-            }
-        }
+
+        allReady = resources.every((res) => {
+            return !res.payload_token;
+        });
     }
+
     // set ready column when all resources are ready
+    var readyColumn = TG_ARGV[0];
     if (readyColumn) {
         NEW[readyColumn] = allReady;
     }

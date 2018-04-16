@@ -102,7 +102,6 @@ function updatePayload(details, payload) {
             var res = resources[i];
             if (res.payload_token === payload.token) {
                 transferProps(payload.details, res);
-                res.ready = ready;
             }
         }
     } else {
@@ -110,7 +109,6 @@ function updatePayload(details, payload) {
         var res = details;
         if (res.payload_token === payload.token) {
             transferProps(payload.details, res);
-            res.ready = ready;
         }
     }
     return details;
