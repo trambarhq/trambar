@@ -20,7 +20,8 @@ module.exports = React.createClass({
     displayName: 'TopNavigation',
     propTypes: {
         settings: PropTypes.object.isRequired,
-        hasConnection: PropTypes.bool,
+        online: PropTypes.bool,
+        connected: PropTypes.bool,
         searching: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
@@ -28,6 +29,18 @@ module.exports = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
+
+    /**
+     * Return default props
+     *
+     * @return {Object}
+     */
+    getDefaultProps: function() {
+        return {
+            online: true,
+            connected: true,
+        };
     },
 
     /**
@@ -195,7 +208,8 @@ module.exports = React.createClass({
             locale: this.props.locale,
             uploading: this.props.payloads.uploading,
             searching: this.props.searching,
-            hasConnection: this.props.hasConnection,
+            online: this.props.online,
+            connected: this.props.connected,
         };
         return (
             <div>
@@ -311,8 +325,8 @@ function Button(props) {
 }
 
 function ConnectionIndicator(props) {
+    var t = props.locale.translate;
     if (props.uploading) {
-        var t = props.locale.translate;
         var size = _.fileSize(props.uploading.bytes);
         var count = props.uploading.files;
         var title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
@@ -327,11 +341,18 @@ function ConnectionIndicator(props) {
                 <i className="fa fa-refresh"/>
             </span>
         );
-    } else if (!props.hasConnection) {
+    } else if (!props.online) {
         return (
             <span className="connection">
                 <i className="fa fa-wifi" />
                 <i className="fa fa-ban" />
+            </span>
+        );
+    } else if (!props.connected) {
+        var title = t('warning-no-connection', count, size);
+        return (
+            <span className="connection" title={title}>
+                <i className="fa fa-warning" />
             </span>
         );
     } else {

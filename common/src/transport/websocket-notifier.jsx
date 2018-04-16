@@ -18,7 +18,7 @@ module.exports = React.createClass({
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         defaultProfileImage: PropTypes.string,
-        hasConnection: PropTypes.bool,
+        online: PropTypes.bool,
 
         locale: PropTypes.instanceOf(Locale),
 
@@ -42,7 +42,7 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             basePath: '/srv/socket',
-            hasConnection: true,
+            online: true,
             initialReconnectionDelay: 500,
             maximumReconnectionDelay: 30000,
         };
@@ -85,11 +85,11 @@ module.exports = React.createClass({
         if (this.props.serverAddress !== nextProps.serverAddress) {
              this.updateConnection(nextProps);
         }
-        if (!this.props.hasConnection && nextProps.hasConnection) {
+        if (!this.props.online && nextProps.online) {
             if (this.onConnectivity) {
                 this.onConnectivity();
             }
-        } else if(this.props.hasConnection && !nextProps.hasConnection) {
+        } else if(this.props.online && !nextProps.online) {
             if (this.state.socket) {
                 // putting Chrome into offline mode does not automatically
                 // break the WebSocket connection--do it manually
@@ -138,12 +138,12 @@ module.exports = React.createClass({
     },
 
     /**
-     * Wait for props.hasConnection to become true
+     * Wait for props.online to become true
      *
      * @return {Promise}
      */
     waitForConnectivity: function() {
-        if (this.props.hasConnection) {
+        if (this.props.online) {
             return Promise.resolve();
         } else {
             if (!this.connectivityPromise) {

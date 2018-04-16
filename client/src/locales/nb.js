@@ -666,5 +666,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Ta om igjen',
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stopp',
+
+        'warning-no-connection': 'Ingen umiddelbar oppdatering',
     };
 };

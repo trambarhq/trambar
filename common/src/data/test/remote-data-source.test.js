@@ -26,7 +26,7 @@ describe('RemoteDataSource', function() {
         },
         retrievalFlags: {
         },
-        hasConnection: true,
+        online: true,
         inForeground: true,
         prefetching: false,
         sessionRetryInterval: 100,
@@ -746,7 +746,7 @@ describe('RemoteDataSource', function() {
         it('should not perform remote search when there is no connection', function() {
             var onChangePromise = new ManualPromise;
             dataSourceWrapper.setProps({
-                hasConnection: false,
+                online: false,
                 onChange: onChangePromise.resolve,
             });
             var location = { address: 'http://level6.moria.me', schema: 'global', table: 'user' };
@@ -1144,7 +1144,7 @@ describe('RemoteDataSource', function() {
                 expect(found).to.have.lengthOf(1);
 
                 // disable connection
-                dataSourceWrapper.setProps({ hasConnection: false });
+                dataSourceWrapper.setProps({ online: false });
             }).then(() => {
                 // this call will stall
                 return dataSource.remove(location, [ objects[0] ]).timeout(100);
@@ -1159,7 +1159,7 @@ describe('RemoteDataSource', function() {
                 });
             }).then(() => {
                 // restore connection
-                dataSourceWrapper.setProps({ hasConnection: true });
+                dataSourceWrapper.setProps({ online: true });
                 return null;
             }).delay(200).then(() => {
                 expect(storage).to.equal(1);

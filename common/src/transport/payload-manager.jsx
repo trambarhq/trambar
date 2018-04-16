@@ -15,7 +15,7 @@ var DiagnosticsSection = require('widgets/diagnostics-section');
 module.exports = React.createClass({
     displayName: 'PayloadManager',
     propTypes: {
-        hasConnection: PropTypes.bool,
+        online: PropTypes.bool,
         database: PropTypes.instanceOf(Database),
         route: PropTypes.instanceOf(Route),
 
@@ -29,7 +29,7 @@ module.exports = React.createClass({
      */
     getDefaultProps: function() {
         return {
-            hasConnection: true,
+            online: true,
         };
     },
 
@@ -96,7 +96,7 @@ module.exports = React.createClass({
     stream: function() {
         var params = this.props.route.parameters;
         var stream = new BlobStream(params.address);
-        if (!this.props.hasConnection) {
+        if (!this.props.online) {
             stream.suspend();
         }
         this.updateList('streams', (before) => {
@@ -289,9 +289,9 @@ module.exports = React.createClass({
                 this.updateBackendProgress();
             }
         }
-        if (prevProps.hasConnection !== this.props.hasConnection) {
+        if (prevProps.online !== this.props.online) {
             _.each(this.streams, (stream) => {
-                if (this.props.hasConnection) {
+                if (this.props.online) {
                     stream.resume();
                 } else {
                     stream.suspend();

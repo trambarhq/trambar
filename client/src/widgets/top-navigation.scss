@@ -77,5 +77,15 @@
             margin: auto;
             height: 1em;
         }
+
+        .fa-refresh {
+            color: #333333;
+            transform: translate(0, 0.1em);
+        }
+
+        .fa-warning {
+            color: #333333;
+            transform: translate(0, 0.2em);
+        }
     }
 }

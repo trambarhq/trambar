@@ -693,5 +693,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': "Ricomincia",
         'video-capture-start': "Comincia",
         'video-capture-stop': "Termina",
+
+        'warning-no-connection': 'Nessun aggiornamento istantaneo',
     };
 };

@@ -27,7 +27,8 @@ module.exports = React.createClass({
         basePath: PropTypes.string,
         discoveryFlags: PropTypes.object,
         retrievalFlags: PropTypes.object,
-        hasConnection: PropTypes.bool,
+        online: PropTypes.bool,
+        connected: PropTypes.bool,
         inForeground: PropTypes.bool,
         prefetching: PropTypes.bool,
         cache: PropTypes.object,
@@ -52,7 +53,8 @@ module.exports = React.createClass({
             basePath: '/srv/data',
             discoveryFlags: {},
             retrievalFlags: {},
-            hasConnection: true,
+            online: true,
+            connected: false,
             inForeground: true,
             prefetching: true,
             refreshInterval: 15 * 60,   // 15 minutes
@@ -102,7 +104,16 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     isOnline: function() {
-        return this.props.hasConnection;
+        return this.props.online;
+    },
+
+    /**
+     * Return true if we can receive change notifications
+     *
+     * @return {Boolean}
+     */
+    isReceivingNotification: function() {
+        return this.props.connected;
     },
 
     /**
@@ -464,7 +475,7 @@ module.exports = React.createClass({
                     if (!existingSearch.isFresh()) {
                         // search is perhaps out-of-date--indicate that the data
                         // is speculative and check with the server
-                        if (this.props.hasConnection) {
+                        if (this.props.online) {
                             this.searchRemoteDatabase(existingSearch).then((changed) => {
                                 if (changed) {
                                     // data returned earlier wasn't entirely correct
@@ -500,7 +511,7 @@ module.exports = React.createClass({
                     }
 
                     // don't search remotely when there's no connection
-                    if (!this.props.hasConnection) {
+                    if (!this.props.online) {
                         return newSearch.results;
                     }
 
@@ -1261,7 +1272,7 @@ module.exports = React.createClass({
             return Promise.resolve();
         };
         this.queueChange(change);
-        if (this.props.hasConnection) {
+        if (this.props.online) {
             // send it if we've connectivity
             change.dispatch();
         }
@@ -1482,7 +1493,7 @@ module.exports = React.createClass({
         if (schema === 'local') {
             return Promise.resolve();
         }
-        if (!this.props.hasConnection) {
+        if (!this.props.online) {
             return Promise.resolve();
         }
         var cache = this.props.cache;
@@ -1809,7 +1820,7 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (!this.props.hasConnection && nextProps.hasConnection) {
+        if (!this.props.online && nextProps.online) {
             // reconcile changes and invalidate all searches
             this.invalidate().then(() => {
                 // send pending changes

@@ -965,6 +965,8 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Przerób',
         'video-capture-start': 'Rozpocznij',
         'video-capture-stop': 'Zatrzymaj',
+
+        'warning-no-connection': 'Brak natychmiastowej aktualizacji',
     };
 };
 

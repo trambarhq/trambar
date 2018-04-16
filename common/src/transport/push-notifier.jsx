@@ -16,7 +16,7 @@ module.exports = React.createClass({
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         searching: PropTypes.bool,
-        hasConnection: PropTypes.bool,
+        online: PropTypes.bool,
 
         onConnect: PropTypes.func,
         onDisconnect: PropTypes.func,
@@ -82,12 +82,12 @@ module.exports = React.createClass({
     },
 
     /**
-     * Wait for props.hasConnection to become true
+     * Wait for props.online to become true
      *
      * @return {Promise}
      */
     waitForConnectivity: function() {
-        if (this.props.hasConnection) {
+        if (this.props.online) {
             return Promise.resolve();
         } else {
             if (!this.connectivityPromise) {
@@ -116,7 +116,7 @@ module.exports = React.createClass({
                 this.onSearchIdling();
             }
         }
-        if (!this.props.hasConnection && nextProps.hasConnection) {
+        if (!this.props.online && nextProps.online) {
             if (this.onConnectivity) {
                 this.onConnectivity();
             }

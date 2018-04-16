@@ -169,7 +169,8 @@ module.exports = React.createClass({
             settings: settings,
             database: this.state.database,
             payloads: this.state.payloads,
-            hasConnection: this.state.online,
+            online: this.state.online,
+            connected: (this.state.connection) ? true : undefined,
             searching: this.state.searching,
             route: this.state.route,
             locale: this.state.locale,
@@ -274,7 +275,8 @@ module.exports = React.createClass({
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             inForeground: !this.state.paused,
-            hasConnection: this.state.online,
+            online: this.state.online,
+            connected: (this.state.connection) ? true : undefined,
             discoveryFlags: {
                 include_uncommitted: true,
             },
@@ -287,7 +289,7 @@ module.exports = React.createClass({
         };
         var payloadManagerProps = {
             ref: setters.payloadManager,
-            hasConnection: this.state.online,
+            online: this.state.online,
             database: this.state.database,
             route: this.state.route,
             onChange: this.handlePayloadsChange,
@@ -328,7 +330,7 @@ module.exports = React.createClass({
         var notifierProps = {
             ref: setters.notifier,
             serverAddress: serverAddress,
-            hasConnection: this.state.online,
+            online: this.state.online,
             onConnect: this.handleConnection,
             onDisconnect: this.handleDisconnection,
             onNotify: this.handleChangeNotification,
@@ -354,7 +356,7 @@ module.exports = React.createClass({
         var subscriptionManagerProps = {
             ref: setters.subscriptionManager,
             area: 'client',
-            connection: this.state.connection,
+            connection: this.state.connection || null,
             schema: selectedSchema,
             database: this.state.database,
             locale: this.state.locale,
@@ -793,7 +795,8 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleDisconnection: function(evt) {
-        this.setState({ connection: null });
+        // set it to false so we know a connection was lost
+        this.setState({ connection: false });
 
         // invalidate search results when connection is lost
         var dataSource = this.components.remoteDataSource;

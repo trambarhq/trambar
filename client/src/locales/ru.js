@@ -962,6 +962,8 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Пересдавать',
         'video-capture-start': 'Начать',
         'video-capture-stop': 'Прекратить',
+
+        'warning-no-connection': 'Нет мгновенного обновления',
     };
 };
 

@@ -36,7 +36,7 @@ describe('PayloadManager', function() {
     var route = new Route(routeManager);
 
     var payloadManagerProps = {
-        hasConnection: true,
+        online: true,
         database: database,
         route: route,
         onChange: null,

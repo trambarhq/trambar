@@ -670,5 +670,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Nauhoita uudelleen',
         'video-capture-start': 'Ala',
         'video-capture-stop': 'Lopeta',
+
+        'warning-no-connection': 'Ei välitöntä päivitystä',
     };
 };

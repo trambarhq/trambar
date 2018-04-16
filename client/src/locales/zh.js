@@ -717,6 +717,8 @@ var traditionalPhrases = {
     'video-capture-retake': '重新錄製',
     'video-capture-start': '開始',
     'video-capture-stop': '停止',
+
+    'warning-no-connection': '無法即時更新',
 };
 
 var simplifiedPhrases = {
@@ -1398,6 +1400,8 @@ var simplifiedPhrases = {
     'video-capture-retake': '重新录制',
     'video-capture-start': '开始',
     'video-capture-stop': '停止',
+
+    'warning-no-connection': '无法即时更新',
 };
 
 var cantonesePhrases = {
@@ -1762,6 +1766,8 @@ var cantonesePhrases = {
     'user-statistics-tooltip-$count-post': (count) => {
         return `${count}個帖子`;
     },
+
+    'warning-no-connection': '唔可以即時更新',
 };
 
 var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
