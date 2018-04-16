@@ -19,7 +19,6 @@ html, body {
 
 body {
     user-select: none;
-    -webkit-user-select: none;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
 }
@@ -102,7 +101,6 @@ SELECT {
     background-color: #eeeeee;
     border: 1px solid #444444;
     user-select: auto;
-    -webkit-user-select: auto;
     -webkit-appearance: none;
 
     OPTION {
@@ -114,7 +112,7 @@ TEXTAREA,
 INPUT[type=text],
 INPUT[type=url],
 INPUT[type=email],
-input[type=password],
+INPUT[type=password],
 INPUT[type=number]
  {
     border-radius: 0;
@@ -122,8 +120,7 @@ INPUT[type=number]
     border: 1px solid #444444;
     padding: 2px 2px 2px 4px;
     font-size: 1em;
-    user-select: auto;
-    -webkit-user-select: auto;
+    user-select: text;
     -webkit-appearance: none;
 }
 
