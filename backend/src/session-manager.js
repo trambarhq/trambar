@@ -619,7 +619,10 @@ function findServer(serverId) {
  */
 function findOAuthServers(area) {
     return Database.open().then((db) => {
-        var criteria = { deleted: false };
+        var criteria = {
+            deleted: false,
+            disabled: false,
+        };
         return Server.find(db, 'global', criteria, '*').filter((server) => {
             return canProvideAccess(server, area);
         });
