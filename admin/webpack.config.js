@@ -21,7 +21,8 @@ var folders = _.mapValues({
     src: 'src',
     www: 'www',
     assets: 'assets',
-    includes: [ 'src', '../common/src', 'node_modules', 'assets' ]
+    includes: [ 'src', '../common/src', 'node_modules', '../common/node_modules', 'assets' ],
+    loaders: [ 'node_modules', '../common/node_modules' ],
 }, resolve);
 if (event !== 'start') {
     console.log(`Output folder: ${folders.www}`);
@@ -60,6 +61,9 @@ module.exports = {
         extensions: [ '.js', '.jsx' ],
         modules: folders.includes,
     },
+    resolveLoader: {
+        modules: folders.loaders,
+    },
     module: {
         rules: [
             {
@@ -88,6 +92,14 @@ module.exports = {
                     },
                     {
                         loader: 'css-loader'
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            config: {
+                                path: resolve('postcss.config.js'),
+                            },
+                        }
                     },
                     {
                         loader: 'sass-loader',

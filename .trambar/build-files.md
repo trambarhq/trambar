@@ -6,6 +6,7 @@ Scripts and configuration files used to build the application.
 .gitignore
 package.json
 webpack.config.js
+postcss.config.js
 locale-check
 ```
 

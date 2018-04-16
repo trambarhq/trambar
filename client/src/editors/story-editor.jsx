@@ -1147,7 +1147,9 @@ module.exports = React.createClass({
                 if (item instanceof Object) {
                     if (item.label) {
                         // the item is not empty--start the next item automatically
-                        document.execCommand("insertText", false, '* [ ] ');
+                        setImmediate(() => {
+                            document.execCommand("insertText", false, '* [ ] ');
+                        });
                     } else {
                         // it's empty--move the selection back to remove it
                         target.selectionStart = lineFeedIndex + 1;
