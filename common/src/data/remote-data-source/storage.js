@@ -1,3 +1,4 @@
+var _ = require('lodash')
 var Operation = require('data/remote-data-source/operation');
 
 module.exports = Storage;
@@ -10,3 +11,13 @@ function Storage(location, objects, options) {
 }
 
 Storage.prototype = Object.create(Operation.prototype)
+
+Storage.prototype.finish = function(results) {
+    Operation.prototype.finish.call(this, results);
+
+    if (!this.isLocal()) {
+        _.each(this.results, (object) => {
+            object.rtime = this.finishTime;
+        });
+    }
+};

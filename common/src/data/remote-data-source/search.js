@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Promise = require('bluebird');
 var Operation = require('data/remote-data-source/operation');
 var SessionStartTime = require('data/session-start-time');
 
@@ -12,6 +13,7 @@ function Search(query) {
     this.updating = false;
     this.background = false;
     this.lastRetrieved = 0;
+    this.missingResults = [];
 
     this.minimum = query.minimum;
     this.expected = query.expected;
@@ -133,7 +135,7 @@ Search.prototype.isSufficientlyRecent = function(refreshInterval) {
         return false;
     }
     // use the retrieval time of the oldest object as the search's finish time
-    this.finish = minRetrievalTime;
+    this.finishTime = minRetrievalTime;
     return true;
 }
 
@@ -185,6 +187,40 @@ Search.prototype.isSufficientlyCached = function() {
         return false;
     }
     return true;
+};
+
+Search.prototype.finish = function(results) {
+    var previousResults = this.results;
+    var missingResults = [];
+    var newlyRetrieved = 0;
+    Operation.prototype.finish.call(this, results);
+
+    this.dirty = false;
+    if (results) {
+        this.promise = Promise.resolve(this.results);
+
+        // update rtime of results
+        _.each(this.results, (object) => {
+            if (!object.rtime) {
+                newlyRetrieved++;
+            }
+            object.rtime = this.finishTime;
+        });
+
+        // if an object that we found before is no longer there, then
+        // it's either deleted or changed in such a way that it longer
+        // meets the criteria; in both scenarios, the local copy has
+        // become stale and should be removed from cache
+        _.each(previousResults, (object) => {
+            var index = _.sortedIndexBy(results, object, 'id');
+            var target = results[index];
+            if (!target || target.id !== object.id) {
+                missingResults.push(object);
+            }
+        });
+    }
+    this.missingResults = missingResults;
+    this.lastRetrieved = newlyRetrieved;
 };
 
 /**

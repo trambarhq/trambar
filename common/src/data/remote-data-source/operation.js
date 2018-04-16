@@ -9,8 +9,8 @@ function Operation(location) {
     }
     this.schema = location.schema;
     this.table = location.table;
-    this.start = null;
-    this.finish = null;
+    this.startTime = null;
+    this.finishTime = null;
     this.results = [];
     this.promise = null;
     this.by = (byComponent) ? [ byComponent ] : [];
@@ -59,20 +59,25 @@ Operation.prototype.isLocal = function() {
 };
 
 /**
- * Set the finish start time of the operation to the current time
+ * Set the start time of the operation to the current time
  */
-Operation.prototype.setStartTime = function() {
+Operation.prototype.start = function() {
     var now = new Date;
-    this.start = now.toISOString();
+    this.startTime = now.toISOString();
 };
 
 /**
- * Set the finish time to the current time and the duration of the operation
+ * Set the results, finish time, and the duration of the operation
+ *
+ * @param  {Array<Object>} results
  */
-Operation.prototype.setFinishTime = function() {
-    var then = new Date(this.start);
+Operation.prototype.finish = function(results) {
+    var then = new Date(this.startTime);
     var now = new Date;
-    this.finish = now.toISOString();
+    if (results) {
+        this.results = results;
+    }
+    this.finishTime = now.toISOString();
     this.duration = now - then;
 };
 
