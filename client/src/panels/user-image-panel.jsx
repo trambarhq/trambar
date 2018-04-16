@@ -235,11 +235,7 @@ module.exports = React.createClass({
      */
     handleFileChange: function(evt) {
         var files = evt.target.files;
-        this.components.importer.importFiles(files).then((count) => {
-            if (count > 0) {
-                FocusManager.focus({ type: 'ImageEditor' });
-            }
-        });
+        this.components.importer.importFiles(files);
     },
 
     /**
@@ -277,9 +273,6 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleCaptureEnd: function(evt) {
-        if (evt.resource) {
-            FocusManager.focus({ type: 'ImageEditor' });
-        }
     },
 
     /**

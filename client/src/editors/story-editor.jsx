@@ -1175,11 +1175,7 @@ module.exports = React.createClass({
         Promise.all([
             this.components.mediaImporter.importFiles(evt.clipboardData.files),
             this.components.mediaImporter.importDataItems(evt.clipboardData.items)
-        ]).then((counts) => {
-            if (_.some(counts)) {
-                FocusManager.focus({ type: 'ImageEditor' });
-            }
-        });
+        ]);
         if (evt.clipboardData.files.length > 0) {
             evt.preventDefault();
         }
@@ -1427,11 +1423,7 @@ module.exports = React.createClass({
         Promise.all([
             this.components.mediaImporter.importFiles(evt.files),
             this.components.mediaImporter.importDataItems(evt.items),
-        ]).then((counts) => {
-            if (_.some(counts)) {
-                FocusManager.focus({ type: 'ImageEditor' });
-            }
-        });
+        ]);
     },
 
     /**
@@ -1450,9 +1442,6 @@ module.exports = React.createClass({
      */
     handleCaptureEnd: function(evt) {
         this.setState({ capturing: null });
-        if (evt.resource) {
-            FocusManager.focus({ type: 'ImageEditor' });
-        }
     },
 
     /**
@@ -1499,11 +1488,7 @@ module.exports = React.createClass({
                 this.components.mediaImporter.capture('audio');
                 break;
             case 'file-import':
-                this.components.mediaImporter.importFiles(evt.files).then((count) => {
-                    if (count > 0) {
-                        FocusManager.focus({ type: 'ImageEditor' });
-                    }
-                });
+                this.components.mediaImporter.importFiles(evt.files);
                 break;
         }
     }
