@@ -797,7 +797,7 @@ module.exports = React.createClass({
 
                 // update recent searches that aren't being used currently
                 if (this.props.prefetching) {
-                    if (this.props.inForeground) {
+                    if (this.props.inForeground && this.props.online && this.props.connected) {
                         this.schedulePrefetch(address);
                     }
                 }

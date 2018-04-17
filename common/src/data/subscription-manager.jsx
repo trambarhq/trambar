@@ -50,8 +50,11 @@ module.exports = React.createClass({
 
     /**
      * Create or update data subscription
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
      */
-    componentDidUpdate: function() {
+    componentDidUpdate: function(prevProps, prevState) {
         if (!this.props.connection || !this.props.database) {
             return;
         }
@@ -82,9 +85,9 @@ module.exports = React.createClass({
                 this.setState({ subscription });
                 return null;
             }).catch((err) => {
-                // TODO retry
-                // this.setState({ subscription: null });
-                return null;
+                return Promise.delay(5000).then(() => {
+                    this.setState({ subscription: null });
+                });
             });
         }).catch((err) => {
             if (err.statusCode === 401) {

@@ -89,7 +89,6 @@ function handleDatabaseChanges(events) {
         } else if (table === 'system') {
             System.clearCache(events);
         }
-        console.log('Changes to table: ' + table);
     });
 
     System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
@@ -103,7 +102,6 @@ function handleDatabaseChanges(events) {
             // send change messages (silent) first
             _.each(listeners, (listener, index) => {
                 var changes = {};
-                console.log(`Listener ${index + 1}: user_id = ${listener.user.id}, type = ${listener.type}`);
                 _.each(events, (event) => {
                     var accessor = _.find(accessors, { table: event.table });
                     if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {

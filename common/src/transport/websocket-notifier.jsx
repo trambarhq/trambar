@@ -102,7 +102,7 @@ module.exports = React.createClass({
      * Use an interval function to monitor web-socket connection
      */
     componentDidMount: function() {
-        this.heartbeatInterval = setInterval(this.checkHeartbeat, 10 * 1000);
+        this.heartbeatInterval = setInterval(this.checkHeartbeat, 5 * 1000);
     },
 
     /**
@@ -119,7 +119,7 @@ module.exports = React.createClass({
         if (this.state.socket) {
             var now = new Date;
             var elapsed = now - this.lastInteractionTime;
-            if (elapsed > 60 * 1000) {
+            if (elapsed > 40 * 1000) {
                 this.state.socket.close();
             }
         }
@@ -223,7 +223,6 @@ module.exports = React.createClass({
                             // we're still supposed to be connected
                             // try to reestablish connection
                             this.setState({ socket: null, serverResponse: null }, () => {
-                                console.log('Reestablishing web-socket connection...');
                                 this.connect(serverAddress).then((connected) => {
                                     if (connected) {
                                         var reconnectionCount = this.state.reconnectionCount + 1;
@@ -232,12 +231,10 @@ module.exports = React.createClass({
                                     }
                                 });
                             });
-                        } else {
-                            this.setState({ socket: null, serverResponse: null, reconnectionCount: 0 });
-                        }
-                        if (this.props.serverAddress === serverAddress) {
-                            console.log('disconnect');
-                            this.triggerDisconnectEvent();
+                            if (this.props.serverAddress === serverAddress) {
+                                console.log('Disconnect');
+                                this.triggerDisconnectEvent();
+                            }
                         }
                     };
                     this.setState({ socket });

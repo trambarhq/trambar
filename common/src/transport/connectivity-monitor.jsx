@@ -9,6 +9,7 @@ var DiagnosticsSection = require('widgets/diagnostics-section');
 module.exports = React.createClass({
     displayName: 'ConnectivityMonitor',
     propTypes: {
+        inForeground: PropTypes.bool,
         onChange: PropTypes.func,
     },
 
@@ -49,6 +50,40 @@ module.exports = React.createClass({
         }
     },
 
+    /**
+     * Handle Android quirk
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.inForeground !== nextProps.inForeground) {
+            if (/Android/.test(navigator.userAgent)) {
+                // on Android, we can lose connectivity after running in the
+                // background for a while when the device is in battery saving
+                // mode
+                if (nextProps.inForeground) {
+                    clearTimeout(this.offlineTimeout);
+                    if (!this.state.online && navigator.onLine) {
+                        this.setState({ online: true }, () => {
+                            this.triggerChangeEvent(this.state.online, this.state.type);
+                        });
+                    }
+                } else {
+                    this.offlineTimeout = setTimeout(() => {
+                        if (this.state.online) {
+                            this.setState({ online: false }, () => {
+                                this.triggerChangeEvent(this.state.online, this.state.type);
+                            });
+                        }
+                    }, 30 * 1000);
+                }
+            }
+        }
+    },
+
+    /**
+     * Trigger event on mount
+     */
     componentDidMount: function() {
         this.triggerChangeEvent(this.state.online, this.state.type);
     },

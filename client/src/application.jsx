@@ -101,7 +101,7 @@ module.exports = React.createClass({
             canAccessSchema: false,
             connection: null,
             searching: false,
-            paused: false,
+            inForeground: true,
             pushRelay: null,
             renderingStartPage: false,
             showingUploadProgress: false,
@@ -274,7 +274,7 @@ module.exports = React.createClass({
         var selectedSchema = (route) ? route.parameters.schema : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
-            inForeground: !this.state.paused,
+            inForeground: this.state.inForeground,
             online: this.state.online,
             connected: (this.state.connection) ? true : undefined,
             discoveryFlags: {
@@ -325,6 +325,7 @@ module.exports = React.createClass({
             databaseName: 'trambar',
         };
         var connectivityMonitorProps = {
+            inForeground: this.state.inForeground,
             onChange: this.handleConnectivityChange,
         };
         var notifierProps = {
@@ -410,6 +411,7 @@ module.exports = React.createClass({
     componentDidMount: function() {
         if (process.env.PLATFORM === 'browser') {
             window.addEventListener('beforeunload', this.handleBeforeUnload);
+            document.addEventListener('visibilitychange', this.handleVisibilityChange);
         }
         if (process.env.PLATFORM === 'cordova') {
             document.addEventListener('pause', this.handlePause, false);
@@ -438,6 +440,7 @@ module.exports = React.createClass({
     componentWillUnmount: function() {
         if (process.env.PLATFORM === 'browser') {
             window.removeEventListener('beforeunload', this.handleBeforeUnload);
+            document.removeEventListener('visibilitychange', this.handleVisibilityChange);
         }
         if (process.env.PLATFORM === 'cordova') {
             document.removeEventListener('pause', this.handlePause, false);
@@ -880,7 +883,7 @@ module.exports = React.createClass({
      */
     handlePause: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
-        this.setState({ paused: true });
+        this.setState({ inForeground: false });
     },
 
     /**
@@ -890,7 +893,7 @@ module.exports = React.createClass({
      */
     handleResume: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
-        this.setState({ paused: false });
+        this.setState({ inForeground: true });
 
         // while we still receive push notification while the app is in
         // background, it's always possible that some of the messages are
@@ -899,6 +902,16 @@ module.exports = React.createClass({
         // invalidate all queries just in case
         var dataSource = this.components.remoteDataSource;
         dataSource.invalidate();
+    },
+
+    /**
+     * Called when page visibility changed
+     *
+     * @param  {Event} evt
+     */
+    handleVisibilityChange: function(evt) {
+        if (process.env.PLATFORM !== 'browser') return;
+        this.setState({ inForeground: !document.hidden });
     },
 
     /**

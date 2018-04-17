@@ -26,7 +26,7 @@ module.exports = {
 
 var server;
 var sockets = [];
-var heartbeatInterval = 0;
+var heartbeatInterval;
 
 /**
  * Start listening for incoming Web Socket connection
@@ -45,20 +45,27 @@ function listen() {
 
         // set up SockJS server
         var sockJS = SockJS.createServer({
-            sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js'
+            sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js',
+            log: (severity, message) => {
+                if (severity === 'error') {
+                    console.error(message);
+                }
+            },
         });
         sockJS.on('connection', (socket) => {
-            sockets.push(socket);
-            socket.on('close', () => {
-                _.pull(sockets, socket);
-            });
+            if (socket) {
+                sockets.push(socket);
+                socket.on('close', () => {
+                    _.pull(sockets, socket);
+                });
 
-            // assign a random id to socket
-            return Crypto.randomBytesAsync(16).then((buffer) => {
-                socket.token = buffer.toString('hex');
-                socket.write(JSON.stringify({ socket: socket.token }));
-                socket.lastInteractionTime = new Date;
-            });
+                // assign a random id to socket
+                return Crypto.randomBytesAsync(16).then((buffer) => {
+                    socket.token = buffer.toString('hex');
+                    socket.write(JSON.stringify({ socket: socket.token }));
+                    socket.lastInteractionTime = new Date;
+                });
+            }
         });
 
         server = HTTP.createServer(app);
@@ -76,7 +83,6 @@ function listen() {
  */
 function shutdown() {
     clearInterval(heartbeatInterval);
-
     _.each(sockets, (socket) => {
         // for some reason socket is undefined sometimes during shutdown
         if (socket) {
@@ -145,12 +151,10 @@ function sendToWebsockets(db, messages) {
         var socket = _.find(sockets, { token: subscription.token });
         if (socket) {
             var messageType = _.first(_.keys(message.body));
-            console.log(`Sending message (${messageType}) to socket ${subscription.token}`);
-            console.log(message.body);
+            console.log(`Sending message (${messageType}) to socket ${socket.token} (${listener.user.username})`);
             socket.write(JSON.stringify(message.body));
             socket.lastInteractionTime = new Date;
         } else {
-            console.log('Deleting subscription due to missing socket', subscription);
             subscription.deleted = true;
             return Subscription.updateOne(db, 'global', subscription);
         }
@@ -182,13 +186,15 @@ function filterWebsocketMessages(messages) {
     });
 }
 
+/**
+ * Send an empty message to indicate the connection is still alive
+ */
 function sendWebsocketHeartbeat() {
     var now = new Date;
-    var message = JSON.stringify({ heartbeat: true });
     _.each(sockets, (socket) => {
         var elapsed = now - socket.lastInteractionTime;
-        if (elapsed > 30 * 1000) {
-            socket.write(message);
+        if (elapsed > 25 * 1000) {
+            socket.write('{}');
             socket.lastInteractionTime = new Date;
         }
     });
@@ -253,7 +259,6 @@ function sendToPushRelays(db, messages) {
                         }
                     });
                     return Promise.each(expiredSubscriptions, (subscription) => {
-                        console.log('Deleting subscription due to push relay response', subscription);
                         subscription.deleted = true;
                         return Subscription.updateOne(db, 'global', subscription);
                     });
@@ -293,7 +298,6 @@ function filterPushMessages(messages) {
             if (hasWebSession) {
                 var sendToBoth = _.get(user, `settings.mobile_alert.web_session`, false);
                 if (!sendToBoth) {
-                    console.log(`Suppressed mobile alert: user_id = ${user.id}`);
                     return false;
                 }
             }
