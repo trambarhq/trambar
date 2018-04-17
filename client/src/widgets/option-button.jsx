@@ -12,14 +12,22 @@ function OptionButton(props) {
         id: props.id,
         href: props.url,
         target: props.target,
-        className: buttonClasses(props),
         onClick: !props.disabled ? props.onClick : null,
     };
+    var containerProps = {
+        className: buttonClasses(props),
+    };
     return (
-        <a {...linkProps}>
-            <i className={iconClasses(props)} />
-            <span className="label">{props.label}</span>
-        </a>
+        <div {...containerProps}>
+            <div className="icon">
+                <a {...linkProps}><i className={iconClasses(props)} /></a>
+            </div>
+            <div className="label">
+                {props.beforeLabel}
+                <a {...linkProps}>{props.label}</a>
+                {props.afterLabel}
+            </div>
+        </div>
     )
 }
 

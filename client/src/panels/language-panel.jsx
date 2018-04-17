@@ -61,7 +61,8 @@ module.exports = React.createClass({
      */
     renderButton: function(language) {
         var buttonProps = {
-            label: [ language.name, this.renderCountrySelect(language) ],
+            label: language.name,
+            afterLabel: this.renderCountrySelect(language),
             selected: (language.code === this.props.locale.languageCode),
             onClick: this.handleLanguageClick,
             id: language.code,
@@ -85,13 +86,15 @@ module.exports = React.createClass({
         var options = _.map(language.countries, (name, code) => {
             return <option key={code} value={code}>{name}</option>;
         });
-        var style;
+        var props = {
+            value: countryCode,
+            onChange: this.handleCountryChange,
+        };
         if (language.code !== languageCode || _.size(language.countries) <= 1) {
-            // always render the select for lay-out purpose
-            style = { visibility: 'hidden' };
+            props.className = 'sole';
         }
         return (
-            <select key={1} value={countryCode} style={style} onChange={this.handleCountryChange}>
+            <select key={1} {...props}>
                 {options}
             </select>
         );

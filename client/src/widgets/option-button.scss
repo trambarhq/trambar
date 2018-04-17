@@ -1,44 +1,46 @@
 .option-button {
     display: table;
-    width: 100%;
+    max-width: 100%;
     color: #666666;
     margin-bottom: 0.35em;
-    cursor: pointer;
     touch-action: manipulation;
 
     &:link, &:visited {
         text-decoration: none;
     }
 
-    .fa {
+    .icon {
         display: table-cell;
         width: 1em;
         padding-right: 0.25em;
-    }
-
-    &.selected, &:hover {
-        color: #eeeeee;
-    }
-
-    &.disabled {
-        color: #666666;
-        opacity: 0.25;
-        cursor: default;
     }
 
     .label {
         display: table-cell;
     }
 
-    &:last-child {
-        margin-bottom: 0;
+    A {
+        cursor: pointer;
     }
-}
 
-.pop-up-menu {
-    .option-button {
-        &.selected, &:hover {
+    &.selected, &:hover {
+        color: #eeeeee;
+
+        .pop-up-menu & {
             color: #000000;
         }
+    }
+
+    &.disabled {
+        color: #666666;
+        opacity: 0.25;
+
+        A {
+            cursor: default;
+        }
+    }
+
+    &:last-child {
+        margin-bottom: 0;
     }
 }
