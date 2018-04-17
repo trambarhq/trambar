@@ -13,7 +13,8 @@ require('./story-progress.scss');
 function StoryProgress(props) {
     var t = props.locale.translate;
     var contents;
-    if (props.pending || !StoryUtils.isActuallyPublished(props.story)) {
+
+    if (!StoryUtils.isActuallyPublished(props.story)) {
         // not saved yet
         contents = t('story-status-storage-pending');
     } else {
@@ -22,6 +23,14 @@ function StoryProgress(props) {
             contents = t(`story-status-${status.action}-$progress`, status.progress);
         } else {
             contents = <Time time={props.story.ptime} locale={props.locale} />;
+            if (props.pending) {
+                // story has not made it into listings yet
+                contents = (
+                    <span>
+                        {contents} <i className="fa fa-spinner fa-pulse" />
+                    </span>
+                );
+            }
         }
     }
     return <span className="story-progress">{contents}</span>;

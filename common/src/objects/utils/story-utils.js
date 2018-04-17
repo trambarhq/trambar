@@ -6,7 +6,6 @@ var ResourceUtils = require('objects/utils/resource-utils');
 
 module.exports = {
     isSaved,
-    isActuallyPublished,
     isEditable,
     isTrackable,
     isActuallyPublished,
