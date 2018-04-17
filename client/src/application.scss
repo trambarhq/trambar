@@ -121,9 +121,10 @@ INPUT[type=number]
     padding: 2px 2px 2px 4px;
     font-size: 1em;
     user-select: text;
-    -webkit-appearance: none;
 }
 
-TEXTAREA {
+INPUT,
+TEXTAREA,
+BUTTON {
     -webkit-overflow-scrolling: auto !important;
 }
