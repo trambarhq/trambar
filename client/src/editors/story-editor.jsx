@@ -203,7 +203,10 @@ module.exports = React.createClass({
         } else {
             nextState.options = _.clone(nextState.options);
             nextState.options.hidePost = !nextState.draft.public;
-            nextState.options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
+            if (nextState.draft.ptime) {
+                console.log(nextState.options.issueDetails, IssueUtils.extract(nextState.draft, nextProps.repos));
+                nextState.options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
+            }
             if (!nextState.options.preview) {
                 nextState.options.preview = this.choosePreview(nextState.draft);
             }
