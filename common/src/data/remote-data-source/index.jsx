@@ -1706,7 +1706,7 @@ module.exports = React.createClass({
             var resultsBefore = search.results;
             var resultsAfter = resultsBefore;
             _.each(op.results, (object) => {
-                var index = _.sortedIndexBy(search.results, object, 'id');
+                var index = _.sortedIndexBy(resultsAfter, object, 'id');
                 var target = resultsAfter[index];
                 var present = (target && target.id === object.id);
                 if (op instanceof Storage) {

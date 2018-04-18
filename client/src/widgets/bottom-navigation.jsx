@@ -35,6 +35,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         settings: PropTypes.object.isRequired,
+        hasAccess: PropTypes.bool,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -193,6 +194,7 @@ module.exports = React.createClass({
             onClick: this.handleButtonClick,
         };
         var newNotificationProps = {
+            hasAccess: this.props.hasAccess,
             database: this.props.database,
             route: this.props.route,
         };
@@ -285,19 +287,9 @@ var NewNotificationsBadge = Relaks.createClass({
     displayName: 'NewNotificationsBadge',
     propTypes: {
         stacking: PropTypes.bool,
+        hasAccess: PropTypes.bool,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
-    },
-
-    /**
-     * Return initial state
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            failedSchemas: []
-        };
     },
 
     /**
@@ -312,7 +304,7 @@ var NewNotificationsBadge = Relaks.createClass({
         if (!params.schema) {
             return null;
         }
-        if (_.includes(this.state.failedSchemas, params.schema)) {
+        if (!params.hasAccess) {
             return null;
         }
         var db = this.props.database.use({ schema: params.schema, by: this });
@@ -331,10 +323,6 @@ var NewNotificationsBadge = Relaks.createClass({
                     )
                 });
             });
-        }).catch(HTTPError, (err) => {
-            // don't try again when a failure occurs
-            var failedSchemas = _.union(this.state.failedSchemas, [ params.schema ]);
-            this.setState({ failedSchemas });
         });
     },
 

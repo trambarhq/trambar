@@ -178,6 +178,7 @@ module.exports = React.createClass({
         };
         var bottomNavProps = {
             settings: settings,
+            hasAccess: this.state.canAccessServer && this.state.canAccessSchema,
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
