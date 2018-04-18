@@ -41,6 +41,8 @@ function initialize(evt) {
             }
             progressBarFilled.style.width = Math.round(loaded / total * 100) + '%';
         };
+    } else if (process.env.PLATFORM === 'cordova') {
+        require('code-push');
     }
 
     // load application code and support libraries
