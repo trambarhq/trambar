@@ -852,7 +852,7 @@ module.exports = function(localeCode) {
         'validation-duplicate-role-name': 'Rola z tym identyfikatorem już istnieje',
         'validation-duplicate-server-name': 'Serwer z tym identyfikatorem już istnieje',
         'validation-duplicate-user-name': 'Użytkownik o tej nazwie już istnieje',
-        'validation-illegal-project-name': 'Identyfikator projektu nie może być „global” ani „admin”',
+        'validation-illegal-project-name': 'Identyfikator projektu nie może być „global”, „admin”, „public” ani „srv”',
         'validation-localhost-is-wrong': '"localhost" jest nieprawidłowy',
         'validation-password-for-admin-only': 'Tylko administratorzy mogą logować się przy użyciu hasła',
         'validation-required': 'Wymagany',

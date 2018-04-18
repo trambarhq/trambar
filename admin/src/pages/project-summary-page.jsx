@@ -218,7 +218,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var problems = {};
         var project = this.getProject();
         var name = _.toLower(_.trim(project.name));
-        var reservedNames = [ 'global', 'admin' ];
+        var reservedNames = [ 'global', 'admin', 'public', 'srv' ];
         if (!name) {
             problems.name = 'validation-required';
         } else if (_.includes(reservedNames, name)) {

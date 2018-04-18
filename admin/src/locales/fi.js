@@ -590,7 +590,7 @@ module.exports = function(localeCode) {
         'validation-duplicate-role-name': 'Rooli, jolla on sama tunniste, on jo olemassa',
         'validation-duplicate-server-name': 'Palvelin, jolla on sama tunniste, on jo olemassa',
         'validation-duplicate-user-name': 'Käyttäjä, jolla on kyseinen tunniste, on jo olemassa',
-        'validation-illegal-project-name': 'Projektin tunniste ei voi olla “global” tai “admin”',
+        'validation-illegal-project-name': 'Projektin tunniste ei voi olla “global”, “admin”, “public” tai “srv”',
         'validation-localhost-is-wrong': '"localhost" ei ole kelvollinen',
         'validation-password-for-admin-only': 'Vain järjestelmänvalvojat voivat kirjautua salasanalla',
         'validation-required': 'Edellytetään',

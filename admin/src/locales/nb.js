@@ -590,7 +590,7 @@ module.exports = function(localeCode) {
         'validation-duplicate-role-name': 'En rolle med den identifikatoren eksisterer allerede',
         'validation-duplicate-server-name': 'En server med den identifikatoren eksisterer allerede',
         'validation-duplicate-user-name': 'En bruker med det navnet eksisterer allerede',
-        'validation-illegal-project-name': 'Prosjektidentifikator kan ikke være "global" eller "admin"',
+        'validation-illegal-project-name': 'Prosjektidentifikator kan ikke være "global", "admin", "public" eller "srv"',
         'validation-localhost-is-wrong': '"localhost" er ikke gyldig',
         'validation-password-for-admin-only': 'Bare administratorer kan logge på med passord',
         'validation-required': 'Påkrevd',
