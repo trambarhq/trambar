@@ -21,6 +21,11 @@
 
     A {
         cursor: pointer;
+
+        &:link, &:visited {
+            text-decoration: none;
+            color: #666666;
+        }
     }
 
     &.selected, &:hover {
