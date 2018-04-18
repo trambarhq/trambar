@@ -196,10 +196,10 @@ module.exports = React.createClass({
         var index = Math.min(count - 1, this.state.selectedIndex);
         var res = this.props.resources[index];
         switch (res.type) {
-            case 'image': return this.renderImage(res);
-            case 'video': return this.renderVideo(res);
-            case 'audio': return this.renderAudio(res);
-            case 'website': return this.renderWebsite(res);
+            case 'image': return this.renderImage(res, index);
+            case 'video': return this.renderVideo(res, index);
+            case 'audio': return this.renderAudio(res, index);
+            case 'website': return this.renderWebsite(res, index);
         }
     },
 
@@ -207,12 +207,13 @@ module.exports = React.createClass({
      * Render image
      *
      * @param  {Object} res
+     * @param  {Number} key
      *
      * @return {ReactElement}
      */
-    renderImage: function(res) {
+    renderImage: function(res, key) {
         return (
-            <div className="image" onClick={this.handleImageClick}>
+            <div key={key} className="image" onClick={this.handleImageClick}>
                 {this.renderImageElement(res)}
             </div>
         );
@@ -222,17 +223,18 @@ module.exports = React.createClass({
      * Render video poster
      *
      * @param  {Object} res
+     * @param  {Number} key
      *
      * @return {ReactElement}
      */
-    renderVideo: function(res) {
+    renderVideo: function(res, key) {
         var className = 'video';
         var poster = this.renderImageElement(res);
         if (!poster) {
             className += ' posterless';
         }
         return (
-            <div className={className} onClick={this.handleVideoClick}>
+            <div key={key} className={className} onClick={this.handleVideoClick}>
                 {poster}
                 <div className="overlay">
                     <div className="icon">
@@ -250,10 +252,11 @@ module.exports = React.createClass({
      * Render audio player
      *
      * @param  {Object} res
+     * @param  {Number} key
      *
      * @return {ReactElement}
      */
-    renderAudio: function(res) {
+    renderAudio: function(res, key) {
         var className = 'audio';
         var url = this.props.theme.getImageURL(res);
         if (!url) {
@@ -261,7 +264,7 @@ module.exports = React.createClass({
         }
         var action = (!this.state.audioURL) ? 'play' : 'stop';
         return (
-            <div className={className} onClick={this.handleAudioClick}>
+            <div key={key} className={className} onClick={this.handleAudioClick}>
                 {this.renderImageElement(res)}
                 <div className="overlay">
                     <div className="icon">
@@ -279,12 +282,13 @@ module.exports = React.createClass({
      * Render website poster
      *
      * @param  {Object} res
+     * @param  {Number} key
      *
      * @return {ReactElement}
      */
-    renderWebsite: function(res) {
+    renderWebsite: function(res, key) {
         return (
-            <div className="website">
+            <div key={key} className="website">
                 <a href={res.url} target="_blank">
                     {this.renderImageElement(res)}
                     <div className="overlay hidden">

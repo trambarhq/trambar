@@ -39,7 +39,8 @@ module.exports = React.createClass({
      * @return {ReactELement}
      */
     render: function() {
-        var res = _.get(this.props.resources, this.props.resourceIndex);
+        var index = this.props.resourceIndex;
+        var res = _.get(this.props.resources, index);
         if (!res) {
             var placeholder;
             if (this.props.theme.mode !== 'single-col') {
@@ -52,7 +53,7 @@ module.exports = React.createClass({
             );
         } else {
             return (
-                <div className="media-editor">
+                <div key={index} className="media-editor">
                     <div className="resource">
                         {this.renderResource(res)}
                         {this.renderNavigation()}
